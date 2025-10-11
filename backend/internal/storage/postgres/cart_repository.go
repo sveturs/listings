@@ -423,8 +423,8 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 			p.category_id, p.is_active,
 			v.variant_attributes, v.sku, v.price, v.stock_quantity
 		FROM shopping_cart_items ci
-		LEFT JOIN storefront_products p ON ci.product_id = p.id
-		LEFT JOIN storefront_product_variants v ON ci.variant_id = v.id
+		LEFT JOIN b2c_products p ON ci.product_id = p.id
+		LEFT JOIN b2c_product_variants v ON ci.variant_id = v.id
 		WHERE ci.cart_id = $1
 		ORDER BY ci.created_at ASC`
 

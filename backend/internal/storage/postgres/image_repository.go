@@ -83,11 +83,11 @@ func (r *ImageRepository) DeleteImage(ctx context.Context, imageID int) error {
 func (r *ImageRepository) UnsetMainImages(ctx context.Context, entityType string, entityID int) error {
 	switch entityType {
 	case "storefront_product":
-		query := `UPDATE storefront_product_images SET is_default = false WHERE storefront_product_id = $1`
+		query := `UPDATE b2c_product_images SET is_default = false WHERE storefront_product_id = $1`
 		_, err := r.db.ExecContext(ctx, query, entityID)
 		return err
 	case "marketplace_listing":
-		query := `UPDATE marketplace_images SET is_main = false WHERE listing_id = $1`
+		query := `UPDATE c2c_images SET is_main = false WHERE listing_id = $1`
 		_, err := r.db.ExecContext(ctx, query, entityID)
 		return err
 	default:
@@ -97,8 +97,8 @@ func (r *ImageRepository) UnsetMainImages(ctx context.Context, entityType string
 
 // SetMainImage устанавливает изображение как главное
 func (r *ImageRepository) SetMainImage(ctx context.Context, imageID int, isMain bool) error {
-	// Пытаемся обновить в storefront_product_images
-	query := `UPDATE storefront_product_images SET is_default = $1 WHERE id = $2`
+	// Пытаемся обновить в b2c_product_images
+	query := `UPDATE b2c_product_images SET is_default = $1 WHERE id = $2`
 	result, err := r.db.ExecContext(ctx, query, isMain, imageID)
 	if err == nil {
 		rowsAffected, _ := result.RowsAffected()
@@ -107,8 +107,8 @@ func (r *ImageRepository) SetMainImage(ctx context.Context, imageID int, isMain 
 		}
 	}
 
-	// Пытаемся обновить в marketplace_images
-	query = `UPDATE marketplace_images SET is_main = $1 WHERE id = $2`
+	// Пытаемся обновить в c2c_images
+	query = `UPDATE c2c_images SET is_main = $1 WHERE id = $2`
 	result, err = r.db.ExecContext(ctx, query, isMain, imageID)
 	if err == nil {
 		rowsAffected, _ := result.RowsAffected()
@@ -122,8 +122,8 @@ func (r *ImageRepository) SetMainImage(ctx context.Context, imageID int, isMain 
 
 // UpdateDisplayOrder обновляет порядок отображения изображений
 func (r *ImageRepository) UpdateDisplayOrder(ctx context.Context, imageID int, displayOrder int) error {
-	// Пытаемся обновить в storefront_product_images
-	query := `UPDATE storefront_product_images SET display_order = $1 WHERE id = $2`
+	// Пытаемся обновить в b2c_product_images
+	query := `UPDATE b2c_product_images SET display_order = $1 WHERE id = $2`
 	result, err := r.db.ExecContext(ctx, query, displayOrder, imageID)
 	if err == nil {
 		rowsAffected, _ := result.RowsAffected()
@@ -132,8 +132,8 @@ func (r *ImageRepository) UpdateDisplayOrder(ctx context.Context, imageID int, d
 		}
 	}
 
-	// Пытаемся обновить в marketplace_images
-	query = `UPDATE marketplace_images SET display_order = $1 WHERE id = $2`
+	// Пытаемся обновить в c2c_images
+	query = `UPDATE c2c_images SET display_order = $1 WHERE id = $2`
 	result, err = r.db.ExecContext(ctx, query, displayOrder, imageID)
 	if err == nil {
 		rowsAffected, _ := result.RowsAffected()
@@ -145,10 +145,10 @@ func (r *ImageRepository) UpdateDisplayOrder(ctx context.Context, imageID int, d
 	return fmt.Errorf("failed to update display order for image ID: %d", imageID)
 }
 
-// Методы для работы с storefront_product_images
+// Методы для работы с b2c_product_images
 func (r *ImageRepository) createStorefrontProductImage(ctx context.Context, img *models.StorefrontProductImage) (models.ImageInterface, error) {
 	query := `
-		INSERT INTO storefront_product_images (storefront_product_id, image_url, thumbnail_url, display_order, is_default)
+		INSERT INTO b2c_product_images (storefront_product_id, image_url, thumbnail_url, display_order, is_default)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at`
 
@@ -164,7 +164,7 @@ func (r *ImageRepository) createStorefrontProductImage(ctx context.Context, img 
 func (r *ImageRepository) getStorefrontProductImageByID(ctx context.Context, imageID int) (*models.StorefrontProductImage, error) {
 	query := `
 		SELECT id, storefront_product_id, image_url, thumbnail_url, display_order, is_default, created_at
-		FROM storefront_product_images
+		FROM b2c_product_images
 		WHERE id = $1`
 
 	var img models.StorefrontProductImage
@@ -179,7 +179,7 @@ func (r *ImageRepository) getStorefrontProductImageByID(ctx context.Context, ima
 func (r *ImageRepository) getStorefrontProductImages(ctx context.Context, productID int) ([]models.ImageInterface, error) {
 	query := `
 		SELECT id, storefront_product_id, image_url, thumbnail_url, display_order, is_default, created_at
-		FROM storefront_product_images
+		FROM b2c_product_images
 		WHERE storefront_product_id = $1
 		ORDER BY is_default DESC, display_order ASC, created_at ASC`
 
@@ -199,7 +199,7 @@ func (r *ImageRepository) getStorefrontProductImages(ctx context.Context, produc
 }
 
 func (r *ImageRepository) deleteStorefrontProductImage(ctx context.Context, imageID int) error {
-	query := `DELETE FROM storefront_product_images WHERE id = $1`
+	query := `DELETE FROM b2c_product_images WHERE id = $1`
 	result, err := r.db.ExecContext(ctx, query, imageID)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront product image: %w", err)

@@ -195,7 +195,7 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 	LEFT JOIN b2c_stores sf ON sp.storefront_id = sf.id
 	LEFT JOIN unread_counts uc ON c.id = uc.chat_id
 	LEFT JOIN chat_images ci ON c.id = ci.chat_id
-	LEFT JOIN b2c_product_images spi ON c.id = spi.chat_id
+	LEFT JOIN storefront_product_images spi ON c.id = spi.chat_id
 	WHERE c.buyer_id = $1 OR c.seller_id = $1
 	ORDER BY c.last_message_at DESC`
 
