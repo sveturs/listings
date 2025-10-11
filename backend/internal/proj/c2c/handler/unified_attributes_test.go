@@ -73,21 +73,37 @@ func (s *UnifiedAttributesTestSuite) TearDownSuite() {
 	}
 }
 
+// mockAuthMiddleware - простой mock middleware для аутентификации в тестах
+func mockAuthMiddleware() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Устанавливаем mock user ID и roles в контекст
+		c.Locals("user_id", int(1))
+		c.Locals("email", "test@example.com")
+		c.Locals("roles", []string{"admin", "user"})
+		c.Locals("is_admin", true) // Важно: IsAdmin проверяет именно этот флаг
+		c.Locals("authenticated", true)
+		return c.Next()
+	}
+}
+
 // setupRoutes - регистрация маршрутов для тестирования
 func (s *UnifiedAttributesTestSuite) setupRoutes() {
 	api := s.app.Group("/api")
 	v2 := api.Group("/v2")
 
-	// Marketplace routes
+	// Mock auth middleware для всех защищенных роутов
+	authMW := mockAuthMiddleware()
+
+	// Marketplace routes (некоторые требуют аутентификацию)
 	marketplace := v2.Group("/marketplace")
 	marketplace.Get("/categories/:category_id/attributes", s.handler.GetCategoryAttributes)
 	marketplace.Get("/listings/:listing_id/attributes", s.handler.GetListingAttributeValues)
-	marketplace.Post("/listings/:listing_id/attributes", s.handler.SaveListingAttributeValues)
-	marketplace.Put("/listings/:listing_id/attributes", s.handler.UpdateListingAttributeValues)
+	marketplace.Post("/listings/:listing_id/attributes", authMW, s.handler.SaveListingAttributeValues)
+	marketplace.Put("/listings/:listing_id/attributes", authMW, s.handler.UpdateListingAttributeValues)
 	marketplace.Get("/categories/:category_id/attribute-ranges", s.handler.GetAttributeRanges)
 
-	// Admin routes
-	admin := v2.Group("/admin")
+	// Admin routes (все требуют admin аутентификацию)
+	admin := v2.Group("/admin", authMW)
 	admin.Post("/attributes", s.handler.CreateAttribute)
 	admin.Put("/attributes/:attribute_id", s.handler.UpdateAttribute)
 	admin.Delete("/attributes/:attribute_id", s.handler.DeleteAttribute)
