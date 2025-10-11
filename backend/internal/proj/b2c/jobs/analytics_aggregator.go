@@ -134,7 +134,7 @@ func (a *AnalyticsAggregator) aggregateStorefrontAnalytics(ctx context.Context, 
 // getActiveStorefronts получает активные витрины
 func (a *AnalyticsAggregator) getActiveStorefronts(ctx context.Context) ([]*models.Storefront, error) {
 	query := `
-		SELECT id, name FROM marketplace_b2c_stores 
+		SELECT id, name FROM b2c_stores 
 		WHERE is_active = true AND deleted_at IS NULL
 	`
 
@@ -165,7 +165,7 @@ func (a *AnalyticsAggregator) getActiveStorefronts(ctx context.Context) ([]*mode
 func (a *AnalyticsAggregator) getEventStats(ctx context.Context, storefrontID int, from, to time.Time) (map[string]int, error) {
 	query := `
 		SELECT event_type, COUNT(*) 
-		FROM storefront_events
+		FROM b2c_events
 		WHERE storefront_id = $1 AND created_at >= $2 AND created_at <= $3
 		GROUP BY event_type
 	`
@@ -208,7 +208,7 @@ func (a *AnalyticsAggregator) getOrderStats(ctx context.Context, storefrontID in
 			COUNT(*) as orders_count,
 			COALESCE(SUM(total_amount), 0) as revenue,
 			COALESCE(AVG(total_amount), 0) as avg_order_value
-		FROM marketplace_orders
+		FROM c2c_orders
 		WHERE storefront_id = $1 
 			AND created_at >= $2 
 			AND created_at <= $3
@@ -229,7 +229,7 @@ func (a *AnalyticsAggregator) getOrderStats(ctx context.Context, storefrontID in
 func (a *AnalyticsAggregator) getUniqueVisitors(ctx context.Context, storefrontID int, from, to time.Time) (int, error) {
 	query := `
 		SELECT COUNT(DISTINCT session_id)
-		FROM storefront_events
+		FROM b2c_events
 		WHERE storefront_id = $1 
 			AND created_at >= $2 
 			AND created_at <= $3
@@ -256,7 +256,7 @@ func (a *AnalyticsAggregator) getTrafficSources(ctx context.Context, storefrontI
 					AND referrer != '' 
 					AND referrer IS NOT NULL)
 			)
-		FROM storefront_events
+		FROM b2c_events
 		WHERE storefront_id = $1 
 			AND created_at >= $2 
 			AND created_at <= $3
@@ -279,9 +279,9 @@ func (a *AnalyticsAggregator) getTopProducts(ctx context.Context, storefrontID i
 				'views', COUNT(*),
 				'revenue', COALESCE(SUM(oi.price * oi.quantity), 0)
 			) as product_data
-			FROM storefront_events se
+			FROM b2c_events se
 			JOIN c2c_listings ml ON ml.id = (se.event_data->>'product_id')::int
-			LEFT JOIN marketplace_order_items oi ON oi.listing_id = ml.id
+			LEFT JOIN c2c_order_items oi ON oi.listing_id = ml.id
 			WHERE se.storefront_id = $1 
 				AND se.created_at >= $2 
 				AND se.created_at <= $3
@@ -310,7 +310,7 @@ func (a *AnalyticsAggregator) getOrdersByCity(ctx context.Context, storefrontID 
 			SELECT 
 				COALESCE(delivery_city, 'Unknown') as city,
 				COUNT(*) as order_count
-			FROM marketplace_orders
+			FROM c2c_orders
 			WHERE storefront_id = $1 
 				AND created_at >= $2 
 				AND created_at <= $3
@@ -336,7 +336,7 @@ func (a *AnalyticsAggregator) calculateBounceRate(ctx context.Context, storefron
 			SELECT 
 				session_id,
 				COUNT(*) as event_count
-			FROM storefront_events
+			FROM b2c_events
 			WHERE storefront_id = $1 
 				AND created_at >= $2 
 				AND created_at <= $3
@@ -362,7 +362,7 @@ func (a *AnalyticsAggregator) calculateAvgSessionTime(ctx context.Context, store
 			SELECT 
 				session_id,
 				EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) as duration
-			FROM storefront_events
+			FROM b2c_events
 			WHERE storefront_id = $1 
 				AND created_at >= $2 
 				AND created_at <= $3
@@ -381,7 +381,7 @@ func (a *AnalyticsAggregator) calculateAvgSessionTime(ctx context.Context, store
 // saveAnalytics сохраняет аналитику в базу
 func (a *AnalyticsAggregator) saveAnalytics(ctx context.Context, analytics *models.StorefrontAnalytics) error {
 	query := `
-		INSERT INTO storefront_analytics (
+		INSERT INTO b2c_analytics (
 			storefront_id, date, page_views, unique_visitors, bounce_rate, avg_session_time,
 			orders_count, revenue, avg_order_value, conversion_rate,
 			payment_methods_usage, product_views, add_to_cart_count, checkout_count,

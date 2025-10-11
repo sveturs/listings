@@ -115,7 +115,7 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 	query += `
 			FROM unified_geo ug
 			LEFT JOIN c2c_listings ml ON ug.source_type = 'c2c_listing' AND ug.source_id = ml.id
-			LEFT JOIN storefront_products sp ON ug.source_type = 'b2c_product' AND ug.source_id = sp.id
+			LEFT JOIN b2c_products sp ON ug.source_type = 'b2c_product' AND ug.source_id = sp.id
 			LEFT JOIN b2c_stores s ON sp.storefront_id = s.id
 			LEFT JOIN c2c_categories mc1 ON ml.category_id = mc1.id
 			LEFT JOIN c2c_categories mc2 ON sp.category_id = mc2.id
@@ -286,14 +286,14 @@ func (r *PostGISRepository) getListingImages(ctx context.Context, itemID int, it
 	case "marketplace_listing":
 		query = `
 			SELECT public_url
-			FROM marketplace_images
+			FROM c2c_images
 			WHERE listing_id = $1 AND public_url IS NOT NULL AND public_url != ''
 			ORDER BY is_main DESC, created_at
 			LIMIT 5`
 	case "storefront_product":
 		query = `
 			SELECT image_url
-			FROM storefront_product_images
+			FROM b2c_product_images
 			WHERE storefront_product_id = $1 AND image_url IS NOT NULL AND image_url != ''
 			ORDER BY is_default DESC, display_order
 			LIMIT 5`

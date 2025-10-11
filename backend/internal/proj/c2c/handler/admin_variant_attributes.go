@@ -241,8 +241,8 @@ func (h *AdminVariantAttributesHandler) DeleteVariantAttribute(c *fiber.Ctx) err
 	// Проверяем, используется ли атрибут в товарах
 	var count int
 	err = h.services.Storage().QueryRow(ctx, `
-		SELECT COUNT(*) FROM storefront_product_variants spv
-		JOIN storefront_products sp ON spv.product_id = sp.id
+		SELECT COUNT(*) FROM b2c_product_variants spv
+		JOIN b2c_products sp ON spv.product_id = sp.id
 		WHERE spv.variant_attributes ? (SELECT name FROM product_variant_attributes WHERE id = $1)
 	`, id).Scan(&count)
 	if err != nil {

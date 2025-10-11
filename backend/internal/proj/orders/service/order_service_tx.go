@@ -250,7 +250,7 @@ func (s *OrderServiceTx) processOrderItemsInTx(
 // createOrderItemTx создает позицию заказа в транзакции
 func (s *OrderServiceTx) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, item *models.StorefrontOrderItem) error {
 	query := `
-		INSERT INTO storefront_order_items (
+		INSERT INTO b2c_order_items (
 			order_id, product_id, variant_id, product_name, variant_name,
 			product_sku, quantity, price_per_unit, total_price, product_attributes
 		) VALUES (

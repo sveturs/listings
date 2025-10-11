@@ -377,7 +377,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 				average_rating,
 				verified_reviews,
 				photo_reviews
-			FROM storefront_ratings
+			FROM b2c_ratings
 			WHERE storefront_id = $1
 		`, entityId).Scan(
 			&stats.TotalReviews,
@@ -395,7 +395,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		// Получаем распределение оценок
 		rows, err := s.storage.Query(ctx, `
 			SELECT rating, count
-			FROM storefront_rating_distribution
+			FROM b2c_rating_distribution
 			WHERE storefront_id = $1
 		`, entityId)
 		if err != nil {

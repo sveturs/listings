@@ -329,16 +329,16 @@ func (s *MonitoringService) getOrderInfo(ctx context.Context, orderID int) logis
 	var info logistics.OrderInfo
 	info.OrderID = orderID
 
-	// Пытаемся получить информацию из marketplace_orders
+	// Пытаемся получить информацию из c2c_orders
 	err := s.db.QueryRowContext(ctx, `
-		SELECT 
+		SELECT
 			ml.title,
 			ml.price,
 			COALESCE(
-				(SELECT mi.public_url FROM marketplace_images mi WHERE mi.listing_id = mo.listing_id AND mi.is_main = true LIMIT 1),
+				(SELECT mi.public_url FROM c2c_images mi WHERE mi.listing_id = mo.listing_id AND mi.is_main = true LIMIT 1),
 				''
 			)
-		FROM marketplace_orders mo
+		FROM c2c_orders mo
 		JOIN c2c_listings ml ON ml.id = mo.listing_id
 		WHERE mo.id = $1
 	`, orderID).Scan(&info.ProductName, &info.Price, &info.ProductImage)
@@ -355,11 +355,11 @@ func (s *MonitoringService) getOrderInfo(ctx context.Context, orderID int) logis
 			soi.price,
 			soi.quantity,
 			COALESCE(
-				(SELECT spi.image_url FROM storefront_product_images spi WHERE spi.product_id = soi.product_id AND spi.is_primary = true LIMIT 1),
+				(SELECT spi.image_url FROM b2c_product_images spi WHERE spi.product_id = soi.product_id AND spi.is_primary = true LIMIT 1),
 				''
 			)
-		FROM storefront_order_items soi
-		JOIN storefront_products sp ON sp.id = soi.product_id
+		FROM b2c_order_items soi
+		JOIN b2c_products sp ON sp.id = soi.product_id
 		WHERE soi.order_id = $1
 		LIMIT 1
 	`, orderID).Scan(&info.ProductName, &info.Price, &info.Quantity, &info.ProductImage)

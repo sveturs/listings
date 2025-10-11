@@ -686,7 +686,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 			imgQuery := `
 				SELECT public_url, is_main
-				FROM marketplace_images
+				FROM c2c_images
 				WHERE listing_id = $1
 				ORDER BY is_main DESC, id ASC
 			`
@@ -793,7 +793,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				sf.city,
 				sf.country,
 				sf.address
-			FROM storefront_products sp
+			FROM b2c_products sp
 			LEFT JOIN b2c_stores sf ON sp.storefront_id = sf.id
 			LEFT JOIN c2c_categories mc ON sp.category_id = mc.id
 			WHERE sp.is_active = true
@@ -853,7 +853,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 			imgQuery := `
 				SELECT image_url, is_default
-				FROM storefront_product_images
+				FROM b2c_product_images
 				WHERE storefront_product_id = $1
 				ORDER BY is_default DESC, display_order ASC, id ASC
 			`

@@ -164,7 +164,7 @@ func (r *InventoryRepository) GetLowStockProducts(ctx context.Context, storefron
 			   p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
 			   p.is_active, p.attributes, p.view_count, p.sold_count,
 			   p.external_id, p.created_at, p.updated_at
-		FROM storefront_products p
+		FROM b2c_products p
 		WHERE p.storefront_id = $1 
 		AND p.is_active = true
 		AND p.stock_quantity <= $2
@@ -184,7 +184,7 @@ func (r *InventoryRepository) GetStockMovements(ctx context.Context, productID i
 	query := `
 		SELECT id, storefront_product_id, variant_id, type, quantity, reason,
 			   order_id, notes, user_id, created_at
-		FROM storefront_inventory_movements 
+		FROM b2c_inventory_movements 
 		WHERE storefront_product_id = $1
 		ORDER BY created_at DESC
 		LIMIT $2`
@@ -201,7 +201,7 @@ func (r *InventoryRepository) GetStockMovements(ctx context.Context, productID i
 // CreateStockMovement создает запись о движении товара
 func (r *InventoryRepository) CreateStockMovement(ctx context.Context, movement *models.StorefrontInventoryMovement) error {
 	query := `
-		INSERT INTO storefront_inventory_movements (
+		INSERT INTO b2c_inventory_movements (
 			storefront_product_id, variant_id, type, quantity, reason,
 			order_id, notes, user_id
 		) VALUES (

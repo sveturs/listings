@@ -168,7 +168,7 @@ func (s *Service) getProductAttributes(ctx context.Context, productID int, produ
 					FROM delivery_category_defaults dcd
 					WHERE dcd.category_id = sp.category_id)
 				) as attributes
-			FROM storefront_products sp
+			FROM b2c_products sp
 			WHERE sp.id = $1`
 	}
 

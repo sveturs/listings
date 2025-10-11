@@ -143,7 +143,7 @@ func (s *Storage) UpdateShipmentStatus(ctx context.Context, id int, status strin
 // UpdateOrderShipment - связывает заказ с отправлением
 func (s *Storage) UpdateOrderShipment(ctx context.Context, orderID, shipmentID int) error {
 	query := `
-		UPDATE marketplace_orders
+		UPDATE c2c_orders
 		SET delivery_shipment_id = $1
 		WHERE id = $2`
 
