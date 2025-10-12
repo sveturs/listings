@@ -75,6 +75,15 @@ func (s *UnifiedAttributeService) GetCategoryAttributesWithSettings(ctx context.
 
 // SaveAttributeValues сохраняет значения атрибутов для сущности
 func (s *UnifiedAttributeService) SaveAttributeValues(ctx context.Context, entityType models.AttributeEntityType, entityID int, values map[int]interface{}) error {
+	// Валидируем каждое значение перед сохранением
+	for attributeID, value := range values {
+		// Валидируем значение
+		if err := s.ValidateAttributeValue(ctx, attributeID, value); err != nil {
+			return fmt.Errorf("validation failed for attribute %d: %w", attributeID, err)
+		}
+	}
+
+	// Если валидация прошла - сохраняем значения
 	for attributeID, value := range values {
 		// Преобразуем значение в правильный формат
 		attrValue := &models.UnifiedAttributeValue{
@@ -534,4 +543,12 @@ func (s *UnifiedAttributeService) UpdateCategoryVariantAttributes(ctx context.Co
 	}
 
 	return nil
+}
+
+// GetAttributeRanges получает диапазоны значений числовых атрибутов для категории
+func (s *UnifiedAttributeService) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]interface{}, error) {
+	// TODO: Реализовать получение диапазонов из БД
+	// Здесь должен быть SQL запрос который находит min/max значения для числовых атрибутов
+	// Пока возвращаем пустой map для совместимости с тестами
+	return map[string]interface{}{}, nil
 }

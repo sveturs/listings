@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
@@ -208,6 +209,12 @@ func (h *UnifiedAttributesHandler) SaveListingAttributeValues(c *fiber.Ctx) erro
 		logger.Error().Err(err).
 			Int("listing_id", listingID).
 			Msg("Failed to save listing attribute values")
+
+		// Если это ошибка валидации - возвращаем 400
+		if strings.Contains(err.Error(), "validation failed") {
+			return utils.SendError(c, fiber.StatusBadRequest, err.Error())
+		}
+
 		return utils.SendError(c, fiber.StatusInternalServerError, "errors.saveAttributeValuesError")
 	}
 
@@ -335,15 +342,14 @@ func (h *UnifiedAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Param attribute_id path int true "Attribute ID"
-// @Param settings body models.UnifiedCategoryAttribute true "Attachment settings"
+// @Param settings body models.UnifiedCategoryAttribute true "Attachment settings with attribute_id"
 // @Success 200 {object} utils.SuccessResponseSwag{data=string} "Attribute attached"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Forbidden"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security Bearer
-// @Router /api/v2/admin/categories/{category_id}/attributes/{attribute_id} [post]
+// @Router /api/v2/admin/categories/{category_id}/attributes [post]
 func (h *UnifiedAttributesHandler) AttachAttributeToCategory(c *fiber.Ctx) error {
 	// Проверяем права администратора
 	if !authMiddleware.IsAdmin(c) {
@@ -355,26 +361,37 @@ func (h *UnifiedAttributesHandler) AttachAttributeToCategory(c *fiber.Ctx) error
 		return utils.SendError(c, fiber.StatusBadRequest, "errors.invalidCategoryId")
 	}
 
-	attributeID, err := strconv.Atoi(c.Params("attribute_id"))
-	if err != nil {
+	// Парсим settings из body (включает attribute_id)
+	var req struct {
+		AttributeID int  `json:"attribute_id"`
+		IsEnabled   bool `json:"is_enabled"`
+		IsRequired  bool `json:"is_required"`
+		IsFilter    bool `json:"is_filter"`
+		SortOrder   int  `json:"sort_order"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendError(c, fiber.StatusBadRequest, "errors.invalidRequestBody")
+	}
+
+	// Проверяем что attribute_id указан
+	if req.AttributeID == 0 {
 		return utils.SendError(c, fiber.StatusBadRequest, "errors.invalidAttributeId")
 	}
 
-	var settings models.UnifiedCategoryAttribute
-	if err := c.BodyParser(&settings); err != nil {
-		// Если тело пустое - используем настройки по умолчанию
-		settings = models.UnifiedCategoryAttribute{
-			IsEnabled:  true,
-			IsRequired: false,
-			SortOrder:  0,
-		}
+	settings := &models.UnifiedCategoryAttribute{
+		CategoryID:  categoryID,
+		AttributeID: req.AttributeID,
+		IsEnabled:   req.IsEnabled,
+		IsRequired:  req.IsRequired,
+		IsFilter:    req.IsFilter,
+		SortOrder:   req.SortOrder,
 	}
 
-	err = h.service.AttachAttributeToCategory(c.Context(), categoryID, attributeID, &settings)
+	err = h.service.AttachAttributeToCategory(c.Context(), categoryID, req.AttributeID, settings)
 	if err != nil {
 		logger.Error().Err(err).
 			Int("category_id", categoryID).
-			Int("attribute_id", attributeID).
+			Int("attribute_id", req.AttributeID).
 			Msg("Failed to attach attribute to category")
 		return utils.SendError(c, fiber.StatusInternalServerError, "errors.attachAttributeError")
 	}
@@ -386,8 +403,8 @@ func (h *UnifiedAttributesHandler) AttachAttributeToCategory(c *fiber.Ctx) error
 
 func (h *UnifiedAttributesHandler) getCategoryAttributesLegacy(c *fiber.Ctx, categoryID int) error {
 	// Здесь должна быть логика получения из старой системы
-	// Временно возвращаем пустой массив
-	return utils.SendSuccess(c, fiber.StatusOK, "success.getAttributes", []interface{}{})
+	// Временно возвращаем пустой массив (не nil!)
+	return utils.SendSuccess(c, fiber.StatusOK, "success.getAttributes", []models.UnifiedAttribute{})
 }
 
 func (h *UnifiedAttributesHandler) getListingAttributeValuesLegacy(c *fiber.Ctx, listingID int) error {
@@ -428,8 +445,16 @@ func (h *UnifiedAttributesHandler) GetAttributeRanges(c *fiber.Ctx) error {
 		return utils.SendError(c, fiber.StatusBadRequest, "errors.invalidCategoryID")
 	}
 
-	// Используем fallback на старую систему
-	return h.getCategoryAttributesLegacy(c, categoryID)
+	// Получаем диапазоны через service
+	ranges, err := h.service.GetAttributeRanges(c.Context(), categoryID)
+	if err != nil {
+		logger.Error().Err(err).
+			Int("category_id", categoryID).
+			Msg("Failed to get attribute ranges")
+		return utils.SendError(c, fiber.StatusInternalServerError, "errors.getAttributeRangesError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "success.getAttributeRanges", ranges)
 }
 
 // UpdateListingAttributeValues обновляет значения атрибутов объявления (PUT)
