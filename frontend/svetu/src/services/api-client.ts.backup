@@ -387,3 +387,150 @@ class ApiClient {
 
 // Экспортируем singleton instance
 export const apiClient = new ApiClient();
+
+// Для обратной совместимости с существующим кодом
+export abstract class ApiClientLegacy {
+  protected baseURL: string;
+
+  constructor(baseURL?: string) {
+    // В development режиме и в браузере используем пустую строку для proxy
+    if (
+      !baseURL &&
+      typeof window !== 'undefined' &&
+      process.env.NODE_ENV === 'development'
+    ) {
+      this.baseURL = '';
+    } else {
+      this.baseURL = baseURL || configManager.getConfig().api.url;
+    }
+  }
+
+  /**
+   * Преобразует старый формат ответа в новый
+   */
+  private convertResponse<T>(response: ApiResponse<T>): {
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  } {
+    if (response.data !== undefined) {
+      return {
+        success: true,
+        data: response.data,
+      };
+    }
+
+    return {
+      success: false,
+      data: null,
+      error: response.error?.message,
+      message: response.error?.message,
+    };
+  }
+
+  protected async get<T>(
+    endpoint: string,
+    params?: Record<string, any>,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const queryString = params
+      ? '?' + new URLSearchParams(params).toString()
+      : '';
+    const response = await apiClient.get<T>(
+      `${endpoint}${queryString}`,
+      options
+    );
+    return this.convertResponse(response);
+  }
+
+  protected async post<T, D = unknown>(
+    endpoint: string,
+    data?: D,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const response = await apiClient.post<T>(endpoint, data, options);
+    return this.convertResponse(response);
+  }
+
+  protected async put<T, D = unknown>(
+    endpoint: string,
+    data?: D,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const response = await apiClient.put<T>(endpoint, data, options);
+    return this.convertResponse(response);
+  }
+
+  protected async delete<T>(
+    endpoint: string,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const response = await apiClient.delete<T>(endpoint, options);
+    return this.convertResponse(response);
+  }
+
+  protected async upload<T>(
+    endpoint: string,
+    formData: FormData,
+    options?: any
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const response = await apiClient.upload<T>(endpoint, formData, options);
+    return this.convertResponse(response);
+  }
+
+  protected async request<T>(
+    url: string,
+    options?: RequestInit
+  ): Promise<{
+    success: boolean;
+    data: T | null;
+    error?: string;
+    message?: string;
+  }> {
+    const endpoint = url.startsWith(this.baseURL)
+      ? url.replace(this.baseURL, '')
+      : url;
+    const response = await apiClient.request<T>(endpoint, options);
+    return this.convertResponse(response);
+  }
+
+  protected unwrap<T>(response: {
+    success: boolean;
+    data: T | null;
+    error?: string;
+  }): T {
+    if (response.success && response.data !== null) {
+      return response.data;
+    }
+    throw new Error(response.error || 'Request failed');
+  }
+}
+
+// Экспортируем ApiClientLegacy как ApiClient для обратной совместимости
+export { ApiClientLegacy as ApiClient };

@@ -5,7 +5,6 @@ import {
   PayloadAction,
 } from '@reduxjs/toolkit';
 import { RootState } from '../index';
-import { apiClientAuth } from '@/lib/api-client-auth';
 import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 import type { PaymentMethodType } from '@/types/b2c';
@@ -413,9 +412,7 @@ export const fetchDashboardStats = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchDashboardStats', async (slug, { rejectWithValue }) => {
   try {
-    const response = await apiClientAuth.get(
-      `/api/v1/b2c/${slug}/dashboard/stats`
-    );
+    const response = await apiClient.get(`/api/v1/b2c/${slug}/dashboard/stats`);
     return response.data.data;
   } catch (error: any) {
     return rejectWithValue(
@@ -432,7 +429,7 @@ export const fetchRecentOrders = createAsyncThunk<
   'storefronts/fetchRecentOrders',
   async ({ slug, limit = 5 }, { rejectWithValue }) => {
     try {
-      const response = await apiClientAuth.get(
+      const response = await apiClient.get(
         `/api/v1/b2c/${slug}/dashboard/recent-orders?limit=${limit}`
       );
       return response.data.data;
@@ -450,7 +447,7 @@ export const fetchLowStockProducts = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchLowStockProducts', async (slug, { rejectWithValue }) => {
   try {
-    const response = await apiClientAuth.get(
+    const response = await apiClient.get(
       `/api/v1/b2c/${slug}/dashboard/low-stock`
     );
     return response.data.data;
@@ -469,7 +466,7 @@ export const fetchDashboardNotifications = createAsyncThunk<
   'storefronts/fetchDashboardNotifications',
   async ({ slug, limit = 10 }, { rejectWithValue }) => {
     try {
-      const response = await apiClientAuth.get(
+      const response = await apiClient.get(
         `/api/v1/b2c/${slug}/dashboard/notifications?limit=${limit}`
       );
       return response.data.data;

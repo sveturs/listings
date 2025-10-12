@@ -337,10 +337,10 @@ func (db *Database) ReindexAllProducts(ctx context.Context) error {
 			variants, err := db.GetProductVariants(ctx, product.ID)
 			if err == nil {
 				// Конвертируем []*StorefrontProductVariant в []StorefrontProductVariant
-			product.Variants = make([]models.StorefrontProductVariant, len(variants))
-			for i, v := range variants {
-				product.Variants[i] = *v
-			}
+				product.Variants = make([]models.StorefrontProductVariant, len(variants))
+				for i, v := range variants {
+					product.Variants[i] = *v
+				}
 			}
 		}
 

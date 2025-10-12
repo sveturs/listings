@@ -128,18 +128,6 @@ export default function UnifiedAttributesStep({
       } catch (err) {
         console.error('Error loading attributes:', err);
         setError(t('attributes.load_error'));
-
-        // Пробуем fallback на v1 API
-        try {
-          unifiedAttributeService.useV1Api();
-          const fallbackResponse =
-            await unifiedAttributeService.getCategoryAttributes(categoryId);
-          if (fallbackResponse.success && fallbackResponse.data) {
-            setAttributes(fallbackResponse.data);
-          }
-        } catch (fallbackErr) {
-          console.error('Fallback also failed:', fallbackErr);
-        }
       } finally {
         setLoading(false);
       }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { apiClientAuth } from '@/lib/api-client-auth';
+import { apiClient } from '@/services/api-client';
 import {
   FiX,
   FiMessageSquare,
@@ -45,7 +45,7 @@ export default function ProblemCommentsModal({
   const loadComments = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await apiClientAuth.get(
+      const response = await apiClient.get(
         `/admin/logistics/problems/${problemId}/comments`
       );
       setComments(response.data || []);
@@ -66,13 +66,10 @@ export default function ProblemCommentsModal({
 
     setSubmitting(true);
     try {
-      await apiClientAuth.post(
-        `/admin/logistics/problems/${problemId}/comments`,
-        {
-          comment: newComment,
-          comment_type: 'comment',
-        }
-      );
+      await apiClient.post(`/admin/logistics/problems/${problemId}/comments`, {
+        comment: newComment,
+        comment_type: 'comment',
+      });
 
       setNewComment('');
       loadComments(); // Перезагружаем комментарии

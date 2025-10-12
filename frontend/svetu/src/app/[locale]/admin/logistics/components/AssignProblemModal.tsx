@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { FiX, FiUser } from 'react-icons/fi';
-import { apiClientAuth } from '@/lib/api-client-auth';
+import { apiClient } from '@/services/api-client';
 
 interface Admin {
   id: number;
@@ -42,7 +42,7 @@ export default function AssignProblemModal({
   const fetchAdmins = async () => {
     try {
       setLoading(true);
-      const response = await apiClientAuth.get('/admin/users?role=admin');
+      const response = await apiClient.get('/admin/users?role=admin');
       if (response.data && Array.isArray(response.data)) {
         setAdmins(response.data);
       } else {
