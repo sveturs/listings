@@ -2172,7 +2172,7 @@ func (s *MarketplaceService) getCategorySuggestionsUnified(ctx context.Context, 
 
 // getProductSuggestionsUnified возвращает подходящие товары
 func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, query string, limit int) []models.UnifiedSuggestion {
-	// Поиск товаров по названию из обеих таблиц (c2c_listings и storefront_products)
+	// Поиск товаров по названию из обеих таблиц (c2c_listings и b2c_products)
 	sqlQuery := `
 		SELECT id, title, price, category_name, image_url, storefront_id, storefront_name, storefront_slug, source_type
 		FROM (
@@ -2197,9 +2197,9 @@ func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, q
 			       sp.storefront_id, s.name as storefront_name, s.slug as storefront_slug,
 			       'b2c_store' as source_type,
 			       0 as views_count, sp.created_at
-			FROM storefront_products sp
+			FROM b2c_products sp
 			LEFT JOIN c2c_categories mc ON sp.category_id = mc.id
-			LEFT JOIN storefront_product_images spi ON sp.id = spi.storefront_product_id AND spi.is_default = true
+			LEFT JOIN b2c_product_images spi ON sp.id = spi.storefront_product_id AND spi.is_default = true
 			JOIN b2c_stores s ON sp.storefront_id = s.id
 			WHERE LOWER(sp.name) LIKE LOWER($1)
 		) combined

@@ -109,7 +109,7 @@ func main() {
 			p.has_individual_location, p.individual_latitude, p.individual_longitude,
 			p.individual_address, p.show_on_map, p.location_privacy,
 			c.id as cat_id, c.name as cat_name, c.slug as cat_slug
-		FROM storefront_products p
+		FROM b2c_products p
 		LEFT JOIN c2c_categories c ON c.id = p.category_id
 		WHERE p.is_active = true
 		ORDER BY p.id
@@ -175,7 +175,7 @@ func main() {
 		// Get product images
 		imgQuery := `
 			SELECT id, image_url, thumbnail_url, is_default, display_order
-			FROM storefront_product_images
+			FROM b2c_product_images
 			WHERE storefront_product_id = $1
 			ORDER BY display_order, id
 		`
@@ -200,7 +200,7 @@ func main() {
 		// Get product variants
 		varQuery := `
 			SELECT id, name, sku, price, stock_quantity, attributes
-			FROM storefront_product_variants
+			FROM b2c_product_variants
 			WHERE storefront_product_id = $1
 			ORDER BY id
 		`

@@ -478,7 +478,7 @@ func (r *inventoryRepository) RecordMovement(ctx context.Context, movement *mode
 // GetLowStockItems получает товары с низким запасом
 func (r *inventoryRepository) GetLowStockItems(ctx context.Context, storefrontID int) ([]models.LowStockItem, error) {
 	query := `
-		SELECT 
+		SELECT
 			p.id as product_id,
 			p.name as product_name,
 			pv.id as variant_id,
@@ -487,8 +487,8 @@ func (r *inventoryRepository) GetLowStockItems(ctx context.Context, storefrontID
 			s.available_quantity,
 			s.low_stock_threshold
 		FROM inventory_stock s
-		JOIN storefront_products p ON p.id = s.product_id
-		LEFT JOIN storefront_product_variants pv ON pv.id = s.variant_id
+		JOIN b2c_products p ON p.id = s.product_id
+		LEFT JOIN b2c_product_variants pv ON pv.id = s.variant_id
 		WHERE p.storefront_id = $1
 			AND s.available_quantity <= s.low_stock_threshold
 			AND s.low_stock_threshold > 0

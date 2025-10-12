@@ -247,13 +247,13 @@ func (r *UnifiedGeoRepository) getItemImages(ctx context.Context, itemID int, it
 	case "marketplace_listing":
 		query = `
 			SELECT public_url
-			FROM marketplace_images
+			FROM c2c_images
 			WHERE listing_id = $1 AND public_url IS NOT NULL AND public_url != ''
 			ORDER BY is_main DESC, created_at`
 	case "storefront_product":
 		query = `
 			SELECT image_url
-			FROM storefront_product_images
+			FROM b2c_product_images
 			WHERE storefront_product_id = $1 AND image_url IS NOT NULL AND image_url != ''
 			ORDER BY is_default DESC, display_order`
 	case "storefront":

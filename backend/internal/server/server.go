@@ -62,6 +62,8 @@ import (
 	"backend/internal/proj/subscriptions"
 	"backend/internal/proj/tracking"
 	"backend/internal/proj/translation_admin"
+	unifiedHandler "backend/internal/proj/unified/handler"
+	unifiedStorage "backend/internal/proj/unified/storage/postgres"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/proj/viber"
 	vinModule "backend/internal/proj/vin"
@@ -107,6 +109,7 @@ type Server struct {
 	vin                *vinModule.Module
 	credit             *creditHandler.Handler
 	recommendations    *recommendationsHandler.Handler
+	unified            *unifiedHandler.UnifiedHandler
 	fileStorage        filestorage.FileStorageInterface
 	health             *healthHandler.Handler
 	redisClient        *redis.Client
@@ -290,6 +293,10 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	creditHandlerInstance := creditHandler.NewHandler()
 	recommendationsHandlerInstance := recommendationsHandler.NewHandler(db)
 
+	// Инициализация unified listings handler
+	unifiedStorageInstance := unifiedStorage.NewUnifiedStorage(db.GetPool(), logger.Get())
+	unifiedHandlerInstance := unifiedHandler.NewUnifiedHandler(unifiedStorageInstance, logger.Get())
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// Детальное логирование ошибки
@@ -356,6 +363,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		vin:                vinModule,
 		credit:             creditHandlerInstance,
 		recommendations:    recommendationsHandlerInstance,
+		unified:            unifiedHandlerInstance,
 		fileStorage:        fileStorage,
 		health:             healthHandlerInstance,
 		redisClient:        redisClient,
@@ -596,10 +604,11 @@ func (s *Server) registerProjectRoutes() {
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// config регистрируется отдельно до этого метода для публичных роутов
 	// analytics должен быть РАНЬШЕ остальных, чтобы публичный /api/v1/analytics/event зарегистрировался первым
+	// unified должен быть раньше marketplace для публичных роутов unified listings
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	// subscriptions должен быть раньше marketplace, чтобы публичные роуты не перехватывались auth middleware
 	// tracking должен быть раньше marketplace, чтобы его публичные роуты не перехватывались auth middleware
-	registrars = append(registrars, s.global, s.analytics, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
+	registrars = append(registrars, s.global, s.analytics, s.unified, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
 
 	// Добавляем Subscriptions если он инициализирован - ДО marketplace чтобы избежать конфликтов с auth middleware
 	if s.subscriptions != nil {

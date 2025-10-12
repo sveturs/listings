@@ -176,7 +176,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 
 	// Создаем владельца в staff
 	_, err = tx.Exec(ctx, `
-		INSERT INTO storefront_staff (storefront_id, user_id, role, permissions)
+		INSERT INTO b2c_store_staff (storefront_id, user_id, role, permissions)
 		VALUES ($1, $2, $3, $4)
 	`, storefront.ID, dto.UserID, models.StaffRoleOwner, getOwnerPermissions())
 	if err != nil {
@@ -186,7 +186,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 	// Устанавливаем дефолтные часы работы (9:00-18:00 пн-пт)
 	for day := 1; day <= 5; day++ {
 		_, err = tx.Exec(ctx, `
-			INSERT INTO storefront_hours (storefront_id, day_of_week, open_time, close_time)
+			INSERT INTO b2c_store_hours (storefront_id, day_of_week, open_time, close_time)
 			VALUES ($1, $2, $3, $4)
 		`, storefront.ID, day, "09:00", "18:00")
 		if err != nil {
@@ -206,7 +206,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 
 	for _, pm := range paymentMethods {
 		_, err = tx.Exec(ctx, `
-			INSERT INTO storefront_payment_methods (
+			INSERT INTO b2c_payment_methods (
 				storefront_id, method_type, is_enabled, transaction_fee
 			) VALUES ($1, $2, $3, $4)
 		`, storefront.ID, pm.method, true, pm.fee)
@@ -451,7 +451,7 @@ func (r *storefrontRepo) Delete(ctx context.Context, id int) error {
 
 	// Деактивируем все товары этой витрины
 	_, err = tx.Exec(ctx,
-		"UPDATE storefront_products SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE storefront_id = $1",
+		"UPDATE b2c_products SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE storefront_id = $1",
 		id,
 	)
 	if err != nil {
@@ -490,7 +490,7 @@ func (r *storefrontRepo) Restore(ctx context.Context, id int) error {
 
 	// Активируем все товары этой витрины
 	_, err = tx.Exec(ctx,
-		"UPDATE storefront_products SET is_active = true, updated_at = CURRENT_TIMESTAMP WHERE storefront_id = $1",
+		"UPDATE b2c_products SET is_active = true, updated_at = CURRENT_TIMESTAMP WHERE storefront_id = $1",
 		id,
 	)
 	if err != nil {
@@ -519,7 +519,7 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 	// 1. Сначала получаем ID всех товаров витрины
 	logger.Debug().Int("storefrontID", id).Msg("HardDelete: Getting product IDs")
 	var productIDs []int
-	rows, err := tx.Query(ctx, "SELECT id FROM storefront_products WHERE storefront_id = $1", id)
+	rows, err := tx.Query(ctx, "SELECT id FROM b2c_products WHERE storefront_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to get product IDs: %w", err)
 	}
@@ -538,8 +538,8 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 		// shopping_cart_items относится к c2c_listings, а не к storefront_products - пропускаем
 
 		// Удаляем товары из избранного
-		logger.Debug().Ints("productIDs", productIDs).Msg("HardDelete: Deleting from storefront_favorites")
-		_, err = tx.Exec(ctx, "DELETE FROM storefront_favorites WHERE product_id = ANY($1)", productIDs)
+		logger.Debug().Ints("productIDs", productIDs).Msg("HardDelete: Deleting from b2c_favorites")
+		_, err = tx.Exec(ctx, "DELETE FROM b2c_favorites WHERE product_id = ANY($1)", productIDs)
 		if err != nil {
 			return fmt.Errorf("failed to delete favorites: %w", err)
 		}
@@ -559,34 +559,34 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 		// }
 
 		// Удаляем изображения товаров
-		logger.Debug().Msg("HardDelete: Deleting from storefront_product_images")
-		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_images WHERE storefront_product_id = ANY($1)", productIDs)
+		logger.Debug().Msg("HardDelete: Deleting from b2c_product_images")
+		_, err = tx.Exec(ctx, "DELETE FROM b2c_product_images WHERE storefront_product_id = ANY($1)", productIDs)
 		if err != nil {
 			return fmt.Errorf("failed to delete product images: %w", err)
 		}
 
 		// Удаляем варианты товаров
-		logger.Debug().Msg("HardDelete: Deleting from storefront_product_variants")
-		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_variants WHERE product_id = ANY($1)", productIDs)
+		logger.Debug().Msg("HardDelete: Deleting from b2c_product_variants")
+		_, err = tx.Exec(ctx, "DELETE FROM b2c_product_variants WHERE product_id = ANY($1)", productIDs)
 		if err != nil {
 			return fmt.Errorf("failed to delete product variants: %w", err)
 		}
 	}
 
 	// 3. Удаляем заказы
-	_, err = tx.Exec(ctx, "DELETE FROM storefront_orders WHERE storefront_id = $1", id)
+	_, err = tx.Exec(ctx, "DELETE FROM b2c_orders WHERE storefront_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront orders: %w", err)
 	}
 
 	// 4. Удаляем товары
-	_, err = tx.Exec(ctx, "DELETE FROM storefront_products WHERE storefront_id = $1", id)
+	_, err = tx.Exec(ctx, "DELETE FROM b2c_products WHERE storefront_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront products: %w", err)
 	}
 
 	// 5. Удаляем сотрудников
-	_, err = tx.Exec(ctx, "DELETE FROM storefront_staff WHERE storefront_id = $1", id)
+	_, err = tx.Exec(ctx, "DELETE FROM b2c_store_staff WHERE storefront_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront staff: %w", err)
 	}
@@ -856,33 +856,33 @@ func (r *storefrontRepo) FindNearby(ctx context.Context, lat, lng, radiusKm floa
 // GetMapData получает данные для отображения на карте
 func (r *storefrontRepo) GetMapData(ctx context.Context, bounds GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error) {
 	query := `
-		SELECT 
+		SELECT
 			s.id, s.slug, s.name, s.latitude, s.longitude, s.rating, s.logo_url,
 			s.address, s.phone, s.products_count,
-			CASE 
+			CASE
 				WHEN EXISTS (
-					SELECT 1 FROM storefront_hours 
-					WHERE storefront_id = s.id 
+					SELECT 1 FROM b2c_store_hours
+					WHERE storefront_id = s.id
 					AND day_of_week = EXTRACT(DOW FROM CURRENT_TIMESTAMP)
 					AND NOT is_closed
 					AND CURRENT_TIME BETWEEN open_time AND close_time
-				) THEN true 
-				ELSE false 
+				) THEN true
+				ELSE false
 			END as working_now,
 			CASE WHEN EXISTS (
-				SELECT 1 FROM storefront_payment_methods 
+				SELECT 1 FROM b2c_payment_methods
 				WHERE storefront_id = s.id AND method_type = 'cod' AND is_enabled
 			) THEN true ELSE false END as supports_cod,
 			CASE WHEN EXISTS (
-				SELECT 1 FROM storefront_delivery_options 
+				SELECT 1 FROM b2c_delivery_options
 				WHERE storefront_id = s.id AND is_enabled AND provider != 'self_pickup'
 			) THEN true ELSE false END as has_delivery,
 			CASE WHEN EXISTS (
-				SELECT 1 FROM storefront_delivery_options 
+				SELECT 1 FROM b2c_delivery_options
 				WHERE storefront_id = s.id AND is_enabled AND provider = 'self_pickup'
 			) THEN true ELSE false END as has_self_pickup,
 			CASE WHEN EXISTS (
-				SELECT 1 FROM storefront_payment_methods 
+				SELECT 1 FROM b2c_payment_methods
 				WHERE storefront_id = s.id AND method_type = 'card' AND is_enabled
 			) THEN true ELSE false END as accepts_cards
 		FROM b2c_stores s
@@ -964,7 +964,7 @@ func (r *storefrontRepo) HasPermission(ctx context.Context, storefrontID, userID
 	// Проверяем права сотрудника
 	var permissions models.JSONB
 	err = r.db.pool.QueryRow(ctx, `
-		SELECT permissions FROM storefront_staff 
+		SELECT permissions FROM b2c_store_staff
 		WHERE storefront_id = $1 AND user_id = $2
 	`, storefrontID, userID).Scan(&permissions)
 
@@ -1052,11 +1052,11 @@ func (r *storefrontRepo) GetDashboardStats(ctx context.Context, storefrontID int
 
 	// Получаем количество активных и общее количество товаров
 	err := r.db.pool.QueryRow(ctx, `
-		SELECT 
+		SELECT
 			COUNT(*) FILTER (WHERE is_active = true) as active_products,
 			COUNT(*) as total_products,
 			COUNT(*) FILTER (WHERE stock_quantity < COALESCE((attributes->>'min_stock')::int, 5)) as low_stock_products
-		FROM storefront_products
+		FROM b2c_products
 		WHERE storefront_id = $1
 	`, storefrontID).Scan(&stats.ActiveProducts, &stats.TotalProducts, &stats.LowStockProducts)
 	if err != nil {
@@ -1066,7 +1066,7 @@ func (r *storefrontRepo) GetDashboardStats(ctx context.Context, storefrontID int
 	// Получаем количество ожидающих заказов
 	err = r.db.pool.QueryRow(ctx, `
 		SELECT COUNT(*)
-		FROM storefront_orders
+		FROM b2c_orders
 		WHERE storefront_id = $1 AND status IN ('pending', 'confirmed')
 	`, storefrontID).Scan(&stats.PendingOrders)
 	if err != nil {
@@ -1077,8 +1077,8 @@ func (r *storefrontRepo) GetDashboardStats(ctx context.Context, storefrontID int
 	// Для этого нужно найти все чаты, где продавец - это владелец витрины
 	err = r.db.pool.QueryRow(ctx, `
 		SELECT COUNT(*)
-		FROM marketplace_messages m
-		JOIN marketplace_chats c ON m.chat_id = c.id
+		FROM c2c_messages m
+		JOIN c2c_chats c ON m.chat_id = c.id
 		JOIN b2c_stores s ON c.seller_id = s.user_id
 		WHERE s.id = $1 AND m.receiver_id = s.user_id AND m.is_read = false
 	`, storefrontID).Scan(&stats.UnreadMessages)
@@ -1096,12 +1096,12 @@ func (r *storefrontRepo) GetRecentOrders(ctx context.Context, storefrontID int, 
 			o.id,
 			o.order_number,
 			o.customer_id::text as customer_name,
-			(SELECT COUNT(*) FROM storefront_order_items WHERE order_id = o.id) as items_count,
+			(SELECT COUNT(*) FROM b2c_order_items WHERE order_id = o.id) as items_count,
 			o.total_amount,
 			o.currency,
 			o.status,
 			o.created_at
-		FROM storefront_orders o
+		FROM b2c_orders o
 		WHERE o.storefront_id = $1
 		ORDER BY o.created_at DESC
 		LIMIT $2
@@ -1138,13 +1138,13 @@ func (r *storefrontRepo) GetRecentOrders(ctx context.Context, storefrontID int, 
 // GetLowStockProducts получает товары с низким запасом
 func (r *storefrontRepo) GetLowStockProducts(ctx context.Context, storefrontID int, limit int) ([]*LowStockProduct, error) {
 	rows, err := r.db.pool.Query(ctx, `
-		SELECT 
+		SELECT
 			id,
 			name,
 			stock_quantity,
 			COALESCE((attributes->>'min_stock')::int, 5) as min_stock
-		FROM storefront_products
-		WHERE storefront_id = $1 
+		FROM b2c_products
+		WHERE storefront_id = $1
 			AND stock_quantity < COALESCE((attributes->>'min_stock')::int, 5)
 			AND is_active = true
 		ORDER BY stock_quantity ASC
@@ -1178,8 +1178,8 @@ func (r *storefrontRepo) GetUnreadMessagesCount(ctx context.Context, storefrontI
 	var count int
 	err := r.db.pool.QueryRow(ctx, `
 		SELECT COUNT(*)
-		FROM marketplace_messages m
-		JOIN marketplace_chats c ON m.chat_id = c.id
+		FROM c2c_messages m
+		JOIN c2c_chats c ON m.chat_id = c.id
 		JOIN b2c_stores s ON c.seller_id = s.user_id
 		WHERE s.id = $1 AND m.receiver_id = s.user_id AND m.is_read = false
 	`, storefrontID).Scan(&count)
@@ -1218,12 +1218,12 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 		var ordersCount int
 		var totalRevenue float64
 		err := r.db.pool.QueryRow(ctx, `
-			SELECT 
+			SELECT
 				COUNT(*) as orders_count,
 				COALESCE(SUM(total_amount), 0) as revenue
-			FROM storefront_orders
-			WHERE storefront_id = $1 
-				AND created_at >= $2 
+			FROM b2c_orders
+			WHERE storefront_id = $1
+				AND created_at >= $2
 				AND created_at < $3
 				AND status NOT IN ('cancelled', 'refunded')
 		`, storefrontID, dayStart, dayEnd).Scan(&ordersCount, &totalRevenue)
@@ -1242,16 +1242,16 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 
 		// Получаем топ категории товаров за день
 		rows, err := r.db.pool.Query(ctx, `
-			SELECT 
+			SELECT
 				c.name,
 				COUNT(DISTINCT oi.product_id) as product_count,
 				SUM(oi.quantity) as items_sold
-			FROM storefront_order_items oi
-			JOIN storefront_orders o ON oi.order_id = o.id
-			JOIN storefront_products p ON oi.product_id = p.id
+			FROM b2c_order_items oi
+			JOIN b2c_orders o ON oi.order_id = o.id
+			JOIN b2c_products p ON oi.product_id = p.id
 			JOIN c2c_categories c ON p.category_id = c.id
-			WHERE o.storefront_id = $1 
-				AND o.created_at >= $2 
+			WHERE o.storefront_id = $1
+				AND o.created_at >= $2
 				AND o.created_at < $3
 				AND o.status NOT IN ('cancelled', 'refunded')
 			GROUP BY c.id, c.name
@@ -1285,15 +1285,15 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 
 		// Получаем топ товары за день
 		productRows, err := r.db.pool.Query(ctx, `
-			SELECT 
+			SELECT
 				p.name,
 				SUM(oi.quantity) as quantity_sold,
 				SUM(oi.price * oi.quantity) as revenue
-			FROM storefront_order_items oi
-			JOIN storefront_orders o ON oi.order_id = o.id
-			JOIN storefront_products p ON oi.product_id = p.id
-			WHERE o.storefront_id = $1 
-				AND o.created_at >= $2 
+			FROM b2c_order_items oi
+			JOIN b2c_orders o ON oi.order_id = o.id
+			JOIN b2c_products p ON oi.product_id = p.id
+			WHERE o.storefront_id = $1
+				AND o.created_at >= $2
 				AND o.created_at < $3
 				AND o.status NOT IN ('cancelled', 'refunded')
 			GROUP BY p.id, p.name

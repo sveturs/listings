@@ -500,13 +500,19 @@ func (h *SearchOptimizationHandler) GetSynonyms(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "get_synonyms_failed")
 	}
 
-	return utils.SuccessResponse(c, map[string]interface{}{
-		"data":        synonyms,
-		"total":       total,
-		"page":        page,
-		"limit":       limit,
-		"total_pages": (total + limit - 1) / limit,
-	})
+	// Frontend expects nested "data" structure: {success: true, data: {data: [...], total: N, ...}}
+	response := fiber.Map{
+		"success": true,
+		"data": fiber.Map{
+			"data":        synonyms,
+			"total":       total,
+			"page":        page,
+			"limit":       limit,
+			"total_pages": (total + limit - 1) / limit,
+		},
+	}
+
+	return c.JSON(response)
 }
 
 // CreateSynonym создает новый синоним

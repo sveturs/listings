@@ -92,7 +92,7 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
             ) as unread_count
         FROM c2c_chats c
         LEFT JOIN c2c_listings l ON c.listing_id = l.id
-        LEFT JOIN storefront_products sp ON c.storefront_product_id = sp.id
+        LEFT JOIN b2c_products sp ON c.storefront_product_id = sp.id
         WHERE c.id = $1 AND (c.buyer_id = $2 OR c.seller_id = $2)
     `, chatID, userID).Scan(
 		&chat.ID, &chat.ListingID, &chat.StorefrontProductID, &chat.BuyerID, &chat.SellerID,
@@ -165,7 +165,7 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 				) ORDER BY spi.is_default DESC, spi.id ASC
 			) as images
 		FROM c2c_chats c
-		LEFT JOIN storefront_product_images spi ON spi.storefront_product_id = c.storefront_product_id
+		LEFT JOIN b2c_product_images spi ON spi.storefront_product_id = c.storefront_product_id
 		WHERE c.storefront_product_id IS NOT NULL AND (c.buyer_id = $1 OR c.seller_id = $1)
 		GROUP BY c.id
 	)
@@ -191,7 +191,7 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 		END as listing_images
 	FROM c2c_chats c
 	LEFT JOIN c2c_listings l ON c.listing_id = l.id
-	LEFT JOIN storefront_products sp ON c.storefront_product_id = sp.id
+	LEFT JOIN b2c_products sp ON c.storefront_product_id = sp.id
 	LEFT JOIN b2c_stores sf ON sp.storefront_id = sf.id
 	LEFT JOIN unread_counts uc ON c.id = uc.chat_id
 	LEFT JOIN chat_images ci ON c.id = ci.chat_id

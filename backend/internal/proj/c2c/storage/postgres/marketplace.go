@@ -1021,7 +1021,7 @@ func (s *Storage) RemoveFromFavorites(ctx context.Context, userID int, listingID
 // AddStorefrontToFavorites добавляет товар витрины в избранное
 func (s *Storage) AddStorefrontToFavorites(ctx context.Context, userID int, productID int) error {
 	_, err := s.pool.Exec(ctx, `
-        INSERT INTO storefront_favorites (user_id, product_id)
+        INSERT INTO b2c_favorites (user_id, product_id)
         VALUES ($1, $2)
         ON CONFLICT (user_id, product_id) DO NOTHING
     `, userID, productID)
@@ -1031,7 +1031,7 @@ func (s *Storage) AddStorefrontToFavorites(ctx context.Context, userID int, prod
 // RemoveStorefrontFromFavorites удаляет товар витрины из избранного
 func (s *Storage) RemoveStorefrontFromFavorites(ctx context.Context, userID int, productID int) error {
 	_, err := s.pool.Exec(ctx, `
-        DELETE FROM storefront_favorites
+        DELETE FROM b2c_favorites
         WHERE user_id = $1 AND product_id = $2
     `, userID, productID)
 	return err
@@ -1052,7 +1052,7 @@ func (s *Storage) GetUserStorefrontFavorites(ctx context.Context, userID int) ([
                         'display_order', display_order
                     ) ORDER BY is_default DESC, display_order ASC, id ASC
                 ) as images
-            FROM storefront_product_images
+            FROM b2c_product_images
             GROUP BY storefront_product_id
         )
         SELECT
@@ -1080,8 +1080,8 @@ func (s *Storage) GetUserStorefrontFavorites(ctx context.Context, userID int) ([
             COALESCE(c.slug, '') as category_slug,
             true as is_favorite,
             COALESCE(product_images.images, '[]'::jsonb) as product_images
-        FROM storefront_products p
-        JOIN storefront_favorites f ON p.id = f.product_id
+        FROM b2c_products p
+        JOIN b2c_favorites f ON p.id = f.product_id
         LEFT JOIN b2c_stores s ON p.storefront_id = s.id
         LEFT JOIN c2c_categories c ON p.category_id = c.id
         LEFT JOIN product_images ON p.id = product_images.product_id
@@ -2600,7 +2600,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
                 COUNT(DISTINCT l.id) + COUNT(DISTINCT sp.id) as total_count
             FROM c2c_categories c
             LEFT JOIN c2c_listings l ON l.category_id = c.id AND l.status = 'active'
-            LEFT JOIN storefront_products sp ON sp.category_id = c.id AND sp.is_active = true
+            LEFT JOIN b2c_products sp ON sp.category_id = c.id AND sp.is_active = true
             GROUP BY c.id
         )
         SELECT
@@ -3332,14 +3332,14 @@ func (s *Storage) GenerateUniqueSlug(ctx context.Context, baseSlug string, exclu
 	return fmt.Sprintf("%s-%s", baseSlug, shortHash), nil
 }
 
-// getStorefrontProductAsListing получает товар из storefront_products и возвращает как MarketplaceListing
+// getStorefrontProductAsListing получает товар из b2c_products и возвращает как MarketplaceListing
 func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*models.MarketplaceListing, error) {
 	listing := &models.MarketplaceListing{
 		User:     &models.User{},
 		Category: &models.MarketplaceCategory{},
 	}
 
-	// Получаем данные товара из storefront_products
+	// Получаем данные товара из b2c_products
 	var categoryName, categorySlug sql.NullString
 
 	err := s.pool.QueryRow(ctx, `
@@ -3349,7 +3349,7 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
             0 as latitude, 0 as longitude, '' as city, '' as country,
             sp.view_count, sp.created_at, sp.updated_at, false as show_on_map, 'sr' as original_language,
             c.name as category_name, c.slug as category_slug, '{}'::jsonb as metadata
-        FROM storefront_products sp
+        FROM b2c_products sp
         LEFT JOIN b2c_stores sf ON sp.storefront_id = sf.id
         LEFT JOIN c2c_categories c ON sp.category_id = c.id
         WHERE sp.id = $1 AND sp.is_active = true
@@ -3591,7 +3591,7 @@ func (s *Storage) GetB2CProductImages(ctx context.Context, productID int) ([]mod
         SELECT
             id, storefront_product_id, image_url, thumbnail_url, 
             display_order, is_default, created_at
-        FROM storefront_product_images
+        FROM b2c_product_images
         WHERE storefront_product_id = $1
         ORDER BY display_order ASC, id ASC
     `

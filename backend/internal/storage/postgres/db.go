@@ -266,7 +266,7 @@ func (db *Database) ReindexAllProducts(ctx context.Context) error {
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id,
 			s.name as storefront_name
-		FROM storefront_products p
+		FROM b2c_products p
 		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		LEFT JOIN b2c_stores s ON p.storefront_id = s.id
 		WHERE p.is_active = true
@@ -382,7 +382,7 @@ func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*mode
 	err := db.pool.QueryRow(ctx, `
 		SELECT id, listing_id, file_path, file_name, file_size, content_type, is_main,
 		       storage_type, storage_bucket, public_url, created_at
-		FROM marketplace_images
+		FROM c2c_images
 		WHERE id = $1
 	`, imageID).Scan(
 		&image.ID, &image.ListingID, &image.FilePath, &image.FileName, &image.FileSize,
@@ -409,7 +409,7 @@ func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*mode
 
 func (db *Database) DeleteListingImage(ctx context.Context, imageID int) error {
 	_, err := db.pool.Exec(ctx, `
-		DELETE FROM marketplace_images
+		DELETE FROM c2c_images
 		WHERE id = $1
 	`, imageID)
 
@@ -529,7 +529,7 @@ func (db *Database) GetSQLDB() *sql.DB {
 func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	query := `
         SELECT user_id
-        FROM marketplace_favorites
+        FROM c2c_favorites
         WHERE listing_id = $1
     `
 	rows, err := db.pool.Query(ctx, query, listingID)
@@ -957,7 +957,7 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
 	var count int
 	err := db.pool.QueryRow(ctx, `
         SELECT COUNT(*)
-        FROM marketplace_messages m
+        FROM c2c_messages m
         JOIN marketplace_chats c ON m.chat_id = c.id
         WHERE m.receiver_id = $1
         AND NOT m.is_read
@@ -1243,7 +1243,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 			err = db.pool.QueryRow(ctx, "SELECT views_count FROM c2c_listings WHERE id = $1", id).Scan(&viewsCount)
 			if err != nil {
 				// Если не нашли в c2c_listings, пробуем из storefront_products
-				err = db.pool.QueryRow(ctx, "SELECT view_count FROM storefront_products WHERE id = $1", id).Scan(&viewsCount)
+				err = db.pool.QueryRow(ctx, "SELECT view_count FROM b2c_products WHERE id = $1", id).Scan(&viewsCount)
 				if err != nil {
 					log.Printf("Ошибка при получении обновленного счетчика просмотров: %v", err)
 					// Не прерываем выполнение, так как главное - обновить в PostgreSQL
@@ -1417,7 +1417,7 @@ func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, selle
 			SELECT
 				c.id as chat_id,
 				c.created_at as chat_created
-			FROM marketplace_chats c
+			FROM c2c_chats c
 			WHERE c.buyer_id = $1
 				AND c.seller_id = $2
 				AND c.listing_id = $3
@@ -1430,7 +1430,7 @@ func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, selle
 				COUNT(*) FILTER (WHERE m.sender_id = $2) as seller_messages,
 				MIN(m.created_at) as first_message_date,
 				MAX(m.created_at) as last_message_date
-			FROM marketplace_messages m
+			FROM c2c_messages m
 			INNER JOIN chat_info ci ON m.chat_id = ci.chat_id
 		)
 		SELECT
@@ -1514,7 +1514,7 @@ func (db *Database) GetStorefrontAggregatedRating(ctx context.Context, storefron
 			total_reviews, average_rating, direct_reviews, listing_reviews,
 			verified_reviews, rating_1, rating_2, rating_3, rating_4, rating_5,
 			recent_rating, recent_reviews, last_review_at, owner_id
-		FROM storefront_ratings
+		FROM b2c_rating_summary
 		WHERE storefront_id = $1
 	`
 
@@ -2062,7 +2062,7 @@ func (db *Database) GetListingVariants(ctx context.Context, listingID int) ([]mo
 	query := `
 		SELECT id, listing_id, sku, price, stock, attributes, image_url, is_active,
 		       created_at::text, updated_at::text
-		FROM marketplace_listing_variants
+		FROM c2c_listing_variants
 		WHERE listing_id = $1 AND is_active = true
 		ORDER BY id
 	`

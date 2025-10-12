@@ -323,13 +323,13 @@ func (s *Service) GetShipmentStatus(ctx context.Context, shipmentID int) (*model
 
 			if shipment.MarketplaceOrderID != nil {
 				orderID = *shipment.MarketplaceOrderID
-				// Получаем user_id из marketplace_orders
-				userQuery := "SELECT user_id FROM marketplace_orders WHERE id = $1"
+				// Получаем user_id из c2c_orders
+				userQuery := "SELECT user_id FROM c2c_orders WHERE id = $1"
 				err = s.db.QueryRowContext(ctx, userQuery, orderID).Scan(&userID)
 			} else if shipment.StorefrontOrderID != nil {
 				orderID = int(*shipment.StorefrontOrderID)
 				// Получаем user_id из storefront_orders
-				userQuery := "SELECT user_id FROM storefront_orders WHERE id = $1"
+				userQuery := "SELECT user_id FROM b2c_orders WHERE id = $1"
 				err = s.db.QueryRowContext(ctx, userQuery, orderID).Scan(&userID)
 			}
 

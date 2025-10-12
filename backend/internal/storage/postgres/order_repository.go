@@ -69,7 +69,7 @@ func (r *orderRepository) Create(ctx context.Context, order *models.StorefrontOr
 
 	// Создаем заказ (без items - они будут в отдельной таблице)
 	query := `
-		INSERT INTO storefront_orders (
+		INSERT INTO b2c_orders (
 			storefront_id, customer_id, status,
 			subtotal_amount, tax_amount, shipping_amount, discount, total_amount,
 			commission_amount, seller_amount, currency, 
@@ -109,7 +109,7 @@ func (r *orderRepository) Create(ctx context.Context, order *models.StorefrontOr
 	if len(order.Items) > 0 {
 		for _, item := range order.Items {
 			itemQuery := `
-				INSERT INTO storefront_order_items (
+				INSERT INTO b2c_order_items (
 					order_id, product_id, variant_id,
 					product_name, product_sku, variant_name,
 					quantity, price_per_unit, total_price,
@@ -159,7 +159,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 			payment_method, payment_status, payment_transaction_id,
 			customer_notes, metadata, created_at, updated_at,
 			confirmed_at, shipped_at, delivered_at, canceled_at
-		FROM storefront_orders
+		FROM b2c_orders
 		WHERE id = $1`
 
 	var order models.StorefrontOrder
@@ -242,7 +242,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 			product_name, product_sku, variant_name,
 			quantity, price_per_unit, total_price,
 			product_attributes
-		FROM storefront_order_items
+		FROM b2c_order_items
 		WHERE order_id = $1
 		ORDER BY id`
 
@@ -300,7 +300,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 func (r *orderRepository) GetByOrderNumber(ctx context.Context, orderNumber string) (*models.StorefrontOrder, error) {
 	// Просто переиспользуем GetByID после получения ID по номеру
 	var orderID int64
-	err := r.pool.QueryRow(ctx, "SELECT id FROM storefront_orders WHERE order_number = $1", orderNumber).Scan(&orderID)
+	err := r.pool.QueryRow(ctx, "SELECT id FROM b2c_orders WHERE order_number = $1", orderNumber).Scan(&orderID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("order not found")
@@ -320,7 +320,7 @@ func (r *orderRepository) Update(ctx context.Context, order *models.StorefrontOr
 	metadataJSON, _ := json.Marshal(order.Metadata)
 
 	query := `
-		UPDATE storefront_orders SET
+		UPDATE b2c_orders SET
 			status = $1,
 			subtotal_amount = $2,
 			tax_amount = $3,
@@ -377,7 +377,7 @@ func (r *orderRepository) Update(ctx context.Context, order *models.StorefrontOr
 // List возвращает список заказов с фильтрацией и пагинацией
 func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) ([]models.StorefrontOrder, int, error) {
 	// Базовый запрос без JOIN users (информация о продавце теперь в auth-service)
-	baseQuery := `FROM storefront_orders so
+	baseQuery := `FROM b2c_orders so
 		LEFT JOIN b2c_stores sf ON so.storefront_id = sf.id
 		WHERE 1=1`
 	countQuery := `SELECT COUNT(*) ` + baseQuery
@@ -508,7 +508,7 @@ func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) (
 func (r *orderRepository) UpdateStatus(ctx context.Context, orderID int64, status models.OrderStatus, metadata map[string]interface{}) error {
 	metadataJSON, _ := json.Marshal(metadata)
 
-	query := `UPDATE storefront_orders SET status = $1, metadata = metadata || $2::jsonb`
+	query := `UPDATE b2c_orders SET status = $1, metadata = metadata || $2::jsonb`
 	args := []interface{}{status, metadataJSON}
 
 	// Обновляем временные метки в зависимости от статуса

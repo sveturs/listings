@@ -39,7 +39,7 @@ func NewOrderRepository(db *sqlx.DB) *OrderRepository {
 // Create создает новый заказ
 func (r *OrderRepository) Create(ctx context.Context, order *models.StorefrontOrder) (*models.StorefrontOrder, error) {
 	query := `
-		INSERT INTO storefront_orders (
+		INSERT INTO b2c_orders (
 			storefront_id, customer_id, subtotal_amount, shipping_amount, 
 			tax_amount, total_amount, commission_amount, seller_amount, 
 			currency, status, escrow_days, shipping_address, shipping_method, 
@@ -75,7 +75,7 @@ func (r *OrderRepository) Create(ctx context.Context, order *models.StorefrontOr
 // Update обновляет заказ
 func (r *OrderRepository) Update(ctx context.Context, order *models.StorefrontOrder) error {
 	query := `
-		UPDATE storefront_orders SET
+		UPDATE b2c_orders SET
 			payment_transaction_id = :payment_transaction_id,
 			subtotal_amount = :subtotal_amount,
 			shipping_amount = :shipping_amount,
@@ -109,7 +109,7 @@ func (r *OrderRepository) Update(ctx context.Context, order *models.StorefrontOr
 
 // Delete удаляет заказ
 func (r *OrderRepository) Delete(ctx context.Context, orderID int64) error {
-	query := `DELETE FROM storefront_orders WHERE id = $1`
+	query := `DELETE FROM b2c_orders WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, orderID)
 	if err != nil {
 		return fmt.Errorf("failed to delete order: %w", err)
@@ -127,7 +127,7 @@ func (r *OrderRepository) GetByID(ctx context.Context, orderID int64) (*models.S
 			   shipping_provider, tracking_number, customer_notes, seller_notes,
 			   confirmed_at, shipped_at, delivered_at, canceled_at,
 			   created_at, updated_at
-		FROM storefront_orders 
+		FROM b2c_orders 
 		WHERE id = $1`
 
 	var order models.StorefrontOrder
@@ -219,7 +219,7 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 	}
 
 	// Считаем общее количество
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM storefront_orders %s", whereClause)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM b2c_orders %s", whereClause)
 	var total int
 	countRows, err := r.db.NamedQueryContext(ctx, countQuery, args)
 	if err != nil {
@@ -282,7 +282,7 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 			   shipping_provider, tracking_number, customer_notes, seller_notes,
 			   confirmed_at, shipped_at, delivered_at, canceled_at,
 			   created_at, updated_at
-		FROM storefront_orders 
+		FROM b2c_orders 
 		%s
 		ORDER BY %s %s
 		LIMIT :limit OFFSET :offset`,
@@ -315,7 +315,7 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 // AddItem добавляет позицию к заказу
 func (r *OrderRepository) AddItem(ctx context.Context, item *models.StorefrontOrderItem) error {
 	query := `
-		INSERT INTO storefront_order_items (
+		INSERT INTO b2c_order_items (
 			order_id, product_id, variant_id, product_name, product_sku,
 			variant_name, quantity, price_per_unit, total_price, product_attributes
 		) VALUES (
@@ -350,7 +350,7 @@ func (r *OrderRepository) GetItems(ctx context.Context, orderID int64) ([]models
 		SELECT id, order_id, product_id, variant_id, product_name, product_sku,
 			   variant_name, quantity, price_per_unit, total_price, 
 			   product_attributes, created_at
-		FROM storefront_order_items 
+		FROM b2c_order_items 
 		WHERE order_id = $1
 		ORDER BY id`
 

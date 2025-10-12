@@ -79,7 +79,7 @@ func (s *Service) GetProductAttributes(ctx context.Context, productID int, produ
 					WHERE dcd.category_id = sp.category_id),
 					'{}'::jsonb
 				) as attributes
-			FROM storefront_products sp
+			FROM b2c_products sp
 			WHERE sp.id = $1`
 	}
 
@@ -136,7 +136,7 @@ func (s *Service) UpdateProductAttributes(ctx context.Context, productID int, pr
 			WHERE id = $2`
 	} else {
 		query = `
-			UPDATE storefront_products
+			UPDATE b2c_products
 			SET attributes = jsonb_set(
 				COALESCE(attributes, '{}'),
 				'{delivery_attributes}',
@@ -325,7 +325,7 @@ func (s *Service) updateProductAttributesTx(ctx context.Context, tx *sqlx.Tx, pr
 			WHERE id = $2`
 	} else {
 		query = `
-			UPDATE storefront_products
+			UPDATE b2c_products
 			SET attributes = jsonb_set(
 				COALESCE(attributes, '{}'),
 				'{delivery_attributes}',
@@ -386,9 +386,9 @@ func (s *Service) ApplyCategoryDefaultsToProducts(ctx context.Context, categoryI
 
 	count1, _ := result1.RowsAffected()
 
-	// Обновляем товары из storefront_products
+	// Обновляем товары из b2c_products
 	query2 := `
-		UPDATE storefront_products
+		UPDATE b2c_products
 		SET attributes = jsonb_set(
 			COALESCE(attributes, '{}'),
 			'{delivery_attributes}',

@@ -346,7 +346,7 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 			ml.updated_at,
 			COALESCE(
 				(SELECT mi.public_url
-				 FROM marketplace_images mi
+				 FROM c2c_images mi
 				 WHERE mi.listing_id = ml.id
 				 ORDER BY mi.created_at
 				 LIMIT 1),
@@ -468,7 +468,7 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 			ml.updated_at,
 			COALESCE(
 				(SELECT mi.public_url
-				 FROM marketplace_images mi
+				 FROM c2c_images mi
 				 WHERE mi.listing_id = ml.id
 				 ORDER BY mi.created_at
 				 LIMIT 1),

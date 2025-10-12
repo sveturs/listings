@@ -69,7 +69,7 @@ func (r *VariantRepository) CreateVariant(ctx context.Context, req *types.Create
 	// If this is set as default, unset other defaults for this product
 	if req.IsDefault {
 		_, err = tx.ExecContext(ctx,
-			"UPDATE storefront_product_variants SET is_default = false WHERE product_id = $1",
+			"UPDATE b2c_product_variants SET is_default = false WHERE product_id = $1",
 			req.ProductID)
 		if err != nil {
 			return nil, err
@@ -100,7 +100,7 @@ func (r *VariantRepository) CreateVariant(ctx context.Context, req *types.Create
 
 	// Insert variant
 	query := `
-		INSERT INTO storefront_product_variants (
+		INSERT INTO b2c_product_variants (
 			product_id, sku, barcode, price, compare_at_price, cost_price,
 			stock_quantity, stock_status, low_stock_threshold, variant_attributes,
 			weight, dimensions, is_default, is_active
@@ -138,7 +138,7 @@ func (r *VariantRepository) CreateVariant(ctx context.Context, req *types.Create
 	if len(req.Images) > 0 {
 		for i, img := range req.Images {
 			imageQuery := `
-				INSERT INTO storefront_product_variant_images (
+				INSERT INTO b2c_product_variant_images (
 					variant_id, image_url, thumbnail_url, alt_text, display_order, is_main
 				) VALUES ($1, $2, $3, $4, $5, $6)`
 
@@ -165,7 +165,7 @@ func (r *VariantRepository) CreateVariantTx(ctx context.Context, tx *sqlx.Tx, re
 	// If this is set as default, unset other defaults for this product
 	if req.IsDefault {
 		_, err := tx.ExecContext(ctx,
-			"UPDATE storefront_product_variants SET is_default = false WHERE product_id = $1",
+			"UPDATE b2c_product_variants SET is_default = false WHERE product_id = $1",
 			req.ProductID)
 		if err != nil {
 			return nil, err
@@ -196,7 +196,7 @@ func (r *VariantRepository) CreateVariantTx(ctx context.Context, tx *sqlx.Tx, re
 
 	// Insert variant
 	query := `
-		INSERT INTO storefront_product_variants (
+		INSERT INTO b2c_product_variants (
 			product_id, sku, barcode, price, compare_at_price, cost_price,
 			stock_quantity, stock_status, low_stock_threshold, variant_attributes,
 			weight, dimensions, is_default, is_active
@@ -234,7 +234,7 @@ func (r *VariantRepository) CreateVariantTx(ctx context.Context, tx *sqlx.Tx, re
 	if len(req.Images) > 0 {
 		for i, img := range req.Images {
 			imageQuery := `
-				INSERT INTO storefront_product_variant_images (
+				INSERT INTO b2c_product_variant_images (
 					variant_id, image_url, thumbnail_url, alt_text, display_order, is_main
 				) VALUES ($1, $2, $3, $4, $5, $6)`
 
@@ -277,7 +277,7 @@ func (r *VariantRepository) BulkCreateVariantsTx(ctx context.Context, tx *sqlx.T
 	// If we have a default variant, unset all existing defaults for this product
 	if hasDefault {
 		_, err := tx.ExecContext(ctx,
-			"UPDATE storefront_product_variants SET is_default = false WHERE product_id = $1",
+			"UPDATE b2c_product_variants SET is_default = false WHERE product_id = $1",
 			productID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unset existing default variants: %w", err)
@@ -310,7 +310,7 @@ func (r *VariantRepository) GetVariantByID(ctx context.Context, id int) (*types.
 			   v.stock_status, v.low_stock_threshold, v.variant_attributes,
 			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
 			   v.created_at, v.updated_at
-		FROM storefront_product_variants v
+		FROM b2c_product_variants v
 		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
 		WHERE v.id = $1
 		GROUP BY v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
@@ -367,7 +367,7 @@ func (r *VariantRepository) GetVariantsByProductID(ctx context.Context, productI
 			   v.stock_status, v.low_stock_threshold, v.variant_attributes,
 			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
 			   v.created_at, v.updated_at
-		FROM storefront_product_variants v
+		FROM b2c_product_variants v
 		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
 		WHERE v.product_id = $1 AND v.is_active = true
 		GROUP BY v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
@@ -583,7 +583,7 @@ func (r *VariantRepository) SetupProductAttributes(ctx context.Context, req *typ
 	}()
 
 	// Delete existing attribute configurations for this product
-	_, err = tx.ExecContext(ctx, "DELETE FROM storefront_product_attributes WHERE product_id = $1", req.ProductID)
+	_, err = tx.ExecContext(ctx, "DELETE FROM b2c_product_attributes WHERE product_id = $1", req.ProductID)
 	if err != nil {
 		return err
 	}
@@ -628,7 +628,7 @@ func (r *VariantRepository) SetupProductAttributes(ctx context.Context, req *typ
 
 		// Insert attribute configuration
 		_, err = tx.ExecContext(ctx, `
-			INSERT INTO storefront_product_attributes (product_id, attribute_id, is_enabled, is_required, custom_values)
+			INSERT INTO b2c_product_attributes (product_id, attribute_id, is_enabled, is_required, custom_values)
 			VALUES ($1, $2, $3, $4, $5)`,
 			req.ProductID, attr.AttributeID, attr.IsEnabled, attr.IsRequired, customValuesJSON)
 		if err != nil {
@@ -645,7 +645,7 @@ func (r *VariantRepository) GetProductAttributes(ctx context.Context, productID 
 		SELECT spa.id, spa.product_id, spa.attribute_id, spa.is_enabled, spa.is_required,
 			   spa.custom_values, spa.created_at, spa.updated_at,
 			   pva.name, pva.display_name, pva.type, pva.sort_order
-		FROM storefront_product_attributes spa
+		FROM b2c_product_attributes spa
 		JOIN product_variant_attributes pva ON spa.attribute_id = pva.id
 		WHERE spa.product_id = $1 AND spa.is_enabled = true
 		ORDER BY pva.sort_order, pva.name`
@@ -701,7 +701,7 @@ func (r *VariantRepository) GetAvailableAttributesForCategory(ctx context.Contex
 func (r *VariantRepository) getVariantImages(ctx context.Context, variantID int) ([]types.ProductVariantImage, error) {
 	query := `
 		SELECT id, variant_id, image_url, thumbnail_url, alt_text, display_order, is_main, created_at
-		FROM storefront_product_variant_images
+		FROM b2c_product_variant_images
 		WHERE variant_id = $1
 		ORDER BY is_main DESC, display_order ASC, created_at ASC`
 
@@ -712,7 +712,7 @@ func (r *VariantRepository) getVariantImages(ctx context.Context, variantID int)
 
 // DeleteVariant soft deletes a variant by setting is_active to false
 func (r *VariantRepository) DeleteVariant(ctx context.Context, variantID int) error {
-	query := `UPDATE storefront_product_variants SET is_active = false WHERE id = $1`
+	query := `UPDATE b2c_product_variants SET is_active = false WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, variantID)
 	return err
 }
@@ -811,9 +811,9 @@ func (r *VariantRepository) UpdateVariant(ctx context.Context, variantID int, re
 	if req.IsDefault != nil && *req.IsDefault {
 		// Unset other defaults for this product first
 		_, err = tx.ExecContext(ctx, `
-			UPDATE storefront_product_variants 
+			UPDATE b2c_product_variants 
 			SET is_default = false 
-			WHERE product_id = (SELECT product_id FROM storefront_product_variants WHERE id = $1)`,
+			WHERE product_id = (SELECT product_id FROM b2c_product_variants WHERE id = $1)`,
 			variantID)
 		if err != nil {
 			return nil, err
@@ -835,7 +835,7 @@ func (r *VariantRepository) UpdateVariant(ctx context.Context, variantID int, re
 	args = append(args, variantID)
 	whereClause := fmt.Sprintf(" WHERE id = $%d", argIndex)
 
-	query := fmt.Sprintf("UPDATE storefront_product_variants SET %s%s", strings.Join(setParts, ", "), whereClause)
+	query := fmt.Sprintf("UPDATE b2c_product_variants SET %s%s", strings.Join(setParts, ", "), whereClause)
 
 	_, err = tx.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -897,7 +897,7 @@ func (r *VariantRepository) BulkUpdateStock(ctx context.Context, productID int, 
 	updatedCount := 0
 	for _, update := range req.Updates {
 		query := `
-			UPDATE storefront_product_variants 
+			UPDATE b2c_product_variants 
 			SET stock_quantity = $1, updated_at = NOW()
 			WHERE id = $2 AND product_id = $3`
 
@@ -930,7 +930,7 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 			COUNT(*) as total_variants,
 			COALESCE(SUM(stock_quantity), 0) as total_stock,
 			COALESCE(SUM(sold_count), 0) as total_sold
-		FROM storefront_product_variants 
+		FROM b2c_product_variants 
 		WHERE product_id = $1 AND is_active = true`
 
 	var analytics types.VariantAnalyticsResponse
@@ -952,7 +952,7 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 			   v.stock_status, v.low_stock_threshold, v.variant_attributes,
 			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
 			   v.created_at, v.updated_at
-		FROM storefront_product_variants v
+		FROM b2c_product_variants v
 		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
 		WHERE v.product_id = $1 AND v.is_active = true
 		GROUP BY v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
@@ -999,7 +999,7 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 			   v.stock_status, v.low_stock_threshold, v.variant_attributes,
 			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
 			   v.created_at, v.updated_at
-		FROM storefront_product_variants v
+		FROM b2c_product_variants v
 		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
 		WHERE v.product_id = $1 AND v.is_active = true
 		GROUP BY v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
@@ -1386,7 +1386,7 @@ func (r *VariantRepository) GetVariantsByProductIDPublic(ctx context.Context, pr
 			v.stock_status,
 			v.variant_attributes, v.weight, v.dimensions, v.is_active, v.is_default,
 			v.view_count, v.sold_count, v.created_at, v.updated_at
-		FROM storefront_product_variants v
+		FROM b2c_product_variants v
 		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
 		WHERE v.product_id = $1 AND v.is_active = true
 		GROUP BY v.id, v.product_id, v.sku, v.price, v.compare_at_price,
@@ -1483,7 +1483,7 @@ func (r *VariantRepository) GetProductPublic(ctx context.Context, slug string, p
 			p.view_count, p.sold_count, p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address, p.individual_latitude,
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants
-		FROM storefront_products p
+		FROM b2c_products p
 		JOIN b2c_stores s ON p.storefront_id = s.id
 		WHERE p.id = $1 AND s.slug = $2 AND p.is_active = true`
 
@@ -1498,7 +1498,7 @@ func (r *VariantRepository) GetProductPublic(ctx context.Context, slug string, p
 		SELECT
 			id, storefront_product_id, image_url, thumbnail_url,
 			display_order, is_default, created_at
-		FROM storefront_product_images
+		FROM b2c_product_images
 		WHERE storefront_product_id = $1
 		ORDER BY is_default DESC, display_order ASC`
 
@@ -1525,7 +1525,7 @@ func (r *VariantRepository) GetVariantByIDPublic(ctx context.Context, variantID 
 			v.stock_status,
 			v.variant_attributes, v.weight, v.dimensions, v.is_active, v.is_default,
 			v.view_count, v.sold_count, v.created_at, v.updated_at
-		FROM storefront_product_variants v
+		FROM b2c_product_variants v
 		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
 		WHERE v.id = $1 AND v.is_active = true
 		GROUP BY v.id, v.product_id, v.sku, v.price, v.compare_at_price,

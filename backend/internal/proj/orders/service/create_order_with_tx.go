@@ -242,7 +242,7 @@ func (s *OrderService) getOrderItemsTx(ctx context.Context, tx *sqlx.Tx, req *mo
 	if req.CartID != nil {
 		// Блокируем корзину для чтения
 		var cart models.ShoppingCart
-		query := `SELECT * FROM storefront_carts WHERE id = $1 FOR UPDATE`
+		query := `SELECT * FROM b2c_carts WHERE id = $1 FOR UPDATE`
 		err := tx.GetContext(ctx, &cart, query, *req.CartID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get cart: %w", err)
@@ -258,7 +258,7 @@ func (s *OrderService) getOrderItemsTx(ctx context.Context, tx *sqlx.Tx, req *mo
 
 		// Получаем позиции корзины
 		var cartItems []models.ShoppingCartItem
-		itemsQuery := `SELECT * FROM storefront_cart_items WHERE cart_id = $1`
+		itemsQuery := `SELECT * FROM b2c_cart_items WHERE cart_id = $1`
 		err = tx.SelectContext(ctx, &cartItems, itemsQuery, cart.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get cart items: %w", err)
@@ -281,7 +281,7 @@ func (s *OrderService) getOrderItemsTx(ctx context.Context, tx *sqlx.Tx, req *mo
 func (s *OrderService) lockProductForUpdate(ctx context.Context, tx *sqlx.Tx, productID int64, variantID *int64) (*models.StorefrontProduct, *models.StorefrontProductVariant, error) {
 	// Блокируем товар для обновления
 	var product models.StorefrontProduct
-	productQuery := `SELECT * FROM storefront_products WHERE id = $1 FOR UPDATE`
+	productQuery := `SELECT * FROM b2c_products WHERE id = $1 FOR UPDATE`
 	err := tx.GetContext(ctx, &product, productQuery, productID)
 	if err != nil {
 		return nil, nil, err
@@ -291,7 +291,7 @@ func (s *OrderService) lockProductForUpdate(ctx context.Context, tx *sqlx.Tx, pr
 	var variant *models.StorefrontProductVariant
 	if variantID != nil {
 		var v models.StorefrontProductVariant
-		variantQuery := `SELECT * FROM storefront_product_variants WHERE id = $1 AND product_id = $2 FOR UPDATE`
+		variantQuery := `SELECT * FROM b2c_product_variants WHERE id = $1 AND product_id = $2 FOR UPDATE`
 		err := tx.GetContext(ctx, &v, variantQuery, *variantID, productID)
 		if err != nil {
 			return nil, nil, err
@@ -304,7 +304,7 @@ func (s *OrderService) lockProductForUpdate(ctx context.Context, tx *sqlx.Tx, pr
 
 func (s *OrderService) createOrderInTransaction(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) (*models.StorefrontOrder, error) {
 	query := `
-		INSERT INTO storefront_orders (
+		INSERT INTO b2c_orders (
 			storefront_id, customer_id, subtotal_amount, shipping_amount, 
 			tax_amount, total_amount, commission_amount, seller_amount, 
 			currency, status, escrow_days, shipping_address, billing_address,
@@ -393,19 +393,19 @@ func (s *OrderService) createReservationTx(ctx context.Context, tx *sqlx.Tx, pro
 
 func (s *OrderService) updateProductStockTx(ctx context.Context, tx *sqlx.Tx, productID int64, variantID *int64, newQuantity int) error {
 	if variantID != nil {
-		query := `UPDATE storefront_product_variants SET stock_quantity = $1, updated_at = NOW() WHERE id = $2 AND product_id = $3`
+		query := `UPDATE b2c_product_variants SET stock_quantity = $1, updated_at = NOW() WHERE id = $2 AND product_id = $3`
 		_, err := tx.ExecContext(ctx, query, newQuantity, *variantID, productID)
 		return err
 	}
 
-	query := `UPDATE storefront_products SET stock_quantity = $1, updated_at = NOW() WHERE id = $2`
+	query := `UPDATE b2c_products SET stock_quantity = $1, updated_at = NOW() WHERE id = $2`
 	_, err := tx.ExecContext(ctx, query, newQuantity, productID)
 	return err
 }
 
 func (s *OrderService) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, item *models.StorefrontOrderItem) error {
 	query := `
-		INSERT INTO storefront_order_items (
+		INSERT INTO b2c_order_items (
 			order_id, product_id, variant_id, product_name, variant_name,
 			product_sku, quantity, unit_price, total_price
 		) VALUES (
@@ -429,7 +429,7 @@ func (s *OrderService) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, item 
 
 func (s *OrderService) updateOrderTx(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) error {
 	query := `
-		UPDATE storefront_orders SET
+		UPDATE b2c_orders SET
 			subtotal_amount = $1,
 			shipping_amount = $2,
 			tax_amount = $3,
@@ -456,14 +456,14 @@ func (s *OrderService) updateOrderTx(ctx context.Context, tx *sqlx.Tx, order *mo
 
 func (s *OrderService) clearCartTx(ctx context.Context, tx *sqlx.Tx, cartID int64) error {
 	// Удаляем позиции корзины
-	deleteItemsQuery := `DELETE FROM storefront_cart_items WHERE cart_id = $1`
+	deleteItemsQuery := `DELETE FROM b2c_cart_items WHERE cart_id = $1`
 	_, err := tx.ExecContext(ctx, deleteItemsQuery, cartID)
 	if err != nil {
 		return err
 	}
 
 	// Обновляем корзину
-	updateCartQuery := `UPDATE storefront_carts SET updated_at = NOW() WHERE id = $1`
+	updateCartQuery := `UPDATE b2c_carts SET updated_at = NOW() WHERE id = $1`
 	_, err = tx.ExecContext(ctx, updateCartQuery, cartID)
 	return err
 }

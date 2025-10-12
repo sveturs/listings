@@ -32549,7 +32549,7 @@ const docTemplate = `{
         },
         "/api/v1/search/config/synonyms": {
             "get": {
-                "description": "Get all synonyms for search terms",
+                "description": "Get all synonyms for search terms with pagination",
                 "consumes": [
                     "application/json"
                 ],
@@ -32566,28 +32566,32 @@ const docTemplate = `{
                         "description": "Language code (default: ru)",
                         "name": "language",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term",
+                        "name": "search",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of synonyms",
+                        "description": "Paginated list of synonyms",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/domain.SearchSynonym"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
@@ -35242,6 +35246,172 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/unified/listings": {
+            "get": {
+                "description": "Возвращает объединенный список C2C объявлений и B2C товаров",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unified"
+                ],
+                "summary": "Get unified listings (C2C + B2C)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "all",
+                        "description": "Тип источника: all, c2c, b2c",
+                        "name": "source_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID категории",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Минимальная цена",
+                        "name": "min_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Максимальная цена",
+                        "name": "max_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Состояние: new, used, refurbished",
+                        "name": "condition",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Текстовый поиск",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID витрины (только для B2C)",
+                        "name": "storefront_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Лимит",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Смещение",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UnifiedListingsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/unified/listings/{id}": {
+            "get": {
+                "description": "Получить unified listing по ID и типу (c2c или b2c)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "unified"
+                ],
+                "summary": "Get unified listing by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID объявления/товара",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Тип источника: c2c, b2c",
+                        "name": "source_type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UnifiedListing"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user/carts": {
             "get": {
                 "security": [
@@ -36468,7 +36638,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v2/admin/categories/{category_id}/attributes/{attribute_id}": {
+        "/api/v2/admin/categories/{category_id}/attributes": {
             "post": {
                 "security": [
                     {
@@ -36495,14 +36665,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "description": "Attribute ID",
-                        "name": "attribute_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Attachment settings",
+                        "description": "Attachment settings with attribute_id",
                         "name": "settings",
                         "in": "body",
                         "required": true,
@@ -50470,6 +50633,158 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "models.UnifiedImage": {
+            "type": "object",
+            "properties": {
+                "display_order": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_main": {
+                    "type": "boolean"
+                },
+                "thumbnail_url": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UnifiedListing": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/models.MarketplaceCategory"
+                },
+                "category_id": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "condition": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount_percentage": {
+                    "type": "integer"
+                },
+                "has_discount": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "images": {
+                    "description": "Связанные данные (загружаются отдельно)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UnifiedImage"
+                    }
+                },
+                "is_favorite": {
+                    "description": "Флаги и дополнительные поля",
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "old_price": {
+                    "type": "number"
+                },
+                "original_language": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "show_on_map": {
+                    "type": "boolean"
+                },
+                "source_type": {
+                    "description": "\"c2c\" или \"b2c\"",
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storefront": {
+                    "description": "только для B2C",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Storefront"
+                        }
+                    ]
+                },
+                "storefront_id": {
+                    "description": "только для B2C",
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "translations": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "views_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UnifiedListingsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UnifiedListing"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "source_type": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

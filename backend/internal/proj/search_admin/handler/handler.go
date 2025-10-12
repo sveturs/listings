@@ -166,24 +166,109 @@ func (h *Handler) DeleteWeight(c *fiber.Ctx) error {
 
 // GetSynonyms godoc
 // @Summary Get search synonyms
-// @Description Get all synonyms for search terms
+// @Description Get all synonyms for search terms with pagination
 // @Tags search-config
 // @Accept json
 // @Produce json
 // @Param language query string false "Language code (default: ru)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]domain.SearchSynonym} "List of synonyms"
+// @Param page query int false "Page number (default: 1)"
+// @Param limit query int false "Items per page (default: 20)"
+// @Param search query string false "Search term"
+// @Success 200 {object} map[string]interface{} "Paginated list of synonyms"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/synonyms [get]
 func (h *Handler) GetSynonyms(c *fiber.Ctx) error {
 	language := c.Query("language", "ru")
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 20)
+	search := c.Query("search", "")
 
-	synonyms, err := h.service.GetSynonyms(c.Context(), language)
+	// Защита от некорректных значений
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	// Получаем все синонимы
+	allSynonyms, err := h.service.GetSynonyms(c.Context(), language)
 	if err != nil {
 		// h.log.Error("Failed to get synonyms", "language", language, "error", err)
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.internalServerError")
 	}
 
-	return utils.SuccessResponse(c, synonyms)
+	// Фильтруем по поисковому запросу если есть
+	filteredSynonyms := allSynonyms
+	if search != "" {
+		filteredSynonyms = []domain.SearchSynonym{}
+		for _, syn := range allSynonyms {
+			// Поиск в term или synonyms
+			if contains(syn.Term, search) {
+				filteredSynonyms = append(filteredSynonyms, syn)
+				continue
+			}
+			for _, s := range syn.Synonyms {
+				if contains(s, search) {
+					filteredSynonyms = append(filteredSynonyms, syn)
+					break
+				}
+			}
+		}
+	}
+
+	// Подсчитываем total
+	total := len(filteredSynonyms)
+	totalPages := (total + limit - 1) / limit
+
+	// Применяем пагинацию
+	startIndex := (page - 1) * limit
+	endIndex := startIndex + limit
+	if startIndex > total {
+		startIndex = total
+	}
+	if endIndex > total {
+		endIndex = total
+	}
+
+	paginatedSynonyms := []domain.SearchSynonym{}
+	if startIndex < endIndex {
+		paginatedSynonyms = filteredSynonyms[startIndex:endIndex]
+	}
+
+	// Возвращаем с пагинацией
+	response := fiber.Map{
+		"success": true,
+		"data": fiber.Map{
+			"data":        paginatedSynonyms,
+			"total":       total,
+			"page":        page,
+			"limit":       limit,
+			"total_pages": totalPages,
+		},
+	}
+
+	// Логируем ответ для отладки
+	log.Printf("GetSynonyms response: success=%v, total=%d, page=%d, synonyms count=%d", true, total, page, len(paginatedSynonyms))
+
+	return c.JSON(response)
+}
+
+// Helper function для case-insensitive поиска
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr ||
+		len(substr) > 0 && len(s) > 0 &&
+			(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
+				findSubstring(s, substr)))
+}
+
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
 
 // CreateSynonym godoc
