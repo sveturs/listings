@@ -9,6 +9,7 @@ import (
 	"backend/pkg/logger"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 type Module struct {
@@ -37,7 +38,7 @@ func NewModule(db *postgres.Database, logger logger.Logger) *Module {
 // RegisterRoutes регистрирует маршруты модуля поисковой оптимизации
 func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middleware) error {
 	// Группа для админских эндпоинтов поиска
-	admin := app.Group("/api/v1/admin/search", middleware.JWTParser(), middleware.AdminRequired)
+	admin := app.Group("/api/v1/admin/search", middleware.JWTParser(), authMiddleware.RequireAuthString("admin"))
 
 	// Эндпоинты для управления синонимами
 	admin.Get("/synonyms", m.Handler.GetSynonyms)
