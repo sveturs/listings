@@ -34665,7 +34665,7 @@ paths:
       summary: Get feature flags status for unified attributes
       tags:
       - marketplace-attributes-v2-admin
-  /api/v2/admin/categories/{category_id}/attributes/{attribute_id}:
+  /api/v2/admin/categories/{category_id}/attributes:
     post:
       consumes:
       - application/json
@@ -34677,12 +34677,7 @@ paths:
         name: category_id
         required: true
         type: integer
-      - description: Attribute ID
-        in: path
-        name: attribute_id
-        required: true
-        type: integer
-      - description: Attachment settings
+      - description: Attachment settings with attribute_id
         in: body
         name: settings
         required: true

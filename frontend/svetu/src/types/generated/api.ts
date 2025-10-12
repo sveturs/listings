@@ -37696,7 +37696,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/admin/categories/{category_id}/attributes/{attribute_id}': {
+  '/api/v2/admin/categories/{category_id}/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -37716,12 +37716,10 @@ export interface paths {
         path: {
           /** @description Category ID */
           category_id: number;
-          /** @description Attribute ID */
-          attribute_id: number;
         };
         cookie?: never;
       };
-      /** @description Attachment settings */
+      /** @description Attachment settings with attribute_id */
       requestBody: {
         content: {
           'application/json': components['schemas']['models.UnifiedCategoryAttribute'];

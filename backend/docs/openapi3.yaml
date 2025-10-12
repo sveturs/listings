@@ -25159,7 +25159,7 @@ paths:
       summary: Get feature flags status for unified attributes
       tags:
         - marketplace-attributes-v2-admin
-  "/api/v2/admin/categories/{category_id}/attributes/{attribute_id}":
+  "/api/v2/admin/categories/{category_id}/attributes":
     post:
       description: Attach an attribute to a category with specific settings (Admin only)
       parameters:
@@ -25169,18 +25169,12 @@ paths:
           required: true
           schema:
             type: integer
-        - description: Attribute ID
-          in: path
-          name: attribute_id
-          required: true
-          schema:
-            type: integer
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/models.UnifiedCategoryAttribute"
-        description: Attachment settings
+        description: Attachment settings with attribute_id
         required: true
       responses:
         "200":

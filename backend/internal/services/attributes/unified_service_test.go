@@ -240,6 +240,22 @@ func TestSaveAttributeValues(t *testing.T) {
 		2: "Red",
 	}
 
+	// Mock для валидации атрибутов (GetAttribute вызывается внутри ValidateAttributeValue)
+	attr1 := &models.UnifiedAttribute{
+		ID:            1,
+		Name:          "Size",
+		AttributeType: "text",
+		IsRequired:    false,
+	}
+	attr2 := &models.UnifiedAttribute{
+		ID:            2,
+		Name:          "Color",
+		AttributeType: "text",
+		IsRequired:    false,
+	}
+	mockStorage.On("GetAttribute", ctx, 1).Return(attr1, nil)
+	mockStorage.On("GetAttribute", ctx, 2).Return(attr2, nil)
+
 	// Mock для сохранения новых значений
 	mockStorage.On("SaveAttributeValue", ctx, mock.AnythingOfType("*models.UnifiedAttributeValue")).Return(nil).Twice()
 

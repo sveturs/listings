@@ -36638,7 +36638,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v2/admin/categories/{category_id}/attributes/{attribute_id}": {
+        "/api/v2/admin/categories/{category_id}/attributes": {
             "post": {
                 "security": [
                     {
@@ -36665,14 +36665,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "description": "Attribute ID",
-                        "name": "attribute_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Attachment settings",
+                        "description": "Attachment settings with attribute_id",
                         "name": "settings",
                         "in": "body",
                         "required": true,
