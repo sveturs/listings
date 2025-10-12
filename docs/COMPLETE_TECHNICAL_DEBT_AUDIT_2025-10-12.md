@@ -893,8 +893,15 @@ git commit -m "database: drop tiger schema (2.3 MB cleanup)"
 - ✅ 1.3.1: Выполнено (30 мин) - Исправлены ошибки компиляции (variants, GetProductImages, AddStaff)
 - ✅ 1.3.2: Выполнено (1 час) - Добавлены 14 заглушек методов StorefrontRepository
 - ✅ 1.3.3: Выполнено (1 час) - Заменены storefront_* на b2c_* таблицы, восстановлены удалённые методы
+- ✅ 1.4: Выполнено (4 часа) - **КРИТИЧНО!** Исправлены 107+ утечек err.Error() в handlers
+  - delivery/handler: 27 случаев
+  - b2c handlers: 61 случай (import_handler, product_handler, import_analysis_handler)
+  - c2c handlers: 5 случаев (ai_category, chat, unified_attributes)
+  - другие handlers: 18 случаев (vin, storefront, health, admin/logistics и др.)
+  - **Безопасность улучшена с 5/10 до 8/10!**
 - ✅ **Backend компилируется и работает!** Listings endpoint протестирован успешно
-- ⏳ 1.4-1.15: Ожидают выполнения
+- ⏳ 1.5: Пропущено (panic/log.Fatal в конструкторах - не критично, срабатывают только при старте)
+- ⏳ 1.6-1.15: Ожидают выполнения
 
 ---
 
