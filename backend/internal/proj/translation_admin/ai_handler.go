@@ -199,7 +199,7 @@ func (h *AITranslationHandler) TranslateBatch(c *fiber.Ctx) error {
 					Msg("Failed to translate item")
 				// Записываем ошибку, но продолжаем с другими переводами
 				result.Translations[targetLang] = "[TRANSLATION_ERROR] " + item.Text
-				result.Error = err.Error()
+				result.Error = "translation_failed"
 			} else {
 				result.Translations[targetLang] = translation
 				result.Confidence = confidence
@@ -359,7 +359,7 @@ func (h *AITranslationHandler) TranslateModule(c *fiber.Ctx) error {
 					Str("target_lang", targetLang).
 					Msg("Failed to translate key")
 				result.Translations[targetLang] = "[ERROR] " + sourceText
-				result.Error = err.Error()
+				result.Error = "translation_failed"
 			} else {
 				result.Translations[targetLang] = translation
 				result.Confidence = confidence

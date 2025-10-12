@@ -72,7 +72,7 @@ func (h *Handler) ReadyCheck(c *fiber.Ctx) error {
 
 		err := h.db.PingContext(ctx)
 		if err != nil {
-			checks["database"] = "unhealthy: " + err.Error()
+			checks["database"] = "unhealthy"
 			isReady = false
 		} else {
 			// Check database stats
@@ -92,7 +92,7 @@ func (h *Handler) ReadyCheck(c *fiber.Ctx) error {
 		ctx := c.Context()
 		_, err := h.redis.Ping(ctx).Result()
 		if err != nil {
-			checks["redis"] = "unhealthy: " + err.Error()
+			checks["redis"] = "unhealthy"
 			isReady = false
 		} else {
 			checks["redis"] = statusHealthy

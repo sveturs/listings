@@ -675,7 +675,7 @@ func (s *ImportService) importSingleProduct(ctx context.Context, importProduct m
 	if importProduct.SKU != "" {
 		existingProduct, err = s.productService.GetProductBySKU(ctx, storefrontID, importProduct.SKU)
 		// Если товар не найден - это нормально, просто создадим новый
-		if err != nil && !errors.Is(err, postgres.ErrStorefrontProductNotFound) {
+		if err != nil && !errors.Is(err, postgres.ErrNotFound) {
 			return fmt.Errorf("failed to check existing product: %w", err)
 		}
 	}

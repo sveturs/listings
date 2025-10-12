@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -631,7 +632,7 @@ func (h *ChatHandler) DeleteAttachment(c *fiber.Ctx) error {
 	}
 
 	if err := h.services.ChatAttachment().DeleteAttachment(c.Context(), attachmentID, userID); err != nil {
-		if err.Error() == "permission denied" {
+		if strings.Contains(err.Error(), "permission denied") {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.deleteAttachmentForbidden")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteAttachmentError")
@@ -848,7 +849,7 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 				if err := h.services.Chat().SendMessage(ctx, &msg); err != nil {
 					logger.Error().Err(err).Msg("Error sending message via WebSocket")
 					errMsg := map[string]interface{}{
-						"error":      err.Error(),
+						"error":      "marketplace.sendMessageError",
 						"chat_id":    msg.ChatID,
 						"listing_id": msg.ListingID,
 					}

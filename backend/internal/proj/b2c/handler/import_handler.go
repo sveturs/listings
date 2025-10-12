@@ -64,8 +64,7 @@ func (h *ImportHandler) ImportFromURL(c *fiber.Ctx) error {
 		storefrontID, err = strconv.Atoi(c.Params("storefront_id"))
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-				Error:   "Invalid storefront ID",
-				Message: err.Error(),
+				Error: "Invalid storefront ID",
 			})
 		}
 	}
@@ -73,8 +72,7 @@ func (h *ImportHandler) ImportFromURL(c *fiber.Ctx) error {
 	var req models.ImportRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid request body",
-			Message: err.Error(),
+			Error: "Invalid request body",
 		})
 	}
 
@@ -114,8 +112,7 @@ func (h *ImportHandler) ImportFromURL(c *fiber.Ctx) error {
 	job, err := h.importService.ImportFromURLAsync(c.Context(), userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to start import",
-			Message: err.Error(),
+			Error: "Failed to start import",
 		})
 	}
 
@@ -152,8 +149,7 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 		storefrontID, err = strconv.Atoi(c.Params("storefront_id"))
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-				Error:   "Invalid storefront ID",
-				Message: err.Error(),
+				Error: "Invalid storefront ID",
 			})
 		}
 	}
@@ -162,8 +158,7 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "File upload failed",
-			Message: err.Error(),
+			Error: "File upload failed",
 		})
 	}
 
@@ -171,8 +166,7 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 	src, err := file.Open()
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to open uploaded file",
-			Message: err.Error(),
+			Error: "Failed to open uploaded file",
 		})
 	}
 	defer func() {
@@ -185,8 +179,7 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 	fileData, err := io.ReadAll(src)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to read uploaded file",
-			Message: err.Error(),
+			Error: "Failed to read uploaded file",
 		})
 	}
 
@@ -229,8 +222,7 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 	job, err := h.importService.ImportFromFileAsync(c.Context(), userID, fileData, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to start import",
-			Message: err.Error(),
+			Error: "Failed to start import",
 		})
 	}
 
@@ -265,8 +257,7 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 		storefrontID, err = strconv.Atoi(c.Params("storefront_id"))
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-				Error:   "Invalid storefront ID",
-				Message: err.Error(),
+				Error: "Invalid storefront ID",
 			})
 		}
 	}
@@ -275,8 +266,7 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "File upload failed",
-			Message: err.Error(),
+			Error: "File upload failed",
 		})
 	}
 
@@ -292,8 +282,7 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 	src, err := file.Open()
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to open uploaded file",
-			Message: err.Error(),
+			Error: "Failed to open uploaded file",
 		})
 	}
 	defer func() {
@@ -305,8 +294,7 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 	fileData, err := io.ReadAll(src)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to read uploaded file",
-			Message: err.Error(),
+			Error: "Failed to read uploaded file",
 		})
 	}
 
@@ -314,8 +302,7 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 	status, err := h.importService.ValidateImportFile(c.Context(), fileData, fileType, storefrontID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "File validation failed",
-			Message: err.Error(),
+			Error: "File validation failed",
 		})
 	}
 
@@ -351,8 +338,7 @@ func (h *ImportHandler) PreviewImportFile(c *fiber.Ctx) error {
 		storefrontID, err = strconv.Atoi(c.Params("storefront_id"))
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-				Error:   "Invalid storefront ID",
-				Message: err.Error(),
+				Error: "Invalid storefront ID",
 			})
 		}
 	}
@@ -361,8 +347,7 @@ func (h *ImportHandler) PreviewImportFile(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "File upload failed",
-			Message: err.Error(),
+			Error: "File upload failed",
 		})
 	}
 
@@ -370,8 +355,7 @@ func (h *ImportHandler) PreviewImportFile(c *fiber.Ctx) error {
 	src, err := file.Open()
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to open uploaded file",
-			Message: err.Error(),
+			Error: "Failed to open uploaded file",
 		})
 	}
 	defer func() {
@@ -384,8 +368,7 @@ func (h *ImportHandler) PreviewImportFile(c *fiber.Ctx) error {
 	fileData, err := io.ReadAll(src)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to read uploaded file",
-			Message: err.Error(),
+			Error: "Failed to read uploaded file",
 		})
 	}
 
@@ -410,8 +393,7 @@ func (h *ImportHandler) PreviewImportFile(c *fiber.Ctx) error {
 	preview, err := h.importService.PreviewImport(c.Context(), fileData, fileType, storefrontID, previewLimit)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "File preview failed",
-			Message: err.Error(),
+			Error: "File preview failed",
 		})
 	}
 
@@ -530,8 +512,7 @@ func (h *ImportHandler) GetJobs(c *fiber.Ctx) error {
 		storefrontID, err = strconv.Atoi(c.Params("storefront_id"))
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-				Error:   "Invalid storefront ID",
-				Message: err.Error(),
+				Error: "Invalid storefront ID",
 			})
 		}
 	}
@@ -555,8 +536,7 @@ func (h *ImportHandler) GetJobs(c *fiber.Ctx) error {
 	jobs, err := h.importService.GetJobs(c.Context(), storefrontID, status, limit, offset)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to get import jobs",
-			Message: err.Error(),
+			Error: "Failed to get import jobs",
 		})
 	}
 
@@ -582,16 +562,14 @@ func (h *ImportHandler) GetJobDetails(c *fiber.Ctx) error {
 	jobID, err := strconv.Atoi(c.Params("jobId"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid job ID",
-			Message: err.Error(),
+			Error: "Invalid job ID",
 		})
 	}
 
 	job, err := h.importService.GetJobDetails(c.Context(), jobID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to get job details",
-			Message: err.Error(),
+			Error: "Failed to get job details",
 		})
 	}
 
@@ -617,16 +595,14 @@ func (h *ImportHandler) GetJobStatus(c *fiber.Ctx) error {
 	jobID, err := strconv.Atoi(c.Params("jobId"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid job ID",
-			Message: err.Error(),
+			Error: "Invalid job ID",
 		})
 	}
 
 	status, err := h.importService.GetJobStatus(c.Context(), jobID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to get job status",
-			Message: err.Error(),
+			Error: "Failed to get job status",
 		})
 	}
 
@@ -656,8 +632,7 @@ func (h *ImportHandler) CancelJob(c *fiber.Ctx) error {
 			Str("jobId", c.Params("jobId")).
 			Msg("Invalid job ID for cancel")
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid job ID",
-			Message: err.Error(),
+			Error: "Invalid job ID",
 		})
 	}
 
@@ -668,8 +643,7 @@ func (h *ImportHandler) CancelJob(c *fiber.Ctx) error {
 			Int("jobId", jobID).
 			Msg("Failed to cancel import job")
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to cancel job",
-			Message: err.Error(),
+			Error: "Failed to cancel job",
 		})
 	}
 
@@ -698,16 +672,14 @@ func (h *ImportHandler) RetryJob(c *fiber.Ctx) error {
 	jobID, err := strconv.Atoi(c.Params("jobId"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid job ID",
-			Message: err.Error(),
+			Error: "Invalid job ID",
 		})
 	}
 
 	job, err := h.importService.RetryJob(c.Context(), jobID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to retry job",
-			Message: err.Error(),
+			Error: "Failed to retry job",
 		})
 	}
 

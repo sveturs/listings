@@ -212,7 +212,7 @@ func (h *UnifiedAttributesHandler) SaveListingAttributeValues(c *fiber.Ctx) erro
 
 		// Если это ошибка валидации - возвращаем 400
 		if strings.Contains(err.Error(), "validation failed") {
-			return utils.SendError(c, fiber.StatusBadRequest, err.Error())
+			return utils.SendError(c, fiber.StatusBadRequest, "errors.validationFailed")
 		}
 
 		return utils.SendError(c, fiber.StatusInternalServerError, "errors.saveAttributeValuesError")

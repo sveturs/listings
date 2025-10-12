@@ -54,7 +54,7 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -144,7 +144,7 @@ func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -224,7 +224,7 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -238,7 +238,7 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 	var req models.CreateProductRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body: " + err.Error(),
+			"error": "Invalid request body",
 		})
 	}
 
@@ -258,12 +258,11 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 			strings.Contains(errorMsg, "invalid request:") ||
 			strings.Contains(errorMsg, "unauthorized:") {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error":   errorMsg,
-				"details": "validation or ownership error",
+				"error": "validation or ownership error",
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": errorMsg,
+			"error": "Failed to create product",
 		})
 	}
 
@@ -290,7 +289,7 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -324,7 +323,7 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 			Interface("request", req).
 			Msg("Failed to update product")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to update product",
 		})
 	}
 
@@ -352,7 +351,7 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -376,7 +375,7 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 
 	if err := h.productService.DeleteProduct(ctx, storefrontID, productID, userID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to delete product",
 		})
 	}
 
@@ -405,7 +404,7 @@ func (h *ProductHandler) HardDeleteProduct(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -435,7 +434,7 @@ func (h *ProductHandler) HardDeleteProduct(c *fiber.Ctx) error {
 			Int("user_id", userID).
 			Msg("Failed to hard delete product")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to hard delete product",
 		})
 	}
 
@@ -464,7 +463,7 @@ func (h *ProductHandler) UpdateInventory(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -491,7 +490,7 @@ func (h *ProductHandler) UpdateInventory(c *fiber.Ctx) error {
 
 	if err := h.productService.UpdateInventory(c.Context(), storefrontID, productID, userID, &req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to update inventory",
 		})
 	}
 
@@ -516,7 +515,7 @@ func (h *ProductHandler) GetProductStats(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -530,7 +529,7 @@ func (h *ProductHandler) GetProductStats(c *fiber.Ctx) error {
 	stats, err := h.productService.GetProductStats(c.Context(), storefrontID, userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to get product stats",
 		})
 	}
 
@@ -557,7 +556,7 @@ func (h *ProductHandler) BulkCreateProducts(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -578,7 +577,7 @@ func (h *ProductHandler) BulkCreateProducts(c *fiber.Ctx) error {
 	response, err := h.productService.BulkCreateProducts(c.Context(), storefrontID, userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to bulk create products",
 		})
 	}
 
@@ -603,7 +602,7 @@ func (h *ProductHandler) BulkUpdateProducts(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -624,7 +623,7 @@ func (h *ProductHandler) BulkUpdateProducts(c *fiber.Ctx) error {
 	response, err := h.productService.BulkUpdateProducts(c.Context(), storefrontID, userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to bulk update products",
 		})
 	}
 
@@ -649,7 +648,7 @@ func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -674,7 +673,7 @@ func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
 	response, err := h.productService.BulkDeleteProducts(ctx, storefrontID, userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to bulk delete products",
 		})
 	}
 
@@ -699,7 +698,7 @@ func (h *ProductHandler) BulkUpdateStatus(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Invalid storefront ID",
 		})
 	}
 
@@ -720,7 +719,7 @@ func (h *ProductHandler) BulkUpdateStatus(c *fiber.Ctx) error {
 	response, err := h.productService.BulkUpdateStatus(c.Context(), storefrontID, userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to bulk update status",
 		})
 	}
 

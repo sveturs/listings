@@ -16,7 +16,6 @@ import (
 	marketplaceService "backend/internal/proj/c2c/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
-	"backend/internal/types"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -335,17 +334,21 @@ func (db *Database) ReindexAllProducts(ctx context.Context) error {
 
 		// Загружаем варианты если есть
 		if product.HasVariants {
-			variants, err := db.getProductVariants(ctx, product.ID)
+			variants, err := db.GetProductVariants(ctx, product.ID)
 			if err == nil {
-				product.Variants = variants
+				// Конвертируем []*StorefrontProductVariant в []StorefrontProductVariant
+			product.Variants = make([]models.StorefrontProductVariant, len(variants))
+			for i, v := range variants {
+				product.Variants[i] = *v
+			}
 			}
 		}
 
-		// Загружаем изображения
-		images, err := db.getProductImages(ctx, []int{product.ID})
-		if err == nil {
-			product.Images = images
-		}
+		// TODO: Реализовать GetProductImages когда понадобится
+		// images, err := db.GetProductImages(ctx, []int{product.ID})
+		// if err == nil {
+		// 	product.Images = images
+		// }
 
 		products = append(products, product)
 	}
@@ -480,46 +483,6 @@ func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]
 
 // GetSession - DEPRECATED: Sessions are now managed via JWT tokens in auth-service
 // This method is kept for backward compatibility but should not be used in new code
-func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
-	return nil, fmt.Errorf("GetSession: moved to JWT-based auth, sessions table no longer used")
-}
-
-// Refresh Token methods - DEPRECATED: moved to auth-service
-func (db *Database) CreateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
-	return fmt.Errorf("CreateRefreshToken: moved to auth-service")
-}
-
-func (db *Database) GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error) {
-	return nil, fmt.Errorf("GetRefreshToken: moved to auth-service")
-}
-
-func (db *Database) GetRefreshTokenByID(ctx context.Context, id int) (*models.RefreshToken, error) {
-	return nil, fmt.Errorf("GetRefreshTokenByID: moved to auth-service")
-}
-
-func (db *Database) GetUserRefreshTokens(ctx context.Context, userID int) ([]*models.RefreshToken, error) {
-	return nil, fmt.Errorf("GetUserRefreshTokens: moved to auth-service")
-}
-
-func (db *Database) UpdateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
-	return fmt.Errorf("UpdateRefreshToken: moved to auth-service")
-}
-
-func (db *Database) RevokeRefreshToken(ctx context.Context, tokenID int) error {
-	return fmt.Errorf("RevokeRefreshToken: moved to auth-service")
-}
-
-func (db *Database) RevokeRefreshTokenByValue(ctx context.Context, tokenValue string) error {
-	return fmt.Errorf("RevokeRefreshTokenByValue: moved to auth-service")
-}
-
-func (db *Database) RevokeUserRefreshTokens(ctx context.Context, userID int) error {
-	return fmt.Errorf("RevokeUserRefreshTokens: moved to auth-service")
-}
-
-func (db *Database) DeleteExpiredRefreshTokens(ctx context.Context) (int64, error) {
-	return 0, fmt.Errorf("DeleteExpiredRefreshTokens: moved to auth-service")
-}
 
 // GetSQLDB returns the raw sql.DB connection
 func (db *Database) GetSQLDB() *sql.DB {

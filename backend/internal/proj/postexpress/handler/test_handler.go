@@ -74,9 +74,7 @@ func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
 
 	var req TestShipmentRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
 	}
 
 	// Валидация обязательных полей

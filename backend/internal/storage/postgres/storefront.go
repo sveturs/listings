@@ -535,7 +535,7 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 
 	// 2. Удаляем связанные с товарами записи
 	if len(productIDs) > 0 {
-		// shopping_cart_items относится к c2c_listings, а не к storefront_products - пропускаем
+		// shopping_cart_items относится к c2c_listings, а не к b2c_products - пропускаем
 
 		// Удаляем товары из избранного
 		logger.Debug().Ints("productIDs", productIDs).Msg("HardDelete: Deleting from b2c_favorites")
@@ -856,33 +856,33 @@ func (r *storefrontRepo) FindNearby(ctx context.Context, lat, lng, radiusKm floa
 // GetMapData получает данные для отображения на карте
 func (r *storefrontRepo) GetMapData(ctx context.Context, bounds GeoBounds, filter *models.StorefrontFilter) ([]*models.StorefrontMapData, error) {
 	query := `
-		SELECT
+		SELECT 
 			s.id, s.slug, s.name, s.latitude, s.longitude, s.rating, s.logo_url,
 			s.address, s.phone, s.products_count,
-			CASE
+			CASE 
 				WHEN EXISTS (
-					SELECT 1 FROM b2c_store_hours
-					WHERE storefront_id = s.id
+					SELECT 1 FROM b2c_store_hours 
+					WHERE storefront_id = s.id 
 					AND day_of_week = EXTRACT(DOW FROM CURRENT_TIMESTAMP)
 					AND NOT is_closed
 					AND CURRENT_TIME BETWEEN open_time AND close_time
-				) THEN true
-				ELSE false
+				) THEN true 
+				ELSE false 
 			END as working_now,
 			CASE WHEN EXISTS (
-				SELECT 1 FROM b2c_payment_methods
+				SELECT 1 FROM b2c_payment_methods 
 				WHERE storefront_id = s.id AND method_type = 'cod' AND is_enabled
 			) THEN true ELSE false END as supports_cod,
 			CASE WHEN EXISTS (
-				SELECT 1 FROM b2c_delivery_options
+				SELECT 1 FROM b2c_delivery_options 
 				WHERE storefront_id = s.id AND is_enabled AND provider != 'self_pickup'
 			) THEN true ELSE false END as has_delivery,
 			CASE WHEN EXISTS (
-				SELECT 1 FROM b2c_delivery_options
+				SELECT 1 FROM b2c_delivery_options 
 				WHERE storefront_id = s.id AND is_enabled AND provider = 'self_pickup'
 			) THEN true ELSE false END as has_self_pickup,
 			CASE WHEN EXISTS (
-				SELECT 1 FROM b2c_payment_methods
+				SELECT 1 FROM b2c_payment_methods 
 				WHERE storefront_id = s.id AND method_type = 'card' AND is_enabled
 			) THEN true ELSE false END as accepts_cards
 		FROM b2c_stores s
@@ -964,7 +964,7 @@ func (r *storefrontRepo) HasPermission(ctx context.Context, storefrontID, userID
 	// Проверяем права сотрудника
 	var permissions models.JSONB
 	err = r.db.pool.QueryRow(ctx, `
-		SELECT permissions FROM b2c_store_staff
+		SELECT permissions FROM b2c_store_staff 
 		WHERE storefront_id = $1 AND user_id = $2
 	`, storefrontID, userID).Scan(&permissions)
 
@@ -1052,7 +1052,7 @@ func (r *storefrontRepo) GetDashboardStats(ctx context.Context, storefrontID int
 
 	// Получаем количество активных и общее количество товаров
 	err := r.db.pool.QueryRow(ctx, `
-		SELECT
+		SELECT 
 			COUNT(*) FILTER (WHERE is_active = true) as active_products,
 			COUNT(*) as total_products,
 			COUNT(*) FILTER (WHERE stock_quantity < COALESCE((attributes->>'min_stock')::int, 5)) as low_stock_products
@@ -1077,8 +1077,8 @@ func (r *storefrontRepo) GetDashboardStats(ctx context.Context, storefrontID int
 	// Для этого нужно найти все чаты, где продавец - это владелец витрины
 	err = r.db.pool.QueryRow(ctx, `
 		SELECT COUNT(*)
-		FROM c2c_messages m
-		JOIN c2c_chats c ON m.chat_id = c.id
+		FROM marketplace_messages m
+		JOIN marketplace_chats c ON m.chat_id = c.id
 		JOIN b2c_stores s ON c.seller_id = s.user_id
 		WHERE s.id = $1 AND m.receiver_id = s.user_id AND m.is_read = false
 	`, storefrontID).Scan(&stats.UnreadMessages)
@@ -1138,13 +1138,13 @@ func (r *storefrontRepo) GetRecentOrders(ctx context.Context, storefrontID int, 
 // GetLowStockProducts получает товары с низким запасом
 func (r *storefrontRepo) GetLowStockProducts(ctx context.Context, storefrontID int, limit int) ([]*LowStockProduct, error) {
 	rows, err := r.db.pool.Query(ctx, `
-		SELECT
+		SELECT 
 			id,
 			name,
 			stock_quantity,
 			COALESCE((attributes->>'min_stock')::int, 5) as min_stock
 		FROM b2c_products
-		WHERE storefront_id = $1
+		WHERE storefront_id = $1 
 			AND stock_quantity < COALESCE((attributes->>'min_stock')::int, 5)
 			AND is_active = true
 		ORDER BY stock_quantity ASC
@@ -1178,8 +1178,8 @@ func (r *storefrontRepo) GetUnreadMessagesCount(ctx context.Context, storefrontI
 	var count int
 	err := r.db.pool.QueryRow(ctx, `
 		SELECT COUNT(*)
-		FROM c2c_messages m
-		JOIN c2c_chats c ON m.chat_id = c.id
+		FROM marketplace_messages m
+		JOIN marketplace_chats c ON m.chat_id = c.id
 		JOIN b2c_stores s ON c.seller_id = s.user_id
 		WHERE s.id = $1 AND m.receiver_id = s.user_id AND m.is_read = false
 	`, storefrontID).Scan(&count)
@@ -1218,12 +1218,12 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 		var ordersCount int
 		var totalRevenue float64
 		err := r.db.pool.QueryRow(ctx, `
-			SELECT
+			SELECT 
 				COUNT(*) as orders_count,
 				COALESCE(SUM(total_amount), 0) as revenue
 			FROM b2c_orders
-			WHERE storefront_id = $1
-				AND created_at >= $2
+			WHERE storefront_id = $1 
+				AND created_at >= $2 
 				AND created_at < $3
 				AND status NOT IN ('cancelled', 'refunded')
 		`, storefrontID, dayStart, dayEnd).Scan(&ordersCount, &totalRevenue)
@@ -1242,7 +1242,7 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 
 		// Получаем топ категории товаров за день
 		rows, err := r.db.pool.Query(ctx, `
-			SELECT
+			SELECT 
 				c.name,
 				COUNT(DISTINCT oi.product_id) as product_count,
 				SUM(oi.quantity) as items_sold
@@ -1250,8 +1250,8 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 			JOIN b2c_orders o ON oi.order_id = o.id
 			JOIN b2c_products p ON oi.product_id = p.id
 			JOIN c2c_categories c ON p.category_id = c.id
-			WHERE o.storefront_id = $1
-				AND o.created_at >= $2
+			WHERE o.storefront_id = $1 
+				AND o.created_at >= $2 
 				AND o.created_at < $3
 				AND o.status NOT IN ('cancelled', 'refunded')
 			GROUP BY c.id, c.name
@@ -1285,15 +1285,15 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 
 		// Получаем топ товары за день
 		productRows, err := r.db.pool.Query(ctx, `
-			SELECT
+			SELECT 
 				p.name,
 				SUM(oi.quantity) as quantity_sold,
 				SUM(oi.price * oi.quantity) as revenue
 			FROM b2c_order_items oi
 			JOIN b2c_orders o ON oi.order_id = o.id
 			JOIN b2c_products p ON oi.product_id = p.id
-			WHERE o.storefront_id = $1
-				AND o.created_at >= $2
+			WHERE o.storefront_id = $1 
+				AND o.created_at >= $2 
 				AND o.created_at < $3
 				AND o.status NOT IN ('cancelled', 'refunded')
 			GROUP BY p.id, p.name
@@ -1332,4 +1332,89 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 	}
 
 	return analytics, nil
+}
+
+// ============================================================================
+// TODO: Методы-заглушки для полной реализации StorefrontRepository интерфейса
+// Эти методы будут реализованы по мере необходимости
+// ============================================================================
+
+// AddStaff добавляет сотрудника в витрину
+func (r *storefrontRepo) AddStaff(ctx context.Context, staff *models.StorefrontStaff) error {
+	return fmt.Errorf("AddStaff method not implemented yet")
+}
+
+// UpdateStaff обновляет права сотрудника
+func (r *storefrontRepo) UpdateStaff(ctx context.Context, id int, permissions models.JSONB) error {
+	return fmt.Errorf("UpdateStaff method not implemented yet")
+}
+
+// RemoveStaff удаляет сотрудника из витрины
+func (r *storefrontRepo) RemoveStaff(ctx context.Context, storefrontID, userID int) error {
+	return fmt.Errorf("RemoveStaff method not implemented yet")
+}
+
+// GetStaff получает список сотрудников витрины
+func (r *storefrontRepo) GetStaff(ctx context.Context, storefrontID int) ([]*models.StorefrontStaff, error) {
+	return nil, fmt.Errorf("GetStaff method not implemented yet")
+}
+
+// SetWorkingHours устанавливает часы работы витрины
+func (r *storefrontRepo) SetWorkingHours(ctx context.Context, hours []*models.StorefrontHours) error {
+	return fmt.Errorf("SetWorkingHours method not implemented yet")
+}
+
+// GetWorkingHours получает часы работы витрины
+func (r *storefrontRepo) GetWorkingHours(ctx context.Context, storefrontID int) ([]*models.StorefrontHours, error) {
+	return nil, fmt.Errorf("GetWorkingHours method not implemented yet")
+}
+
+// IsOpenNow проверяет работает ли витрина сейчас
+func (r *storefrontRepo) IsOpenNow(ctx context.Context, storefrontID int) (bool, error) {
+	return false, fmt.Errorf("IsOpenNow method not implemented yet")
+}
+
+// SetPaymentMethods устанавливает методы оплаты витрины
+func (r *storefrontRepo) SetPaymentMethods(ctx context.Context, methods []*models.StorefrontPaymentMethod) error {
+	return fmt.Errorf("SetPaymentMethods method not implemented yet")
+}
+
+// GetPaymentMethods получает методы оплаты витрины
+func (r *storefrontRepo) GetPaymentMethods(ctx context.Context, storefrontID int) ([]*models.StorefrontPaymentMethod, error) {
+	return nil, fmt.Errorf("GetPaymentMethods method not implemented yet")
+}
+
+// SetDeliveryOptions устанавливает опции доставки витрины
+func (r *storefrontRepo) SetDeliveryOptions(ctx context.Context, options []*models.StorefrontDeliveryOption) error {
+	return fmt.Errorf("SetDeliveryOptions method not implemented yet")
+}
+
+// GetDeliveryOptions получает опции доставки витрины
+func (r *storefrontRepo) GetDeliveryOptions(ctx context.Context, storefrontID int) ([]*models.StorefrontDeliveryOption, error) {
+	return nil, fmt.Errorf("GetDeliveryOptions method not implemented yet")
+}
+
+// RecordView записывает просмотр витрины
+func (r *storefrontRepo) RecordView(ctx context.Context, storefrontID int) error {
+	return fmt.Errorf("RecordView method not implemented yet")
+}
+
+// RecordAnalytics записывает аналитические данные
+func (r *storefrontRepo) RecordAnalytics(ctx context.Context, analytics *models.StorefrontAnalytics) error {
+	return fmt.Errorf("RecordAnalytics method not implemented yet")
+}
+
+// GetAnalytics получает аналитические данные за период
+func (r *storefrontRepo) GetAnalytics(ctx context.Context, storefrontID int, from, to time.Time) ([]*models.StorefrontAnalytics, error) {
+	return nil, fmt.Errorf("GetAnalytics method not implemented yet")
+}
+
+// GetClusters получает кластеры витрин для карты
+func (r *storefrontRepo) GetClusters(ctx context.Context, bounds GeoBounds, zoomLevel int) ([]*models.MapCluster, error) {
+	return nil, fmt.Errorf("GetClusters method not implemented yet")
+}
+
+// HardDeleteFixed исправленная версия полного удаления витрины
+func (r *storefrontRepo) HardDeleteFixed(ctx context.Context, id int) error {
+	return fmt.Errorf("HardDeleteFixed method not implemented yet")
 }

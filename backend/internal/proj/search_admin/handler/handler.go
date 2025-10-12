@@ -289,7 +289,7 @@ func (h *Handler) CreateSynonym(c *fiber.Ctx) error {
 	var synonym domain.SearchSynonym
 	if err := c.BodyParser(&synonym); err != nil {
 		log.Printf("CreateSynonym: Failed to parse body: %v", err)
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid input", "details": err.Error()})
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
 	log.Printf("CreateSynonym: Parsed synonym: %+v", synonym)
@@ -297,7 +297,7 @@ func (h *Handler) CreateSynonym(c *fiber.Ctx) error {
 	err := h.service.CreateSynonym(c.Context(), &synonym)
 	if err != nil {
 		log.Printf("CreateSynonym: Service error: %v", err)
-		return c.Status(500).JSON(fiber.Map{"error": "Service error", "details": err.Error()})
+		return c.Status(500).JSON(fiber.Map{"error": "Service error"})
 	}
 
 	log.Printf("CreateSynonym: Success")
