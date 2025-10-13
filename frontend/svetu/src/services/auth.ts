@@ -159,31 +159,4 @@ class AuthNewService {
 
 export const authService = new AuthNewService();
 
-// Для обратной совместимости со старым кодом
-export class AuthService {
-  static async login(credentials: LoginCredentials) {
-    return authService.login(credentials);
-  }
-
-  static async register(data: RegisterData) {
-    return authService.register(data);
-  }
-
-  static async logout() {
-    return authService.logout();
-  }
-
-  static async getSession() {
-    const user = await authService.getSession();
-    return {
-      authenticated: !!user,
-      user: user || undefined,
-    };
-  }
-
-  static async refreshToken() {
-    return authService.refreshToken();
-  }
-}
-
 export default authService;

@@ -1,5 +1,3 @@
-import { logger } from '@/utils/logger';
-
 export interface ApiClientOptions extends RequestInit {
   // Timeout в миллисекундах
   timeout?: number;
@@ -245,20 +243,6 @@ class ApiClient {
     endpoint: string,
     options?: ApiClientOptions
   ): Promise<ApiResponse<T>> {
-    // ВРЕМЕННО ОТКЛЮЧЕНО: Блокировка радиусного поиска в API клиенте
-    // Блокировка теперь работает на уровне backend
-    if (
-      endpoint.includes('/api/v1/gis/search/radius') &&
-      typeof window !== 'undefined' &&
-      (window.location.pathname.includes('/districts') ||
-        localStorage.getItem('blockRadiusSearch') === 'true' ||
-        (window as any).__BLOCK_RADIUS_SEARCH__)
-    ) {
-      logger.api.debug(
-        'ℹ️ API CLIENT: Radius search request detected but allowing (backend will block)'
-      );
-    }
-
     return this.request<T>(endpoint, {
       ...options,
       method: 'GET',
