@@ -294,11 +294,27 @@ func (s *OrderService) calculateOrderTotals(ctx context.Context, order *models.S
 		order.SubtotalAmount = order.SubtotalAmount.Add(item.TotalPrice)
 	}
 
-	// TODO: Рассчитать стоимость доставки на основе настроек витрины
+	// TODO: Реализовать расчёт стоимость доставки
+	// План реализации:
+	// 1. Получить выбранную опцию доставки (StorefrontDeliveryOption) из заказа
+	// 2. Рассчитать базовую стоимость: BasePrice + (distance_km * PricePerKm) + (weight_kg * PricePerKg)
+	// 3. Применить FreeAboveAmount если order.SubtotalAmount >= FreeAboveAmount
+	// 4. Добавить дополнительные платы: CODFee (если COD), InsuranceFee, FragileHandling
+	// 5. Применить модификатор зоны доставки (DeliveryZone.PriceModifier)
+	// 6. Проверить ограничения: MinOrderAmount, MaxWeightKg, MaxDistanceKm
+	// Зависимости: StorefrontRepository.GetDeliveryOptions(ctx, storefrontID)
 	order.ShippingAmount = decimal.Zero
 
-	// TODO: Рассчитать налоги если применимо
-	order.TaxAmount = decimal.Zero
+	// TODO: Реализовать расчёт налогов
+	// План реализации:
+	// 1. Определить применимую налоговую ставку на основе:
+	//    - Адреса доставки (страна/регион)
+	//    - Типа товаров (категории могут иметь разные ставки НДС)
+	//    - Настроек витрины (Settings JSONB может содержать tax_settings)
+	// 2. Для Сербии: стандартная ставка НДС 20%, льготная 10%
+	// 3. Рассчитать: TaxAmount = SubtotalAmount * TaxRate
+	// 4. Учесть: некоторые товары могут быть освобождены от НДС
+	// Зависимости: TaxService/TaxRepository (может потребоваться создание)
 
 	// Итоговая сумма
 	order.TotalAmount = order.SubtotalAmount.Add(order.ShippingAmount).Add(order.TaxAmount)
