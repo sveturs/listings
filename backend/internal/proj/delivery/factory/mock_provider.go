@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"backend/internal/config"
 	"backend/internal/proj/delivery/interfaces"
 )
 
@@ -165,7 +166,7 @@ func (m *MockProvider) CalculateRate(ctx context.Context, req *interfaces.RateRe
 		ProviderCode:    m.code,
 		ProviderName:    m.name,
 		DeliveryOptions: options,
-		Currency:        "RSD",
+		Currency:        config.GetGlobalDefaultCurrency(),
 		ValidUntil:      time.Now().Add(24 * time.Hour),
 	}, nil
 }

@@ -388,7 +388,7 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 				{Name: "Miscellaneous", Probability: 0.5},
 			},
 			Price:             1000,
-			Currency:          "RSD",
+			Currency:          config.GetGlobalDefaultCurrency(),
 			Condition:         "used",
 			Attributes:        map[string]interface{}{},
 			Keywords:          []string{"sale", "product"},

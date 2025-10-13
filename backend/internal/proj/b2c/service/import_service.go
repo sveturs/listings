@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/b2c/parsers"
@@ -1683,7 +1684,7 @@ func (s *ImportService) importVariantGroup(
 		Name:          group.BaseName,
 		Description:   description,
 		Price:         firstVariant.Price, // цена по умолчанию из первого варианта
-		Currency:      "RSD",              // TODO: извлекать из OriginalAttributes
+		Currency:      config.GetGlobalDefaultCurrency(),
 		CategoryID:    categoryID,
 		SKU:           &group.BaseName, // используем base name как SKU родителя
 		StockQuantity: 0,               // суммарное количество будет в вариантах

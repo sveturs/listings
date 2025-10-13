@@ -44,9 +44,6 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	users.Get("/chat-settings", h.User.GetChatSettings)
 	users.Put("/chat-settings", h.User.UpdateChatSettings)
 
-	// Roles endpoints for specific users
-	users.Get("/:userId/roles", h.Auth.GetUserRoles)
-
 	// Admin endpoints (БЕЗ CSRF - используем BFF proxy архитектуру)
 	adminUsersRoutes := app.Group("/api/v1/admin/users", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))
 	adminUsersRoutes.Get("/", h.User.GetAllUsers)
@@ -57,12 +54,6 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminUsersRoutes.Delete("/:id", h.User.DeleteUser)
 	adminUsersRoutes.Get("/:id/balance", h.User.GetUserBalance)
 	adminUsersRoutes.Get("/:id/transactions", h.User.GetUserTransactions)
-
-	// Roles management (general endpoints)
-	rolesRoutes := app.Group("/api/v1/roles", h.jwtParserMW, authMiddleware.RequireAuthString())
-	rolesRoutes.Get("/", h.Auth.GetRoles)
-	rolesRoutes.Post("/assign", h.Auth.AssignRole)
-	rolesRoutes.Post("/revoke", h.Auth.RevokeRole)
 
 	// Admin roles management
 	adminRolesRoutes := app.Group("/api/v1/admin/roles", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"backend/internal/config"
 	"backend/internal/proj/delivery/interfaces"
 	"backend/internal/proj/postexpress"
 )
@@ -94,7 +95,7 @@ func (a *PostExpressAdapter) CalculateRate(ctx context.Context, req *interfaces.
 	return &interfaces.RateResponse{
 		ProviderCode:    "post_express",
 		ProviderName:    "Post Express",
-		Currency:        "RSD",
+		Currency:        config.GetGlobalDefaultCurrency(),
 		ValidUntil:      time.Now().Add(24 * time.Hour),
 		DeliveryOptions: deliveryOptions,
 	}, nil
