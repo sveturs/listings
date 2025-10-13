@@ -1,15 +1,10 @@
-import configManager from '@/config';
 import { logger } from '@/utils/logger';
 
 export interface ApiClientOptions extends RequestInit {
-  // DEPRECATED: Больше не используется, все запросы идут через BFF прокси /api/v2
-  internal?: boolean;
   // Timeout в миллисекундах
   timeout?: number;
   // Повторные попытки при ошибках сети
   retries?: number;
-  // Использовать прямой доступ к backend (минуя BFF прокси) - только для специальных случаев
-  direct?: boolean;
   // Управление Next.js кешированием (по умолчанию 'no-store' для client-side)
   // 'force-cache' - максимальное кеширование
   // 'no-store' - без кеширования (по умолчанию)
@@ -37,18 +32,12 @@ class ApiClient {
   /**
    * Получает базовый URL в зависимости от контекста
    *
-   * По умолчанию все запросы идут через Next.js BFF прокси /api/v2
+   * Все запросы идут через Next.js BFF прокси /api/v2
    * который автоматически добавляет JWT токены из httpOnly cookies.
    *
    * Маппинг: /api/v2/* → backend /api/v1/*
    */
-  private getBaseUrl(useDirect: boolean = false): string {
-    if (useDirect) {
-      // Прямой доступ к backend (используется редко, только для специальных случаев)
-      return configManager.getApiUrl();
-    }
-
-    // По умолчанию используем BFF прокси
+  private getBaseUrl(): string {
     // В browser это будет относительный путь: /api/v2
     // В SSR это будет полный URL: http://localhost:3001/api/v2
     if (typeof window === 'undefined') {
@@ -120,14 +109,6 @@ class ApiClient {
   }
 
   /**
-   * CSRF токены управляются backend автоматически в BFF архитектуре
-   * Этот метод оставлен для совместимости, всегда возвращает null
-   */
-  private async getCsrfToken(): Promise<string | null> {
-    return null;
-  }
-
-  /**
    * Основной метод для выполнения запросов
    */
   async request<T = any>(
@@ -135,8 +116,6 @@ class ApiClient {
     options: ApiClientOptions = {}
   ): Promise<ApiResponse<T>> {
     const {
-      internal = false, // deprecated
-      direct = false,
       timeout = this.defaultTimeout,
       retries = this.defaultRetries,
       nextCache,
@@ -144,12 +123,12 @@ class ApiClient {
       ...fetchOptions
     } = options;
 
-    // Получаем базовый URL
-    const baseUrl = this.getBaseUrl(direct);
+    // Получаем базовый URL (всегда BFF прокси)
+    const baseUrl = this.getBaseUrl();
 
     // Для BFF прокси нужно убрать /api/v1 из endpoint если он есть
     let finalEndpoint = endpoint;
-    if (!direct && endpoint.startsWith('/api/v1/')) {
+    if (endpoint.startsWith('/api/v1/')) {
       // BFF прокси ожидает путь без /api/v1
       // Например: /api/v1/users/me → /users/me → BFF → backend /api/v1/users/me
       finalEndpoint = endpoint.replace('/api/v1/', '/');
@@ -176,20 +155,7 @@ class ApiClient {
     }
 
     // Cookies (включая JWT токены) отправляются автоматически через credentials: 'include'
-
-    // Добавляем CSRF токен для небезопасных методов
-    const method = fetchOptions.method?.toUpperCase();
-    if (method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-      const csrfToken = await this.getCsrfToken();
-      if (csrfToken) {
-        headers.set('X-CSRF-Token', csrfToken);
-      }
-    }
-
-    // Добавляем специальный заголовок для внутренних запросов
-    if (internal) {
-      headers.set('X-Internal-Request', 'true');
-    }
+    // BFF proxy обрабатывает CSRF защиту через SameSite cookies
 
     // Финальные опции запроса
     const finalOptions: RequestInit = {

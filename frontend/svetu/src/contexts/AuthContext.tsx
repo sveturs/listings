@@ -178,23 +178,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router, dispatch]);
 
   const updateProfile = useCallback(
-    async (_data: UpdateProfileRequest): Promise<boolean> => {
+    async (data: UpdateProfileRequest): Promise<boolean> => {
       setIsUpdatingProfile(true);
       setError(null);
       try {
-        // TODO: Implement profile update with new auth service
-        // const updatedProfile = await AuthService.updateProfile(data);
-        const updatedProfile = false;
-        if (updatedProfile) {
-          // Refresh session to get updated user data
-          await refreshSession();
-          return true;
-        }
-        setError('Failed to update profile');
-        return false;
+        await authService.updateProfile(data);
+        // Refresh session to get updated user data
+        await refreshSession();
+        return true;
       } catch (error) {
         console.error('Profile update error:', error);
-        setError('Failed to update profile. Please try again.');
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Failed to update profile. Please try again.';
+        setError(message);
         return false;
       } finally {
         setIsUpdatingProfile(false);

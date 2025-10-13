@@ -9,18 +9,10 @@ type ListingsResponse = components['schemas']['handler.ListingsResponse'];
 
 /**
  * Базовый класс для API endpoints
+ * Все запросы идут через BFF proxy /api/v2
  */
 export class ApiEndpoint {
   constructor(protected basePath: string) {}
-
-  /**
-   * Определяет, должен ли запрос использовать внутренний URL
-   * Переопределите в наследниках для специфичной логики
-   */
-  protected shouldUseInternalUrl(): boolean {
-    // По умолчанию используем внутренний URL только для SSR
-    return typeof window === 'undefined';
-  }
 }
 
 /**
@@ -32,17 +24,13 @@ export class UserApi extends ApiEndpoint {
   }
 
   async getCurrentUser(): Promise<ApiResponse<UserProfile>> {
-    return apiClient.get<UserProfile>(`${this.basePath}/me`, {
-      internal: this.shouldUseInternalUrl(),
-    });
+    return apiClient.get<UserProfile>(`${this.basePath}/me`);
   }
 
   async updateProfile(
     data: Partial<UserProfile>
   ): Promise<ApiResponse<UserProfile>> {
-    return apiClient.patch<UserProfile>(`${this.basePath}/me`, data, {
-      internal: this.shouldUseInternalUrl(),
-    });
+    return apiClient.patch<UserProfile>(`${this.basePath}/me`, data);
   }
 }
 
@@ -52,11 +40,6 @@ export class UserApi extends ApiEndpoint {
 export class MarketplaceApi extends ApiEndpoint {
   constructor() {
     super('/api/v1/c2c');
-  }
-
-  // Для публичных данных можем использовать внутренний URL при SSR
-  protected shouldUseInternalUrl(): boolean {
-    return typeof window === 'undefined';
   }
 
   async getListings(params?: {
@@ -70,17 +53,12 @@ export class MarketplaceApi extends ApiEndpoint {
     if (params?.category) queryParams.set('category', params.category);
 
     return apiClient.get<ListingsResponse>(
-      `${this.basePath}/listings?${queryParams}`,
-      {
-        internal: this.shouldUseInternalUrl(),
-      }
+      `${this.basePath}/listings?${queryParams}`
     );
   }
 
   async getListingById(id: string): Promise<ApiResponse<C2CListing>> {
-    return apiClient.get<C2CListing>(`${this.basePath}/listings/${id}`, {
-      internal: this.shouldUseInternalUrl(),
-    });
+    return apiClient.get<C2CListing>(`${this.basePath}/listings/${id}`);
   }
 
   async createListing(data: FormData): Promise<ApiResponse<C2CListing>> {
@@ -93,16 +71,11 @@ export class MarketplaceApi extends ApiEndpoint {
 }
 
 /**
- * Chat API endpoints - всегда использует публичный URL для WebSocket
+ * Chat API endpoints
  */
 export class ChatApi extends ApiEndpoint {
   constructor() {
     super('/api/v1/chat');
-  }
-
-  // Для чата всегда используем публичный URL из-за WebSocket
-  protected shouldUseInternalUrl(): boolean {
-    return false;
   }
 
   async getMessages(chatId: string): Promise<ApiResponse<ChatMessage[]>> {

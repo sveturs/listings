@@ -129,6 +129,32 @@ class AuthNewService {
       throw error;
     }
   }
+
+  async updateProfile(data: Partial<User>): Promise<User> {
+    try {
+      const response = await fetch('/api/v2/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Отправляем httpOnly cookies
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(
+          error.error || error.message || 'Failed to update profile'
+        );
+      }
+
+      const result = await response.json();
+      return result.user || result.data || result;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
+  }
 }
 
 export const authService = new AuthNewService();
