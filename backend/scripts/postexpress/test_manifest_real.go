@@ -63,6 +63,7 @@ type Posiljka struct {
 	Primalac         Primalac      `json:"Primalac"`
 	TezinaPosiljke   int           `json:"TezinaPosiljke"`   // в граммах
 	VrednostPosiljke int           `json:"VrednostPosiljke"` // в параx (1 RSD = 100 para)
+	IdTipPosiljke    int           `json:"IdTipPosiljke"`    // 1 = обычная, 2 = возврат (ОБЯЗАТЕЛЬНО!)
 	BrojOtkupnice    string        `json:"BrojOtkupnice,omitempty"`
 	Sadrzaj          string        `json:"Sadrzaj"`
 	Otkupnina        *Otkupnina    `json:"Otkupnina,omitempty"`      // COD
@@ -86,11 +87,11 @@ type Otkupnina struct {
 	BrojRacuna    string `json:"BrojRacuna,omitempty"`
 }
 
-// Test credentials from documentation
+// REAL credentials from .env file
 const (
 	testEndpoint = "http://212.62.32.201/WspWebApi/transakcija"
-	testUsername = "TEST"
-	testPassword = "t3st"
+	testUsername = "b2b@svetu.rs"
+	testPassword = "Sv5et@U!"
 )
 
 func createClient() Klijent {
@@ -116,9 +117,9 @@ func sendManifestRequest(manifest ManifestRequest, testName string) (*Transakcij
 
 	request := TransakcijaIn{
 		StrKlijent:         string(clientJSON),
-		Servis:             3,  // B2B сервис
-		IdVrstaTranskacije: 73, // Manifest (ВАЖНО!)
-		TipSerijalizacije:  2,  // JSON
+		Servis:             101, // B2B сервис (НЕ 3 - это TT!)
+		IdVrstaTranskacije: 73,  // Manifest (ВАЖНО!)
+		TipSerijalizacije:  2,   // JSON
 		IdTransakcija:      uuid.New().String(),
 		StrIn:              string(manifestJSON),
 	}
@@ -187,6 +188,7 @@ func testStandardShipment() {
 				},
 				TezinaPosiljke:   500,   // 500g
 				VrednostPosiljke: 50000, // 500 RSD (в параx)
+				IdTipPosiljke:    1,     // 1 = обычная пошиљка
 				Sadrzaj:          "Test package - Standard kurir",
 				IdRukovanje:      29,          // PE_Danas_za_sutra_12
 				NacinIsporuke:    "K",         // Kurir
@@ -238,6 +240,7 @@ func testCODShipment() {
 				},
 				TezinaPosiljke:   750,
 				VrednostPosiljke: 120000, // 1200 RSD
+				IdTipPosiljke:    1,      // 1 = обычная пошиљка
 				BrojOtkupnice:    fmt.Sprintf("OTK-%d", time.Now().Unix()),
 				Sadrzaj:          "Test COD package - 5000 RSD",
 				Otkupnina: &Otkupnina{
@@ -294,6 +297,7 @@ func testParcelLocker() {
 				},
 				TezinaPosiljke:   600,
 				VrednostPosiljke: 80000, // 800 RSD
+				IdTipPosiljke:    1,     // 1 = обычная пошиљка
 				Sadrzaj:          "Test Parcel Locker package",
 				IdRukovanje:      85,    // Isporuka_na_paketomatu
 				NacinIsporuke:    "PAK", // Paketomat
@@ -346,6 +350,7 @@ func testCODWithSMS() {
 				},
 				TezinaPosiljke:   900,
 				VrednostPosiljke: 150000, // 1500 RSD
+				IdTipPosiljke:    1,      // 1 = обычная пошиљка
 				BrojOtkupnice:    fmt.Sprintf("OTKSMS-%d", time.Now().Unix()),
 				Sadrzaj:          "Test COD+SMS package - 12000 RSD",
 				Otkupnina: &Otkupnina{
@@ -380,7 +385,7 @@ func main() {
 	fmt.Println("=" + string(bytes.Repeat([]byte("="), 79)))
 	fmt.Println("📡 Endpoint:", testEndpoint)
 	fmt.Println("👤 Username:", testUsername)
-	fmt.Println("🔑 Password: t3st")
+	fmt.Println("🔑 Password: ********")
 	fmt.Println("📅 Date:", time.Now().Format("2006-01-02 15:04:05"))
 	fmt.Println("=" + string(bytes.Repeat([]byte("="), 79)))
 
