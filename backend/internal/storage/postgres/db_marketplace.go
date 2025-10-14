@@ -134,6 +134,7 @@ func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int
 
 	return userIDs, nil
 }
+
 func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
 	return db.marketplaceDB.CreateListing(ctx, listing)
 }
@@ -617,6 +618,7 @@ func (db *Database) GetAllUnifiedAttributes(ctx context.Context) ([]*models.Unif
 
 	return attributes, nil
 }
+
 func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, sellerID int, listingID int) (*models.ChatActivityStats, error) {
 	stats := &models.ChatActivityStats{}
 
@@ -683,6 +685,7 @@ func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, selle
 
 	return stats, err
 }
+
 func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
 	// Получаем все объявления с информацией о скидке
 	query := `

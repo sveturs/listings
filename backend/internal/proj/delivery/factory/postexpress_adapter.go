@@ -107,37 +107,92 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 		return nil, fmt.Errorf("post Express service not initialized")
 	}
 
-	// Маппинг в Post Express формат
-	peReq := &postexpress.ShipmentRequest{
-		BrojPosiljke: fmt.Sprintf("SVETU-%d", time.Now().Unix()),
-		Tezina:       calculateTotalWeight(req.Packages),
-		VrednostRSD:  req.InsuranceValue,
-		Otkupnina:    req.CODAmount,
-		NacinPlacanj: postexpress.PaymentCash, // По умолчанию наличные
+	// Маппинг в Post Express B2B формат
+	boolFalse := false
+	config := a.service.GetConfig()
 
-		// Получатель
-		PrijemnoLice:       req.ToAddress.Name,
-		PrijemnoLiceAdresa: req.ToAddress.Street,
-		PrijemnoLiceGrad:   req.ToAddress.City,
-		PrijemnoLicePosbr:  req.ToAddress.PostalCode,
-		PrijemnoLiceTel:    req.ToAddress.Phone,
-		PrijemnoLiceEmail:  req.ToAddress.Email,
-
-		// Отправитель (используем конфигурацию из сервиса)
-		PosaljalacNaziv:  a.service.GetConfig().Brand,
-		PosaljalacAdresa: req.FromAddress.Street,
-		PosaljalacGrad:   req.FromAddress.City,
-		PosaljalacPosbr:  req.FromAddress.PostalCode,
-		PosaljalacTel:    req.FromAddress.Phone,
-		PosaljalacEmail:  req.FromAddress.Email,
+	// Определяем способ оплаты
+	nacinPlacanja := "POF" // По умолчанию postanska uplatnica
+	if req.CODAmount > 0 {
+		nacinPlacanja = "N" // Наличные при получении
 	}
 
-	// Добавляем дополнительные услуги
-	if contains(req.Services, "sms") && req.ToAddress.Phone != "" {
-		peReq.Usluge = append(peReq.Usluge, postexpress.ServiceRequest{
-			SifraUsluge: postexpress.ServiceSMS,
-			Parametri:   req.ToAddress.Phone,
-		})
+	// Конвертируем вес из кг в граммы
+	weightGrams := int(calculateTotalWeight(req.Packages) * 1000)
+
+	// Конвертируем денежные суммы в para (1 RSD = 100 para)
+	codPara := int(req.CODAmount * 100)
+	insurancePara := int(req.InsuranceValue * 100)
+
+	peReq := &postexpress.ShipmentRequest{
+		// Обязательные B2B поля
+		ExtBrend:          config.Brand,
+		ExtMagacin:        "WAREHOUSE1",
+		ExtReferenca:      fmt.Sprintf("SVETU-%d", time.Now().Unix()),
+		NacinPrijema:      "K", // K - курьер
+		ImaPrijemniBrojDN: &boolFalse,
+		NacinPlacanja:     nacinPlacanja,
+
+		// Отправитель внутри отправления
+		Posiljalac: postexpress.SenderInfo{
+			Naziv: config.Brand,
+			Adresa: &postexpress.AddressInfo{
+				Ulica:         req.FromAddress.Street,
+				Mesto:         req.FromAddress.City,
+				PostanskiBroj: req.FromAddress.PostalCode,
+				OznakaZemlje:  "RS",
+			},
+			Mesto:         req.FromAddress.City,
+			PostanskiBroj: req.FromAddress.PostalCode,
+			Telefon:       req.FromAddress.Phone,
+			Email:         req.FromAddress.Email,
+			OznakaZemlje:  "RS",
+		},
+
+		// Место забора для курьера
+		MestoPreuzimanja: &postexpress.SenderInfo{
+			Naziv: config.Brand,
+			Adresa: &postexpress.AddressInfo{
+				Ulica:         req.FromAddress.Street,
+				Mesto:         req.FromAddress.City,
+				PostanskiBroj: req.FromAddress.PostalCode,
+				OznakaZemlje:  "RS",
+			},
+			Mesto:         req.FromAddress.City,
+			PostanskiBroj: req.FromAddress.PostalCode,
+			Telefon:       req.FromAddress.Phone,
+			Email:         req.FromAddress.Email,
+			OznakaZemlje:  "RS",
+		},
+
+		// Основные данные
+		BrojPosiljke: fmt.Sprintf("SVETU-%d", time.Now().Unix()),
+		IDRukovanje:  29, // Стандартная услуга
+		Masa:         weightGrams,
+
+		// Получатель
+		Primalac: postexpress.ReceiverInfo{
+			TipAdrese: "S", // Стандартный адрес
+			Naziv:     req.ToAddress.Name,
+			Telefon:   req.ToAddress.Phone,
+			Email:     req.ToAddress.Email,
+			Adresa: &postexpress.AddressInfo{
+				Ulica:         req.ToAddress.Street,
+				Mesto:         req.ToAddress.City,
+				PostanskiBroj: req.ToAddress.PostalCode,
+				OznakaZemlje:  "RS",
+			},
+			Mesto:         req.ToAddress.City,
+			PostanskiBroj: req.ToAddress.PostalCode,
+			OznakaZemlje:  "RS",
+		},
+
+		// COD и ценность
+		Otkupnina: codPara,
+		Vrednost:  insurancePara,
+
+		// Дополнительные услуги через запятую
+		PosebneUsluge: buildPosebneUsluge(req.Services), // PNA + другие услуги
 	}
 
 	// Валидация перед отправкой
@@ -349,4 +404,34 @@ func contains(slice []string, item string) bool {
 		}
 	}
 	return false
+}
+
+// buildPosebneUsluge строит строку дополнительных услуг через запятую
+func buildPosebneUsluge(services []string) string {
+	usluge := []string{"PNA"} // Приём на адресе для курьера - всегда включён
+
+	// Добавляем SMS если запрошен
+	if contains(services, "sms") {
+		usluge = append(usluge, "SMS")
+	}
+
+	// Добавляем OTK (откупнина) если есть COD
+	if contains(services, "cod") {
+		usluge = append(usluge, "OTK")
+	}
+
+	// Добавляем VD (ценная посылка) если есть insurance
+	if contains(services, "insurance") {
+		usluge = append(usluge, "VD")
+	}
+
+	// Соединяем через запятую
+	result := ""
+	for i, u := range usluge {
+		if i > 0 {
+			result += ","
+		}
+		result += u
+	}
+	return result
 }

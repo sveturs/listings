@@ -44,8 +44,8 @@ type TransakcijaOut struct {
 
 // Правильная структура для B2B - вложенная иерархия!
 type WSPManifestRequest struct {
-	ExtIdManifest  string          `json:"ExtIdManifest"`            // ОБЯЗАТЕЛЬНО: внешний ID манифеста
-	IdTipPosiljke  int             `json:"IdTipPosiljke"`            // ВАЖНО: Тип посылки на ВЕРХНЕМ уровне! 1=обычная, 2=возврат
+	ExtIdManifest  string          `json:"ExtIdManifest"` // ОБЯЗАТЕЛЬНО: внешний ID манифеста
+	IdTipPosiljke  int             `json:"IdTipPosiljke"` // ВАЖНО: Тип посылки на ВЕРХНЕМ уровне! 1=обычная, 2=возврат
 	Posiljalac     WSPPosiljalac   `json:"Posiljalac"`
 	Porudzbine     []WSPPorudzbina `json:"Porudzbine"` // Заказы (верхний уровень)
 	DatumPrijema   string          `json:"DatumPrijema"`
@@ -57,15 +57,15 @@ type WSPManifestRequest struct {
 
 // Поруджбина (Заказ) содержит массив посылок!
 type WSPPorudzbina struct {
-	ExtIdPorudzbina       string        `json:"ExtIdPorudzbina,omitempty"`       // External ID заказа
-	ExtIdPorudzbinaKupca  string        `json:"ExtIdPorudzbinaKupca,omitempty"`  // External ID заказа клиента
-	IndGrupnostUrucenja   *bool         `json:"IndGrupnostUrucenja,omitempty"`   // Групповая доставка
-	Posiljke              []WSPPosiljka `json:"Posiljke"`                        // Посылки внутри заказа!
+	ExtIdPorudzbina      string        `json:"ExtIdPorudzbina,omitempty"`      // External ID заказа
+	ExtIdPorudzbinaKupca string        `json:"ExtIdPorudzbinaKupca,omitempty"` // External ID заказа клиента
+	IndGrupnostUrucenja  *bool         `json:"IndGrupnostUrucenja,omitempty"`  // Групповая доставка
+	Posiljke             []WSPPosiljka `json:"Posiljke"`                       // Посылки внутри заказа!
 }
 
 type WSPPosiljalac struct {
 	Naziv         string     `json:"Naziv"`
-	Adresa        *WSPAdresa `json:"Adresa"`        // ВАЖНО: Adresa - это ОБЪЕКТ!
+	Adresa        *WSPAdresa `json:"Adresa"` // ВАЖНО: Adresa - это ОБЪЕКТ!
 	Mesto         string     `json:"Mesto"`
 	PostanskiBroj string     `json:"PostanskiBroj"`
 	Telefon       string     `json:"Telefon"`
@@ -79,35 +79,35 @@ type WSPPosiljalac struct {
 
 type WSPPosiljka struct {
 	// Обязательные для B2B API
-	ExtBrend           string        `json:"ExtBrend"`           // ОБЯЗАТЕЛЬНО: бренд (например "SVETU")
-	ExtMagacin         string        `json:"ExtMagacin"`         // ОБЯЗАТЕЛЬНО: склад (например "WAREHOUSE1")
-	ExtReferenca       string        `json:"ExtReferenca"`       // ОБЯЗАТЕЛЬНО: референс (уникальный ID в нашей системе)
-	NacinPrijema       string        `json:"NacinPrijema"`       // ОБЯЗАТЕЛЬНО: способ приема (K=курьер, O=отделение)
-	ImaPrijemniBrojDN  *bool         `json:"ImaPrijemniBrojDN"`  // *bool чтобы передать false (не nil!)
-	NacinPlacanja      string          `json:"NacinPlacanja"`      // ОБЯЗАТЕЛЬНО: способ оплаты (N=наличные, K=карта, POF=postanska uplatnica)
-	Posiljalac         WSPPosiljalac   `json:"Posiljalac"`         // ОБЯЗАТЕЛЬНО: отправитель ВНУТРИ посылки!
-	MestoPreuzimanja   *WSPPosiljalac  `json:"MestoPreuzimanja,omitempty"` // Место забора (объект Korisnik)
-	PosebneUsluge      string          `json:"PosebneUsluge,omitempty"`    // Особые услуги через запятую: "PNA" или "PNA,SMS"
+	ExtBrend          string         `json:"ExtBrend"`                   // ОБЯЗАТЕЛЬНО: бренд (например "SVETU")
+	ExtMagacin        string         `json:"ExtMagacin"`                 // ОБЯЗАТЕЛЬНО: склад (например "WAREHOUSE1")
+	ExtReferenca      string         `json:"ExtReferenca"`               // ОБЯЗАТЕЛЬНО: референс (уникальный ID в нашей системе)
+	NacinPrijema      string         `json:"NacinPrijema"`               // ОБЯЗАТЕЛЬНО: способ приема (K=курьер, O=отделение)
+	ImaPrijemniBrojDN *bool          `json:"ImaPrijemniBrojDN"`          // *bool чтобы передать false (не nil!)
+	NacinPlacanja     string         `json:"NacinPlacanja"`              // ОБЯЗАТЕЛЬНО: способ оплаты (N=наличные, K=карта, POF=postanska uplatnica)
+	Posiljalac        WSPPosiljalac  `json:"Posiljalac"`                 // ОБЯЗАТЕЛЬНО: отправитель ВНУТРИ посылки!
+	MestoPreuzimanja  *WSPPosiljalac `json:"MestoPreuzimanja,omitempty"` // Место забора (объект Korisnik)
+	PosebneUsluge     string         `json:"PosebneUsluge,omitempty"`    // Особые услуги через запятую: "PNA" или "PNA,SMS"
 
 	// Основные поля
-	BrojPosiljke       string        `json:"BrojPosiljke"`  // ВАЖНО: уникальный номер
-	IdRukovanje        int           `json:"IdRukovanje"`
+	BrojPosiljke string `json:"BrojPosiljke"` // ВАЖНО: уникальный номер
+	IdRukovanje  int    `json:"IdRukovanje"`
 	// IdTipPosiljke УДАЛЕНО - оно теперь на верхнем уровне WSPManifestRequest!
-	Primalac           WSPPrimalac   `json:"Primalac"`
-	Masa               int     `json:"Masa"` // ВАЖНО: в ГРАММАХ, integer!
-	Duzina             float64 `json:"Duzina,omitempty"`
-	Sirina             float64 `json:"Sirina,omitempty"`
-	Visina             float64 `json:"Visina,omitempty"`
-	Otkupnina          int     `json:"Otkupnina,omitempty"`          // COD в ПАРАX (1 RSD = 100 para, 5000 RSD = 500000 para)
-	Vrednost           int     `json:"Vrednost,omitempty"`           // ОБЯЗАТЕЛЬНО для COD: стоимость в ПАРАX!
-	SMS                bool          `json:"SMS,omitempty"`
-	Povratnica         bool          `json:"Povratnica,omitempty"`
-	LicnoUrucenje      bool          `json:"LicnoUrucenje,omitempty"`
-	PDK                bool          `json:"PDK,omitempty"`
-	VD                 bool          `json:"VD,omitempty"`
-	Sadrzaj            string        `json:"Sadrzaj,omitempty"`
-	Napomena           string        `json:"Napomena,omitempty"`
-	ReferencaBroj      string        `json:"ReferencaBroj,omitempty"`
+	Primalac      WSPPrimalac `json:"Primalac"`
+	Masa          int         `json:"Masa"` // ВАЖНО: в ГРАММАХ, integer!
+	Duzina        float64     `json:"Duzina,omitempty"`
+	Sirina        float64     `json:"Sirina,omitempty"`
+	Visina        float64     `json:"Visina,omitempty"`
+	Otkupnina     int         `json:"Otkupnina,omitempty"` // COD в ПАРАX (1 RSD = 100 para, 5000 RSD = 500000 para)
+	Vrednost      int         `json:"Vrednost,omitempty"`  // ОБЯЗАТЕЛЬНО для COD: стоимость в ПАРАX!
+	SMS           bool        `json:"SMS,omitempty"`
+	Povratnica    bool        `json:"Povratnica,omitempty"`
+	LicnoUrucenje bool        `json:"LicnoUrucenje,omitempty"`
+	PDK           bool        `json:"PDK,omitempty"`
+	VD            bool        `json:"VD,omitempty"`
+	Sadrzaj       string      `json:"Sadrzaj,omitempty"`
+	Napomena      string      `json:"Napomena,omitempty"`
+	ReferencaBroj string      `json:"ReferencaBroj,omitempty"`
 }
 
 type WSPPrimalac struct {
@@ -211,7 +211,7 @@ func testStandardShipment() {
 
 	manifest := WSPManifestRequest{
 		ExtIdManifest: fmt.Sprintf("MANIFEST-%d", timestamp), // ОБЯЗАТЕЛЬНО!
-		IdTipPosiljke: 1, // ВАЖНО: Тип посылки на верхнем уровне! 1=обычная
+		IdTipPosiljke: 1,                                     // ВАЖНО: Тип посылки на верхнем уровне! 1=обычная
 		Posiljalac: WSPPosiljalac{
 			Naziv: "SVETU Platforma d.o.o.",
 			Adresa: &WSPAdresa{
@@ -234,13 +234,13 @@ func testStandardShipment() {
 				Posiljke: []WSPPosiljka{
 					{
 						// Обязательные B2B поля
-						ExtBrend:          "SVETU",                             // бренд
-						ExtMagacin:        "WAREHOUSE1",                        // склад
-						ExtReferenca:      fmt.Sprintf("REF-%d", timestamp),    // референс
-						NacinPrijema:      "K",                     // K=курьер, O=отделение
-						ImaPrijemniBrojDN: &boolFalse,              // false как pointer
-						NacinPlacanja:     "POF",                   // POF=postanska uplatnica (почтовая платежка)
-						MestoPreuzimanja: &WSPPosiljalac{           // место забора для курьера
+						ExtBrend:          "SVETU",                          // бренд
+						ExtMagacin:        "WAREHOUSE1",                     // склад
+						ExtReferenca:      fmt.Sprintf("REF-%d", timestamp), // референс
+						NacinPrijema:      "K",                              // K=курьер, O=отделение
+						ImaPrijemniBrojDN: &boolFalse,                       // false как pointer
+						NacinPlacanja:     "POF",                            // POF=postanska uplatnica (почтовая платежка)
+						MestoPreuzimanja: &WSPPosiljalac{ // место забора для курьера
 							Naziv: "SVETU Platforma d.o.o.",
 							Adresa: &WSPAdresa{
 								Ulica:         "Bulevar kralja Aleksandra",
@@ -255,8 +255,8 @@ func testStandardShipment() {
 							Email:         "b2b@svetu.rs",
 							OznakaZemlje:  "RS",
 						},
-						PosebneUsluge:     "PNA",                   // PNA=приём на адресе (для курьера обязательно!)
-						Posiljalac: WSPPosiljalac{                              // отправитель внутри посылки!
+						PosebneUsluge: "PNA", // PNA=приём на адресе (для курьера обязательно!)
+						Posiljalac: WSPPosiljalac{ // отправитель внутри посылки!
 							Naziv: "SVETU Platforma d.o.o.",
 							Adresa: &WSPAdresa{
 								Ulica:         "Bulevar kralja Aleksandra",
@@ -327,7 +327,7 @@ func testCODShipment() {
 
 	manifest := WSPManifestRequest{
 		ExtIdManifest: fmt.Sprintf("MANIFEST-COD-%d", timestamp), // ОБЯЗАТЕЛЬНО!
-		IdTipPosiljke: 1, // ВАЖНО: Тип посылки на верхнем уровне! 1=обычная
+		IdTipPosiljke: 1,                                         // ВАЖНО: Тип посылки на верхнем уровне! 1=обычная
 		Posiljalac: WSPPosiljalac{
 			Naziv: "SVETU Platforma d.o.o.",
 			Adresa: &WSPAdresa{
@@ -350,13 +350,13 @@ func testCODShipment() {
 				Posiljke: []WSPPosiljka{
 					{
 						// Обязательные B2B поля
-						ExtBrend:          "SVETU",                             // бренд
-						ExtMagacin:        "WAREHOUSE1",                        // склад
-						ExtReferenca:      fmt.Sprintf("COD-REF-%d", timestamp),    // референс
-						NacinPrijema:      "K",                     // K=курьер
-						ImaPrijemniBrojDN: &boolFalse,              // false как pointer
-						NacinPlacanja:     "POF",                   // POF=postanska uplatnica (почтовая платежка)
-						MestoPreuzimanja: &WSPPosiljalac{           // место забора для курьера
+						ExtBrend:          "SVETU",                              // бренд
+						ExtMagacin:        "WAREHOUSE1",                         // склад
+						ExtReferenca:      fmt.Sprintf("COD-REF-%d", timestamp), // референс
+						NacinPrijema:      "K",                                  // K=курьер
+						ImaPrijemniBrojDN: &boolFalse,                           // false как pointer
+						NacinPlacanja:     "POF",                                // POF=postanska uplatnica (почтовая платежка)
+						MestoPreuzimanja: &WSPPosiljalac{ // место забора для курьера
 							Naziv: "SVETU Platforma d.o.o.",
 							Adresa: &WSPAdresa{
 								Ulica:         "Bulevar kralja Aleksandra",
@@ -371,8 +371,8 @@ func testCODShipment() {
 							Email:         "b2b@svetu.rs",
 							OznakaZemlje:  "RS",
 						},
-						PosebneUsluge:     "PNA,OTK,VD",            // PNA=приём, OTK=откупнина, VD=ценная посылка (для COD обязательно!)
-						Posiljalac: WSPPosiljalac{                              // отправитель внутри посылки!
+						PosebneUsluge: "PNA,OTK,VD", // PNA=приём, OTK=откупнина, VD=ценная посылка (для COD обязательно!)
+						Posiljalac: WSPPosiljalac{ // отправитель внутри посылки!
 							Naziv: "SVETU Platforma d.o.o.",
 							Adresa: &WSPAdresa{
 								Ulica:         "Bulevar kralja Aleksandra",

@@ -52,25 +52,25 @@ type ManifestRequest struct {
 }
 
 type Posiljalac struct {
-	Ime      string `json:"Ime"`
-	Adresa   string `json:"Adresa"`
+	Ime       string `json:"Ime"`
+	Adresa    string `json:"Adresa"`
 	IdNaselje int    `json:"IdNaselje"`
-	Telefon  string `json:"Telefon"`
-	Email    string `json:"Email,omitempty"`
+	Telefon   string `json:"Telefon"`
+	Email     string `json:"Email,omitempty"`
 }
 
 type Posiljka struct {
-	Primalac         Primalac      `json:"Primalac"`
-	TezinaPosiljke   int           `json:"TezinaPosiljke"`   // в граммах
-	VrednostPosiljke int           `json:"VrednostPosiljke"` // в параx (1 RSD = 100 para)
-	IdTipPosiljke    int           `json:"IdTipPosiljke"`    // 1 = обычная, 2 = возврат (ОБЯЗАТЕЛЬНО!)
-	BrojOtkupnice    string        `json:"BrojOtkupnice,omitempty"`
-	Sadrzaj          string        `json:"Sadrzaj"`
-	Otkupnina        *Otkupnina    `json:"Otkupnina,omitempty"`      // COD
-	UslugePPU        *string       `json:"UslugePPU,omitempty"`      // Дополнительные услуги (PNA, SMS, etc.)
-	IdRukovanje      int           `json:"IdRukovanje"`              // 29, 30, 58, 71, 85 и т.д.
-	NacinIsporuke    string        `json:"NacinIsporuke,omitempty"`  // K = Kurir, S = Šalter, PAK = Paketomat
-	SifraOmegranice  *string       `json:"SifraOmegranice,omitempty"` // Код паккетомата для IdRukovanje=85
+	Primalac         Primalac   `json:"Primalac"`
+	TezinaPosiljke   int        `json:"TezinaPosiljke"`   // в граммах
+	VrednostPosiljke int        `json:"VrednostPosiljke"` // в параx (1 RSD = 100 para)
+	IdTipPosiljke    int        `json:"IdTipPosiljke"`    // 1 = обычная, 2 = возврат (ОБЯЗАТЕЛЬНО!)
+	BrojOtkupnice    string     `json:"BrojOtkupnice,omitempty"`
+	Sadrzaj          string     `json:"Sadrzaj"`
+	Otkupnina        *Otkupnina `json:"Otkupnina,omitempty"`       // COD
+	UslugePPU        *string    `json:"UslugePPU,omitempty"`       // Дополнительные услуги (PNA, SMS, etc.)
+	IdRukovanje      int        `json:"IdRukovanje"`               // 29, 30, 58, 71, 85 и т.д.
+	NacinIsporuke    string     `json:"NacinIsporuke,omitempty"`   // K = Kurir, S = Šalter, PAK = Paketomat
+	SifraOmegranice  *string    `json:"SifraOmegranice,omitempty"` // Код паккетомата для IdRukovanje=85
 }
 
 type Primalac struct {
@@ -190,8 +190,8 @@ func testStandardShipment() {
 				VrednostPosiljke: 50000, // 500 RSD (в параx)
 				IdTipPosiljke:    1,     // 1 = обычная пошиљка
 				Sadrzaj:          "Test package - Standard kurir",
-				IdRukovanje:      29,          // PE_Danas_za_sutra_12
-				NacinIsporuke:    "K",         // Kurir
+				IdRukovanje:      29,  // PE_Danas_za_sutra_12
+				NacinIsporuke:    "K", // Kurir
 				UslugePPU:        &services,
 			},
 		},
@@ -219,7 +219,7 @@ func testCODShipment() {
 	fmt.Println(string(bytes.Repeat([]byte("="), 80)))
 
 	services := "PNA,OTK" // Prijem na adresi + Otkupnina
-	codAmount := 500000  // 5000 RSD в параx (1 RSD = 100 para)
+	codAmount := 500000   // 5000 RSD в параx (1 RSD = 100 para)
 
 	manifest := ManifestRequest{
 		Posiljalac: Posiljalac{

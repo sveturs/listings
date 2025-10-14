@@ -22114,66 +22114,6 @@ paths:
       summary: Get user rating summary
       tags:
         - reviews
-  /api/v1/roles:
-    get:
-      description: Returns all available roles in the system
-      responses:
-        "200":
-          description: List of roles
-          content:
-            application/json:
-              schema:
-                items:
-                  additionalProperties: true
-                  type: object
-                type: array
-      security:
-        - BearerAuth: []
-      summary: Get all roles
-      tags:
-        - roles
-  /api/v1/roles/assign:
-    post:
-      description: Assigns a specific role to a user
-      responses:
-        "200":
-          description: Role assigned successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.SuccessResponseSwag"
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - BearerAuth: []
-      summary: Assign role to user
-      tags:
-        - roles
-  /api/v1/roles/revoke:
-    post:
-      description: Revokes a specific role from a user
-      responses:
-        "200":
-          description: Role revoked successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.SuccessResponseSwag"
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - BearerAuth: []
-      summary: Revoke role from user
-      tags:
-        - roles
   /api/v1/search:
     get:
       description: Searches both marketplace listings and storefront products
@@ -24447,35 +24387,6 @@ paths:
       summary: Get public user profile
       tags:
         - users
-  "/api/v1/users/{userId}/roles":
-    get:
-      description: Returns all roles assigned to a specific user
-      parameters:
-        - description: User ID
-          in: path
-          name: userId
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: User roles
-          content:
-            application/json:
-              schema:
-                additionalProperties: true
-                type: object
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - BearerAuth: []
-      summary: Get user roles
-      tags:
-        - roles
   "/api/v1/users/admin-check/{email}":
     get:
       description: Checks if user with specified email is administrator (simplified

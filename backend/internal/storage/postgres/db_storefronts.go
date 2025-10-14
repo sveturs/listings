@@ -183,6 +183,7 @@ func (db *Database) ReindexAllProducts(ctx context.Context) error {
 	log.Printf("Успешно проиндексировано %d товаров витрин", len(products))
 	return nil
 }
+
 func (db *Database) GetB2CProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
 	return db.marketplaceDB.GetB2CProductImages(ctx, productID)
 }
@@ -211,6 +212,7 @@ func (db *Database) RemoveStorefrontFromFavorites(ctx context.Context, userID in
 func (db *Database) GetUserStorefrontFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
 	return db.marketplaceDB.GetUserStorefrontFavorites(ctx, userID)
 }
+
 func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 	// Логируем вызов функции
 	fmt.Printf("IncrementViewsCount called for listing %d\n", id)
@@ -610,6 +612,7 @@ func (db *Database) Storefront() interface{} {
 	// Возвращаем новый репозиторий используя текущий экземпляр db
 	return NewStorefrontRepository(db)
 }
+
 func (db *Database) updateViewCountInOpenSearch(id int, viewsCount int) {
 	ctx := context.Background()
 

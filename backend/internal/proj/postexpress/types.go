@@ -2,57 +2,100 @@ package postexpress
 
 import "time"
 
-// ManifestRequest - запрос создания манифеста (списка отправлений)
+// ========================================
+// B2B Manifest API Structures (Transaction 73)
+// ========================================
+
+// ManifestRequest - запрос создания манифеста B2B (правильная структура)
 type ManifestRequest struct {
-	ExtIDManifest string         `json:"ExtIdManifest"` // Уникальный ID манифеста
-	IDTipPosiljke int            `json:"IdTipPosiljke"` // Тип пошљке: 1-обычная, 2-возврат
-	Porudzbine    []OrderRequest `json:"Porudzbine"`    // Список заказов
+	ExtIDManifest  string         `json:"ExtIdManifest"`            // ОБЯЗАТЕЛЬНО: Уникальный ID манифеста
+	IDTipPosiljke  int            `json:"IdTipPosiljke"`            // ОБЯЗАТЕЛЬНО: Тип пошљке на уровне манифеста: 1-обычная, 2-возврат
+	Posiljalac     SenderInfo     `json:"Posiljalac"`               // ОБЯЗАТЕЛЬНО: Отправитель (объект)
+	Porudzbine     []OrderRequest `json:"Porudzbine"`               // ОБЯЗАТЕЛЬНО: Список заказов
+	DatumPrijema   string         `json:"DatumPrijema"`             // ОБЯЗАТЕЛЬНО: Дата приема (YYYY-MM-DD)
+	VremePrijema   string         `json:"VremePrijema,omitempty"`   // Время приема (HH:MM)
+	IDPartnera     int            `json:"IdPartnera,omitempty"`     // ID партнера (10109 для svetu.rs)
+	NazivManifesta string         `json:"NazivManifesta,omitempty"` // Название манифеста
 }
 
-// OrderRequest - данные заказа в манифесте
+// OrderRequest - данные заказа в манифесте (nested structure)
 type OrderRequest struct {
-	BrojPorudzbine string            `json:"BrojPorudzbine"` // Номер заказа
-	Posiljke       []ShipmentRequest `json:"Posiljke"`       // Список отправлений в заказе
+	ExtIdPorudzbina      string            `json:"ExtIdPorudzbina,omitempty"`      // Внешний ID заказа
+	ExtIdPorudzbinaKupca string            `json:"ExtIdPorudzbinaKupca,omitempty"` // ID заказа покупателя
+	IndGrupnostUrucenja  *bool             `json:"IndGrupnostUrucenja,omitempty"`  // Индикатор групповой доставки
+	Posiljke             []ShipmentRequest `json:"Posiljke"`                       // ОБЯЗАТЕЛЬНО: Список отправлений в заказе
 }
 
-// ShipmentRequest - данные отправления
+// ShipmentRequest - данные отправления (B2B структура)
 type ShipmentRequest struct {
-	// Основные данные
-	BrojPosiljke string  `json:"BrojPosiljke"`         // Номер отправления (уникальный)
-	Tezina       float64 `json:"Tezina"`               // Вес в кг
-	VrednostRSD  float64 `json:"VrednostRSD"`          // Объявленная ценность в RSD
-	Otkupnina    float64 `json:"Otkupnina"`            // Наложенный платеж (COD) в RSD
-	NacinPlacanj string  `json:"NacinPlacanjaDostave"` // Способ оплаты доставки
+	// === ОБЯЗАТЕЛЬНЫЕ B2B поля ===
+	ExtBrend          string      `json:"ExtBrend"`                    // ОБЯЗАТЕЛЬНО: Бренд (напр. "SVETU")
+	ExtMagacin        string      `json:"ExtMagacin"`                  // ОБЯЗАТЕЛЬНО: Склад (напр. "WAREHOUSE1")
+	ExtReferenca      string      `json:"ExtReferenca"`                // ОБЯЗАТЕЛЬНО: Уникальная референция
+	NacinPrijema      string      `json:"NacinPrijema"`                // ОБЯЗАТЕЛЬНО: K-курьер, O-офис
+	ImaPrijemniBrojDN *bool       `json:"ImaPrijemniBrojDN,omitempty"` // ОБЯЗАТЕЛЬНО: false (указатель!)
+	NacinPlacanja     string      `json:"NacinPlacanja"`               // ОБЯЗАТЕЛЬНО: POF, N, K
+	Posiljalac        SenderInfo  `json:"Posiljalac"`                  // ОБЯЗАТЕЛЬНО: Отправитель в отправлении
+	MestoPreuzimanja  *SenderInfo `json:"MestoPreuzimanja,omitempty"`  // Место забора (объект!)
 
-	// Получатель
-	PrijemnoLice       string `json:"PrijemnoLice"`                // ФИО получателя
-	PrijemnoLiceAdresa string `json:"PrijemnoLiceAdresa"`          // Адрес получателя
-	PrijemnoLiceGrad   string `json:"PrijemnoLiceGrad"`            // Город получателя
-	PrijemnoLicePosbr  string `json:"PrijemnoLicePosbr"`           // Почтовый индекс
-	PrijemnoLiceTel    string `json:"PrijemnoLiceTel"`             // Телефон получателя
-	PrijemnoLiceEmail  string `json:"PrijemnoLiceEmail,omitempty"` // Email получателя
+	// === Основные данные ===
+	BrojPosiljke string       `json:"BrojPosiljke"` // ОБЯЗАТЕЛЬНО: Номер отправления
+	IDRukovanje  int          `json:"IdRukovanje"`  // ОБЯЗАТЕЛЬНО: ID услуги (29, 30, 55, 58, 59, 71, 85)
+	Primalac     ReceiverInfo `json:"Primalac"`     // ОБЯЗАТЕЛЬНО: Получатель
+	Masa         int          `json:"Masa"`         // ОБЯЗАТЕЛЬНО: Вес в ГРАММАХ (integer!)
 
-	// Отправитель
-	PosaljalacNaziv  string `json:"PosaljalacNaziv"`           // Название отправителя
-	PosaljalacAdresa string `json:"PosaljalacAdresa"`          // Адрес отправителя
-	PosaljalacGrad   string `json:"PosaljalacGrad"`            // Город отправителя
-	PosaljalacPosbr  string `json:"PosaljalacPosbr"`           // Почтовый индекс отправителя
-	PosaljalacTel    string `json:"PosaljalacTel"`             // Телефон отправителя
-	PosaljalacEmail  string `json:"PosaljalacEmail,omitempty"` // Email отправителя
+	// === COD и ценности (в PARA - 1 RSD = 100 para) ===
+	Otkupnina int `json:"Otkupnina,omitempty"` // COD в para (5000 RSD = 500000)
+	Vrednost  int `json:"Vrednost,omitempty"`  // Объявленная ценность в para (ОБЯЗАТЕЛЬНО для COD!)
 
-	// Возврат/забор
-	MestoPreuzimanja string `json:"MestoPreuzimanja,omitempty"` // Место забора
-	VracanjePosiljke string `json:"VracanjePosiljke,omitempty"` // Адрес возврата
+	// === Дополнительные услуги (строка через запятую!) ===
+	PosebneUsluge string `json:"PosebneUsluge,omitempty"` // "PNA,OTK,VD" - НЕ массив!
 
-	// Дополнительные услуги
-	Usluge []ServiceRequest `json:"Usluge,omitempty"` // Доп. услуги (SMS и т.д.)
-
-	// Опции
-	GrupnaDostava bool   `json:"GrupnaDostava,omitempty"` // Групповая доставка
+	// === Опциональные поля ===
+	Sadrzaj       string `json:"Sadrzaj,omitempty"`       // Описание содержимого
+	ReferencaBroj string `json:"ReferencaBroj,omitempty"` // Референсный номер
 	Napomena      string `json:"Napomena,omitempty"`      // Примечание
 }
 
-// ServiceRequest - дополнительная услуга
+// AddressInfo - адрес (ВСЕГДА объект, НЕ строка!)
+type AddressInfo struct {
+	Ulica         string `json:"Ulica,omitempty"`         // Улица
+	Broj          string `json:"Broj,omitempty"`          // Номер дома
+	Mesto         string `json:"Mesto,omitempty"`         // Город
+	PostanskiBroj string `json:"PostanskiBroj,omitempty"` // Почтовый индекс
+	PAK           string `json:"PAK,omitempty"`           // Postal Address Code
+	OznakaZemlje  string `json:"OznakaZemlje,omitempty"`  // Код страны (RS)
+}
+
+// SenderInfo - информация об отправителе/клиенте (Adresa - объект!)
+type SenderInfo struct {
+	Naziv         string       `json:"Naziv"`                   // ОБЯЗАТЕЛЬНО: Название/имя
+	Adresa        *AddressInfo `json:"Adresa"`                  // ОБЯЗАТЕЛЬНО: Адрес (объект!)
+	Mesto         string       `json:"Mesto"`                   // ОБЯЗАТЕЛЬНО: Город
+	PostanskiBroj string       `json:"PostanskiBroj"`           // ОБЯЗАТЕЛЬНО: Почтовый индекс
+	Telefon       string       `json:"Telefon"`                 // ОБЯЗАТЕЛЬНО: Телефон
+	Email         string       `json:"Email,omitempty"`         // Email
+	OznakaZemlje  string       `json:"OznakaZemlje,omitempty"`  // Код страны
+	PIB           string       `json:"PIB,omitempty"`           // ИНН
+	MaticniBroj   string       `json:"MaticniBroj,omitempty"`   // Регистрационный номер
+	IDUgovor      int          `json:"IdUgovor,omitempty"`      // ID договора
+	SifraKlijenta string       `json:"SifraKlijenta,omitempty"` // Код клиента
+}
+
+// ReceiverInfo - информация о получателе (Adresa - объект!)
+type ReceiverInfo struct {
+	Naziv         string       `json:"Naziv"`                   // ОБЯЗАТЕЛЬНО: Имя/название
+	Adresa        *AddressInfo `json:"Adresa"`                  // ОБЯЗАТЕЛЬНО: Адрес (объект!)
+	Mesto         string       `json:"Mesto"`                   // ОБЯЗАТЕЛЬНО: Город
+	PostanskiBroj string       `json:"PostanskiBroj"`           // ОБЯЗАТЕЛЬНО: Почтовый индекс
+	Telefon       string       `json:"Telefon"`                 // ОБЯЗАТЕЛЬНО: Телефон
+	Email         string       `json:"Email,omitempty"`         // Email
+	OznakaZemlje  string       `json:"OznakaZemlje,omitempty"`  // Код страны
+	TipAdrese     string       `json:"TipAdrese,omitempty"`     // S-standard, F-fah, P-post restant
+	PAK           string       `json:"PAK,omitempty"`           // Postal Address Code
+}
+
+// ServiceRequest - дополнительная услуга (DEPRECATED - используйте PosebneUsluge string)
 type ServiceRequest struct {
 	SifraUsluge string      `json:"SifraUsluge"`         // Код услуги (например, "SMS")
 	Parametri   interface{} `json:"Parametri,omitempty"` // Параметры услуги

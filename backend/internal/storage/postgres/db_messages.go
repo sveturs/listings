@@ -22,6 +22,7 @@ func (db *Database) UpdateNotificationSettings(ctx context.Context, s *models.No
 func (db *Database) SaveTelegramConnection(ctx context.Context, userID int, chatID string, username string) error {
 	return db.notificationsDB.SaveTelegramConnection(ctx, userID, chatID, username)
 }
+
 func (db *Database) GetTelegramConnection(ctx context.Context, userID int) (*models.TelegramConnection, error) {
 	return db.notificationsDB.GetTelegramConnection(ctx, userID)
 }
