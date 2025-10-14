@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
+import configManager from '@/config';
 
 export interface AddressConfirmationMapProps {
   address: string;
@@ -47,8 +48,8 @@ export default function AddressConfirmationMap({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Получаем токен из переменных окружения
-    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    // Получаем токен из ConfigManager
+    const mapboxToken = configManager.getMapboxToken();
     if (!mapboxToken) {
       console.error('MAPBOX_ACCESS_TOKEN is not set');
       return;

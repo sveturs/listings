@@ -10,6 +10,7 @@ import {
   TranslationResponse,
   GetTranslationParams,
 } from '@/types/chat';
+import configManager from '@/config';
 
 class ChatService {
   private baseUrl: string;
@@ -377,16 +378,16 @@ class ChatService {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
       // Для development используем backend порт напрямую
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isDevelopment = configManager.isDevelopment();
 
-      // Получаем WebSocket URL из переменной окружения или используем дефолтный хост
+      // Получаем WebSocket URL из ConfigManager
       let wsHost: string;
       if (isDevelopment) {
         wsHost = 'localhost:3000';
       } else {
-        // На production используем NEXT_PUBLIC_WEBSOCKET_URL или выводим из API URL
-        const wsUrlEnv = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        // На production используем WebSocket URL или выводим из API URL
+        const wsUrlEnv = configManager.getWebSocketUrl();
+        const apiUrl = configManager.getApiUrl();
 
         if (wsUrlEnv) {
           // Извлекаем хост из wss://devapi.svetu.rs

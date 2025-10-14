@@ -2,8 +2,9 @@ import type { Feature, Polygon } from 'geojson';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import { point } from '@turf/helpers';
 import { generateLocalIsochrone } from './isochrone';
+import configManager from '@/config';
 
-const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+const MAPBOX_ACCESS_TOKEN = configManager.getMapboxToken() || '';
 const MAPBOX_ISOCHRONE_API = 'https://api.mapbox.com/isochrone/v1/mapbox';
 
 interface MapboxIsochroneOptions {

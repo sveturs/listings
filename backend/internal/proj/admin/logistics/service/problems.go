@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"backend/internal/domain"
 	"backend/internal/domain/logistics"
 	"backend/pkg/logger"
 )
@@ -237,7 +238,7 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, problemID int, updat
 		return nil, err
 	}
 	if !exists {
-		return nil, fmt.Errorf("problem not found")
+		return nil, domain.ErrProblemNotFound
 	}
 
 	// Строим динамический запрос обновления
@@ -281,7 +282,7 @@ func (s *ProblemService) ResolveProblem(ctx context.Context, problemID int, reso
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("problem not found")
+		return domain.ErrProblemNotFound
 	}
 
 	query := `
@@ -314,7 +315,7 @@ func (s *ProblemService) AssignProblem(ctx context.Context, problemID int, assig
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("problem not found")
+		return domain.ErrProblemNotFound
 	}
 
 	query := `
@@ -373,7 +374,7 @@ func (s *ProblemService) GetProblemByID(ctx context.Context, problemID int) (*lo
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("problem not found")
+		return nil, domain.ErrProblemNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get problem: %w", err)

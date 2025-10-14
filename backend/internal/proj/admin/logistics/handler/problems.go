@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
+	"backend/internal/domain"
 	"backend/internal/domain/logistics"
 	"backend/internal/proj/admin/logistics/service"
 	"backend/pkg/logger"
@@ -12,10 +14,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
-)
-
-const (
-	problemNotFoundErr = "problem not found"
 )
 
 // ProblemsHandler обработчик для управления проблемными отправлениями
@@ -182,7 +180,7 @@ func (h *ProblemsHandler) UpdateProblem(c *fiber.Ctx) error {
 	// Обновляем проблему
 	updatedProblem, err := h.problemService.UpdateProblem(c.Context(), problemID, updates)
 	if err != nil {
-		if err.Error() == problemNotFoundErr {
+		if errors.Is(err, domain.ErrProblemNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.problem.update_error")
@@ -235,7 +233,7 @@ func (h *ProblemsHandler) ResolveProblem(c *fiber.Ctx) error {
 	// Решаем проблему
 	err = h.problemService.ResolveProblem(c.Context(), problemID, request.Resolution, userIDInt)
 	if err != nil {
-		if err.Error() == problemNotFoundErr {
+		if errors.Is(err, domain.ErrProblemNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.problem.resolve_error")
@@ -305,7 +303,7 @@ func (h *ProblemsHandler) AssignProblem(c *fiber.Ctx) error {
 	// Назначаем проблему
 	err = h.problemService.AssignProblem(c.Context(), problemID, request.AssignTo)
 	if err != nil {
-		if err.Error() == problemNotFoundErr {
+		if errors.Is(err, domain.ErrProblemNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.problem.assign_error")
@@ -374,7 +372,7 @@ func (h *ProblemsHandler) AddProblemComment(c *fiber.Ctx) error {
 	// Добавляем комментарий
 	comment, err := h.problemService.AddProblemComment(c.Context(), problemID, userIDInt, request.Comment, "comment", map[string]interface{}{})
 	if err != nil {
-		if err.Error() == problemNotFoundErr {
+		if errors.Is(err, domain.ErrProblemNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.comment.add_error")
@@ -483,7 +481,7 @@ func (h *ProblemsHandler) GetProblemDetails(c *fiber.Ctx) error {
 	// Получаем детали проблемы
 	problem, err := h.problemService.GetProblemWithDetails(c.Context(), problemID)
 	if err != nil {
-		if err.Error() == problemNotFoundErr {
+		if errors.Is(err, domain.ErrProblemNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.problem_details.get_error")

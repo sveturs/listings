@@ -469,8 +469,8 @@ func (s *Storage) scanListingAttributeRow(rows pgx.Rows, locale string) (models.
 
 // populateAttributeValue заполняет значение атрибута в зависимости от типа
 func (s *Storage) populateAttributeValue(attr *models.ListingAttributeValue, textValue sql.NullString,
-	numericValue sql.NullFloat64, boolValue sql.NullBool, jsonValue sql.NullString, locale string) {
-
+	numericValue sql.NullFloat64, boolValue sql.NullBool, jsonValue sql.NullString, locale string,
+) {
 	// Текстовое значение (для select ищем перевод)
 	if textValue.Valid {
 		attr.TextValue = &textValue.String
@@ -913,15 +913,15 @@ func (s *Storage) queryAttributeRanges(ctx context.Context, categoryIDs string) 
 // fillDefaultRanges заполняет отсутствующие атрибуты значениями по умолчанию
 func (s *Storage) fillDefaultRanges(ranges map[string]map[string]interface{}) {
 	defaultRanges := map[string]map[string]interface{}{
-		attrNameYear:       {"min": float64(time.Now().Year() - 30), "max": float64(time.Now().Year() + 1), "step": 1.0},
-		attrNameMileage:    {"min": 0.0, "max": 500000.0, "step": 1000.0},
-		"engine_capacity":  {"min": 0.5, "max": 8.0, "step": 0.1},
-		attrNamePower:      {"min": 50.0, "max": 500.0, "step": 10.0},
-		"rooms":            {"min": 1.0, "max": 10.0, "step": 1.0},
-		"floor":            {"min": 1.0, "max": 25.0, "step": 1.0},
-		"total_floors":     {"min": 1.0, "max": 30.0, "step": 1.0},
-		"area":             {"min": 10.0, "max": 300.0, "step": 0.5},
-		"land_area":        {"min": 1.0, "max": 100.0, "step": 0.5},
+		attrNameYear:      {"min": float64(time.Now().Year() - 30), "max": float64(time.Now().Year() + 1), "step": 1.0},
+		attrNameMileage:   {"min": 0.0, "max": 500000.0, "step": 1000.0},
+		"engine_capacity": {"min": 0.5, "max": 8.0, "step": 0.1},
+		attrNamePower:     {"min": 50.0, "max": 500.0, "step": 10.0},
+		"rooms":           {"min": 1.0, "max": 10.0, "step": 1.0},
+		"floor":           {"min": 1.0, "max": 25.0, "step": 1.0},
+		"total_floors":    {"min": 1.0, "max": 30.0, "step": 1.0},
+		"area":            {"min": 10.0, "max": 300.0, "step": 0.5},
+		"land_area":       {"min": 1.0, "max": 100.0, "step": 0.5},
 	}
 
 	for attr, defaultRange := range defaultRanges {

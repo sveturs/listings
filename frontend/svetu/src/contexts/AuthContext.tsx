@@ -14,6 +14,7 @@ import authService from '@/services/auth';
 import type { User, UpdateProfileRequest } from '@/types/auth';
 import { reset as resetChat, closeWebSocket } from '@/store/slices/chatSlice';
 import { resetCart } from '@/store/slices/cartSlice';
+import configManager from '@/config';
 
 interface AuthContextType {
   user: User | null;
@@ -110,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = useCallback(() => {
     // Redirect to backend OAuth endpoint
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:31876';
+    const apiUrl = configManager.getApiUrl() || 'http://localhost:31876';
     window.location.href = `${apiUrl}/api/v1/auth/google`;
   }, []);
 

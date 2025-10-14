@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useTranslations } from 'next-intl';
+import configManager from '@/config';
 
-// Mapbox token из .env
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
+// Mapbox token из ConfigManager
+mapboxgl.accessToken = configManager.getMapboxToken() || '';
 
 interface DeliveryData {
   id: number;

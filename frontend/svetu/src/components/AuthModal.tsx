@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
+import configManager from '@/config';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -64,7 +65,7 @@ export default function AuthModal({
       const returnUrl = encodeURIComponent(currentPath);
 
       // Pass locale and returnUrl as query parameters to backend
-      const oauthUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/google?locale=${locale}&return_url=${returnUrl}`;
+      const oauthUrl = `${configManager.getApiUrl()}/api/v1/auth/google?locale=${locale}&return_url=${returnUrl}`;
 
       console.log('[AuthModal] === GOOGLE LOGIN INITIATED ===');
       console.log('[AuthModal] Current locale:', locale);

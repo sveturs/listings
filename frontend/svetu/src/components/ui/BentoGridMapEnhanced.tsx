@@ -13,6 +13,7 @@ import { getMapboxIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
 import { useTranslations } from 'next-intl';
+import configManager from '@/config';
 
 // Компонент перетаскиваемой иконки местоположения
 const DraggableLocationIcon: React.FC<{
@@ -684,10 +685,7 @@ export const BentoGridMapEnhanced: React.FC<BentoGridMapEnhancedProps> = ({
             ? 'mapbox://styles/mapbox/dark-v11'
             : 'mapbox://styles/mapbox/light-v11'
         }
-        mapboxAccessToken={
-          process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ||
-          process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-        }
+        mapboxAccessToken={configManager.getMapboxToken() || ''}
         interactive={true}
         attributionControl={false}
         onClick={handleMapClick}

@@ -9,6 +9,7 @@ import {
 } from '@/hooks/useAddressGeocoding';
 import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { useLocale, useTranslations } from 'next-intl';
+import configManager from '@/config';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface LocationData {
@@ -44,10 +45,13 @@ export default function LocationPicker({
   height = '400px',
   showCurrentLocation = true,
   defaultCountry = 'Србија',
-  mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
+  mapboxToken,
 }: LocationPickerProps) {
   const locale = useLocale();
   const t = useTranslations('common');
+
+  // Получаем Mapbox token из ConfigManager если не передан явно
+  const token = mapboxToken || configManager.getMapboxToken();
   const { getMultilingualAddress } = useAddressGeocoding({ language: locale });
   const [mode, setMode] = useState<'search' | 'map'>('search');
   const [address, setAddress] = useState(value?.address || '');
@@ -81,7 +85,7 @@ export default function LocationPicker({
       try {
         const response = await fetch(
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?` +
-            `access_token=${mapboxToken}&language=${locale}&types=address,place`
+            `access_token=${token}&language=${locale}&types=address,place`
         );
 
         if (!response.ok) throw new Error('Geocoding failed');
@@ -152,7 +156,7 @@ export default function LocationPicker({
         setIsReverseGeocoding(false);
       }
     },
-    [mapboxToken, defaultCountry, onChange, locale, getMultilingualAddress]
+    [token, defaultCountry, onChange, locale, getMultilingualAddress]
   );
 
   // Обработка выбора адреса из поиска
@@ -359,7 +363,7 @@ export default function LocationPicker({
               {...mapLocation}
               onMove={(evt) => setMapLocation(evt.viewState)}
               onClick={handleMapClick}
-              mapboxAccessToken={mapboxToken}
+              mapboxAccessToken={token}
               mapStyle="mapbox://styles/mapbox/streets-v12"
               attributionControl={false}
             >

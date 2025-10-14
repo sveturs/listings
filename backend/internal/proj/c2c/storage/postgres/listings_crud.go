@@ -587,8 +587,8 @@ func (s *Storage) processListingNullables(listing *models.MarketplaceListing,
 	description, condition, status, location sql.NullString,
 	latitude, longitude sql.NullFloat64,
 	city, country, categoryName, categorySlug sql.NullString,
-	storefrontID sql.NullInt32) {
-
+	storefrontID sql.NullInt32,
+) {
 	if description.Valid {
 		listing.Description = description.String
 	}
@@ -705,9 +705,9 @@ func (s *Storage) deleteListing(ctx context.Context, id int, userID int, isAdmin
 func (s *Storage) deleteListingRelatedData(ctx context.Context, tx pgx.Tx, id int) error {
 	// Список таблиц и их условий для удаления
 	deletions := []struct {
-		table     string
-		where     string
-		critical  bool // критичная ли ошибка
+		table    string
+		where    string
+		critical bool // критичная ли ошибка
 	}{
 		{"c2c_favorites", "listing_id = $1", true},
 		{"translations", "entity_type = 'listing' AND entity_id = $1", true},
@@ -892,8 +892,8 @@ func (s *Storage) processListingBaseNullables(listing *models.MarketplaceListing
 	latitude, longitude sql.NullFloat64,
 	city, country, originalLang, categoryName, categorySlug sql.NullString,
 	storefrontID sql.NullInt32, locationPrivacy sql.NullString,
-	addressMultilingual []byte) {
-
+	addressMultilingual []byte,
+) {
 	if description.Valid {
 		listing.Description = description.String
 	}
