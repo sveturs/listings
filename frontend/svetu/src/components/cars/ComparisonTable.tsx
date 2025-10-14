@@ -99,7 +99,11 @@ export default function ComparisonTable({ locale }: ComparisonTableProps) {
 
   // Проверка, есть ли различия в характеристике
   const hasDifference = (key: string) => {
-    const values = items.map((item) => item[key as keyof typeof item]);
+    const values = items.map((item) => {
+      // price это прямое свойство, остальное в attributes
+      if (key === 'price') return item.price;
+      return item.attributes?.[key];
+    });
     return new Set(values).size > 1;
   };
 
@@ -118,10 +122,10 @@ export default function ComparisonTable({ locale }: ComparisonTableProps) {
                 <th key={car.id} className="min-w-[250px]">
                   <div className="space-y-2">
                     {/* Car Image */}
-                    {car.imageUrl && (
+                    {car.image && (
                       <div className="relative h-32 w-full">
                         <Image
-                          src={car.imageUrl}
+                          src={car.image}
                           alt={car.title}
                           fill
                           className="object-cover rounded"
@@ -163,7 +167,7 @@ export default function ComparisonTable({ locale }: ComparisonTableProps) {
                   {items.map((car) => (
                     <td key={`${car.id}-${spec.key}`}>
                       {formatValue(
-                        car[spec.key as keyof typeof car],
+                        spec.key === 'price' ? car.price : car.attributes?.[spec.key],
                         spec.format
                       )}
                     </td>
@@ -179,9 +183,9 @@ export default function ComparisonTable({ locale }: ComparisonTableProps) {
               </td>
               {items.map((car) => (
                 <td key={`${car.id}-features`}>
-                  {car.features && car.features.length > 0 ? (
+                  {car.attributes?.features && Array.isArray(car.attributes.features) && car.attributes.features.length > 0 ? (
                     <ul className="text-sm space-y-1">
-                      {car.features.map((feature, idx) => (
+                      {car.attributes.features.map((feature: string, idx: number) => (
                         <li key={idx} className="flex items-center gap-1">
                           <Check className="w-3 h-3 text-success flex-shrink-0" />
                           {feature}
