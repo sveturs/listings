@@ -6,8 +6,7 @@ import UniversalFilters from '@/components/universal/filters/UniversalFilters';
 import UniversalCreditCalculator from '@/components/universal/calculators/UniversalCreditCalculator';
 import RecommendationsEngine from '@/components/universal/recommendations/RecommendationsEngine';
 import { useAppDispatch } from '@/store/hooks';
-import { initializeCompare as initUniversalCompare } from '@/store/slices/universalCompareSlice';
-import { initializeCompare as initCarCompare } from '@/store/slices/compareSlice';
+import { initializeCompare } from '@/store/slices/universalCompareSlice';
 
 export default function TestUniversalPage() {
   const dispatch = useAppDispatch();
@@ -17,8 +16,7 @@ export default function TestUniversalPage() {
 
   useEffect(() => {
     // Инициализация сравнения при загрузке
-    dispatch(initUniversalCompare());
-    dispatch(initCarCompare());
+    dispatch(initializeCompare());
   }, [dispatch]);
 
   // Тестовые данные для разных категорий

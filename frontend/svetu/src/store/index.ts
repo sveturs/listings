@@ -8,7 +8,6 @@ import paymentReducer from './slices/paymentSlice';
 import cartReducer from './slices/cartSlice';
 import localCartReducer from './slices/localCartSlice';
 import categoriesReducer from './slices/categoriesSlice';
-import compareReducer from './slices/compareSlice';
 import universalCompareReducer from './slices/universalCompareSlice';
 import favoritesReducer from './slices/favoritesSlice';
 import savedSearchesReducer from './slices/savedSearchesSlice';
@@ -26,7 +25,6 @@ export const store = configureStore({
     cart: cartReducer,
     localCart: localCartReducer,
     categories: categoriesReducer,
-    compare: compareReducer,
     universalCompare: universalCompareReducer,
     favorites: favoritesReducer,
     savedSearches: savedSearchesReducer,
