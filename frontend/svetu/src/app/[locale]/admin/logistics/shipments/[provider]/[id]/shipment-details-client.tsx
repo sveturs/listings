@@ -15,7 +15,7 @@ import {
   FiInfo,
 } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
-import { apiClientAuth } from '@/lib/api-client-auth';
+import { apiClient } from '@/services/api-client';
 
 interface ShipmentDetailsClientProps {
   provider: string;
@@ -76,7 +76,7 @@ export default function ShipmentDetailsClient({
       setLoading(true);
       setError(null);
 
-      const result = await apiClientAuth.get(
+      const result = await apiClient.get(
         `/admin/logistics/shipments/${provider}/${id}`
       );
 

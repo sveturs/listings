@@ -7,6 +7,7 @@ import (
 
 	"github.com/shopspring/decimal"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/pkg/allsecure"
 	"backend/internal/proj/payments/service"
@@ -77,7 +78,7 @@ func (s *SubscriptionService) CreateSubscription(ctx context.Context, req *model
 		return nil, fmt.Errorf("failed to check existing subscription: %w", err)
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("user already has active subscription")
+		return nil, domain.ErrActiveSubscriptionExists
 	}
 
 	// Get plan details

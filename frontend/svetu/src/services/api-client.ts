@@ -1,15 +1,8 @@
-import configManager from '@/config';
-import { logger } from '@/utils/logger';
-
 export interface ApiClientOptions extends RequestInit {
-  // DEPRECATED: Больше не используется, все запросы идут через BFF прокси /api/v2
-  internal?: boolean;
   // Timeout в миллисекундах
   timeout?: number;
   // Повторные попытки при ошибках сети
   retries?: number;
-  // Использовать прямой доступ к backend (минуя BFF прокси) - только для специальных случаев
-  direct?: boolean;
   // Управление Next.js кешированием (по умолчанию 'no-store' для client-side)
   // 'force-cache' - максимальное кеширование
   // 'no-store' - без кеширования (по умолчанию)
@@ -37,18 +30,12 @@ class ApiClient {
   /**
    * Получает базовый URL в зависимости от контекста
    *
-   * По умолчанию все запросы идут через Next.js BFF прокси /api/v2
+   * Все запросы идут через Next.js BFF прокси /api/v2
    * который автоматически добавляет JWT токены из httpOnly cookies.
    *
    * Маппинг: /api/v2/* → backend /api/v1/*
    */
-  private getBaseUrl(useDirect: boolean = false): string {
-    if (useDirect) {
-      // Прямой доступ к backend (используется редко, только для специальных случаев)
-      return configManager.getApiUrl();
-    }
-
-    // По умолчанию используем BFF прокси
+  private getBaseUrl(): string {
     // В browser это будет относительный путь: /api/v2
     // В SSR это будет полный URL: http://localhost:3001/api/v2
     if (typeof window === 'undefined') {
@@ -120,14 +107,6 @@ class ApiClient {
   }
 
   /**
-   * CSRF токены управляются backend автоматически в BFF архитектуре
-   * Этот метод оставлен для совместимости, всегда возвращает null
-   */
-  private async getCsrfToken(): Promise<string | null> {
-    return null;
-  }
-
-  /**
    * Основной метод для выполнения запросов
    */
   async request<T = any>(
@@ -135,8 +114,6 @@ class ApiClient {
     options: ApiClientOptions = {}
   ): Promise<ApiResponse<T>> {
     const {
-      internal = false, // deprecated
-      direct = false,
       timeout = this.defaultTimeout,
       retries = this.defaultRetries,
       nextCache,
@@ -144,12 +121,12 @@ class ApiClient {
       ...fetchOptions
     } = options;
 
-    // Получаем базовый URL
-    const baseUrl = this.getBaseUrl(direct);
+    // Получаем базовый URL (всегда BFF прокси)
+    const baseUrl = this.getBaseUrl();
 
     // Для BFF прокси нужно убрать /api/v1 из endpoint если он есть
     let finalEndpoint = endpoint;
-    if (!direct && endpoint.startsWith('/api/v1/')) {
+    if (endpoint.startsWith('/api/v1/')) {
       // BFF прокси ожидает путь без /api/v1
       // Например: /api/v1/users/me → /users/me → BFF → backend /api/v1/users/me
       finalEndpoint = endpoint.replace('/api/v1/', '/');
@@ -176,20 +153,7 @@ class ApiClient {
     }
 
     // Cookies (включая JWT токены) отправляются автоматически через credentials: 'include'
-
-    // Добавляем CSRF токен для небезопасных методов
-    const method = fetchOptions.method?.toUpperCase();
-    if (method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-      const csrfToken = await this.getCsrfToken();
-      if (csrfToken) {
-        headers.set('X-CSRF-Token', csrfToken);
-      }
-    }
-
-    // Добавляем специальный заголовок для внутренних запросов
-    if (internal) {
-      headers.set('X-Internal-Request', 'true');
-    }
+    // BFF proxy обрабатывает CSRF защиту через SameSite cookies
 
     // Финальные опции запроса
     const finalOptions: RequestInit = {
@@ -279,20 +243,6 @@ class ApiClient {
     endpoint: string,
     options?: ApiClientOptions
   ): Promise<ApiResponse<T>> {
-    // ВРЕМЕННО ОТКЛЮЧЕНО: Блокировка радиусного поиска в API клиенте
-    // Блокировка теперь работает на уровне backend
-    if (
-      endpoint.includes('/api/v1/gis/search/radius') &&
-      typeof window !== 'undefined' &&
-      (window.location.pathname.includes('/districts') ||
-        localStorage.getItem('blockRadiusSearch') === 'true' ||
-        (window as any).__BLOCK_RADIUS_SEARCH__)
-    ) {
-      logger.api.debug(
-        'ℹ️ API CLIENT: Radius search request detected but allowing (backend will block)'
-      );
-    }
-
     return this.request<T>(endpoint, {
       ...options,
       method: 'GET',
@@ -387,150 +337,3 @@ class ApiClient {
 
 // Экспортируем singleton instance
 export const apiClient = new ApiClient();
-
-// Для обратной совместимости с существующим кодом
-export abstract class ApiClientLegacy {
-  protected baseURL: string;
-
-  constructor(baseURL?: string) {
-    // В development режиме и в браузере используем пустую строку для proxy
-    if (
-      !baseURL &&
-      typeof window !== 'undefined' &&
-      process.env.NODE_ENV === 'development'
-    ) {
-      this.baseURL = '';
-    } else {
-      this.baseURL = baseURL || configManager.getConfig().api.url;
-    }
-  }
-
-  /**
-   * Преобразует старый формат ответа в новый
-   */
-  private convertResponse<T>(response: ApiResponse<T>): {
-    success: boolean;
-    data: T | null;
-    error?: string;
-    message?: string;
-  } {
-    if (response.data !== undefined) {
-      return {
-        success: true,
-        data: response.data,
-      };
-    }
-
-    return {
-      success: false,
-      data: null,
-      error: response.error?.message,
-      message: response.error?.message,
-    };
-  }
-
-  protected async get<T>(
-    endpoint: string,
-    params?: Record<string, any>,
-    options?: any
-  ): Promise<{
-    success: boolean;
-    data: T | null;
-    error?: string;
-    message?: string;
-  }> {
-    const queryString = params
-      ? '?' + new URLSearchParams(params).toString()
-      : '';
-    const response = await apiClient.get<T>(
-      `${endpoint}${queryString}`,
-      options
-    );
-    return this.convertResponse(response);
-  }
-
-  protected async post<T, D = unknown>(
-    endpoint: string,
-    data?: D,
-    options?: any
-  ): Promise<{
-    success: boolean;
-    data: T | null;
-    error?: string;
-    message?: string;
-  }> {
-    const response = await apiClient.post<T>(endpoint, data, options);
-    return this.convertResponse(response);
-  }
-
-  protected async put<T, D = unknown>(
-    endpoint: string,
-    data?: D,
-    options?: any
-  ): Promise<{
-    success: boolean;
-    data: T | null;
-    error?: string;
-    message?: string;
-  }> {
-    const response = await apiClient.put<T>(endpoint, data, options);
-    return this.convertResponse(response);
-  }
-
-  protected async delete<T>(
-    endpoint: string,
-    options?: any
-  ): Promise<{
-    success: boolean;
-    data: T | null;
-    error?: string;
-    message?: string;
-  }> {
-    const response = await apiClient.delete<T>(endpoint, options);
-    return this.convertResponse(response);
-  }
-
-  protected async upload<T>(
-    endpoint: string,
-    formData: FormData,
-    options?: any
-  ): Promise<{
-    success: boolean;
-    data: T | null;
-    error?: string;
-    message?: string;
-  }> {
-    const response = await apiClient.upload<T>(endpoint, formData, options);
-    return this.convertResponse(response);
-  }
-
-  protected async request<T>(
-    url: string,
-    options?: RequestInit
-  ): Promise<{
-    success: boolean;
-    data: T | null;
-    error?: string;
-    message?: string;
-  }> {
-    const endpoint = url.startsWith(this.baseURL)
-      ? url.replace(this.baseURL, '')
-      : url;
-    const response = await apiClient.request<T>(endpoint, options);
-    return this.convertResponse(response);
-  }
-
-  protected unwrap<T>(response: {
-    success: boolean;
-    data: T | null;
-    error?: string;
-  }): T {
-    if (response.success && response.data !== null) {
-      return response.data;
-    }
-    throw new Error(response.error || 'Request failed');
-  }
-}
-
-// Экспортируем ApiClientLegacy как ApiClient для обратной совместимости
-export { ApiClientLegacy as ApiClient };

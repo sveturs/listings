@@ -7,6 +7,8 @@ import (
 	"log"
 	"time"
 
+	"backend/internal/domain"
+
 	"github.com/pkg/errors"
 )
 
@@ -605,7 +607,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 		)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return nil, errors.New("shipment not found")
+				return nil, domain.ErrShipmentNotFound
 			}
 			return nil, errors.Wrap(err, "failed to get BEX shipment details")
 		}
@@ -713,7 +715,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 		)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return nil, errors.New("shipment not found")
+				return nil, domain.ErrShipmentNotFound
 			}
 			return nil, errors.Wrap(err, "failed to get Post Express shipment details")
 		}

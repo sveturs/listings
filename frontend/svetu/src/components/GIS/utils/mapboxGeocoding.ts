@@ -1,4 +1,5 @@
 import mbxGeocoding from '@mapbox/mapbox-sdk/services/geocoding';
+import configManager from '@/config';
 
 // Определяем тип для MapboxFeature
 interface MapboxFeature {
@@ -34,7 +35,7 @@ class MapboxGeocodingService {
   private client: ReturnType<typeof mbxGeocoding>;
 
   constructor() {
-    const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    const token = configManager.getMapboxToken();
     if (!token) {
       throw new Error('NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN is required');
     }

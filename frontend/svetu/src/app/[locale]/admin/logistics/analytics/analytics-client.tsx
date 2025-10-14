@@ -11,7 +11,7 @@ import {
   FiDownload,
   FiMap,
 } from 'react-icons/fi';
-import { apiClientAuth } from '@/lib/api-client-auth';
+import { apiClient } from '@/services/api-client';
 import DeliveryMap from '../components/DeliveryMap';
 
 interface PerformanceMetrics {
@@ -81,13 +81,13 @@ export default function AnalyticsClient() {
       // Пытаемся загрузить аналитические данные (могут не работать)
       try {
         const [performanceRes, financialRes, courierRes] = await Promise.all([
-          apiClientAuth.get(
+          apiClient.get(
             `/admin/logistics/analytics/performance?period=${selectedPeriod}`
           ),
-          apiClientAuth.get(
+          apiClient.get(
             `/admin/logistics/analytics/financial?period=${selectedPeriod}`
           ),
-          apiClientAuth.get(
+          apiClient.get(
             `/admin/logistics/analytics/couriers?period=${selectedPeriod}`
           ),
         ]);

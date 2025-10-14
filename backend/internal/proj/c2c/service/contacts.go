@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/storage"
@@ -39,12 +40,12 @@ func (s *ContactsService) AddContact(ctx context.Context, userID int, req *model
 		Bool("canAdd", canAdd).
 		Msg("[ContactsService] CanAddContact result")
 	if !canAdd {
-		return nil, fmt.Errorf("user does not allow contact requests or has blocked you")
+		return nil, domain.ErrUserNotAllowContactRequests
 	}
 
 	// Проверяем, не пытается ли пользователь добавить себя
 	if userID == req.ContactUserID {
-		return nil, fmt.Errorf("cannot add yourself as contact")
+		return nil, domain.ErrCannotAddYourself
 	}
 
 	// Проверяем, существует ли уже связь
@@ -55,7 +56,7 @@ func (s *ContactsService) AddContact(ctx context.Context, userID int, req *model
 	}
 
 	if existingContact != nil {
-		return nil, fmt.Errorf("contact already exists")
+		return nil, domain.ErrContactAlreadyExists
 	}
 
 	status := models.ContactStatusPending

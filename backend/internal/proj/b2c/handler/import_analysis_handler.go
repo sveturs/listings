@@ -75,8 +75,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 	storefrontID, err := c.ParamsInt("storefront_id")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid storefront_id",
-			Message: err.Error(),
+			Error: "Invalid storefront_id",
 		})
 	}
 
@@ -84,8 +83,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "File upload failed",
-			Message: err.Error(),
+			Error: "File upload failed",
 		})
 	}
 
@@ -93,8 +91,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 	src, err := file.Open()
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to open uploaded file",
-			Message: err.Error(),
+			Error: "Failed to open uploaded file",
 		})
 	}
 	defer func() {
@@ -107,8 +104,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 	fileData, err := io.ReadAll(src)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to read uploaded file",
-			Message: err.Error(),
+			Error: "Failed to read uploaded file",
 		})
 	}
 
@@ -134,8 +130,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 			products, parseErrors, err = xmlParser.ParseGenericXML(fileData)
 			if err != nil {
 				return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-					Error:   "Failed to parse XML file",
-					Message: err.Error(),
+					Error: "Failed to parse XML file",
 				})
 			}
 		}
@@ -145,8 +140,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 		products, parseErrors, err = csvParser.ParseCSV(reader)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-				Error:   "Failed to parse CSV file",
-				Message: err.Error(),
+				Error: "Failed to parse CSV file",
 			})
 		}
 	default:
@@ -216,8 +210,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 	suggestions, err := h.aiCategoryMapper.BatchMapCategories(c.Context(), categories, categoryToProduct)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to analyze categories",
-			Message: err.Error(),
+			Error: "Failed to analyze categories",
 		})
 	}
 
@@ -401,8 +394,7 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 	storefrontID, err := c.ParamsInt("storefront_id")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid storefront_id",
-			Message: err.Error(),
+			Error: "Invalid storefront_id",
 		})
 	}
 
@@ -410,8 +402,7 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "File upload failed",
-			Message: err.Error(),
+			Error: "File upload failed",
 		})
 	}
 
@@ -419,8 +410,7 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 	src, err := file.Open()
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to open uploaded file",
-			Message: err.Error(),
+			Error: "Failed to open uploaded file",
 		})
 	}
 	defer func() {
@@ -433,8 +423,7 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 	fileData, err := io.ReadAll(src)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to read uploaded file",
-			Message: err.Error(),
+			Error: "Failed to read uploaded file",
 		})
 	}
 
@@ -458,8 +447,7 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 			products, parseErrors, err = xmlParser.ParseGenericXML(fileData)
 			if err != nil {
 				return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-					Error:   "Failed to parse XML file",
-					Message: err.Error(),
+					Error: "Failed to parse XML file",
 				})
 			}
 		}
@@ -469,8 +457,7 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 		products, parseErrors, err = csvParser.ParseCSV(reader)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-				Error:   "Failed to parse CSV file",
-				Message: err.Error(),
+				Error: "Failed to parse CSV file",
 			})
 		}
 	default:
@@ -626,8 +613,7 @@ func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
 	storefrontID, err := c.ParamsInt("storefront_id")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid storefront_id",
-			Message: err.Error(),
+			Error: "Invalid storefront_id",
 		})
 	}
 
@@ -635,8 +621,7 @@ func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "File upload failed",
-			Message: err.Error(),
+			Error: "File upload failed",
 		})
 	}
 
@@ -644,8 +629,7 @@ func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
 	src, err := file.Open()
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to open uploaded file",
-			Message: err.Error(),
+			Error: "Failed to open uploaded file",
 		})
 	}
 	defer func() {
@@ -658,8 +642,7 @@ func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
 	fileData, err := io.ReadAll(src)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Failed to read uploaded file",
-			Message: err.Error(),
+			Error: "Failed to read uploaded file",
 		})
 	}
 
@@ -683,8 +666,7 @@ func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
 			products, parseErrors, err = xmlParser.ParseGenericXML(fileData)
 			if err != nil {
 				return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-					Error:   "Failed to parse XML file",
-					Message: err.Error(),
+					Error: "Failed to parse XML file",
 				})
 			}
 		}
@@ -694,8 +676,7 @@ func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
 		products, parseErrors, err = csvParser.ParseCSV(reader)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-				Error:   "Failed to parse CSV file",
-				Message: err.Error(),
+				Error: "Failed to parse CSV file",
 			})
 		}
 	default:
@@ -754,16 +735,14 @@ func (h *ImportHandler) AnalyzeClientCategories(c *fiber.Ctx) error {
 	var req AnalyzeClientCategoriesRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid request body",
-			Message: err.Error(),
+			Error: "Invalid request body",
 		})
 	}
 
 	analysis, err := h.aiCategoryAnalyzer.AnalyzeClientCategories(c.Context(), req.Categories)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
-			Error:   "Failed to analyze categories",
-			Message: err.Error(),
+			Error: "Failed to analyze categories",
 		})
 	}
 

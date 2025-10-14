@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { apiClientAuth } from '@/lib/api-client-auth';
+import { apiClient } from '@/services/api-client';
 
 interface Synonym {
   id: number;
@@ -55,7 +55,7 @@ export default function SynonymManager() {
         params.append('search', searchTerm.trim());
       }
 
-      const response = await apiClientAuth.get(
+      const response = await apiClient.get(
         `/api/v1/admin/search/synonyms?${params}`
       );
 
@@ -125,7 +125,7 @@ export default function SynonymManager() {
     }
 
     try {
-      await apiClientAuth.post('/api/v1/admin/search/synonyms', editForm);
+      await apiClient.post('/api/v1/admin/search/synonyms', editForm);
 
       setEditForm({ term: '', synonym: '', language: 'ru', is_active: true });
       setShowCreateForm(false);
@@ -140,7 +140,7 @@ export default function SynonymManager() {
 
   const handleUpdate = async (synonym: Synonym) => {
     try {
-      await apiClientAuth.put(`/api/v1/admin/search/synonyms/${synonym.id}`, {
+      await apiClient.put(`/api/v1/admin/search/synonyms/${synonym.id}`, {
         term: synonym.term,
         synonym: synonym.synonym,
         language: synonym.language,
@@ -163,7 +163,7 @@ export default function SynonymManager() {
     }
 
     try {
-      await apiClientAuth.delete(`/api/v1/admin/search/synonyms/${synonymId}`);
+      await apiClient.delete(`/api/v1/admin/search/synonyms/${synonymId}`);
       fetchSynonyms();
     } catch (error: any) {
       console.error('Error deleting synonym:', error);

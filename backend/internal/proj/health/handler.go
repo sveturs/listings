@@ -10,7 +10,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const statusHealthy = "healthy"
+const (
+	statusHealthy   = "healthy"
+	statusUnhealthy = "unhealthy"
+)
 
 type Handler struct {
 	db    *sql.DB
@@ -72,7 +75,7 @@ func (h *Handler) ReadyCheck(c *fiber.Ctx) error {
 
 		err := h.db.PingContext(ctx)
 		if err != nil {
-			checks["database"] = "unhealthy: " + err.Error()
+			checks["database"] = statusUnhealthy
 			isReady = false
 		} else {
 			// Check database stats
@@ -92,7 +95,7 @@ func (h *Handler) ReadyCheck(c *fiber.Ctx) error {
 		ctx := c.Context()
 		_, err := h.redis.Ping(ctx).Result()
 		if err != nil {
-			checks["redis"] = "unhealthy: " + err.Error()
+			checks["redis"] = statusUnhealthy
 			isReady = false
 		} else {
 			checks["redis"] = statusHealthy
@@ -108,7 +111,7 @@ func (h *Handler) ReadyCheck(c *fiber.Ctx) error {
 	statusText := "ok"
 	statusCode := fiber.StatusOK
 	if !isReady {
-		statusText = "unhealthy"
+		statusText = statusUnhealthy
 		statusCode = fiber.StatusServiceUnavailable
 	}
 

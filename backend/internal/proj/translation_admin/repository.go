@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 
 	"github.com/jmoiron/sqlx"
@@ -179,7 +180,7 @@ func (r *Repository) UpdateTranslation(ctx context.Context, translation *models.
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("translation not found")
+		return domain.ErrTranslationNotFound
 	}
 
 	return nil
@@ -200,7 +201,7 @@ func (r *Repository) DeleteTranslation(ctx context.Context, id int) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("translation not found")
+		return domain.ErrTranslationNotFound
 	}
 
 	return nil
@@ -850,7 +851,7 @@ func (r *Repository) GetTranslationByID(ctx context.Context, id int) (*models.Tr
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("translation not found")
+		return nil, domain.ErrTranslationNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get translation: %w", err)

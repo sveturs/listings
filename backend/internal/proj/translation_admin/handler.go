@@ -1,19 +1,17 @@
 package translation_admin
 
 import (
+	"errors"
 	"strconv"
 
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
-)
-
-const (
-	translationNotFoundError = "translation not found"
 )
 
 // Handler handles translation admin API requests
@@ -348,7 +346,7 @@ func (h *Handler) GetTranslation(c *fiber.Ctx) error {
 
 	translation, err := h.service.GetTranslationByID(ctx, id)
 	if err != nil {
-		if err.Error() == translationNotFoundError {
+		if errors.Is(err, domain.ErrTranslationNotFound) {
 			return utils.SendError(c, fiber.StatusNotFound, "admin.translations.translationNotFound")
 		}
 		h.logger.Error().Err(err).Int("id", id).Msg("Failed to get translation")
@@ -393,7 +391,7 @@ func (h *Handler) UpdateTranslation(c *fiber.Ctx) error {
 	}
 
 	if err := h.service.UpdateDatabaseTranslation(ctx, id, &updateReq, userID); err != nil {
-		if err.Error() == translationNotFoundError {
+		if errors.Is(err, domain.ErrTranslationNotFound) {
 			return utils.SendError(c, fiber.StatusNotFound, "admin.translations.translationNotFound")
 		}
 		h.logger.Error().Err(err).Int("id", id).Msg("Failed to update translation")
@@ -432,7 +430,7 @@ func (h *Handler) DeleteTranslation(c *fiber.Ctx) error {
 	}
 
 	if err := h.service.DeleteDatabaseTranslation(ctx, id, userID); err != nil {
-		if err.Error() == translationNotFoundError {
+		if errors.Is(err, domain.ErrTranslationNotFound) {
 			return utils.SendError(c, fiber.StatusNotFound, "admin.translations.translationNotFound")
 		}
 		h.logger.Error().Err(err).Int("id", id).Msg("Failed to delete translation")

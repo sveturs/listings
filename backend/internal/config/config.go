@@ -48,6 +48,7 @@ type Config struct {
 	MigrationsOnAPI       string            `yaml:"migrations_on_api"` // off, schema, full
 	ReindexOnAPI          string            `yaml:"reindex_on_api"`    // on
 	FeatureFlags          *FeatureFlags     `yaml:"feature_flags"`
+	Currency              CurrencyConfig    `yaml:"currency"`
 }
 
 type FileStorageConfig struct {
@@ -444,6 +445,23 @@ func NewConfig() (*Config, error) {
 	// Получаем настройку reindex при старте API
 	reindexOnAPI := strings.TrimSpace(os.Getenv("REINDEX_ON_API"))
 
+	// Загружаем конфигурацию валют
+	currencyConfig := GetDefaultCurrencyConfig()
+
+	// Переопределяем из переменных окружения, если указаны
+	if defaultCurrency := os.Getenv("DEFAULT_CURRENCY"); defaultCurrency != "" {
+		currencyConfig.DefaultCurrency = defaultCurrency
+	}
+	if supportedCurrencies := os.Getenv("SUPPORTED_CURRENCIES"); supportedCurrencies != "" {
+		currencyConfig.SupportedCurrencies = strings.Split(supportedCurrencies, ",")
+	}
+	if exchangeRatesEnabled := os.Getenv("EXCHANGE_RATES_ENABLED"); exchangeRatesEnabled == envValueTrue {
+		currencyConfig.ExchangeRatesEnabled = true
+	}
+	if exchangeRatesProvider := os.Getenv("EXCHANGE_RATES_PROVIDER"); exchangeRatesProvider != "" {
+		currencyConfig.ExchangeRatesProvider = exchangeRatesProvider
+	}
+
 	return &Config{
 		Port:                  port,
 		DatabaseURL:           dbURL,
@@ -477,6 +495,7 @@ func NewConfig() (*Config, error) {
 		MigrationsOnAPI:       migrationsOnAPI,
 		ReindexOnAPI:          reindexOnAPI,
 		FeatureFlags:          LoadFeatureFlags(),
+		Currency:              currencyConfig,
 	}, nil
 }
 

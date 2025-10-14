@@ -5,6 +5,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -16,6 +17,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 
 	"backend/internal/config"
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
@@ -631,7 +633,7 @@ func (h *ChatHandler) DeleteAttachment(c *fiber.Ctx) error {
 	}
 
 	if err := h.services.ChatAttachment().DeleteAttachment(c.Context(), attachmentID, userID); err != nil {
-		if err.Error() == "permission denied" {
+		if errors.Is(err, domain.ErrPermissionDenied) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.deleteAttachmentForbidden")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteAttachmentError")
@@ -848,7 +850,7 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 				if err := h.services.Chat().SendMessage(ctx, &msg); err != nil {
 					logger.Error().Err(err).Msg("Error sending message via WebSocket")
 					errMsg := map[string]interface{}{
-						"error":      err.Error(),
+						"error":      "marketplace.sendMessageError",
 						"chat_id":    msg.ChatID,
 						"listing_id": msg.ListingID,
 					}

@@ -310,41 +310,42 @@ func (c *WSPClientImpl) GetOffices(ctx context.Context, locationID int) ([]WSPOf
 // CreateShipment создает новое отправление через манифест (транзакция 73)
 // ВАЖНО: Транзакция 63 предназначена только для отслеживания, не для создания!
 func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmentRequest) (*WSPShipmentResponse, error) {
-	// Используем новый метод создания через манифест (транзакция 73)
+	// Используем новый метод создания через манифест B2B (транзакция 73)
 	manifestResp, err := c.CreateShipmentViaManifest(ctx, shipment)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create shipment via manifest: %w", err)
 	}
 
 	// Преобразуем ответ манифеста в формат WSPShipmentResponse
-	if !manifestResp.Success {
+	// Новая структура: ManifestResponse с Rezultat (0=success), Poruka, Porudzbine[]
+	if manifestResp.Rezultat != 0 {
 		return &WSPShipmentResponse{
 			Success:      false,
-			ErrorMessage: manifestResp.ErrorMessage,
+			ErrorMessage: manifestResp.Poruka,
 		}, nil
 	}
 
 	// Проверяем результат создания посылки
-	if len(manifestResp.Posiljke) == 0 {
+	if len(manifestResp.Porudzbine) == 0 || len(manifestResp.Porudzbine[0].Posiljke) == 0 {
 		return &WSPShipmentResponse{
 			Success:      false,
 			ErrorMessage: "no shipment result in manifest response",
 		}, nil
 	}
 
-	posiljkaResult := manifestResp.Posiljke[0]
-	if posiljkaResult.Status != "OK" {
+	posiljkaResult := manifestResp.Porudzbine[0].Posiljke[0]
+	if posiljkaResult.Rezultat != 0 {
 		return &WSPShipmentResponse{
 			Success:      false,
-			ErrorMessage: posiljkaResult.Greska,
+			ErrorMessage: posiljkaResult.Poruka,
 		}, nil
 	}
 
 	// Возвращаем успешный результат
 	return &WSPShipmentResponse{
 		Success:         true,
-		TrackingNumber:  posiljkaResult.PostExpressBroj,
-		Barcode:         posiljkaResult.Barkod,
+		TrackingNumber:  posiljkaResult.TrackingNumber,
+		Barcode:         "",                       // Баркод не возвращается в B2B API
 		ReferenceNumber: posiljkaResult.BrojPosiljke,
 	}, nil
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import SafeImage from '@/components/SafeImage';
 import SafeHTML from '@/components/SafeHTML';
@@ -20,7 +20,7 @@ interface ProductCardProps {
   viewMode?: 'grid' | 'list';
 }
 
-export default function ProductCard({
+const ProductCard = memo(function ProductCard({
   product,
   storefrontId,
   viewMode = 'grid'
@@ -28,13 +28,18 @@ export default function ProductCard({
   const t = useTranslations('storefronts');
   const locale = useLocale();
 
-  const mainImage = product.images?.find(img => img.is_default) || product.images?.[0];
-  
-  const stockStatusColor = {
+  // Мемоизируем главное изображение
+  const mainImage = useMemo(() =>
+    product.images?.find(img => img.is_default) || product.images?.[0],
+    [product.images]
+  );
+
+  // Мемоизируем цвет статуса склада
+  const stockStatusColor = useMemo(() => ({
     in_stock: 'text-success',
     low_stock: 'text-warning',
     out_of_stock: 'text-error',
-  }[product.stock_status || 'in_stock'];
+  }[product.stock_status || 'in_stock']), [product.stock_status]);
 
   if (viewMode === 'list') {
     return (
@@ -215,4 +220,6 @@ export default function ProductCard({
       </div>
     </div>
   );
-}
+});
+
+export default ProductCard;

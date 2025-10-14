@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/proj/c2c/repository"
 	"backend/internal/storage"
@@ -233,7 +234,7 @@ func (s *OrderService) CreateOrderFromRequest(ctx context.Context, req CreateOrd
 	paymentReq := CreatePaymentRequest{
 		UserID:        int(req.BuyerID),
 		Amount:        decimal.NewFromFloat(order.ItemPrice),
-		Currency:      "RSD",
+		Currency:      config.GetGlobalDefaultCurrency(),
 		PaymentMethod: req.PaymentMethod,
 		Description:   fmt.Sprintf("Order #%d: %s", order.ID, listing.Title),
 		ReturnURL:     req.ReturnURL,

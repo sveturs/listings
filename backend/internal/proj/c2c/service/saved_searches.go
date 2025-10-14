@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
@@ -131,8 +133,8 @@ func (s *MarketplaceService) GetSavedSearchByID(ctx context.Context, userID int,
 	)
 	if err != nil {
 		logger.Error().Err(err).Int("searchId", searchID).Int("userId", userID).Msg("Failed to get saved search")
-		if err.Error() == "sql: no rows in result set" {
-			return nil, fmt.Errorf("saved search not found")
+		if errors.Is(err, domain.ErrNoRows) {
+			return nil, domain.ErrSavedSearchNotFound
 		}
 		return nil, fmt.Errorf("failed to get saved search: %w", err)
 	}
@@ -224,7 +226,7 @@ func (s *MarketplaceService) DeleteSavedSearch(ctx context.Context, userID int, 
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		return fmt.Errorf("saved search not found")
+		return domain.ErrSavedSearchNotFound
 	}
 
 	logger.Info().Int("id", searchID).Int("userId", userID).Msg("Deleted saved search")

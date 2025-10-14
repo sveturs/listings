@@ -3,11 +3,13 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
@@ -55,13 +57,13 @@ func (h *Handler) AddContact(c *fiber.Ctx) error {
 	contact, err := h.services.Contacts().AddContact(c.Context(), userID, &req)
 	if err != nil {
 		// Проверяем специфичные ошибки
-		if err.Error() == "contact already exists" {
+		if errors.Is(err, domain.ErrContactAlreadyExists) {
 			return utils.ErrorResponse(c, fiber.StatusConflict, "contacts.alreadyExists")
 		}
-		if err.Error() == "cannot add yourself as contact" {
+		if errors.Is(err, domain.ErrCannotAddYourself) {
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "contacts.cannotAddYourself")
 		}
-		if err.Error() == "user does not allow contact requests or has blocked you" {
+		if errors.Is(err, domain.ErrUserNotAllowContactRequests) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "contacts.userNotAllowRequests")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.addError")

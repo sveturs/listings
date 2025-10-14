@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
-import { apiClientAuth } from '@/lib/api-client-auth';
+import { apiClient } from '@/services/api-client';
 
 interface Shipment {
   id: number;
@@ -66,7 +66,7 @@ export default function ShipmentsListClient() {
       if (dateTo) params.append('date_to', dateTo);
       if (cityFilter) params.append('city', cityFilter);
 
-      const result = await apiClientAuth.get(
+      const result = await apiClient.get(
         `/admin/logistics/shipments?${params}`
       );
 

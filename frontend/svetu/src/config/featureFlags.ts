@@ -30,6 +30,11 @@ export function getFeatureFlags(): FeatureFlags {
     }
   }
 
+  // ВАЖНО: Сейчас используем прямой process.env для feature flags
+  // так как они не интегрированы в ConfigManager
+  // TODO: После интеграции всех feature flags в ConfigManager,
+  // использовать configManager.getFeatureFlag()
+
   // Дефолтные значения из переменных окружения
   return {
     useUnifiedAttributes:

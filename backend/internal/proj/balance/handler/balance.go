@@ -4,6 +4,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strconv"
 
@@ -11,6 +12,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/config"
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	balance "backend/internal/proj/balance/service"
 	paymentService "backend/internal/proj/payments/service"
@@ -57,12 +60,12 @@ func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Error getting balance for user %d: %v", userID, err)
 		// Если записи нет, возвращаем нулевой баланс
-		if err.Error() == "no rows in result set" {
+		if errors.Is(err, domain.ErrNoRows) {
 			log.Printf("No balance record found for user %d, returning zero balance", userID)
 			return utils.SuccessResponse(c, &models.UserBalance{
 				UserID:   userID,
 				Balance:  0,
-				Currency: "RSD",
+				Currency: config.GetGlobalDefaultCurrency(),
 			})
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "balance.getError")

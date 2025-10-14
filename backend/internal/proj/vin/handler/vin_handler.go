@@ -76,7 +76,7 @@ func (h *VINHandler) DecodeVIN(c *fiber.Ctx) error {
 	// Декодируем VIN
 	response, err := h.service.DecodeVIN(c.Context(), &req, userID)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "vin.decodeFailed", fiber.Map{"error": err.Error()})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "vin.decodeFailed", nil)
 	}
 
 	if !response.Success {
@@ -104,9 +104,7 @@ func (h *VINHandler) ValidateVIN(c *fiber.Ctx) error {
 	decoder := service.NewVINDecoder()
 	err := decoder.ValidateVIN(vin)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "vin.invalidVIN", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "vin.invalidVIN", nil)
 	}
 
 	// Получаем базовую информацию
@@ -160,7 +158,7 @@ func (h *VINHandler) GetHistory(c *fiber.Ctx) error {
 
 	history, err := h.service.GetHistory(c.Context(), &req)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "vin.historyFailed", fiber.Map{"error": err.Error()})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "vin.historyFailed", nil)
 	}
 
 	return utils.SendSuccessResponse(c, history, "vin.historySuccess")
@@ -207,9 +205,7 @@ func (h *VINHandler) AutoFillFromVIN(c *fiber.Ctx) error {
 	// Получаем данные для автозаполнения
 	autoFillData, err := h.service.AutoFillFromVIN(c.Context(), vin, &userID)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "vin.autoFillFailed", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "vin.autoFillFailed", nil)
 	}
 
 	return utils.SendSuccessResponse(c, autoFillData, "vin.autoFillSuccess")
@@ -240,7 +236,7 @@ func (h *VINHandler) GetStats(c *fiber.Ctx) error {
 
 	stats, err := h.service.GetVINStats(c.Context(), &userID)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "vin.statsFailed", fiber.Map{"error": err.Error()})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "vin.statsFailed", nil)
 	}
 
 	return utils.SendSuccessResponse(c, stats, "vin.statsSuccess")
@@ -276,9 +272,7 @@ func (h *VINHandler) ExportReport(c *fiber.Ctx) error {
 	// Генерируем отчет
 	reportData, err := h.service.ExportVINReport(c.Context(), vin, &userID)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "vin.reportFailed", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "vin.reportFailed", nil)
 	}
 
 	// Устанавливаем заголовки для скачивания

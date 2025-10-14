@@ -10,6 +10,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { memo, useMemo } from 'react';
 import type { UnifiedListing } from '@/types/unified-listing';
 import {
   getUnifiedListingDetailUrl,
@@ -35,7 +36,7 @@ export interface UnifiedListingCardProps {
   variant?: 'grid' | 'list';
 }
 
-export function UnifiedListingCard({
+export const UnifiedListingCard = memo(function UnifiedListingCard({
   listing,
   locale,
   className = '',
@@ -47,11 +48,17 @@ export function UnifiedListingCard({
 }: UnifiedListingCardProps) {
   const t = useTranslations('unified');
 
-  // Получить главное изображение
-  const mainImage = getMainImage(listing.images);
+  // Мемоизируем главное изображение
+  const mainImage = useMemo(
+    () => getMainImage(listing.images),
+    [listing.images]
+  );
 
-  // URL детальной страницы
-  const detailUrl = getUnifiedListingDetailUrl(listing, locale);
+  // Мемоизируем URL детальной страницы
+  const detailUrl = useMemo(
+    () => getUnifiedListingDetailUrl(listing, locale),
+    [listing, locale]
+  );
 
   // Бейдж типа (C2C/B2C)
   const typeBadge = showTypeBadge && (
@@ -75,12 +82,16 @@ export function UnifiedListingCard({
     </span>
   );
 
-  // Форматирование цены
-  const formattedPrice = new Intl.NumberFormat(locale, {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(listing.price);
+  // Мемоизируем форматирование цены
+  const formattedPrice = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'decimal',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(listing.price),
+    [locale, listing.price]
+  );
 
   if (variant === 'list') {
     return (
@@ -253,7 +264,7 @@ export function UnifiedListingCard({
       </div>
     </Link>
   );
-}
+});
 
 /**
  * Компонент сетки unified listings

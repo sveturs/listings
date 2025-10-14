@@ -14,6 +14,7 @@ import authService from '@/services/auth';
 import type { User, UpdateProfileRequest } from '@/types/auth';
 import { reset as resetChat, closeWebSocket } from '@/store/slices/chatSlice';
 import { resetCart } from '@/store/slices/cartSlice';
+import configManager from '@/config';
 
 interface AuthContextType {
   user: User | null;
@@ -110,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = useCallback(() => {
     // Redirect to backend OAuth endpoint
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:31876';
+    const apiUrl = configManager.getApiUrl() || 'http://localhost:31876';
     window.location.href = `${apiUrl}/api/v1/auth/google`;
   }, []);
 
@@ -178,23 +179,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router, dispatch]);
 
   const updateProfile = useCallback(
-    async (_data: UpdateProfileRequest): Promise<boolean> => {
+    async (data: UpdateProfileRequest): Promise<boolean> => {
       setIsUpdatingProfile(true);
       setError(null);
       try {
-        // TODO: Implement profile update with new auth service
-        // const updatedProfile = await AuthService.updateProfile(data);
-        const updatedProfile = false;
-        if (updatedProfile) {
-          // Refresh session to get updated user data
-          await refreshSession();
-          return true;
-        }
-        setError('Failed to update profile');
-        return false;
+        await authService.updateProfile(data);
+        // Refresh session to get updated user data
+        await refreshSession();
+        return true;
       } catch (error) {
         console.error('Profile update error:', error);
-        setError('Failed to update profile. Please try again.');
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Failed to update profile. Please try again.';
+        setError(message);
         return false;
       } finally {
         setIsUpdatingProfile(false);

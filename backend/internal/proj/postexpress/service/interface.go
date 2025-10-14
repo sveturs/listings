@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"backend/internal/proj/postexpress"
 	"backend/internal/proj/postexpress/models"
 	"backend/internal/proj/postexpress/storage"
 )
@@ -68,8 +69,8 @@ type WSPClient interface {
 	GetLocations(ctx context.Context, search string) ([]WSPLocation, error)
 	GetOffices(ctx context.Context, locationID int) ([]WSPOffice, error)
 	CreateShipment(ctx context.Context, shipment *WSPShipmentRequest) (*WSPShipmentResponse, error)
-	CreateShipmentViaManifest(ctx context.Context, shipment *WSPShipmentRequest) (*WSPManifestResponse, error)
-	CreateManifest(ctx context.Context, manifest *WSPManifestRequest) (*WSPManifestResponse, error)
+	CreateShipmentViaManifest(ctx context.Context, shipment *WSPShipmentRequest) (*postexpress.ManifestResponse, error)
+	CreateManifest(ctx context.Context, manifest *postexpress.ManifestRequest) (*postexpress.ManifestResponse, error)
 	GetShipmentStatus(ctx context.Context, trackingNumber string) (*WSPTrackingResponse, error)
 	PrintLabel(ctx context.Context, shipmentID string) ([]byte, error)
 	CancelShipment(ctx context.Context, shipmentID string) error

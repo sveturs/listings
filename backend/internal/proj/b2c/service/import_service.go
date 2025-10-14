@@ -20,6 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"backend/internal/config"
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/b2c/parsers"
@@ -675,7 +677,7 @@ func (s *ImportService) importSingleProduct(ctx context.Context, importProduct m
 	if importProduct.SKU != "" {
 		existingProduct, err = s.productService.GetProductBySKU(ctx, storefrontID, importProduct.SKU)
 		// Если товар не найден - это нормально, просто создадим новый
-		if err != nil && !errors.Is(err, postgres.ErrStorefrontProductNotFound) {
+		if err != nil && !errors.Is(err, postgres.ErrNotFound) {
 			return fmt.Errorf("failed to check existing product: %w", err)
 		}
 	}
@@ -1290,7 +1292,7 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 					Str("url", url).
 					Err(curlErr).
 					Msg("Curl fallback also failed")
-				return nil, "", fmt.Errorf("failed to download image (both Go and curl failed): %w", err)
+				return nil, "", fmt.Errorf("failed to download image (both Go and curl failed): %w, wrapped: %w", domain.ErrTLSHandshake, err)
 			}
 
 			logger.Info().
@@ -1683,7 +1685,7 @@ func (s *ImportService) importVariantGroup(
 		Name:          group.BaseName,
 		Description:   description,
 		Price:         firstVariant.Price, // цена по умолчанию из первого варианта
-		Currency:      "RSD",              // TODO: извлекать из OriginalAttributes
+		Currency:      config.GetGlobalDefaultCurrency(),
 		CategoryID:    categoryID,
 		SKU:           &group.BaseName, // используем base name как SKU родителя
 		StockQuantity: 0,               // суммарное количество будет в вариантах

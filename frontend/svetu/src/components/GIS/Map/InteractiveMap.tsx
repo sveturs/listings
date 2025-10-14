@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
+import configManager from '@/config';
 
 // Хук для детекции fullscreen режима
 const useFullscreen = () => {
@@ -186,9 +187,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [internalSelectedMarker, setInternalSelectedMarker] =
     useState<MapMarkerData | null>(null);
 
-  // Получение токена Mapbox из переменных окружения
-  const accessToken =
-    mapboxAccessToken || process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+  // Получение токена Mapbox из конфигурации
+  const accessToken = mapboxAccessToken || configManager.getMapboxToken();
 
   // Создаем кастомный стиль для OpenStreetMap
   const openStreetMapStyle = useMemo(

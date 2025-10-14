@@ -200,8 +200,13 @@ func (s *Service) GetOffices(ctx context.Context, req *OfficeListRequest) (*Offi
 }
 
 // CreateShipment - вспомогательный метод для создания одного отправления
-// Обертка над CreateManifest для простоты использования
+// Обертка над CreateManifest для простоты использования (UPDATED для B2B API)
 func (s *Service) CreateShipment(ctx context.Context, shipment *ShipmentRequest) (*ShipmentResponse, error) {
+	// Валидация перед созданием
+	if err := s.ValidateShipment(shipment); err != nil {
+		return nil, fmt.Errorf("shipment validation failed: %w", err)
+	}
+
 	// Генерируем уникальный ID манифеста
 	manifestID := fmt.Sprintf("SVETU-M-%d", time.Now().Unix())
 	orderID := fmt.Sprintf("SVETU-O-%d", time.Now().Unix())
@@ -209,12 +214,15 @@ func (s *Service) CreateShipment(ctx context.Context, shipment *ShipmentRequest)
 	manifest := &ManifestRequest{
 		ExtIDManifest: manifestID,
 		IDTipPosiljke: 1, // Обычная отправка
+		Posiljalac:    shipment.Posiljalac, // Отправитель на уровне манифеста
 		Porudzbine: []OrderRequest{
 			{
-				BrojPorudzbine: orderID,
-				Posiljke:       []ShipmentRequest{*shipment},
+				ExtIdPorudzbina: orderID,
+				Posiljke:        []ShipmentRequest{*shipment},
 			},
 		},
+		DatumPrijema: time.Now().Format("2006-01-02"),
+		IDPartnera:   10109, // svetu.rs
 	}
 
 	resp, err := s.CreateManifest(ctx, manifest)
@@ -229,37 +237,76 @@ func (s *Service) CreateShipment(ctx context.Context, shipment *ShipmentRequest)
 	return &resp.Porudzbine[0].Posiljke[0], nil
 }
 
-// ValidateShipment проверяет корректность данных отправления перед отправкой
+// ValidateShipment проверяет корректность данных отправления перед отправкой (UPDATED для B2B)
 func (s *Service) ValidateShipment(shipment *ShipmentRequest) error {
+	// Обязательные B2B поля
+	if shipment.ExtBrend == "" {
+		return fmt.Errorf("ExtBrend is required")
+	}
+	if shipment.ExtMagacin == "" {
+		return fmt.Errorf("ExtMagacin is required")
+	}
+	if shipment.ExtReferenca == "" {
+		return fmt.Errorf("ExtReferenca is required")
+	}
+	if shipment.NacinPrijema == "" {
+		return fmt.Errorf("NacinPrijema is required (K or O)")
+	}
+	if shipment.NacinPlacanja == "" {
+		return fmt.Errorf("NacinPlacanja is required (POF, N, K)")
+	}
+
+	// Основные поля
 	if shipment.BrojPosiljke == "" {
-		return fmt.Errorf("shipment number is required")
+		return fmt.Errorf("shipment number (BrojPosiljke) is required")
 	}
-	if shipment.Tezina <= 0 {
-		return fmt.Errorf("weight must be greater than 0")
+	if shipment.Masa <= 0 {
+		return fmt.Errorf("weight (Masa) must be greater than 0 grams")
 	}
-	if shipment.PrijemnoLice == "" {
+	if shipment.IDRukovanje == 0 {
+		return fmt.Errorf("service type (IdRukovanje) is required")
+	}
+
+	// Получатель
+	if shipment.Primalac.Naziv == "" {
 		return fmt.Errorf("recipient name is required")
 	}
-	if shipment.PrijemnoLiceAdresa == "" {
-		return fmt.Errorf("recipient address is required")
+	if shipment.Primalac.Adresa == nil {
+		return fmt.Errorf("recipient address object is required")
 	}
-	if shipment.PrijemnoLiceGrad == "" {
+	if shipment.Primalac.Mesto == "" {
 		return fmt.Errorf("recipient city is required")
 	}
-	if shipment.PrijemnoLiceTel == "" {
+	if shipment.Primalac.PostanskiBroj == "" {
+		return fmt.Errorf("recipient postal code is required")
+	}
+	if shipment.Primalac.Telefon == "" {
 		return fmt.Errorf("recipient phone is required")
 	}
-	if shipment.PosaljalacNaziv == "" {
+
+	// Отправитель (внутри отправления для B2B)
+	if shipment.Posiljalac.Naziv == "" {
 		return fmt.Errorf("sender name is required")
 	}
-	if shipment.PosaljalacAdresa == "" {
-		return fmt.Errorf("sender address is required")
+	if shipment.Posiljalac.Adresa == nil {
+		return fmt.Errorf("sender address object is required")
 	}
-	if shipment.PosaljalacGrad == "" {
+	if shipment.Posiljalac.Mesto == "" {
 		return fmt.Errorf("sender city is required")
 	}
-	if shipment.NacinPlacanj == "" {
-		return fmt.Errorf("payment method is required")
+	if shipment.Posiljalac.Telefon == "" {
+		return fmt.Errorf("sender phone is required")
+	}
+
+	// COD валидация
+	if shipment.Otkupnina > 0 {
+		if shipment.Vrednost == 0 {
+			return fmt.Errorf("Vrednost is required when Otkupnina is set")
+		}
+		// Проверка на услуги OTK и VD
+		if shipment.PosebneUsluge == "" {
+			return fmt.Errorf("PosebneUsluge must include OTK and VD for COD shipments")
+		}
 	}
 
 	return nil

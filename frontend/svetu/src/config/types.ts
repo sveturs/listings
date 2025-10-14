@@ -9,6 +9,10 @@ export const publicEnvSchema = z.object({
   NEXT_PUBLIC_IMAGE_PATH_PATTERN: z.string().optional(),
   NEXT_PUBLIC_WEBSOCKET_URL: z.string().url().optional().or(z.literal('')),
   NEXT_PUBLIC_ENABLE_PAYMENTS: z.string().optional(),
+  NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string().optional(),
+  NEXT_PUBLIC_ENABLE_MAPBOX: z.string().optional(),
+  NEXT_PUBLIC_CLAUDE_API_KEY: z.string().optional(),
+  NEXT_PUBLIC_FRONTEND_URL: z.string().optional(),
 });
 
 // Схема для серверных переменных
@@ -57,10 +61,20 @@ export interface Config {
   features: {
     enableChat: boolean;
     enablePayments: boolean;
+    enableMapbox: boolean;
+  };
+
+  // Mapbox Configuration
+  mapbox: {
+    accessToken?: string;
+    enabled: boolean;
   };
 
   // AI Configuration
   claudeApiKey?: string;
+
+  // Frontend Configuration
+  frontendUrl?: string;
 }
 
 // Дополнительный тип для ошибок валидации

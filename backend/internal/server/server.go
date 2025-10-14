@@ -574,9 +574,6 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 		return fiber.ErrUpgradeRequired
 	})
 
-	// CSRF токен - регистрируем ДО проектных роутов чтобы избежать конфликта с AuthRequiredJWT
-	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
-
 	// Config роуты - публичные, регистрируем ДО проектных роутов чтобы избежать конфликта с AuthRequiredJWT
 	s.app.Get("/api/v1/config/storage", s.configModule.Handler.GetStorageConfig)
 

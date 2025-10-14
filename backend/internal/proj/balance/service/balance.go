@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"time"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/storage"
 )
@@ -28,10 +29,11 @@ func NewBalanceService(storage storage.Storage) *BalanceService {
 
 func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*models.UserBalance, error) {
 	var balance models.UserBalance
+	defaultCurrency := config.GetGlobalDefaultCurrency()
 	err := s.storage.QueryRow(ctx, `
         WITH new_balance AS (
             INSERT INTO user_balances (user_id, balance, frozen_balance, currency)
-            VALUES ($1, 0, 0, 'RSD')
+            VALUES ($1, 0, 0, $2)
             ON CONFLICT (user_id) DO NOTHING
             RETURNING user_id, balance, frozen_balance, currency, updated_at
         )
@@ -42,7 +44,7 @@ func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*models.Us
         FROM user_balances
         WHERE user_id = $1
         LIMIT 1
-    `, userID).Scan(
+    `, userID, defaultCurrency).Scan(
 		&balance.UserID,
 		&balance.Balance,
 		&balance.FrozenBalance,
@@ -55,7 +57,7 @@ func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*models.Us
 			return &models.UserBalance{
 				UserID:   userID,
 				Balance:  0,
-				Currency: "RSD",
+				Currency: config.GetGlobalDefaultCurrency(),
 			}, nil
 		}
 		return nil, fmt.Errorf("failed to get user balance: %w", err)
@@ -115,7 +117,7 @@ func (s *BalanceService) CreateDeposit(ctx context.Context, userID int, amount f
 		UserID:        userID,
 		Type:          "deposit",
 		Amount:        totalAmount,
-		Currency:      "RSD",
+		Currency:      config.GetGlobalDefaultCurrency(),
 		Status:        "completed",
 		PaymentMethod: method,
 		Description:   fmt.Sprintf("Пополнение через %s", paymentMethod.Name),
@@ -149,9 +151,9 @@ func (s *BalanceService) CreateDeposit(ctx context.Context, userID int, amount f
 	_, err = tx.Exec(ctx, `
         INSERT INTO user_balances (user_id, balance, currency)
         VALUES ($1, $2, $3)
-        ON CONFLICT (user_id) 
+        ON CONFLICT (user_id)
         DO UPDATE SET balance = user_balances.balance + EXCLUDED.balance
-    `, userID, totalAmount, "RSD")
+    `, userID, totalAmount, config.GetGlobalDefaultCurrency())
 	if err != nil {
 		return nil, fmt.Errorf("failed to update balance: %w", err)
 	}

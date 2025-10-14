@@ -4,24 +4,35 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
 import {
-  removeFromCompare,
-  clearCompare,
-  toggleComparePanel,
+  removeItem,
+  clearCategory,
+  togglePanel,
   initializeCompare,
-} from '@/store/slices/compareSlice';
+  selectCompareItems,
+  selectCompareConfig,
+} from '@/store/slices/universalCompareSlice';
 import { useTranslations } from 'next-intl';
 import { X, Scale, ChevronUp, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+
+const CATEGORY = 'cars';
 
 export default function ComparisonBar() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const t = useTranslations('cars');
 
-  const { items, isOpen, maxItems } = useSelector(
-    (state: RootState) => state.compare
+  const items = useSelector((state: RootState) =>
+    selectCompareItems(state, CATEGORY)
   );
+  const isOpen = useSelector(
+    (state: RootState) => state.universalCompare.isPanelOpen
+  );
+  const config = useSelector((state: RootState) =>
+    selectCompareConfig(state, CATEGORY)
+  );
+  const maxItems = config?.maxItems || 3;
 
   useEffect(() => {
     dispatch(initializeCompare());
@@ -44,7 +55,7 @@ export default function ComparisonBar() {
       {/* Floating button for mobile */}
       <div className="fixed bottom-20 right-4 z-40 lg:hidden">
         <button
-          onClick={() => dispatch(toggleComparePanel())}
+          onClick={() => dispatch(togglePanel())}
           className="btn btn-primary btn-circle shadow-lg relative"
         >
           <Scale className="w-5 h-5" />
@@ -67,7 +78,7 @@ export default function ComparisonBar() {
         {/* Header */}
         <div
           className="flex items-center justify-between p-4 border-b border-base-300 cursor-pointer lg:cursor-default"
-          onClick={() => dispatch(toggleComparePanel())}
+          onClick={() => dispatch(togglePanel())}
         >
           <div className="flex items-center gap-3">
             <Scale className="w-5 h-5 text-primary" />
@@ -92,7 +103,7 @@ export default function ComparisonBar() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                dispatch(clearCompare());
+                dispatch(clearCategory(CATEGORY));
               }}
               className="btn btn-ghost btn-sm"
             >
@@ -120,17 +131,17 @@ export default function ComparisonBar() {
                 >
                   {/* Remove button */}
                   <button
-                    onClick={() => dispatch(removeFromCompare(car.id))}
+                    onClick={() => dispatch(removeItem(car.id))}
                     className="absolute top-2 right-2 btn btn-ghost btn-xs btn-circle"
                   >
                     <X className="w-3 h-3" />
                   </button>
 
                   {/* Car image */}
-                  {car.imageUrl && (
+                  {car.image && (
                     <div className="w-16 h-16 flex-shrink-0">
                       <Image
-                        src={car.imageUrl}
+                        src={car.image}
                         alt={car.title}
                         width={64}
                         height={64}
@@ -143,9 +154,9 @@ export default function ComparisonBar() {
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium truncate">{car.title}</h4>
                     <p className="text-sm text-base-content/70">
-                      {car.year} •{' '}
-                      {car.mileage
-                        ? `${car.mileage.toLocaleString()} ${t('common.km')}`
+                      {car.attributes?.year} •{' '}
+                      {car.attributes?.mileage
+                        ? `${car.attributes.mileage.toLocaleString()} ${t('common.km')}`
                         : t('common.noMileage')}
                     </p>
                     <p className="text-sm font-semibold text-primary">

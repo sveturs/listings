@@ -1,23 +1,28 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
+	"backend/internal/domain"
 	"backend/internal/proj/search_optimization/service"
 	"backend/pkg/utils"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
 type SearchOptimizationHandler struct {
-	service service.SearchOptimizationService
+	service   service.SearchOptimizationService
+	validator *validator.Validate
 }
 
 func NewSearchOptimizationHandler(service service.SearchOptimizationService) *SearchOptimizationHandler {
 	return &SearchOptimizationHandler{
-		service: service,
+		service:   service,
+		validator: validator.New(),
 	}
 }
 
@@ -90,8 +95,10 @@ func (h *SearchOptimizationHandler) StartOptimization(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
 	}
 
-	// Валидация запроса (пропускаем пока)
-	// TODO: Реализовать валидацию
+	// Валидация запроса
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "search_optimization.validation_failed")
+	}
 
 	// Получение ID администратора из контекста
 	adminID, ok := c.Locals("admin_id").(int)
@@ -226,7 +233,10 @@ func (h *SearchOptimizationHandler) ApplyOptimizedWeights(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
 	}
 
-	// TODO: Добавить валидацию, когда будет реализована функция ValidateStruct
+	// Валидация запроса
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "search_optimization.validation_failed")
+	}
 
 	adminID, ok := c.Locals("admin_id").(int)
 	if !ok {
@@ -264,7 +274,10 @@ func (h *SearchOptimizationHandler) AnalyzeCurrentWeights(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
 	}
 
-	// TODO: Добавить валидацию, когда будет реализована функция ValidateStruct
+	// Валидация запроса
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "search_optimization.validation_failed")
+	}
 
 	// Парсинг дат
 	fromDate, err := time.Parse("2006-01-02", req.FromDate)
@@ -391,7 +404,10 @@ func (h *SearchOptimizationHandler) CreateWeightBackup(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
 	}
 
-	// TODO: Добавить валидацию, когда будет реализована функция ValidateStruct
+	// Валидация запроса
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "search_optimization.validation_failed")
+	}
 
 	adminID, ok := c.Locals("admin_id").(int)
 	if !ok {
@@ -433,7 +449,10 @@ func (h *SearchOptimizationHandler) RollbackWeights(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
 	}
 
-	// TODO: Добавить валидацию, когда будет реализована функция ValidateStruct
+	// Валидация запроса
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "search_optimization.validation_failed")
+	}
 
 	adminID, ok := c.Locals("admin_id").(int)
 	if !ok {
@@ -535,7 +554,10 @@ func (h *SearchOptimizationHandler) CreateSynonym(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
 	}
 
-	// TODO: Добавить валидацию, когда будет реализована функция ValidateStruct
+	// Валидация запроса
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "search_optimization.validation_failed")
+	}
 
 	adminID, ok := c.Locals("admin_id").(int)
 	if !ok {
@@ -545,7 +567,7 @@ func (h *SearchOptimizationHandler) CreateSynonym(c *fiber.Ctx) error {
 
 	synonymID, err := h.service.CreateSynonym(c.Context(), req.Term, req.Synonym, req.Language, req.IsActive, adminID)
 	if err != nil {
-		if err.Error() == "synonym already exists" {
+		if errors.Is(err, domain.ErrSynonymAlreadyExists) {
 			return utils.ErrorResponse(c, http.StatusConflict, "synonym_already_exists")
 		}
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "create_synonym_failed")
@@ -589,7 +611,10 @@ func (h *SearchOptimizationHandler) UpdateSynonym(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "invalid_request_body")
 	}
 
-	// TODO: Добавить валидацию, когда будет реализована функция ValidateStruct
+	// Валидация запроса
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "search_optimization.validation_failed")
+	}
 
 	adminID, ok := c.Locals("admin_id").(int)
 	if !ok {
@@ -599,7 +624,7 @@ func (h *SearchOptimizationHandler) UpdateSynonym(c *fiber.Ctx) error {
 
 	err = h.service.UpdateSynonym(c.Context(), synonymID, req.Term, req.Synonym, req.Language, req.IsActive, adminID)
 	if err != nil {
-		if err.Error() == "synonym not found" {
+		if errors.Is(err, domain.ErrSynonymNotFound) {
 			return utils.ErrorResponse(c, http.StatusNotFound, "synonym_not_found")
 		}
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "update_synonym_failed")
@@ -643,7 +668,7 @@ func (h *SearchOptimizationHandler) DeleteSynonym(c *fiber.Ctx) error {
 
 	err = h.service.DeleteSynonym(c.Context(), synonymID, adminID)
 	if err != nil {
-		if err.Error() == "synonym not found" {
+		if errors.Is(err, domain.ErrSynonymNotFound) {
 			return utils.ErrorResponse(c, http.StatusNotFound, "synonym_not_found")
 		}
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "delete_synonym_failed")

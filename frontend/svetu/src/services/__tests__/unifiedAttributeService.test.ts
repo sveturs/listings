@@ -1,20 +1,24 @@
 import { unifiedAttributeService } from '../unifiedAttributeService';
+import { apiClient } from '../api-client';
 import type { components } from '@/types/generated/api';
 
 type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
 type UnifiedAttributeValue =
   components['schemas']['models.UnifiedAttributeValue'];
 
-// Mock fetch globally
-global.fetch = jest.fn();
+// Mock apiClient
+jest.mock('../api-client', () => ({
+  apiClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
 
 describe('UnifiedAttributeService', () => {
-  const mockBaseUrl = 'http://localhost:3000/api';
-
   beforeEach(() => {
     jest.clearAllMocks();
-    // Reset to v2 API
-    unifiedAttributeService.useV2Api();
   });
 
   describe('getCategoryAttributes', () => {
@@ -24,41 +28,35 @@ describe('UnifiedAttributeService', () => {
         { id: 2, name: 'model', display_name: 'Model', attribute_type: 'text' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, data: mockAttributes }),
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { data: mockAttributes },
+        status: 200,
       });
 
       const result = await unifiedAttributeService.getCategoryAttributes(123);
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v2/attributes/category/123`,
-        expect.objectContaining({
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        })
-      );
+      expect(apiClient.get).toHaveBeenCalledWith('/v2/attributes/category/123');
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockAttributes);
     });
 
     it('should handle fetch error', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(
-        new Error('Network error')
-      );
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        error: { message: 'Network error' },
+        status: 500,
+      });
 
       const result = await unifiedAttributeService.getCategoryAttributes(123);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to fetch category attributes');
+      expect(result.error).toBe('Network error');
     });
 
     it('should handle API error response', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ success: false, error: 'Category not found' }),
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        error: { message: 'Category not found' },
+        status: 404,
       });
 
       const result = await unifiedAttributeService.getCategoryAttributes(123);
@@ -74,9 +72,9 @@ describe('UnifiedAttributeService', () => {
         { id: 1, name: 'test', is_required: true },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, data: mockAttributes }),
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { data: mockAttributes },
+        status: 200,
       });
 
       const result = await unifiedAttributeService.getAttributes({
@@ -85,24 +83,22 @@ describe('UnifiedAttributeService', () => {
         searchable: false,
       });
 
-      const expectedUrl = `${mockBaseUrl}/v2/attributes?category_id=123&required=true&searchable=false`;
-      expect(global.fetch).toHaveBeenCalledWith(expectedUrl, expect.anything());
+      expect(apiClient.get).toHaveBeenCalledWith(
+        '/v2/attributes?category_id=123&required=true&searchable=false'
+      );
 
       expect(result.success).toBe(true);
     });
 
     it('should handle empty params', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, data: [] }),
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { data: [] },
+        status: 200,
       });
 
       await unifiedAttributeService.getAttributes();
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v2/attributes`,
-        expect.anything()
-      );
+      expect(apiClient.get).toHaveBeenCalledWith('/v2/attributes');
     });
   });
 
@@ -114,9 +110,9 @@ describe('UnifiedAttributeService', () => {
         text_value: 'test value',
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, data: mockValue }),
+      (apiClient.post as jest.Mock).mockResolvedValueOnce({
+        data: { data: mockValue },
+        status: 201,
       });
 
       const result = await unifiedAttributeService.createAttributeValue({
@@ -125,15 +121,16 @@ describe('UnifiedAttributeService', () => {
         text_value: 'test value',
       });
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v2/listings/100/attributes`,
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({
-            attribute_id: 10,
-            text_value: 'test value',
-          }),
-        })
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/v2/listings/100/attributes',
+        {
+          attribute_id: 10,
+          text_value: 'test value',
+          numeric_value: undefined,
+          boolean_value: undefined,
+          date_value: undefined,
+          json_value: undefined,
+        }
       );
 
       expect(result.success).toBe(true);
@@ -147,9 +144,9 @@ describe('UnifiedAttributeService', () => {
         numeric_value: 42,
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, data: mockValue }),
+      (apiClient.post as jest.Mock).mockResolvedValueOnce({
+        data: { data: mockValue },
+        status: 201,
       });
 
       const result = await unifiedAttributeService.createAttributeValue({
@@ -158,8 +155,8 @@ describe('UnifiedAttributeService', () => {
         numeric_value: 42,
       });
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v2/products/200/attributes`,
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/v2/products/200/attributes',
         expect.anything()
       );
 
@@ -175,9 +172,9 @@ describe('UnifiedAttributeService', () => {
         text_value: 'updated value',
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, data: mockValue }),
+      (apiClient.put as jest.Mock).mockResolvedValueOnce({
+        data: { data: mockValue },
+        status: 200,
       });
 
       const result = await unifiedAttributeService.updateAttributeValue({
@@ -187,14 +184,15 @@ describe('UnifiedAttributeService', () => {
         text_value: 'updated value',
       });
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v2/listings/100/attributes/1`,
-        expect.objectContaining({
-          method: 'PUT',
-          body: JSON.stringify({
-            text_value: 'updated value',
-          }),
-        })
+      expect(apiClient.put).toHaveBeenCalledWith(
+        '/v2/listings/100/attributes/1',
+        {
+          text_value: 'updated value',
+          numeric_value: undefined,
+          boolean_value: undefined,
+          date_value: undefined,
+          json_value: undefined,
+        }
       );
 
       expect(result.success).toBe(true);
@@ -203,18 +201,15 @@ describe('UnifiedAttributeService', () => {
 
   describe('deleteAttributeValue', () => {
     it('should delete attribute value', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, message: 'Deleted' }),
+      (apiClient.delete as jest.Mock).mockResolvedValueOnce({
+        data: { message: 'Deleted' },
+        status: 200,
       });
 
       const result = await unifiedAttributeService.deleteAttributeValue(1, 100);
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v2/listings/100/attributes/1`,
-        expect.objectContaining({
-          method: 'DELETE',
-        })
+      expect(apiClient.delete).toHaveBeenCalledWith(
+        '/v2/listings/100/attributes/1'
       );
 
       expect(result.success).toBe(true);
@@ -228,9 +223,9 @@ describe('UnifiedAttributeService', () => {
         { attribute_id: 2, numeric_value: 42 },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, data: attributeValues }),
+      (apiClient.post as jest.Mock).mockResolvedValueOnce({
+        data: { data: attributeValues },
+        status: 200,
       });
 
       const result = await unifiedAttributeService.saveListingAttributes(
@@ -238,12 +233,9 @@ describe('UnifiedAttributeService', () => {
         attributeValues
       );
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v2/listings/100/attributes/batch`,
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ attributes: attributeValues }),
-        })
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/v2/listings/100/attributes/batch',
+        { attributes: attributeValues }
       );
 
       expect(result.success).toBe(true);
@@ -381,44 +373,25 @@ describe('UnifiedAttributeService', () => {
     });
   });
 
-  describe('API version switching', () => {
-    it('should switch to v1 API', async () => {
-      unifiedAttributeService.useV1Api();
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, data: [] }),
-      });
-
-      await unifiedAttributeService.getAttributes();
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v1/attributes`,
-        expect.anything()
-      );
-    });
-
+  describe('checkV2ApiAvailability', () => {
     it('should check v2 API availability', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true }),
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { success: true },
+        status: 200,
       });
 
       const isAvailable =
         await unifiedAttributeService.checkV2ApiAvailability();
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/v2/attributes/health`,
-        expect.anything()
-      );
+      expect(apiClient.get).toHaveBeenCalledWith('/v2/attributes/health');
 
       expect(isAvailable).toBe(true);
     });
 
     it('should return false when v2 API is not available', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ success: false }),
+      (apiClient.get as jest.Mock).mockResolvedValueOnce({
+        error: { message: 'Not available' },
+        status: 503,
       });
 
       const isAvailable =

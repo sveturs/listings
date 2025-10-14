@@ -2,11 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"backend/internal/domain"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -104,7 +107,7 @@ func importMakes(db *sqlx.DB, dataDir string) error {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil && err.Error() != "sql: transaction has already been committed or rolled back" {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, domain.ErrTransactionFailed) {
 			log.Printf("Error rolling back transaction: %v", err)
 		}
 	}()

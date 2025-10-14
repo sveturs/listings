@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
+	"backend/internal/config"
 	"backend/internal/domain/behavior"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
@@ -518,7 +519,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			Name:               listing.Title,
 			Description:        listing.Description,
 			Price:              listing.Price,
-			Currency:           "RSD", // TODO: получить реальную валюту из конфигурации
+			Currency:           config.GetGlobalDefaultCurrency(),
 			Images:             convertedImages,
 			Category:           h.convertMarketplaceCategory(listing.Category),
 			Location:           h.convertMarketplaceLocation(listing),

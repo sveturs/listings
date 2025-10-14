@@ -880,8 +880,9 @@ func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models
 		Rating5:       0,
 	}
 
-	// TODO: User name should be loaded from auth-service at handler level
-	// For now, summary.Name will be empty until auth-service integration is added
+	// NOTE: User name is loaded from auth-service at handler/service level (see reviews/handler)
+	// Storage layer only returns user_id, handler enriches with user data from auth-service
+	// This follows the separation of concerns pattern: storage = data access, handler = data enrichment
 
 	// Получаем данные о рейтинге из отзывов к пользователю
 	// Теперь запрос включает как отзывы с entity_type='user', так и отзывы на объявления пользователя

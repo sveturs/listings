@@ -89,18 +89,14 @@ func (h *Handler) RegisterWebhookRoutes(router fiber.Router) {
 func (h *Handler) CalculateUniversal(c *fiber.Ctx) error {
 	var req calculator.CalculationRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
 	}
 
 	// Используем мок калькулятор для демонстрации
 	mockCalc := calculator.NewMockCalculator()
 	resp, err := mockCalc.CalculateMock(c.Context(), &req)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.calculation_failed", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.calculation_failed", nil)
 	}
 
 	return utils.SendSuccessResponse(c, resp, "Стоимость доставки рассчитана")
@@ -120,9 +116,7 @@ func (h *Handler) CalculateUniversal(c *fiber.Ctx) error {
 func (h *Handler) CalculateCart(c *fiber.Ctx) error {
 	var req CartCalculationRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
 	}
 
 	// Конвертируем в стандартный запрос расчета
@@ -137,9 +131,7 @@ func (h *Handler) CalculateCart(c *fiber.Ctx) error {
 
 	resp, err := h.service.CalculateDelivery(c.Context(), calcReq)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.calculation_failed", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.calculation_failed", nil)
 	}
 
 	return utils.SendSuccessResponse(c, resp, "Стоимость доставки для корзины рассчитана")
@@ -159,9 +151,7 @@ func (h *Handler) GetProviders(c *fiber.Ctx) error {
 
 	providers, err := h.service.GetProviders(c.Context(), activeOnly)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_get_providers", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_get_providers", nil)
 	}
 
 	return utils.SendSuccessResponse(c, providers, "Список провайдеров получен")
@@ -188,9 +178,7 @@ func (h *Handler) GetProductAttributes(c *fiber.Ctx) error {
 
 	attrs, err := h.service.GetProductAttributes(c.Context(), productID, productType)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusNotFound, "error.product_not_found", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusNotFound, "error.product_not_found", nil)
 	}
 
 	return utils.SendSuccessResponse(c, attrs, "Атрибуты доставки получены")
@@ -220,15 +208,11 @@ func (h *Handler) UpdateProductAttributes(c *fiber.Ctx) error {
 
 	var attrs models.DeliveryAttributes
 	if err := c.BodyParser(&attrs); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
 	}
 
 	if err := h.service.UpdateProductAttributes(c.Context(), productID, productType, &attrs); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_update", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_update", nil)
 	}
 
 	return utils.SendSuccessResponse(c, nil, "Атрибуты доставки обновлены")
@@ -252,9 +236,7 @@ func (h *Handler) GetCategoryDefaults(c *fiber.Ctx) error {
 
 	defaults, err := h.service.GetCategoryDefaults(c.Context(), categoryID)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusNotFound, "error.category_not_found", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusNotFound, "error.category_not_found", nil)
 	}
 
 	return utils.SendSuccessResponse(c, defaults, "Дефолтные атрибуты получены")
@@ -280,17 +262,13 @@ func (h *Handler) UpdateCategoryDefaults(c *fiber.Ctx) error {
 
 	var defaults models.CategoryDefaults
 	if err := c.BodyParser(&defaults); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
 	}
 
 	defaults.CategoryID = categoryID
 
 	if err := h.service.UpdateCategoryDefaults(c.Context(), &defaults); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_update", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_update", nil)
 	}
 
 	return utils.SendSuccessResponse(c, nil, "Дефолтные атрибуты обновлены")
@@ -314,9 +292,7 @@ func (h *Handler) ApplyCategoryDefaults(c *fiber.Ctx) error {
 
 	count, err := h.service.ApplyCategoryDefaults(c.Context(), categoryID)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_apply", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_apply", nil)
 	}
 
 	return utils.SendSuccessResponse(c, fiber.Map{
@@ -338,16 +314,12 @@ func (h *Handler) ApplyCategoryDefaults(c *fiber.Ctx) error {
 func (h *Handler) CreateShipment(c *fiber.Ctx) error {
 	var req service.CreateShipmentRequest
 	if err := c.BodyParser(&req); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
 	}
 
 	shipment, err := h.service.CreateShipment(c.Context(), &req)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_create_shipment", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_create_shipment", nil)
 	}
 
 	return utils.SendSuccessResponse(c, shipment, "Отправление создано")
@@ -371,9 +343,7 @@ func (h *Handler) GetShipment(c *fiber.Ctx) error {
 
 	shipment, err := h.service.GetShipment(c.Context(), shipmentID)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusNotFound, "error.shipment_not_found", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusNotFound, "error.shipment_not_found", nil)
 	}
 
 	return utils.SendSuccessResponse(c, shipment, "Информация об отправлении")
@@ -403,9 +373,7 @@ func (h *Handler) CancelShipment(c *fiber.Ctx) error {
 	}
 
 	if err := h.service.CancelShipment(c.Context(), shipmentID, req.Reason); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_cancel", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_cancel", nil)
 	}
 
 	return utils.SendSuccessResponse(c, nil, "Отправление отменено")
@@ -429,9 +397,7 @@ func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 
 	info, err := h.service.TrackShipment(c.Context(), trackingNumber)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusNotFound, "error.shipment_not_found", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusNotFound, "error.shipment_not_found", nil)
 	}
 
 	return utils.SendSuccessResponse(c, info, "Информация об отслеживании получена")
@@ -448,9 +414,7 @@ func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 func (h *Handler) GetProvidersAdmin(c *fiber.Ctx) error {
 	providers, err := h.service.GetProviders(c.Context(), false)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_get_providers", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_get_providers", nil)
 	}
 
 	return utils.SendSuccessResponse(c, providers, "Список провайдеров получен")
@@ -476,15 +440,11 @@ func (h *Handler) UpdateProvider(c *fiber.Ctx) error {
 
 	var provider models.Provider
 	if err := c.BodyParser(&provider); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
 	}
 
 	if err := h.service.UpdateProvider(c.Context(), providerID, &provider); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_update_provider", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_update_provider", nil)
 	}
 
 	return utils.SendSuccessResponse(c, nil, "Провайдер обновлен")
@@ -504,16 +464,12 @@ func (h *Handler) UpdateProvider(c *fiber.Ctx) error {
 func (h *Handler) CreatePricingRule(c *fiber.Ctx) error {
 	var rule models.PricingRule
 	if err := c.BodyParser(&rule); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
 	}
 
 	createdRule, err := h.service.CreatePricingRule(c.Context(), &rule)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_create_rule", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_create_rule", nil)
 	}
 
 	return utils.SendSuccessResponse(c, createdRule, "Правило ценообразования создано")
@@ -541,9 +497,7 @@ func (h *Handler) GetAnalytics(c *fiber.Ctx) error {
 	if fromStr != "" {
 		from, err = time.Parse("2006-01-02", fromStr)
 		if err != nil {
-			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_from_date", fiber.Map{
-				"error": err.Error(),
-			})
+			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_from_date", nil)
 		}
 	} else {
 		// По умолчанию - последние 30 дней
@@ -553,9 +507,7 @@ func (h *Handler) GetAnalytics(c *fiber.Ctx) error {
 	if toStr != "" {
 		to, err = time.Parse("2006-01-02", toStr)
 		if err != nil {
-			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_to_date", fiber.Map{
-				"error": err.Error(),
-			})
+			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_to_date", nil)
 		}
 	} else {
 		// По умолчанию - сегодня
@@ -567,18 +519,14 @@ func (h *Handler) GetAnalytics(c *fiber.Ctx) error {
 	if providerIDStr := c.Query("provider_id"); providerIDStr != "" {
 		pID, err := strconv.Atoi(providerIDStr)
 		if err != nil {
-			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_provider_id", fiber.Map{
-				"error": err.Error(),
-			})
+			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_provider_id", nil)
 		}
 		providerID = &pID
 	}
 
 	analytics, err := h.service.GetDeliveryAnalytics(c.Context(), from, to, providerID)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_get_analytics", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_get_analytics", nil)
 	}
 
 	return utils.SendSuccessResponse(c, analytics, "Аналитика доставок")
@@ -621,9 +569,7 @@ func (h *Handler) HandleTrackingWebhook(c *fiber.Ctx) error {
 	// Обрабатываем webhook через сервис
 	result, err := h.service.HandleProviderWebhook(c.Context(), providerCode, payload, headers)
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "delivery.webhook.processing_error", fiber.Map{
-			"error": err.Error(),
-		})
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "delivery.webhook.processing_error", nil)
 	}
 
 	return utils.SendSuccessResponse(c, result, "Webhook processed successfully")

@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 
+	"backend/internal/domain"
 	"backend/internal/logger"
 
 	"github.com/gofiber/fiber/v2"
@@ -81,7 +83,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 		case "invalid state: invalid state":
 			errorType = "invalid_state"
 		default:
-			if err.Error() == "failed to exchange code" {
+			if errors.Is(err, domain.ErrOAuthCodeExchangeFailed) {
 				errorType = "exchange_failed"
 			}
 		}
@@ -158,84 +160,5 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 			"roles": roles,
 		},
 		"authenticated": true,
-	})
-}
-
-// GetUserRoles returns roles for a specific user
-// @Summary Get user roles
-// @Description Returns all roles assigned to a specific user
-// @Tags roles
-// @Security BearerAuth
-// @Param userId path int true "User ID"
-// @Produce json
-// @Success 200 {object} map[string]interface{} "User roles"
-// @Failure 404 {object} utils.ErrorResponseSwag "User not found"
-// @Router /api/v1/users/{userId}/roles [get]
-func (h *AuthHandler) GetUserRoles(c *fiber.Ctx) error {
-	userID := c.Params("userId")
-	if userID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "user ID required",
-		})
-	}
-
-	// For now, return empty roles
-	// TODO: Implement through auth service
-	return c.JSON(fiber.Map{
-		"roles": []string{},
-	})
-}
-
-// GetRoles returns all available roles
-// @Summary Get all roles
-// @Description Returns all available roles in the system
-// @Tags roles
-// @Security BearerAuth
-// @Produce json
-// @Success 200 {object} []map[string]interface{} "List of roles"
-// @Router /api/v1/roles [get]
-func (h *AuthHandler) GetRoles(c *fiber.Ctx) error {
-	// TODO: Implement through auth service
-	return c.JSON(fiber.Map{
-		"roles": []fiber.Map{
-			{"id": 1, "name": "admin", "description": "Administrator"},
-			{"id": 2, "name": "user", "description": "Regular user"},
-		},
-	})
-}
-
-// AssignRole assigns a role to a user
-// @Summary Assign role to user
-// @Description Assigns a specific role to a user
-// @Tags roles
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag "Role assigned successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Router /api/v1/roles/assign [post]
-func (h *AuthHandler) AssignRole(c *fiber.Ctx) error {
-	// TODO: Implement through auth service when EntityAssignRoleRequest is available
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Role assignment not implemented",
-	})
-}
-
-// RevokeRole revokes a role from a user
-// @Summary Revoke role from user
-// @Description Revokes a specific role from a user
-// @Tags roles
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag "Role revoked successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Router /api/v1/roles/revoke [post]
-func (h *AuthHandler) RevokeRole(c *fiber.Ctx) error {
-	// TODO: Implement through auth service when EntityRevokeRoleRequest is available
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Role revocation not implemented",
 	})
 }

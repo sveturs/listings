@@ -10,40 +10,15 @@ import {
   TranslationResponse,
   GetTranslationParams,
 } from '@/types/chat';
+import configManager from '@/config';
 
 class ChatService {
   private baseUrl: string;
-  private csrfToken: string | null = null;
   private reconnectAttempts = 0;
 
   constructor() {
     // BFF proxy endpoint
     this.baseUrl = '/api/v2/c2c/chat';
-  }
-
-  private async getCsrfToken(): Promise<string> {
-    if (this.csrfToken) {
-      return this.csrfToken;
-    }
-
-    try {
-      const response = await fetch('/api/v2/csrf-token', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        this.csrfToken = data.csrf_token;
-        return this.csrfToken || '';
-      }
-    } catch (error) {
-      console.warn('Failed to fetch CSRF token:', error);
-    }
-
-    // Fallback: generate client-side token for basic protection
-    this.csrfToken = `client-${Date.now()}-${Math.random().toString(36).substring(2)}`;
-    return this.csrfToken;
   }
 
   private async request<T>(
@@ -58,12 +33,7 @@ class ChatService {
     };
 
     // BFF proxy handles JWT automatically via httpOnly cookies
-    // Добавляем CSRF токен для изменяющих запросов
-    const method = options?.method || 'GET';
-    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())) {
-      const csrfToken = await this.getCsrfToken();
-      headers['X-CSRF-Token'] = csrfToken;
-    }
+    // BFF proxy также обрабатывает CSRF защиту через SameSite cookies
 
     const response = await fetch(url, {
       ...options,
@@ -287,10 +257,7 @@ class ChatService {
       const uploadUrl = `${this.baseUrl}/messages/${messageId}/attachments`;
       xhr.open('POST', uploadUrl);
 
-      // BFF proxy handles JWT automatically via httpOnly cookies
-      // Добавляем CSRF токен
-      const csrfToken = await this.getCsrfToken();
-      xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+      // BFF proxy handles JWT и CSRF защиту автоматически
 
       xhr.send(formData);
     });
@@ -358,10 +325,7 @@ class ChatService {
 
       xhr.open('POST', `${this.baseUrl}/messages/${messageId}/attachments`);
 
-      // BFF proxy handles JWT automatically via httpOnly cookies
-      // Добавляем CSRF токен
-      const csrfToken = await this.getCsrfToken();
-      xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+      // BFF proxy handles JWT и CSRF защиту автоматически
 
       xhr.withCredentials = true;
       xhr.send(formData);
@@ -414,16 +378,16 @@ class ChatService {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
       // Для development используем backend порт напрямую
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isDevelopment = configManager.isDevelopment();
 
-      // Получаем WebSocket URL из переменной окружения или используем дефолтный хост
+      // Получаем WebSocket URL из ConfigManager
       let wsHost: string;
       if (isDevelopment) {
         wsHost = 'localhost:3000';
       } else {
-        // На production используем NEXT_PUBLIC_WEBSOCKET_URL или выводим из API URL
-        const wsUrlEnv = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        // На production используем WebSocket URL или выводим из API URL
+        const wsUrlEnv = configManager.getWebSocketUrl();
+        const apiUrl = configManager.getApiUrl();
 
         if (wsUrlEnv) {
           // Извлекаем хост из wss://devapi.svetu.rs
@@ -526,14 +490,11 @@ class ChatService {
     show_original_language_badge: boolean;
     chat_tone_moderation: boolean;
   }): Promise<void> {
-    const csrfToken = await this.getCsrfToken();
-
     const response = await fetch('/api/v2/users/chat-settings', {
       method: 'PUT',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken,
       },
       body: JSON.stringify(settings),
     });

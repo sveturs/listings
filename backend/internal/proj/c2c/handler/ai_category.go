@@ -617,13 +617,8 @@ func (h *AICategoryHandler) SelectCategory(c *fiber.Ctx) error {
 	result, err := h.detector.SelectCategoryDirectly(c.Context(), input)
 	if err != nil {
 		h.logger.Error("Failed to select category via AI",
-			zap.Error(err),
-			zap.String("errorDetails", err.Error()))
-		// Возвращаем подробную ошибку в режиме разработки
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "AI selection failed",
-			"details": err.Error(),
-		})
+			zap.Error(err))
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.aiSelectionFailed")
 	}
 
 	h.logger.Info("AI category selection successful",

@@ -1,13 +1,16 @@
 package handler
 
 import (
+	"errors"
 	"log"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/proj/c2c/service"
 	"backend/pkg/utils"
@@ -16,12 +19,14 @@ import (
 // OrderHandler обрабатывает запросы связанные с заказами
 type OrderHandler struct {
 	orderService service.OrderServiceInterface
+	validator    *validator.Validate
 }
 
 // NewOrderHandler создает новый обработчик заказов
 func NewOrderHandler(orderService service.OrderServiceInterface) *OrderHandler {
 	return &OrderHandler{
 		orderService: orderService,
+		validator:    validator.New(),
 	}
 }
 
@@ -78,10 +83,10 @@ func (h *OrderHandler) CreateMarketplaceOrder(c *fiber.Ctx) error {
 
 	log.Printf("Request: ListingID=%d, PaymentMethod=%s", req.ListingID, req.PaymentMethod)
 
-	// TODO: Добавить валидацию структуры
-	// if err := utils.ValidateStruct(&req); err != nil {
-	//     return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidData")
-	// }
+	// Валидация структуры
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidData")
+	}
 
 	// Создаем заказ
 	order, payment, err := h.orderService.CreateOrderFromRequest(c.Context(), service.CreateOrderRequest{
@@ -204,7 +209,7 @@ func (h *OrderHandler) GetOrderDetails(c *fiber.Ctx) error {
 
 	order, err := h.orderService.GetOrderDetails(c.Context(), orderID, int64(userID))
 	if err != nil {
-		if err.Error() == "unauthorized: not a party of this order" {
+		if errors.Is(err, domain.ErrOrderAccessDenied) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.accessDenied")
 		}
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.notFound")
@@ -243,7 +248,7 @@ func (h *OrderHandler) ConfirmPayment(c *fiber.Ctx) error {
 	// Проверяем что пользователь - покупатель этого заказа
 	order, err := h.orderService.GetOrderDetails(c.Context(), orderID, int64(userID))
 	if err != nil {
-		if err.Error() == "unauthorized: not a party of this order" {
+		if errors.Is(err, domain.ErrOrderAccessDenied) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.accessDenied")
 		}
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.notFound")
@@ -290,10 +295,10 @@ func (h *OrderHandler) MarkAsShipped(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidRequest")
 	}
 
-	// TODO: Добавить валидацию структуры
-	// if err := utils.ValidateStruct(&req); err != nil {
-	//     return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidData")
-	// }
+	// Валидация структуры
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidData")
+	}
 
 	err = h.orderService.MarkAsShipped(c.Context(), orderID, int64(userID), req.ShippingMethod, req.TrackingNumber)
 	if err != nil {
@@ -368,10 +373,10 @@ func (h *OrderHandler) OpenDispute(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidRequest")
 	}
 
-	// TODO: Добавить валидацию структуры
-	// if err := utils.ValidateStruct(&req); err != nil {
-	//     return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidData")
-	// }
+	// Валидация структуры
+	if err := h.validator.Struct(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidData")
+	}
 
 	err = h.orderService.OpenDispute(c.Context(), orderID, int64(userID), req.Reason)
 	if err != nil {

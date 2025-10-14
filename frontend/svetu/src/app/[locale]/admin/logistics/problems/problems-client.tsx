@@ -13,7 +13,7 @@ import {
   FiUser,
   FiMessageSquare,
 } from 'react-icons/fi';
-import { apiClientAuth } from '@/lib/api-client-auth';
+import { apiClient } from '@/services/api-client';
 import AssignProblemModal from '../components/AssignProblemModal';
 import ResolveProblemModal from '../components/ResolveProblemModal';
 import ProblemCommentsModal from '../components/ProblemCommentsModal';
@@ -57,9 +57,7 @@ export default function ProblemShipmentsClient() {
       if (filterType !== 'all') params.append('problem_type', filterType);
       if (filterStatus !== 'all') params.append('status', filterStatus);
 
-      const result = await apiClientAuth.get(
-        `/admin/logistics/problems?${params}`
-      );
+      const result = await apiClient.get(`/admin/logistics/problems?${params}`);
 
       if (result.data) {
         setProblems(result.data.problems || []);
@@ -149,7 +147,7 @@ export default function ProblemShipmentsClient() {
     if (!selectedProblem) return;
 
     try {
-      const result = await apiClientAuth.post(
+      const result = await apiClient.post(
         `/admin/logistics/problems/${selectedProblem.id}/resolve`,
         {
           resolution: resolution,
@@ -176,7 +174,7 @@ export default function ProblemShipmentsClient() {
     if (!selectedProblem) return;
 
     try {
-      const result = await apiClientAuth.post(
+      const result = await apiClient.post(
         `/admin/logistics/problems/${selectedProblem.id}/assign`,
         {
           assign_to: adminId,

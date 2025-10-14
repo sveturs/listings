@@ -371,7 +371,7 @@ func (h *Handler) CreateBulkShipments(c *fiber.Ctx) error {
 
 		shipment, err := h.service.CreateShipment(c.Context(), &req)
 		if err != nil {
-			errors = append(errors, fmt.Sprintf("Shipment %d: %s", i+1, err.Error()))
+			errors = append(errors, fmt.Sprintf("Shipment %d: failed", i+1))
 			continue
 		}
 		shipments = append(shipments, shipment)

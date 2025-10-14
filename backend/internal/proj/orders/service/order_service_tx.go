@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/shopspring/decimal"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	orderRepo "backend/internal/proj/orders/repository"
 )
@@ -140,7 +141,7 @@ func (s *OrderServiceTx) prepareOrder(req *models.CreateOrderRequest, userID int
 		CustomerID:      userID,
 		UserID:          userID, // Для совместимости
 		Status:          models.OrderStatusPending,
-		Currency:        "RSD", // TODO: получать из настроек витрины
+		Currency:        config.GetGlobalDefaultCurrency(),
 		ShippingMethod:  &req.ShippingMethod,
 		CustomerNotes:   &req.CustomerNotes,
 		EscrowDays:      s.calculateEscrowDays(storefront),

@@ -85,6 +85,14 @@ class ConfigManager {
       NEXT_PUBLIC_ENABLE_PAYMENTS: this.getEnvValue(
         'NEXT_PUBLIC_ENABLE_PAYMENTS'
       ),
+      NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: this.getEnvValue(
+        'NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN'
+      ),
+      NEXT_PUBLIC_ENABLE_MAPBOX: this.getEnvValue('NEXT_PUBLIC_ENABLE_MAPBOX'),
+      NEXT_PUBLIC_CLAUDE_API_KEY: this.getEnvValue(
+        'NEXT_PUBLIC_CLAUDE_API_KEY'
+      ),
+      NEXT_PUBLIC_FRONTEND_URL: this.getEnvValue('NEXT_PUBLIC_FRONTEND_URL'),
     };
 
     // Собираем серверные переменные
@@ -129,8 +137,14 @@ class ConfigManager {
       features: {
         enableChat: !!publicEnv.NEXT_PUBLIC_WEBSOCKET_URL,
         enablePayments: publicEnv.NEXT_PUBLIC_ENABLE_PAYMENTS === 'true',
+        enableMapbox: publicEnv.NEXT_PUBLIC_ENABLE_MAPBOX === 'true',
       },
-      claudeApiKey: this.getEnvValue('NEXT_PUBLIC_CLAUDE_API_KEY'),
+      mapbox: {
+        accessToken: publicEnv.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
+        enabled: publicEnv.NEXT_PUBLIC_ENABLE_MAPBOX === 'true',
+      },
+      claudeApiKey: publicEnv.NEXT_PUBLIC_CLAUDE_API_KEY,
+      frontendUrl: publicEnv.NEXT_PUBLIC_FRONTEND_URL,
     };
   }
 
@@ -281,6 +295,41 @@ class ConfigManager {
 
     // Для остальных путей - предполагаем что это API пути
     return `${config.api.url}${normalizedPath}`;
+  }
+
+  /**
+   * Получает Mapbox access token
+   */
+  public getMapboxToken(): string | undefined {
+    return this.getConfig().mapbox.accessToken;
+  }
+
+  /**
+   * Проверяет, включен ли Mapbox
+   */
+  public isMapboxEnabled(): boolean {
+    return this.getConfig().mapbox.enabled;
+  }
+
+  /**
+   * Получает Claude API key
+   */
+  public getClaudeApiKey(): string | undefined {
+    return this.getConfig().claudeApiKey;
+  }
+
+  /**
+   * Получает Frontend URL
+   */
+  public getFrontendUrl(): string | undefined {
+    return this.getConfig().frontendUrl;
+  }
+
+  /**
+   * Получает WebSocket URL
+   */
+  public getWebSocketUrl(): string | undefined {
+    return this.getConfig().api.websocketUrl;
   }
 }
 

@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
+	"backend/internal/domain"
 	"backend/internal/domain/logistics"
 	"backend/internal/proj/admin/logistics/service"
 	"backend/pkg/logger"
@@ -160,7 +162,7 @@ func (h *ShipmentsHandler) GetShipmentDetailsByProvider(c *fiber.Ctx) error {
 	// Получаем детали отправления
 	details, err := h.monitoringService.GetShipmentDetailsByProvider(c.Context(), provider, shipmentID)
 	if err != nil {
-		if err.Error() == "shipment not found" {
+		if errors.Is(err, domain.ErrShipmentNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.shipment_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.error")

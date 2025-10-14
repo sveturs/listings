@@ -1,3 +1,4 @@
+import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
 type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
@@ -37,14 +38,6 @@ interface UpdateAttributeValueParams extends CreateAttributeValueParams {
 }
 
 class UnifiedAttributeService {
-  private baseUrl: string;
-  private apiVersion: string = 'v2'; // Используем v2 API для унифицированных атрибутов
-
-  constructor() {
-    this.baseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api';
-  }
-
   /**
    * Получить список атрибутов для категории
    */
@@ -52,23 +45,20 @@ class UnifiedAttributeService {
     categoryId: number
   ): Promise<ApiResponse<UnifiedAttribute[]>> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.apiVersion}/attributes/category/${categoryId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        }
+      const response = await apiClient.get<{ data: UnifiedAttribute[] }>(
+        `/v2/attributes/category/${categoryId}`
       );
 
-      const data = await response.json();
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error fetching category attributes:', error);
@@ -95,24 +85,24 @@ class UnifiedAttributeService {
         });
       }
 
-      const url = `${this.baseUrl}/${this.apiVersion}/attributes${
+      const endpoint = `/v2/attributes${
         queryParams.toString() ? `?${queryParams.toString()}` : ''
       }`;
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      const response = await apiClient.get<{ data: UnifiedAttribute[] }>(
+        endpoint
+      );
 
-      const data = await response.json();
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error fetching attributes:', error);
@@ -130,23 +120,20 @@ class UnifiedAttributeService {
     attributeId: number
   ): Promise<ApiResponse<UnifiedAttribute>> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.apiVersion}/attributes/${attributeId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        }
+      const response = await apiClient.get<{ data: UnifiedAttribute }>(
+        `/v2/attributes/${attributeId}`
       );
 
-      const data = await response.json();
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error fetching attribute:', error);
@@ -164,23 +151,20 @@ class UnifiedAttributeService {
     listingId: number
   ): Promise<ApiResponse<UnifiedAttributeValue[]>> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.apiVersion}/listings/${listingId}/attributes`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        }
-      );
+      const response = await apiClient.get<{
+        data: UnifiedAttributeValue[];
+      }>(`/v2/listings/${listingId}/attributes`);
 
-      const data = await response.json();
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error fetching listing attribute values:', error);
@@ -198,23 +182,20 @@ class UnifiedAttributeService {
     productId: number
   ): Promise<ApiResponse<UnifiedAttributeValue[]>> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.apiVersion}/products/${productId}/attributes`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        }
-      );
+      const response = await apiClient.get<{
+        data: UnifiedAttributeValue[];
+      }>(`/v2/products/${productId}/attributes`);
 
-      const data = await response.json();
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error fetching product attribute values:', error);
@@ -233,31 +214,33 @@ class UnifiedAttributeService {
   ): Promise<ApiResponse<UnifiedAttributeValue>> {
     try {
       const endpoint = params.listing_id
-        ? `${this.baseUrl}/${this.apiVersion}/listings/${params.listing_id}/attributes`
-        : `${this.baseUrl}/${this.apiVersion}/products/${params.product_id}/attributes`;
+        ? `/v2/listings/${params.listing_id}/attributes`
+        : `/v2/products/${params.product_id}/attributes`;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          attribute_id: params.attribute_id,
-          text_value: params.text_value,
-          numeric_value: params.numeric_value,
-          boolean_value: params.boolean_value,
-          date_value: params.date_value,
-          json_value: params.json_value,
-        }),
-      });
+      const payload = {
+        attribute_id: params.attribute_id,
+        text_value: params.text_value,
+        numeric_value: params.numeric_value,
+        boolean_value: params.boolean_value,
+        date_value: params.date_value,
+        json_value: params.json_value,
+      };
 
-      const data = await response.json();
+      const response = await apiClient.post<{ data: UnifiedAttributeValue }>(
+        endpoint,
+        payload
+      );
+
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error creating attribute value:', error);
@@ -276,30 +259,32 @@ class UnifiedAttributeService {
   ): Promise<ApiResponse<UnifiedAttributeValue>> {
     try {
       const endpoint = params.listing_id
-        ? `${this.baseUrl}/${this.apiVersion}/listings/${params.listing_id}/attributes/${params.id}`
-        : `${this.baseUrl}/${this.apiVersion}/products/${params.product_id}/attributes/${params.id}`;
+        ? `/v2/listings/${params.listing_id}/attributes/${params.id}`
+        : `/v2/products/${params.product_id}/attributes/${params.id}`;
 
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          text_value: params.text_value,
-          numeric_value: params.numeric_value,
-          boolean_value: params.boolean_value,
-          date_value: params.date_value,
-          json_value: params.json_value,
-        }),
-      });
+      const payload = {
+        text_value: params.text_value,
+        numeric_value: params.numeric_value,
+        boolean_value: params.boolean_value,
+        date_value: params.date_value,
+        json_value: params.json_value,
+      };
 
-      const data = await response.json();
+      const response = await apiClient.put<{ data: UnifiedAttributeValue }>(
+        endpoint,
+        payload
+      );
+
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error updating attribute value:', error);
@@ -320,22 +305,21 @@ class UnifiedAttributeService {
   ): Promise<ApiResponse<void>> {
     try {
       const endpoint = listingId
-        ? `${this.baseUrl}/${this.apiVersion}/listings/${listingId}/attributes/${valueId}`
-        : `${this.baseUrl}/${this.apiVersion}/products/${productId}/attributes/${valueId}`;
+        ? `/v2/listings/${listingId}/attributes/${valueId}`
+        : `/v2/products/${productId}/attributes/${valueId}`;
 
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      const response = await apiClient.delete<{ message?: string }>(endpoint);
 
-      const data = await response.json();
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        message: response.data?.message,
       };
     } catch (error) {
       console.error('Error deleting attribute value:', error);
@@ -354,24 +338,22 @@ class UnifiedAttributeService {
     attributeValues: Partial<UnifiedAttributeValue>[]
   ): Promise<ApiResponse<UnifiedAttributeValue[]>> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.apiVersion}/listings/${listingId}/attributes/batch`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ attributes: attributeValues }),
-        }
-      );
+      const response = await apiClient.post<{
+        data: UnifiedAttributeValue[];
+      }>(`/v2/listings/${listingId}/attributes/batch`, {
+        attributes: attributeValues,
+      });
 
-      const data = await response.json();
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error saving listing attributes:', error);
@@ -390,24 +372,22 @@ class UnifiedAttributeService {
     attributeValues: Partial<UnifiedAttributeValue>[]
   ): Promise<ApiResponse<UnifiedAttributeValue[]>> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.apiVersion}/products/${productId}/attributes/batch`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ attributes: attributeValues }),
-        }
-      );
+      const response = await apiClient.post<{
+        data: UnifiedAttributeValue[];
+      }>(`/v2/products/${productId}/attributes/batch`, {
+        attributes: attributeValues,
+      });
 
-      const data = await response.json();
+      if (response.error) {
+        return {
+          success: false,
+          error: response.error.message,
+        };
+      }
+
       return {
-        success: response.ok,
-        data: response.ok ? data.data : undefined,
-        message: data.message,
-        error: !response.ok ? data.error : undefined,
+        success: true,
+        data: response.data?.data,
       };
     } catch (error) {
       console.error('Error saving product attributes:', error);
@@ -504,35 +484,12 @@ class UnifiedAttributeService {
    */
   async checkV2ApiAvailability(): Promise<boolean> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.apiVersion}/attributes/health`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        }
-      );
-      return response.ok;
+      const response = await apiClient.get('/v2/attributes/health');
+      return !response.error;
     } catch {
-      console.warn('V2 API not available, falling back to v1');
+      console.warn('V2 API not available');
       return false;
     }
-  }
-
-  /**
-   * Переключиться на v1 API (fallback)
-   */
-  useV1Api() {
-    this.apiVersion = 'v1';
-  }
-
-  /**
-   * Переключиться на v2 API
-   */
-  useV2Api() {
-    this.apiVersion = 'v2';
   }
 }
 

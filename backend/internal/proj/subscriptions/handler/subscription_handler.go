@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/proj/subscriptions/service"
 	"backend/pkg/logger"
@@ -103,7 +105,7 @@ func (h *SubscriptionHandler) CreateSubscription(c *fiber.Ctx) error {
 
 	subscription, err := h.service.CreateSubscription(c.Context(), &req)
 	if err != nil {
-		if err.Error() == "user already has active subscription" {
+		if errors.Is(err, domain.ErrActiveSubscriptionExists) {
 			return utils.SendError(c, fiber.StatusConflict, "subscriptions.alreadyHasSubscription")
 		}
 		h.logger.Error("Failed to create subscription: %v (user_id: %d)", err, userID)
@@ -140,7 +142,7 @@ func (h *SubscriptionHandler) UpgradeSubscription(c *fiber.Ctx) error {
 
 	subscription, err := h.service.UpgradeSubscription(c.Context(), userID, &req)
 	if err != nil {
-		if err.Error() == "no active subscription found" {
+		if errors.Is(err, domain.ErrNoActiveSubscription) {
 			return utils.SendError(c, fiber.StatusNotFound, "subscriptions.notFound")
 		}
 		h.logger.Error("Failed to upgrade subscription: %v (user_id: %d)", err, userID)
@@ -181,7 +183,7 @@ func (h *SubscriptionHandler) CancelSubscription(c *fiber.Ctx) error {
 
 	err := h.service.CancelSubscription(c.Context(), userID, reason)
 	if err != nil {
-		if err.Error() == "no active subscription found" {
+		if errors.Is(err, domain.ErrNoActiveSubscription) {
 			return utils.SendError(c, fiber.StatusNotFound, "subscriptions.notFound")
 		}
 		h.logger.Error("Failed to cancel subscription: %v (user_id: %d)", err, userID)

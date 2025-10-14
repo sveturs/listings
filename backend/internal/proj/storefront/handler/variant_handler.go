@@ -187,7 +187,7 @@ func (h *VariantHandler) GenerateVariants(c *fiber.Ctx) error {
 	variants, err := h.variantRepo.GenerateVariants(c.Context(), &req)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to generate variants: " + err.Error(),
+			"error": "Failed to generate variants",
 		})
 	}
 
@@ -229,7 +229,7 @@ func (h *VariantHandler) BulkCreateVariants(c *fiber.Ctx) error {
 		variant, err := h.variantRepo.CreateVariant(c.Context(), &variantReq)
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Failed to create variant: " + err.Error(),
+				"error": "Failed to create variant",
 			})
 		}
 		createdVariants = append(createdVariants, *variant)
@@ -264,7 +264,7 @@ func (h *VariantHandler) SetupProductAttributes(c *fiber.Ctx) error {
 	err := h.variantRepo.SetupProductAttributes(c.Context(), &req)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to setup product attributes: " + err.Error(),
+			"error": "Failed to setup product attributes",
 		})
 	}
 
@@ -550,7 +550,7 @@ func (h *VariantHandler) ImportVariants(c *fiber.Ctx) error {
 	importedCount, err := h.variantRepo.ImportVariants(c.Context(), productID, fileData)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to import variants: " + err.Error(),
+			"error": "Failed to import variants",
 		})
 	}
 
