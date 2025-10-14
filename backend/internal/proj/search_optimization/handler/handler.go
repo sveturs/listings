@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
+	"backend/internal/domain"
 	"backend/internal/proj/search_optimization/service"
 	"backend/pkg/utils"
 
@@ -565,7 +567,7 @@ func (h *SearchOptimizationHandler) CreateSynonym(c *fiber.Ctx) error {
 
 	synonymID, err := h.service.CreateSynonym(c.Context(), req.Term, req.Synonym, req.Language, req.IsActive, adminID)
 	if err != nil {
-		if err.Error() == "synonym already exists" {
+		if errors.Is(err, domain.ErrSynonymAlreadyExists) {
 			return utils.ErrorResponse(c, http.StatusConflict, "synonym_already_exists")
 		}
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "create_synonym_failed")
@@ -622,7 +624,7 @@ func (h *SearchOptimizationHandler) UpdateSynonym(c *fiber.Ctx) error {
 
 	err = h.service.UpdateSynonym(c.Context(), synonymID, req.Term, req.Synonym, req.Language, req.IsActive, adminID)
 	if err != nil {
-		if err.Error() == "synonym not found" {
+		if errors.Is(err, domain.ErrSynonymNotFound) {
 			return utils.ErrorResponse(c, http.StatusNotFound, "synonym_not_found")
 		}
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "update_synonym_failed")
@@ -666,7 +668,7 @@ func (h *SearchOptimizationHandler) DeleteSynonym(c *fiber.Ctx) error {
 
 	err = h.service.DeleteSynonym(c.Context(), synonymID, adminID)
 	if err != nil {
-		if err.Error() == "synonym not found" {
+		if errors.Is(err, domain.ErrSynonymNotFound) {
 			return utils.ErrorResponse(c, http.StatusNotFound, "synonym_not_found")
 		}
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "delete_synonym_failed")

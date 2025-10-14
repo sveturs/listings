@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"log"
 	"strconv"
 
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/proj/c2c/service"
 	"backend/pkg/utils"
@@ -207,7 +209,7 @@ func (h *OrderHandler) GetOrderDetails(c *fiber.Ctx) error {
 
 	order, err := h.orderService.GetOrderDetails(c.Context(), orderID, int64(userID))
 	if err != nil {
-		if err.Error() == "unauthorized: not a party of this order" {
+		if errors.Is(err, domain.ErrOrderAccessDenied) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.accessDenied")
 		}
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.notFound")
@@ -246,7 +248,7 @@ func (h *OrderHandler) ConfirmPayment(c *fiber.Ctx) error {
 	// Проверяем что пользователь - покупатель этого заказа
 	order, err := h.orderService.GetOrderDetails(c.Context(), orderID, int64(userID))
 	if err != nil {
-		if err.Error() == "unauthorized: not a party of this order" {
+		if errors.Is(err, domain.ErrOrderAccessDenied) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "orders.accessDenied")
 		}
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "orders.notFound")

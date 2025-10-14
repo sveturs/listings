@@ -9,6 +9,7 @@ import (
 	"sort"
 	"time"
 
+	"backend/internal/domain"
 	"backend/internal/proj/search_optimization/storage"
 	"backend/pkg/logger"
 
@@ -848,7 +849,7 @@ func (s *searchOptimizationService) CreateSynonym(ctx context.Context, term, syn
 		return 0, pkgErrors.Wrap(err, "failed to check synonym existence")
 	}
 	if existing {
-		return 0, pkgErrors.New("synonym already exists")
+		return 0, domain.ErrSynonymAlreadyExists
 	}
 
 	// Создание синонима
@@ -888,7 +889,7 @@ func (s *searchOptimizationService) UpdateSynonym(ctx context.Context, synonymID
 		return pkgErrors.Wrap(err, "failed to check synonym existence")
 	}
 	if !exists {
-		return pkgErrors.New("synonym not found")
+		return domain.ErrSynonymNotFound
 	}
 
 	// Обновление синонима
@@ -917,7 +918,7 @@ func (s *searchOptimizationService) DeleteSynonym(ctx context.Context, synonymID
 		return pkgErrors.Wrap(err, "failed to check synonym existence")
 	}
 	if !exists {
-		return pkgErrors.New("synonym not found")
+		return domain.ErrSynonymNotFound
 	}
 
 	// Удаление синонима

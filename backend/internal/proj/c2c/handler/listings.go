@@ -4,6 +4,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/c2c/cache"
@@ -158,7 +160,7 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 	id, err := h.marketplaceService.CreateListing(c.Context(), &listing)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create listing")
-		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+		if errors.Is(err, domain.ErrDuplicateKey) {
 			return utils.ErrorResponse(c, fiber.StatusConflict, "marketplace.duplicateTitle")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.createError")
@@ -225,7 +227,7 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 		listing, err = h.marketplaceService.GetListingByID(ctx, id)
 		if err != nil {
 			logger.Error().Err(err).Int("listingId", id).Msg("Failed to get listing")
-			if err.Error() == "listing not found" {
+			if errors.Is(err, domain.ErrListingNotFound) {
 				return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 			}
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getError")
@@ -329,7 +331,7 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 	listing, err := h.marketplaceService.GetListingBySlug(ctx, slug)
 	if err != nil {
 		logger.Error().Err(err).Str("slug", slug).Msg("Failed to get listing by slug")
-		if strings.Contains(err.Error(), "not found") {
+		if domain.IsNotFoundError(err) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getError")
@@ -875,7 +877,7 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 	err = h.marketplaceService.DeleteListingWithAdmin(c.Context(), id, userID, isAdmin)
 	if err != nil {
 		logger.Error().Err(err).Int("listingId", id).Msg("Failed to delete listing")
-		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "permission") {
+		if domain.IsNotFoundError(err) || domain.IsPermissionError(err) {
 			return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.forbidden")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteError")

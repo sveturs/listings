@@ -2,14 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
+	"backend/internal/domain"
 	"backend/internal/domain/behavior"
 	"backend/internal/logger"
 	"backend/internal/proj/behavior_tracking/storage/postgres"
@@ -94,7 +95,7 @@ func (s *behaviorTrackingService) flushBuffer(ctx context.Context) error {
 	if err := s.repo.SaveEventsBatch(flushCtx, events); err != nil {
 		// При ошибке conn busy просто логируем и не возвращаем события в буфер
 		// чтобы избежать накопления событий
-		if strings.Contains(err.Error(), "conn busy") {
+		if errors.Is(err, domain.ErrConnectionBusy) {
 			logger.Warn().
 				Int("count", len(events)).
 				Err(err).

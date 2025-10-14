@@ -3,10 +3,12 @@
 package handler
 
 import (
+	"errors"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/domain"
 	globalService "backend/internal/proj/global/service"
 	paymentService "backend/internal/proj/payments/service"
 	"backend/pkg/logger"
@@ -64,7 +66,7 @@ func (h *Handler) HandleWebhook(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Webhook error: %v", err)
 		// Check if it's a signature verification error
-		if err.Error() == "invalid signature" {
+		if errors.Is(err, domain.ErrInvalidSignature) {
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "payments.webhook.invalid_signature")
 		}
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "payments.webhook.processing_error")

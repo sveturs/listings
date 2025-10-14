@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 
+	"backend/internal/domain"
 	"backend/internal/logger"
 
 	"github.com/gofiber/fiber/v2"
@@ -81,7 +83,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 		case "invalid state: invalid state":
 			errorType = "invalid_state"
 		default:
-			if err.Error() == "failed to exchange code" {
+			if errors.Is(err, domain.ErrOAuthCodeExchangeFailed) {
 				errorType = "exchange_failed"
 			}
 		}

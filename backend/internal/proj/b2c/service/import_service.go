@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"backend/internal/config"
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/b2c/parsers"
@@ -1291,7 +1292,7 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 					Str("url", url).
 					Err(curlErr).
 					Msg("Curl fallback also failed")
-				return nil, "", fmt.Errorf("failed to download image (both Go and curl failed): %w", err)
+				return nil, "", fmt.Errorf("failed to download image (both Go and curl failed): %w, wrapped: %w", domain.ErrTLSHandshake, err)
 			}
 
 			logger.Info().

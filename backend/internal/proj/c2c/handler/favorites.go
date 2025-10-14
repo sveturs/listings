@@ -3,12 +3,13 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"strconv"
-	"strings"
 	"sync"
 
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/c2c/service"
@@ -120,7 +121,7 @@ func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 	if err != nil {
 		logger.Error().Err(err).Int("id", id).Int("userId", userID).Bool("isStorefront", isStorefront).Msg("Failed to add to favorites")
 		// Проверяем, было ли объявление уже в избранном
-		if strings.Contains(err.Error(), "already in favorites") {
+		if errors.Is(err, domain.ErrAlreadyInFavorites) {
 			return utils.SuccessResponse(c, MessageResponse{
 				Message: "marketplace.alreadyInFavorites",
 			})
@@ -173,7 +174,7 @@ func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 	if err != nil {
 		logger.Error().Err(err).Int("id", id).Int("userId", userID).Bool("isStorefront", isStorefront).Msg("Failed to remove from favorites")
 		// Проверяем, было ли объявление в избранном
-		if strings.Contains(err.Error(), "not in favorites") {
+		if errors.Is(err, domain.ErrNotInFavorites) {
 			return utils.SuccessResponse(c, MessageResponse{
 				Message: "marketplace.notInFavorites",
 			})

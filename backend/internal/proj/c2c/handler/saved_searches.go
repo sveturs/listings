@@ -1,21 +1,19 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
+	"backend/internal/domain"
 	"backend/internal/logger"
 	"backend/internal/proj/c2c/service"
 	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
-)
-
-const (
-	errSavedSearchNotFound = "saved search not found"
 )
 
 // SavedSearchesHandler обрабатывает запросы, связанные с сохраненными поисками
@@ -171,7 +169,7 @@ func (h *SavedSearchesHandler) GetSavedSearch(c *fiber.Ctx) error {
 	savedSearch, err := h.marketplaceService.GetSavedSearchByID(c.Context(), userID, searchID)
 	if err != nil {
 		logger.Error().Err(err).Int("userId", userID).Int("searchId", searchID).Msg("Failed to get saved search")
-		if err.Error() == errSavedSearchNotFound {
+		if errors.Is(err, domain.ErrSavedSearchNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.savedSearchNotFound")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getSavedSearchError")
@@ -217,7 +215,7 @@ func (h *SavedSearchesHandler) UpdateSavedSearch(c *fiber.Ctx) error {
 	savedSearch, err := h.marketplaceService.UpdateSavedSearch(c.Context(), userID, searchID, req.Name, req.Filters, req.NotifyEnabled, req.NotifyFrequency)
 	if err != nil {
 		logger.Error().Err(err).Int("userId", userID).Int("searchId", searchID).Msg("Failed to update saved search")
-		if err.Error() == errSavedSearchNotFound {
+		if errors.Is(err, domain.ErrSavedSearchNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.savedSearchNotFound")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateSavedSearchError")
@@ -255,7 +253,7 @@ func (h *SavedSearchesHandler) DeleteSavedSearch(c *fiber.Ctx) error {
 	err = h.marketplaceService.DeleteSavedSearch(c.Context(), userID, searchID)
 	if err != nil {
 		logger.Error().Err(err).Int("userId", userID).Int("searchId", searchID).Msg("Failed to delete saved search")
-		if err.Error() == errSavedSearchNotFound {
+		if errors.Is(err, domain.ErrSavedSearchNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.savedSearchNotFound")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.deleteSavedSearchError")
@@ -296,7 +294,7 @@ func (h *SavedSearchesHandler) ExecuteSavedSearch(c *fiber.Ctx) error {
 	savedSearch, err := h.marketplaceService.GetSavedSearchByID(c.Context(), userID, searchID)
 	if err != nil {
 		logger.Error().Err(err).Int("userId", userID).Int("searchId", searchID).Msg("Failed to get saved search")
-		if err.Error() == errSavedSearchNotFound {
+		if errors.Is(err, domain.ErrSavedSearchNotFound) {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.savedSearchNotFound")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.executeSavedSearchError")

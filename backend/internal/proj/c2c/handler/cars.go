@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/domain"
 	"backend/internal/logger"
 	"backend/internal/proj/c2c/service"
 	"backend/pkg/utils"
@@ -230,7 +232,7 @@ func (h *CarsHandler) DecodeVIN(c *fiber.Ctx) error {
 	if err != nil {
 		logger.Error().Err(err).Str("vin", vin).Msg("Failed to decode VIN")
 		// Если VIN некорректный, возвращаем 400
-		if err.Error() == "invalid VIN length" || err.Error() == "VIN decoder is disabled" {
+		if errors.Is(err, domain.ErrInvalidVINLength) || errors.Is(err, domain.ErrVINDecoderDisabled) {
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidVIN")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "general.decodeError")

@@ -2,13 +2,14 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"strconv"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/config"
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/middleware"
@@ -211,7 +212,7 @@ func (h *UnifiedAttributesHandler) SaveListingAttributeValues(c *fiber.Ctx) erro
 			Msg("Failed to save listing attribute values")
 
 		// Если это ошибка валидации - возвращаем 400
-		if strings.Contains(err.Error(), "validation failed") {
+		if errors.Is(err, domain.ErrValidationFailed) {
 			return utils.SendError(c, fiber.StatusBadRequest, "errors.validationFailed")
 		}
 
