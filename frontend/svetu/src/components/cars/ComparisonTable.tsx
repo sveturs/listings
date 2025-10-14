@@ -15,7 +15,9 @@ interface ComparisonTableProps {
 export default function ComparisonTable({ locale }: ComparisonTableProps) {
   const t = useTranslations('cars');
   // Получаем элементы для категории 'cars' из universalCompare
-  const items = useSelector((state: RootState) => state.universalCompare.itemsByCategory['cars'] || []);
+  const items = useSelector(
+    (state: RootState) => state.universalCompare.itemsByCategory['cars'] || []
+  );
 
   if (items.length < 2) {
     return (
@@ -167,7 +169,9 @@ export default function ComparisonTable({ locale }: ComparisonTableProps) {
                   {items.map((car) => (
                     <td key={`${car.id}-${spec.key}`}>
                       {formatValue(
-                        spec.key === 'price' ? car.price : car.attributes?.[spec.key],
+                        spec.key === 'price'
+                          ? car.price
+                          : car.attributes?.[spec.key],
                         spec.format
                       )}
                     </td>
@@ -183,14 +187,18 @@ export default function ComparisonTable({ locale }: ComparisonTableProps) {
               </td>
               {items.map((car) => (
                 <td key={`${car.id}-features`}>
-                  {car.attributes?.features && Array.isArray(car.attributes.features) && car.attributes.features.length > 0 ? (
+                  {car.attributes?.features &&
+                  Array.isArray(car.attributes.features) &&
+                  car.attributes.features.length > 0 ? (
                     <ul className="text-sm space-y-1">
-                      {car.attributes.features.map((feature: string, idx: number) => (
-                        <li key={idx} className="flex items-center gap-1">
-                          <Check className="w-3 h-3 text-success flex-shrink-0" />
-                          {feature}
-                        </li>
-                      ))}
+                      {car.attributes.features.map(
+                        (feature: string, idx: number) => (
+                          <li key={idx} className="flex items-center gap-1">
+                            <Check className="w-3 h-3 text-success flex-shrink-0" />
+                            {feature}
+                          </li>
+                        )
+                      )}
                     </ul>
                   ) : (
                     <Minus className="w-4 h-4 text-base-content/40" />

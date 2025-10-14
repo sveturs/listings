@@ -3,11 +3,11 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
-	"database/sql"
 
 	"backend/internal/domain/models"
 	storefrontOpenSearch "backend/internal/proj/b2c/storage/opensearch"
