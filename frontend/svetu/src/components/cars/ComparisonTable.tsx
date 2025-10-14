@@ -14,7 +14,7 @@ interface ComparisonTableProps {
 
 export default function ComparisonTable({ locale }: ComparisonTableProps) {
   const t = useTranslations('cars');
-  const { items } = useSelector((state: RootState) => state.compare);
+  const { items } = useSelector((state: RootState) => state.universalCompare);
 
   if (items.length < 2) {
     return (
