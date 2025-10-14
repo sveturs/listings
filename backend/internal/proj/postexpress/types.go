@@ -29,12 +29,12 @@ type OrderRequest struct {
 // ShipmentRequest - данные отправления (B2B структура)
 type ShipmentRequest struct {
 	// === ОБЯЗАТЕЛЬНЫЕ B2B поля ===
-	ExtBrend          string      `json:"ExtBrend"`                    // ОБЯЗАТЕЛЬНО: Бренд (напр. "SVETU")
-	ExtMagacin        string      `json:"ExtMagacin"`                  // ОБЯЗАТЕЛЬНО: Склад (напр. "WAREHOUSE1")
-	ExtReferenca      string      `json:"ExtReferenca"`                // ОБЯЗАТЕЛЬНО: Уникальная референция
-	NacinPrijema      string      `json:"NacinPrijema"`                // ОБЯЗАТЕЛЬНО: K-курьер, O-офис
-	ImaPrijemniBrojDN *bool       `json:"ImaPrijemniBrojDN,omitempty"` // ОБЯЗАТЕЛЬНО: false (указатель!)
-	NacinPlacanja     string      `json:"NacinPlacanja"`               // ОБЯЗАТЕЛЬНО: POF, N, K
+	ExtBrend          string      `json:"ExtBrend"`            // ОБЯЗАТЕЛЬНО: Бренд (напр. "SVETU")
+	ExtMagacin        string      `json:"ExtMagacin"`          // ОБЯЗАТЕЛЬНО: Склад (напр. "WAREHOUSE1")
+	ExtReferenca      string      `json:"ExtReferenca"`        // ОБЯЗАТЕЛЬНО: Уникальная референция
+	NacinPrijema      string      `json:"NacinPrijema"`        // ОБЯЗАТЕЛЬНО: K-курьер, O-офис
+	ImaPrijemniBrojDN string      `json:"ImaPrijemniBrojDN"`   // ОБЯЗАТЕЛЬНО: "D" если есть PrijemniBroj, "N" если нет
+	NacinPlacanja     string      `json:"NacinPlacanja"`       // ОБЯЗАТЕЛЬНО: POF, N, K
 	Posiljalac        SenderInfo  `json:"Posiljalac"`                  // ОБЯЗАТЕЛЬНО: Отправитель в отправлении
 	MestoPreuzimanja  *SenderInfo `json:"MestoPreuzimanja,omitempty"`  // Место забора (объект!)
 
@@ -291,3 +291,133 @@ const (
 	ServiceCOD       = "COD"        // Наложенный платеж
 	ServiceReturnDoc = "RETURN_DOC" // Возврат документов
 )
+
+// ========================================
+// TX 3 - GetNaselje (Поиск населённых пунктов)
+// ========================================
+
+// GetSettlementsRequest - запрос поиска населённых пунктов (TX 3)
+type GetSettlementsRequest struct {
+	Naziv string `json:"Naziv"` // Название или часть названия населённого пункта
+}
+
+// Settlement - данные населённого пункта
+type Settlement struct {
+	IdNaselje      int    `json:"IdNaselje"`      // ID населённого пункта
+	Naziv          string `json:"Naziv"`          // Название
+	PostanskiBroj  string `json:"PostanskiBroj"`  // Почтовый индекс
+	IdOkrug        int    `json:"IdOkrug"`        // ID округа
+	NazivOkruga    string `json:"NazivOkruga"`    // Название округа
+}
+
+// GetSettlementsResponse - ответ поиска населённых пунктов (TX 3)
+type GetSettlementsResponse struct {
+	Rezultat int          `json:"Rezultat"`       // 0 - успех, 1 - ошибка
+	Poruka   string       `json:"Poruka,omitempty"` // Сообщение об ошибке
+	Naselja  []Settlement `json:"Naselja"`        // Массив найденных населённых пунктов
+}
+
+// ========================================
+// TX 4 - GetUlica (Поиск улиц)
+// ========================================
+
+// GetStreetsRequest - запрос поиска улиц в населённом пункте (TX 4)
+type GetStreetsRequest struct {
+	IdNaselje int    `json:"IdNaselje"` // ID населённого пункта (из TX 3)
+	Naziv     string `json:"Naziv"`     // Название или часть названия улицы
+}
+
+// Street - данные улицы
+type Street struct {
+	IdUlica   int    `json:"IdUlica"`   // ID улицы
+	Naziv     string `json:"Naziv"`     // Название улицы
+	IdNaselje int    `json:"IdNaselje"` // ID населённого пункта
+}
+
+// GetStreetsResponse - ответ поиска улиц (TX 4)
+type GetStreetsResponse struct {
+	Rezultat int      `json:"Rezultat"`       // 0 - успех, 1 - ошибка
+	Poruka   string   `json:"Poruka,omitempty"` // Сообщение об ошибке
+	Ulice    []Street `json:"Ulice"`          // Массив найденных улиц
+}
+
+// ========================================
+// TX 6 - ProveraAdrese (Валидация адреса)
+// ========================================
+
+// AddressValidationRequest - запрос валидации адреса (TX 6)
+type AddressValidationRequest struct {
+	IdNaselje      int    `json:"IdNaselje"`      // ID населённого пункта
+	IdUlica        int    `json:"IdUlica,omitempty"` // ID улицы (опционально)
+	Broj           string `json:"Broj"`           // Номер дома
+	PostanskiBroj  string `json:"PostanskiBroj"`  // Почтовый индекс
+}
+
+// AddressValidationResponse - ответ валидации адреса (TX 6)
+type AddressValidationResponse struct {
+	Rezultat      int    `json:"Rezultat"`       // 0 - успех, 1 - ошибка
+	Poruka        string `json:"Poruka,omitempty"` // Сообщение об ошибке
+	PostojiAdresa bool   `json:"PostojiAdresa"`  // Существует ли адрес
+	IdNaselje     int    `json:"IdNaselje"`      // ID населённого пункта
+	NazivNaselja  string `json:"NazivNaselja"`   // Название населённого пункта
+	IdUlica       int    `json:"IdUlica"`        // ID улицы
+	NazivUlice    string `json:"NazivUlice"`     // Название улицы
+	Broj          string `json:"Broj"`           // Номер дома
+	PostanskiBroj string `json:"PostanskiBroj"`  // Почтовый индекс
+	PAK           string `json:"PAK"`            // Postal Address Code
+	IdPoste       int    `json:"IdPoste"`        // ID почтового отделения
+	NazivPoste    string `json:"NazivPoste"`     // Название почтового отделения
+}
+
+// ========================================
+// TX 9 - ProveraDostupnostiUsluge (Проверка доступности услуги)
+// ========================================
+
+// ServiceAvailabilityRequest - запрос проверки доступности услуги (TX 9)
+type ServiceAvailabilityRequest struct {
+	IdRukovanje            int    `json:"IdRukovanje"`            // ID услуги (29, 30, 55, 58, 59, 71, 85)
+	PostanskiBrojOdlaska   string `json:"PostanskiBrojOdlaska"`   // Почтовый индекс отправления
+	PostanskiBrojDolaska   string `json:"PostanskiBrojDolaska"`   // Почтовый индекс прибытия
+}
+
+// ServiceAvailabilityResponse - ответ проверки доступности услуги (TX 9)
+type ServiceAvailabilityResponse struct {
+	Rezultat      int    `json:"Rezultat"`       // 0 - успех, 1 - ошибка
+	Poruka        string `json:"Poruka,omitempty"` // Сообщение об ошибке
+	Dostupna      bool   `json:"Dostupna"`       // Доступна ли услуга
+	IdRukovanje   int    `json:"IdRukovanje"`    // ID услуги
+	NazivUsluge   string `json:"NazivUsluge"`    // Название услуги
+	OcekivanoDana int    `json:"OcekivanoDana"`  // Ожидаемое время доставки (дни)
+	Napomena      string `json:"Napomena,omitempty"` // Примечание
+}
+
+// ========================================
+// TX 11 - PostarinaPosiljke (Расчёт стоимости доставки)
+// ========================================
+
+// PostageCalculationRequest - запрос расчёта стоимости доставки (TX 11)
+type PostageCalculationRequest struct {
+	IdRukovanje            int    `json:"IdRukovanje"`            // ID услуги доставки
+	PostanskiBrojOdlaska   string `json:"PostanskiBrojOdlaska"`   // Почтовый индекс отправления
+	PostanskiBrojDolaska   string `json:"PostanskiBrojDolaska"`   // Почтовый индекс прибытия
+	Masa                   int    `json:"Masa"`                   // Вес в граммах
+	Otkupnina              int    `json:"Otkupnina,omitempty"`    // COD в para (1 RSD = 100 para)
+	Vrednost               int    `json:"Vrednost,omitempty"`     // Объявленная ценность в para
+	PosebneUsluge          string `json:"PosebneUsluge,omitempty"` // Дополнительные услуги через запятую
+}
+
+// PostageCalculationResponse - ответ расчёта стоимости доставки (TX 11)
+type PostageCalculationResponse struct {
+	Rezultat             int    `json:"Rezultat"`       // 0 - успех, 1 - ошибка
+	Poruka               string `json:"Poruka,omitempty"` // Сообщение об ошибке
+	Postarina            int    `json:"Postarina"`      // Стоимость в para (295 RSD = 29500 para)
+	IdRukovanje          int    `json:"IdRukovanje"`    // ID услуги
+	NazivUsluge          string `json:"NazivUsluge"`    // Название услуги
+	PostanskiBrojOdlaska string `json:"PostanskiBrojOdlaska"` // Почтовый индекс отправления
+	PostanskiBrojDolaska string `json:"PostanskiBrojDolaska"` // Почтовый индекс прибытия
+	Masa                 int    `json:"Masa"`           // Вес в граммах
+	Otkupnina            int    `json:"Otkupnina"`      // COD в para
+	Vrednost             int    `json:"Vrednost"`       // Объявленная ценность в para
+	PosebneUsluge        string `json:"PosebneUsluge"`  // Дополнительные услуги
+	Napomena             string `json:"Napomena,omitempty"` // Примечание
+}

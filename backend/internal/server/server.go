@@ -229,7 +229,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 			MaxRetries:           3,
 		},
 	)
-	postexpressHandlerInstance := postexpressHandler.NewHandler(postexpressServiceInstance, *pkglogger.New())
+	postexpressHandlerInstance := postexpressHandler.NewHandlerWithWSPClient(postexpressServiceInstance, postexpressWSPClient, *pkglogger.New())
 
 	// BEX Express инициализация
 	bexexpressModule, err := bexexpress.NewModule(db.GetSQLXDB().DB, cfg)

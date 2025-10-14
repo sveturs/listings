@@ -29,6 +29,7 @@ export type TranslationModule =
   | 'notifications'
   | 'orders'
   | 'payment'
+  | 'postexpress'
   | 'products'
   | 'profile'
   | 'realEstate'
@@ -63,6 +64,7 @@ export const moduleLoaders = {
   notifications: () => import('./notifications.json'),
   orders: () => import('./orders.json'),
   payment: () => import('./payment.json'),
+  postexpress: () => import('./postexpress.json'),
   products: () => import('./products.json'),
   profile: () => import('./profile.json'),
   realEstate: () => import('./realEstate.json'),

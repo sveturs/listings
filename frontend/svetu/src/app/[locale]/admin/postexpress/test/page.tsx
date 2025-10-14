@@ -24,6 +24,8 @@ interface TestShipmentRequest {
   services: string;
   delivery_method: string;
   payment_method: string;
+  id_rukovanje?: number;
+  parcel_locker_code?: string;
 }
 
 interface TestShipmentResponse {
@@ -84,12 +86,137 @@ export default function PostExpressTestPage() {
     services: 'PNA',
     delivery_method: 'K',
     payment_method: 'POF',
+    id_rukovanje: 29,
+    parcel_locker_code: '',
   });
 
   const [config, setConfig] = useState<Config | null>(null);
   const [result, setResult] = useState<TestShipmentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
+
+  // ============== NEW: TX 3, 4, 6, 9, 11 states ==============
+
+  // TX 3 - GetSettlements
+  const [tx3ModalOpen, setTx3ModalOpen] = useState(false);
+  const [tx3Query, setTx3Query] = useState('Beograd');
+  const [tx3Settlements, setTx3Settlements] = useState<any[]>([]);
+  const [tx3Loading, setTx3Loading] = useState(false);
+  const [tx3Error, setTx3Error] = useState<string | null>(null);
+
+  // TX 4 - GetStreets
+  const [tx4ModalOpen, setTx4ModalOpen] = useState(false);
+  const [tx4SettlementId, setTx4SettlementId] = useState('100001');
+  const [tx4Query, setTx4Query] = useState('Takovska');
+  const [tx4Streets, setTx4Streets] = useState<any[]>([]);
+  const [tx4Loading, setTx4Loading] = useState(false);
+  const [tx4Error, setTx4Error] = useState<string | null>(null);
+
+  // TX 6 - ValidateAddress
+  const [tx6ModalOpen, setTx6ModalOpen] = useState(false);
+  const [tx6Request, setTx6Request] = useState({
+    id_naselje: 100001,
+    id_ulica: 1186,
+    broj: '2',
+    postanski_broj: '11000',
+  });
+  const [tx6Response, setTx6Response] = useState<any>(null);
+  const [tx6Loading, setTx6Loading] = useState(false);
+  const [tx6Error, setTx6Error] = useState<string | null>(null);
+
+  // TX 9 - CheckServiceAvailability
+  const [tx9ModalOpen, setTx9ModalOpen] = useState(false);
+  const [tx9Request, setTx9Request] = useState({
+    id_rukovanje: 71,
+    postanski_broj_odlaska: '11000',
+    postanski_broj_dolaska: '21000',
+  });
+  const [tx9Response, setTx9Response] = useState<any>(null);
+  const [tx9Loading, setTx9Loading] = useState(false);
+  const [tx9Error, setTx9Error] = useState<string | null>(null);
+
+  // TX 11 - CalculatePostage
+  const [tx11ModalOpen, setTx11ModalOpen] = useState(false);
+  const [tx11Request, setTx11Request] = useState({
+    id_rukovanje: 71,
+    postanski_broj_odlaska: '11000',
+    postanski_broj_dolaska: '21000',
+    masa: 500,
+    otkupnina: 0,
+    vrednost: 0,
+    posebne_usluge: 'PNA',
+  });
+  const [tx11Response, setTx11Response] = useState<any>(null);
+  const [tx11Loading, setTx11Loading] = useState(false);
+  const [tx11Error, setTx11Error] = useState<string | null>(null);
+
+  // Predefined test scenarios (recipient data only, sender will be preserved from config)
+  const testScenarios: Record<string, Partial<TestShipmentRequest>> = {
+    standard: {
+      recipient_name: 'Marko Marković',
+      recipient_phone: '+381641234567',
+      recipient_email: 'marko@example.com',
+      recipient_city: 'Beograd',
+      recipient_address: 'Takovska 2',
+      recipient_zip: '11000',
+      weight: 500,
+      content: 'Test paket - standardna dostava',
+      cod_amount: 0,
+      insured_value: 0,
+      services: 'PNA',
+      delivery_method: 'K',
+      payment_method: 'POF',
+    },
+    cod: {
+      recipient_name: 'Ana Anić',
+      recipient_phone: '+381641234568',
+      recipient_email: 'ana@example.com',
+      recipient_city: 'Beograd',
+      recipient_address: 'Kneza Miloša 10',
+      recipient_zip: '11000',
+      weight: 750,
+      content: 'Test paket - sa otkupninom',
+      cod_amount: 5000,
+      insured_value: 5000,
+      services: 'PNA,OTK,VD',
+      delivery_method: 'K',
+      payment_method: 'N',
+    },
+    express: {
+      recipient_name: 'Petar Petrović',
+      recipient_phone: '+381641234569',
+      recipient_email: 'petar@example.com',
+      recipient_city: 'Novi Sad',
+      recipient_address: 'Bulevar oslobođenja 50',
+      recipient_zip: '21000',
+      weight: 300,
+      content: 'Test paket - ekspresna dostava',
+      cod_amount: 0,
+      insured_value: 1000,
+      services: 'PNA,SMS',
+      delivery_method: 'K',
+      payment_method: 'POF',
+      id_rukovanje: 30,
+    },
+    parcel_locker: {
+      recipient_name: 'Jovana Jovanović',
+      recipient_phone: '+381647654321',
+      recipient_email: 'jovana@example.com',
+      recipient_city: 'Beograd',
+      recipient_address: 'Trg Republike 5',
+      recipient_zip: '11000',
+      weight: 500,
+      content: 'Test paket - paketomat dostava',
+      cod_amount: 0,
+      insured_value: 0,
+      services: 'PNA',
+      delivery_method: 'PAK',
+      payment_method: 'POF',
+      id_rukovanje: 85,
+      parcel_locker_code: 'BG001',
+    },
+  };
 
   const loadConfig = useCallback(async () => {
     try {
@@ -124,6 +251,20 @@ export default function PostExpressTestPage() {
     loadConfig();
   }, [loadConfig]);
 
+  const loadScenario = (scenarioType: string) => {
+    const scenario = testScenarios[scenarioType];
+    if (!scenario) return;
+
+    // Merge scenario data with current form data (preserving sender info from config)
+    setFormData((prev) => ({
+      ...prev,
+      ...scenario,
+    }));
+    setSelectedScenario(scenarioType);
+    setResult(null);
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -137,7 +278,8 @@ export default function PostExpressTestPage() {
       );
 
       if (response.data.success && response.data.data) {
-        setResult(response.data.data);
+        const shipmentResult = response.data.data;
+        setResult(shipmentResult);
       } else {
         setError(response.data.message || 'Failed to create test shipment');
       }
@@ -160,6 +302,274 @@ export default function PostExpressTestPage() {
     });
   };
 
+  // ====================== NEW: TX HANDLERS ======================
+
+  // TX 3 - GetSettlements
+  const handleTx3Test = async () => {
+    if (!tx3Query.trim()) {
+      setTx3Error('Please enter a search query');
+      return;
+    }
+
+    setTx3Loading(true);
+    setTx3Error(null);
+    setTx3Settlements([]);
+
+    try {
+      const response = await apiClient.get(
+        `/postexpress/settlements?query=${encodeURIComponent(tx3Query)}`
+      );
+
+      if (response.data.success && response.data.data) {
+        const settlements =
+          response.data.data.naselja || response.data.data.Naselja || [];
+        setTx3Settlements(settlements);
+      } else {
+        setTx3Error(response.data.message || 'Failed to get settlements');
+      }
+    } catch (err: any) {
+      setTx3Error(err.response?.data?.message || err.message || 'TX 3 failed');
+    } finally {
+      setTx3Loading(false);
+    }
+  };
+
+  // TX 4 - GetStreets
+  const handleTx4Test = async () => {
+    if (!tx4SettlementId.trim()) {
+      setTx4Error('Please enter a settlement ID');
+      return;
+    }
+
+    if (!tx4Query.trim()) {
+      setTx4Error('Please enter a search query');
+      return;
+    }
+
+    setTx4Loading(true);
+    setTx4Error(null);
+    setTx4Streets([]);
+
+    try {
+      const response = await apiClient.get(
+        `/postexpress/streets?settlement_id=${tx4SettlementId}&query=${encodeURIComponent(tx4Query)}`
+      );
+
+      if (response.data.success && response.data.data) {
+        const streets =
+          response.data.data.ulice || response.data.data.Ulice || [];
+        setTx4Streets(streets);
+      } else {
+        setTx4Error(response.data.message || 'Failed to get streets');
+      }
+    } catch (err: any) {
+      setTx4Error(err.response?.data?.message || err.message || 'TX 4 failed');
+    } finally {
+      setTx4Loading(false);
+    }
+  };
+
+  // TX 6 - ValidateAddress
+  const handleTx6Test = async () => {
+    if (tx6Request.id_naselje <= 0) {
+      setTx6Error('Please enter a valid settlement ID');
+      return;
+    }
+
+    if (!tx6Request.broj || !tx6Request.postanski_broj) {
+      setTx6Error('Please fill all required fields');
+      return;
+    }
+
+    setTx6Loading(true);
+    setTx6Error(null);
+    setTx6Response(null);
+
+    try {
+      // Преобразуем snake_case в PascalCase для WSP API
+      const wspRequest = {
+        IdNaselje: tx6Request.id_naselje,
+        IdUlica: tx6Request.id_ulica,
+        Broj: tx6Request.broj,
+        PostanskiBroj: tx6Request.postanski_broj,
+      };
+
+      const response = await apiClient.post(
+        '/postexpress/validate-address',
+        wspRequest
+      );
+
+      // Обрабатываем ошибки из ApiResponse
+      if (response.error) {
+        setTx6Error(response.error.message || 'Failed to validate address');
+        return;
+      }
+
+      // Обрабатываем успешный ответ
+      if (response?.data?.success && response?.data?.data) {
+        setTx6Response(response.data.data);
+      } else {
+        setTx6Error('Failed to validate address');
+      }
+    } catch (err: any) {
+      const errorMsg = err.message || 'TX 6 failed';
+      setTx6Error(errorMsg);
+    } finally {
+      setTx6Loading(false);
+    }
+  };
+
+  // TX 9 - CheckServiceAvailability
+  const handleTx9Test = async () => {
+    if (tx9Request.id_rukovanje <= 0) {
+      setTx9Error('Please enter a valid service ID (id_rukovanje)');
+      return;
+    }
+
+    if (
+      !tx9Request.postanski_broj_odlaska ||
+      !tx9Request.postanski_broj_dolaska
+    ) {
+      setTx9Error('Please fill postal codes');
+      return;
+    }
+
+    setTx9Loading(true);
+    setTx9Error(null);
+    setTx9Response(null);
+
+    try {
+      // Преобразуем snake_case в PascalCase для WSP API
+      const wspRequest = {
+        IdRukovanje: tx9Request.id_rukovanje,
+        PostanskiBrojOdlaska: tx9Request.postanski_broj_odlaska,
+        PostanskiBrojDolaska: tx9Request.postanski_broj_dolaska,
+      };
+
+      const response = await apiClient.post(
+        '/postexpress/check-service-availability',
+        wspRequest
+      );
+
+      // Обрабатываем ошибки из ApiResponse
+      if (response.error) {
+        setTx9Error(response.error.message || 'Failed to check service availability');
+        return;
+      }
+
+      // Обрабатываем успешный ответ
+      if (response?.data?.success && response?.data?.data) {
+        setTx9Response(response.data.data);
+      } else {
+        setTx9Error('Failed to check service availability');
+      }
+    } catch (err: any) {
+      const errorMsg = err.message || 'TX 9 failed';
+      setTx9Error(errorMsg);
+    } finally {
+      setTx9Loading(false);
+    }
+  };
+
+  // TX 11 - CalculatePostage
+  const handleTx11Test = async () => {
+    if (tx11Request.id_rukovanje <= 0) {
+      setTx11Error('Please enter a valid service ID (id_rukovanje)');
+      return;
+    }
+
+    if (
+      !tx11Request.postanski_broj_odlaska ||
+      !tx11Request.postanski_broj_dolaska
+    ) {
+      setTx11Error('Please fill postal codes');
+      return;
+    }
+
+    if (tx11Request.masa <= 0) {
+      setTx11Error('Please enter valid weight (masa)');
+      return;
+    }
+
+    setTx11Loading(true);
+    setTx11Error(null);
+    setTx11Response(null);
+
+    try {
+      // Преобразуем snake_case в PascalCase для WSP API
+      const wspRequest = {
+        IdRukovanje: tx11Request.id_rukovanje,
+        PostanskiBrojOdlaska: tx11Request.postanski_broj_odlaska,
+        PostanskiBrojDolaska: tx11Request.postanski_broj_dolaska,
+        Masa: tx11Request.masa,
+        Otkupnina: tx11Request.otkupnina,
+        Vrednost: tx11Request.vrednost,
+        PosebneUsluge: tx11Request.posebne_usluge,
+      };
+
+      const response = await apiClient.post(
+        '/postexpress/calculate-postage',
+        wspRequest
+      );
+
+      // Обрабатываем ошибки из ApiResponse
+      if (response.error) {
+        setTx11Error(response.error.message || 'Failed to calculate postage');
+        return;
+      }
+
+      // Обрабатываем успешный ответ
+      if (response?.data?.success && response?.data?.data) {
+        setTx11Response(response.data.data);
+      } else {
+        setTx11Error('Failed to calculate postage');
+      }
+    } catch (err: any) {
+      const errorMsg = err.message || 'TX 11 failed';
+      setTx11Error(errorMsg);
+    } finally {
+      setTx11Loading(false);
+    }
+  };
+
+  // ====================== MODAL COMPONENTS ======================
+  const Modal = ({
+    isOpen,
+    onClose,
+    title,
+    children,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    children: React.ReactNode;
+  }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+          onClick={onClose}
+        ></div>
+        <div className="flex min-h-screen items-center justify-center p-4">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">{children}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -168,9 +578,220 @@ export default function PostExpressTestPage() {
           <p className="mt-2 text-gray-600">{t('description')}</p>
         </div>
 
+        {/* WSP API Transaction Tests (NEW SECTION) */}
+        <div className="bg-gradient-to-r from-cyan-50 to-green-50 rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-2 text-gray-800">
+            🔧 WSP API Transaction Tests (TX 3, 4, 6, 9, 11)
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Test individual WSP API operations: settlements, streets, address
+            validation, service availability, postage calculation
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* TX 3 - GetNaselje */}
+            <button
+              onClick={() => setTx3ModalOpen(true)}
+              className="bg-white p-4 rounded-lg border-2 border-cyan-200 hover:border-cyan-400 transition-all text-left shadow-md hover:shadow-lg"
+            >
+              <h3 className="font-semibold text-cyan-700 mb-1">
+                📍 TX 3: GetNaselje
+              </h3>
+              <p className="text-sm text-gray-600">
+                Search settlements by name
+              </p>
+              <div className="mt-2 text-xs text-gray-500">
+                Query: city name → List of settlements
+              </div>
+            </button>
+
+            {/* TX 4 - GetUlica */}
+            <button
+              onClick={() => setTx4ModalOpen(true)}
+              className="bg-white p-4 rounded-lg border-2 border-blue-200 hover:border-blue-400 transition-all text-left shadow-md hover:shadow-lg"
+            >
+              <h3 className="font-semibold text-blue-700 mb-1">
+                🛣️ TX 4: GetUlica
+              </h3>
+              <p className="text-sm text-gray-600">
+                Search streets in settlement
+              </p>
+              <div className="mt-2 text-xs text-gray-500">
+                SettlementID + Query → List of streets
+              </div>
+            </button>
+
+            {/* TX 6 - ProveraAdrese */}
+            <button
+              onClick={() => setTx6ModalOpen(true)}
+              className="bg-white p-4 rounded-lg border-2 border-green-200 hover:border-green-400 transition-all text-left shadow-md hover:shadow-lg"
+            >
+              <h3 className="font-semibold text-green-700 mb-1">
+                ✅ TX 6: ProveraAdrese
+              </h3>
+              <p className="text-sm text-gray-600">Validate address</p>
+              <div className="mt-2 text-xs text-gray-500">
+                Settlement + Street + Number → Valid?
+              </div>
+            </button>
+
+            {/* TX 9 - ProveraDostupnostiUsluge */}
+            <button
+              onClick={() => setTx9ModalOpen(true)}
+              className="bg-white p-4 rounded-lg border-2 border-purple-200 hover:border-purple-400 transition-all text-left shadow-md hover:shadow-lg"
+            >
+              <h3 className="font-semibold text-purple-700 mb-1">
+                📦 TX 9: Service Availability
+              </h3>
+              <p className="text-sm text-gray-600">
+                Check service availability
+              </p>
+              <div className="mt-2 text-xs text-gray-500">
+                ServiceID + Route → Available? Days?
+              </div>
+            </button>
+
+            {/* TX 11 - PostarinaPosiljke */}
+            <button
+              onClick={() => setTx11ModalOpen(true)}
+              className="bg-white p-4 rounded-lg border-2 border-amber-200 hover:border-amber-400 transition-all text-left shadow-md hover:shadow-lg"
+            >
+              <h3 className="font-semibold text-amber-700 mb-1">
+                💰 TX 11: Postage Calculation
+              </h3>
+              <p className="text-sm text-gray-600">Calculate shipping cost</p>
+              <div className="mt-2 text-xs text-gray-500">
+                Service + Weight + Route → Cost
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Test Scenarios */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-2 text-gray-800">
+            {t('quickTests')}
+          </h2>
+          <p className="text-gray-600 mb-4">{t('quickTestsDesc')}</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Standard Test */}
+            <button
+              onClick={() => loadScenario('standard')}
+              className={`bg-white p-4 rounded-lg border-2 transition-all text-left ${
+                selectedScenario === 'standard'
+                  ? 'border-blue-500 shadow-md ring-2 ring-blue-200'
+                  : 'border-blue-200 hover:border-blue-400'
+              }`}
+            >
+              <h3 className="font-semibold text-blue-700 mb-1">
+                📦 {t('standardTest')}
+              </h3>
+              <p className="text-sm text-gray-600">{t('standardTestDesc')}</p>
+              <div className="mt-2 text-xs text-gray-500">
+                • 500g • Beograd → Beograd
+              </div>
+            </button>
+
+            {/* COD Test */}
+            <button
+              onClick={() => loadScenario('cod')}
+              className={`bg-white p-4 rounded-lg border-2 transition-all text-left ${
+                selectedScenario === 'cod'
+                  ? 'border-green-500 shadow-md ring-2 ring-green-200'
+                  : 'border-green-200 hover:border-green-400'
+              }`}
+            >
+              <h3 className="font-semibold text-green-700 mb-1">
+                💰 {t('codTest')}
+              </h3>
+              <p className="text-sm text-gray-600">{t('codTestDesc')}</p>
+              <div className="mt-2 text-xs text-gray-500">
+                • 750g • 5000 RSD COD • Insurance
+              </div>
+            </button>
+
+            {/* Express Test */}
+            <button
+              onClick={() => loadScenario('express')}
+              className={`bg-white p-4 rounded-lg border-2 transition-all text-left ${
+                selectedScenario === 'express'
+                  ? 'border-purple-500 shadow-md ring-2 ring-purple-200'
+                  : 'border-purple-200 hover:border-purple-400'
+              }`}
+            >
+              <h3 className="font-semibold text-purple-700 mb-1">
+                ⚡ {t('expressTest')}
+              </h3>
+              <p className="text-sm text-gray-600">{t('expressTestDesc')}</p>
+              <div className="mt-2 text-xs text-gray-500">
+                • 300g • Beograd → Novi Sad • SMS
+              </div>
+            </button>
+
+            {/* Parcel Locker Test */}
+            <button
+              onClick={() => loadScenario('parcel_locker')}
+              className={`bg-white p-4 rounded-lg border-2 transition-all text-left ${
+                selectedScenario === 'parcel_locker'
+                  ? 'border-orange-500 shadow-md ring-2 ring-orange-200'
+                  : 'border-orange-200 hover:border-orange-400'
+              }`}
+            >
+              <h3 className="font-semibold text-orange-700 mb-1">
+                📬 Paketomat
+              </h3>
+              <p className="text-sm text-gray-600">Isporuka na paketomatu</p>
+              <div className="mt-2 text-xs text-gray-500">
+                • 500g • IdRukovanje: 85 • BG001
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Working Post Express WSP API Features */}
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-2 text-gray-800">
+            ✅ Working Post Express WSP API Feature
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Successfully tested with real Post Express API - only TX 73 (B2B
+            Manifest) is working!
+          </p>
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-3 mb-4">
+            ⚠️ <strong>Important:</strong> TX 63 (Tracking) returns error:
+            &quot;Kretanja još uvek nisu implementirana za izabranu
+            uslugu!&quot; - Tracking is not yet implemented for B2B service by
+            Post Express.
+          </p>
+
+          <div className="max-w-md mx-auto">
+            {/* Manifest Creation Test (Transaction 73) - ONLY WORKING ONE */}
+            <div className="bg-white p-6 rounded-lg border-2 border-green-300 hover:border-green-500 transition-all shadow-md">
+              <h3 className="font-semibold text-green-700 mb-2 text-lg">
+                📦 B2B Manifest (TX 73) ✅
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                CreateShipmentViaManifest - The ONLY working Transaction ID for
+                creating shipments via B2B API
+              </p>
+              <button
+                onClick={() =>
+                  document
+                    .getElementById('shipment-form')
+                    ?.scrollIntoView({ behavior: 'smooth' })
+                }
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-sm font-medium"
+              >
+                Go to Shipment Form Below ↓
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Форма */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div id="shipment-form" className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold mb-6">{t('shipmentParams')}</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -498,6 +1119,44 @@ export default function PostExpressTestPage() {
                       </select>
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        IdRukovanje
+                      </label>
+                      <select
+                        name="id_rukovanje"
+                        value={formData.id_rukovanje || 29}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      >
+                        <option value={29}>29 - PE_Danas_za_sutra_12</option>
+                        <option value={30}>30 - PE_Danas_za_danas</option>
+                        <option value={55}>55 - PE_Danas_za_odmah</option>
+                        <option value={58}>58 - PE_Danas_za_sutra_19</option>
+                        <option value={59}>59 - PE_Danas_za_odmah_Bg</option>
+                        <option value={71}>
+                          71 - PE_Danas_za_sutra_isporuka
+                        </option>
+                        <option value={85}>85 - Paketomat</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Parcel Locker Code
+                      </label>
+                      <input
+                        type="text"
+                        name="parcel_locker_code"
+                        value={formData.parcel_locker_code || ''}
+                        onChange={handleChange}
+                        placeholder="BG001 (for IdRukovanje: 85)"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -688,6 +1347,700 @@ export default function PostExpressTestPage() {
             )}
           </div>
         </div>
+
+        {/* ====================== TX MODALS ====================== */}
+
+        {/* ====================== TX 3 MODAL ====================== */}
+        <Modal
+          isOpen={tx3ModalOpen}
+          onClose={() => setTx3ModalOpen(false)}
+          title="TX 3: GetNaselje (Search Settlements)"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Search Query
+              </label>
+              <input
+                type="text"
+                value={tx3Query}
+                onChange={(e) => setTx3Query(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleTx3Test()}
+                placeholder="Beograd, Niš, Novi Sad"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <button
+              onClick={handleTx3Test}
+              disabled={tx3Loading}
+              className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              {tx3Loading ? 'Testing...' : '🔍 Test TX 3'}
+            </button>
+
+            {tx3Error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                {tx3Error}
+              </div>
+            )}
+
+            {tx3Settlements.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2 text-gray-800">
+                  Settlements ({tx3Settlements.length})
+                </h4>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {tx3Settlements.map((s, i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded p-3 hover:bg-gray-50"
+                    >
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="font-medium">ID:</span>{' '}
+                          {s.IdNaselje || s.id_naselje}
+                        </div>
+                        <div>
+                          <span className="font-medium">Name:</span>{' '}
+                          {s.Naziv || s.naziv}
+                        </div>
+                        <div>
+                          <span className="font-medium">Postal Code:</span>{' '}
+                          {s.PostanskiBroj || s.postanski_broj}
+                        </div>
+                        <div>
+                          <span className="font-medium">Region:</span>{' '}
+                          {s.NazivOkruga || s.naziv_okruga}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setTx4SettlementId(
+                            String(s.IdNaselje || s.id_naselje)
+                          );
+                          setTx3ModalOpen(false);
+                          setTx4ModalOpen(true);
+                        }}
+                        className="mt-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded"
+                      >
+                        Use in TX 4 →
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTx6Request((prev) => ({
+                            ...prev,
+                            id_naselje: s.IdNaselje || s.id_naselje,
+                            postanski_broj: s.PostanskiBroj || s.postanski_broj,
+                          }));
+                          setTx3ModalOpen(false);
+                          setTx6ModalOpen(true);
+                        }}
+                        className="mt-2 ml-2 text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded"
+                      >
+                        Use in TX 6 →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tx3Settlements.length > 0 && (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                  Raw Response JSON
+                </summary>
+                <pre className="mt-2 bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
+                  {JSON.stringify(tx3Settlements, null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
+        </Modal>
+
+        {/* ====================== TX 4 MODAL ====================== */}
+        <Modal
+          isOpen={tx4ModalOpen}
+          onClose={() => setTx4ModalOpen(false)}
+          title="TX 4: GetUlica (Search Streets)"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Settlement ID (from TX 3)
+              </label>
+              <input
+                type="number"
+                value={tx4SettlementId}
+                onChange={(e) => setTx4SettlementId(e.target.value)}
+                placeholder="100001 (Beograd)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Street Search Query
+              </label>
+              <input
+                type="text"
+                value={tx4Query}
+                onChange={(e) => setTx4Query(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleTx4Test()}
+                placeholder="Takovska, Kneza Miloša"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <button
+              onClick={handleTx4Test}
+              disabled={tx4Loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              {tx4Loading ? 'Testing...' : '🔍 Test TX 4'}
+            </button>
+
+            {tx4Error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                {tx4Error}
+              </div>
+            )}
+
+            {tx4Streets.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2 text-gray-800">
+                  Streets ({tx4Streets.length})
+                </h4>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {tx4Streets.map((street, i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded p-3 hover:bg-gray-50"
+                    >
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="font-medium">ID:</span>{' '}
+                          {street.IdUlica || street.id_ulica}
+                        </div>
+                        <div>
+                          <span className="font-medium">Name:</span>{' '}
+                          {street.Naziv || street.naziv}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setTx6Request((prev) => ({
+                            ...prev,
+                            id_ulica: street.IdUlica || street.id_ulica,
+                          }));
+                          setTx4ModalOpen(false);
+                          setTx6ModalOpen(true);
+                        }}
+                        className="mt-2 text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded"
+                      >
+                        Use in TX 6 →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tx4Streets.length > 0 && (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                  Raw Response JSON
+                </summary>
+                <pre className="mt-2 bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
+                  {JSON.stringify(tx4Streets, null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
+        </Modal>
+
+        {/* ====================== TX 6 MODAL ====================== */}
+        <Modal
+          isOpen={tx6ModalOpen}
+          onClose={() => setTx6ModalOpen(false)}
+          title="TX 6: ProveraAdrese (Validate Address)"
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Settlement ID (from TX 3)
+                </label>
+                <input
+                  type="number"
+                  value={tx6Request.id_naselje}
+                  onChange={(e) =>
+                    setTx6Request({
+                      ...tx6Request,
+                      id_naselje: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="100001 (Beograd)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Street ID (from TX 4, optional)
+                </label>
+                <input
+                  type="number"
+                  value={tx6Request.id_ulica}
+                  onChange={(e) =>
+                    setTx6Request({
+                      ...tx6Request,
+                      id_ulica: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  House Number *
+                </label>
+                <input
+                  type="text"
+                  value={tx6Request.broj}
+                  onChange={(e) =>
+                    setTx6Request({ ...tx6Request, broj: e.target.value })
+                  }
+                  placeholder="2"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Postal Code *
+                </label>
+                <input
+                  type="text"
+                  value={tx6Request.postanski_broj}
+                  onChange={(e) =>
+                    setTx6Request({
+                      ...tx6Request,
+                      postanski_broj: e.target.value,
+                    })
+                  }
+                  placeholder="11000"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleTx6Test}
+              disabled={tx6Loading}
+              className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              {tx6Loading ? 'Testing...' : '✅ Test TX 6'}
+            </button>
+
+            {tx6Error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                {tx6Error}
+              </div>
+            )}
+
+            {tx6Response && (
+              <div>
+                <h4 className="font-semibold mb-2 text-gray-800">
+                  Validation Result
+                </h4>
+                <div className="border border-gray-200 rounded p-4 bg-gray-50">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="font-medium">Address Exists:</span>{' '}
+                      <span
+                        className={
+                          tx6Response.postoji_adresa ||
+                          tx6Response.PostojiAdresa
+                            ? 'text-green-600 font-bold'
+                            : 'text-red-600 font-bold'
+                        }
+                      >
+                        {tx6Response.postoji_adresa || tx6Response.PostojiAdresa
+                          ? '✅ YES'
+                          : '❌ NO'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Result Code:</span>{' '}
+                      {tx6Response.rezultat || tx6Response.Rezultat}
+                    </div>
+                    {(tx6Response.poruka || tx6Response.Poruka) && (
+                      <div className="col-span-2">
+                        <span className="font-medium">Message:</span>{' '}
+                        {tx6Response.poruka || tx6Response.Poruka}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                    Raw Response JSON
+                  </summary>
+                  <pre className="mt-2 bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
+                    {JSON.stringify(tx6Response, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            )}
+          </div>
+        </Modal>
+
+        {/* ====================== TX 9 MODAL ====================== */}
+        <Modal
+          isOpen={tx9ModalOpen}
+          onClose={() => setTx9ModalOpen(false)}
+          title="TX 9: ProveraDostupnostiUsluge (Check Service Availability)"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Service ID (IdRukovanje) *
+              </label>
+              <select
+                value={tx9Request.id_rukovanje}
+                onChange={(e) =>
+                  setTx9Request({
+                    ...tx9Request,
+                    id_rukovanje: parseInt(e.target.value),
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              >
+                <option value={29}>29 - PE_Danas_za_sutra_12</option>
+                <option value={30}>30 - PE_Danas_za_danas</option>
+                <option value={55}>55 - PE_Danas_za_odmah</option>
+                <option value={58}>58 - PE_Danas_za_sutra_19</option>
+                <option value={59}>59 - PE_Danas_za_odmah_Bg</option>
+                <option value={71}>71 - PE_Danas_za_sutra_isporuka</option>
+                <option value={85}>85 - Paketomat</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  From Postal Code *
+                </label>
+                <input
+                  type="text"
+                  value={tx9Request.postanski_broj_odlaska}
+                  onChange={(e) =>
+                    setTx9Request({
+                      ...tx9Request,
+                      postanski_broj_odlaska: e.target.value,
+                    })
+                  }
+                  placeholder="11000"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  To Postal Code *
+                </label>
+                <input
+                  type="text"
+                  value={tx9Request.postanski_broj_dolaska}
+                  onChange={(e) =>
+                    setTx9Request({
+                      ...tx9Request,
+                      postanski_broj_dolaska: e.target.value,
+                    })
+                  }
+                  placeholder="21000"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleTx9Test}
+              disabled={tx9Loading}
+              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              {tx9Loading ? 'Testing...' : '📦 Test TX 9'}
+            </button>
+
+            {tx9Error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                {tx9Error}
+              </div>
+            )}
+
+            {tx9Response && (
+              <div>
+                <h4 className="font-semibold mb-2 text-gray-800">
+                  Service Availability
+                </h4>
+                <div className="border border-gray-200 rounded p-4 bg-gray-50">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="font-medium">Available:</span>{' '}
+                      <span
+                        className={
+                          tx9Response.dostupna || tx9Response.Dostupna
+                            ? 'text-green-600 font-bold'
+                            : 'text-red-600 font-bold'
+                        }
+                      >
+                        {tx9Response.dostupna || tx9Response.Dostupna
+                          ? '✅ YES'
+                          : '❌ NO'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Expected Days:</span>{' '}
+                      {tx9Response.ocekivano_dana || tx9Response.OcekivanoDana}
+                    </div>
+                    <div>
+                      <span className="font-medium">Result Code:</span>{' '}
+                      {tx9Response.rezultat || tx9Response.Rezultat}
+                    </div>
+                    {(tx9Response.poruka || tx9Response.Poruka) && (
+                      <div className="col-span-2">
+                        <span className="font-medium">Message:</span>{' '}
+                        {tx9Response.poruka || tx9Response.Poruka}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                    Raw Response JSON
+                  </summary>
+                  <pre className="mt-2 bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
+                    {JSON.stringify(tx9Response, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            )}
+          </div>
+        </Modal>
+
+        {/* ====================== TX 11 MODAL ====================== */}
+        <Modal
+          isOpen={tx11ModalOpen}
+          onClose={() => setTx11ModalOpen(false)}
+          title="TX 11: PostarinaPosiljke (Calculate Postage)"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Service ID (IdRukovanje) *
+              </label>
+              <select
+                value={tx11Request.id_rukovanje}
+                onChange={(e) =>
+                  setTx11Request({
+                    ...tx11Request,
+                    id_rukovanje: parseInt(e.target.value),
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+              >
+                <option value={29}>29 - PE_Danas_za_sutra_12</option>
+                <option value={30}>30 - PE_Danas_za_danas</option>
+                <option value={55}>55 - PE_Danas_za_odmah</option>
+                <option value={58}>58 - PE_Danas_za_sutra_19</option>
+                <option value={59}>59 - PE_Danas_za_odmah_Bg</option>
+                <option value={71}>71 - PE_Danas_za_sutra_isporuka</option>
+                <option value={85}>85 - Paketomat</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  From Postal Code *
+                </label>
+                <input
+                  type="text"
+                  value={tx11Request.postanski_broj_odlaska}
+                  onChange={(e) =>
+                    setTx11Request({
+                      ...tx11Request,
+                      postanski_broj_odlaska: e.target.value,
+                    })
+                  }
+                  placeholder="11000"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  To Postal Code *
+                </label>
+                <input
+                  type="text"
+                  value={tx11Request.postanski_broj_dolaska}
+                  onChange={(e) =>
+                    setTx11Request({
+                      ...tx11Request,
+                      postanski_broj_dolaska: e.target.value,
+                    })
+                  }
+                  placeholder="21000"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Weight (grams) *
+                </label>
+                <input
+                  type="number"
+                  value={tx11Request.masa}
+                  onChange={(e) =>
+                    setTx11Request({
+                      ...tx11Request,
+                      masa: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  COD Amount (para)
+                </label>
+                <input
+                  type="number"
+                  value={tx11Request.otkupnina}
+                  onChange={(e) =>
+                    setTx11Request({
+                      ...tx11Request,
+                      otkupnina: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Insured Value (para)
+                </label>
+                <input
+                  type="number"
+                  value={tx11Request.vrednost}
+                  onChange={(e) =>
+                    setTx11Request({
+                      ...tx11Request,
+                      vrednost: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Special Services (comma-separated codes)
+              </label>
+              <input
+                type="text"
+                value={tx11Request.posebne_usluge}
+                onChange={(e) =>
+                  setTx11Request({
+                    ...tx11Request,
+                    posebne_usluge: e.target.value,
+                  })
+                }
+                placeholder="PNA,SMS"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Examples: PNA (notification), SMS, OTK (COD), VD (declared
+                value)
+              </p>
+            </div>
+
+            <button
+              onClick={handleTx11Test}
+              disabled={tx11Loading}
+              className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              {tx11Loading ? 'Testing...' : '💰 Test TX 11'}
+            </button>
+
+            {tx11Error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                {tx11Error}
+              </div>
+            )}
+
+            {tx11Response && (
+              <div>
+                <h4 className="font-semibold mb-2 text-gray-800">
+                  Postage Calculation
+                </h4>
+                <div className="border border-gray-200 rounded p-4 bg-gradient-to-br from-amber-50 to-yellow-50">
+                  <div className="text-center mb-4">
+                    <div className="text-3xl font-bold text-amber-700">
+                      {(
+                        (tx11Response.postarina || tx11Response.Postarina) / 100
+                      ).toFixed(2)}{' '}
+                      RSD
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      ({tx11Response.postarina || tx11Response.Postarina} para)
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm border-t pt-3">
+                    <div>
+                      <span className="font-medium">Result Code:</span>{' '}
+                      {tx11Response.rezultat || tx11Response.Rezultat}
+                    </div>
+                    {(tx11Response.poruka || tx11Response.Poruka) && (
+                      <div className="col-span-2">
+                        <span className="font-medium">Message:</span>{' '}
+                        {tx11Response.poruka || tx11Response.Poruka}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                    Raw Response JSON
+                  </summary>
+                  <pre className="mt-2 bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
+                    {JSON.stringify(tx11Response, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            )}
+          </div>
+        </Modal>
       </div>
     </div>
   );

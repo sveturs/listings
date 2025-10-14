@@ -63,6 +63,13 @@ func (c *WSPClientImpl) CreateManifest(ctx context.Context, manifest *postexpres
 		return nil, fmt.Errorf("failed to marshal manifest request: %w", err)
 	}
 
+	// Логируем JSON для диагностики (обрезаем до 2000 символов)
+	jsonPreview := string(inputData)
+	if len(jsonPreview) > 2000 {
+		jsonPreview = jsonPreview[:2000] + "..."
+	}
+	c.logger.Debug("Manifest JSON request: %s", jsonPreview)
+
 	// Выполнение транзакции 73 (B2B Manifest)
 	req := &models.TransactionRequest{
 		TransactionType: 73, // ID транзакции для B2B Manifest
@@ -92,16 +99,33 @@ func (c *WSPClientImpl) CreateManifest(ctx context.Context, manifest *postexpres
 		return nil, fmt.Errorf("failed to parse manifest response: %w", err)
 	}
 
+	// Логируем ошибки валидации если они есть
+	if len(result.GreskeValidaci) > 0 {
+		c.logger.Error("Post Express validation errors (%d errors):", len(result.GreskeValidaci))
+		for i, validErr := range result.GreskeValidaci {
+			c.logger.Error("  [%d] Field: %s, Value: %s, Message: %s", i+1, validErr.Polje, validErr.Vrednost, validErr.Poruka)
+		}
+	}
+
+	// Логируем результат манифеста
+	if result.Rezultat != 0 {
+		c.logger.Error("Manifest creation failed - Rezultat: %d, Poruka: %s, IDManifesta: %d",
+			result.Rezultat, result.Poruka, result.IDManifesta)
+	} else {
+		c.logger.Info("Manifest created successfully - IDManifesta: %d, ExtIDManifest: %s",
+			result.IDManifesta, result.ExtIDManifest)
+	}
+
 	return &result, nil
 }
 
 // CreateShipmentViaManifest создает отправление через манифест B2B API (правильная структура)
 func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment *WSPShipmentRequest) (*postexpress.ManifestResponse, error) {
 	timestamp := time.Now().Unix()
-	boolFalse := false // Helper для *bool полей
 
 	// Определяем ID услуги на основе типа сервиса
-	idRukovanje := 29 // По умолчанию: PE_Danas_za_sutra_12
+	// ВАЖНО: ID 29 (PE_Danas_za_sutra_12) отменена с 01.01.2022!
+	idRukovanje := 71 // По умолчанию: PE_Danas_za_sutra_isporuka (ID 71)
 	switch shipment.ServiceType {
 	case "PE_Danas_za_danas":
 		idRukovanje = 30
@@ -147,7 +171,7 @@ func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment 
 		ExtMagacin:        "WAREHOUSE1",
 		ExtReferenca:      fmt.Sprintf("SVETU-REF-%d", timestamp),
 		NacinPrijema:      "K", // K=courier, O=office
-		ImaPrijemniBrojDN: &boolFalse,
+		ImaPrijemniBrojDN: "N", // "N" = нет приёмного номера, "D" = есть приёмный номер
 		NacinPlacanja:     "POF", // POF=poslato od firme (sent by company)
 
 		// Отправитель ВНУТРИ отправления

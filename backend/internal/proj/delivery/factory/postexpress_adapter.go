@@ -108,7 +108,6 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 	}
 
 	// Маппинг в Post Express B2B формат
-	boolFalse := false
 	config := a.service.GetConfig()
 
 	// Определяем способ оплаты
@@ -130,7 +129,7 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 		ExtMagacin:        "WAREHOUSE1",
 		ExtReferenca:      fmt.Sprintf("SVETU-%d", time.Now().Unix()),
 		NacinPrijema:      "K", // K - курьер
-		ImaPrijemniBrojDN: &boolFalse,
+		ImaPrijemniBrojDN: "N", // "N" = нет приёмного номера, "D" = есть приёмный номер
 		NacinPlacanja:     nacinPlacanja,
 
 		// Отправитель внутри отправления
@@ -167,7 +166,7 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 
 		// Основные данные
 		BrojPosiljke: fmt.Sprintf("SVETU-%d", time.Now().Unix()),
-		IDRukovanje:  29, // Стандартная услуга
+		IDRukovanje:  71, // PE_Danas_za_sutra_isporuka (ID 29 отменена с 01.01.2022)
 		Masa:         weightGrams,
 
 		// Получатель

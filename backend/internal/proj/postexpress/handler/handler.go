@@ -8,6 +8,7 @@ import (
 
 	"backend/internal/interfaces"
 	"backend/internal/middleware"
+	"backend/internal/proj/postexpress"
 	"backend/internal/proj/postexpress/models"
 	"backend/internal/proj/postexpress/service"
 	"backend/internal/proj/postexpress/storage"
@@ -17,8 +18,9 @@ import (
 
 // Handler представляет HTTP обработчик для Post Express
 type Handler struct {
-	service service.Service
-	logger  logger.Logger
+	service   service.Service
+	wspClient service.WSPClient
+	logger    logger.Logger
 }
 
 // NewHandler создает новый экземпляр обработчика
@@ -26,6 +28,15 @@ func NewHandler(service service.Service, logger logger.Logger) *Handler {
 	return &Handler{
 		service: service,
 		logger:  logger,
+	}
+}
+
+// NewHandlerWithWSPClient создает новый экземпляр обработчика с WSP клиентом для тестирования
+func NewHandlerWithWSPClient(service service.Service, wspClient service.WSPClient, logger logger.Logger) *Handler {
+	return &Handler{
+		service:   service,
+		wspClient: wspClient,
+		logger:    logger,
 	}
 }
 
@@ -86,6 +97,20 @@ func (h *Handler) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewa
 	test.Post("/shipment", h.CreateTestShipment)
 	test.Get("/config", h.GetTestConfig)
 	test.Get("/history", h.GetTestHistory)
+
+	// Новые тестовые эндпоинты для всех WSP API возможностей
+	test.Post("/track", h.TestTrackShipment)       // Transaction 15 - Отслеживание
+	test.Post("/cancel", h.TestCancelShipment)     // Transaction 25 - Отмена
+	test.Post("/label", h.TestPrintLabel)          // Transaction 20 - Печать этикетки
+	test.Post("/locations", h.TestSearchLocations) // Transaction 3 - Поиск населенных пунктов
+	test.Post("/offices", h.TestGetOffices)        // Transaction 10 - Список отделений
+
+	// TX 3-11: Новые WSP API endpoints
+	postExpress.Get("/settlements", h.GetSettlements)                    // TX 3 - Поиск населённых пунктов
+	postExpress.Get("/streets", h.GetStreets)                            // TX 4 - Поиск улиц
+	postExpress.Post("/validate-address", h.ValidateAddress)             // TX 6 - Валидация адреса
+	postExpress.Post("/check-service-availability", h.CheckServiceAvailability) // TX 9 - Проверка доступности услуги
+	postExpress.Post("/calculate-postage", h.CalculatePostage)           // TX 11 - Расчёт стоимости доставки
 
 	return nil
 }
@@ -974,6 +999,233 @@ func (h *Handler) GetWarehouseStatistics(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, stats)
+}
+
+// =============================================================================
+// TX 3-11: НОВЫЕ WSP API ENDPOINTS
+// =============================================================================
+
+// GetSettlements - TX 3: Поиск населённых пунктов по названию
+// @Summary Search settlements by name (TX 3)
+// @Description Поиск населённых пунктов по названию через Post Express WSP API
+// @Tags PostExpress
+// @Accept json
+// @Produce json
+// @Param query query string true "Поисковый запрос (название или часть названия)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=postexpress.GetSettlementsResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/postexpress/settlements [get]
+func (h *Handler) GetSettlements(c *fiber.Ctx) error {
+	query := c.Query("query")
+	if query == "" {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.queryRequired")
+	}
+
+	// Вызываем WSP API через клиент
+	if h.wspClient == nil {
+		h.logger.Error("WSP client is not initialized")
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.wspClientNotInitialized")
+	}
+
+	response, err := h.wspClient.GetSettlements(c.Context(), query)
+	if err != nil {
+		h.logger.Error("Failed to get settlements - query: %s, error: %v", query, err)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getSettlementsError")
+	}
+
+	// Проверяем Rezultat (0 = успех)
+	if response.Rezultat != 0 {
+		h.logger.Error("GetSettlements failed - Rezultat: %d, Poruka: %s", response.Rezultat, response.Poruka)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, response.Poruka)
+	}
+
+	h.logger.Info("GetSettlements success - Query: %s, Found: %d settlements", query, len(response.Naselja))
+	return utils.SuccessResponse(c, response)
+}
+
+// GetStreets - TX 4: Поиск улиц в населённом пункте
+// @Summary Search streets in settlement (TX 4)
+// @Description Поиск улиц по названию в конкретном населённом пункте
+// @Tags PostExpress
+// @Accept json
+// @Produce json
+// @Param settlement_id query int true "ID населённого пункта (из TX 3)"
+// @Param query query string true "Поисковый запрос (название или часть названия улицы)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=postexpress.GetStreetsResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/postexpress/streets [get]
+func (h *Handler) GetStreets(c *fiber.Ctx) error {
+	settlementID, err := strconv.Atoi(c.Query("settlement_id"))
+	if err != nil || settlementID <= 0 {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.settlementIDRequired")
+	}
+
+	query := c.Query("query")
+	if query == "" {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.queryRequired")
+	}
+
+	if h.wspClient == nil {
+		h.logger.Error("WSP client is not initialized")
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.wspClientNotInitialized")
+	}
+
+	response, err := h.wspClient.GetStreets(c.Context(), settlementID, query)
+	if err != nil {
+		h.logger.Error("Failed to get streets - settlementID: %d, query: %s, error: %v", settlementID, query, err)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getStreetsError")
+	}
+
+	if response.Rezultat != 0 {
+		h.logger.Error("GetStreets failed - Rezultat: %d, Poruka: %s", response.Rezultat, response.Poruka)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, response.Poruka)
+	}
+
+	h.logger.Info("GetStreets success - SettlementID: %d, Query: %s, Found: %d streets", settlementID, query, len(response.Ulice))
+	return utils.SuccessResponse(c, response)
+}
+
+// ValidateAddress - TX 6: Валидация адреса
+// @Summary Validate address (TX 6)
+// @Description Проверка существования адреса в базе Post Express
+// @Tags PostExpress
+// @Accept json
+// @Produce json
+// @Param request body postexpress.AddressValidationRequest true "Данные для валидации адреса"
+// @Success 200 {object} utils.SuccessResponseSwag{data=postexpress.AddressValidationResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/postexpress/validate-address [post]
+func (h *Handler) ValidateAddress(c *fiber.Ctx) error {
+	var req postexpress.AddressValidationRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "common.errors.invalidRequestBody")
+	}
+
+	// Валидация обязательных полей
+	if req.IdNaselje <= 0 {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.settlementIDRequired")
+	}
+	if req.Broj == "" {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.houseNumberRequired")
+	}
+	if req.PostanskiBroj == "" {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.postalCodeRequired")
+	}
+
+	if h.wspClient == nil {
+		h.logger.Error("WSP client is not initialized")
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.wspClientNotInitialized")
+	}
+
+	response, err := h.wspClient.ValidateAddress(c.Context(), &req)
+	if err != nil {
+		h.logger.Error("Failed to validate address - error: %v", err)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.validateAddressError")
+	}
+
+	if response.Rezultat != 0 {
+		h.logger.Error("ValidateAddress failed - Rezultat: %d, Poruka: %s", response.Rezultat, response.Poruka)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, response.Poruka)
+	}
+
+	h.logger.Info("ValidateAddress success - PostojiAdresa: %t", response.PostojiAdresa)
+	return utils.SuccessResponse(c, response)
+}
+
+// CheckServiceAvailability - TX 9: Проверка доступности услуги доставки
+// @Summary Check service availability (TX 9)
+// @Description Проверить доступность услуги доставки между двумя точками
+// @Tags PostExpress
+// @Accept json
+// @Produce json
+// @Param request body postexpress.ServiceAvailabilityRequest true "Данные для проверки доступности"
+// @Success 200 {object} utils.SuccessResponseSwag{data=postexpress.ServiceAvailabilityResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/postexpress/check-service-availability [post]
+func (h *Handler) CheckServiceAvailability(c *fiber.Ctx) error {
+	var req postexpress.ServiceAvailabilityRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "common.errors.invalidRequestBody")
+	}
+
+	// Валидация обязательных полей
+	if req.IdRukovanje <= 0 {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.serviceIDRequired")
+	}
+	if req.PostanskiBrojOdlaska == "" || req.PostanskiBrojDolaska == "" {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.postalCodesRequired")
+	}
+
+	if h.wspClient == nil {
+		h.logger.Error("WSP client is not initialized")
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.wspClientNotInitialized")
+	}
+
+	response, err := h.wspClient.CheckServiceAvailability(c.Context(), &req)
+	if err != nil {
+		h.logger.Error("Failed to check service availability - error: %v", err)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.checkServiceAvailabilityError")
+	}
+
+	if response.Rezultat != 0 {
+		h.logger.Error("CheckServiceAvailability failed - Rezultat: %d, Poruka: %s", response.Rezultat, response.Poruka)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, response.Poruka)
+	}
+
+	h.logger.Info("CheckServiceAvailability success - Dostupna: %t, OcekivanoDana: %d", response.Dostupna, response.OcekivanoDana)
+	return utils.SuccessResponse(c, response)
+}
+
+// CalculatePostage - TX 11: Расчёт стоимости доставки
+// @Summary Calculate postage (TX 11)
+// @Description Рассчитать точную стоимость доставки для конкретной посылки
+// @Tags PostExpress
+// @Accept json
+// @Produce json
+// @Param request body postexpress.PostageCalculationRequest true "Данные для расчёта стоимости"
+// @Success 200 {object} utils.SuccessResponseSwag{data=postexpress.PostageCalculationResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/postexpress/calculate-postage [post]
+func (h *Handler) CalculatePostage(c *fiber.Ctx) error {
+	var req postexpress.PostageCalculationRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "common.errors.invalidRequestBody")
+	}
+
+	// Валидация обязательных полей
+	if req.IdRukovanje <= 0 {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.serviceIDRequired")
+	}
+	if req.PostanskiBrojOdlaska == "" || req.PostanskiBrojDolaska == "" {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.postalCodesRequired")
+	}
+	if req.Masa <= 0 {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.weightRequired")
+	}
+
+	if h.wspClient == nil {
+		h.logger.Error("WSP client is not initialized")
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.wspClientNotInitialized")
+	}
+
+	response, err := h.wspClient.CalculatePostage(c.Context(), &req)
+	if err != nil {
+		h.logger.Error("Failed to calculate postage - error: %v", err)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.calculatePostageError")
+	}
+
+	if response.Rezultat != 0 {
+		h.logger.Error("CalculatePostage failed - Rezultat: %d, Poruka: %s", response.Rezultat, response.Poruka)
+		return utils.ErrorResponse(c, http.StatusInternalServerError, response.Poruka)
+	}
+
+	h.logger.Info("CalculatePostage success - Postarina: %d para (%.2f RSD)", response.Postarina, float64(response.Postarina)/100)
+	return utils.SuccessResponse(c, response)
 }
 
 // Ensure Handler implements RouteRegistrar interface

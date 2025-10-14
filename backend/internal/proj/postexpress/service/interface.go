@@ -74,6 +74,13 @@ type WSPClient interface {
 	GetShipmentStatus(ctx context.Context, trackingNumber string) (*WSPTrackingResponse, error)
 	PrintLabel(ctx context.Context, shipmentID string) ([]byte, error)
 	CancelShipment(ctx context.Context, shipmentID string) error
+
+	// TX 3-11: Новые методы WSP API
+	GetSettlements(ctx context.Context, query string) (*postexpress.GetSettlementsResponse, error)
+	GetStreets(ctx context.Context, settlementID int, query string) (*postexpress.GetStreetsResponse, error)
+	ValidateAddress(ctx context.Context, req *postexpress.AddressValidationRequest) (*postexpress.AddressValidationResponse, error)
+	CheckServiceAvailability(ctx context.Context, req *postexpress.ServiceAvailabilityRequest) (*postexpress.ServiceAvailabilityResponse, error)
+	CalculatePostage(ctx context.Context, req *postexpress.PostageCalculationRequest) (*postexpress.PostageCalculationResponse, error)
 }
 
 // WSP API структуры данных
