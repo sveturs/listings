@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
@@ -19,6 +20,7 @@ import (
 // ViberHandler обрабатывает запросы Viber Bot
 type ViberHandler struct {
 	webhookHandler *handler.WebhookHandler
+	messageHandler *handler.MessageHandler
 	botService     *service.BotService
 	infobipService *service.InfobipBotService
 	sessionManager *service.SessionManager
@@ -62,6 +64,7 @@ func NewViberHandler(db *postgres.Database, services globalService.ServicesInter
 
 	return &ViberHandler{
 		webhookHandler: webhookHandler,
+		messageHandler: messageHandler,
 		botService:     botService,
 		infobipService: infobipService,
 		sessionManager: sessionManager,
@@ -123,6 +126,53 @@ func (h *ViberHandler) HandleInfobipWebhook(c *fiber.Ctx) error {
 		// Логируем ошибку, но возвращаем 200, чтобы Infobip не ретраил
 		// В production логирование через logger
 		_ = err // В production: logger.Error("Failed to process Infobip webhook", "error", err)
+	}
+
+	// ВАЖНО: Если это входящее сообщение, обрабатываем через MessageHandler
+	if infobipWebhook.InboundContent != nil && infobipWebhook.InboundContent.Text != "" {
+		ctx := c.Context()
+		viberID := infobipWebhook.From
+		text := infobipWebhook.InboundContent.Text
+
+		// Обрабатываем команды
+		text = strings.TrimSpace(strings.ToLower(text))
+
+		switch {
+		case text == "help" || strings.Contains(text, "помощь") || text == "/help" || text == "start":
+			_ = h.messageHandler.HandleHelp(ctx, viberID)
+
+		case text == "search" || strings.Contains(text, "поиск") || strings.Contains(text, "найти"):
+			_ = h.messageHandler.HandleSearch(ctx, viberID, text)
+
+		case text == "my_orders" || strings.Contains(text, "заказ"):
+			_ = h.messageHandler.HandleMyOrders(ctx, viberID)
+
+		case text == "cart" || strings.Contains(text, "корзин"):
+			_ = h.messageHandler.HandleCart(ctx, viberID)
+
+		case text == "storefronts" || strings.Contains(text, "витрин") || strings.Contains(text, "магазин"):
+			_ = h.messageHandler.HandleStorefronts(ctx, viberID)
+
+		case strings.HasPrefix(text, "track_"):
+			trackingToken := strings.TrimPrefix(text, "track_")
+			_ = h.messageHandler.HandleTrackDelivery(ctx, viberID, trackingToken)
+
+		default:
+			// Пытаемся понять намерение через поиск
+			if len(text) > 3 {
+				_ = h.messageHandler.HandleSearch(ctx, viberID, text)
+			} else {
+				// Приветствие или первое сообщение
+				welcomeMsg := "👋 Привет! Я бот SveTu Marketplace.\n\n" +
+					"Я помогу вам:\n" +
+					"🔍 Найти товары - просто напишите что ищете\n" +
+					"🏪 Показать витрины - напишите 'витрины'\n" +
+					"📦 Отследить доставку - напишите 'track_НОМЕР'\n" +
+					"❓ Помощь - напишите 'помощь'\n\n" +
+					"Что вас интересует?"
+				_ = h.infobipService.SendTextMessage(ctx, viberID, welcomeMsg)
+			}
+		}
 	}
 
 	return utils.SuccessResponse(c, nil)
