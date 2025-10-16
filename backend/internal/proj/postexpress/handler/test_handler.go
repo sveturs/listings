@@ -491,6 +491,25 @@ func (h *Handler) createRealShipment(ctx context.Context, req *TestShipmentReque
 		return nil, fmt.Errorf("WSP client not initialized")
 	}
 
+	// Определяем ServiceType на основе IdRukovanje
+	serviceType := "PE_Danas_za_sutra_isporuka" // Дефолтный сервис (IdRukovanje=71)
+	switch req.IdRukovanje {
+	case 29:
+		serviceType = "PE_Danas_za_sutra_12"
+	case 30:
+		serviceType = "PE_Danas_za_danas"
+	case 55:
+		serviceType = "PE_Danas_za_odmah"
+	case 58:
+		serviceType = "PE_Danas_za_sutra_19"
+	case 59:
+		serviceType = "PE_Danas_za_odmah_Bg"
+	case 71:
+		serviceType = "PE_Danas_za_sutra_isporuka"
+	case 85:
+		serviceType = "PE_Klasicna" // Parcel Locker
+	}
+
 	// Подготавливаем запрос для WSP API
 	wspReq := &service.WSPShipmentRequest{
 		SenderName:          req.SenderName,
@@ -506,7 +525,7 @@ func (h *Handler) createRealShipment(ctx context.Context, req *TestShipmentReque
 		Weight:              float64(req.Weight) / 1000.0, // Конвертируем граммы в килограммы
 		CODAmount:           float64(req.CODAmount),
 		InsuranceAmount:     float64(req.InsuredValue),
-		ServiceType:         "PE_Danas_za_sutra_12", // Дефолтный сервис
+		ServiceType:         serviceType,
 		Content:             req.Content,
 		Note:                fmt.Sprintf("Test shipment from SVETU platform - %s", req.DeliveryMethod),
 		ParcelLockerCode:    req.ParcelLockerCode, // Код паккетомата для IdRukovanje=85
