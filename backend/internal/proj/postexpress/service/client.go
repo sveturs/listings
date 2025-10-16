@@ -44,7 +44,10 @@ type WSPConfig struct {
 	DeviceName      string
 	ApplicationName string
 	Version         string
-	PartnerID       int // Добавлено: ID партнера (10109 для svetu.rs)
+	PartnerID       int    // Добавлено: ID партнера (10109 для svetu.rs)
+	BankAccount     string // Банковский счёт для перевода откупнины
+	PaymentCode     string // Шифра плаћања (обычно "189")
+	PaymentModel    string // Модель платежа (обычно "97")
 }
 
 // NewWSPClient создает новый экземпляр WSP клиента

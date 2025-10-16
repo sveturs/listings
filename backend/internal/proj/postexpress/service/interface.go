@@ -120,6 +120,7 @@ type WSPShipmentRequest struct {
 	ServiceType         string  `json:"VrstaUsluge"`
 	Content             string  `json:"Sadrzaj"`
 	Note                string  `json:"Napomena"`
+	ParcelLockerCode    string  `json:"ParcelLockerCode"` // Код паккетомата (для IdRukovanje=85)
 }
 
 // WSPShipmentResponse представляет ответ на создание отправления

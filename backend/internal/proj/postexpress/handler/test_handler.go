@@ -557,17 +557,27 @@ func (h *Handler) createRealShipment(ctx context.Context, req *TestShipmentReque
 		}, nil
 	}
 
+	// Извлекаем стоимость (в para, 1 RSD = 100 para)
+	costPara := posiljka.Postarina
+	costRSD := float64(costPara) / 100.0
+
+	// Извлекаем трек-номер (PrijemniBroj - это настоящий tracking number)
+	trackingNumber := posiljka.PrijemniBroj
+	if trackingNumber == "" {
+		trackingNumber = posiljka.TrackingNumber // Fallback
+	}
+
 	// Успешный ответ
-	h.logger.Info("Test shipment created successfully: tracking=%s, ID=%d",
-		posiljka.TrackingNumber, posiljka.IDPosiljke)
+	h.logger.Info("Test shipment created successfully: tracking=%s, ID=%d, cost=%.2f RSD (%d para)",
+		trackingNumber, posiljka.IDPosiljke, costRSD, costPara)
 
 	return &TestShipmentResponse{
 		Success:        true,
-		TrackingNumber: posiljka.TrackingNumber,
+		TrackingNumber: trackingNumber,
 		ManifestID:     manifestResp.IDManifesta,
 		ShipmentID:     posiljka.IDPosiljke,
 		ExternalID:     posiljka.BrojPosiljke,
-		Cost:           0, // Стоимость нужно рассчитывать отдельным запросом
+		Cost:           int(costRSD), // Конвертируем в RSD (целое число)
 		CreatedAt:      time.Now().Format(time.RFC3339),
 		ProcessingTime: time.Since(startTime).Milliseconds(),
 		RequestData:    buildRequestData(req),
@@ -774,9 +784,11 @@ func (h *Handler) TestValidateAddress(c *fiber.Ctx) error {
 		req.SettlementID, req.StreetID, req.HouseNumber, req.PostalCode)
 
 	wspReq := &postexpress.AddressValidationRequest{
+		TipAdrese:     0,                 // 0 = стандартный тип адреса
+		IdRukovanje:   71,                // Дефолтная услуга доставки (можно любую)
 		IdNaselje:     req.SettlementID,
 		IdUlica:       req.StreetID,
-		Broj:          req.HouseNumber,
+		BrojPodbroj:   req.HouseNumber,
 		PostanskiBroj: req.PostalCode,
 	}
 
@@ -850,7 +862,10 @@ func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
 		req.ServiceID, req.FromPostalCode, req.ToPostalCode)
 
 	wspReq := &postexpress.ServiceAvailabilityRequest{
+		TipAdrese:            0,                   // 0 = стандартный тип адреса
 		IdRukovanje:          req.ServiceID,
+		IdNaseljeOdlaska:     100001,              // Белград (11000) - hardcoded для теста
+		IdNaseljeDolaska:     100039,              // Нови Сад (21000) - hardcoded для теста
 		PostanskiBrojOdlaska: req.FromPostalCode,
 		PostanskiBrojDolaska: req.ToPostalCode,
 	}
@@ -930,6 +945,7 @@ func (h *Handler) TestCalculatePostage(c *fiber.Ctx) error {
 
 	wspReq := &postexpress.PostageCalculationRequest{
 		IdRukovanje:          req.ServiceID,
+		IdZemlja:             0, // 0 = domestic shipments
 		PostanskiBrojOdlaska: req.FromPostalCode,
 		PostanskiBrojDolaska: req.ToPostalCode,
 		Masa:                 req.Weight,

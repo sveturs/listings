@@ -39,14 +39,14 @@ interface GetStreetsResponse {
 }
 
 export default function PostaExamplesPage() {
-
   // TX 3 State
   const [settlementQuery, setSettlementQuery] = useState('Beograd');
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [tx3Loading, setTx3Loading] = useState(false);
   const [tx3Error, setTx3Error] = useState<string | null>(null);
   const [tx3ResponseTime, setTx3ResponseTime] = useState<number | null>(null);
-  const [selectedSettlement, setSelectedSettlement] = useState<Settlement | null>(null);
+  const [selectedSettlement, setSelectedSettlement] =
+    useState<Settlement | null>(null);
 
   // TX 4 State
   const [streetQuery, setStreetQuery] = useState('Takovska');
@@ -70,12 +70,14 @@ export default function PostaExamplesPage() {
       const response = await apiClient.get<{
         success: boolean;
         data: GetSettlementsResponse;
-      }>(`/postexpress/settlements?query=${encodeURIComponent(settlementQuery)}`);
+      }>(
+        `/postexpress/settlements?query=${encodeURIComponent(settlementQuery)}`
+      );
 
       const responseTime = Date.now() - startTime;
       setTx3ResponseTime(responseTime);
 
-      if (response.data.success && response.data.data.Rezultat === 0) {
+      if (response.data?.success && response.data?.data?.Rezultat === 0) {
         setSettlements(response.data.data.Naselja || []);
       } else {
         setTx3Error('Post Express returned error');
@@ -109,12 +111,14 @@ export default function PostaExamplesPage() {
       const response = await apiClient.get<{
         success: boolean;
         data: GetStreetsResponse;
-      }>(`/postexpress/streets?settlement_id=${idToUse}&query=${encodeURIComponent(streetQuery)}`);
+      }>(
+        `/postexpress/streets?settlement_id=${idToUse}&query=${encodeURIComponent(streetQuery)}`
+      );
 
       const responseTime = Date.now() - startTime;
       setTx4ResponseTime(responseTime);
 
-      if (response.data.success && response.data.data.Rezultat === 0) {
+      if (response.data?.success && response.data?.data?.Rezultat === 0) {
         setStreets(response.data.data.Ulice || []);
       } else {
         setTx4Error('Post Express returned error');
@@ -201,7 +205,7 @@ export default function PostaExamplesPage() {
             <button
               onClick={handleRunAllTests}
               disabled={tx3Loading || tx4Loading}
-              className={`btn btn-sm btn-accent gap-2 ${(tx3Loading || tx4Loading) ? 'loading' : ''}`}
+              className={`btn btn-sm btn-accent gap-2 ${tx3Loading || tx4Loading ? 'loading' : ''}`}
             >
               <PlayIcon className="w-4 h-4" />
               Run All Tests
@@ -222,8 +226,14 @@ export default function PostaExamplesPage() {
             <div className="alert alert-info">
               <CodeBracketIcon className="w-5 h-5" />
               <div>
-                <div className="font-bold">Search for Serbian cities and settlements. Returns IdNaselje for use in TX 4.</div>
-                <div className="text-sm mt-1">💡 <strong>Pre-filled with "Beograd"</strong> - just click "Search" to test!</div>
+                <div className="font-bold">
+                  Search for Serbian cities and settlements. Returns IdNaselje
+                  for use in TX 4.
+                </div>
+                <div className="text-sm mt-1">
+                  💡 <strong>Pre-filled with "Beograd"</strong> - just click
+                  "Search" to test!
+                </div>
               </div>
             </div>
 
@@ -239,7 +249,9 @@ export default function PostaExamplesPage() {
                   className="input input-bordered flex-1"
                   value={settlementQuery}
                   onChange={(e) => setSettlementQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearchSettlements()}
+                  onKeyPress={(e) =>
+                    e.key === 'Enter' && handleSearchSettlements()
+                  }
                 />
                 <button
                   className={`btn btn-primary ${tx3Loading ? 'loading' : ''}`}
@@ -256,9 +268,13 @@ export default function PostaExamplesPage() {
             {tx3ResponseTime !== null && (
               <div className="flex items-center gap-2 text-sm">
                 <ClockIcon className="w-4 h-4 text-success" />
-                <span>Response time: <strong>{tx3ResponseTime}ms</strong></span>
+                <span>
+                  Response time: <strong>{tx3ResponseTime}ms</strong>
+                </span>
                 {tx3ResponseTime < 100 && (
-                  <span className="badge badge-success badge-sm">Excellent</span>
+                  <span className="badge badge-success badge-sm">
+                    Excellent
+                  </span>
                 )}
                 {tx3ResponseTime >= 100 && tx3ResponseTime < 300 && (
                   <span className="badge badge-info badge-sm">Good</span>
@@ -293,10 +309,13 @@ export default function PostaExamplesPage() {
                       <div className="card-body p-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-bold text-lg">{settlement.Naziv}</h4>
+                            <h4 className="font-bold text-lg">
+                              {settlement.Naziv}
+                            </h4>
                             <p className="text-sm opacity-70">
                               ID: {settlement.IdNaselje}
-                              {settlement.PostanskiBroj && ` • Postal: ${settlement.PostanskiBroj}`}
+                              {settlement.PostanskiBroj &&
+                                ` • Postal: ${settlement.PostanskiBroj}`}
                             </p>
                           </div>
                           <button
@@ -329,8 +348,14 @@ export default function PostaExamplesPage() {
             <div className="alert alert-info">
               <CodeBracketIcon className="w-5 h-5" />
               <div>
-                <div className="font-bold">Search for streets within a selected settlement. Requires IdNaselje from TX 3.</div>
-                <div className="text-sm mt-1">💡 <strong>Pre-filled with "Takovska"</strong> - select Belgrade above and click "Search"!</div>
+                <div className="font-bold">
+                  Search for streets within a selected settlement. Requires
+                  IdNaselje from TX 3.
+                </div>
+                <div className="text-sm mt-1">
+                  💡 <strong>Pre-filled with "Takovska"</strong> - select
+                  Belgrade above and click "Search"!
+                </div>
               </div>
             </div>
 
@@ -339,8 +364,12 @@ export default function PostaExamplesPage() {
               <div className="alert alert-success">
                 <CheckCircleIcon className="w-5 h-5" />
                 <div>
-                  <div className="font-bold">Selected Settlement: {selectedSettlement.Naziv}</div>
-                  <div className="text-sm">IdNaselje: {selectedSettlement.IdNaselje}</div>
+                  <div className="font-bold">
+                    Selected Settlement: {selectedSettlement.Naziv}
+                  </div>
+                  <div className="text-sm">
+                    IdNaselje: {selectedSettlement.IdNaselje}
+                  </div>
                 </div>
               </div>
             )}
@@ -375,9 +404,13 @@ export default function PostaExamplesPage() {
             {tx4ResponseTime !== null && (
               <div className="flex items-center gap-2 text-sm">
                 <ClockIcon className="w-4 h-4 text-success" />
-                <span>Response time: <strong>{tx4ResponseTime}ms</strong></span>
+                <span>
+                  Response time: <strong>{tx4ResponseTime}ms</strong>
+                </span>
                 {tx4ResponseTime < 100 && (
-                  <span className="badge badge-success badge-sm">Excellent</span>
+                  <span className="badge badge-success badge-sm">
+                    Excellent
+                  </span>
                 )}
                 {tx4ResponseTime >= 100 && tx4ResponseTime < 300 && (
                   <span className="badge badge-info badge-sm">Good</span>
@@ -400,19 +433,21 @@ export default function PostaExamplesPage() {
                 </h3>
                 <div className="grid gap-2">
                   {streets.map((street) => (
-                    <div
-                      key={street.IdUlica}
-                      className="card bg-base-200"
-                    >
+                    <div key={street.IdUlica} className="card bg-base-200">
                       <div className="card-body p-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-bold text-lg">{street.Naziv}</h4>
+                            <h4 className="font-bold text-lg">
+                              {street.Naziv}
+                            </h4>
                             <p className="text-sm opacity-70">
-                              Street ID: {street.IdUlica} • Settlement ID: {street.IdNaselje}
+                              Street ID: {street.IdUlica} • Settlement ID:{' '}
+                              {street.IdNaselje}
                             </p>
                           </div>
-                          <div className="badge badge-success">Ready for TX 6</div>
+                          <div className="badge badge-success">
+                            Ready for TX 6
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -435,7 +470,8 @@ export default function PostaExamplesPage() {
               <h3>✅ Successfully Tested Transactions</h3>
               <ul>
                 <li>
-                  <strong>TX 3 (GetNaselje)</strong>: Settlement search - 200ms avg response time
+                  <strong>TX 3 (GetNaselje)</strong>: Settlement search - 200ms
+                  avg response time
                   <ul>
                     <li>Rezultat: 0 (Success)</li>
                     <li>Test query: "Beograd" → 2 results</li>
@@ -443,7 +479,8 @@ export default function PostaExamplesPage() {
                   </ul>
                 </li>
                 <li>
-                  <strong>TX 4 (GetUlica)</strong>: Street search - 50ms avg response time
+                  <strong>TX 4 (GetUlica)</strong>: Street search - 50ms avg
+                  response time
                   <ul>
                     <li>Rezultat: 0 (Success)</li>
                     <li>Test query: "Takovska" in Belgrade → 1 result</li>
@@ -457,8 +494,12 @@ export default function PostaExamplesPage() {
                 <li>User enters city name (TX 3: GetNaselje)</li>
                 <li>System displays matching settlements with IdNaselje</li>
                 <li>User selects settlement and enters street name</li>
-                <li>System searches streets using IdNaselje (TX 4: GetUlica)</li>
-                <li>Results ready for address validation (TX 6: ProveraAdrese)</li>
+                <li>
+                  System searches streets using IdNaselje (TX 4: GetUlica)
+                </li>
+                <li>
+                  Results ready for address validation (TX 6: ProveraAdrese)
+                </li>
               </ol>
 
               <h3>📊 Performance Metrics</h3>
@@ -476,13 +517,17 @@ export default function PostaExamplesPage() {
                     <td>TX 3 (GetNaselje)</td>
                     <td>~200ms</td>
                     <td>100%</td>
-                    <td><span className="badge badge-success">Production</span></td>
+                    <td>
+                      <span className="badge badge-success">Production</span>
+                    </td>
                   </tr>
                   <tr>
                     <td>TX 4 (GetUlica)</td>
                     <td>~50ms</td>
                     <td>100%</td>
-                    <td><span className="badge badge-success">Production</span></td>
+                    <td>
+                      <span className="badge badge-success">Production</span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -507,11 +552,17 @@ export default function PostaExamplesPage() {
             TX 3 & TX 4 are fully tested and ready to deploy
           </p>
           <div className="flex gap-4 justify-center">
-            <a href="/admin/postexpress/test" className="btn btn-lg bg-white text-primary hover:bg-white/90">
+            <a
+              href="/admin/postexpress/test"
+              className="btn btn-lg bg-white text-primary hover:bg-white/90"
+            >
               <CodeBracketIcon className="w-5 h-5" />
               View Full Test Suite
             </a>
-            <a href="https://github.com/sveturs/svetu" className="btn btn-lg btn-outline border-white text-white hover:bg-white/20">
+            <a
+              href="https://github.com/sveturs/svetu"
+              className="btn btn-lg btn-outline border-white text-white hover:bg-white/20"
+            >
               <ServerIcon className="w-5 h-5" />
               View Documentation
             </a>

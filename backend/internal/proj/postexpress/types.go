@@ -26,6 +26,16 @@ type OrderRequest struct {
 	Posiljke             []ShipmentRequest `json:"Posiljke"`                       // ОБЯЗАТЕЛЬНО: Список отправлений в заказе
 }
 
+// OtkupninaData - структура откупной пошилки (COD) с полными банковскими данными
+type OtkupninaData struct {
+	Iznos          int    `json:"Iznos"`          // Сумма в para (1 RSD = 100 para)
+	VrstaDokumenta string `json:"VrstaDokumenta"` // Тип документа: N=налогни документ
+	TekuciRacun    string `json:"TekuciRacun"`    // Банковский счёт для перевода откупнины
+	ModelPNB       string `json:"ModelPNB"`       // Модель платежа (обычно "97")
+	PNB            string `json:"PNB"`            // Позив на број (payment reference)
+	SifraPlacanja  string `json:"SifraPlacanja"`  // Шифра плаћања (обычно "189")
+}
+
 // ShipmentRequest - данные отправления (B2B структура)
 type ShipmentRequest struct {
 	// === ОБЯЗАТЕЛЬНЫЕ B2B поля ===
@@ -45,16 +55,17 @@ type ShipmentRequest struct {
 	Masa         int          `json:"Masa"`         // ОБЯЗАТЕЛЬНО: Вес в ГРАММАХ (integer!)
 
 	// === COD и ценности (в PARA - 1 RSD = 100 para) ===
-	Otkupnina int `json:"Otkupnina,omitempty"` // COD в para (5000 RSD = 500000)
-	Vrednost  int `json:"Vrednost,omitempty"`  // Объявленная ценность в para (ОБЯЗАТЕЛЬНО для COD!)
+	Otkupnina *OtkupninaData `json:"Otkupnina,omitempty"` // COD с полными банковскими данными (структура!)
+	Vrednost  int            `json:"Vrednost,omitempty"`  // Объявленная ценность в para (ОБЯЗАТЕЛЬНО для COD!)
 
 	// === Дополнительные услуги (строка через запятую!) ===
 	PosebneUsluge string `json:"PosebneUsluge,omitempty"` // "PNA,OTK,VD" - НЕ массив!
 
 	// === Опциональные поля ===
-	Sadrzaj       string `json:"Sadrzaj,omitempty"`       // Описание содержимого
-	ReferencaBroj string `json:"ReferencaBroj,omitempty"` // Референсный номер
-	Napomena      string `json:"Napomena,omitempty"`      // Примечание
+	Sadrzaj          string `json:"Sadrzaj,omitempty"`          // Описание содержимого
+	ReferencaBroj    string `json:"ReferencaBroj,omitempty"`    // Референсный номер
+	Napomena         string `json:"Napomena,omitempty"`         // Примечание
+	ParcelLockerCode string `json:"ParcelLockerCode,omitempty"` // Код паккетомата (для IdRukovanje=85)
 }
 
 // AddressInfo - адрес (ВСЕГДА объект, НЕ строка!)
@@ -121,11 +132,13 @@ type OrderResponse struct {
 type ShipmentResponse struct {
 	BrojPosiljke   string `json:"BrojPosiljke"`       // Номер отправления
 	IDPosiljke     int    `json:"IdPosiljke"`         // ID отправления в системе Pošta
-	TrackingNumber string `json:"TrackingNumber"`     // Трек-номер
+	PrijemniBroj   string `json:"PrijemniBroj"`       // Трек-номер (реальный от Post Express)
+	TrackingNumber string `json:"TrackingNumber"`     // Трек-номер (алиас для совместимости)
 	Status         string `json:"Status"`             // Статус отправления
 	Rezultat       int    `json:"Rezultat"`           // 0 - успех
 	Poruka         string `json:"Poruka,omitempty"`   // Сообщение об ошибке
 	LabelURL       string `json:"LabelUrl,omitempty"` // URL этикетки для печати
+	Postarina      int    `json:"Postarina,omitempty"` // Стоимость доставки в para (1 RSD = 100 para)
 }
 
 // ValidationError - ошибка валидации
@@ -303,7 +316,8 @@ type GetSettlementsRequest struct {
 
 // Settlement - данные населённого пункта
 type Settlement struct {
-	IdNaselje      int    `json:"IdNaselje"`      // ID населённого пункта
+	Id             int    `json:"Id"`             // ID населённого пункта (ВАЖНО: API возвращает "Id", не "IdNaselje"!)
+	IdNaselje      int    `json:"IdNaselje"`      // Алиас для совместимости
 	Naziv          string `json:"Naziv"`          // Название
 	PostanskiBroj  string `json:"PostanskiBroj"`  // Почтовый индекс
 	IdOkrug        int    `json:"IdOkrug"`        // ID округа
@@ -329,7 +343,8 @@ type GetStreetsRequest struct {
 
 // Street - данные улицы
 type Street struct {
-	IdUlica   int    `json:"IdUlica"`   // ID улицы
+	Id        int    `json:"Id"`        // ID улицы (ВАЖНО: API возвращает "Id", не "IdUlica"!)
+	IdUlica   int    `json:"IdUlica"`   // Алиас для совместимости
 	Naziv     string `json:"Naziv"`     // Название улицы
 	IdNaselje int    `json:"IdNaselje"` // ID населённого пункта
 }
@@ -347,10 +362,13 @@ type GetStreetsResponse struct {
 
 // AddressValidationRequest - запрос валидации адреса (TX 6)
 type AddressValidationRequest struct {
+	TipAdrese      int    `json:"TipAdrese"`      // Тип адреса (0, 1, 2)
+	IdRukovanje    int    `json:"IdRukovanje"`    // ID услуги доставки
 	IdNaselje      int    `json:"IdNaselje"`      // ID населённого пункта
 	IdUlica        int    `json:"IdUlica,omitempty"` // ID улицы (опционально)
-	Broj           string `json:"Broj"`           // Номер дома
+	BrojPodbroj    string `json:"BrojPodbroj"`    // Номер дома (например, "2" или "2a")
 	PostanskiBroj  string `json:"PostanskiBroj"`  // Почтовый индекс
+	Datum          string `json:"Datum,omitempty"` // Дата (опционально, формат: YYYY-MM-DD)
 }
 
 // AddressValidationResponse - ответ валидации адреса (TX 6)
@@ -375,9 +393,13 @@ type AddressValidationResponse struct {
 
 // ServiceAvailabilityRequest - запрос проверки доступности услуги (TX 9)
 type ServiceAvailabilityRequest struct {
+	TipAdrese              int    `json:"TipAdrese"`              // Тип адреса (0, 1, 2)
 	IdRukovanje            int    `json:"IdRukovanje"`            // ID услуги (29, 30, 55, 58, 59, 71, 85)
+	IdNaseljeOdlaska       int    `json:"IdNaseljeOdlaska,omitempty"`       // ID населённого пункта отправления
+	IdNaseljeDolaska       int    `json:"IdNaseljeDolaska,omitempty"`       // ID населённого пункта прибытия
 	PostanskiBrojOdlaska   string `json:"PostanskiBrojOdlaska"`   // Почтовый индекс отправления
 	PostanskiBrojDolaska   string `json:"PostanskiBrojDolaska"`   // Почтовый индекс прибытия
+	Datum                  string `json:"Datum,omitempty"`        // Дата (опционально, формат: YYYY-MM-DD)
 }
 
 // ServiceAvailabilityResponse - ответ проверки доступности услуги (TX 9)
@@ -398,6 +420,7 @@ type ServiceAvailabilityResponse struct {
 // PostageCalculationRequest - запрос расчёта стоимости доставки (TX 11)
 type PostageCalculationRequest struct {
 	IdRukovanje            int    `json:"IdRukovanje"`            // ID услуги доставки
+	IdZemlja               int    `json:"IdZemlja"`               // ID страны (0 = внутренние отправления)
 	PostanskiBrojOdlaska   string `json:"PostanskiBrojOdlaska"`   // Почтовый индекс отправления
 	PostanskiBrojDolaska   string `json:"PostanskiBrojDolaska"`   // Почтовый индекс прибытия
 	Masa                   int    `json:"Masa"`                   // Вес в граммах

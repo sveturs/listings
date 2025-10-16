@@ -227,16 +227,28 @@ func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment 
 		Masa: weightGrams, // В граммах!
 
 		// COD и ценность (в para!)
-		Otkupnina: codPara,
-		Vrednost:  valuePara,
+		Vrednost: valuePara,
 
 		// Услуги (строка через запятую!)
 		PosebneUsluge: services,
 
 		// Опциональные поля
-		Sadrzaj:       shipment.Content,
-		ReferencaBroj: fmt.Sprintf("SVETU-%d", timestamp),
-		Napomena:      shipment.Note,
+		Sadrzaj:          shipment.Content,
+		ReferencaBroj:    fmt.Sprintf("SVETU-%d", timestamp),
+		Napomena:         shipment.Note,
+		ParcelLockerCode: shipment.ParcelLockerCode, // Код паккетомата для IdRukovanje=85
+	}
+
+	// Формируем структуру Otkupnina ТОЛЬКО если это COD отправление
+	if codPara > 0 {
+		posiljka.Otkupnina = &postexpress.OtkupninaData{
+			Iznos:          codPara,
+			VrstaDokumenta: "N", // N = налогни документ
+			TekuciRacun:    c.config.BankAccount,
+			ModelPNB:       c.config.PaymentModel,
+			PNB:            generatePNB(timestamp),
+			SifraPlacanja:  c.config.PaymentCode,
+		}
 	}
 
 	// Создаем заказ с одной посылкой
@@ -300,4 +312,15 @@ func parseAddress(fullAddress string) (street string, number string) {
 	street = fullAddress[:lastSpace]
 	number = fullAddress[lastSpace+1:]
 	return street, number
+}
+
+// generatePNB генерирует уникальный позив на број (payment reference) на основе timestamp
+// Позив на број используется для идентификации платежа при откупном переводе
+func generatePNB(timestamp int64) string {
+	// Используем последние 10 цифр timestamp для создания уникального PNB
+	pnb := fmt.Sprintf("%d", timestamp)
+	if len(pnb) > 10 {
+		pnb = pnb[len(pnb)-10:]
+	}
+	return pnb
 }

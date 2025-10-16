@@ -1,0 +1,346 @@
+{
+  "title": "Post Express API Testing",
+  "subtitle": "Interactive testing of all Post Express WSP API endpoints",
+  "badges": {
+    "apiReady": "API Ready",
+    "testMode": "Test Mode"
+  },
+  "request": {
+    "title": "Request",
+    "endpoint": "Endpoint",
+    "headers": "Headers",
+    "body": "Body",
+    "copy": "Copy request"
+  },
+  "response": {
+    "title": "Response",
+    "headers": "Headers",
+    "data": "Data",
+    "copy": "Copy response",
+    "loading": "Waiting for response...",
+    "empty": "Response will appear here after request"
+  },
+  "form": {
+    "title": "Test Parameters",
+    "submit": "Run Test",
+    "submitting": "Running...",
+    "reset": "Reset to Defaults"
+  },
+  "tx3": {
+    "title": "TX 3: Search Settlements (GetNaselje)",
+    "description": "Search for settlements by name",
+    "query": "Settlement name",
+    "queryPlaceholder": "Enter settlement name (e.g., Beograd)",
+    "numRecords": "Number of records",
+    "success": "Found {count} settlements"
+  },
+  "tx4": {
+    "title": "TX 4: Search Streets (GetUlica)",
+    "description": "Search for streets in a specific settlement",
+    "back": "Back to test list",
+    "formTitle": "Search Parameters",
+    "settlementId": "Settlement ID",
+    "settlementIdPlaceholder": "Enter settlement ID",
+    "settlementIdHint": "Use TX 3 to get the ID (e.g., 100001 for Beograd)",
+    "query": "Street name",
+    "queryPlaceholder": "Enter street name (e.g., Takovska)",
+    "queryHint": "Enter full or partial street name",
+    "numRecords": "Number of records",
+    "reset": "Reset",
+    "searching": "Searching...",
+    "searchButton": "Find Streets",
+    "success": "Found streets: {count}",
+    "streetName": "Street Name",
+    "resultsPlaceholder": "Results will appear here after request execution"
+  },
+  "tx9": {
+    "title": "TX 9: ProveraDostupnostiUsluge (Service Availability)",
+    "description": "Check delivery service availability for selected route",
+    "back": "Back to test list",
+    "formTitle": "Check Parameters",
+    "serviceId": "Service ID",
+    "serviceIdHint": "71 - Express shipment, 29 - Regular shipment",
+    "fromPostalCode": "Sender Postal Code",
+    "fromPostalCodePlaceholder": "E.g.: 11000",
+    "fromPostalCodeHint": "Postal code of origin",
+    "toPostalCode": "Recipient Postal Code",
+    "toPostalCodePlaceholder": "E.g.: 21000",
+    "toPostalCodeHint": "Postal code of destination",
+    "reset": "Reset",
+    "checking": "Checking...",
+    "checkButton": "Check Availability",
+    "resultTitle": "Check Result",
+    "serviceAvailable": "Service available for this route",
+    "serviceNotAvailable": "Service NOT available for this route",
+    "serviceIdLabel": "Service ID",
+    "serviceName": "Service Name",
+    "expectedDays": "Expected Time",
+    "daysLabel": "day | days | days",
+    "note": "Note",
+    "routeLabel": "Route:",
+    "resultsPlaceholder": "Results will appear here after request execution"
+  },
+  "tx6": {
+    "title": "TX 6: ProveraAdrese (Address Validation)",
+    "description": "Validate address existence in Pošta Srbije database",
+    "back": "Back to test list",
+    "formTitle": "Address Parameters",
+    "settlementId": "Settlement ID",
+    "settlementIdHint": "Use TX 3 to get the ID",
+    "streetId": "Street ID",
+    "streetIdHint": "Use TX 4 to get the ID",
+    "houseNumber": "House Number",
+    "houseNumberPlaceholder": "E.g.: 2, 15A, 7-9",
+    "postalCode": "Postal Code",
+    "postalCodePlaceholder": "E.g.: 11000",
+    "reset": "Reset",
+    "checking": "Checking...",
+    "checkAddress": "Check Address",
+    "errorTitle": "Address Validation Error",
+    "resultTitle": "Validation Result",
+    "addressExists": "Address exists in database",
+    "addressNotFound": "Address NOT found in database",
+    "settlementName": "Settlement Name",
+    "streetName": "Street Name",
+    "resultsPlaceholder": "Results will appear here after request execution",
+    "testDataWarning": {
+      "title": "⚠️ Post Express Test Data Limitation",
+      "description": "Post Express test database does not contain addresses with PostojiAdresa=true. The API works correctly (returns PAK code and postal code), but all addresses are marked as non-existent. This is a limitation of Post Express test environment."
+    }
+  },
+  "tx73": {
+    "title": "TX 73: Create Shipment (B2B Manifest)",
+    "description": "Create a test shipment via Post Express API",
+    "back": "Back to test list",
+    "titleStandard": "TX 73: Standard Delivery (B2B Manifest)",
+    "titleCod": "TX 73: COD Delivery (B2B Manifest)",
+    "titleParcelLocker": "TX 73: Parcel Locker Delivery (B2B Manifest)",
+    "descriptionStandard": "Create shipment with standard address delivery",
+    "descriptionCod": "Create shipment with Cash on Delivery",
+    "descriptionParcelLocker": "Create shipment with automated parcel locker delivery",
+    "formTitle": "Shipment Parameters",
+    "reset": "Reset",
+    "creating": "Creating...",
+    "createButton": "Create Shipment",
+    "loadingConfig": "Loading configuration...",
+    "recipient": {
+      "title": "Recipient",
+      "name": "Name",
+      "namePlaceholder": "Enter recipient name",
+      "phone": "Phone",
+      "phonePlaceholder": "Enter phone number",
+      "email": "Email",
+      "emailPlaceholder": "Enter email (optional)",
+      "city": "City",
+      "cityPlaceholder": "Enter city",
+      "address": "Address",
+      "addressPlaceholder": "Enter street and number",
+      "zip": "Postal Code",
+      "zipPlaceholder": "Enter postal code"
+    },
+    "sender": {
+      "title": "Sender",
+      "name": "Name / Company",
+      "phone": "Phone",
+      "email": "Email",
+      "city": "City",
+      "address": "Address",
+      "zip": "Postal Code"
+    },
+    "shipment": {
+      "title": "Shipment Details",
+      "weight": "Weight (grams)",
+      "weightPlaceholder": "Enter weight in grams",
+      "content": "Content",
+      "contentPlaceholder": "Describe package contents",
+      "codAmount": "COD Amount (RSD)",
+      "codAmountPlaceholder": "Enter COD amount",
+      "insuredValue": "Insured Value (RSD)",
+      "insuredValuePlaceholder": "Enter insured value",
+      "deliveryType": "Delivery Type",
+      "idRukovanje": "Service Type (IdRukovanje)",
+      "parcelLockerCode": "Parcel Locker Code",
+      "parcelLockerCodePlaceholder": "Enter locker code (e.g., BEO-001)"
+    },
+    "deliveryTypes": {
+      "standard": {
+        "name": "Standard Delivery",
+        "description": "Standard courier or post office delivery"
+      },
+      "cod": {
+        "name": "COD (Cash on Delivery)",
+        "description": "Delivery with payment collection"
+      },
+      "parcelLocker": {
+        "name": "Parcel Locker",
+        "description": "Delivery to automated locker (IdRukovanje: 85)"
+      }
+    },
+    "result": {
+      "title": "Result",
+      "success": "Shipment created successfully!",
+      "failed": "Failed to create shipment",
+      "trackingNumber": "Tracking Number",
+      "manifestId": "Manifest ID",
+      "shipmentId": "Shipment ID",
+      "externalId": "External ID",
+      "cost": "Cost",
+      "processingTime": "Processing Time",
+      "waitingForResult": "Result will appear here after creating shipment"
+    }
+  },
+  "common": {
+    "required": "Required field",
+    "optional": "Optional",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "index": {
+    "title": "Post Express API - Testing",
+    "subtitle": "Comprehensive testing of Post Express WSP B2B API integration. Create shipments, calculate costs, search addresses and offices.",
+    "stats": {
+      "totalTests": "Total tests",
+      "totalTestsDesc": "Post Express API integration",
+      "fullyWorking": "Fully working",
+      "fullyWorkingDesc": "Ready to use",
+      "withIssues": "With issues",
+      "withIssuesDesc": "Need improvements",
+      "notWorking": "Not working",
+      "notWorkingDesc": "Need fixes"
+    },
+    "sections": {
+      "fullyWorking": "Fully working tests",
+      "withIssues": "Tests with issues",
+      "notWorking": "Not working tests"
+    },
+    "testCard": {
+      "responseTime": "Response time: ~{time}ms",
+      "working": "Working",
+      "issues": "With issues",
+      "notWorking": "Not working",
+      "button": "Test"
+    },
+    "tests": {
+      "tx3": {
+        "title": "TX 3: Search Settlements",
+        "description": "Search cities and settlements in Pošta Srbije database"
+      },
+      "tx4": {
+        "title": "TX 4: Search Streets",
+        "description": "Search streets in selected settlement"
+      },
+      "tx6": {
+        "title": "TX 6: Address Validation",
+        "description": "Validate address existence in Pošta Srbije database"
+      },
+      "tx9": {
+        "title": "TX 9: Service Availability",
+        "description": "Check delivery service availability for selected route"
+      },
+      "tx11": {
+        "title": "TX 11: Cost Calculation",
+        "description": "Calculate delivery cost with weight and additional services",
+        "pageTitle": "TX 11: PostarinaPosiljke (Cost Calculation)",
+        "pageDescription": "Calculate delivery cost including weight and additional services",
+        "back": "Back to test list",
+        "formTitle": "Calculation Parameters",
+        "serviceId": "Service ID",
+        "serviceIdHint": "71 - Express shipment, 29 - Regular shipment",
+        "fromPostalCode": "Sender Postal Code",
+        "fromPostalCodePlaceholder": "E.g.: 11000",
+        "toPostalCode": "Recipient Postal Code",
+        "toPostalCodePlaceholder": "E.g.: 21000",
+        "weight": "Weight (grams)",
+        "weightHint": "From 1 to 30000 grams",
+        "services": "Additional Services",
+        "servicesPlaceholder": "E.g.: PNA",
+        "servicesHint": "PNA - Povratnica (delivery notification)",
+        "reset": "Reset",
+        "calculating": "Calculating...",
+        "calculateButton": "Calculate Cost",
+        "resultTitle": "Delivery Cost Calculation",
+        "totalCost": "Total Cost",
+        "weightLabel": "Weight",
+        "priceBreakdown": "Cost Breakdown",
+        "service": "Service",
+        "amount": "Amount (RSD)",
+        "total": "Total",
+        "codAmount": "COD Amount",
+        "insuredValue": "Insured Value",
+        "routeLabel": "Route",
+        "resultsPlaceholder": "Results will appear here after request execution"
+      },
+      "tx73Standard": {
+        "title": "TX 73: Standard Delivery",
+        "description": "Create shipment with standard address delivery"
+      },
+      "tx73Cod": {
+        "title": "TX 73: COD Delivery",
+        "description": "Create shipment with Cash on Delivery"
+      },
+      "tx73ParcelLocker": {
+        "title": "TX 73: Parcel Locker Delivery",
+        "description": "Create shipment with automated parcel locker delivery"
+      }
+    },
+    "issuesAlert": {
+      "title": "Attention",
+      "description": "These tests work but have known issues or limitations. See each test description for details."
+    },
+    "issueDescriptions": {
+      "tx11": "API returns incorrect data when using Serbian language (sr-Latn-RS)"
+    },
+    "about": {
+      "title": "About test suite",
+      "description": "This is a complete test suite for Post Express WSP B2B API integration. Each test provides interactive form with pre-filled values and displays request/response data in real-time.",
+      "features": {
+        "realtime": {
+          "title": "🔄 Real-time testing",
+          "description": "All requests are sent to real Post Express test environment"
+        },
+        "requestResponse": {
+          "title": "📋 Request/Response",
+          "description": "Complete JSON data for debugging and documentation"
+        },
+        "prefilledForms": {
+          "title": "🎯 Pre-filled forms",
+          "description": "Sensible defaults for quick testing"
+        }
+      }
+    }
+  },
+  "tx11": {
+    "title": "TX 11: Cost Calculation",
+    "description": "Calculate delivery cost with weight and additional services",
+    "pageTitle": "TX 11: PostarinaPosiljke (Cost Calculation)",
+    "pageDescription": "Calculate delivery cost including weight and additional services",
+    "back": "Back to test list",
+    "formTitle": "Calculation Parameters",
+    "serviceId": "Service ID",
+    "serviceIdHint": "71 - Express shipment, 29 - Regular shipment",
+    "fromPostalCode": "Sender Postal Code",
+    "fromPostalCodePlaceholder": "E.g.: 11000",
+    "toPostalCode": "Recipient Postal Code",
+    "toPostalCodePlaceholder": "E.g.: 21000",
+    "weight": "Weight (grams)",
+    "weightHint": "From 1 to 30000 grams",
+    "services": "Additional Services",
+    "servicesPlaceholder": "E.g.: PNA",
+    "servicesHint": "PNA - Povratnica (delivery notification)",
+    "reset": "Reset",
+    "calculating": "Calculating...",
+    "calculateButton": "Calculate Cost",
+    "resultTitle": "Delivery Cost Calculation",
+    "totalCost": "Total Cost",
+    "weightLabel": "Weight",
+    "priceBreakdown": "Cost Breakdown",
+    "service": "Service",
+    "amount": "Amount (RSD)",
+    "total": "Total",
+    "codAmount": "COD Amount",
+    "insuredValue": "Insured Value",
+    "routeLabel": "Route",
+    "resultsPlaceholder": "Results will appear here after request execution"
+  }
+}

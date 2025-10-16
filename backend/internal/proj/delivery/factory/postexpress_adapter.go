@@ -187,11 +187,23 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 		},
 
 		// COD и ценность
-		Otkupnina: codPara,
+		// Otkupnina будет добавлена ниже если COD > 0
 		Vrednost:  insurancePara,
 
 		// Дополнительные услуги через запятую
 		PosebneUsluge: buildPosebneUsluge(req.Services), // PNA + другие услуги
+	}
+
+	// Добавляем COD (Otkupnina) только если сумма > 0
+	if codPara > 0 {
+		peReq.Otkupnina = &postexpress.OtkupninaData{
+			Iznos:          codPara,
+			VrstaDokumenta: "N", // N = налоговый документ
+			TekuciRacun:    config.BankAccount,
+			ModelPNB:       config.PaymentModel,
+			PNB:            fmt.Sprintf("%d", time.Now().Unix()%10000000000), // 10 цифр
+			SifraPlacanja:  config.PaymentCode,
+		}
 	}
 
 	// Валидация перед отправкой

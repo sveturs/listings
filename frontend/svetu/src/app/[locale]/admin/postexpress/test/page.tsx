@@ -151,6 +151,25 @@ export default function PostExpressTestPage() {
   const [tx11Loading, setTx11Loading] = useState(false);
   const [tx11Error, setTx11Error] = useState<string | null>(null);
 
+  // TX 73 - B2B Manifest (CreateShipmentViaManifest)
+  const [tx73ModalOpen, setTx73ModalOpen] = useState(false);
+  const [tx73Request, setTx73Request] = useState({
+    recipient_name: 'Marko Marković',
+    recipient_phone: '+381641234567',
+    recipient_email: 'marko@example.com',
+    recipient_city: 'Beograd',
+    recipient_address: 'Takovska 2',
+    recipient_zip: '11000',
+    weight: 500,
+    content: 'Test paket - TX 73 test',
+    cod_amount: 0,
+    insured_value: 0,
+    services: 'PNA',
+  });
+  const [tx73Response, setTx73Response] = useState<any>(null);
+  const [tx73Loading, setTx73Loading] = useState(false);
+  const [tx73Error, setTx73Error] = useState<string | null>(null);
+
   // Predefined test scenarios (recipient data only, sender will be preserved from config)
   const testScenarios: Record<string, Partial<TestShipmentRequest>> = {
     standard: {
@@ -316,8 +335,9 @@ export default function PostExpressTestPage() {
     setTx3Settlements([]);
 
     try {
-      const response = await apiClient.get(
-        `/postexpress/settlements?query=${encodeURIComponent(tx3Query)}`
+      const response = await apiClient.post(
+        '/postexpress/test/tx3-settlements',
+        { query: tx3Query }
       );
 
       if (response.data.success && response.data.data) {
@@ -351,9 +371,10 @@ export default function PostExpressTestPage() {
     setTx4Streets([]);
 
     try {
-      const response = await apiClient.get(
-        `/postexpress/streets?settlement_id=${tx4SettlementId}&query=${encodeURIComponent(tx4Query)}`
-      );
+      const response = await apiClient.post('/postexpress/test/tx4-streets', {
+        settlement_id: parseInt(tx4SettlementId),
+        query: tx4Query,
+      });
 
       if (response.data.success && response.data.data) {
         const streets =
@@ -395,7 +416,7 @@ export default function PostExpressTestPage() {
       };
 
       const response = await apiClient.post(
-        '/postexpress/validate-address',
+        '/postexpress/test/tx6-validate-address',
         wspRequest
       );
 
@@ -447,13 +468,15 @@ export default function PostExpressTestPage() {
       };
 
       const response = await apiClient.post(
-        '/postexpress/check-service-availability',
+        '/postexpress/test/tx9-service-availability',
         wspRequest
       );
 
       // Обрабатываем ошибки из ApiResponse
       if (response.error) {
-        setTx9Error(response.error.message || 'Failed to check service availability');
+        setTx9Error(
+          response.error.message || 'Failed to check service availability'
+        );
         return;
       }
 
@@ -508,7 +531,7 @@ export default function PostExpressTestPage() {
       };
 
       const response = await apiClient.post(
-        '/postexpress/calculate-postage',
+        '/postexpress/test/tx11-calculate-postage',
         wspRequest
       );
 
@@ -529,6 +552,67 @@ export default function PostExpressTestPage() {
       setTx11Error(errorMsg);
     } finally {
       setTx11Loading(false);
+    }
+  };
+
+  // TX 73 - B2B Manifest (CreateShipmentViaManifest)
+  const handleTx73Test = async () => {
+    if (!tx73Request.recipient_name || !tx73Request.recipient_phone) {
+      setTx73Error('Please fill recipient name and phone');
+      return;
+    }
+
+    if (!tx73Request.recipient_city || !tx73Request.recipient_zip) {
+      setTx73Error('Please fill recipient city and postal code');
+      return;
+    }
+
+    if (tx73Request.weight <= 0) {
+      setTx73Error('Please enter valid weight');
+      return;
+    }
+
+    setTx73Loading(true);
+    setTx73Error(null);
+    setTx73Response(null);
+
+    try {
+      // Merge with sender data from config
+      const shipmentData = {
+        ...tx73Request,
+        sender_name: config?.default_sender.name || 'SVETU d.o.o.',
+        sender_phone: config?.default_sender.phone || '+381641234567',
+        sender_email: config?.default_sender.email || 'b2b@svetu.rs',
+        sender_city: config?.default_sender.city || 'Beograd',
+        sender_address: config?.default_sender.address || '',
+        sender_zip: config?.default_sender.zip || '11000',
+        delivery_method: 'K',
+        payment_method: 'POF',
+        id_rukovanje: 71, // PE_Danas_za_sutra_isporuka
+      };
+
+      const response = await apiClient.post(
+        '/postexpress/test/shipment',
+        shipmentData
+      );
+
+      // Обрабатываем ошибки из ApiResponse
+      if (response.error) {
+        setTx73Error(response.error.message || 'Failed to create shipment');
+        return;
+      }
+
+      // Обрабатываем успешный ответ
+      if (response?.data?.success && response?.data?.data) {
+        setTx73Response(response.data.data);
+      } else {
+        setTx73Error(response.data.message || 'Failed to create shipment');
+      }
+    } catch (err: any) {
+      const errorMsg = err.message || 'TX 73 failed';
+      setTx73Error(errorMsg);
+    } finally {
+      setTx73Loading(false);
     }
   };
 
@@ -581,73 +665,75 @@ export default function PostExpressTestPage() {
         {/* WSP API Transaction Tests (NEW SECTION) */}
         <div className="bg-gradient-to-r from-cyan-50 to-green-50 rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-xl font-bold mb-2 text-gray-800">
-            🔧 WSP API Transaction Tests (TX 3, 4, 6, 9, 11)
+            🔧 WSP API Transaction Tests
           </h2>
           <p className="text-gray-600 mb-4">
-            Test individual WSP API operations: settlements, streets, address
-            validation, service availability, postage calculation
+            ✅ Working: TX3 (settlements), TX4 (streets), TX73 (shipments + COD)
+            | ⚠️ Known issues: TX6, TX9, TX11 (Post Express API limitations)
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* TX 3 - GetNaselje */}
+            {/* TX 3 - GetNaselje ✅ WORKING! */}
             <button
               onClick={() => setTx3ModalOpen(true)}
-              className="bg-white p-4 rounded-lg border-2 border-cyan-200 hover:border-cyan-400 transition-all text-left shadow-md hover:shadow-lg"
+              className="bg-white p-4 rounded-lg border-2 border-cyan-300 hover:border-cyan-500 transition-all text-left shadow-md hover:shadow-xl ring-2 ring-cyan-200"
             >
               <h3 className="font-semibold text-cyan-700 mb-1">
-                📍 TX 3: GetNaselje
+                📍 TX 3: GetNaselje ✅
               </h3>
               <p className="text-sm text-gray-600">
-                Search settlements by name
+                Search settlements by name (WORKING!)
               </p>
               <div className="mt-2 text-xs text-gray-500">
-                Query: city name → List of settlements
+                Query: city name → List of settlements (122ms)
               </div>
             </button>
 
-            {/* TX 4 - GetUlica */}
+            {/* TX 4 - GetUlica ✅ WORKING! */}
             <button
               onClick={() => setTx4ModalOpen(true)}
-              className="bg-white p-4 rounded-lg border-2 border-blue-200 hover:border-blue-400 transition-all text-left shadow-md hover:shadow-lg"
+              className="bg-white p-4 rounded-lg border-2 border-blue-300 hover:border-blue-500 transition-all text-left shadow-md hover:shadow-xl ring-2 ring-blue-200"
             >
               <h3 className="font-semibold text-blue-700 mb-1">
-                🛣️ TX 4: GetUlica
+                🛣️ TX 4: GetUlica ✅
               </h3>
               <p className="text-sm text-gray-600">
-                Search streets in settlement
+                Search streets in settlement (WORKING!)
               </p>
               <div className="mt-2 text-xs text-gray-500">
-                SettlementID + Query → List of streets
+                SettlementID + Query → List of streets (74ms)
               </div>
             </button>
 
-            {/* TX 6 - ProveraAdrese */}
+            {/* TX 6 - ProveraAdrese ⚠️ Known Issue */}
             <button
               onClick={() => setTx6ModalOpen(true)}
-              className="bg-white p-4 rounded-lg border-2 border-green-200 hover:border-green-400 transition-all text-left shadow-md hover:shadow-lg"
+              className="bg-white p-4 rounded-lg border-2 border-yellow-200 hover:border-yellow-400 transition-all text-left shadow-md hover:shadow-lg"
             >
-              <h3 className="font-semibold text-green-700 mb-1">
-                ✅ TX 6: ProveraAdrese
+              <h3 className="font-semibold text-yellow-700 mb-1">
+                ⚠️ TX 6: ProveraAdrese
               </h3>
-              <p className="text-sm text-gray-600">Validate address</p>
+              <p className="text-sm text-gray-600">
+                Validate address (PE API format issue)
+              </p>
               <div className="mt-2 text-xs text-gray-500">
-                Settlement + Street + Number → Valid?
+                ⚠️ Post Express requires specific format
               </div>
             </button>
 
-            {/* TX 9 - ProveraDostupnostiUsluge */}
+            {/* TX 9 - ProveraDostupnostiUsluge ⚠️ Known Issue */}
             <button
               onClick={() => setTx9ModalOpen(true)}
-              className="bg-white p-4 rounded-lg border-2 border-purple-200 hover:border-purple-400 transition-all text-left shadow-md hover:shadow-lg"
+              className="bg-white p-4 rounded-lg border-2 border-yellow-200 hover:border-yellow-400 transition-all text-left shadow-md hover:shadow-lg"
             >
-              <h3 className="font-semibold text-purple-700 mb-1">
-                📦 TX 9: Service Availability
+              <h3 className="font-semibold text-yellow-700 mb-1">
+                ⚠️ TX 9: Service Availability
               </h3>
               <p className="text-sm text-gray-600">
-                Check service availability
+                Check service availability (PE API requirements)
               </p>
               <div className="mt-2 text-xs text-gray-500">
-                ServiceID + Route → Available? Days?
+                ⚠️ Requires more address data than postal codes
               </div>
             </button>
 
@@ -657,11 +743,29 @@ export default function PostExpressTestPage() {
               className="bg-white p-4 rounded-lg border-2 border-amber-200 hover:border-amber-400 transition-all text-left shadow-md hover:shadow-lg"
             >
               <h3 className="font-semibold text-amber-700 mb-1">
-                💰 TX 11: Postage Calculation
+                💰 TX 11: Postage Calculation ❌
               </h3>
-              <p className="text-sm text-gray-600">Calculate shipping cost</p>
+              <p className="text-sm text-gray-600">
+                Calculate shipping cost (BROKEN)
+              </p>
               <div className="mt-2 text-xs text-gray-500">
-                Service + Weight + Route → Cost
+                ⚠️ Post Express database bug
+              </div>
+            </button>
+
+            {/* TX 73 - B2B Manifest ✅ WORKING! */}
+            <button
+              onClick={() => setTx73ModalOpen(true)}
+              className="bg-white p-4 rounded-lg border-2 border-emerald-300 hover:border-emerald-500 transition-all text-left shadow-md hover:shadow-xl ring-2 ring-emerald-200"
+            >
+              <h3 className="font-semibold text-emerald-700 mb-1">
+                🚀 TX 73: B2B Manifest ✅
+              </h3>
+              <p className="text-sm text-gray-600">
+                Create shipment + Get cost (WORKING!)
+              </p>
+              <div className="mt-2 text-xs text-gray-500">
+                ⭐ Recommended for price calculation
               </div>
             </button>
           </div>
@@ -2035,6 +2139,273 @@ export default function PostExpressTestPage() {
                   </summary>
                   <pre className="mt-2 bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
                     {JSON.stringify(tx11Response, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            )}
+          </div>
+        </Modal>
+
+        {/* ====================== TX 73 MODAL ====================== */}
+        <Modal
+          isOpen={tx73ModalOpen}
+          onClose={() => setTx73ModalOpen(false)}
+          title="TX 73: B2B Manifest (Create Shipment + Get Cost)"
+        >
+          <div className="space-y-4">
+            <div className="bg-emerald-50 border border-emerald-200 rounded p-3 mb-4">
+              <p className="text-sm text-emerald-700">
+                ⭐ <strong>Recommended for postage calculation!</strong> TX 73
+                creates a real shipment and returns the actual cost.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Recipient Name *
+                </label>
+                <input
+                  type="text"
+                  value={tx73Request.recipient_name}
+                  onChange={(e) =>
+                    setTx73Request({
+                      ...tx73Request,
+                      recipient_name: e.target.value,
+                    })
+                  }
+                  placeholder="Marko Marković"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Recipient Phone *
+                </label>
+                <input
+                  type="text"
+                  value={tx73Request.recipient_phone}
+                  onChange={(e) =>
+                    setTx73Request({
+                      ...tx73Request,
+                      recipient_phone: e.target.value,
+                    })
+                  }
+                  placeholder="+381641234567"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Recipient City *
+                </label>
+                <input
+                  type="text"
+                  value={tx73Request.recipient_city}
+                  onChange={(e) =>
+                    setTx73Request({
+                      ...tx73Request,
+                      recipient_city: e.target.value,
+                    })
+                  }
+                  placeholder="Beograd"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Postal Code *
+                </label>
+                <input
+                  type="text"
+                  value={tx73Request.recipient_zip}
+                  onChange={(e) =>
+                    setTx73Request({
+                      ...tx73Request,
+                      recipient_zip: e.target.value,
+                    })
+                  }
+                  placeholder="11000"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Recipient Address
+              </label>
+              <input
+                type="text"
+                value={tx73Request.recipient_address}
+                onChange={(e) =>
+                  setTx73Request({
+                    ...tx73Request,
+                    recipient_address: e.target.value,
+                  })
+                }
+                placeholder="Takovska 2"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Weight (grams) *
+                </label>
+                <input
+                  type="number"
+                  value={tx73Request.weight}
+                  onChange={(e) =>
+                    setTx73Request({
+                      ...tx73Request,
+                      weight: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  COD Amount (para)
+                </label>
+                <input
+                  type="number"
+                  value={tx73Request.cod_amount}
+                  onChange={(e) =>
+                    setTx73Request({
+                      ...tx73Request,
+                      cod_amount: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Insured Value (para)
+                </label>
+                <input
+                  type="number"
+                  value={tx73Request.insured_value}
+                  onChange={(e) =>
+                    setTx73Request({
+                      ...tx73Request,
+                      insured_value: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Package Content *
+              </label>
+              <input
+                type="text"
+                value={tx73Request.content}
+                onChange={(e) =>
+                  setTx73Request({
+                    ...tx73Request,
+                    content: e.target.value,
+                  })
+                }
+                placeholder="Test paket - TX 73 test"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <button
+              onClick={handleTx73Test}
+              disabled={tx73Loading}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg"
+            >
+              {tx73Loading
+                ? 'Creating Shipment...'
+                : '🚀 Create Shipment & Get Cost'}
+            </button>
+
+            {tx73Error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                {tx73Error}
+              </div>
+            )}
+
+            {tx73Response && tx73Response.success && (
+              <div>
+                <h4 className="font-semibold mb-2 text-gray-800">
+                  ✅ Shipment Created Successfully!
+                </h4>
+
+                {/* Cost Display - MOST IMPORTANT! */}
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-300 rounded-lg p-4 mb-4">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 mb-1">Shipping Cost</p>
+                    <div className="text-4xl font-bold text-emerald-700">
+                      {tx73Response.cost} RSD
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      ({tx73Response.cost * 100} para)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tracking & IDs */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-blue-50 p-3 rounded">
+                    <p className="text-xs text-blue-600 mb-1">
+                      Tracking Number
+                    </p>
+                    <p className="font-mono text-sm font-semibold text-blue-900">
+                      {tx73Response.tracking_number}
+                    </p>
+                  </div>
+
+                  <div className="bg-purple-50 p-3 rounded">
+                    <p className="text-xs text-purple-600 mb-1">Manifest ID</p>
+                    <p className="font-mono text-sm font-semibold text-purple-900">
+                      {tx73Response.manifest_id}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-gray-50 p-3 rounded">
+                    <p className="text-xs text-gray-600 mb-1">Shipment ID</p>
+                    <p className="font-mono text-sm font-semibold">
+                      {tx73Response.shipment_id}
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded">
+                    <p className="text-xs text-gray-600 mb-1">
+                      Processing Time
+                    </p>
+                    <p className="font-mono text-sm font-semibold">
+                      {tx73Response.processing_time_ms}ms
+                    </p>
+                  </div>
+                </div>
+
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm font-medium text-gray-700">
+                    Full Response JSON
+                  </summary>
+                  <pre className="mt-2 bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
+                    {JSON.stringify(tx73Response, null, 2)}
                   </pre>
                 </details>
               </div>
