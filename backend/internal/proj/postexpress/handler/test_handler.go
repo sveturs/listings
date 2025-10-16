@@ -509,6 +509,7 @@ func (h *Handler) createRealShipment(ctx context.Context, req *TestShipmentReque
 		ServiceType:         "PE_Danas_za_sutra_12", // Дефолтный сервис
 		Content:             req.Content,
 		Note:                fmt.Sprintf("Test shipment from SVETU platform - %s", req.DeliveryMethod),
+		ParcelLockerCode:    req.ParcelLockerCode, // Код паккетомата для IdRukovanje=85
 	}
 
 	// Вызываем реальный API
