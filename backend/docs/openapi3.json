@@ -33197,6 +33197,70 @@
                 }
             }
         },
+        "/api/v1/postexpress/calculate-postage": {
+            "post": {
+                "description": "Рассчитать точную стоимость доставки для конкретной посылки",
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Calculate postage (TX 11)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/postexpress.PostageCalculationRequest"
+                            }
+                        }
+                    },
+                    "description": "Данные для расчёта стоимости",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/postexpress.PostageCalculationResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/postexpress/calculate-rate": {
             "post": {
                 "description": "Рассчитать стоимость доставки Post Express",
@@ -33230,6 +33294,70 @@
                                             "properties": {
                                                 "data": {
                                                     "$ref": "#/components/schemas/backend_internal_proj_postexpress_models.CalculateRateResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/check-service-availability": {
+            "post": {
+                "description": "Проверить доступность услуги доставки между двумя точками",
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Check service availability (TX 9)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/postexpress.ServiceAvailabilityRequest"
+                            }
+                        }
+                    },
+                    "description": "Данные для проверки доступности",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/postexpress.ServiceAvailabilityResponse"
                                                 }
                                             }
                                         }
@@ -33773,6 +33901,70 @@
                                             "properties": {
                                                 "data": {
                                                     "$ref": "#/components/schemas/models.PostExpressSettings"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/settlements": {
+            "get": {
+                "description": "Поиск населённых пунктов по названию через Post Express WSP API",
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Search settlements by name (TX 3)",
+                "parameters": [
+                    {
+                        "description": "Поисковый запрос (название или часть названия)",
+                        "name": "query",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/postexpress.GetSettlementsResponse"
                                                 }
                                             }
                                         }
@@ -34466,6 +34658,144 @@
                 }
             }
         },
+        "/api/v1/postexpress/streets": {
+            "get": {
+                "description": "Поиск улиц по названию в конкретном населённом пункте",
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Search streets in settlement (TX 4)",
+                "parameters": [
+                    {
+                        "description": "ID населённого пункта (из TX 3)",
+                        "name": "settlement_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Поисковый запрос (название или часть названия улицы)",
+                        "name": "query",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/postexpress.GetStreetsResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/cancel": {
+            "post": {
+                "description": "Cancel shipment using real Post Express WSP API (Transaction 25)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test cancel shipment",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestCancelRequest"
+                            }
+                        }
+                    },
+                    "description": "Cancel request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cancel result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/postexpress/test/config": {
             "get": {
                 "description": "Get current Post Express configuration (without password) for testing page",
@@ -34536,9 +34866,204 @@
                 }
             }
         },
+        "/api/v1/postexpress/test/label": {
+            "post": {
+                "description": "Print shipment label using real Post Express WSP API (Transaction 20)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test print label",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestPrintLabelRequest"
+                            }
+                        }
+                    },
+                    "description": "Print label request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Label data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/locations": {
+            "post": {
+                "description": "Search locations using real Post Express WSP API (Transaction 3)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test search locations",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestSearchLocationsRequest"
+                            }
+                        }
+                    },
+                    "description": "Search request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Locations list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/offices": {
+            "post": {
+                "description": "Get offices for location using real Post Express WSP API (Transaction 10)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test get offices",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestGetOfficesRequest"
+                            }
+                        }
+                    },
+                    "description": "Get offices request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Offices list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/postexpress/test/shipment": {
             "post": {
-                "description": "Create a test shipment using Post Express WSP API for visual testing",
+                "description": "Create a test shipment using real Post Express WSP API (B2B Manifest)",
                 "tags": [
                     "post-express-test"
                 ],
@@ -34569,6 +35094,396 @@
                                             "properties": {
                                                 "data": {
                                                     "$ref": "#/components/schemas/handler.TestShipmentResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/track": {
+            "post": {
+                "description": "Track shipment using real Post Express WSP API (Transaction 15)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test tracking shipment",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestTrackingRequest"
+                            }
+                        }
+                    },
+                    "description": "Tracking request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tracking result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/tx11-calculate-postage": {
+            "post": {
+                "description": "Calculate postage using real Post Express WSP API (Transaction 11)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test TX 11 - PostarinaPosiljke (Calculate Postage)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestCalculatePostageRequest"
+                            }
+                        }
+                    },
+                    "description": "Calculate postage request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Postage calculation result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/tx3-settlements": {
+            "post": {
+                "description": "Search settlements using real Post Express WSP API (Transaction 3)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test TX 3 - GetNaselje (Search Settlements)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestGetSettlementsRequest"
+                            }
+                        }
+                    },
+                    "description": "Search settlements request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Settlements list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/tx4-streets": {
+            "post": {
+                "description": "Search streets in settlement using real Post Express WSP API (Transaction 4)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test TX 4 - GetUlica (Search Streets)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestGetStreetsRequest"
+                            }
+                        }
+                    },
+                    "description": "Search streets request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Streets list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/tx6-validate-address": {
+            "post": {
+                "description": "Validate address using real Post Express WSP API (Transaction 6)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test TX 6 - ProveraAdrese (Validate Address)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestValidateAddressRequest"
+                            }
+                        }
+                    },
+                    "description": "Validate address request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Address validation result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/tx9-service-availability": {
+            "post": {
+                "description": "Check service availability using real Post Express WSP API (Transaction 9)",
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Test TX 9 - ProveraDostupnostiUsluge (Check Service Availability)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/handler.TestCheckServiceAvailabilityRequest"
+                            }
+                        }
+                    },
+                    "description": "Check service availability request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Service availability result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
                                                 }
                                             }
                                         }
@@ -34689,6 +35604,70 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/validate-address": {
+            "post": {
+                "description": "Проверка существования адреса в базе Post Express",
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Validate address (TX 6)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/postexpress.AddressValidationRequest"
+                            }
+                        }
+                    },
+                    "description": "Данные для валидации адреса",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/postexpress.AddressValidationResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -47904,6 +48883,122 @@
                     }
                 }
             },
+            "handler.TestCalculatePostageRequest": {
+                "type": "object",
+                "properties": {
+                    "cod_amount": {
+                        "description": "para (1 RSD = 100 para)",
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "from_postal_code": {
+                        "type": "string",
+                        "example": "11000"
+                    },
+                    "insured_value": {
+                        "description": "para",
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "service_id": {
+                        "type": "integer",
+                        "example": 71
+                    },
+                    "services": {
+                        "description": "дополнительные услуги",
+                        "type": "string",
+                        "example": "PNA"
+                    },
+                    "to_postal_code": {
+                        "type": "string",
+                        "example": "21000"
+                    },
+                    "weight": {
+                        "description": "граммы",
+                        "type": "integer",
+                        "example": 500
+                    }
+                }
+            },
+            "handler.TestCancelRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "example": "Отмена по требованию клиента"
+                    },
+                    "shipment_id": {
+                        "type": "string",
+                        "example": "12345"
+                    }
+                }
+            },
+            "handler.TestCheckServiceAvailabilityRequest": {
+                "type": "object",
+                "properties": {
+                    "from_postal_code": {
+                        "type": "string",
+                        "example": "11000"
+                    },
+                    "service_id": {
+                        "type": "integer",
+                        "example": 71
+                    },
+                    "to_postal_code": {
+                        "type": "string",
+                        "example": "21000"
+                    }
+                }
+            },
+            "handler.TestGetOfficesRequest": {
+                "type": "object",
+                "properties": {
+                    "location_id": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                }
+            },
+            "handler.TestGetSettlementsRequest": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "example": "Beograd"
+                    }
+                }
+            },
+            "handler.TestGetStreetsRequest": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "example": "Takovska"
+                    },
+                    "settlement_id": {
+                        "type": "integer",
+                        "example": 123
+                    }
+                }
+            },
+            "handler.TestPrintLabelRequest": {
+                "type": "object",
+                "properties": {
+                    "shipment_id": {
+                        "type": "string",
+                        "example": "12345"
+                    }
+                }
+            },
+            "handler.TestSearchLocationsRequest": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "example": "Beograd"
+                    }
+                }
+            },
             "handler.TestShipmentRequest": {
                 "type": "object",
                 "properties": {
@@ -48044,6 +49139,36 @@
                     },
                     "tracking_number": {
                         "type": "string"
+                    }
+                }
+            },
+            "handler.TestTrackingRequest": {
+                "type": "object",
+                "properties": {
+                    "tracking_number": {
+                        "type": "string",
+                        "example": "SVETU-TEST-123456"
+                    }
+                }
+            },
+            "handler.TestValidateAddressRequest": {
+                "type": "object",
+                "properties": {
+                    "house_number": {
+                        "type": "string",
+                        "example": "2"
+                    },
+                    "postal_code": {
+                        "type": "string",
+                        "example": "11000"
+                    },
+                    "settlement_id": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "street_id": {
+                        "type": "integer",
+                        "example": 456
                     }
                 }
             },
@@ -58259,6 +59384,395 @@
                     },
                     "total": {
                         "type": "integer"
+                    }
+                }
+            },
+            "postexpress.AddressValidationRequest": {
+                "type": "object",
+                "properties": {
+                    "BrojPodbroj": {
+                        "description": "Номер дома (например, \"2\" или \"2a\")",
+                        "type": "string"
+                    },
+                    "Datum": {
+                        "description": "Дата (опционально, формат: YYYY-MM-DD)",
+                        "type": "string"
+                    },
+                    "IdNaselje": {
+                        "description": "ID населённого пункта",
+                        "type": "integer"
+                    },
+                    "IdRukovanje": {
+                        "description": "ID услуги доставки",
+                        "type": "integer"
+                    },
+                    "IdUlica": {
+                        "description": "ID улицы (опционально)",
+                        "type": "integer"
+                    },
+                    "PostanskiBroj": {
+                        "description": "Почтовый индекс",
+                        "type": "string"
+                    },
+                    "TipAdrese": {
+                        "description": "Тип адреса (0, 1, 2)",
+                        "type": "integer"
+                    }
+                }
+            },
+            "postexpress.AddressValidationResponse": {
+                "type": "object",
+                "properties": {
+                    "Broj": {
+                        "description": "Номер дома",
+                        "type": "string"
+                    },
+                    "IdNaselje": {
+                        "description": "ID населённого пункта",
+                        "type": "integer"
+                    },
+                    "IdPoste": {
+                        "description": "ID почтового отделения",
+                        "type": "integer"
+                    },
+                    "IdUlica": {
+                        "description": "ID улицы",
+                        "type": "integer"
+                    },
+                    "NazivNaselja": {
+                        "description": "Название населённого пункта",
+                        "type": "string"
+                    },
+                    "NazivPoste": {
+                        "description": "Название почтового отделения",
+                        "type": "string"
+                    },
+                    "NazivUlice": {
+                        "description": "Название улицы",
+                        "type": "string"
+                    },
+                    "PAK": {
+                        "description": "Postal Address Code",
+                        "type": "string"
+                    },
+                    "Poruka": {
+                        "description": "Сообщение об ошибке",
+                        "type": "string"
+                    },
+                    "PostanskiBroj": {
+                        "description": "Почтовый индекс",
+                        "type": "string"
+                    },
+                    "PostojiAdresa": {
+                        "description": "Существует ли адрес",
+                        "type": "boolean"
+                    },
+                    "Rezultat": {
+                        "description": "0 - успех, 1 - ошибка",
+                        "type": "integer"
+                    }
+                }
+            },
+            "postexpress.AdresaUPS": {
+                "type": "object",
+                "properties": {
+                    "Broj": {
+                        "description": "Номер дома (\"-1\" для BB, \"-2\" если только подbroj)",
+                        "type": "string"
+                    },
+                    "BrojFaha": {
+                        "description": "Номер poštanski pregatak (для Vrsta=\"F\")",
+                        "type": "string"
+                    },
+                    "IdNaselje": {
+                        "description": "ID населённого пункта (из TX 3)",
+                        "type": "integer"
+                    },
+                    "IdUlica": {
+                        "description": "ID улицы (из TX 4)",
+                        "type": "integer"
+                    },
+                    "Napomena": {
+                        "description": "Примечание",
+                        "type": "string"
+                    },
+                    "Naselje": {
+                        "description": "Название населённого пункта",
+                        "type": "string"
+                    },
+                    "Opstina": {
+                        "description": "Муниципалитет",
+                        "type": "string"
+                    },
+                    "Pak": {
+                        "description": "Postal Address Code (PAK)",
+                        "type": "string"
+                    },
+                    "Podbroj": {
+                        "description": "Подномер (буква или дополнительный номер)",
+                        "type": "string"
+                    },
+                    "Posta": {
+                        "description": "Почтовый индекс (5 цифр)",
+                        "type": "string"
+                    },
+                    "Reon": {
+                        "description": "Район",
+                        "type": "string"
+                    },
+                    "Sprat": {
+                        "description": "Этаж",
+                        "type": "string"
+                    },
+                    "Stan": {
+                        "description": "Квартира",
+                        "type": "string"
+                    },
+                    "Ulica": {
+                        "description": "Название улицы",
+                        "type": "string"
+                    },
+                    "Vrsta": {
+                        "description": "Тип адреса: S-стандартный, F-fah, P-post restant",
+                        "type": "string"
+                    }
+                }
+            },
+            "postexpress.GetSettlementsResponse": {
+                "type": "object",
+                "properties": {
+                    "Naselja": {
+                        "description": "Массив найденных населённых пунктов",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/postexpress.Settlement"
+                        }
+                    },
+                    "Poruka": {
+                        "description": "Сообщение об ошибке",
+                        "type": "string"
+                    },
+                    "Rezultat": {
+                        "description": "0 - успех, 1 - ошибка",
+                        "type": "integer"
+                    }
+                }
+            },
+            "postexpress.GetStreetsResponse": {
+                "type": "object",
+                "properties": {
+                    "Poruka": {
+                        "description": "Сообщение об ошибке",
+                        "type": "string"
+                    },
+                    "Rezultat": {
+                        "description": "0 - успех, 1 - ошибка",
+                        "type": "integer"
+                    },
+                    "Ulice": {
+                        "description": "Массив найденных улиц",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/postexpress.Street"
+                        }
+                    }
+                }
+            },
+            "postexpress.PostageCalculationRequest": {
+                "type": "object",
+                "properties": {
+                    "IdRukovanje": {
+                        "description": "ID услуги доставки",
+                        "type": "integer"
+                    },
+                    "IdZemlja": {
+                        "description": "ID страны (0 = внутренние отправления)",
+                        "type": "integer"
+                    },
+                    "Masa": {
+                        "description": "Вес в граммах",
+                        "type": "integer"
+                    },
+                    "Otkupnina": {
+                        "description": "COD в para (1 RSD = 100 para)",
+                        "type": "integer"
+                    },
+                    "PosebneUsluge": {
+                        "description": "Дополнительные услуги через запятую",
+                        "type": "string"
+                    },
+                    "PostanskiBrojDolaska": {
+                        "description": "Почтовый индекс прибытия",
+                        "type": "string"
+                    },
+                    "PostanskiBrojOdlaska": {
+                        "description": "Почтовый индекс отправления",
+                        "type": "string"
+                    },
+                    "Vrednost": {
+                        "description": "Объявленная ценность в para",
+                        "type": "integer"
+                    }
+                }
+            },
+            "postexpress.PostageCalculationResponse": {
+                "type": "object",
+                "properties": {
+                    "IdRukovanje": {
+                        "description": "ID услуги",
+                        "type": "integer"
+                    },
+                    "Masa": {
+                        "description": "Вес в граммах",
+                        "type": "integer"
+                    },
+                    "Napomena": {
+                        "description": "Примечание",
+                        "type": "string"
+                    },
+                    "NazivUsluge": {
+                        "description": "Название услуги",
+                        "type": "string"
+                    },
+                    "Otkupnina": {
+                        "description": "COD в para",
+                        "type": "integer"
+                    },
+                    "Poruka": {
+                        "description": "Сообщение об ошибке",
+                        "type": "string"
+                    },
+                    "PosebneUsluge": {
+                        "description": "Дополнительные услуги",
+                        "type": "string"
+                    },
+                    "PostanskiBrojDolaska": {
+                        "description": "Почтовый индекс прибытия",
+                        "type": "string"
+                    },
+                    "PostanskiBrojOdlaska": {
+                        "description": "Почтовый индекс отправления",
+                        "type": "string"
+                    },
+                    "Postarina": {
+                        "description": "Стоимость в para (295 RSD = 29500 para)",
+                        "type": "integer"
+                    },
+                    "Rezultat": {
+                        "description": "0 - успех, 1 - ошибка",
+                        "type": "integer"
+                    },
+                    "Vrednost": {
+                        "description": "Объявленная ценность в para",
+                        "type": "integer"
+                    }
+                }
+            },
+            "postexpress.ServiceAvailabilityRequest": {
+                "type": "object",
+                "properties": {
+                    "Adresa": {
+                        "description": "ОБЯЗАТЕЛЬНО: Полная структура адреса",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/postexpress.AdresaUPS"
+                            }
+                        ]
+                    },
+                    "Datum": {
+                        "description": "Дата доставки (опционально, формат: DD.MM.YYYY)",
+                        "type": "string"
+                    },
+                    "IdRukovanje": {
+                        "description": "ID услуги (29, 30, 55, 58, 59, 71, 85)",
+                        "type": "integer"
+                    },
+                    "TipAdrese": {
+                        "description": "Тип адреса: 0-адрес забора, 1-адрес отправителя, 2-адрес получателя",
+                        "type": "integer"
+                    }
+                }
+            },
+            "postexpress.ServiceAvailabilityResponse": {
+                "type": "object",
+                "properties": {
+                    "Dostupna": {
+                        "description": "Доступна ли услуга",
+                        "type": "boolean"
+                    },
+                    "IdRukovanje": {
+                        "description": "ID услуги",
+                        "type": "integer"
+                    },
+                    "Napomena": {
+                        "description": "Примечание",
+                        "type": "string"
+                    },
+                    "NazivUsluge": {
+                        "description": "Название услуги",
+                        "type": "string"
+                    },
+                    "OcekivanoDana": {
+                        "description": "Ожидаемое время доставки (дни)",
+                        "type": "integer"
+                    },
+                    "Poruka": {
+                        "description": "Сообщение об ошибке",
+                        "type": "string"
+                    },
+                    "Rezultat": {
+                        "description": "0 - успех, 1 - ошибка",
+                        "type": "integer"
+                    }
+                }
+            },
+            "postexpress.Settlement": {
+                "type": "object",
+                "properties": {
+                    "Id": {
+                        "description": "ID населённого пункта (ВАЖНО: API возвращает \"Id\", не \"IdNaselje\"!)",
+                        "type": "integer"
+                    },
+                    "IdNaselje": {
+                        "description": "Алиас для совместимости",
+                        "type": "integer"
+                    },
+                    "IdOkrug": {
+                        "description": "ID округа",
+                        "type": "integer"
+                    },
+                    "Naziv": {
+                        "description": "Название",
+                        "type": "string"
+                    },
+                    "NazivOkruga": {
+                        "description": "Название округа",
+                        "type": "string"
+                    },
+                    "PostanskiBroj": {
+                        "description": "Почтовый индекс",
+                        "type": "string"
+                    }
+                }
+            },
+            "postexpress.Street": {
+                "type": "object",
+                "properties": {
+                    "Id": {
+                        "description": "ID улицы (ВАЖНО: API возвращает \"Id\", не \"IdUlica\"!)",
+                        "type": "integer"
+                    },
+                    "IdNaselje": {
+                        "description": "ID населённого пункта",
+                        "type": "integer"
+                    },
+                    "IdUlica": {
+                        "description": "Алиас для совместимости",
+                        "type": "integer"
+                    },
+                    "Naziv": {
+                        "description": "Название улицы",
+                        "type": "string"
                     }
                 }
             },

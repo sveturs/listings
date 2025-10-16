@@ -12,7 +12,6 @@ import Link from 'next/link';
 
 export default function TX11PostagePage() {
   const t = useTranslations('postexpressTest.tx11');
-  const tCommon = useTranslations('postexpressTest.common');
 
   // Предзаполненные значения для расчёта стоимости
   const [serviceId, setServiceId] = useState(71); // Express pošiljka

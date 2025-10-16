@@ -170,8 +170,8 @@ func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment 
 		ExtBrend:          "SVETU",
 		ExtMagacin:        "WAREHOUSE1",
 		ExtReferenca:      fmt.Sprintf("SVETU-REF-%d", timestamp),
-		NacinPrijema:      "K", // K=courier, O=office
-		ImaPrijemniBrojDN: "N", // "N" = нет приёмного номера, "D" = есть приёмный номер
+		NacinPrijema:      "K",   // K=courier, O=office
+		ImaPrijemniBrojDN: "N",   // "N" = нет приёмного номера, "D" = есть приёмный номер
 		NacinPlacanja:     "POF", // POF=poslato od firme (sent by company)
 
 		// Отправитель ВНУТРИ отправления

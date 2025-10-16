@@ -9,7 +9,6 @@ import Link from 'next/link';
 
 export default function TX4StreetsPage() {
   const t = useTranslations('postexpressTest.tx4');
-  const tCommon = useTranslations('postexpressTest.common');
 
   // Предзаполненные значения
   const [settlementId, setSettlementId] = useState(100001); // Beograd

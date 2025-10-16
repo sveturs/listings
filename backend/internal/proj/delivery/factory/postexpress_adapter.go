@@ -188,7 +188,7 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 
 		// COD и ценность
 		// Otkupnina будет добавлена ниже если COD > 0
-		Vrednost:  insurancePara,
+		Vrednost: insurancePara,
 
 		// Дополнительные услуги через запятую
 		PosebneUsluge: buildPosebneUsluge(req.Services), // PNA + другие услуги

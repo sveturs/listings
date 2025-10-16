@@ -13,7 +13,6 @@ import Link from 'next/link';
 
 export default function TX6ValidatePage() {
   const t = useTranslations('postexpressTest.tx6');
-  const tCommon = useTranslations('postexpressTest.common');
 
   // Предзаполненные значения для валидации адреса
   const [settlementId, setSettlementId] = useState(100001); // Beograd

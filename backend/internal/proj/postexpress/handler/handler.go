@@ -106,18 +106,18 @@ func (h *Handler) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewa
 	test.Post("/offices", h.TestGetOffices)        // Transaction 10 - Список отделений
 
 	// TX 3-11: Тестовые эндпоинты для новых WSP API функций
-	test.Post("/tx3-settlements", h.TestGetSettlements)                 // TX 3 - Поиск населённых пунктов
-	test.Post("/tx4-streets", h.TestGetStreets)                         // TX 4 - Поиск улиц
-	test.Post("/tx6-validate-address", h.TestValidateAddress)           // TX 6 - Валидация адреса
+	test.Post("/tx3-settlements", h.TestGetSettlements)                    // TX 3 - Поиск населённых пунктов
+	test.Post("/tx4-streets", h.TestGetStreets)                            // TX 4 - Поиск улиц
+	test.Post("/tx6-validate-address", h.TestValidateAddress)              // TX 6 - Валидация адреса
 	test.Post("/tx9-service-availability", h.TestCheckServiceAvailability) // TX 9 - Проверка доступности услуги
-	test.Post("/tx11-calculate-postage", h.TestCalculatePostage)        // TX 11 - Расчёт стоимости
+	test.Post("/tx11-calculate-postage", h.TestCalculatePostage)           // TX 11 - Расчёт стоимости
 
 	// TX 3-11: Новые WSP API endpoints
-	postExpress.Get("/settlements", h.GetSettlements)                    // TX 3 - Поиск населённых пунктов
-	postExpress.Get("/streets", h.GetStreets)                            // TX 4 - Поиск улиц
-	postExpress.Post("/validate-address", h.ValidateAddress)             // TX 6 - Валидация адреса
+	postExpress.Get("/settlements", h.GetSettlements)                           // TX 3 - Поиск населённых пунктов
+	postExpress.Get("/streets", h.GetStreets)                                   // TX 4 - Поиск улиц
+	postExpress.Post("/validate-address", h.ValidateAddress)                    // TX 6 - Валидация адреса
 	postExpress.Post("/check-service-availability", h.CheckServiceAvailability) // TX 9 - Проверка доступности услуги
-	postExpress.Post("/calculate-postage", h.CalculatePostage)           // TX 11 - Расчёт стоимости доставки
+	postExpress.Post("/calculate-postage", h.CalculatePostage)                  // TX 11 - Расчёт стоимости доставки
 
 	return nil
 }

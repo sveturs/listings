@@ -213,7 +213,7 @@ func (s *Service) CreateShipment(ctx context.Context, shipment *ShipmentRequest)
 
 	manifest := &ManifestRequest{
 		ExtIDManifest: manifestID,
-		IDTipPosiljke: 1, // Обычная отправка
+		IDTipPosiljke: 1,                   // Обычная отправка
 		Posiljalac:    shipment.Posiljalac, // Отправитель на уровне манифеста
 		Porudzbine: []OrderRequest{
 			{
@@ -301,7 +301,7 @@ func (s *Service) ValidateShipment(shipment *ShipmentRequest) error {
 	// COD валидация (Otkupnina теперь int, не структура!)
 	if shipment.Otkupnina > 0 {
 		if shipment.Vrednost == 0 {
-			return fmt.Errorf("Vrednost is required when Otkupnina is set")
+			return fmt.Errorf("vrednost is required when Otkupnina is set")
 		}
 		// Проверка на услуги OTK и VD
 		if shipment.PosebneUsluge == "" {

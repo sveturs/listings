@@ -208,7 +208,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		Password:        cfg.PostExpress.Password,
 		TestMode:        cfg.PostExpress.TestMode,
 		Timeout:         30 * time.Second,
-		Language:        "", // ИСПРАВЛЕНО: пустая строка - обходим баг Post Express с отсутствующими колонками PREVOD_*
+		Language:        "",  // ИСПРАВЛЕНО: пустая строка - обходим баг Post Express с отсутствующими колонками PREVOD_*
 		DeviceType:      "2", // ИСПРАВЛЕНО: должна быть строка "2" для веб-приложения
 		MaxRetries:      3,
 		RetryDelay:      1 * time.Second,

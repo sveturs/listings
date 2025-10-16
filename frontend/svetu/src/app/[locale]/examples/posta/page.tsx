@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   MagnifyingGlassIcon,
   MapPinIcon,
@@ -231,8 +232,8 @@ export default function PostaExamplesPage() {
                   for use in TX 4.
                 </div>
                 <div className="text-sm mt-1">
-                  💡 <strong>Pre-filled with "Beograd"</strong> - just click
-                  "Search" to test!
+                  💡 <strong>Pre-filled with &quot;Beograd&quot;</strong> - just
+                  click &quot;Search&quot; to test!
                 </div>
               </div>
             </div>
@@ -353,8 +354,8 @@ export default function PostaExamplesPage() {
                   IdNaselje from TX 3.
                 </div>
                 <div className="text-sm mt-1">
-                  💡 <strong>Pre-filled with "Takovska"</strong> - select
-                  Belgrade above and click "Search"!
+                  💡 <strong>Pre-filled with &quot;Takovska&quot;</strong> -
+                  select Belgrade above and click &quot;Search&quot;!
                 </div>
               </div>
             </div>
@@ -474,7 +475,7 @@ export default function PostaExamplesPage() {
                   avg response time
                   <ul>
                     <li>Rezultat: 0 (Success)</li>
-                    <li>Test query: "Beograd" → 2 results</li>
+                    <li>Test query: &quot;Beograd&quot; → 2 results</li>
                     <li>Status: Production ready</li>
                   </ul>
                 </li>
@@ -483,7 +484,9 @@ export default function PostaExamplesPage() {
                   response time
                   <ul>
                     <li>Rezultat: 0 (Success)</li>
-                    <li>Test query: "Takovska" in Belgrade → 1 result</li>
+                    <li>
+                      Test query: &quot;Takovska&quot; in Belgrade → 1 result
+                    </li>
                     <li>Status: Production ready</li>
                   </ul>
                 </li>
@@ -552,15 +555,17 @@ export default function PostaExamplesPage() {
             TX 3 & TX 4 are fully tested and ready to deploy
           </p>
           <div className="flex gap-4 justify-center">
-            <a
+            <Link
               href="/admin/postexpress/test"
               className="btn btn-lg bg-white text-primary hover:bg-white/90"
             >
               <CodeBracketIcon className="w-5 h-5" />
               View Full Test Suite
-            </a>
+            </Link>
             <a
               href="https://github.com/sveturs/svetu"
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn btn-lg btn-outline border-white text-white hover:bg-white/20"
             >
               <ServerIcon className="w-5 h-5" />

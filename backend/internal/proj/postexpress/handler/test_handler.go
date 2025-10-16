@@ -12,6 +12,11 @@ import (
 	"backend/pkg/utils"
 )
 
+const (
+	// defaultCityBeograd - дефолтный город для тестовых запросов
+	defaultCityBeograd = "Beograd"
+)
+
 // TestShipmentRequest - запрос для создания тестового отправления
 type TestShipmentRequest struct {
 	// Получатель
@@ -147,7 +152,7 @@ func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 			"name":    "Sve Tu d.o.o.",
 			"phone":   "0641234567",
 			"email":   "b2b@svetu.rs",
-			"city":    "Beograd",
+			"city":    defaultCityBeograd,
 			"address": "Bulevar kralja Aleksandra 73",
 			"zip":     "11000",
 		},
@@ -155,7 +160,7 @@ func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 			"name":    "Petar Petrović",
 			"phone":   "0641234567",
 			"email":   "petar@example.com",
-			"city":    "Beograd",
+			"city":    defaultCityBeograd,
 			"address": "Takovska 2",
 			"zip":     "11000",
 		},
@@ -408,7 +413,7 @@ func (h *Handler) TestSearchLocations(c *fiber.Ctx) error {
 	}
 
 	if req.Query == "" {
-		req.Query = "Beograd" // Дефолтный поиск
+		req.Query = defaultCityBeograd // Дефолтный поиск
 	}
 
 	if h.wspClient == nil {
@@ -679,7 +684,7 @@ func (h *Handler) TestGetSettlements(c *fiber.Ctx) error {
 	}
 
 	if req.Query == "" {
-		req.Query = "Beograd"
+		req.Query = defaultCityBeograd
 	}
 
 	if h.wspClient == nil {
@@ -815,8 +820,8 @@ func (h *Handler) TestValidateAddress(c *fiber.Ctx) error {
 		req.SettlementID, req.StreetID, req.HouseNumber, req.PostalCode)
 
 	wspReq := &postexpress.AddressValidationRequest{
-		TipAdrese:     0,                 // 0 = стандартный тип адреса
-		IdRukovanje:   71,                // Дефолтная услуга доставки (можно любую)
+		TipAdrese:     0,  // 0 = стандартный тип адреса
+		IdRukovanje:   71, // Дефолтная услуга доставки (можно любую)
 		IdNaselje:     req.SettlementID,
 		IdUlica:       req.StreetID,
 		BrojPodbroj:   req.HouseNumber,
@@ -937,13 +942,15 @@ func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
 		err = fmt.Errorf("no streets found with any prefix")
 	}
 
-	if err != nil {
-		h.logger.Info("Failed to get streets for settlement %d: %v, using fallback", idNaseljeDolaska, err)
+	// Обрабатываем результаты поиска улиц
+	if err != nil || streetsResp.Rezultat != 0 || len(streetsResp.Ulice) == 0 {
 		// Fallback: используем название населенного пункта
+		h.logger.Info("Failed to get streets for settlement %d: %v, using fallback", idNaseljeDolaska, err)
+
 		settName := ""
 		switch idNaseljeDolaska {
 		case 100001:
-			settName = "Beograd"
+			settName = defaultCityBeograd
 		case 100039:
 			settName = "Novi Sad"
 		case 100040:
@@ -968,7 +975,7 @@ func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
 			},
 			Datum: time.Now().Format("02.01.2006"),
 		}
-	} else if streetsResp.Rezultat == 0 && len(streetsResp.Ulice) > 0 {
+	} else {
 		// Используем первую найденную улицу
 		firstStreet := streetsResp.Ulice[0]
 		idUlica := firstStreet.Id
@@ -982,20 +989,16 @@ func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
 			TipAdrese:   2, // 2 = адрес получателя (primalac)
 			IdRukovanje: req.ServiceID,
 			Adresa: postexpress.AdresaUPS{
-				IdNaselje: idNaseljeDolaska,   // ID населённого пункта
-				Naselje:   "",                 // Можно не указывать если есть IdNaselje
-				IdUlica:   idUlica,            // ВАЖНО: Реальный ID улицы!
-				Ulica:     firstStreet.Naziv,  // Название улицы
-				Broj:      "1",                // Номер дома
-				Posta:     req.ToPostalCode,   // Почтовый индекс
-				Vrsta:     "S",                // S = стандартная адреса
+				IdNaselje: idNaseljeDolaska,  // ID населённого пункта
+				Naselje:   "",                // Можно не указывать если есть IdNaselje
+				IdUlica:   idUlica,           // ВАЖНО: Реальный ID улицы!
+				Ulica:     firstStreet.Naziv, // Название улицы
+				Broj:      "1",               // Номер дома
+				Posta:     req.ToPostalCode,  // Почтовый индекс
+				Vrsta:     "S",               // S = стандартная адреса
 			},
 			Datum: time.Now().Format("02.01.2006"), // Формат DD.MM.YYYY
 		}
-	} else {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.no_streets_found", fiber.Map{
-			"settlement_id": idNaseljeDolaska,
-		})
 	}
 
 	resp, err := h.wspClient.CheckServiceAvailability(c.Context(), wspReq)
@@ -1029,10 +1032,10 @@ type TestCalculatePostageRequest struct {
 	ServiceID      int    `json:"service_id" example:"71"`
 	FromPostalCode string `json:"from_postal_code" example:"11000"`
 	ToPostalCode   string `json:"to_postal_code" example:"21000"`
-	Weight         int    `json:"weight" example:"500"` // граммы
-	CODAmount      int    `json:"cod_amount,omitempty" example:"0"` // para (1 RSD = 100 para)
+	Weight         int    `json:"weight" example:"500"`                // граммы
+	CODAmount      int    `json:"cod_amount,omitempty" example:"0"`    // para (1 RSD = 100 para)
 	InsuredValue   int    `json:"insured_value,omitempty" example:"0"` // para
-	Services       string `json:"services,omitempty" example:"PNA"` // дополнительные услуги
+	Services       string `json:"services,omitempty" example:"PNA"`    // дополнительные услуги
 }
 
 // TestCalculatePostage тестирует TX 11 - расчёт стоимости доставки

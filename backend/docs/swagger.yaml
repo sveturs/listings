@@ -2293,6 +2293,88 @@ definitions:
         example: OK
         type: string
     type: object
+  handler.TestCalculatePostageRequest:
+    properties:
+      cod_amount:
+        description: para (1 RSD = 100 para)
+        example: 0
+        type: integer
+      from_postal_code:
+        example: "11000"
+        type: string
+      insured_value:
+        description: para
+        example: 0
+        type: integer
+      service_id:
+        example: 71
+        type: integer
+      services:
+        description: дополнительные услуги
+        example: PNA
+        type: string
+      to_postal_code:
+        example: "21000"
+        type: string
+      weight:
+        description: граммы
+        example: 500
+        type: integer
+    type: object
+  handler.TestCancelRequest:
+    properties:
+      reason:
+        example: Отмена по требованию клиента
+        type: string
+      shipment_id:
+        example: "12345"
+        type: string
+    type: object
+  handler.TestCheckServiceAvailabilityRequest:
+    properties:
+      from_postal_code:
+        example: "11000"
+        type: string
+      service_id:
+        example: 71
+        type: integer
+      to_postal_code:
+        example: "21000"
+        type: string
+    type: object
+  handler.TestGetOfficesRequest:
+    properties:
+      location_id:
+        example: 1
+        type: integer
+    type: object
+  handler.TestGetSettlementsRequest:
+    properties:
+      query:
+        example: Beograd
+        type: string
+    type: object
+  handler.TestGetStreetsRequest:
+    properties:
+      query:
+        example: Takovska
+        type: string
+      settlement_id:
+        example: 123
+        type: integer
+    type: object
+  handler.TestPrintLabelRequest:
+    properties:
+      shipment_id:
+        example: "12345"
+        type: string
+    type: object
+  handler.TestSearchLocationsRequest:
+    properties:
+      query:
+        example: Beograd
+        type: string
+    type: object
   handler.TestShipmentRequest:
     properties:
       cod_amount:
@@ -2399,6 +2481,27 @@ definitions:
         type: boolean
       tracking_number:
         type: string
+    type: object
+  handler.TestTrackingRequest:
+    properties:
+      tracking_number:
+        example: SVETU-TEST-123456
+        type: string
+    type: object
+  handler.TestValidateAddressRequest:
+    properties:
+      house_number:
+        example: "2"
+        type: string
+      postal_code:
+        example: "11000"
+        type: string
+      settlement_id:
+        example: 123
+        type: integer
+      street_id:
+        example: 456
+        type: integer
     type: object
   handler.TranslateContentResponse:
     additionalProperties:
@@ -9255,6 +9358,287 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  postexpress.AddressValidationRequest:
+    properties:
+      BrojPodbroj:
+        description: Номер дома (например, "2" или "2a")
+        type: string
+      Datum:
+        description: 'Дата (опционально, формат: YYYY-MM-DD)'
+        type: string
+      IdNaselje:
+        description: ID населённого пункта
+        type: integer
+      IdRukovanje:
+        description: ID услуги доставки
+        type: integer
+      IdUlica:
+        description: ID улицы (опционально)
+        type: integer
+      PostanskiBroj:
+        description: Почтовый индекс
+        type: string
+      TipAdrese:
+        description: Тип адреса (0, 1, 2)
+        type: integer
+    type: object
+  postexpress.AddressValidationResponse:
+    properties:
+      Broj:
+        description: Номер дома
+        type: string
+      IdNaselje:
+        description: ID населённого пункта
+        type: integer
+      IdPoste:
+        description: ID почтового отделения
+        type: integer
+      IdUlica:
+        description: ID улицы
+        type: integer
+      NazivNaselja:
+        description: Название населённого пункта
+        type: string
+      NazivPoste:
+        description: Название почтового отделения
+        type: string
+      NazivUlice:
+        description: Название улицы
+        type: string
+      PAK:
+        description: Postal Address Code
+        type: string
+      Poruka:
+        description: Сообщение об ошибке
+        type: string
+      PostanskiBroj:
+        description: Почтовый индекс
+        type: string
+      PostojiAdresa:
+        description: Существует ли адрес
+        type: boolean
+      Rezultat:
+        description: 0 - успех, 1 - ошибка
+        type: integer
+    type: object
+  postexpress.AdresaUPS:
+    properties:
+      Broj:
+        description: Номер дома ("-1" для BB, "-2" если только подbroj)
+        type: string
+      BrojFaha:
+        description: Номер poštanski pregatak (для Vrsta="F")
+        type: string
+      IdNaselje:
+        description: ID населённого пункта (из TX 3)
+        type: integer
+      IdUlica:
+        description: ID улицы (из TX 4)
+        type: integer
+      Napomena:
+        description: Примечание
+        type: string
+      Naselje:
+        description: Название населённого пункта
+        type: string
+      Opstina:
+        description: Муниципалитет
+        type: string
+      Pak:
+        description: Postal Address Code (PAK)
+        type: string
+      Podbroj:
+        description: Подномер (буква или дополнительный номер)
+        type: string
+      Posta:
+        description: Почтовый индекс (5 цифр)
+        type: string
+      Reon:
+        description: Район
+        type: string
+      Sprat:
+        description: Этаж
+        type: string
+      Stan:
+        description: Квартира
+        type: string
+      Ulica:
+        description: Название улицы
+        type: string
+      Vrsta:
+        description: 'Тип адреса: S-стандартный, F-fah, P-post restant'
+        type: string
+    type: object
+  postexpress.GetSettlementsResponse:
+    properties:
+      Naselja:
+        description: Массив найденных населённых пунктов
+        items:
+          $ref: '#/definitions/postexpress.Settlement'
+        type: array
+      Poruka:
+        description: Сообщение об ошибке
+        type: string
+      Rezultat:
+        description: 0 - успех, 1 - ошибка
+        type: integer
+    type: object
+  postexpress.GetStreetsResponse:
+    properties:
+      Poruka:
+        description: Сообщение об ошибке
+        type: string
+      Rezultat:
+        description: 0 - успех, 1 - ошибка
+        type: integer
+      Ulice:
+        description: Массив найденных улиц
+        items:
+          $ref: '#/definitions/postexpress.Street'
+        type: array
+    type: object
+  postexpress.PostageCalculationRequest:
+    properties:
+      IdRukovanje:
+        description: ID услуги доставки
+        type: integer
+      IdZemlja:
+        description: ID страны (0 = внутренние отправления)
+        type: integer
+      Masa:
+        description: Вес в граммах
+        type: integer
+      Otkupnina:
+        description: COD в para (1 RSD = 100 para)
+        type: integer
+      PosebneUsluge:
+        description: Дополнительные услуги через запятую
+        type: string
+      PostanskiBrojDolaska:
+        description: Почтовый индекс прибытия
+        type: string
+      PostanskiBrojOdlaska:
+        description: Почтовый индекс отправления
+        type: string
+      Vrednost:
+        description: Объявленная ценность в para
+        type: integer
+    type: object
+  postexpress.PostageCalculationResponse:
+    properties:
+      IdRukovanje:
+        description: ID услуги
+        type: integer
+      Masa:
+        description: Вес в граммах
+        type: integer
+      Napomena:
+        description: Примечание
+        type: string
+      NazivUsluge:
+        description: Название услуги
+        type: string
+      Otkupnina:
+        description: COD в para
+        type: integer
+      Poruka:
+        description: Сообщение об ошибке
+        type: string
+      PosebneUsluge:
+        description: Дополнительные услуги
+        type: string
+      PostanskiBrojDolaska:
+        description: Почтовый индекс прибытия
+        type: string
+      PostanskiBrojOdlaska:
+        description: Почтовый индекс отправления
+        type: string
+      Postarina:
+        description: Стоимость в para (295 RSD = 29500 para)
+        type: integer
+      Rezultat:
+        description: 0 - успех, 1 - ошибка
+        type: integer
+      Vrednost:
+        description: Объявленная ценность в para
+        type: integer
+    type: object
+  postexpress.ServiceAvailabilityRequest:
+    properties:
+      Adresa:
+        allOf:
+        - $ref: '#/definitions/postexpress.AdresaUPS'
+        description: 'ОБЯЗАТЕЛЬНО: Полная структура адреса'
+      Datum:
+        description: 'Дата доставки (опционально, формат: DD.MM.YYYY)'
+        type: string
+      IdRukovanje:
+        description: ID услуги (29, 30, 55, 58, 59, 71, 85)
+        type: integer
+      TipAdrese:
+        description: 'Тип адреса: 0-адрес забора, 1-адрес отправителя, 2-адрес получателя'
+        type: integer
+    type: object
+  postexpress.ServiceAvailabilityResponse:
+    properties:
+      Dostupna:
+        description: Доступна ли услуга
+        type: boolean
+      IdRukovanje:
+        description: ID услуги
+        type: integer
+      Napomena:
+        description: Примечание
+        type: string
+      NazivUsluge:
+        description: Название услуги
+        type: string
+      OcekivanoDana:
+        description: Ожидаемое время доставки (дни)
+        type: integer
+      Poruka:
+        description: Сообщение об ошибке
+        type: string
+      Rezultat:
+        description: 0 - успех, 1 - ошибка
+        type: integer
+    type: object
+  postexpress.Settlement:
+    properties:
+      Id:
+        description: 'ID населённого пункта (ВАЖНО: API возвращает "Id", не "IdNaselje"!)'
+        type: integer
+      IdNaselje:
+        description: Алиас для совместимости
+        type: integer
+      IdOkrug:
+        description: ID округа
+        type: integer
+      Naziv:
+        description: Название
+        type: string
+      NazivOkruga:
+        description: Название округа
+        type: string
+      PostanskiBroj:
+        description: Почтовый индекс
+        type: string
+    type: object
+  postexpress.Street:
+    properties:
+      Id:
+        description: 'ID улицы (ВАЖНО: API возвращает "Id", не "IdUlica"!)'
+        type: integer
+      IdNaselje:
+        description: ID населённого пункта
+        type: integer
+      IdUlica:
+        description: Алиас для совместимости
+        type: integer
+      Naziv:
+        description: Название улицы
+        type: string
     type: object
   postgres.DashboardOrder:
     properties:
@@ -29554,6 +29938,41 @@ paths:
       summary: Process payment webhook
       tags:
       - payments
+  /api/v1/postexpress/calculate-postage:
+    post:
+      consumes:
+      - application/json
+      description: Рассчитать точную стоимость доставки для конкретной посылки
+      parameters:
+      - description: Данные для расчёта стоимости
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/postexpress.PostageCalculationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/postexpress.PostageCalculationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Calculate postage (TX 11)
+      tags:
+      - PostExpress
   /api/v1/postexpress/calculate-rate:
     post:
       consumes:
@@ -29587,6 +30006,41 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
       summary: Calculate delivery rate
+      tags:
+      - PostExpress
+  /api/v1/postexpress/check-service-availability:
+    post:
+      consumes:
+      - application/json
+      description: Проверить доступность услуги доставки между двумя точками
+      parameters:
+      - description: Данные для проверки доступности
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/postexpress.ServiceAvailabilityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/postexpress.ServiceAvailabilityResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Check service availability (TX 9)
       tags:
       - PostExpress
   /api/v1/postexpress/health:
@@ -29884,6 +30338,40 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
       summary: Update Post Express settings
+      tags:
+      - PostExpress
+  /api/v1/postexpress/settlements:
+    get:
+      consumes:
+      - application/json
+      description: Поиск населённых пунктов по названию через Post Express WSP API
+      parameters:
+      - description: Поисковый запрос (название или часть названия)
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/postexpress.GetSettlementsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Search settlements by name (TX 3)
       tags:
       - PostExpress
   /api/v1/postexpress/shipments:
@@ -30238,6 +30726,81 @@ paths:
       summary: Get warehouse statistics
       tags:
       - PostExpress
+  /api/v1/postexpress/streets:
+    get:
+      consumes:
+      - application/json
+      description: Поиск улиц по названию в конкретном населённом пункте
+      parameters:
+      - description: ID населённого пункта (из TX 3)
+        in: query
+        name: settlement_id
+        required: true
+        type: integer
+      - description: Поисковый запрос (название или часть названия улицы)
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/postexpress.GetStreetsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Search streets in settlement (TX 4)
+      tags:
+      - PostExpress
+  /api/v1/postexpress/test/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel shipment using real Post Express WSP API (Transaction 25)
+      parameters:
+      - description: Cancel request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestCancelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cancel result
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test cancel shipment
+      tags:
+      - post-express-test
   /api/v1/postexpress/test/config:
     get:
       description: Get current Post Express configuration (without password) for testing
@@ -30278,11 +30841,121 @@ paths:
       summary: Get test shipments history
       tags:
       - post-express-test
+  /api/v1/postexpress/test/label:
+    post:
+      consumes:
+      - application/json
+      description: Print shipment label using real Post Express WSP API (Transaction
+        20)
+      parameters:
+      - description: Print label request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestPrintLabelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Label data
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test print label
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/locations:
+    post:
+      consumes:
+      - application/json
+      description: Search locations using real Post Express WSP API (Transaction 3)
+      parameters:
+      - description: Search request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestSearchLocationsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Locations list
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test search locations
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/offices:
+    post:
+      consumes:
+      - application/json
+      description: Get offices for location using real Post Express WSP API (Transaction
+        10)
+      parameters:
+      - description: Get offices request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestGetOfficesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Offices list
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test get offices
+      tags:
+      - post-express-test
   /api/v1/postexpress/test/shipment:
     post:
       consumes:
       - application/json
-      description: Create a test shipment using Post Express WSP API for visual testing
+      description: Create a test shipment using real Post Express WSP API (B2B Manifest)
       parameters:
       - description: Test shipment request
         in: body
@@ -30311,6 +30984,226 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
       summary: Create test shipment
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/track:
+    post:
+      consumes:
+      - application/json
+      description: Track shipment using real Post Express WSP API (Transaction 15)
+      parameters:
+      - description: Tracking request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestTrackingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tracking result
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test tracking shipment
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/tx3-settlements:
+    post:
+      consumes:
+      - application/json
+      description: Search settlements using real Post Express WSP API (Transaction
+        3)
+      parameters:
+      - description: Search settlements request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestGetSettlementsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Settlements list
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test TX 3 - GetNaselje (Search Settlements)
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/tx4-streets:
+    post:
+      consumes:
+      - application/json
+      description: Search streets in settlement using real Post Express WSP API (Transaction
+        4)
+      parameters:
+      - description: Search streets request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestGetStreetsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Streets list
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test TX 4 - GetUlica (Search Streets)
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/tx6-validate-address:
+    post:
+      consumes:
+      - application/json
+      description: Validate address using real Post Express WSP API (Transaction 6)
+      parameters:
+      - description: Validate address request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestValidateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Address validation result
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test TX 6 - ProveraAdrese (Validate Address)
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/tx9-service-availability:
+    post:
+      consumes:
+      - application/json
+      description: Check service availability using real Post Express WSP API (Transaction
+        9)
+      parameters:
+      - description: Check service availability request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestCheckServiceAvailabilityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service availability result
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test TX 9 - ProveraDostupnostiUsluge (Check Service Availability)
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/tx11-calculate-postage:
+    post:
+      consumes:
+      - application/json
+      description: Calculate postage using real Post Express WSP API (Transaction
+        11)
+      parameters:
+      - description: Calculate postage request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.TestCalculatePostageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Postage calculation result
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Test TX 11 - PostarinaPosiljke (Calculate Postage)
       tags:
       - post-express-test
   /api/v1/postexpress/track/{tracking}:
@@ -30371,6 +31264,41 @@ paths:
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
       summary: Sync all active shipments
+      tags:
+      - PostExpress
+  /api/v1/postexpress/validate-address:
+    post:
+      consumes:
+      - application/json
+      description: Проверка существования адреса в базе Post Express
+      parameters:
+      - description: Данные для валидации адреса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/postexpress.AddressValidationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/postexpress.AddressValidationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+      summary: Validate address (TX 6)
       tags:
       - PostExpress
   /api/v1/postexpress/warehouse:

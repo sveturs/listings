@@ -226,10 +226,10 @@ func (c *WSPClientImpl) parseWSPResponse(resp map[string]interface{}) (*models.T
 				Rezultat int    `json:"Rezultat"`
 				Poruka   string `json:"Poruka"`
 				Greske   []struct {
-					ExtIDManifest    string `json:"ExtIdManifest"`
-					ExtIDPorudzbina  string `json:"ExtIdPorudzbina"`
-					Rbr              int    `json:"Rbr"`
-					PorukaGreske     string `json:"PorukaGreske"`
+					ExtIDManifest   string `json:"ExtIdManifest"`
+					ExtIDPorudzbina string `json:"ExtIdPorudzbina"`
+					Rbr             int    `json:"Rbr"`
+					PorukaGreske    string `json:"PorukaGreske"`
 				} `json:"Greske"`
 			}
 			if err := json.Unmarshal([]byte(strOutStr), &manifestResp); err != nil {
@@ -261,7 +261,6 @@ func (c *WSPClientImpl) parseWSPResponse(resp map[string]interface{}) (*models.T
 		// Fallback: если нет StrOut, проверяем внешний Rezultat
 		if rezultat, ok := rezultatField.(float64); ok {
 			if rezultat != 0 {
-				success = false
 				poruka := "unknown error"
 
 				// Сначала пытаемся извлечь детальную ошибку из StrRezultat
@@ -460,7 +459,7 @@ func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmen
 	return &WSPShipmentResponse{
 		Success:         true,
 		TrackingNumber:  posiljkaResult.TrackingNumber,
-		Barcode:         "",                       // Баркод не возвращается в B2B API
+		Barcode:         "", // Баркод не возвращается в B2B API
 		ReferenceNumber: posiljkaResult.BrojPosiljke,
 	}, nil
 }

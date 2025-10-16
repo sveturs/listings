@@ -55,7 +55,6 @@ interface ShipmentResult {
 
 export default function TX73CODPage() {
   const t = useTranslations('postexpressTest.tx73');
-  const tCommon = useTranslations('postexpressTest.common');
 
   const [config, setConfig] = useState<TestConfig | null>(null);
   const [loading, setLoading] = useState(true);
