@@ -223,6 +223,7 @@ func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment 
 			PostanskiBroj: shipment.RecipientPostalCode,
 			Telefon:       shipment.RecipientPhone,
 			OznakaZemlje:  "RS",
+			TipAdrese:     "S", // По умолчанию стандартный адрес
 		},
 		Masa: weightGrams, // В граммах!
 
@@ -239,16 +240,35 @@ func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment 
 		ParcelLockerCode: shipment.ParcelLockerCode, // Код паккетомата для IdRukovanje=85
 	}
 
-	// Формируем структуру Otkupnina ТОЛЬКО если это COD отправление
-	if codPara > 0 {
-		posiljka.Otkupnina = &postexpress.OtkupninaData{
-			Iznos:          codPara,
-			VrstaDokumenta: "N", // N = налогни документ
-			TekuciRacun:    c.config.BankAccount,
-			ModelPNB:       c.config.PaymentModel,
-			PNB:            generatePNB(timestamp),
-			SifraPlacanja:  c.config.PaymentCode,
+	// Для parcel locker (IdRukovanje=85) устанавливаем специальный тип адреса
+	if idRukovanje == 85 || shipment.ParcelLockerCode != "" {
+		// Валидация ParcelLockerCode
+		if shipment.ParcelLockerCode == "" {
+			return nil, fmt.Errorf("ParcelLockerCode is required for parcel locker delivery (IdRukovanje=85)")
 		}
+
+		// Устанавливаем тип адреса "P" (Parcel Locker / Paketom at)
+		posiljka.Primalac.TipAdrese = "P"
+		posiljka.Primalac.PAK = shipment.ParcelLockerCode
+
+		c.logger.Debug("Parcel Locker configured: code=%s, IdRukovanje=%d", shipment.ParcelLockerCode, idRukovanje)
+	}
+
+	// Устанавливаем Otkupnina ТОЛЬКО если это COD отправление
+	if codPara > 0 {
+		// Otkupnina - это простое число в para, НЕ структура!
+		posiljka.Otkupnina = codPara
+
+		// Банковские данные для COD (опциональные, но рекомендуемые)
+		posiljka.OtkupninaTekuciRacun = c.config.BankAccount
+		posiljka.OtkupninaModelPNB = c.config.PaymentModel
+		posiljka.OtkupninaPNB = generatePNB(timestamp)
+		posiljka.OtkupninaSifraPlacanja = c.config.PaymentCode
+		posiljka.OtkupninaVrstaDokumenta = "N" // N = налогни документ
+
+		c.logger.Debug("COD configured: amount=%d para (%.2f RSD), bank=%s, model=%s, PNB=%s, code=%s",
+			codPara, float64(codPara)/100.0, c.config.BankAccount, c.config.PaymentModel,
+			posiljka.OtkupninaPNB, c.config.PaymentCode)
 	}
 
 	// Создаем заказ с одной посылкой

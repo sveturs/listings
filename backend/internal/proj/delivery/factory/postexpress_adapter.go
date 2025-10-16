@@ -195,15 +195,16 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 	}
 
 	// Добавляем COD (Otkupnina) только если сумма > 0
+	// ВАЖНО: Otkupnina теперь просто число в para, НЕ объект!
 	if codPara > 0 {
-		peReq.Otkupnina = &postexpress.OtkupninaData{
-			Iznos:          codPara,
-			VrstaDokumenta: "N", // N = налоговый документ
-			TekuciRacun:    config.BankAccount,
-			ModelPNB:       config.PaymentModel,
-			PNB:            fmt.Sprintf("%d", time.Now().Unix()%10000000000), // 10 цифр
-			SifraPlacanja:  config.PaymentCode,
-		}
+		peReq.Otkupnina = codPara
+
+		// Банковские данные COD устанавливаем отдельными полями
+		peReq.OtkupninaTekuciRacun = config.BankAccount
+		peReq.OtkupninaModelPNB = config.PaymentModel
+		peReq.OtkupninaPNB = fmt.Sprintf("%d", time.Now().Unix()%10000000000) // 10 цифр
+		peReq.OtkupninaSifraPlacanja = config.PaymentCode
+		peReq.OtkupninaVrstaDokumenta = "N" // N = налоговый документ
 	}
 
 	// Валидация перед отправкой

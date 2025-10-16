@@ -298,8 +298,8 @@ func (s *Service) ValidateShipment(shipment *ShipmentRequest) error {
 		return fmt.Errorf("sender phone is required")
 	}
 
-	// COD валидация
-	if shipment.Otkupnina != nil && shipment.Otkupnina.Iznos > 0 {
+	// COD валидация (Otkupnina теперь int, не структура!)
+	if shipment.Otkupnina > 0 {
 		if shipment.Vrednost == 0 {
 			return fmt.Errorf("Vrednost is required when Otkupnina is set")
 		}
@@ -307,13 +307,8 @@ func (s *Service) ValidateShipment(shipment *ShipmentRequest) error {
 		if shipment.PosebneUsluge == "" {
 			return fmt.Errorf("PosebneUsluge must include OTK and VD for COD shipments")
 		}
-		// Проверка обязательных полей откупнины
-		if shipment.Otkupnina.TekuciRacun == "" {
-			return fmt.Errorf("TekuciRacun is required for COD shipments")
-		}
-		if shipment.Otkupnina.VrstaDokumenta == "" {
-			return fmt.Errorf("VrstaDokumenta is required for COD shipments")
-		}
+		// Банковские данные COD стали опциональными отдельными полями
+		// Они устанавливаются автоматически при создании манифеста
 	}
 
 	return nil

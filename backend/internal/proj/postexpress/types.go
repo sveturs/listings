@@ -55,8 +55,15 @@ type ShipmentRequest struct {
 	Masa         int          `json:"Masa"`         // ОБЯЗАТЕЛЬНО: Вес в ГРАММАХ (integer!)
 
 	// === COD и ценности (в PARA - 1 RSD = 100 para) ===
-	Otkupnina *OtkupninaData `json:"Otkupnina,omitempty"` // COD с полными банковскими данными (структура!)
-	Vrednost  int            `json:"Vrednost,omitempty"`  // Объявленная ценность в para (ОБЯЗАТЕЛЬНО для COD!)
+	Otkupnina int `json:"Otkupnina,omitempty"` // COD сумма в para (простое число, НЕ объект!)
+	Vrednost  int `json:"Vrednost,omitempty"`  // Объявленная ценность в para (ОБЯЗАТЕЛЬНО для COD!)
+
+	// === Банковские данные для COD (опциональные поля) ===
+	OtkupninaTekuciRacun   string `json:"OtkupninaTekuciRacun,omitempty"`   // Банковский счёт для перевода откупнины
+	OtkupninaModelPNB      string `json:"OtkupninaModelPNB,omitempty"`      // Модель платежа (обычно "97")
+	OtkupninaPNB           string `json:"OtkupninaPNB,omitempty"`           // Позив на број (payment reference)
+	OtkupninaSifraPlacanja string `json:"OtkupninaSifraPlacanja,omitempty"` // Шифра плаћања (обычно "189")
+	OtkupninaVrstaDokumenta string `json:"OtkupninaVrstaDokumenta,omitempty"` // Тип документа: N=налогни документ
 
 	// === Дополнительные услуги (строка через запятую!) ===
 	PosebneUsluge string `json:"PosebneUsluge,omitempty"` // "PNA,OTK,VD" - НЕ массив!
@@ -393,13 +400,13 @@ type AddressValidationResponse struct {
 
 // ServiceAvailabilityRequest - запрос проверки доступности услуги (TX 9)
 type ServiceAvailabilityRequest struct {
-	TipAdrese              int    `json:"TipAdrese"`              // Тип адреса (0, 1, 2)
-	IdRukovanje            int    `json:"IdRukovanje"`            // ID услуги (29, 30, 55, 58, 59, 71, 85)
-	IdNaseljeOdlaska       int    `json:"IdNaseljeOdlaska,omitempty"`       // ID населённого пункта отправления
-	IdNaseljeDolaska       int    `json:"IdNaseljeDolaska,omitempty"`       // ID населённого пункта прибытия
-	PostanskiBrojOdlaska   string `json:"PostanskiBrojOdlaska"`   // Почтовый индекс отправления
-	PostanskiBrojDolaska   string `json:"PostanskiBrojDolaska"`   // Почтовый индекс прибытия
-	Datum                  string `json:"Datum,omitempty"`        // Дата (опционально, формат: YYYY-MM-DD)
+	TipAdrese              int    `json:"TipAdrese"`            // Тип адреса (0, 1, 2)
+	IdRukovanje            int    `json:"IdRukovanje"`          // ID услуги (29, 30, 55, 58, 59, 71, 85)
+	IdNaseljeOdlaska       int    `json:"IdNaseljeOdlaska"`     // ID населённого пункта отправления (ОБЯЗАТЕЛЬНО!)
+	IdNaseljeDolaska       int    `json:"IdNaseljeDolaska"`     // ID населённого пункта прибытия (ОБЯЗАТЕЛЬНО!)
+	PostanskiBrojOdlaska   string `json:"PostanskiBrojOdlaska"` // Почтовый индекс отправления
+	PostanskiBrojDolaska   string `json:"PostanskiBrojDolaska"` // Почтовый индекс прибытия
+	Datum                  string `json:"Datum,omitempty"`      // Дата (опционально, формат: YYYY-MM-DD)
 }
 
 // ServiceAvailabilityResponse - ответ проверки доступности услуги (TX 9)
