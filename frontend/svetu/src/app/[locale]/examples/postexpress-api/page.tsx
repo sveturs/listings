@@ -105,7 +105,7 @@ function TestCard({
 
           {issueDescription && (
             <div className="alert alert-warning py-2 mt-2">
-              <div className="text-xs">{issueDescription}</div>
+              <div className="text-xs text-warning-content">{issueDescription}</div>
             </div>
           )}
 
@@ -299,8 +299,8 @@ export default function PostExpressAPIIndexPage() {
               </span>
             </h2>
             <div className="alert alert-warning mb-6">
-              <ExclamationTriangleIcon className="w-6 h-6" />
-              <div>
+              <ExclamationTriangleIcon className="w-6 h-6 text-warning-content" />
+              <div className="text-warning-content">
                 <h3 className="font-bold">{t('issuesAlert.title')}</h3>
                 <div className="text-sm">
                   {t('issuesAlert.description')}
@@ -326,8 +326,8 @@ export default function PostExpressAPIIndexPage() {
               </span>
             </h2>
             <div className="alert alert-error mb-6">
-              <XCircleIcon className="w-6 h-6" />
-              <div>
+              <XCircleIcon className="w-6 h-6 text-error-content" />
+              <div className="text-error-content">
                 <h3 className="font-bold">{t('issuesAlert.title')}</h3>
                 <div className="text-sm">
                   {t('issuesAlert.description')}
