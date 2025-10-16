@@ -10,6 +10,9 @@ export function createPaymentService(config: PaymentConfig): IPaymentService {
       if (!config.mock) {
         throw new Error('Mock configuration is required in mock mode');
       }
+      if (!config.mock.config) {
+        throw new Error('Mock config object is required in mock mode');
+      }
       return new MockAllSecureService(config.mock.config);
 
     case 'sandbox':

@@ -52,21 +52,29 @@ export default function MultiSelectAttribute({
   }, [isOpen]);
 
   useEffect(() => {
+    let newValues: string[] = [];
+
     if (value) {
       if (typeof value === 'string') {
         try {
           const parsed = JSON.parse(value);
-          setSelectedValues(Array.isArray(parsed) ? parsed : []);
+          newValues = Array.isArray(parsed) ? parsed : [value];
         } catch {
-          setSelectedValues([value]);
+          newValues = [value];
         }
       } else if (Array.isArray(value)) {
-        setSelectedValues(value);
+        newValues = value;
       }
-    } else {
-      setSelectedValues([]);
     }
-  }, [value]);
+
+    // Only update if values actually changed (prevent infinite loop)
+    const currentValuesStr = JSON.stringify(selectedValues.sort());
+    const newValuesStr = JSON.stringify(newValues.sort());
+
+    if (currentValuesStr !== newValuesStr) {
+      setSelectedValues(newValues);
+    }
+  }, [value, selectedValues]);
 
   // Parse options
   let options: any[] = [];

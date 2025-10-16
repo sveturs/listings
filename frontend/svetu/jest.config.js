@@ -23,6 +23,12 @@ const customJestConfig = {
     '\\.spec\\.ts$',
   ],
   coveragePathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
+  // Increase test timeout to prevent timeouts
+  testTimeout: 30000,
+  // Limit concurrent tests to reduce memory usage
+  maxWorkers: '50%',
+  // Reduce memory usage
+  workerIdleMemoryLimit: '512MB',
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
