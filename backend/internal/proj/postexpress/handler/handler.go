@@ -1163,8 +1163,11 @@ func (h *Handler) CheckServiceAvailability(c *fiber.Ctx) error {
 	if req.IdRukovanje <= 0 {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.serviceIDRequired")
 	}
-	if req.PostanskiBrojOdlaska == "" || req.PostanskiBrojDolaska == "" {
-		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.postalCodesRequired")
+	if req.Adresa.Posta == "" {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.postalCodeRequired")
+	}
+	if req.Adresa.Vrsta == "" {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "postexpress.addressTypeRequired")
 	}
 
 	if h.wspClient == nil {

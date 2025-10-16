@@ -105,7 +105,9 @@ function TestCard({
 
           {issueDescription && (
             <div className="alert alert-warning py-2 mt-2">
-              <div className="text-xs text-warning-content">{issueDescription}</div>
+              <div className="text-xs text-warning-content">
+                {issueDescription}
+              </div>
             </div>
           )}
 
@@ -206,12 +208,8 @@ export default function PostExpressAPIIndexPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-5xl font-bold mb-4">
-            {t('title')}
-          </h1>
-          <p className="text-xl opacity-90 max-w-3xl">
-            {t('subtitle')}
-          </p>
+          <h1 className="text-5xl font-bold mb-4">{t('title')}</h1>
+          <p className="text-xl opacity-90 max-w-3xl">{t('subtitle')}</p>
           <div className="mt-6 flex gap-2 flex-wrap">
             <div className="badge badge-success badge-lg gap-2">
               <CheckCircleIcon className="w-4 h-4" />
@@ -302,9 +300,7 @@ export default function PostExpressAPIIndexPage() {
               <ExclamationTriangleIcon className="w-6 h-6 text-warning-content" />
               <div className="text-warning-content">
                 <h3 className="font-bold">{t('issuesAlert.title')}</h3>
-                <div className="text-sm">
-                  {t('issuesAlert.description')}
-                </div>
+                <div className="text-sm">{t('issuesAlert.description')}</div>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -329,9 +325,7 @@ export default function PostExpressAPIIndexPage() {
               <XCircleIcon className="w-6 h-6 text-error-content" />
               <div className="text-error-content">
                 <h3 className="font-bold">{t('issuesAlert.title')}</h3>
-                <div className="text-sm">
-                  {t('issuesAlert.description')}
-                </div>
+                <div className="text-sm">{t('issuesAlert.description')}</div>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -346,25 +340,29 @@ export default function PostExpressAPIIndexPage() {
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
             <h3 className="card-title">{t('about.title')}</h3>
-            <p className="text-base-content/70">
-              {t('about.description')}
-            </p>
+            <p className="text-base-content/70">{t('about.description')}</p>
             <div className="divider"></div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <h4 className="font-semibold mb-2">{t('about.features.realtime.title')}</h4>
+                <h4 className="font-semibold mb-2">
+                  {t('about.features.realtime.title')}
+                </h4>
                 <p className="text-base-content/60">
                   {t('about.features.realtime.description')}
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">{t('about.features.requestResponse.title')}</h4>
+                <h4 className="font-semibold mb-2">
+                  {t('about.features.requestResponse.title')}
+                </h4>
                 <p className="text-base-content/60">
                   {t('about.features.requestResponse.description')}
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">{t('about.features.prefilledForms.title')}</h4>
+                <h4 className="font-semibold mb-2">
+                  {t('about.features.prefilledForms.title')}
+                </h4>
                 <p className="text-base-content/60">
                   {t('about.features.prefilledForms.description')}
                 </p>

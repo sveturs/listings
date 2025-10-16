@@ -190,9 +190,7 @@ export default function TX73StandardPage() {
             <TruckIcon className="w-10 h-10" />
             {t('titleStandard')}
           </h1>
-          <p className="text-xl opacity-90">
-            {t('descriptionStandard')}
-          </p>
+          <p className="text-xl opacity-90">{t('descriptionStandard')}</p>
           <div className="mt-4 flex gap-2 flex-wrap">
             <div className="badge badge-success badge-lg gap-2">
               <CheckCircleIcon className="w-4 h-4" />
@@ -216,9 +214,7 @@ export default function TX73StandardPage() {
               className="card bg-base-100 shadow-xl"
             >
               <div className="card-body">
-                <h2 className="card-title text-2xl mb-4">
-                  {t('formTitle')}
-                </h2>
+                <h2 className="card-title text-2xl mb-4">{t('formTitle')}</h2>
 
                 {/* Recipient Section */}
                 <div className="mb-6">
@@ -229,7 +225,9 @@ export default function TX73StandardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text">{t('recipient.name')}</span>
+                        <span className="label-text">
+                          {t('recipient.name')}
+                        </span>
                       </label>
                       <input
                         type="text"
@@ -242,7 +240,9 @@ export default function TX73StandardPage() {
                     </div>
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text">{t('recipient.phone')}</span>
+                        <span className="label-text">
+                          {t('recipient.phone')}
+                        </span>
                       </label>
                       <input
                         type="text"
@@ -255,7 +255,9 @@ export default function TX73StandardPage() {
                     </div>
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text">{t('recipient.email')}</span>
+                        <span className="label-text">
+                          {t('recipient.email')}
+                        </span>
                       </label>
                       <input
                         type="email"
@@ -267,7 +269,9 @@ export default function TX73StandardPage() {
                     </div>
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text">{t('recipient.city')}</span>
+                        <span className="label-text">
+                          {t('recipient.city')}
+                        </span>
                       </label>
                       <input
                         type="text"
@@ -280,7 +284,9 @@ export default function TX73StandardPage() {
                     </div>
                     <div className="form-control md:col-span-2">
                       <label className="label">
-                        <span className="label-text">{t('recipient.address')}</span>
+                        <span className="label-text">
+                          {t('recipient.address')}
+                        </span>
                       </label>
                       <input
                         type="text"
@@ -311,7 +317,9 @@ export default function TX73StandardPage() {
 
                 {/* Sender Section */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-lg mb-3">{t('sender.title')}</h3>
+                  <h3 className="font-semibold text-lg mb-3">
+                    {t('sender.title')}
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="form-control">
                       <label className="label">
@@ -362,7 +370,9 @@ export default function TX73StandardPage() {
                     </div>
                     <div className="form-control md:col-span-2">
                       <label className="label">
-                        <span className="label-text">{t('sender.address')}</span>
+                        <span className="label-text">
+                          {t('sender.address')}
+                        </span>
                       </label>
                       <input
                         type="text"
@@ -397,7 +407,9 @@ export default function TX73StandardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text">{t('shipment.weight')}</span>
+                        <span className="label-text">
+                          {t('shipment.weight')}
+                        </span>
                       </label>
                       <input
                         type="number"
@@ -413,7 +425,9 @@ export default function TX73StandardPage() {
                     </div>
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text">{t('shipment.content')}</span>
+                        <span className="label-text">
+                          {t('shipment.content')}
+                        </span>
                       </label>
                       <input
                         type="text"
@@ -444,7 +458,9 @@ export default function TX73StandardPage() {
                     </div>
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text">{t('shipment.idRukovanje')}</span>
+                        <span className="label-text">
+                          {t('shipment.idRukovanje')}
+                        </span>
                       </label>
                       <select
                         className="select select-bordered"
@@ -509,25 +525,33 @@ export default function TX73StandardPage() {
 
                         <div className="space-y-2">
                           <div className="flex justify-between">
-                            <span className="text-sm">{t('result.trackingNumber')}:</span>
+                            <span className="text-sm">
+                              {t('result.trackingNumber')}:
+                            </span>
                             <span className="font-mono font-bold">
                               {result.tracking_number}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-sm">{t('result.manifestId')}:</span>
+                            <span className="text-sm">
+                              {t('result.manifestId')}:
+                            </span>
                             <span className="font-bold">
                               {result.manifest_id}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-sm">{t('result.shipmentId')}:</span>
+                            <span className="text-sm">
+                              {t('result.shipmentId')}:
+                            </span>
                             <span className="font-bold">
                               {result.shipment_id}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-sm">{t('result.externalId')}:</span>
+                            <span className="text-sm">
+                              {t('result.externalId')}:
+                            </span>
                             <span className="font-mono text-xs">
                               {result.external_id}
                             </span>
@@ -539,7 +563,9 @@ export default function TX73StandardPage() {
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-sm">{t('result.processingTime')}:</span>
+                            <span className="text-sm">
+                              {t('result.processingTime')}:
+                            </span>
                             <span className="text-xs">
                               {result.processing_time_ms}ms
                             </span>

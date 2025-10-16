@@ -134,12 +134,8 @@ export default function TX9AvailabilityPage() {
             </svg>
             {t('back')}
           </Link>
-          <h1 className="text-4xl font-bold mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-xl opacity-90">
-            {t('description')}
-          </p>
+          <h1 className="text-4xl font-bold mb-2">{t('title')}</h1>
+          <p className="text-xl opacity-90">{t('description')}</p>
           <div className="mt-4 flex gap-2 flex-wrap">
             <div className="badge badge-success badge-lg gap-2">
               <CheckCircleIcon className="w-4 h-4" />
@@ -151,6 +147,27 @@ export default function TX9AvailabilityPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        {/* API Warning Alert */}
+        <div className="alert alert-error mb-6">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="stroke-current shrink-0 h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <div>
+            <h3 className="font-bold">{t('apiWarning.title')}</h3>
+            <div className="text-sm">{t('apiWarning.description')}</div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Form */}
           <div>
@@ -186,7 +203,8 @@ export default function TX9AvailabilityPage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t('fromPostalCode')} <span className="text-error">*</span>
+                      {t('fromPostalCode')}{' '}
+                      <span className="text-error">*</span>
                     </span>
                   </label>
                   <input
@@ -289,17 +307,23 @@ export default function TX9AvailabilityPage() {
                       <table className="table table-sm">
                         <tbody>
                           <tr>
-                            <td className="font-semibold">{t('serviceIdLabel')}</td>
+                            <td className="font-semibold">
+                              {t('serviceIdLabel')}
+                            </td>
                             <td className="font-mono">
                               {availabilityResult.IdRukovanje}
                             </td>
                           </tr>
                           <tr>
-                            <td className="font-semibold">{t('serviceName')}</td>
+                            <td className="font-semibold">
+                              {t('serviceName')}
+                            </td>
                             <td>{availabilityResult.NazivUsluge}</td>
                           </tr>
                           <tr>
-                            <td className="font-semibold">{t('expectedDays')}</td>
+                            <td className="font-semibold">
+                              {t('expectedDays')}
+                            </td>
                             <td>
                               {availabilityResult.OcekivanoDana}{' '}
                               {getDaysLabel(availabilityResult.OcekivanoDana)}
@@ -319,7 +343,9 @@ export default function TX9AvailabilityPage() {
                   {/* Route Info */}
                   <div className="mt-4">
                     <div className="text-sm opacity-70">
-                      <div className="font-semibold mb-2">{t('routeLabel')}</div>
+                      <div className="font-semibold mb-2">
+                        {t('routeLabel')}
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="badge badge-outline">
                           {fromPostalCode}

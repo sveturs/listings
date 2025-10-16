@@ -398,15 +398,35 @@ type AddressValidationResponse struct {
 // TX 9 - ProveraDostupnostiUsluge (Проверка доступности услуги)
 // ========================================
 
+// AdresaUPS - структура адреса согласно официальной документации Post Express
+// Используется в TX 9 (ProveraDostupnostiUsluge)
+// Документация: https://www.posta.rs/wsp-help/transakcije/provera-dostupnosti-usluge.aspx
+type AdresaUPS struct {
+	IdNaselje int    `json:"IdNaselje"`           // ID населённого пункта (из TX 3)
+	Naselje   string `json:"Naselje,omitempty"`   // Название населённого пункта
+	IdUlica   int    `json:"IdUlica"`             // ID улицы (из TX 4)
+	Ulica     string `json:"Ulica,omitempty"`     // Название улицы
+	Broj      string `json:"Broj"`                // Номер дома ("-1" для BB, "-2" если только подbroj)
+	Podbroj   string `json:"Podbroj,omitempty"`   // Подномер (буква или дополнительный номер)
+	Sprat     string `json:"Sprat,omitempty"`     // Этаж
+	Stan      string `json:"Stan,omitempty"`      // Квартира
+	Pak       string `json:"Pak,omitempty"`       // Postal Address Code (PAK)
+	Reon      string `json:"Reon,omitempty"`      // Район
+	Posta     string `json:"Posta"`               // Почтовый индекс (5 цифр)
+	BrojFaha  string `json:"BrojFaha,omitempty"`  // Номер poštanski pregatak (для Vrsta="F")
+	Opstina   string `json:"Opstina,omitempty"`   // Муниципалитет
+	Napomena  string `json:"Napomena,omitempty"`  // Примечание
+	Vrsta     string `json:"Vrsta"`               // Тип адреса: S-стандартный, F-fah, P-post restant
+}
+
 // ServiceAvailabilityRequest - запрос проверки доступности услуги (TX 9)
+// ВАЖНО: Структура согласно официальной документации Post Express
+// Документация: https://www.posta.rs/wsp-help/transakcije/provera-dostupnosti-usluge.aspx
 type ServiceAvailabilityRequest struct {
-	TipAdrese              int    `json:"TipAdrese"`            // Тип адреса (0, 1, 2)
-	IdRukovanje            int    `json:"IdRukovanje"`          // ID услуги (29, 30, 55, 58, 59, 71, 85)
-	IdNaseljeOdlaska       int    `json:"IdNaseljeOdlaska"`     // ID населённого пункта отправления (ОБЯЗАТЕЛЬНО!)
-	IdNaseljeDolaska       int    `json:"IdNaseljeDolaska"`     // ID населённого пункта прибытия (ОБЯЗАТЕЛЬНО!)
-	PostanskiBrojOdlaska   string `json:"PostanskiBrojOdlaska"` // Почтовый индекс отправления
-	PostanskiBrojDolaska   string `json:"PostanskiBrojDolaska"` // Почтовый индекс прибытия
-	Datum                  string `json:"Datum,omitempty"`      // Дата (опционально, формат: YYYY-MM-DD)
+	TipAdrese   int       `json:"TipAdrese"`   // Тип адреса: 0-адрес забора, 1-адрес отправителя, 2-адрес получателя
+	IdRukovanje int       `json:"IdRukovanje"` // ID услуги (29, 30, 55, 58, 59, 71, 85)
+	Adresa      AdresaUPS `json:"Adresa"`      // ОБЯЗАТЕЛЬНО: Полная структура адреса
+	Datum       string    `json:"Datum,omitempty"` // Дата доставки (опционально, формат: DD.MM.YYYY)
 }
 
 // ServiceAvailabilityResponse - ответ проверки доступности услуги (TX 9)

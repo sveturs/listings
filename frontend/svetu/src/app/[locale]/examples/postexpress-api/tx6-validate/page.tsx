@@ -4,7 +4,11 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiClient } from '@/services/api-client';
 import RequestResponseDisplay from '@/components/postexpress/RequestResponseDisplay';
-import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export default function TX6ValidatePage() {
@@ -129,12 +133,8 @@ export default function TX6ValidatePage() {
             </svg>
             {t('back')}
           </Link>
-          <h1 className="text-4xl font-bold mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-xl opacity-90">
-            {t('description')}
-          </p>
+          <h1 className="text-4xl font-bold mb-2">{t('title')}</h1>
+          <p className="text-xl opacity-90">{t('description')}</p>
           <div className="mt-4 flex gap-2 flex-wrap">
             <div className="badge badge-success badge-lg gap-2">
               <CheckCircleIcon className="w-4 h-4" />
@@ -171,8 +171,7 @@ export default function TX6ValidatePage() {
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t('settlementId')}{' '}
-                      <span className="text-error">*</span>
+                      {t('settlementId')} <span className="text-error">*</span>
                     </span>
                   </label>
                   <input
@@ -346,7 +345,9 @@ export default function TX6ValidatePage() {
                             <td>{validationResult.NazivUlice}</td>
                           </tr>
                           <tr>
-                            <td className="font-semibold">{t('houseNumber')}</td>
+                            <td className="font-semibold">
+                              {t('houseNumber')}
+                            </td>
                             <td>{validationResult.Broj}</td>
                           </tr>
                           <tr>

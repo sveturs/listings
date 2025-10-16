@@ -78,7 +78,11 @@
     "daysLabel": "день | дня | дней",
     "note": "Примечание",
     "routeLabel": "Маршрут:",
-    "resultsPlaceholder": "Результаты появятся здесь после выполнения запроса"
+    "resultsPlaceholder": "Результаты появятся здесь после выполнения запроса",
+    "apiWarning": {
+      "title": "⚠️ Ограничение тестового окружения Post Express",
+      "description": "TX 9 требует реальные адреса улиц (IdUlica из TX 4). Однако тестовая база данных Post Express не содержит данных об улицах - TX 4 (GetStreets) возвращает пустые списки для всех населённых пунктов. Без IdUlica API трактует адрес как тип 'Postrestant' и отклоняет запрос с ошибкой: 'Kod adrese sa vrstom Postrestant treba da se šalju samo podaci pošte!'. Этот endpoint будет работать корректно в продакшен окружении, где база адресов заполнена. Альтернатива: используйте TX 73 (Создание посылки), который автоматически проверяет доступность услуги и возвращает стоимость доставки."
+    }
   },
   "tx6": {
     "title": "TX 6: ProveraAdrese (Валидация адреса)",
@@ -240,7 +244,7 @@
       },
       "tx11": {
         "title": "TX 11: Расчет стоимости",
-        "description": "Расчёт стоимости доставки с учётом веса и дополнительных услуг",
+        "description": "⚠️ Документирован, но имеет баг Database schema error на стороне Post Express. Используйте TX 73 для получения стоимости.",
         "pageTitle": "TX 11: PostarinaPosiljke (Расчёт стоимости)",
         "pageDescription": "Расчёт стоимости доставки с учётом веса и дополнительных услуг",
         "back": "Назад к списку тестов",
@@ -289,8 +293,8 @@
       "description": "Эти тесты работают, но имеют известные проблемы или ограничения. См. описание каждого теста для деталей."
     },
     "issueDescriptions": {
-      "tx11": "API возвращает некорректные данные при использовании сербского языка (sr-Latn-RS)",
-      "tx9": "Ошибка Post Express API: 'Podaci adrese nisu prosleđeni!' (Данные адреса не переданы). API требует дополнительные параметры адреса, которые не документированы.",
+      "tx11": "TX 11 документирован на https://www.posta.rs/wsp-help/transakcije/postarina-posiljke.aspx, но имеет баг в реализации. Database schema error: 'Column PREVOD_ does not belong to table Prevodi'. Альтернатива: TX 73 возвращает Postarina, но создаёт реальную посылку.",
+      "tx9": "Тестовая база данных Post Express не содержит данных об улицах (TX 4 GetStreets возвращает пустые списки). TX 9 требует IdUlica для валидации адреса, без него API отклоняет запрос с ошибкой 'Postrestant'. Работает в продакшене. Альтернатива: TX 73 автоматически проверяет доступность.",
       "tx73Cod": "Ошибка десериализации Post Express API в поле Otkupnina.Iznos. Не удается корректно сериализовать сумму откупа.",
       "tx73ParcelLocker": "Post Express API возвращает 400 Bad Request. Функциональность паккетоматов недоступна в тестовом окружении."
     },
@@ -316,6 +320,10 @@
   "tx11": {
     "title": "TX 11: Расчет стоимости",
     "description": "Расчёт стоимости доставки с учётом веса и дополнительных услуг",
+    "apiWarning": {
+      "title": "⚠️ TX 11 документирован, но имеет Database schema error",
+      "description": "TX 11 (PostarinaPosiljke) правильно задокументирован на https://www.posta.rs/wsp-help/transakcije/postarina-posiljke.aspx, но при вызове API возвращает ошибку Database schema: 'Column PREVOD_ does not belong to table Prevodi'. Это баг в реализации Post Express backend. Альтернатива: TX 73 (Manifest) автоматически возвращает поле Postarina при создании посылки, но это создаёт реальную посылку и не подходит для калькулятора стоимости без создания заказа."
+    },
     "pageTitle": "TX 11: PostarinaPosiljke (Расчёт стоимости)",
     "pageDescription": "Расчёт стоимости доставки с учётом веса и дополнительных услуг",
     "back": "Назад к списку тестов",

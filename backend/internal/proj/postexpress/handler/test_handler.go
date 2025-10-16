@@ -914,14 +914,88 @@ func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
 	h.logger.Debug("Resolved settlement IDs: from=%d (postal=%s), to=%d (postal=%s)",
 		idNaseljeOdlaska, req.FromPostalCode, idNaseljeDolaska, req.ToPostalCode)
 
-	wspReq := &postexpress.ServiceAvailabilityRequest{
-		TipAdrese:            0, // 0 = стандартный тип адреса
-		IdRukovanje:          req.ServiceID,
-		IdNaseljeOdlaska:     idNaseljeOdlaska, // Получено через TX3
-		IdNaseljeDolaska:     idNaseljeDolaska, // Получено через TX3
-		PostanskiBrojOdlaska: req.FromPostalCode,
-		PostanskiBrojDolaska: req.ToPostalCode,
-		Datum:                time.Now().Format("02.01.2006"), // Формат DD.MM.YYYY (Post Express требование)
+	// ВАЖНО: TX 9 требует РЕАЛЬНЫЕ IdNaselje и IdUlica!
+	// Без них Post Express API считает адрес Postrestant
+	// Получаем список улиц для населенного пункта получателя
+	// API требует минимум 2 символа для поиска, пробуем популярные префиксы
+	var wspReq *postexpress.ServiceAvailabilityRequest
+	var streetsResp *postexpress.GetStreetsResponse
+
+	// Пробуем несколько популярных префиксов улиц
+	prefixes := []string{"Ma", "Kr", "Ga", "Ba", "Ko", "Du"}
+	for _, prefix := range prefixes {
+		resp, err := h.wspClient.GetStreets(c.Context(), idNaseljeDolaska, prefix)
+		if err == nil && resp.Rezultat == 0 && len(resp.Ulice) > 0 {
+			h.logger.Debug("Found streets with prefix '%s': count=%d", prefix, len(resp.Ulice))
+			streetsResp = resp
+			break
+		}
+	}
+
+	// Проверяем результаты поиска улиц
+	if streetsResp == nil {
+		err = fmt.Errorf("no streets found with any prefix")
+	}
+
+	if err != nil {
+		h.logger.Info("Failed to get streets for settlement %d: %v, using fallback", idNaseljeDolaska, err)
+		// Fallback: используем название населенного пункта
+		settName := ""
+		switch idNaseljeDolaska {
+		case 100001:
+			settName = "Beograd"
+		case 100039:
+			settName = "Novi Sad"
+		case 100040:
+			settName = "Niš"
+		case 100004:
+			settName = "Kragujevac"
+		case 100041:
+			settName = "Kragujevac"
+		}
+
+		wspReq = &postexpress.ServiceAvailabilityRequest{
+			TipAdrese:   2,
+			IdRukovanje: req.ServiceID,
+			Adresa: postexpress.AdresaUPS{
+				IdNaselje: idNaseljeDolaska,
+				Naselje:   settName,
+				IdUlica:   0,
+				Ulica:     "",
+				Broj:      "1",
+				Posta:     req.ToPostalCode,
+				Vrsta:     "S",
+			},
+			Datum: time.Now().Format("02.01.2006"),
+		}
+	} else if streetsResp.Rezultat == 0 && len(streetsResp.Ulice) > 0 {
+		// Используем первую найденную улицу
+		firstStreet := streetsResp.Ulice[0]
+		idUlica := firstStreet.Id
+		if idUlica == 0 {
+			idUlica = firstStreet.IdUlica
+		}
+
+		h.logger.Debug("Using street for TX 9: IdUlica=%d, Name=%s", idUlica, firstStreet.Naziv)
+
+		wspReq = &postexpress.ServiceAvailabilityRequest{
+			TipAdrese:   2, // 2 = адрес получателя (primalac)
+			IdRukovanje: req.ServiceID,
+			Adresa: postexpress.AdresaUPS{
+				IdNaselje: idNaseljeDolaska,   // ID населённого пункта
+				Naselje:   "",                 // Можно не указывать если есть IdNaselje
+				IdUlica:   idUlica,            // ВАЖНО: Реальный ID улицы!
+				Ulica:     firstStreet.Naziv,  // Название улицы
+				Broj:      "1",                // Номер дома
+				Posta:     req.ToPostalCode,   // Почтовый индекс
+				Vrsta:     "S",                // S = стандартная адреса
+			},
+			Datum: time.Now().Format("02.01.2006"), // Формат DD.MM.YYYY
+		}
+	} else {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.no_streets_found", fiber.Map{
+			"settlement_id": idNaseljeDolaska,
+		})
 	}
 
 	resp, err := h.wspClient.CheckServiceAvailability(c.Context(), wspReq)

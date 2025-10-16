@@ -126,12 +126,8 @@ export default function TX4StreetsPage() {
             </svg>
             {t('back') || 'Back'}
           </Link>
-          <h1 className="text-4xl font-bold mb-2">
-            {t('title')}
-          </h1>
-          <p className="text-xl opacity-90">
-            {t('description')}
-          </p>
+          <h1 className="text-4xl font-bold mb-2">{t('title')}</h1>
+          <p className="text-xl opacity-90">{t('description')}</p>
           <div className="mt-4 flex gap-2 flex-wrap">
             <div className="badge badge-success badge-lg gap-2">
               <CheckCircleIcon className="w-4 h-4" />
@@ -151,14 +147,15 @@ export default function TX4StreetsPage() {
               className="card bg-base-100 shadow-xl"
             >
               <div className="card-body">
-                <h2 className="card-title text-2xl mb-4">{t('formTitle') || 'Search Parameters'}</h2>
+                <h2 className="card-title text-2xl mb-4">
+                  {t('formTitle') || 'Search Parameters'}
+                </h2>
 
                 {/* Settlement ID */}
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t('settlementId')}{' '}
-                      <span className="text-error">*</span>
+                      {t('settlementId')} <span className="text-error">*</span>
                     </span>
                   </label>
                   <input

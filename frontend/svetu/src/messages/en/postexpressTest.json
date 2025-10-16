@@ -78,7 +78,11 @@
     "daysLabel": "day | days | days",
     "note": "Note",
     "routeLabel": "Route:",
-    "resultsPlaceholder": "Results will appear here after request execution"
+    "resultsPlaceholder": "Results will appear here after request execution",
+    "apiWarning": {
+      "title": "⚠️ Post Express Test Environment Limitation",
+      "description": "TX 9 requires real street addresses (IdUlica from TX 4). However, Post Express test database does not contain any street data - TX 4 (GetStreets) returns empty lists for all settlements. Without IdUlica, the API treats addresses as 'Postrestant' type and rejects the request with error: 'Kod adrese sa vrstom Postrestant treba da se šalju samo podaci pošte!'. This endpoint will work correctly in production environment where the address database is populated. Alternative: Use TX 73 (Create Shipment) which automatically validates service availability and returns delivery cost."
+    }
   },
   "tx6": {
     "title": "TX 6: ProveraAdrese (Address Validation)",
@@ -240,7 +244,7 @@
       },
       "tx11": {
         "title": "TX 11: Cost Calculation",
-        "description": "Calculate delivery cost with weight and additional services",
+        "description": "⚠️ Documented but has Database schema error bug on Post Express side. Use TX 73 to get cost.",
         "pageTitle": "TX 11: PostarinaPosiljke (Cost Calculation)",
         "pageDescription": "Calculate delivery cost including weight and additional services",
         "back": "Back to test list",
@@ -289,8 +293,8 @@
       "description": "These tests work but have known issues or limitations. See each test description for details."
     },
     "issueDescriptions": {
-      "tx11": "API returns incorrect data when using Serbian language (sr-Latn-RS)",
-      "tx9": "Post Express API error: 'Podaci adrese nisu prosleđeni!' (Address data not provided). API requires additional address parameters that are not documented.",
+      "tx11": "TX 11 is documented at https://www.posta.rs/wsp-help/transakcije/postarina-posiljke.aspx but has implementation bug. Database schema error: 'Column PREVOD_ does not belong to table Prevodi'. Alternative: TX 73 returns Postarina, but creates real shipment.",
+      "tx9": "Post Express test database contains no street data (TX 4 GetStreets returns empty lists). TX 9 requires IdUlica for address validation, without it API rejects with 'Postrestant' error. Works in production. Alternative: TX 73 validates availability automatically.",
       "tx73Cod": "Post Express API deserialization error in Otkupnina.Iznos field. Cannot serialize COD amount correctly.",
       "tx73ParcelLocker": "Post Express API returns 400 Bad Request. Parcel locker functionality appears to be unavailable in test environment."
     },
@@ -316,6 +320,10 @@
   "tx11": {
     "title": "TX 11: Cost Calculation",
     "description": "Calculate delivery cost with weight and additional services",
+    "apiWarning": {
+      "title": "⚠️ TX 11 is documented but has Database schema error",
+      "description": "TX 11 (PostarinaPosiljke) is properly documented at https://www.posta.rs/wsp-help/transakcije/postarina-posiljke.aspx, but API returns Database schema error: 'Column PREVOD_ does not belong to table Prevodi'. This is an implementation bug on Post Express backend side. Alternative: TX 73 (Manifest) automatically returns Postarina field when creating shipment, but this creates real shipment and is not suitable for cost calculator without order creation."
+    },
     "pageTitle": "TX 11: PostarinaPosiljke (Cost Calculation)",
     "pageDescription": "Calculate delivery cost including weight and additional services",
     "back": "Back to test list",
