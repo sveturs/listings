@@ -80,10 +80,21 @@ func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
 	}
 
 	// Валидация обязательных полей
-	if req.RecipientName == "" || req.RecipientPhone == "" || req.RecipientCity == "" {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_recipient_data", fiber.Map{
-			"missing_fields": []string{"recipient_name", "recipient_phone", "recipient_city"},
-		})
+	// Для parcel locker (IdRukovanje=85) не требуется адрес получателя
+	if req.IdRukovanje == 85 {
+		// Для паккетомата нужны только имя, телефон и код паккетомата
+		if req.RecipientName == "" || req.RecipientPhone == "" || req.ParcelLockerCode == "" {
+			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_parcel_locker_data", fiber.Map{
+				"missing_fields": []string{"recipient_name", "recipient_phone", "parcel_locker_code"},
+			})
+		}
+	} else {
+		// Для обычной доставки нужны полные данные получателя
+		if req.RecipientName == "" || req.RecipientPhone == "" || req.RecipientCity == "" {
+			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_recipient_data", fiber.Map{
+				"missing_fields": []string{"recipient_name", "recipient_phone", "recipient_city"},
+			})
+		}
 	}
 
 	if req.SenderName == "" || req.SenderCity == "" {
