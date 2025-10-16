@@ -16,40 +16,40 @@ const (
 )
 
 type Config struct {
-	Port                      string
-	DatabaseURL               string
-	GoogleClientID            string
-	GoogleClientSecret        string
-	GoogleRedirectURL         string
-	FrontendURL               string
-	AuthServiceURL            string
-	AuthServicePublicKeyPath  string // Path to auth service public key for JWT validation
-	BackendURL                string
-	Environment               string
-	LogLevel                  string `yaml:"log_level"`
-	OpenAIAPIKey              string
-	GoogleTranslateAPIKey     string
-	ClaudeAPIKey              string
-	DeepLAPIKey               string
-	DeepLUseFreeAPI           bool `yaml:"deepl_use_free_api"`
-	StripeAPIKey              string
-	StripeWebhookSecret       string
-	OpenSearch                OpenSearchConfig  `yaml:"opensearch"`
-	FileStorage               FileStorageConfig `yaml:"file_storage"`
-	FileUpload                FileUploadConfig  `yaml:"file_upload"`
-	MinIOPublicURL            string
-	Docs                      DocsConfig        `yaml:"docs"`
-	AllSecure                 AllSecureConfig   `yaml:"allsecure"`
-	PostExpress               PostExpressConfig `yaml:"postexpress"`
-	BEXAuthToken              string            `yaml:"bex_auth_token"`
-	BEXClientID               string            `yaml:"bex_client_id"`
-	BEXAPIURL                 string            `yaml:"bex_api_url"`
-	SearchWeights             *SearchWeights    `yaml:"search_weights"`
-	Redis                     RedisConfig       `yaml:"redis"`
-	MigrationsOnAPI           string            `yaml:"migrations_on_api"` // off, schema, full
-	ReindexOnAPI              string            `yaml:"reindex_on_api"`    // on
-	FeatureFlags              *FeatureFlags     `yaml:"feature_flags"`
-	Currency                  CurrencyConfig    `yaml:"currency"`
+	Port                     string
+	DatabaseURL              string
+	GoogleClientID           string
+	GoogleClientSecret       string
+	GoogleRedirectURL        string
+	FrontendURL              string
+	AuthServiceURL           string
+	AuthServicePublicKeyPath string // Path to auth service public key for JWT validation
+	BackendURL               string
+	Environment              string
+	LogLevel                 string `yaml:"log_level"`
+	OpenAIAPIKey             string
+	GoogleTranslateAPIKey    string
+	ClaudeAPIKey             string
+	DeepLAPIKey              string
+	DeepLUseFreeAPI          bool `yaml:"deepl_use_free_api"`
+	StripeAPIKey             string
+	StripeWebhookSecret      string
+	OpenSearch               OpenSearchConfig  `yaml:"opensearch"`
+	FileStorage              FileStorageConfig `yaml:"file_storage"`
+	FileUpload               FileUploadConfig  `yaml:"file_upload"`
+	MinIOPublicURL           string
+	Docs                     DocsConfig        `yaml:"docs"`
+	AllSecure                AllSecureConfig   `yaml:"allsecure"`
+	PostExpress              PostExpressConfig `yaml:"postexpress"`
+	BEXAuthToken             string            `yaml:"bex_auth_token"`
+	BEXClientID              string            `yaml:"bex_client_id"`
+	BEXAPIURL                string            `yaml:"bex_api_url"`
+	SearchWeights            *SearchWeights    `yaml:"search_weights"`
+	Redis                    RedisConfig       `yaml:"redis"`
+	MigrationsOnAPI          string            `yaml:"migrations_on_api"` // off, schema, full
+	ReindexOnAPI             string            `yaml:"reindex_on_api"`    // on
+	FeatureFlags             *FeatureFlags     `yaml:"feature_flags"`
+	Currency                 CurrencyConfig    `yaml:"currency"`
 }
 
 type FileStorageConfig struct {

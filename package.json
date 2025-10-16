@@ -1,4 +1,8 @@
 {
+  "name": "svetu-monorepo",
+  "version": "0.2.4",
+  "private": true,
+  "license": "UNLICENSED",
   "dependencies": {
     "playwright": "^1.54.2"
   },

@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"backend/internal/domain"
 	"backend/internal/domain/models"
 	"backend/internal/storage/postgres"
 )
@@ -79,7 +80,7 @@ func (s *UnifiedAttributeService) SaveAttributeValues(ctx context.Context, entit
 	for attributeID, value := range values {
 		// Валидируем значение
 		if err := s.ValidateAttributeValue(ctx, attributeID, value); err != nil {
-			return fmt.Errorf("validation failed for attribute %d: %w", attributeID, err)
+			return fmt.Errorf("%w: attribute %d: %w", domain.ErrValidationFailed, attributeID, err)
 		}
 	}
 

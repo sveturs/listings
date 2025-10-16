@@ -265,14 +265,7 @@ class ConfigManager {
       return path;
     }
 
-    // Логируем предупреждение для отладки - не должно происходить с новым backend
-    console.warn(
-      'buildImageUrl получил относительный путь:',
-      path,
-      'Backend должен возвращать полные URL'
-    );
-
-    // Обратная совместимость для старых данных
+    // Обратная совместимость для старых данных (backend иногда возвращает относительные пути)
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     const config = this.getConfig();
     const minioUrl = config.storage.minioUrl;
