@@ -803,6 +803,9 @@ func (c *WSPClientImpl) CheckServiceAvailability(ctx context.Context, req *poste
 		return nil, fmt.Errorf("failed to marshal CheckServiceAvailability request: %w", err)
 	}
 
+	// Логируем JSON запроса для диагностики
+	c.logger.Debug("CheckServiceAvailability request JSON: %s", string(inputData))
+
 	txReq := &models.TransactionRequest{
 		TransactionType: 9, // ProveraDostupnostiUsluge
 		InputData:       string(inputData),

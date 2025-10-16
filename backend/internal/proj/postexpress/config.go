@@ -69,6 +69,10 @@ func LoadConfig() (*Config, error) {
 
 	// COD Configuration
 	bankAccount := os.Getenv("POST_EXPRESS_BANK_ACCOUNT")
+	if bankAccount == "" {
+		// Тестовый банковский счёт для COD (замените на реальный в production!)
+		bankAccount = "160-12345678-90" // default test bank account
+	}
 	paymentCode := os.Getenv("POST_EXPRESS_PAYMENT_CODE")
 	if paymentCode == "" {
 		paymentCode = "189" // default payment code

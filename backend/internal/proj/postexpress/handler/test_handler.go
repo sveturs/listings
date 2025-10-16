@@ -861,13 +861,36 @@ func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
 	h.logger.Info("Testing TX 9 CheckServiceAvailability: service_id=%d, from=%s, to=%s",
 		req.ServiceID, req.FromPostalCode, req.ToPostalCode)
 
+	// Получаем IdNaselje для отправления и прибытия через TX3
+	idNaseljeOdlaska, err := h.getSettlementIDByPostalCode(c.Context(), req.FromPostalCode)
+	if err != nil {
+		h.logger.Error("Failed to get settlement ID for from postal code %s: %v", req.FromPostalCode, err)
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_from_postal_code", fiber.Map{
+			"postal_code": req.FromPostalCode,
+			"error":       err.Error(),
+		})
+	}
+
+	idNaseljeDolaska, err := h.getSettlementIDByPostalCode(c.Context(), req.ToPostalCode)
+	if err != nil {
+		h.logger.Error("Failed to get settlement ID for to postal code %s: %v", req.ToPostalCode, err)
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_to_postal_code", fiber.Map{
+			"postal_code": req.ToPostalCode,
+			"error":       err.Error(),
+		})
+	}
+
+	h.logger.Debug("Resolved settlement IDs: from=%d (postal=%s), to=%d (postal=%s)",
+		idNaseljeOdlaska, req.FromPostalCode, idNaseljeDolaska, req.ToPostalCode)
+
 	wspReq := &postexpress.ServiceAvailabilityRequest{
-		TipAdrese:            0,                   // 0 = стандартный тип адреса
+		TipAdrese:            0, // 0 = стандартный тип адреса
 		IdRukovanje:          req.ServiceID,
-		IdNaseljeOdlaska:     100001,              // Белград (11000) - hardcoded для теста
-		IdNaseljeDolaska:     100039,              // Нови Сад (21000) - hardcoded для теста
+		IdNaseljeOdlaska:     idNaseljeOdlaska, // Получено через TX3
+		IdNaseljeDolaska:     idNaseljeDolaska, // Получено через TX3
 		PostanskiBrojOdlaska: req.FromPostalCode,
 		PostanskiBrojDolaska: req.ToPostalCode,
+		Datum:                time.Now().Format("02.01.2006"), // Формат DD.MM.YYYY (Post Express требование)
 	}
 
 	resp, err := h.wspClient.CheckServiceAvailability(c.Context(), wspReq)
@@ -984,4 +1007,57 @@ func (h *Handler) TestCalculatePostage(c *fiber.Ctx) error {
 		resp.Postarina, float64(resp.Postarina)/100.0, resp.Rezultat)
 
 	return utils.SendSuccessResponse(c, result, fmt.Sprintf("TX 11: Postage: %.2f RSD (Rezultat: %d)", float64(resp.Postarina)/100.0, resp.Rezultat))
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+// getSettlementIDByPostalCode получает IdNaselje по почтовому индексу через TX3
+func (h *Handler) getSettlementIDByPostalCode(ctx context.Context, postalCode string) (int, error) {
+	// Mapping популярных почтовых кодов (оптимизация для часто используемых)
+	knownPostalCodes := map[string]int{
+		"11000": 100001, // Beograd
+		"21000": 100039, // Novi Sad
+		"18000": 100040, // Niš
+		"34000": 100041, // Kragujevac
+		"31000": 100042, // Užice
+	}
+
+	// Проверяем известные коды
+	if id, ok := knownPostalCodes[postalCode]; ok {
+		h.logger.Debug("Using known postal code mapping: %s -> %d", postalCode, id)
+		return id, nil
+	}
+
+	// Для неизвестных кодов пробуем поиск через API
+	// TX3 требует минимум 2 символа, используем широкий поиск
+	searchQueries := []string{
+		"Be", "No", "Ni", "Kr", "Su", "Pa", "Le", "Sm", "Va", "Za",
+	}
+
+	for _, query := range searchQueries {
+		resp, err := h.wspClient.GetSettlements(ctx, query)
+		if err != nil {
+			continue
+		}
+
+		if resp.Rezultat != 0 {
+			continue
+		}
+
+		// Ищем населенный пункт с нужным почтовым индексом
+		for _, naselje := range resp.Naselja {
+			if naselje.PostanskiBroj == postalCode {
+				id := naselje.Id
+				if id == 0 {
+					id = naselje.IdNaselje
+				}
+				h.logger.Info("Found settlement for postal code %s: Id=%d, Naziv=%s", postalCode, id, naselje.Naziv)
+				return id, nil
+			}
+		}
+	}
+
+	return 0, fmt.Errorf("settlement not found for postal code: %s (tried multiple searches)", postalCode)
 }
