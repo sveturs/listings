@@ -168,9 +168,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, pkgErrors.Wrap(err, "failed to create auth client")
 	}
 
-	// Create auth service with client and logger
+	// Create auth service with local JWT validation (automatically fetches public key from auth service)
 	zerologLogger := *logger.Get()
-	authServiceInstance := authService.NewAuthService(authClient, zerologLogger)
+	authServiceInstance := authService.NewAuthServiceWithLocalValidation(authClient, zerologLogger)
+	logger.Info().
+		Str("auth_service_url", cfg.AuthServiceURL).
+		Msg("Auth service initialized with local JWT validation (public key will be fetched from auth service)")
+
 	userServiceInstance := authService.NewUserService(authClient, zerologLogger)
 	oauthServiceInstance := authService.NewOAuthService(authClient)
 
