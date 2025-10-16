@@ -393,7 +393,7 @@ export default function TX73ParcelLockerPage() {
                         placeholder={t('shipment.weightPlaceholder')}
                         min="100"
                         max="20000"
-                        step="100"
+                        step="1"
                         required
                       />
                     </div>
@@ -425,7 +425,7 @@ export default function TX73ParcelLockerPage() {
                         }
                         placeholder={t('shipment.insuredValuePlaceholder')}
                         min="0"
-                        step="100"
+                        step="1"
                       />
                     </div>
                     <div className="form-control">

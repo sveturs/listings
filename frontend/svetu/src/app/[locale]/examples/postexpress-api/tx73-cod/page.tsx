@@ -414,7 +414,7 @@ export default function TX73CODPage() {
                         placeholder={t('shipment.weightPlaceholder')}
                         min="100"
                         max="20000"
-                        step="100"
+                        step="1"
                         required
                       />
                     </div>
@@ -445,7 +445,7 @@ export default function TX73CODPage() {
                         onChange={(e) => setCodAmount(Number(e.target.value))}
                         placeholder={t('shipment.codAmountPlaceholder')}
                         min="100"
-                        step="100"
+                        step="1"
                         required
                       />
                     </div>
@@ -464,7 +464,7 @@ export default function TX73CODPage() {
                         }
                         placeholder={t('shipment.insuredValuePlaceholder')}
                         min="0"
-                        step="100"
+                        step="1"
                       />
                     </div>
                     <div className="form-control">
