@@ -289,7 +289,10 @@
       "description": "These tests work but have known issues or limitations. See each test description for details."
     },
     "issueDescriptions": {
-      "tx11": "API returns incorrect data when using Serbian language (sr-Latn-RS)"
+      "tx11": "API returns incorrect data when using Serbian language (sr-Latn-RS)",
+      "tx9": "Post Express API error: 'Podaci adrese nisu prosleđeni!' (Address data not provided). API requires additional address parameters that are not documented.",
+      "tx73Cod": "Post Express API deserialization error in Otkupnina.Iznos field. Cannot serialize COD amount correctly.",
+      "tx73ParcelLocker": "Post Express API returns 400 Bad Request. Parcel locker functionality appears to be unavailable in test environment."
     },
     "about": {
       "title": "About test suite",

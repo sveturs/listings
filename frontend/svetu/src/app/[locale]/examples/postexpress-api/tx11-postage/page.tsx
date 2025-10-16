@@ -231,7 +231,7 @@ export default function TX11PostagePage() {
                     onChange={(e) => setWeight(Number(e.target.value))}
                     min="1"
                     max="30000"
-                    step="1"
+                    step="100"
                     required
                   />
                   <label className="label">

@@ -129,7 +129,7 @@ export default function PostExpressAPIIndexPage() {
       href: '/examples/postexpress-api/tx3-settlements',
       icon: <MagnifyingGlassIcon className="w-8 h-8" />,
       status: 'working',
-      responseTime: 122,
+      responseTime: 147,
     },
     {
       title: t('tests.tx4.title'),
@@ -137,7 +137,7 @@ export default function PostExpressAPIIndexPage() {
       href: '/examples/postexpress-api/tx4-streets',
       icon: <MapIcon className="w-8 h-8" />,
       status: 'working',
-      responseTime: 95,
+      responseTime: 196,
     },
     {
       title: t('tests.tx6.title'),
@@ -145,15 +145,7 @@ export default function PostExpressAPIIndexPage() {
       href: '/examples/postexpress-api/tx6-validate',
       icon: <CheckCircleIcon className="w-8 h-8" />,
       status: 'working',
-      responseTime: 88,
-    },
-    {
-      title: t('tests.tx9.title'),
-      description: t('tests.tx9.description'),
-      href: '/examples/postexpress-api/tx9-availability',
-      icon: <TruckIcon className="w-8 h-8" />,
-      status: 'working',
-      responseTime: 112,
+      responseTime: 157,
     },
     {
       title: t('tests.tx73Standard.title'),
@@ -161,23 +153,7 @@ export default function PostExpressAPIIndexPage() {
       href: '/examples/postexpress-api/tx73-standard',
       icon: <TruckIcon className="w-8 h-8" />,
       status: 'working',
-      responseTime: 403,
-    },
-    {
-      title: t('tests.tx73Cod.title'),
-      description: t('tests.tx73Cod.description'),
-      href: '/examples/postexpress-api/tx73-cod',
-      icon: <CurrencyDollarIcon className="w-8 h-8" />,
-      status: 'working',
-      responseTime: 421,
-    },
-    {
-      title: t('tests.tx73ParcelLocker.title'),
-      description: t('tests.tx73ParcelLocker.description'),
-      href: '/examples/postexpress-api/tx73-parcel-locker',
-      icon: <BuildingStorefrontIcon className="w-8 h-8" />,
-      status: 'working',
-      responseTime: 387,
+      responseTime: 71,
     },
   ];
 
@@ -189,13 +165,38 @@ export default function PostExpressAPIIndexPage() {
       href: '/examples/postexpress-api/tx11-postage',
       icon: <CurrencyDollarIcon className="w-8 h-8" />,
       status: 'issues',
-      responseTime: 156,
+      responseTime: 81,
       issueDescription: t('issueDescriptions.tx11'),
     },
   ];
 
-  // Нерабочие тесты (пока пустой массив)
-  const notWorkingTests: TestCardProps[] = [];
+  // Нерабочие тесты
+  const notWorkingTests: TestCardProps[] = [
+    {
+      title: t('tests.tx9.title'),
+      description: t('tests.tx9.description'),
+      href: '/examples/postexpress-api/tx9-availability',
+      icon: <TruckIcon className="w-8 h-8" />,
+      status: 'not_working',
+      issueDescription: t('issueDescriptions.tx9'),
+    },
+    {
+      title: t('tests.tx73Cod.title'),
+      description: t('tests.tx73Cod.description'),
+      href: '/examples/postexpress-api/tx73-cod',
+      icon: <CurrencyDollarIcon className="w-8 h-8" />,
+      status: 'not_working',
+      issueDescription: t('issueDescriptions.tx73Cod'),
+    },
+    {
+      title: t('tests.tx73ParcelLocker.title'),
+      description: t('tests.tx73ParcelLocker.description'),
+      href: '/examples/postexpress-api/tx73-parcel-locker',
+      icon: <BuildingStorefrontIcon className="w-8 h-8" />,
+      status: 'not_working',
+      issueDescription: t('issueDescriptions.tx73ParcelLocker'),
+    },
+  ];
 
   const totalTests =
     workingTests.length + testsWithIssues.length + notWorkingTests.length;
