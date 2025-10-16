@@ -155,6 +155,22 @@ export default function PostExpressAPIIndexPage() {
       status: 'working',
       responseTime: 71,
     },
+    {
+      title: t('tests.tx73Cod.title'),
+      description: t('tests.tx73Cod.description'),
+      href: '/examples/postexpress-api/tx73-cod',
+      icon: <CurrencyDollarIcon className="w-8 h-8" />,
+      status: 'working',
+      responseTime: 19121,
+    },
+    {
+      title: t('tests.tx73ParcelLocker.title'),
+      description: t('tests.tx73ParcelLocker.description'),
+      href: '/examples/postexpress-api/tx73-parcel-locker',
+      icon: <BuildingStorefrontIcon className="w-8 h-8" />,
+      status: 'working',
+      responseTime: 401,
+    },
   ];
 
   // Тесты с недостатками
@@ -179,22 +195,6 @@ export default function PostExpressAPIIndexPage() {
       icon: <TruckIcon className="w-8 h-8" />,
       status: 'not_working',
       issueDescription: t('issueDescriptions.tx9'),
-    },
-    {
-      title: t('tests.tx73Cod.title'),
-      description: t('tests.tx73Cod.description'),
-      href: '/examples/postexpress-api/tx73-cod',
-      icon: <CurrencyDollarIcon className="w-8 h-8" />,
-      status: 'not_working',
-      issueDescription: t('issueDescriptions.tx73Cod'),
-    },
-    {
-      title: t('tests.tx73ParcelLocker.title'),
-      description: t('tests.tx73ParcelLocker.description'),
-      href: '/examples/postexpress-api/tx73-parcel-locker',
-      icon: <BuildingStorefrontIcon className="w-8 h-8" />,
-      status: 'not_working',
-      issueDescription: t('issueDescriptions.tx73ParcelLocker'),
     },
   ];
 
