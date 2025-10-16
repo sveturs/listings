@@ -69,8 +69,8 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('min');
-    const maxInput = screen.getByPlaceholderText('max');
+    const minInput = screen.getByPlaceholderText('create.min');
+    const maxInput = screen.getByPlaceholderText('create.max');
 
     expect(minInput).toBeInTheDocument();
     expect(maxInput).toBeInTheDocument();
@@ -100,7 +100,7 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('min');
+    const minInput = screen.getByPlaceholderText('create.min');
     await user.type(minInput, '100');
 
     expect(mockOnChange).toHaveBeenCalledWith({
@@ -119,7 +119,7 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const maxInput = screen.getByPlaceholderText('max');
+    const maxInput = screen.getByPlaceholderText('create.max');
     await user.type(maxInput, '500');
 
     expect(mockOnChange).toHaveBeenCalledWith({
@@ -138,8 +138,8 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('min');
-    const maxInput = screen.getByPlaceholderText('max');
+    const minInput = screen.getByPlaceholderText('create.min');
+    const maxInput = screen.getByPlaceholderText('create.max');
 
     await user.type(minInput, '100');
     await user.type(maxInput, '500');
@@ -160,13 +160,13 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('min');
-    const maxInput = screen.getByPlaceholderText('max');
+    const minInput = screen.getByPlaceholderText('create.min');
+    const maxInput = screen.getByPlaceholderText('create.max');
 
     await user.type(minInput, '600');
     await user.type(maxInput, '400');
 
-    expect(screen.getByText('minGreaterThanMax')).toBeInTheDocument();
+    expect(screen.getByText('create.minGreaterThanMax')).toBeInTheDocument();
     expect(minInput).toHaveClass('input-error');
     expect(maxInput).toHaveClass('input-error');
   });
@@ -194,8 +194,8 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('min') as HTMLInputElement;
-    const maxInput = screen.getByPlaceholderText('max') as HTMLInputElement;
+    const minInput = screen.getByPlaceholderText('create.min') as HTMLInputElement;
+    const maxInput = screen.getByPlaceholderText('create.max') as HTMLInputElement;
 
     expect(minInput.value).toBe('100');
     expect(maxInput.value).toBe('500');
@@ -211,8 +211,8 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('min') as HTMLInputElement;
-    const maxInput = screen.getByPlaceholderText('max') as HTMLInputElement;
+    const minInput = screen.getByPlaceholderText('create.min') as HTMLInputElement;
+    const maxInput = screen.getByPlaceholderText('create.max') as HTMLInputElement;
 
     expect(minInput.value).toBe('200');
     expect(maxInput.value).toBe('800');
@@ -227,7 +227,7 @@ describe('RangeAttribute', () => {
       />
     );
 
-    expect(screen.getByText(/allowedRange: 0 - 1000 \$/)).toBeInTheDocument();
+    expect(screen.getByText(/create.allowedRange: 0 - 1000 \$/)).toBeInTheDocument();
   });
 
   it('displays only min allowed when only min_value is defined', () => {
@@ -244,7 +244,7 @@ describe('RangeAttribute', () => {
       />
     );
 
-    expect(screen.getByText(/minAllowed: 0 \$/)).toBeInTheDocument();
+    expect(screen.getByText(/create.minAllowed: 0 \$/)).toBeInTheDocument();
   });
 
   it('displays only max allowed when only max_value is defined', () => {
@@ -261,7 +261,7 @@ describe('RangeAttribute', () => {
       />
     );
 
-    expect(screen.getByText(/maxAllowed: 1000 \$/)).toBeInTheDocument();
+    expect(screen.getByText(/create.maxAllowed: 1000 \$/)).toBeInTheDocument();
   });
 
   it('sets min and max attributes on inputs', () => {
@@ -273,8 +273,8 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('min');
-    const maxInput = screen.getByPlaceholderText('max');
+    const minInput = screen.getByPlaceholderText('create.min');
+    const maxInput = screen.getByPlaceholderText('create.max');
 
     expect(minInput).toHaveAttribute('min', '0');
     expect(minInput).toHaveAttribute('max', '1000');
@@ -293,7 +293,7 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('min');
+    const minInput = screen.getByPlaceholderText('create.min');
     await user.clear(minInput);
 
     expect(mockOnChange).toHaveBeenCalledWith({
@@ -314,7 +314,7 @@ describe('RangeAttribute', () => {
     );
 
     expect(screen.getByText('Some error')).toBeInTheDocument();
-    expect(screen.queryByText('minGreaterThanMax')).not.toBeInTheDocument();
+    expect(screen.queryByText('create.minGreaterThanMax')).not.toBeInTheDocument();
   });
 
   it('renders without unit when not provided', () => {

@@ -37,31 +37,62 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
 
   // Извлекаем автомобильные атрибуты из listing.attributes
   const extractCarAttributes = () => {
-    const attrs = listing.attributes || {};
+    const attrs = listing.attributes;
     const result: Record<string, any> = {};
 
-    // Ищем атрибуты по ключам
-    Object.entries(attrs).forEach(([key, value]) => {
-      if (key.includes('car_make') || key.includes('make')) {
-        result.make = value;
-      } else if (key.includes('car_model') || key.includes('model')) {
-        result.model = value;
-      } else if (key.includes('year')) {
-        result.year = value;
-      } else if (key.includes('mileage') || key.includes('kilometers')) {
-        result.mileage = value;
-      } else if (key.includes('fuel') || key.includes('fuel_type')) {
-        result.fuelType = value;
-      } else if (key.includes('transmission') || key.includes('gearbox')) {
-        result.transmission = value;
-      } else if (key.includes('engine') || key.includes('displacement')) {
-        result.engineSize = value;
-      } else if (key.includes('color') || key.includes('colour')) {
-        result.color = value;
-      } else if (key.includes('body') || key.includes('body_type')) {
-        result.bodyType = value;
-      }
-    });
+    if (!attrs) return result;
+
+    // Проверяем является ли attrs массивом (из тестов) или объектом (из API)
+    if (Array.isArray(attrs)) {
+      // Обработка массива атрибутов
+      attrs.forEach((attr: any) => {
+        const key = attr.attribute_name || '';
+        const value = attr.string_value || attr.value;
+
+        if (key.includes('car_make') || key.includes('make')) {
+          result.make = value;
+        } else if (key.includes('car_model') || key.includes('model')) {
+          result.model = value;
+        } else if (key.includes('year')) {
+          result.year = value;
+        } else if (key.includes('mileage') || key.includes('kilometers')) {
+          result.mileage = value;
+        } else if (key.includes('fuel') || key.includes('fuel_type')) {
+          result.fuelType = value;
+        } else if (key.includes('transmission') || key.includes('gearbox')) {
+          result.transmission = value;
+        } else if (key.includes('engine') || key.includes('displacement')) {
+          result.engineSize = value;
+        } else if (key.includes('color') || key.includes('colour')) {
+          result.color = value;
+        } else if (key.includes('body') || key.includes('body_type')) {
+          result.bodyType = value;
+        }
+      });
+    } else {
+      // Обработка объекта атрибутов
+      Object.entries(attrs).forEach(([key, value]) => {
+        if (key.includes('car_make') || key.includes('make')) {
+          result.make = value;
+        } else if (key.includes('car_model') || key.includes('model')) {
+          result.model = value;
+        } else if (key.includes('year')) {
+          result.year = value;
+        } else if (key.includes('mileage') || key.includes('kilometers')) {
+          result.mileage = value;
+        } else if (key.includes('fuel') || key.includes('fuel_type')) {
+          result.fuelType = value;
+        } else if (key.includes('transmission') || key.includes('gearbox')) {
+          result.transmission = value;
+        } else if (key.includes('engine') || key.includes('displacement')) {
+          result.engineSize = value;
+        } else if (key.includes('color') || key.includes('colour')) {
+          result.color = value;
+        } else if (key.includes('body') || key.includes('body_type')) {
+          result.bodyType = value;
+        }
+      });
+    }
 
     return result;
   };

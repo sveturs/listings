@@ -74,7 +74,7 @@ describe('TranslationStatus', () => {
     render(<TranslationStatus entityType="category" entityId={1} />);
 
     await waitFor(() => {
-      expect(screen.getByText('status')).toBeInTheDocument();
+      expect(screen.getByText('translations.status')).toBeInTheDocument();
       expect(screen.getByText('English')).toBeInTheDocument();
       expect(screen.getByText('Русский')).toBeInTheDocument();
       expect(screen.getByText('Српски')).toBeInTheDocument();
@@ -134,7 +134,7 @@ describe('TranslationStatus', () => {
     );
 
     await waitFor(() => {
-      const translateButton = screen.getByTitle('translate');
+      const translateButton = screen.getByTitle('translations.translate');
       expect(translateButton).toBeInTheDocument();
       expect(translateButton).toHaveTextContent('🌍');
     });
@@ -157,11 +157,11 @@ describe('TranslationStatus', () => {
     );
 
     await waitFor(() => {
-      const translateButton = screen.getByTitle('translate');
+      const translateButton = screen.getByTitle('translations.translate');
       expect(translateButton).toBeInTheDocument();
     });
 
-    const translateButton = screen.getByTitle('translate');
+    const translateButton = screen.getByTitle('translations.translate');
     await user.click(translateButton);
 
     expect(mockOnTranslateClick).toHaveBeenCalled();
@@ -205,8 +205,8 @@ describe('TranslationStatus', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByTitle('translate')).not.toBeInTheDocument();
-      expect(screen.getByText('allTranslated')).toBeInTheDocument();
+      expect(screen.queryByTitle('translations.translate')).not.toBeInTheDocument();
+      expect(screen.getByText('translations.allTranslated')).toBeInTheDocument();
     });
   });
 

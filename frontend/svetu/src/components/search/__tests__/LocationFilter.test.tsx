@@ -53,7 +53,7 @@ describe('LocationFilter', () => {
   it('should render location input and radius slider', () => {
     render(
       <LocationFilter
-        location=""
+        location="Belgrade"
         radius={10}
         onLocationChange={mockOnLocationChange}
       />
@@ -61,7 +61,8 @@ describe('LocationFilter', () => {
 
     expect(screen.getByLabelText('Location')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Enter city name')).toBeInTheDocument();
-    expect(screen.getByText('Search radius')).toBeInTheDocument();
+    // Radius is shown only when location is set
+    expect(screen.getByText(/Search radius/i)).toBeInTheDocument();
     expect(screen.getByText('10 km')).toBeInTheDocument();
   });
 

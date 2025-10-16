@@ -29,6 +29,13 @@ jest.mock('next/navigation', () => ({
   },
 }));
 
+// Mock next/link to prevent navigation errors
+jest.mock('next/link', () => {
+  const React = require('react');
+  return ({ children, href, ...props }) =>
+    React.createElement('a', { href, ...props }, children);
+});
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -45,19 +52,5 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock window.location to prevent "Not implemented: navigation" errors
-delete window.location;
-window.location = {
-  href: 'http://localhost:3000',
-  origin: 'http://localhost:3000',
-  protocol: 'http:',
-  host: 'localhost:3000',
-  hostname: 'localhost',
-  port: '3000',
-  pathname: '/',
-  search: '',
-  hash: '',
-  assign: jest.fn(),
-  replace: jest.fn(),
-  reload: jest.fn(),
-  toString: jest.fn(() => 'http://localhost:3000'),
-};
+// Simply don't mock it - let JSDOM handle it naturally
+// The navigation errors will be caught by individual test mocks if needed

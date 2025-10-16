@@ -394,14 +394,14 @@ describe('MockCardForm', () => {
 
     it('должен восстанавливать состояние кнопки после ошибки', async () => {
       const user = userEvent.setup();
-      mockOnSubmit.mockImplementation(() =>
-        Promise.reject(new Error('Submission failed'))
-      );
+      mockOnSubmit.mockImplementation(async () => {
+        throw new Error('Submission failed');
+      });
       mockHandleSubmit.mockImplementation((fn) => async (e: any) => {
         e.preventDefault();
         try {
           await fn({});
-        } catch {
+        } catch (error) {
           // Ошибка обработана в компоненте
         }
       });
