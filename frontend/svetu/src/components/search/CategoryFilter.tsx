@@ -146,6 +146,7 @@ export default function CategoryFilter({
                 toggleExpand(category.id);
               }}
               className="btn btn-ghost btn-xs p-0 min-h-0 h-5 w-5 hover:bg-base-300"
+              aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${category.translations?.[locale] || category.name}`}
             >
               <svg
                 className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
@@ -173,6 +174,7 @@ export default function CategoryFilter({
               className="checkbox checkbox-sm checkbox-primary"
               checked={isSelected}
               onChange={() => toggleCategory(category.id)}
+              aria-label={category.translations?.[locale] || category.name}
             />
             {category.icon ? (
               renderCategoryIcon(category.icon, 'w-4 h-4 text-primary')
