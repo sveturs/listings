@@ -188,6 +188,7 @@ export default function MultiSelectAttribute({
                           className="checkbox checkbox-sm checkbox-primary"
                           checked={isSelected}
                           onChange={() => toggleOption(optionValue)}
+                          aria-label={getOptionLabel(option)}
                         />
                         <span className="flex-1">{getOptionLabel(option)}</span>
                       </label>

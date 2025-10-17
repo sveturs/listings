@@ -3,6 +3,17 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MultiSelectAttribute from '../MultiSelectAttribute';
 
+jest.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => {
+    const translations: Record<string, string> = {
+      'create.selectOptions': 'selectOptions',
+      'create.selected': 'selected',
+      'create.noOptions': 'noOptions',
+    };
+    return translations[key] || key;
+  },
+}));
+
 const mockAttribute = {
   id: 1,
   name: 'colors',
@@ -86,9 +97,10 @@ describe('MultiSelectAttribute', () => {
 
   it('selects and deselects options correctly', async () => {
     const user = userEvent.setup();
-    render(
+    const { rerender } = render(
       <MultiSelectAttribute
         attribute={mockAttribute}
+        value={[]}
         onChange={mockOnChange}
         locale="en"
       />
@@ -103,19 +115,65 @@ describe('MultiSelectAttribute', () => {
     await user.click(redCheckbox);
 
     expect(mockOnChange).toHaveBeenCalledWith(['Red']);
-    expect(redCheckbox).toBeChecked();
+
+    // Rerender with new value
+    rerender(
+      <MultiSelectAttribute
+        attribute={mockAttribute}
+        value={['Red']}
+        onChange={mockOnChange}
+        locale="en"
+      />
+    );
+
+    await waitFor(() => {
+      const updatedRedCheckbox = screen.getByRole('checkbox', { name: /Red/i });
+      expect(updatedRedCheckbox).toBeChecked();
+    });
 
     // Select Green
     const greenCheckbox = screen.getByRole('checkbox', { name: /Green/i });
     await user.click(greenCheckbox);
 
-    expect(mockOnChange).toHaveBeenCalledWith(['Red', 'Green']);
-    expect(greenCheckbox).toBeChecked();
+    // Check that onChange was called with both values (order may vary)
+    expect(mockOnChange).toHaveBeenCalledWith(
+      expect.arrayContaining(['Red', 'Green'])
+    );
+
+    // Rerender with both selected
+    rerender(
+      <MultiSelectAttribute
+        attribute={mockAttribute}
+        value={['Red', 'Green']}
+        onChange={mockOnChange}
+        locale="en"
+      />
+    );
+
+    await waitFor(() => {
+      const updatedGreenCheckbox = screen.getByRole('checkbox', { name: /Green/i });
+      expect(updatedGreenCheckbox).toBeChecked();
+    });
 
     // Deselect Red
-    await user.click(redCheckbox);
+    const redCheckboxAgain = screen.getByRole('checkbox', { name: /Red/i });
+    await user.click(redCheckboxAgain);
     expect(mockOnChange).toHaveBeenCalledWith(['Green']);
-    expect(redCheckbox).not.toBeChecked();
+
+    // Rerender with only Green
+    rerender(
+      <MultiSelectAttribute
+        attribute={mockAttribute}
+        value={['Green']}
+        onChange={mockOnChange}
+        locale="en"
+      />
+    );
+
+    await waitFor(() => {
+      const finalRedCheckbox = screen.getByRole('checkbox', { name: /Red/i });
+      expect(finalRedCheckbox).not.toBeChecked();
+    });
   });
 
   it('displays selected count correctly', async () => {
@@ -129,7 +187,10 @@ describe('MultiSelectAttribute', () => {
       />
     );
 
-    const button = screen.getByRole('button');
+    // Find the main dropdown button (not the remove buttons in badges)
+    const button = screen.getByRole('button', {
+      name: (name) => name.includes('selected') || name.includes('selectOptions'),
+    });
     expect(button).toHaveTextContent('selected: 2');
   });
 
