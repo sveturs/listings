@@ -30,6 +30,10 @@ env:
   NODE_VERSION: '20.15'
   POSTGRES_VERSION: '16'
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   backend-tests:
     name: Backend Tests
@@ -62,6 +66,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.PRIVATE_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -80,8 +91,8 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:testpassword@localhost:5432/testdb?sslmode=disable
         run: |
-          go build -o migrator ./cmd/migrator/main.go
-          ./migrator migrate
+          go build -o migrator ./cmd/migrator/migrator.go
+          ./migrator up
 
       - name: Run unified attributes tests
         working-directory: backend
@@ -190,6 +201,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.PRIVATE_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -211,8 +229,8 @@ jobs:
           PORT: 3000
         run: |
           go mod download
-          go build -o migrator ./cmd/migrator/main.go
-          ./migrator migrate
+          go build -o migrator ./cmd/migrator/migrator.go
+          ./migrator up
           go run ./cmd/api/main.go &
           sleep 5
           curl -f http://localhost:3000/health/ready || exit 1
@@ -237,7 +255,7 @@ jobs:
     name: Load Tests
     runs-on: ubuntu-latest
     needs: integration-tests
-    
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -256,6 +274,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.PRIVATE_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -271,8 +296,8 @@ jobs:
           DUAL_WRITE_ATTRIBUTES: false
           PORT: 3000
         run: |
-          go build -o migrator ./cmd/migrator/main.go
-          ./migrator migrate
+          go build -o migrator ./cmd/migrator/migrator.go
+          ./migrator up
           go run ./cmd/api/main.go &
           sleep 5
 
@@ -322,7 +347,7 @@ jobs:
   migration-test:
     name: Migration Rollback Test
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -337,6 +362,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.PRIVATE_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -347,16 +379,16 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:testpassword@localhost:5432/testdb?sslmode=disable
         run: |
-          go build -o migrator ./cmd/migrator/main.go
+          go build -o migrator ./cmd/migrator/migrator.go
           
           # Apply all migrations
-          ./migrator migrate
+          ./migrator up
           
           # Rollback unified attributes migrations
           ./migrator rollback --steps 2
           
           # Re-apply migrations
-          ./migrator migrate
+          ./migrator up
           
           # Verify data integrity
           go run scripts/verify_migration_integrity.go
