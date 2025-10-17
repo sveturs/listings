@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -31,6 +32,9 @@ import (
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	adminLogistics "backend/internal/proj/admin/logistics"
+	testingHandler "backend/internal/proj/admin/testing/handler"
+	testingService "backend/internal/proj/admin/testing/service"
+	testingStorage "backend/internal/proj/admin/testing/storage/postgres"
 	aiHandler "backend/internal/proj/ai/handler"
 	"backend/internal/proj/analytics"
 	b2cModule "backend/internal/proj/b2c"
@@ -90,6 +94,7 @@ type Server struct {
 	postexpress        *postexpressHandler.Handler
 	bexexpress         *bexexpress.Module
 	adminLogistics     *adminLogistics.Module
+	adminTesting       *testingHandler.Handler
 	delivery           *delivery.Module
 	orders             *orders.Module
 	storefront         *b2cModule.Module
@@ -249,6 +254,23 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		// Не возвращаем ошибку, продолжаем без админки логистики
 	}
 
+	// Admin Testing module инициализация
+	var adminTestingHandler *testingHandler.Handler
+	testAdminEmail := os.Getenv("TEST_ADMIN_EMAIL")
+	testAdminPassword := os.Getenv("TEST_ADMIN_PASSWORD")
+	if testAdminEmail != "" && testAdminPassword != "" {
+		testStorage := testingStorage.NewStorage(db.GetSQLXDB(), zerologLogger)
+		testAuthMgr := testingService.NewTestAuthManager(cfg.BackendURL, testAdminEmail, testAdminPassword, zerologLogger)
+		testRunner := testingService.NewTestRunner(testStorage, testAuthMgr, cfg.BackendURL, zerologLogger)
+		adminTestingHandler = testingHandler.NewHandler(testRunner, jwtParserMW, zerologLogger)
+		logger.Info().
+			Str("admin_email", testAdminEmail).
+			Str("backend_url", cfg.BackendURL).
+			Msg("Admin Testing module initialized")
+	} else {
+		logger.Info().Msg("Admin Testing module disabled (no TEST_ADMIN_EMAIL or TEST_ADMIN_PASSWORD)")
+	}
+
 	// Delivery система инициализация с консолидацией admin/logistics
 	deliveryModule, err := delivery.NewModule(db.GetSQLXDB(), cfg, pkglogger.New())
 	if err != nil {
@@ -348,6 +370,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		postexpress:        postexpressHandlerInstance,
 		bexexpress:         bexexpressModule,
 		adminLogistics:     adminLogisticsModule,
+		adminTesting:       adminTestingHandler,
 		delivery:           deliveryModule,
 		orders:             ordersModule,
 		storefront:         storefrontModule,
@@ -632,6 +655,13 @@ func (s *Server) registerProjectRoutes() {
 	// Добавляем Admin Logistics если он инициализирован
 	if s.adminLogistics != nil {
 		registrars = append(registrars, s.adminLogistics)
+	}
+
+	// Добавляем Admin Testing если он инициализирован
+	if s.adminTesting != nil {
+		// Register routes directly since it doesn't implement RouteRegistrar
+		s.adminTesting.RegisterRoutes(s.app)
+		logger.Info().Str("prefix", s.adminTesting.GetPrefix()).Msg("Admin Testing routes registered")
 	}
 
 	registrars = append(registrars, s.docs, s.behaviorTracking, s.translationAdmin, s.viber)
