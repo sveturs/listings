@@ -3,6 +3,10 @@ import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { usePaymentService } from '@/services/payment/paymentServiceFactory';
 import type { BuyerInfo } from '@/types/payment';
+import * as navigationHelpers from './useAllSecurePaymentHelpers';
+
+// Re-export for convenience
+export const { navigateToUrl, getLocationOrigin } = navigationHelpers;
 
 export function useAllSecurePayment() {
   const router = useRouter();
@@ -42,7 +46,7 @@ export function useAllSecurePayment() {
           amount: data.amount,
           currency: data.currency,
           buyer_info: data.buyerInfo,
-          return_url: `${window.location.origin}/${locale}/payment/process`,
+          return_url: `${navigationHelpers.getLocationOrigin()}/${locale}/payment/process`,
           locale: locale,
         });
 
@@ -54,7 +58,7 @@ export function useAllSecurePayment() {
         }
 
         // Redirect на страницу оплаты (с локалью)
-        window.location.href = `/${locale}${response.redirectUrl}`;
+        navigationHelpers.navigateToUrl(`/${locale}${response.redirectUrl}`);
 
         return response;
       } catch (error) {
