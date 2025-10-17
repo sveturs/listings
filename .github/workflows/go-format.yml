@@ -7,6 +7,10 @@ on:
       - 'backend/go.mod'
       - 'backend/go.sum'
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   format-check:
     name: Check Go Code Formatting

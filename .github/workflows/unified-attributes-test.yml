@@ -30,6 +30,10 @@ env:
   NODE_VERSION: '20.15'
   POSTGRES_VERSION: '16'
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   backend-tests:
     name: Backend Tests

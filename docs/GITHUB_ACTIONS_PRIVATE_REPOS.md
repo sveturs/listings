@@ -12,42 +12,70 @@ fatal: could not read Username for 'https://github.com': terminal prompts disabl
 
 ## Решение
 
-Для доступа к приватным репозиториям нужно настроить Git authentication и GOPRIVATE переменную.
+Для доступа к приватным репозиториям нужно настроить Git authentication, GOPRIVATE переменную и permissions.
 
-### 1. Использование встроенного GITHUB_TOKEN
+### 1. Добавить permissions в workflow
 
-GitHub Actions автоматически предоставляет `GITHUB_TOKEN` с доступом к репозиториям организации. Этот токен НЕ нужно создавать вручную.
+**КРИТИЧЕСКИ ВАЖНО:** Workflow должен иметь явные permissions для доступа к другим репозиториям:
 
-### 2. Конфигурация в workflow файлах
+```yaml
+permissions:
+  contents: read
+  packages: read
+```
+
+Это дает GITHUB_TOKEN права на чтение других репозиториев в организации.
+
+### 2. Использование встроенного GITHUB_TOKEN
+
+GitHub Actions автоматически предоставляет `GITHUB_TOKEN` с доступом к репозиториям организации. Этот токен НЕ нужно создавать вручную, но нужно настроить permissions (см. выше).
+
+### 3. Конфигурация в workflow файлах
 
 **ВАЖНО:** Git конфигурация должна быть **ДО** `actions/setup-go`, потому что setup-go с `cache: true` пытается восстановить кэш зависимостей сразу при выполнении.
 
-Правильный порядок шагов:
+Полный пример workflow файла:
 
 ```yaml
-- name: Checkout code
-  uses: actions/checkout@v4
+name: My Workflow
 
-- name: Configure Git for private modules
-  run: |
-    git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+on:
+  pull_request:
 
-- name: Set GOPRIVATE
-  run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+permissions:
+  contents: read
+  packages: read  # КРИТИЧЕСКИ ВАЖНО!
 
-- name: Set up Go
-  uses: actions/setup-go@v5
-  with:
-    go-version: '1.21'
-    cache: true
-    cache-dependency-path: backend/go.sum
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-- name: Install dependencies
-  working-directory: backend
-  run: go mod download
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: backend/go.sum
+
+      - name: Install dependencies
+        working-directory: backend
+        run: go mod download
 ```
 
-### 3. Что делают эти настройки
+### 4. Что делают эти настройки
+
+#### permissions: packages: read
+Дает GITHUB_TOKEN права на чтение packages (включая приватные репозитории) в организации. Без этого токен не сможет клонировать приватные модули.
 
 #### Configure Git for private modules
 ```bash
@@ -101,9 +129,15 @@ echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
 ### Ошибка: "repository not found" или "404"
 **Причина:** GITHUB_TOKEN не имеет доступа к приватному репозиторию.
 **Решение:**
-- Убедитесь, что репозиторий находится в той же организации (`sveturs`)
-- Проверьте настройки организации: Settings → Actions → General → Workflow permissions
-- Должно быть включено "Read and write permissions" или минимум "Read repository contents"
+1. **Проверьте permissions в workflow** - ОБЯЗАТЕЛЬНО должно быть:
+   ```yaml
+   permissions:
+     contents: read
+     packages: read
+   ```
+2. Убедитесь, что репозиторий находится в той же организации (`sveturs`)
+3. Проверьте настройки организации: Settings → Actions → General → Workflow permissions
+4. Должно быть включено "Read and write permissions" или минимум "Read repository contents"
 
 ### Ошибка: "invalid version: git ls-remote"
 **Причина:** Go не смог найти тег/версию модуля.
