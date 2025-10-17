@@ -20,13 +20,13 @@ GitHub Actions автоматически предоставляет `GITHUB_TOK
 
 ### 2. Конфигурация в workflow файлах
 
-Добавьте следующие шаги **ПОСЛЕ** `actions/setup-go` и **ПЕРЕД** `go mod download`:
+**ВАЖНО:** Git конфигурация должна быть **ДО** `actions/setup-go`, потому что setup-go с `cache: true` пытается восстановить кэш зависимостей сразу при выполнении.
+
+Правильный порядок шагов:
 
 ```yaml
-- name: Set up Go
-  uses: actions/setup-go@v5
-  with:
-    go-version: '1.21'
+- name: Checkout code
+  uses: actions/checkout@v4
 
 - name: Configure Git for private modules
   run: |
@@ -34,6 +34,13 @@ GitHub Actions автоматически предоставляет `GITHUB_TOK
 
 - name: Set GOPRIVATE
   run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+
+- name: Set up Go
+  uses: actions/setup-go@v5
+  with:
+    go-version: '1.21'
+    cache: true
+    cache-dependency-path: backend/go.sum
 
 - name: Install dependencies
   working-directory: backend
@@ -86,7 +93,10 @@ echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
 
 ### Ошибка: "terminal prompts disabled"
 **Причина:** Git не может запросить credentials интерактивно.
-**Решение:** Убедитесь, что шаг "Configure Git for private modules" выполнен перед `go mod download`.
+**Решение:**
+1. Убедитесь, что шаг "Configure Git for private modules" выполнен **ДО** `actions/setup-go`
+2. Если используете `cache: true` в setup-go, Git ОБЯЗАТЕЛЬНО должен быть настроен до этого шага
+3. Проверьте порядок: Checkout → Configure Git → Set GOPRIVATE → Setup Go
 
 ### Ошибка: "repository not found" или "404"
 **Причина:** GITHUB_TOKEN не имеет доступа к приватному репозиторию.
