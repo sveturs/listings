@@ -69,6 +69,13 @@ jobs:
           cache: true
           cache-dependency-path: backend/go.sum
 
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+
       - name: Install dependencies
         working-directory: backend
         run: |
@@ -195,6 +202,13 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -237,7 +251,7 @@ jobs:
     name: Load Tests
     runs-on: ubuntu-latest
     needs: integration-tests
-    
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -260,6 +274,13 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
 
       - name: Start backend with unified attributes
         working-directory: backend
@@ -322,7 +343,7 @@ jobs:
   migration-test:
     name: Migration Rollback Test
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -341,6 +362,13 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set GOPRIVATE
+        run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
 
       - name: Test migration up and down
         working-directory: backend
