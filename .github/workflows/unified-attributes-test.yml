@@ -91,7 +91,7 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:testpassword@localhost:5432/testdb?sslmode=disable
         run: |
-          go build -o migrator ./cmd/migrator/main.go
+          go build -o migrator ./cmd/migrator/migrator.go
           ./migrator migrate
 
       - name: Run unified attributes tests
@@ -229,7 +229,7 @@ jobs:
           PORT: 3000
         run: |
           go mod download
-          go build -o migrator ./cmd/migrator/main.go
+          go build -o migrator ./cmd/migrator/migrator.go
           ./migrator migrate
           go run ./cmd/api/main.go &
           sleep 5
@@ -296,7 +296,7 @@ jobs:
           DUAL_WRITE_ATTRIBUTES: false
           PORT: 3000
         run: |
-          go build -o migrator ./cmd/migrator/main.go
+          go build -o migrator ./cmd/migrator/migrator.go
           ./migrator migrate
           go run ./cmd/api/main.go &
           sleep 5
@@ -379,7 +379,7 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:testpassword@localhost:5432/testdb?sslmode=disable
         run: |
-          go build -o migrator ./cmd/migrator/main.go
+          go build -o migrator ./cmd/migrator/migrator.go
           
           # Apply all migrations
           ./migrator migrate
