@@ -135,7 +135,9 @@ describe('MockAllSecureService', () => {
       await service.createPayment(mockPaymentRequest);
 
       // Ждем выполнения webhook
-      await new Promise(resolve => setTimeout(resolve, mockConfig.webhookDelay + 10));
+      await new Promise((resolve) =>
+        setTimeout(resolve, mockConfig.webhookDelay + 10)
+      );
 
       const status = await service.getPaymentStatus('mock-payment-123');
       // Webhook должен был выполниться и изменить статус
@@ -232,7 +234,9 @@ describe('MockAllSecureService', () => {
       expect(result).toBe(true);
 
       // Ждем выполнения webhook
-      await new Promise(resolve => setTimeout(resolve, mockConfig.webhookDelay + 10));
+      await new Promise((resolve) =>
+        setTimeout(resolve, mockConfig.webhookDelay + 10)
+      );
 
       // Проверяем что webhook выполнился и статус изменился
       const status = await service.getPaymentStatus('mock-payment-123');
@@ -303,7 +307,9 @@ describe('MockAllSecureService', () => {
       await service.createPayment(mockPaymentRequest);
 
       // Ждем выполнения webhook (webhookDelay + небольшой запас)
-      await new Promise(resolve => setTimeout(resolve, mockConfig.webhookDelay + 10));
+      await new Promise((resolve) =>
+        setTimeout(resolve, mockConfig.webhookDelay + 10)
+      );
 
       const status = await service.getPaymentStatus('mock-payment-123');
       expect(status.status).toBe('captured');
@@ -319,7 +325,9 @@ describe('MockAllSecureService', () => {
       await service.createPayment(mockPaymentRequest);
 
       // Ждем выполнения webhook (webhookDelay + небольшой запас)
-      await new Promise(resolve => setTimeout(resolve, mockConfig.webhookDelay + 10));
+      await new Promise((resolve) =>
+        setTimeout(resolve, mockConfig.webhookDelay + 10)
+      );
 
       const status = await service.getPaymentStatus('mock-payment-123');
       expect(status.status).toBe('failed');
@@ -346,7 +354,9 @@ describe('MockAllSecureService', () => {
       service.cleanup();
 
       // После cleanup ждем время больше webhookDelay
-      await new Promise(resolve => setTimeout(resolve, mockConfig.webhookDelay + 10));
+      await new Promise((resolve) =>
+        setTimeout(resolve, mockConfig.webhookDelay + 10)
+      );
 
       const status = await service.getPaymentStatus('mock-payment-123');
       expect(status.status).toBe('pending'); // Статус не должен измениться т.к. cleanup отменил webhook

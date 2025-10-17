@@ -98,9 +98,11 @@ describe('SearchAutocomplete', () => {
     );
 
     expect(screen.getByText('Suggestions')).toBeInTheDocument();
-    expect(screen.getByText((content, element) => {
-      return element?.textContent === 'iPhone 13';
-    })).toBeInTheDocument();
+    expect(
+      screen.getByText((content, element) => {
+        return element?.textContent === 'iPhone 13';
+      })
+    ).toBeInTheDocument();
   });
 
   it('should display product suggestions with metadata', () => {
@@ -163,7 +165,7 @@ describe('SearchAutocomplete', () => {
     );
 
     const clickableElements = document.querySelectorAll('.cursor-pointer');
-    const productElement = Array.from(clickableElements).find(el =>
+    const productElement = Array.from(clickableElements).find((el) =>
       el.textContent?.includes('iPhone 13')
     );
 
@@ -191,7 +193,7 @@ describe('SearchAutocomplete', () => {
     );
 
     const clickableElements = document.querySelectorAll('.cursor-pointer');
-    const categoryElement = Array.from(clickableElements).find(el =>
+    const categoryElement = Array.from(clickableElements).find((el) =>
       el.textContent?.includes('Smartphones')
     );
 
@@ -219,7 +221,7 @@ describe('SearchAutocomplete', () => {
     );
 
     const clickableElements = document.querySelectorAll('.cursor-pointer');
-    const textElement = Array.from(clickableElements).find(el =>
+    const textElement = Array.from(clickableElements).find((el) =>
       el.textContent?.includes('laptop deals')
     );
 

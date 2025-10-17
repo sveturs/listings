@@ -25,7 +25,6 @@ jest.mock('../useAllSecurePaymentHelpers', () => ({
 
 import * as navigationHelpers from '../useAllSecurePaymentHelpers';
 const mockNavigateToUrl = navigationHelpers.navigateToUrl as jest.Mock;
-const mockGetLocationOrigin = navigationHelpers.getLocationOrigin as jest.Mock;
 
 // Mock payment service
 const mockPaymentService: jest.Mocked<IPaymentService> = {
@@ -135,7 +134,9 @@ describe('useAllSecurePayment', () => {
       );
 
       // Проверяем что был вызван redirect
-      expect(mockNavigateToUrl).toHaveBeenCalledWith('/ru/payment/mock?id=payment-123');
+      expect(mockNavigateToUrl).toHaveBeenCalledWith(
+        '/ru/payment/mock?id=payment-123'
+      );
     });
 
     it('должен установить состояние loading во время обработки', async () => {
@@ -520,7 +521,9 @@ describe('useAllSecurePayment', () => {
       );
 
       // Проверяем что redirect использует английскую локаль
-      expect(mockNavigateToUrl).toHaveBeenCalledWith(expect.stringContaining('/en/'));
+      expect(mockNavigateToUrl).toHaveBeenCalledWith(
+        expect.stringContaining('/en/')
+      );
     });
 
     it('должен включать локаль во все redirect URL', async () => {

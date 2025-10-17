@@ -75,7 +75,7 @@ export class MockAllSecureService implements IPaymentService {
         try {
           payment = JSON.parse(stored);
           this.storage.set(paymentId, payment!);
-        } catch (error) {
+        } catch {
           // Игнорируем некорректный JSON в localStorage
           console.warn(`Invalid payment data in localStorage for ${paymentId}`);
         }

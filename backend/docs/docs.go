@@ -3687,31 +3687,26 @@ const docTemplate = `{
         },
         "/api/v1/admin/delivery/analytics": {
             "get": {
-                "description": "Get analytics and statistics for deliveries",
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "admin-delivery"
+                    "delivery-admin"
                 ],
                 "summary": "Get delivery analytics",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "From date (YYYY-MM-DD)",
-                        "name": "from",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "To date (YYYY-MM-DD)",
-                        "name": "to",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Provider ID",
-                        "name": "provider_id",
+                        "description": "Time period (7d, 30d, 90d, 365d)",
+                        "name": "period",
                         "in": "query"
                     }
                 ],
@@ -3727,15 +3722,15 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/service.DeliveryAnalytics"
+                                            "$ref": "#/definitions/models.AnalyticsData"
                                         }
                                     }
                                 }
                             ]
                         }
                     },
-                    "500": {
-                        "description": "Server error",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
@@ -3836,7 +3831,11 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create new pricing rule for provider",
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -3844,7 +3843,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-delivery"
+                    "delivery-admin"
                 ],
                 "summary": "Create pricing rule",
                 "parameters": [
@@ -3877,14 +3876,8 @@ const docTemplate = `{
                             ]
                         }
                     },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
@@ -4197,48 +4190,11 @@ const docTemplate = `{
         },
         "/api/v1/admin/delivery/providers": {
             "get": {
-                "description": "Get detailed list of all providers for admin panel",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin-delivery"
-                ],
-                "summary": "Get providers for admin",
-                "responses": {
-                    "200": {
-                        "description": "List of providers",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/models.Provider"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
+                "security": [
+                    {
+                        "Bearer": []
                     }
-                }
-            }
-        },
-        "/api/v1/admin/delivery/providers/{id}": {
-            "put": {
-                "description": "Update provider settings",
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -4246,44 +4202,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-delivery"
+                    "delivery-admin"
                 ],
-                "summary": "Update provider",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Provider ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Provider data",
-                        "name": "provider",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Provider"
-                        }
-                    }
-                ],
+                "summary": "Get delivery providers for admin",
                 "responses": {
                     "200": {
-                        "description": "Success",
+                        "description": "List of providers",
                         "schema": {
-                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
-                    "400": {
-                        "description": "Invalid request",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -15645,7 +15581,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Permanently deletes a product and all related data (reviews, favorites, images, etc.)",
+                "description": "Deletes a product. Use query param hard=true for permanent deletion of all related data",
                 "consumes": [
                     "application/json"
                 ],
@@ -15655,7 +15591,7 @@ const docTemplate = `{
                 "tags": [
                     "storefront-products"
                 ],
-                "summary": "Hard delete a storefront product",
+                "summary": "Delete a storefront product",
                 "parameters": [
                     {
                         "type": "string",
@@ -15673,15 +15609,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "Must be true for hard delete",
+                        "description": "Set to true for permanent hard delete (default: false)",
                         "name": "hard",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Product permanently deleted",
+                        "description": "Product deleted successfully",
                         "schema": {
                             "$ref": "#/definitions/SuccessResponse"
                         }
@@ -53715,17 +53650,6 @@ const docTemplate = `{
                 }
             }
         },
-        "service.AnalyticsPeriod": {
-            "type": "object",
-            "properties": {
-                "from": {
-                    "type": "string"
-                },
-                "to": {
-                    "type": "string"
-                }
-            }
-        },
         "service.CategoryAnalysisResult": {
             "type": "object",
             "properties": {
@@ -53853,48 +53777,6 @@ const docTemplate = `{
                 },
                 "to_address": {
                     "$ref": "#/definitions/interfaces.Address"
-                }
-            }
-        },
-        "service.DeliveryAnalytics": {
-            "type": "object",
-            "properties": {
-                "average_cost": {
-                    "type": "number"
-                },
-                "average_delivery_days": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "number",
-                        "format": "float64"
-                    }
-                },
-                "period": {
-                    "$ref": "#/definitions/service.AnalyticsPeriod"
-                },
-                "provider_breakdown": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.ProviderStatistics"
-                    }
-                },
-                "status_breakdown": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "top_routes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.RouteStatistics"
-                    }
-                },
-                "total_cost": {
-                    "type": "number"
-                },
-                "total_shipments": {
-                    "type": "integer"
                 }
             }
         },
@@ -54144,49 +54026,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "redirect_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "service.ProviderStatistics": {
-            "type": "object",
-            "properties": {
-                "average_cost": {
-                    "type": "number"
-                },
-                "provider_id": {
-                    "type": "integer"
-                },
-                "provider_name": {
-                    "type": "string"
-                },
-                "shipment_count": {
-                    "type": "integer"
-                },
-                "success_rate": {
-                    "type": "number"
-                },
-                "total_cost": {
-                    "type": "number"
-                }
-            }
-        },
-        "service.RouteStatistics": {
-            "type": "object",
-            "properties": {
-                "average_cost": {
-                    "type": "number"
-                },
-                "average_days": {
-                    "type": "number"
-                },
-                "from_city": {
-                    "type": "string"
-                },
-                "shipment_count": {
-                    "type": "integer"
-                },
-                "to_city": {
                     "type": "string"
                 }
             }

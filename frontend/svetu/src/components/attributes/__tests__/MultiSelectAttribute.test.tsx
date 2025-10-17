@@ -151,7 +151,9 @@ describe('MultiSelectAttribute', () => {
     );
 
     await waitFor(() => {
-      const updatedGreenCheckbox = screen.getByRole('checkbox', { name: /Green/i });
+      const updatedGreenCheckbox = screen.getByRole('checkbox', {
+        name: /Green/i,
+      });
       expect(updatedGreenCheckbox).toBeChecked();
     });
 
@@ -189,7 +191,8 @@ describe('MultiSelectAttribute', () => {
 
     // Find the main dropdown button (not the remove buttons in badges)
     const button = screen.getByRole('button', {
-      name: (name) => name.includes('selected') || name.includes('selectOptions'),
+      name: (name) =>
+        name.includes('selected') || name.includes('selectOptions'),
     });
     expect(button).toHaveTextContent('selected: 2');
   });

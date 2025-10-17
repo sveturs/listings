@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { CarListingCard } from '../CarListingCard';
 import { useRouter } from 'next/navigation';
 
@@ -84,18 +84,14 @@ describe('CarListingCard', () => {
   });
 
   it('renders in grid view mode', () => {
-    render(
-      <CarListingCard listing={mockListing} locale="en" />
-    );
+    render(<CarListingCard listing={mockListing} locale="en" />);
 
     const card = screen.getByText('BMW 3 Series 2020').closest('a');
     expect(card).toHaveClass('card');
   });
 
   it('renders in list view mode', () => {
-    render(
-      <CarListingCard listing={mockListing} locale="en" isGrid={false} />
-    );
+    render(<CarListingCard listing={mockListing} locale="en" isGrid={false} />);
 
     const card = screen.getByText('BMW 3 Series 2020').closest('a');
     expect(card).toHaveClass('card-side');

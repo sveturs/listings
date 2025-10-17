@@ -9888,13 +9888,6 @@ definitions:
       transport_mode:
         type: string
     type: object
-  service.AnalyticsPeriod:
-    properties:
-      from:
-        type: string
-      to:
-        type: string
-    type: object
   service.CategoryAnalysisResult:
     properties:
       insights:
@@ -9980,34 +9973,6 @@ definitions:
         type: array
       to_address:
         $ref: '#/definitions/interfaces.Address'
-    type: object
-  service.DeliveryAnalytics:
-    properties:
-      average_cost:
-        type: number
-      average_delivery_days:
-        additionalProperties:
-          format: float64
-          type: number
-        type: object
-      period:
-        $ref: '#/definitions/service.AnalyticsPeriod'
-      provider_breakdown:
-        items:
-          $ref: '#/definitions/service.ProviderStatistics'
-        type: array
-      status_breakdown:
-        additionalProperties:
-          type: integer
-        type: object
-      top_routes:
-        items:
-          $ref: '#/definitions/service.RouteStatistics'
-        type: array
-      total_cost:
-        type: number
-      total_shipments:
-        type: integer
     type: object
   service.IndexInfo:
     properties:
@@ -10175,34 +10140,6 @@ definitions:
       payment_required:
         type: boolean
       redirect_url:
-        type: string
-    type: object
-  service.ProviderStatistics:
-    properties:
-      average_cost:
-        type: number
-      provider_id:
-        type: integer
-      provider_name:
-        type: string
-      shipment_count:
-        type: integer
-      success_rate:
-        type: number
-      total_cost:
-        type: number
-    type: object
-  service.RouteStatistics:
-    properties:
-      average_cost:
-        type: number
-      average_days:
-        type: number
-      from_city:
-        type: string
-      shipment_count:
-        type: integer
-      to_city:
         type: string
     type: object
   service.SearchMetrics:
@@ -14582,20 +14519,13 @@ paths:
       - proposals
   /api/v1/admin/delivery/analytics:
     get:
-      description: Get analytics and statistics for deliveries
+      consumes:
+      - application/json
       parameters:
-      - description: From date (YYYY-MM-DD)
+      - description: Time period (7d, 30d, 90d, 365d)
         in: query
-        name: from
+        name: period
         type: string
-      - description: To date (YYYY-MM-DD)
-        in: query
-        name: to
-        type: string
-      - description: Provider ID
-        in: query
-        name: provider_id
-        type: integer
       produces:
       - application/json
       responses:
@@ -14606,15 +14536,17 @@ paths:
             - $ref: '#/definitions/utils.SuccessResponseSwag'
             - properties:
                 data:
-                  $ref: '#/definitions/service.DeliveryAnalytics'
+                  $ref: '#/definitions/models.AnalyticsData'
               type: object
-        "500":
-          description: Server error
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
       summary: Get delivery analytics
       tags:
-      - admin-delivery
+      - delivery-admin
   /api/v1/admin/delivery/dashboard:
     get:
       consumes:
@@ -14670,7 +14602,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create new pricing rule for provider
       parameters:
       - description: Pricing rule
         in: body
@@ -14690,17 +14621,15 @@ paths:
                 data:
                   $ref: '#/definitions/models.PricingRule'
               type: object
-        "400":
-          description: Invalid request
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
       summary: Create pricing rule
       tags:
-      - admin-delivery
+      - delivery-admin
   /api/v1/admin/delivery/pricing-rules/{id}:
     delete:
       consumes:
@@ -14880,63 +14809,27 @@ paths:
       - delivery-admin
   /api/v1/admin/delivery/providers:
     get:
-      description: Get detailed list of all providers for admin panel
+      consumes:
+      - application/json
       produces:
       - application/json
       responses:
         "200":
           description: List of providers
           schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/models.Provider'
-                  type: array
-              type: object
-        "500":
-          description: Server error
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Get providers for admin
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get delivery providers for admin
       tags:
-      - admin-delivery
-  /api/v1/admin/delivery/providers/{id}:
-    put:
-      consumes:
-      - application/json
-      description: Update provider settings
-      parameters:
-      - description: Provider ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Provider data
-        in: body
-        name: provider
-        required: true
-        schema:
-          $ref: '#/definitions/models.Provider'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success
-          schema:
-            $ref: '#/definitions/utils.SuccessResponseSwag'
-        "400":
-          description: Invalid request
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Update provider
-      tags:
-      - admin-delivery
+      - delivery-admin
   /api/v1/admin/delivery/providers/{id}/config:
     put:
       consumes:
@@ -20995,8 +20888,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Permanently deletes a product and all related data (reviews, favorites,
-        images, etc.)
+      description: Deletes a product. Use query param hard=true for permanent deletion
+        of all related data
       parameters:
       - description: Storefront slug
         in: path
@@ -21008,16 +20901,15 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Must be true for hard delete
+      - description: 'Set to true for permanent hard delete (default: false)'
         in: query
         name: hard
-        required: true
         type: boolean
       produces:
       - application/json
       responses:
         "200":
-          description: Product permanently deleted
+          description: Product deleted successfully
           schema:
             $ref: '#/definitions/SuccessResponse'
         "400":
@@ -21038,7 +20930,7 @@ paths:
             $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Hard delete a storefront product
+      summary: Delete a storefront product
       tags:
       - storefront-products
     get:

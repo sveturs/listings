@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MockCardForm from '../MockCardForm';
 import { useForm } from 'react-hook-form';
@@ -420,7 +426,7 @@ describe('MockCardForm', () => {
         // Execute the handler and catch errors
         try {
           await fn({});
-        } catch (error) {
+        } catch {
           // Ошибка обработана - компонент восстановит состояние
         }
       });
@@ -433,15 +439,20 @@ describe('MockCardForm', () => {
       await act(async () => {
         await user.click(submitButton);
         // Give component time to update state in finally block
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       });
 
       // Wait for the button to return to normal state
-      await waitFor(() => {
-        const currentButton = container.querySelector('button[type="submit"]');
-        expect(currentButton).toHaveTextContent('Оплатить');
-        expect(currentButton).not.toBeDisabled();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          const currentButton = container.querySelector(
+            'button[type="submit"]'
+          );
+          expect(currentButton).toHaveTextContent('Оплатить');
+          expect(currentButton).not.toBeDisabled();
+        },
+        { timeout: 3000 }
+      );
     });
   });
 

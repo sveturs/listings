@@ -339,7 +339,7 @@ describe('Mock3DSForm', () => {
         e.preventDefault();
         try {
           await fn({ code: '123' });
-        } catch (error) {
+        } catch {
           // Ошибка обработана в компоненте
         }
       });

@@ -205,8 +205,12 @@ describe('TranslationStatus', () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByTitle('translations.translate')).not.toBeInTheDocument();
-      expect(screen.getByText('translations.allTranslated')).toBeInTheDocument();
+      expect(
+        screen.queryByTitle('translations.translate')
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByText('translations.allTranslated')
+      ).toBeInTheDocument();
     });
   });
 

@@ -194,8 +194,12 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('create.min') as HTMLInputElement;
-    const maxInput = screen.getByPlaceholderText('create.max') as HTMLInputElement;
+    const minInput = screen.getByPlaceholderText(
+      'create.min'
+    ) as HTMLInputElement;
+    const maxInput = screen.getByPlaceholderText(
+      'create.max'
+    ) as HTMLInputElement;
 
     expect(minInput.value).toBe('100');
     expect(maxInput.value).toBe('500');
@@ -211,8 +215,12 @@ describe('RangeAttribute', () => {
       />
     );
 
-    const minInput = screen.getByPlaceholderText('create.min') as HTMLInputElement;
-    const maxInput = screen.getByPlaceholderText('create.max') as HTMLInputElement;
+    const minInput = screen.getByPlaceholderText(
+      'create.min'
+    ) as HTMLInputElement;
+    const maxInput = screen.getByPlaceholderText(
+      'create.max'
+    ) as HTMLInputElement;
 
     expect(minInput.value).toBe('200');
     expect(maxInput.value).toBe('800');
@@ -227,7 +235,9 @@ describe('RangeAttribute', () => {
       />
     );
 
-    expect(screen.getByText(/create.allowedRange: 0 - 1000 \$/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/create.allowedRange: 0 - 1000 \$/)
+    ).toBeInTheDocument();
   });
 
   it('displays only min allowed when only min_value is defined', () => {
@@ -314,7 +324,9 @@ describe('RangeAttribute', () => {
     );
 
     expect(screen.getByText('Some error')).toBeInTheDocument();
-    expect(screen.queryByText('create.minGreaterThanMax')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('create.minGreaterThanMax')
+    ).not.toBeInTheDocument();
   });
 
   it('renders without unit when not provided', () => {
