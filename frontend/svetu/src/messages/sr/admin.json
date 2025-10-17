@@ -450,8 +450,11 @@
     "translations": "Upravljanje prevodima",
     "translationsDescription": "Sistem upravljanja prevodima, AI prevođenje i sinhronizacija",
     "delivery": "Upravljanje dostavom",
-    "deliveryDescription": "Upravljanje provajderima dostave, pravilima cena i pošiljkama"
+    "deliveryDescription": "Upravljanje provajderima dostave, pravilima cena i pošiljkama",
+    "qualityTests": "Testovi kvaliteta koda",
+    "qualityTestsDescription": "Pokretanje sveobuhvatnih provera kvaliteta backend i frontend koda"
   },
+  "runTests": "Pokreni testove",
   "categories": {
     "title": "Naslov",
     "addCategory": "Dodaj kategoriju",
@@ -1885,5 +1888,30 @@
     "requestData": "Poslati podaci",
     "responseData": "API odgovor",
     "required": "*"
+  },
+  "qualityTests": {
+    "title": "Testovi kvaliteta koda",
+    "description": "Sveobuhvatan skup testova za backend i frontend",
+    "runAll": "Pokreni sve testove",
+    "backend": "Backend testovi",
+    "frontend": "Frontend testovi",
+    "running": "Pokretanje...",
+    "success": "Uspešno",
+    "failed": "Neuspelo",
+    "warning": "Upozorenje",
+    "pending": "Na čekanju",
+    "duration": "Trajanje",
+    "output": "Izlaz",
+    "error": "Greška",
+    "details": "Detalji",
+    "runTest": "Pokreni test",
+    "totalTests": "Ukupno testova",
+    "passed": "Prošlo",
+    "progress": "Napredak",
+    "testsCompleted": "Testova završeno",
+    "noTestsRun": "Testovi još nisu pokrenuti",
+    "allGood": "Sve je u redu!",
+    "needAttention": "Potrebna pažnja",
+    "successRate": "stopa uspešnosti"
   }
 }

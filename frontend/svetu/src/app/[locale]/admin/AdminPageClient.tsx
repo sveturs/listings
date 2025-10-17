@@ -94,6 +94,18 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+
+        <div className="card bg-base-100 shadow-xl border-2 border-success">
+          <div className="card-body">
+            <h2 className="card-title">🧪 {t('sections.qualityTests')}</h2>
+            <p>{t('sections.qualityTestsDescription')}</p>
+            <div className="card-actions justify-end">
+              <Link href="/admin/quality-tests" className="btn btn-success">
+                {t('runTests')}
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
