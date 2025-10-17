@@ -68,7 +68,7 @@ jobs:
 
       - name: Configure Git for private modules
         run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.PRIVATE_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Set GOPRIVATE
         run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV

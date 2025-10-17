@@ -12,23 +12,30 @@ fatal: could not read Username for 'https://github.com': terminal prompts disabl
 
 ## Решение
 
-Для доступа к приватным репозиториям нужно настроить Git authentication, GOPRIVATE переменную и permissions.
+**ВАЖНО:** `GITHUB_TOKEN` НЕ РАБОТАЕТ для доступа к приватным Go модулям в других репозиториях!
 
-### 1. Добавить permissions в workflow
+Нужно создать Personal Access Token (PAT) с правами `repo` и добавить его в secrets репозитория.
 
-**КРИТИЧЕСКИ ВАЖНО:** Workflow должен иметь явные permissions для доступа к другим репозиториям:
+### 1. Создать Personal Access Token (Classic)
 
-```yaml
-permissions:
-  contents: read
-  packages: read
-```
+1. Перейдите на https://github.com/settings/tokens
+2. Нажмите "Generate new token" → "Generate new token (classic)"
+3. Настройте токен:
+   - **Note**: `SVETU_PRIVATE_MODULES_TOKEN`
+   - **Expiration**: 90 days (или No expiration)
+   - **Scopes**:
+     - ✅ `repo` (Full control of private repositories)
+     - ✅ `read:packages`
+4. Нажмите "Generate token" и **скопируйте токен**
 
-Это дает GITHUB_TOKEN права на чтение других репозиториев в организации.
+### 2. Добавить токен в GitHub Secrets
 
-### 2. Использование встроенного GITHUB_TOKEN
-
-GitHub Actions автоматически предоставляет `GITHUB_TOKEN` с доступом к репозиториям организации. Этот токен НЕ нужно создавать вручную, но нужно настроить permissions (см. выше).
+1. Перейдите в: https://github.com/sveturs/svetu/settings/secrets/actions
+2. Нажмите "New repository secret"
+3. Настройте:
+   - **Name**: `PRIVATE_MODULES_TOKEN`
+   - **Secret**: вставьте скопированный токен
+4. Нажмите "Add secret"
 
 ### 3. Конфигурация в workflow файлах
 
@@ -44,7 +51,6 @@ on:
 
 permissions:
   contents: read
-  packages: read  # КРИТИЧЕСКИ ВАЖНО!
 
 jobs:
   build:
@@ -55,7 +61,7 @@ jobs:
 
       - name: Configure Git for private modules
         run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.PRIVATE_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Set GOPRIVATE
         run: echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
@@ -74,15 +80,13 @@ jobs:
 
 ### 4. Что делают эти настройки
 
-#### permissions: packages: read
-Дает GITHUB_TOKEN права на чтение packages (включая приватные репозитории) в организации. Без этого токен не сможет клонировать приватные модули.
-
 #### Configure Git for private modules
 ```bash
-git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+git config --global url."https://${{ secrets.PRIVATE_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 ```
-- Настраивает Git использовать GITHUB_TOKEN для HTTPS запросов к GitHub
+- Настраивает Git использовать PRIVATE_MODULES_TOKEN для HTTPS запросов к GitHub
 - Автоматически добавляет токен в URL при клонировании/загрузке
+- PAT имеет полные права на приватные репозитории (в отличие от GITHUB_TOKEN)
 
 #### Set GOPRIVATE
 ```bash
@@ -94,7 +98,7 @@ echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
 
 ## Обновленные workflow файлы
 
-Следующие workflow файлы обновлены:
+Следующие workflow файлы обновлены для использования `PRIVATE_MODULES_TOKEN`:
 
 1. `.github/workflows/go-format.yml` - проверка форматирования Go кода
 2. `.github/workflows/unified-attributes-test.yml` - тесты unified attributes (4 джоба)
@@ -104,18 +108,16 @@ echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
 
 После применения изменений:
 
-1. Создайте PR или запустите workflow вручную
-2. Проверьте логи GitHub Actions
-3. Шаг "Install dependencies" должен успешно скачать приватные модули
+1. Убедитесь, что `PRIVATE_MODULES_TOKEN` добавлен в GitHub Secrets
+2. Создайте PR или запустите workflow вручную
+3. Проверьте логи GitHub Actions
+4. Шаг "Install dependencies" должен успешно скачать приватные модули
 
-## Альтернативный вариант (НЕ рекомендуется)
+## Почему не GITHUB_TOKEN?
 
-Можно создать Personal Access Token (PAT) вручную, но это:
-- Менее безопасно (токен с широкими правами)
-- Требует ручного управления
-- Привязан к конкретному пользователю
+`GITHUB_TOKEN` имеет ограничения безопасности и **НЕ МОЖЕТ** клонировать другие приватные репозитории организации для целей Go modules. Это документированное ограничение GitHub Actions.
 
-Используйте встроенный `GITHUB_TOKEN` - он автоматический, безопасный и работает для всех в организации.
+Personal Access Token (PAT) с правами `repo` - единственное рабочее решение для приватных Go модулей.
 
 ## Troubleshooting
 
@@ -127,17 +129,15 @@ echo "GOPRIVATE=github.com/sveturs/*" >> $GITHUB_ENV
 3. Проверьте порядок: Checkout → Configure Git → Set GOPRIVATE → Setup Go
 
 ### Ошибка: "repository not found" или "404"
-**Причина:** GITHUB_TOKEN не имеет доступа к приватному репозиторию.
+**Причина:** Токен не имеет доступа к приватному репозиторию.
 **Решение:**
-1. **Проверьте permissions в workflow** - ОБЯЗАТЕЛЬНО должно быть:
-   ```yaml
-   permissions:
-     contents: read
-     packages: read
-   ```
-2. Убедитесь, что репозиторий находится в той же организации (`sveturs`)
-3. Проверьте настройки организации: Settings → Actions → General → Workflow permissions
-4. Должно быть включено "Read and write permissions" или минимум "Read repository contents"
+1. **Проверьте, что токен добавлен в Secrets:**
+   - Название: `PRIVATE_MODULES_TOKEN`
+   - Значение: Personal Access Token с правами `repo`
+2. Убедитесь, что токен создан с правильными scopes:
+   - ✅ `repo` - обязательно!
+   - ✅ `read:packages` - для пакетов
+3. Проверьте, что токен не истек (GitHub показывает дату истечения)
 
 ### Ошибка: "invalid version: git ls-remote"
 **Причина:** Go не смог найти тег/версию модуля.
