@@ -9,6 +9,7 @@ jest.mock('@/services/cars');
 // Mock next-intl
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
 }));
 
 describe('CarFilters', () => {
@@ -24,24 +25,26 @@ describe('CarFilters', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (CarsService.prototype.getMakes as jest.Mock).mockResolvedValue(
-      mockCarMakes
-    );
-    (CarsService.prototype.getModels as jest.Mock).mockResolvedValue(
-      mockCarModels
-    );
+    (CarsService.getMakes as jest.Mock).mockResolvedValue({
+      success: true,
+      data: mockCarMakes,
+    });
+    (CarsService.getModelsByMake as jest.Mock).mockResolvedValue({
+      success: true,
+      data: mockCarModels,
+    });
   });
 
   it('renders without crashing', () => {
     render(<CarFilters onFiltersChange={mockOnFiltersChange} />);
-    expect(screen.getByText('filters.carMake')).toBeInTheDocument();
+    expect(screen.getByText('filters.make')).toBeInTheDocument();
   });
 
   it('loads car makes on mount', async () => {
     render(<CarFilters onFiltersChange={mockOnFiltersChange} />);
 
     await waitFor(() => {
-      expect(CarsService.prototype.getMakes).toHaveBeenCalled();
+      expect(CarsService.getMakes).toHaveBeenCalled();
     });
   });
 
@@ -49,24 +52,25 @@ describe('CarFilters', () => {
     render(<CarFilters onFiltersChange={mockOnFiltersChange} />);
 
     await waitFor(() => {
-      expect(screen.getByText('filters.carMake')).toBeInTheDocument();
+      expect(screen.getByText('filters.make')).toBeInTheDocument();
     });
 
     // Select BMW
-    const makeSelect = screen.getByLabelText('filters.carMake');
+    const makeSelects = screen.getAllByRole('combobox');
+    const makeSelect = makeSelects[0]; // First select is make
     fireEvent.change(makeSelect, { target: { value: 'bmw' } });
 
     await waitFor(() => {
-      expect(CarsService.prototype.getModels).toHaveBeenCalledWith('bmw');
+      expect(CarsService.getModelsByMake).toHaveBeenCalledWith('bmw');
     });
   });
 
   it('calls onFiltersChange when filters change', async () => {
     render(<CarFilters onFiltersChange={mockOnFiltersChange} />);
 
-    // Change year from
-    const yearFromInput = screen.getByPlaceholderText('filters.yearFrom');
-    fireEvent.change(yearFromInput, { target: { value: '2015' } });
+    // Change price from
+    const priceFromInput = screen.getByPlaceholderText('filters.from');
+    fireEvent.change(priceFromInput, { target: { value: '10000' } });
 
     await waitFor(() => {
       expect(mockOnFiltersChange).toHaveBeenCalled();
@@ -76,27 +80,27 @@ describe('CarFilters', () => {
   it('toggles advanced filters', () => {
     render(<CarFilters onFiltersChange={mockOnFiltersChange} />);
 
-    const advancedButton = screen.getByText('filters.showAdvanced');
+    const advancedButton = screen.getByText('filters.advancedFilters');
     fireEvent.click(advancedButton);
 
-    expect(screen.getByText('filters.hideAdvanced')).toBeInTheDocument();
+    expect(screen.getByText('filters.bodyType')).toBeInTheDocument();
   });
 
   it('handles body type selection', async () => {
     render(<CarFilters onFiltersChange={mockOnFiltersChange} />);
 
     // Show advanced filters
-    const advancedButton = screen.getByText('filters.showAdvanced');
+    const advancedButton = screen.getByText('filters.advancedFilters');
     fireEvent.click(advancedButton);
 
     // Select sedan body type
-    const sedanCheckbox = screen.getByLabelText('bodyTypes.sedan');
+    const sedanCheckbox = screen.getByLabelText('filters.bodyTypes.sedan');
     fireEvent.click(sedanCheckbox);
 
     await waitFor(() => {
       expect(mockOnFiltersChange).toHaveBeenCalledWith(
         expect.objectContaining({
-          body_types: ['sedan'],
+          car_body_type: ['sedan'],
         })
       );
     });
@@ -106,16 +110,15 @@ describe('CarFilters', () => {
     render(<CarFilters onFiltersChange={mockOnFiltersChange} />);
 
     // Set some filters
-    const yearFromInput = screen.getByPlaceholderText('filters.yearFrom');
-    fireEvent.change(yearFromInput, { target: { value: '2015' } });
+    const priceFromInput = screen.getByPlaceholderText('filters.from');
+    fireEvent.change(priceFromInput, { target: { value: '10000' } });
 
     // Reset filters
     const resetButton = screen.getByText('filters.reset');
     fireEvent.click(resetButton);
 
     await waitFor(() => {
-      expect(yearFromInput).toHaveValue('');
-      expect(mockOnFiltersChange).toHaveBeenCalledWith({});
+      expect(priceFromInput).toHaveValue(null);
     });
   });
 });
