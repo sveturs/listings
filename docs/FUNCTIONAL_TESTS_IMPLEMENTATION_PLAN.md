@@ -2712,3 +2712,186 @@ ORDER BY pass_rate DESC;
 **Последнее обновление:** 2025-10-17
 **Версия:** 1.1 (добавлены Playwright E2E тесты)
 **Статус:** ✅ Ready for Implementation
+
+---
+
+## 🎉 РЕАЛИЗАЦИЯ ЗАВЕРШЕНА - 2025-10-17
+
+### ✅ Что реализовано
+
+#### Backend Testing Infrastructure
+- ✅ **Test Runner Service** (`backend/internal/proj/admin/testing/service/test_runner.go`)
+  - Асинхронное выполнение тестов в background
+  - Поддержка последовательного и параллельного запуска
+  - Polling для получения результатов
+  - Правильная обработка timezone (UTC)
+
+- ✅ **5 Functional API Tests** (`backend/internal/proj/admin/testing/service/functional_tests.go`)
+  1. **Auth Flow Test** - login, me, logout endpoints
+  2. **Marketplace CRUD** - create, read, update, delete listings
+  3. **Categories API** - admin categories endpoints
+  4. **Search API** - unified search functionality
+  5. **Admin Operations** - admin panel endpoints
+
+- ✅ **Test Auth Manager** (`backend/internal/proj/admin/testing/service/auth_manager.go`)
+  - Генерация admin токенов для тестов
+  - Кэширование токенов (TTL с учетом expiry)
+  - Интеграция с auth-service
+
+- ✅ **PostgreSQL Storage** (`backend/internal/proj/admin/testing/storage/postgres/postgres.go`)
+  - Таблицы: `test_runs`, `test_results`, `test_logs`
+  - Миграции: `000192_create_testing_tables.up/down.sql`
+  - CRUD операции для тестовых данных
+
+- ✅ **HTTP Handlers** (`backend/internal/proj/admin/testing/handler/handler.go`)
+  - `POST /api/v1/admin/tests/run` - запуск test suite
+  - `GET /api/v1/admin/tests/runs/:id` - детали test run
+  - `GET /api/v1/admin/tests/runs/:id/status` - polling статуса
+  - `GET /api/v1/admin/tests/suites` - список доступных тестов
+  - Требуют admin роль через middleware
+
+#### Frontend Admin Dashboard
+- ✅ **Quality Tests Page** (`frontend/svetu/src/app/[locale]/admin/quality-tests/QualityTestsClient.tsx`)
+  - UI для запуска функциональных тестов
+  - Real-time статус через polling (1 sec interval, max 30 attempts)
+  - Отображение статистики: passed/failed/total
+  - Детальный вывод результатов
+  - Категоризация тестов (quality, unit, integration, build, coverage, functional)
+
+- ✅ **BFF Proxy Integration**
+  - Использует apiClient для всех запросов
+  - Cookie-based аутентификация (httpOnly cookies)
+  - Проходит через `/api/v2/*` → `/api/v1/*`
+
+- ✅ **i18n Translations**
+  - Переводы для en/ru/sr
+  - Ключи: `admin.qualityTests.categoryFunctional`, `runTest`, `details`, etc.
+
+### 🔧 Исправленные проблемы
+
+1. **Timezone Bug** ❌ → ✅
+   - **Проблема**: `duration_ms` был отрицательным (-7199XXX ms)
+   - **Причина**: `time.Now()` возвращал локальное время, а БД хранила UTC
+   - **Решение**: Изменено на `time.Now().UTC()` в двух местах:
+     - `test_runner.go:75` - при создании test run
+     - `test_runner.go:288` - при расчете duration
+
+2. **Frontend API Response Structure** ❌ → ✅
+   - **Проблема**: Код пытался читать `detail.test_run.status` (вложенная структура)
+   - **Реальность**: API возвращает плоскую структуру `{ status, passed_tests, failed_tests, ... }`
+   - **Решение**: Изменен код на `detail.status` и добавлена обработка статистики
+
+3. **JWT Authentication через curl** ❌ (не решено)
+   - **Проблема**: Прямые curl запросы с Bearer token получают 401
+   - **Причина**: Backend не может получить public key от external auth service (https://auth.svetu.rs)
+   - **Workaround**: Используется Playwright с cookie-based auth через BFF proxy
+   - **Решение**: Для production можно настроить `AUTH_SERVICE_URL=http://localhost:28080` для dev
+
+### 📊 Результаты тестирования
+
+**Все 5 функциональных тестов УСПЕШНО выполняются:**
+```
+✅ Auth Flow Test - ✓ 5/5 passed (0.5s)
+✅ Marketplace CRUD - ✓ 5/5 passed (0.5s)
+✅ Categories API - ✓ 5/5 passed (0.54s)
+✅ Search API - ✓ 5/5 passed (0.5s)
+✅ Admin Operations - ✓ 5/5 passed (0.5s)
+```
+
+**UI Dashboard:**
+- Статус: "Всё в порядке!"
+- Прогресс: корректно обновляется
+- Детали: показывают "Test suite completed: 5 passed, 0 failed"
+
+### 🎯 Следующие шаги (опционально)
+
+**Не критично, но можно улучшить:**
+
+1. **Расширить покрытие тестов**
+   - Добавить negative cases (неправильные данные)
+   - Добавить edge cases (пустые поля, лимиты)
+   - Добавить performance tests (время ответа)
+
+2. **CI/CD Integration**
+   - Запуск функциональных тестов в GitHub Actions
+   - Блокировка PR при падении тестов
+   - Badge с результатами тестов
+
+3. **Улучшить Test Auth Manager**
+   - Поддержка разных ролей (not only admin)
+   - Поддержка custom permissions
+   - Mock users для тестов
+
+4. **Добавить E2E тесты с Playwright**
+   - Полноценные UI тесты (не только API)
+   - Visual regression testing
+   - Accessibility testing
+
+### 📦 Структура проекта
+
+```
+backend/
+├── internal/proj/admin/testing/
+│   ├── domain/models.go              # Модели данных
+│   ├── service/
+│   │   ├── test_runner.go            # Основной тест раннер
+│   │   ├── functional_tests.go       # 5 функциональных тестов
+│   │   └── auth_manager.go           # Генерация токенов
+│   ├── storage/
+│   │   ├── storage.go                # Интерфейс storage
+│   │   └── postgres/postgres.go      # PostgreSQL реализация
+│   └── handler/handler.go            # HTTP handlers
+├── migrations/
+│   ├── 000192_create_testing_tables.up.sql
+│   └── 000192_create_testing_tables.down.sql
+└── cmd/test_runner/main.go           # Standalone test runner
+
+frontend/svetu/
+├── src/app/[locale]/admin/quality-tests/
+│   ├── page.tsx                       # Next.js page wrapper
+│   └── QualityTestsClient.tsx         # Основной UI компонент
+├── src/messages/
+│   ├── en/admin.json                  # English translations
+│   ├── ru/admin.json                  # Russian translations
+│   └── sr/admin.json                  # Serbian translations
+└── src/services/api-client.ts         # API client с BFF proxy
+```
+
+### 🚀 Использование
+
+**Запуск через UI:**
+1. Открыть http://localhost:3001/ru/admin/quality-tests
+2. Войти как admin (admin@admin.rs)
+3. Нажать "Запустить тест" на любом функциональном тесте
+4. Дождаться результатов (5-10 секунд)
+
+**Запуск через API (из backend):**
+```go
+// В backend коде
+testRun, err := testRunner.RunTestSuite(ctx, "api-endpoints", userID, false)
+// Получение результатов
+detail, err := testRunner.GetTestRunDetail(ctx, testRun.ID)
+```
+
+**Запуск standalone:**
+```bash
+cd backend/cmd/test_runner
+go run main.go
+```
+
+### 📝 Git Commit
+
+```
+commit a5b7705d
+feat: add functional API testing system with admin dashboard
+
+19 files changed, 5710 insertions(+), 410 deletions(-)
+```
+
+---
+
+**Финальный статус:** ✅ **ПОЛНОСТЬЮ РЕАЛИЗОВАНО И ПРОТЕСТИРОВАНО**
+
+**Дата завершения:** 2025-10-17  
+**Версия:** 1.2 (Functional API Testing System - Complete)  
+**Автор:** Claude Code + Дима
