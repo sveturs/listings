@@ -92,7 +92,7 @@ jobs:
           DATABASE_URL: postgres://postgres:testpassword@localhost:5432/testdb?sslmode=disable
         run: |
           go build -o migrator ./cmd/migrator/migrator.go
-          ./migrator migrate
+          ./migrator up
 
       - name: Run unified attributes tests
         working-directory: backend
@@ -230,7 +230,7 @@ jobs:
         run: |
           go mod download
           go build -o migrator ./cmd/migrator/migrator.go
-          ./migrator migrate
+          ./migrator up
           go run ./cmd/api/main.go &
           sleep 5
           curl -f http://localhost:3000/health/ready || exit 1
@@ -297,7 +297,7 @@ jobs:
           PORT: 3000
         run: |
           go build -o migrator ./cmd/migrator/migrator.go
-          ./migrator migrate
+          ./migrator up
           go run ./cmd/api/main.go &
           sleep 5
 
@@ -382,13 +382,13 @@ jobs:
           go build -o migrator ./cmd/migrator/migrator.go
           
           # Apply all migrations
-          ./migrator migrate
+          ./migrator up
           
           # Rollback unified attributes migrations
           ./migrator rollback --steps 2
           
           # Re-apply migrations
-          ./migrator migrate
+          ./migrator up
           
           # Verify data integrity
           go run scripts/verify_migration_integrity.go
