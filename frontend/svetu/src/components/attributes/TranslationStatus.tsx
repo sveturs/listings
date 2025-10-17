@@ -71,7 +71,7 @@ export function TranslationStatus({
   }
 
   const getStatusIcon = (fieldStatus: FieldStatus | undefined) => {
-    if (!fieldStatus) {
+    if (!fieldStatus || !fieldStatus.is_translated) {
       return '❌'; // Not translated
     }
     if (fieldStatus.is_verified) {
@@ -84,7 +84,7 @@ export function TranslationStatus({
   };
 
   const getStatusColor = (fieldStatus: FieldStatus | undefined) => {
-    if (!fieldStatus) {
+    if (!fieldStatus || !fieldStatus.is_translated) {
       return 'text-error';
     }
     if (fieldStatus.is_verified) {
@@ -101,7 +101,7 @@ export function TranslationStatus({
     lang: string
   ) => {
     const langLabel = LANGUAGE_LABELS[lang] || lang;
-    if (!fieldStatus) {
+    if (!fieldStatus || !fieldStatus.is_translated) {
       return `${langLabel}: ${t('translations.notTranslated')}`;
     }
     if (fieldStatus.is_verified) {

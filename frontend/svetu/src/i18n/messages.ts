@@ -27,6 +27,7 @@ import enCreateListing from '@/messages/en/create_listing.json';
 import enCalculator from '@/messages/en/calculator.json';
 import enRecommendations from '@/messages/en/recommendations.json';
 import enFilters from '@/messages/en/filters.json';
+import enPostexpressTest from '@/messages/en/postexpressTest.json';
 
 // Русские переводы
 import ruCommon from '@/messages/ru/common.json';
@@ -53,6 +54,7 @@ import ruCreateListing from '@/messages/ru/create_listing.json';
 import ruCalculator from '@/messages/ru/calculator.json';
 import ruRecommendations from '@/messages/ru/recommendations.json';
 import ruFilters from '@/messages/ru/filters.json';
+import ruPostexpressTest from '@/messages/ru/postexpressTest.json';
 
 // Сербские переводы
 import srCommon from '@/messages/sr/common.json';
@@ -79,6 +81,7 @@ import srCreateListing from '@/messages/sr/create_listing.json';
 import srCalculator from '@/messages/sr/calculator.json';
 import srRecommendations from '@/messages/sr/recommendations.json';
 import srFilters from '@/messages/sr/filters.json';
+import srPostexpressTest from '@/messages/sr/postexpressTest.json';
 
 // Объединённые сообщения по языкам
 export const messages = {
@@ -107,6 +110,7 @@ export const messages = {
     calculator: enCalculator,
     recommendations: enRecommendations,
     filters: enFilters,
+    postexpressTest: enPostexpressTest,
   },
   ru: {
     common: ruCommon,
@@ -133,6 +137,7 @@ export const messages = {
     calculator: ruCalculator,
     recommendations: ruRecommendations,
     filters: ruFilters,
+    postexpressTest: ruPostexpressTest,
   },
   sr: {
     common: srCommon,
@@ -159,6 +164,7 @@ export const messages = {
     calculator: srCalculator,
     recommendations: srRecommendations,
     filters: srFilters,
+    postexpressTest: srPostexpressTest,
   },
 };
 

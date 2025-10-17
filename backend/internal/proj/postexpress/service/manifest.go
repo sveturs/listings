@@ -63,6 +63,13 @@ func (c *WSPClientImpl) CreateManifest(ctx context.Context, manifest *postexpres
 		return nil, fmt.Errorf("failed to marshal manifest request: %w", err)
 	}
 
+	// Логируем JSON для диагностики (обрезаем до 2000 символов)
+	jsonPreview := string(inputData)
+	if len(jsonPreview) > 2000 {
+		jsonPreview = jsonPreview[:2000] + "..."
+	}
+	c.logger.Debug("Manifest JSON request: %s", jsonPreview)
+
 	// Выполнение транзакции 73 (B2B Manifest)
 	req := &models.TransactionRequest{
 		TransactionType: 73, // ID транзакции для B2B Manifest
@@ -92,16 +99,33 @@ func (c *WSPClientImpl) CreateManifest(ctx context.Context, manifest *postexpres
 		return nil, fmt.Errorf("failed to parse manifest response: %w", err)
 	}
 
+	// Логируем ошибки валидации если они есть
+	if len(result.GreskeValidaci) > 0 {
+		c.logger.Error("Post Express validation errors (%d errors):", len(result.GreskeValidaci))
+		for i, validErr := range result.GreskeValidaci {
+			c.logger.Error("  [%d] Field: %s, Value: %s, Message: %s", i+1, validErr.Polje, validErr.Vrednost, validErr.Poruka)
+		}
+	}
+
+	// Логируем результат манифеста
+	if result.Rezultat != 0 {
+		c.logger.Error("Manifest creation failed - Rezultat: %d, Poruka: %s, IDManifesta: %d",
+			result.Rezultat, result.Poruka, result.IDManifesta)
+	} else {
+		c.logger.Info("Manifest created successfully - IDManifesta: %d, ExtIDManifest: %s",
+			result.IDManifesta, result.ExtIDManifest)
+	}
+
 	return &result, nil
 }
 
 // CreateShipmentViaManifest создает отправление через манифест B2B API (правильная структура)
 func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment *WSPShipmentRequest) (*postexpress.ManifestResponse, error) {
 	timestamp := time.Now().Unix()
-	boolFalse := false // Helper для *bool полей
 
 	// Определяем ID услуги на основе типа сервиса
-	idRukovanje := 29 // По умолчанию: PE_Danas_za_sutra_12
+	// ВАЖНО: ID 29 (PE_Danas_za_sutra_12) отменена с 01.01.2022!
+	idRukovanje := 71 // По умолчанию: PE_Danas_za_sutra_isporuka (ID 71)
 	switch shipment.ServiceType {
 	case "PE_Danas_za_danas":
 		idRukovanje = 30
@@ -146,8 +170,8 @@ func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment 
 		ExtBrend:          "SVETU",
 		ExtMagacin:        "WAREHOUSE1",
 		ExtReferenca:      fmt.Sprintf("SVETU-REF-%d", timestamp),
-		NacinPrijema:      "K", // K=courier, O=office
-		ImaPrijemniBrojDN: &boolFalse,
+		NacinPrijema:      "K",   // K=courier, O=office
+		ImaPrijemniBrojDN: "N",   // "N" = нет приёмного номера, "D" = есть приёмный номер
 		NacinPlacanja:     "POF", // POF=poslato od firme (sent by company)
 
 		// Отправитель ВНУТРИ отправления
@@ -199,20 +223,52 @@ func (c *WSPClientImpl) CreateShipmentViaManifest(ctx context.Context, shipment 
 			PostanskiBroj: shipment.RecipientPostalCode,
 			Telefon:       shipment.RecipientPhone,
 			OznakaZemlje:  "RS",
+			TipAdrese:     "S", // По умолчанию стандартный адрес
 		},
 		Masa: weightGrams, // В граммах!
 
 		// COD и ценность (в para!)
-		Otkupnina: codPara,
-		Vrednost:  valuePara,
+		Vrednost: valuePara,
 
 		// Услуги (строка через запятую!)
 		PosebneUsluge: services,
 
 		// Опциональные поля
-		Sadrzaj:       shipment.Content,
-		ReferencaBroj: fmt.Sprintf("SVETU-%d", timestamp),
-		Napomena:      shipment.Note,
+		Sadrzaj:          shipment.Content,
+		ReferencaBroj:    fmt.Sprintf("SVETU-%d", timestamp),
+		Napomena:         shipment.Note,
+		ParcelLockerCode: shipment.ParcelLockerCode, // Код паккетомата для IdRukovanje=85
+	}
+
+	// Для parcel locker (IdRukovanje=85) устанавливаем специальный тип адреса
+	if idRukovanje == 85 || shipment.ParcelLockerCode != "" {
+		// Валидация ParcelLockerCode
+		if shipment.ParcelLockerCode == "" {
+			return nil, fmt.Errorf("ParcelLockerCode is required for parcel locker delivery (IdRukovanje=85)")
+		}
+
+		// Устанавливаем тип адреса "P" (Parcel Locker / Paketom at)
+		posiljka.Primalac.TipAdrese = "P"
+		posiljka.Primalac.PAK = shipment.ParcelLockerCode
+
+		c.logger.Debug("Parcel Locker configured: code=%s, IdRukovanje=%d", shipment.ParcelLockerCode, idRukovanje)
+	}
+
+	// Устанавливаем Otkupnina ТОЛЬКО если это COD отправление
+	if codPara > 0 {
+		// Otkupnina - это простое число в para, НЕ структура!
+		posiljka.Otkupnina = codPara
+
+		// Банковские данные для COD (опциональные, но рекомендуемые)
+		posiljka.OtkupninaTekuciRacun = c.config.BankAccount
+		posiljka.OtkupninaModelPNB = c.config.PaymentModel
+		posiljka.OtkupninaPNB = generatePNB(timestamp)
+		posiljka.OtkupninaSifraPlacanja = c.config.PaymentCode
+		posiljka.OtkupninaVrstaDokumenta = "N" // N = налогни документ
+
+		c.logger.Debug("COD configured: amount=%d para (%.2f RSD), bank=%s, model=%s, PNB=%s, code=%s",
+			codPara, float64(codPara)/100.0, c.config.BankAccount, c.config.PaymentModel,
+			posiljka.OtkupninaPNB, c.config.PaymentCode)
 	}
 
 	// Создаем заказ с одной посылкой
@@ -276,4 +332,15 @@ func parseAddress(fullAddress string) (street string, number string) {
 	street = fullAddress[:lastSpace]
 	number = fullAddress[lastSpace+1:]
 	return street, number
+}
+
+// generatePNB генерирует уникальный позив на број (payment reference) на основе timestamp
+// Позив на број используется для идентификации платежа при откупном переводе
+func generatePNB(timestamp int64) string {
+	// Используем последние 10 цифр timestamp для создания уникального PNB
+	pnb := fmt.Sprintf("%d", timestamp)
+	if len(pnb) > 10 {
+		pnb = pnb[len(pnb)-10:]
+	}
+	return pnb
 }

@@ -113,7 +113,14 @@ export default function Mock3DSForm({ onSubmit, amount }: Mock3DSFormProps) {
               <button
                 type="button"
                 className="btn btn-ghost"
-                onClick={() => onSubmit('cancel')}
+                onClick={async () => {
+                  setIsSubmitting(true);
+                  try {
+                    await onSubmit('cancel');
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
                 disabled={isSubmitting}
               >
                 Откажи

@@ -55,9 +55,9 @@ func main() {
 		RecipientCity:       "Beograd",
 		RecipientPostalCode: "11000",
 		RecipientPhone:      "+381691234567",
-		Weight:              0.75,  // kg
-		CODAmount:           0,     // no COD
-		InsuranceAmount:     0,     // no insurance
+		Weight:              0.75, // kg
+		CODAmount:           0,    // no COD
+		InsuranceAmount:     0,    // no insurance
 		ServiceType:         "PE_Danas_za_sutra_12",
 		Content:             "Test sadržaj - knjige",
 		Note:                "Test integration - Standard",

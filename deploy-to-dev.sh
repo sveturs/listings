@@ -252,35 +252,55 @@ else
 fi
 
 # Kill old frontend processes before restart
-log "🔪 Killing old frontend processes..."
-# Убиваем ВСЕ процессы Next.js (не только на порту 3003)
-# Это необходимо т.к. старые процессы хранят кэш переводов в памяти
+log "🔪 Killing old frontend processes (including shell wrappers and worker threads)..."
+
+# Шаг 1: Убиваем все Next.js процессы по паттерну
+# Это критично т.к. старые процессы хранят кэш переводов в памяти
 pkill -9 -f "yarn dev.*3003" 2>/dev/null || true
 pkill -9 -f "yarn start.*3003" 2>/dev/null || true
 pkill -9 -f "next dev.*3003" 2>/dev/null || true
 pkill -9 -f "next start.*3003" 2>/dev/null || true
 pkill -9 -f "next-server.*3003" 2>/dev/null || true
 pkill -9 -f "node.*next.*3003" 2>/dev/null || true
-# Убиваем также старые процессы Next.js без привязки к порту
+# Убиваем также по версии Next.js (более надёжно)
 pkill -9 -f "next-server.*v15" 2>/dev/null || true
+# Убиваем shell wrappers
+pkill -9 -f "/bin/sh -c.*next.*3003" 2>/dev/null || true
 sleep 3
 
-# Verify port 3003 is free (более надежная проверка)
+# Шаг 2: Проверяем порт с несколькими попытками
 log "🔍 Checking if port 3003 is free..."
 PORT_CHECK_ATTEMPTS=0
 MAX_PORT_ATTEMPTS=5
 
-while netstat -tlnp 2>/dev/null | grep -q ":3003 " && [ \$PORT_CHECK_ATTEMPTS -lt \$MAX_PORT_ATTEMPTS ]; do
-    warn "Port 3003 still occupied (attempt \$((PORT_CHECK_ATTEMPTS + 1))/\$MAX_PORT_ATTEMPTS), forcing cleanup..."
-    fuser -k 3003/tcp 2>/dev/null || true
-    sleep 2
-    PORT_CHECK_ATTEMPTS=\$((PORT_CHECK_ATTEMPTS + 1))
+while [ \$PORT_CHECK_ATTEMPTS -lt \$MAX_PORT_ATTEMPTS ]; do
+    # Проверяем порт через netstat
+    if netstat -tlnp 2>/dev/null | grep -q ":3003 "; then
+        warn "Port 3003 still occupied (attempt \$((PORT_CHECK_ATTEMPTS + 1))/\$MAX_PORT_ATTEMPTS), forcing cleanup..."
+
+        # Используем fuser только если команда существует
+        if command -v fuser >/dev/null 2>&1; then
+            fuser -k -9 3003/tcp 2>/dev/null || true
+        fi
+
+        # Дополнительная зачистка через pkill
+        pkill -9 -f "3003" 2>/dev/null || true
+
+        sleep 2
+        PORT_CHECK_ATTEMPTS=\$((PORT_CHECK_ATTEMPTS + 1))
+    else
+        break
+    fi
 done
 
+# Финальная проверка
 if netstat -tlnp 2>/dev/null | grep -q ":3003 "; then
     error "Failed to free port 3003 after \$MAX_PORT_ATTEMPTS attempts"
     warn "Processes still using port 3003:"
-    fuser -v 3003/tcp 2>&1 || true
+    if command -v fuser >/dev/null 2>&1; then
+        fuser -v 3003/tcp 2>&1 || true
+    fi
+    ps aux | grep -E "(3003|next)" | grep -v grep || true
     warn "You may need to manually kill the process or reboot"
     exit 1
 fi
@@ -318,32 +338,92 @@ log "✅ .next is fresh (created within last 2 minutes)"
 
 # Останавливаем старый процесс (критично для очистки кэша переводов!)
 log "🔪 Stopping ALL old Next.js processes..."
-# Убиваем по порту
-lsof -ti:3003 | xargs -r kill -9 2>/dev/null || true
-fuser -k -9 3003/tcp 2>/dev/null || true
-# Убиваем все процессы Next.js для гарантии
-pkill -9 -f "next-server" 2>/dev/null || true
+
+# Шаг 1: Убиваем по имени процесса (самый надёжный способ)
+pkill -9 -f "next-server.*v15" 2>/dev/null || true
 pkill -9 -f "yarn start.*3003" 2>/dev/null || true
-sleep 3
+pkill -9 -f "next start.*3003" 2>/dev/null || true
+sleep 2
+
+# Шаг 2: Убиваем по порту (страховка)
+# Используем только те команды, которые точно есть на сервере
+if command -v lsof >/dev/null 2>&1; then
+    lsof -ti:3003 2>/dev/null | xargs -r kill -9 2>/dev/null || true
+fi
+if command -v fuser >/dev/null 2>&1; then
+    fuser -k -9 3003/tcp 2>/dev/null || true
+fi
+sleep 2
+
+# Шаг 3: Убиваем shell wrappers которые могли остаться
+# (Next.js запускается через nohup, что создаёт /bin/sh процесс)
+pkill -9 -f "/bin/sh -c next start" 2>/dev/null || true
+sleep 1
 
 # Финальная проверка что порт свободен
-if lsof -i:3003 2>/dev/null; then
-    error "Port 3003 is still occupied!"
+PORT_CHECK_RETRIES=0
+MAX_RETRIES=3
+while [ \$PORT_CHECK_RETRIES -lt \$MAX_RETRIES ]; do
+    if command -v lsof >/dev/null 2>&1 && lsof -i:3003 2>/dev/null; then
+        warn "Port 3003 still occupied (retry \$((PORT_CHECK_RETRIES + 1))/\$MAX_RETRIES)"
+        # Более агрессивная очистка
+        pkill -9 -f "3003" 2>/dev/null || true
+        sleep 2
+        PORT_CHECK_RETRIES=\$((PORT_CHECK_RETRIES + 1))
+    else
+        break
+    fi
+done
+
+# Проверка успешности очистки
+if command -v lsof >/dev/null 2>&1 && lsof -i:3003 2>/dev/null; then
+    error "Port 3003 is still occupied after \$MAX_RETRIES retries!"
+    warn "Processes still using port 3003:"
+    ps aux | grep -E "(3003|next)" | grep -v grep || true
     exit 1
 fi
+log "✅ All Next.js processes stopped, port 3003 is free"
 
 # Запускаем production сервер (новый кэш переводов!)
 log "🚀 Starting production server on port 3003..."
 nohup yarn start -p 3003 > frontend-dev.log 2>&1 &
+FRONTEND_START_PID=\$!
+log "📌 Started frontend with wrapper PID: \$FRONTEND_START_PID"
 sleep 3
 
 # Проверяем что frontend действительно запустился
-sleep 5
-if ! pgrep -f "next.*3003" > /dev/null; then
-    error "Frontend process not found after restart"
-    tail -50 frontend-dev.log
+log "🔍 Verifying frontend startup..."
+FRONTEND_CHECK_ATTEMPTS=0
+MAX_FRONTEND_ATTEMPTS=10
+
+while [ \$FRONTEND_CHECK_ATTEMPTS -lt \$MAX_FRONTEND_ATTEMPTS ]; do
+    # Ищем процесс next-server (настоящий процесс, не shell wrapper)
+    if pgrep -f "next-server.*v15" > /dev/null; then
+        NEXT_PID=\$(pgrep -f "next-server.*v15" | head -1)
+        log "✅ Frontend started successfully! Next.js PID: \$NEXT_PID"
+        break
+    fi
+
+    # Проверяем логи на наличие ошибок
+    if [ -f frontend-dev.log ] && grep -qi "error" frontend-dev.log; then
+        warn "Errors found in frontend log (attempt \$((FRONTEND_CHECK_ATTEMPTS + 1))/\$MAX_FRONTEND_ATTEMPTS)"
+        tail -10 frontend-dev.log | sed 's/^/  LOG: /'
+    fi
+
+    sleep 2
+    FRONTEND_CHECK_ATTEMPTS=\$((FRONTEND_CHECK_ATTEMPTS + 1))
+done
+
+# Финальная проверка
+if ! pgrep -f "next-server.*v15" > /dev/null; then
+    error "Frontend process not found after \$MAX_FRONTEND_ATTEMPTS attempts!"
+    warn "Frontend startup log:"
+    tail -50 frontend-dev.log | sed 's/^/  /'
+    warn "Checking for zombie processes:"
+    ps aux | grep -E "(next|yarn|3003)" | grep -v grep || true
     exit 1
 fi
+
 log "✅ Frontend restarted (production mode with FRESH build)"
 
 # Clean up old dumps (keep last 3)

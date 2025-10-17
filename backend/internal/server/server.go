@@ -168,9 +168,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, pkgErrors.Wrap(err, "failed to create auth client")
 	}
 
-	// Create auth service with client and logger
+	// Create auth service with local JWT validation (automatically fetches public key from auth service)
 	zerologLogger := *logger.Get()
-	authServiceInstance := authService.NewAuthService(authClient, zerologLogger)
+	authServiceInstance := authService.NewAuthServiceWithLocalValidation(authClient, zerologLogger)
+	logger.Info().
+		Str("auth_service_url", cfg.AuthServiceURL).
+		Msg("Auth service initialized with local JWT validation (public key will be fetched from auth service)")
+
 	userServiceInstance := authService.NewUserService(authClient, zerologLogger)
 	oauthServiceInstance := authService.NewOAuthService(authClient)
 
@@ -208,7 +212,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		Password:        cfg.PostExpress.Password,
 		TestMode:        cfg.PostExpress.TestMode,
 		Timeout:         30 * time.Second,
-		Language:        "sr",
+		Language:        "",  // ИСПРАВЛЕНО: пустая строка - обходим баг Post Express с отсутствующими колонками PREVOD_*
 		DeviceType:      "2", // ИСПРАВЛЕНО: должна быть строка "2" для веб-приложения
 		MaxRetries:      3,
 		RetryDelay:      1 * time.Second,
@@ -229,7 +233,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 			MaxRetries:           3,
 		},
 	)
-	postexpressHandlerInstance := postexpressHandler.NewHandler(postexpressServiceInstance, *pkglogger.New())
+	postexpressHandlerInstance := postexpressHandler.NewHandlerWithWSPClient(postexpressServiceInstance, postexpressWSPClient, *pkglogger.New())
 
 	// BEX Express инициализация
 	bexexpressModule, err := bexexpress.NewModule(db.GetSQLXDB().DB, cfg)

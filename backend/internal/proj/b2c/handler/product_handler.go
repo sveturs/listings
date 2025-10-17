@@ -332,14 +332,15 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 	})
 }
 
-// DeleteProduct deletes a product
+// DeleteProduct deletes a product (soft delete by default, hard delete with query param)
 // @Summary Delete a storefront product
-// @Description Permanently deletes a product
+// @Description Deletes a product. Use query param hard=true for permanent deletion of all related data
 // @Tags storefront-products
 // @Accept json
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param id path int true "Product ID"
+// @Param hard query bool false "Set to true for permanent hard delete (default: false)"
 // @Success 200 {object} models.SuccessResponse "Product deleted successfully"
 // @Failure 400 {object} models.ErrorResponse "Bad request"
 // @Failure 401 {object} models.ErrorResponse "Unauthorized"
@@ -385,21 +386,8 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 }
 
 // HardDeleteProduct permanently deletes a product
-// @Summary Hard delete a storefront product
-// @Description Permanently deletes a product and all related data (reviews, favorites, images, etc.)
-// @Tags storefront-products
-// @Accept json
-// @Produce json
-// @Param slug path string true "Storefront slug"
-// @Param id path int true "Product ID"
-// @Param hard query bool true "Must be true for hard delete"
-// @Success 200 {object} models.SuccessResponse "Product permanently deleted"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 404 {object} models.ErrorResponse "Product not found"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
-// @Security BearerAuth
-// @Router /api/v1/b2c_stores/{slug}/products/{id} [delete]
+// Note: This is called internally via deleteProductBySlug when query param hard=true
+// The public endpoint is documented in DeleteProduct swagger annotation
 func (h *ProductHandler) HardDeleteProduct(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
 	if err != nil {

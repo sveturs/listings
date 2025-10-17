@@ -404,13 +404,7 @@ func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 }
 
 // GetProvidersAdmin - получает список провайдеров для админки
-// @Summary Get providers for admin
-// @Description Get detailed list of all providers for admin panel
-// @Tags admin-delivery
-// @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Provider} "List of providers"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
-// @Router /api/v1/admin/delivery/providers [get]
+// Note: Swagger documentation is in AdminHandler.GetProviders
 func (h *Handler) GetProvidersAdmin(c *fiber.Ctx) error {
 	providers, err := h.service.GetProviders(c.Context(), false)
 	if err != nil {
@@ -421,17 +415,7 @@ func (h *Handler) GetProvidersAdmin(c *fiber.Ctx) error {
 }
 
 // UpdateProvider - обновляет провайдера
-// @Summary Update provider
-// @Description Update provider settings
-// @Tags admin-delivery
-// @Accept json
-// @Produce json
-// @Param id path int true "Provider ID"
-// @Param provider body models.Provider true "Provider data"
-// @Success 200 {object} utils.SuccessResponseSwag "Success"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
-// @Router /api/v1/admin/delivery/providers/{id} [put]
+// Note: Swagger documentation is in AdminHandler.UpdateProviderConfig
 func (h *Handler) UpdateProvider(c *fiber.Ctx) error {
 	providerID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -451,16 +435,7 @@ func (h *Handler) UpdateProvider(c *fiber.Ctx) error {
 }
 
 // CreatePricingRule - создает правило расчета стоимости
-// @Summary Create pricing rule
-// @Description Create new pricing rule for provider
-// @Tags admin-delivery
-// @Accept json
-// @Produce json
-// @Param rule body models.PricingRule true "Pricing rule"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PricingRule} "Created rule"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
-// @Router /api/v1/admin/delivery/pricing-rules [post]
+// Note: Swagger documentation is in AdminHandler.CreatePricingRule
 func (h *Handler) CreatePricingRule(c *fiber.Ctx) error {
 	var rule models.PricingRule
 	if err := c.BodyParser(&rule); err != nil {
@@ -476,16 +451,7 @@ func (h *Handler) CreatePricingRule(c *fiber.Ctx) error {
 }
 
 // GetAnalytics - получает аналитику по доставкам
-// @Summary Get delivery analytics
-// @Description Get analytics and statistics for deliveries
-// @Tags admin-delivery
-// @Produce json
-// @Param from query string false "From date (YYYY-MM-DD)"
-// @Param to query string false "To date (YYYY-MM-DD)"
-// @Param provider_id query int false "Provider ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=service.DeliveryAnalytics} "Analytics data"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
-// @Router /api/v1/admin/delivery/analytics [get]
+// Note: Swagger documentation is in AdminHandler.GetAnalytics
 func (h *Handler) GetAnalytics(c *fiber.Ctx) error {
 	// Парсим даты
 	fromStr := c.Query("from")

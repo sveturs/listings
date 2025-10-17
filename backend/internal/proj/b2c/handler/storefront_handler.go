@@ -831,22 +831,9 @@ func (h *StorefrontHandler) RecordView(c *fiber.Ctx) error {
 	})
 }
 
-// GetAnalytics получает аналитику витрины
-// @Summary Get storefront analytics
-// @Description Returns analytics data for specified period
-// @Tags b2c_stores
-// @Accept json
-// @Produce json
-// @Param id path int true "Storefront ID"
-// @Param from query string true "Start date (YYYY-MM-DD)"
-// @Param to query string true "End date (YYYY-MM-DD)"
-// @Success 200 {object} []models.StorefrontAnalytics "Analytics data"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
-// @Security BearerAuth
-// @Router /api/v1/b2c_stores/{id}/analytics [get]
+// GetAnalytics получает аналитику витрины (deprecated - use GetStorefrontAnalytics)
+// Note: This is deprecated. Use GetStorefrontAnalytics for new implementations.
+// The public API endpoint is documented in GetStorefrontAnalytics swagger annotation.
 func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
 	userID, _ := authMiddleware.GetUserID(c)
 

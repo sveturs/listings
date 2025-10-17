@@ -1,13 +1,20 @@
 package handler
 
 import (
-	"crypto/rand"
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 
+	"backend/internal/proj/postexpress"
+	"backend/internal/proj/postexpress/service"
 	"backend/pkg/utils"
+)
+
+const (
+	// defaultCityBeograd - дефолтный город для тестовых запросов
+	defaultCityBeograd = "Beograd"
 )
 
 // TestShipmentRequest - запрос для создания тестового отправления
@@ -58,9 +65,9 @@ type TestShipmentResponse struct {
 	ProcessingTime int64       `json:"processing_time_ms"` // milliseconds
 }
 
-// CreateTestShipment создает тестовое отправление
+// CreateTestShipment создает тестовое отправление через реальный Post Express API
 // @Summary Create test shipment
-// @Description Create a test shipment using Post Express WSP API for visual testing
+// @Description Create a test shipment using real Post Express WSP API (B2B Manifest)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -78,10 +85,21 @@ func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
 	}
 
 	// Валидация обязательных полей
-	if req.RecipientName == "" || req.RecipientPhone == "" || req.RecipientCity == "" {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_recipient_data", fiber.Map{
-			"missing_fields": []string{"recipient_name", "recipient_phone", "recipient_city"},
-		})
+	// Для parcel locker (IdRukovanje=85) не требуется адрес получателя
+	if req.IdRukovanje == 85 {
+		// Для паккетомата нужны только имя, телефон и код паккетомата
+		if req.RecipientName == "" || req.RecipientPhone == "" || req.ParcelLockerCode == "" {
+			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_parcel_locker_data", fiber.Map{
+				"missing_fields": []string{"recipient_name", "recipient_phone", "parcel_locker_code"},
+			})
+		}
+	} else {
+		// Для обычной доставки нужны полные данные получателя
+		if req.RecipientName == "" || req.RecipientPhone == "" || req.RecipientCity == "" {
+			return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_recipient_data", fiber.Map{
+				"missing_fields": []string{"recipient_name", "recipient_phone", "recipient_city"},
+			})
+		}
 	}
 
 	if req.SenderName == "" || req.SenderCity == "" {
@@ -107,10 +125,16 @@ func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
 		req.PaymentMethod = "POF"
 	}
 
-	// Создаем тестовое отправление
-	result := h.createTestShipmentResponse(&req, startTime)
+	// РЕАЛЬНОЕ создание отправления через WSP API
+	result, err := h.createRealShipment(c.Context(), &req, startTime)
+	if err != nil {
+		h.logger.Error("Failed to create real test shipment: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.create_shipment_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
-	return utils.SendSuccessResponse(c, result, "Test shipment processed successfully")
+	return utils.SendSuccessResponse(c, result, "Test shipment created successfully via real Post Express API")
 }
 
 // GetTestConfig возвращает текущую конфигурацию Post Express для тестирования
@@ -128,7 +152,7 @@ func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 			"name":    "Sve Tu d.o.o.",
 			"phone":   "0641234567",
 			"email":   "b2b@svetu.rs",
-			"city":    "Beograd",
+			"city":    defaultCityBeograd,
 			"address": "Bulevar kralja Aleksandra 73",
 			"zip":     "11000",
 		},
@@ -136,7 +160,7 @@ func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 			"name":    "Petar Petrović",
 			"phone":   "0641234567",
 			"email":   "petar@example.com",
-			"city":    "Beograd",
+			"city":    defaultCityBeograd,
 			"address": "Takovska 2",
 			"zip":     "11000",
 		},
@@ -188,121 +212,960 @@ func (h *Handler) GetTestHistory(c *fiber.Ctx) error {
 	return utils.SendSuccessResponse(c, history, "Test shipments history")
 }
 
-// createTestShipmentResponse создает ответ для тестового отправления
-func (h *Handler) createTestShipmentResponse(req *TestShipmentRequest, startTime time.Time) *TestShipmentResponse {
-	// Генерируем уникальные ID
-	externalID := fmt.Sprintf("SVETU-TEST-%d", time.Now().Unix())
-	trackingNumber := generateTrackingNumber()
+// =============================================================================
+// НОВЫЕ ТЕСТОВЫЕ ENDPOINTS ДЛЯ ВСЕХ WSP API ФУНКЦИЙ
+// =============================================================================
 
-	// Рассчитываем стоимость (простая формула для теста)
-	cost := calculateTestCost(req.Weight, req.CODAmount, req.InsuredValue, req.Services)
+// TestTrackingRequest - запрос отслеживания
+type TestTrackingRequest struct {
+	TrackingNumber string `json:"tracking_number" example:"SVETU-TEST-123456"`
+}
 
-	response := &TestShipmentResponse{
+// TestTrackShipment тестирует отслеживание через WSP API (Transaction 15)
+// @Summary Test tracking shipment
+// @Description Track shipment using real Post Express WSP API (Transaction 15)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestTrackingRequest true "Tracking request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Tracking result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/track [post]
+func (h *Handler) TestTrackShipment(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestTrackingRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.TrackingNumber == "" {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.tracking_number_required", nil)
+	}
+
+	// Проверяем что WSP клиент инициализирован
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing tracking for shipment: %s", req.TrackingNumber)
+
+	// Вызываем реальный WSP API (Transaction 15)
+	trackingResp, err := h.wspClient.GetShipmentStatus(c.Context(), req.TrackingNumber)
+	if err != nil {
+		h.logger.Error("GetShipmentStatus failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.tracking_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         true,
+		"tracking_number": req.TrackingNumber,
+		"status":          trackingResp.Status,
+		"events":          trackingResp.Events,
+		"processing_time": time.Since(startTime).Milliseconds(),
+		"response_data":   trackingResp,
+	}
+
+	h.logger.Info("Tracking successful: status=%s, events=%d", trackingResp.Status, len(trackingResp.Events))
+
+	return utils.SendSuccessResponse(c, result, "Tracking data retrieved successfully")
+}
+
+// TestCancelRequest - запрос отмены
+type TestCancelRequest struct {
+	ShipmentID string `json:"shipment_id" example:"12345"`
+	Reason     string `json:"reason" example:"Отмена по требованию клиента"`
+}
+
+// TestCancelShipment тестирует отмену через WSP API (Transaction 25)
+// @Summary Test cancel shipment
+// @Description Cancel shipment using real Post Express WSP API (Transaction 25)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestCancelRequest true "Cancel request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Cancel result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/cancel [post]
+func (h *Handler) TestCancelShipment(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestCancelRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.ShipmentID == "" {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.shipment_id_required", nil)
+	}
+
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing cancel for shipment: %s, reason: %s", req.ShipmentID, req.Reason)
+
+	// Вызываем реальный WSP API (Transaction 25)
+	err := h.wspClient.CancelShipment(c.Context(), req.ShipmentID)
+	if err != nil {
+		h.logger.Error("CancelShipment failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.cancel_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         true,
+		"shipment_id":     req.ShipmentID,
+		"reason":          req.Reason,
+		"processing_time": time.Since(startTime).Milliseconds(),
+	}
+
+	h.logger.Info("Cancel successful for shipment: %s", req.ShipmentID)
+
+	return utils.SendSuccessResponse(c, result, "Shipment canceled successfully")
+}
+
+// TestPrintLabelRequest - запрос печати этикетки
+type TestPrintLabelRequest struct {
+	ShipmentID string `json:"shipment_id" example:"12345"`
+}
+
+// TestPrintLabel тестирует печать этикетки через WSP API (Transaction 20)
+// @Summary Test print label
+// @Description Print shipment label using real Post Express WSP API (Transaction 20)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestPrintLabelRequest true "Print label request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Label data"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/label [post]
+func (h *Handler) TestPrintLabel(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestPrintLabelRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.ShipmentID == "" {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.shipment_id_required", nil)
+	}
+
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing print label for shipment: %s", req.ShipmentID)
+
+	// Вызываем реальный WSP API (Transaction 20)
+	labelData, err := h.wspClient.PrintLabel(c.Context(), req.ShipmentID)
+	if err != nil {
+		h.logger.Error("PrintLabel failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.print_label_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         true,
+		"shipment_id":     req.ShipmentID,
+		"label_size":      len(labelData),
+		"label_format":    "PDF",
+		"processing_time": time.Since(startTime).Milliseconds(),
+		// labelData содержит PDF bytes, можно вернуть как base64
+		"label_data_preview": fmt.Sprintf("PDF data: %d bytes", len(labelData)),
+	}
+
+	h.logger.Info("Label printed successfully for shipment: %s, size: %d bytes", req.ShipmentID, len(labelData))
+
+	return utils.SendSuccessResponse(c, result, "Label retrieved successfully")
+}
+
+// TestSearchLocationsRequest - запрос поиска населенных пунктов
+type TestSearchLocationsRequest struct {
+	Query string `json:"query" example:"Beograd"`
+}
+
+// TestSearchLocations тестирует поиск населенных пунктов через WSP API (Transaction 3)
+// @Summary Test search locations
+// @Description Search locations using real Post Express WSP API (Transaction 3)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestSearchLocationsRequest true "Search request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Locations list"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/locations [post]
+func (h *Handler) TestSearchLocations(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestSearchLocationsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.Query == "" {
+		req.Query = defaultCityBeograd // Дефолтный поиск
+	}
+
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing search locations: query=%s", req.Query)
+
+	// Вызываем реальный WSP API (Transaction 3)
+	locations, err := h.wspClient.GetLocations(c.Context(), req.Query)
+	if err != nil {
+		h.logger.Error("GetLocations failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.search_locations_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         true,
+		"query":           req.Query,
+		"count":           len(locations),
+		"locations":       locations,
+		"processing_time": time.Since(startTime).Milliseconds(),
+	}
+
+	h.logger.Info("Search locations successful: query=%s, found=%d", req.Query, len(locations))
+
+	return utils.SendSuccessResponse(c, result, fmt.Sprintf("Found %d locations", len(locations)))
+}
+
+// TestGetOfficesRequest - запрос получения отделений
+type TestGetOfficesRequest struct {
+	LocationID int `json:"location_id" example:"1"`
+}
+
+// TestGetOffices тестирует получение отделений через WSP API (Transaction 10)
+// @Summary Test get offices
+// @Description Get offices for location using real Post Express WSP API (Transaction 10)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestGetOfficesRequest true "Get offices request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Offices list"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/offices [post]
+func (h *Handler) TestGetOffices(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestGetOfficesRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.LocationID <= 0 {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.location_id_required", nil)
+	}
+
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing get offices: location_id=%d", req.LocationID)
+
+	// Вызываем реальный WSP API (Transaction 10)
+	offices, err := h.wspClient.GetOffices(c.Context(), req.LocationID)
+	if err != nil {
+		h.logger.Error("GetOffices failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.get_offices_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         true,
+		"location_id":     req.LocationID,
+		"count":           len(offices),
+		"offices":         offices,
+		"processing_time": time.Since(startTime).Milliseconds(),
+	}
+
+	h.logger.Info("Get offices successful: location_id=%d, found=%d", req.LocationID, len(offices))
+
+	return utils.SendSuccessResponse(c, result, fmt.Sprintf("Found %d offices", len(offices)))
+}
+
+// createRealShipment создает реальное отправление через WSP API
+func (h *Handler) createRealShipment(ctx context.Context, req *TestShipmentRequest, startTime time.Time) (*TestShipmentResponse, error) {
+	// Проверяем что WSP клиент инициализирован
+	if h.wspClient == nil {
+		return nil, fmt.Errorf("WSP client not initialized")
+	}
+
+	// Определяем ServiceType на основе IdRukovanje
+	serviceType := "PE_Danas_za_sutra_isporuka" // Дефолтный сервис (IdRukovanje=71)
+	switch req.IdRukovanje {
+	case 29:
+		serviceType = "PE_Danas_za_sutra_12"
+	case 30:
+		serviceType = "PE_Danas_za_danas"
+	case 55:
+		serviceType = "PE_Danas_za_odmah"
+	case 58:
+		serviceType = "PE_Danas_za_sutra_19"
+	case 59:
+		serviceType = "PE_Danas_za_odmah_Bg"
+	case 71:
+		serviceType = "PE_Danas_za_sutra_isporuka"
+	case 85:
+		serviceType = "PE_Klasicna" // Parcel Locker
+	}
+
+	// Подготавливаем запрос для WSP API
+	wspReq := &service.WSPShipmentRequest{
+		SenderName:          req.SenderName,
+		SenderAddress:       req.SenderAddress,
+		SenderCity:          req.SenderCity,
+		SenderPostalCode:    req.SenderZip,
+		SenderPhone:         req.SenderPhone,
+		RecipientName:       req.RecipientName,
+		RecipientAddress:    req.RecipientAddress,
+		RecipientCity:       req.RecipientCity,
+		RecipientPostalCode: req.RecipientZip,
+		RecipientPhone:      req.RecipientPhone,
+		Weight:              float64(req.Weight) / 1000.0, // Конвертируем граммы в килограммы
+		CODAmount:           float64(req.CODAmount),
+		InsuranceAmount:     float64(req.InsuredValue),
+		ServiceType:         serviceType,
+		Content:             req.Content,
+		Note:                fmt.Sprintf("Test shipment from SVETU platform - %s", req.DeliveryMethod),
+		ParcelLockerCode:    req.ParcelLockerCode, // Код паккетомата для IdRukovanje=85
+	}
+
+	// Вызываем реальный API
+	h.logger.Info("Creating real test shipment via Post Express WSP API")
+	h.logger.Debug("Request data: recipient=%s, city=%s, weight=%dg, COD=%d",
+		req.RecipientName, req.RecipientCity, req.Weight, req.CODAmount)
+
+	manifestResp, err := h.wspClient.CreateShipmentViaManifest(ctx, wspReq)
+	if err != nil {
+		return nil, fmt.Errorf("WSP API call failed: %w", err)
+	}
+
+	// Проверяем результат
+	if manifestResp.Rezultat != 0 {
+		return &TestShipmentResponse{
+			Success:        false,
+			Errors:         []string{manifestResp.Poruka},
+			CreatedAt:      time.Now().Format(time.RFC3339),
+			ProcessingTime: time.Since(startTime).Milliseconds(),
+			RequestData:    buildRequestData(req),
+			ResponseData:   manifestResp,
+		}, nil
+	}
+
+	// Извлекаем данные посылки из ответа
+	if len(manifestResp.Porudzbine) == 0 || len(manifestResp.Porudzbine[0].Posiljke) == 0 {
+		return &TestShipmentResponse{
+			Success:        false,
+			Errors:         []string{"No shipment in manifest response"},
+			CreatedAt:      time.Now().Format(time.RFC3339),
+			ProcessingTime: time.Since(startTime).Milliseconds(),
+			RequestData:    buildRequestData(req),
+			ResponseData:   manifestResp,
+		}, nil
+	}
+
+	posiljka := manifestResp.Porudzbine[0].Posiljke[0]
+	if posiljka.Rezultat != 0 {
+		return &TestShipmentResponse{
+			Success:        false,
+			Errors:         []string{posiljka.Poruka},
+			CreatedAt:      time.Now().Format(time.RFC3339),
+			ProcessingTime: time.Since(startTime).Milliseconds(),
+			RequestData:    buildRequestData(req),
+			ResponseData:   manifestResp,
+		}, nil
+	}
+
+	// Извлекаем стоимость (в para, 1 RSD = 100 para)
+	costPara := posiljka.Postarina
+	costRSD := float64(costPara) / 100.0
+
+	// Извлекаем трек-номер (PrijemniBroj - это настоящий tracking number)
+	trackingNumber := posiljka.PrijemniBroj
+	if trackingNumber == "" {
+		trackingNumber = posiljka.TrackingNumber // Fallback
+	}
+
+	// Успешный ответ
+	h.logger.Info("Test shipment created successfully: tracking=%s, ID=%d, cost=%.2f RSD (%d para)",
+		trackingNumber, posiljka.IDPosiljke, costRSD, costPara)
+
+	return &TestShipmentResponse{
 		Success:        true,
 		TrackingNumber: trackingNumber,
-		ManifestID:     int(time.Now().Unix()%100000) + 120000, // Реалистичные ID как в тестах
-		ShipmentID:     int(time.Now().Unix()%100000) + 27000,
-		ExternalID:     externalID,
-		Cost:           cost,
+		ManifestID:     manifestResp.IDManifesta,
+		ShipmentID:     posiljka.IDPosiljke,
+		ExternalID:     posiljka.BrojPosiljke,
+		Cost:           int(costRSD), // Конвертируем в RSD (целое число)
 		CreatedAt:      time.Now().Format(time.RFC3339),
 		ProcessingTime: time.Since(startTime).Milliseconds(),
-		RequestData: fiber.Map{
-			"recipient": fiber.Map{
-				"name":    req.RecipientName,
-				"phone":   req.RecipientPhone,
-				"email":   req.RecipientEmail,
-				"city":    req.RecipientCity,
-				"address": req.RecipientAddress,
-				"zip":     req.RecipientZip,
-			},
-			"sender": fiber.Map{
-				"name":    req.SenderName,
-				"phone":   req.SenderPhone,
-				"email":   req.SenderEmail,
-				"city":    req.SenderCity,
-				"address": req.SenderAddress,
-				"zip":     req.SenderZip,
-			},
-			"shipment": fiber.Map{
-				"weight":             req.Weight,
-				"content":            req.Content,
-				"cod_amount":         req.CODAmount,
-				"insured_value":      req.InsuredValue,
-				"services":           req.Services,
-				"delivery_method":    req.DeliveryMethod,
-				"delivery_type":      req.DeliveryType,
-				"payment_method":     req.PaymentMethod,
-				"id_rukovanje":       req.IdRukovanje,
-				"parcel_locker_code": req.ParcelLockerCode,
-			},
-		},
-		ResponseData: fiber.Map{
-			"status":    "created",
-			"provider":  "post_express",
-			"test_mode": true,
-			"api_response": fiber.Map{
-				"Rezultat": 0,
-				"Poruka":   "Success",
-				"Greske":   nil,
-			},
-		},
-	}
-
-	return response
+		RequestData:    buildRequestData(req),
+		ResponseData:   manifestResp,
+	}, nil
 }
 
-// generateTrackingNumber генерирует реалистичный трек-номер Post Express
-func generateTrackingNumber() string {
-	// Формат: PJ700042693RS
-	randomNum := make([]byte, 4)
-	if _, err := rand.Read(randomNum); err != nil {
-		// Fallback to timestamp-based number if random fails
-		randomNum = []byte{0, 0, 0, byte(time.Now().Unix() % 256)}
+// buildRequestData строит данные запроса для ответа
+func buildRequestData(req *TestShipmentRequest) fiber.Map {
+	return fiber.Map{
+		"recipient": fiber.Map{
+			"name":    req.RecipientName,
+			"phone":   req.RecipientPhone,
+			"email":   req.RecipientEmail,
+			"city":    req.RecipientCity,
+			"address": req.RecipientAddress,
+			"zip":     req.RecipientZip,
+		},
+		"sender": fiber.Map{
+			"name":    req.SenderName,
+			"phone":   req.SenderPhone,
+			"email":   req.SenderEmail,
+			"city":    req.SenderCity,
+			"address": req.SenderAddress,
+			"zip":     req.SenderZip,
+		},
+		"shipment": fiber.Map{
+			"weight":             req.Weight,
+			"content":            req.Content,
+			"cod_amount":         req.CODAmount,
+			"insured_value":      req.InsuredValue,
+			"services":           req.Services,
+			"delivery_method":    req.DeliveryMethod,
+			"delivery_type":      req.DeliveryType,
+			"payment_method":     req.PaymentMethod,
+			"id_rukovanje":       req.IdRukovanje,
+			"parcel_locker_code": req.ParcelLockerCode,
+		},
 	}
-
-	num := int(randomNum[0])<<24 | int(randomNum[1])<<16 | int(randomNum[2])<<8 | int(randomNum[3])
-	if num < 0 {
-		num = -num
-	}
-	num %= 100000
-
-	return fmt.Sprintf("PJ700%05dRS", num)
 }
 
-// calculateTestCost рассчитывает тестовую стоимость доставки
-func calculateTestCost(weight int, codAmount int64, insuredValue int64, services string) int {
-	// Базовая стоимость
-	baseCost := 415 // RSD для Белграда (как в реальных тестах)
+// =============================================================================
+// TX 3-11: Новые тестовые endpoints для полной интеграции Post Express WSP API
+// =============================================================================
 
-	// Доплата за вес (свыше 500г)
-	if weight > 500 {
-		extraWeight := (weight - 500) / 100 // каждые 100г
-		baseCost += extraWeight * 30        // 30 RSD за 100г
+// TestGetSettlementsRequest - запрос поиска населённых пунктов (TX 3)
+type TestGetSettlementsRequest struct {
+	Query string `json:"query" example:"Beograd"`
+}
+
+// TestGetSettlements тестирует TX 3 - поиск населённых пунктов
+// @Summary Test TX 3 - GetNaselje (Search Settlements)
+// @Description Search settlements using real Post Express WSP API (Transaction 3)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestGetSettlementsRequest true "Search settlements request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Settlements list"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/tx3-settlements [post]
+func (h *Handler) TestGetSettlements(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestGetSettlementsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
 	}
 
-	// Доплата за наложенный платеж
-	if codAmount > 0 {
-		baseCost += 50 // фиксированная доплата за OTK
+	if req.Query == "" {
+		req.Query = defaultCityBeograd
 	}
 
-	// Доплата за объявленную ценность
-	if insuredValue > 0 {
-		insuranceFee := int(float64(insuredValue) * 0.01) // 1% от ценности
-		if insuranceFee < 50 {
-			insuranceFee = 50 // минимум 50 RSD
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing TX 3 GetSettlements: query=%s", req.Query)
+
+	resp, err := h.wspClient.GetSettlements(c.Context(), req.Query)
+	if err != nil {
+		h.logger.Error("GetSettlements failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.get_settlements_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         resp.Rezultat == 0,
+		"rezultat":        resp.Rezultat,
+		"poruka":          resp.Poruka,
+		"query":           req.Query,
+		"count":           len(resp.Naselja),
+		"naselja":         resp.Naselja,
+		"processing_time": time.Since(startTime).Milliseconds(),
+	}
+
+	h.logger.Info("TX 3 GetSettlements successful: query=%s, found=%d, Rezultat=%d", req.Query, len(resp.Naselja), resp.Rezultat)
+
+	return utils.SendSuccessResponse(c, result, fmt.Sprintf("TX 3: Found %d settlements (Rezultat: %d)", len(resp.Naselja), resp.Rezultat))
+}
+
+// TestGetStreetsRequest - запрос поиска улиц (TX 4)
+type TestGetStreetsRequest struct {
+	SettlementID int    `json:"settlement_id" example:"123"`
+	Query        string `json:"query" example:"Takovska"`
+}
+
+// TestGetStreets тестирует TX 4 - поиск улиц в населённом пункте
+// @Summary Test TX 4 - GetUlica (Search Streets)
+// @Description Search streets in settlement using real Post Express WSP API (Transaction 4)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestGetStreetsRequest true "Search streets request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Streets list"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/tx4-streets [post]
+func (h *Handler) TestGetStreets(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestGetStreetsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.SettlementID <= 0 {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.settlement_id_required", nil)
+	}
+
+	if req.Query == "" {
+		req.Query = "Takovska"
+	}
+
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing TX 4 GetStreets: settlement_id=%d, query=%s", req.SettlementID, req.Query)
+
+	resp, err := h.wspClient.GetStreets(c.Context(), req.SettlementID, req.Query)
+	if err != nil {
+		h.logger.Error("GetStreets failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.get_streets_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         resp.Rezultat == 0,
+		"rezultat":        resp.Rezultat,
+		"poruka":          resp.Poruka,
+		"settlement_id":   req.SettlementID,
+		"query":           req.Query,
+		"count":           len(resp.Ulice),
+		"ulice":           resp.Ulice,
+		"processing_time": time.Since(startTime).Milliseconds(),
+	}
+
+	h.logger.Info("TX 4 GetStreets successful: settlement_id=%d, query=%s, found=%d, Rezultat=%d", req.SettlementID, req.Query, len(resp.Ulice), resp.Rezultat)
+
+	return utils.SendSuccessResponse(c, result, fmt.Sprintf("TX 4: Found %d streets (Rezultat: %d)", len(resp.Ulice), resp.Rezultat))
+}
+
+// TestValidateAddressRequest - запрос валидации адреса (TX 6)
+type TestValidateAddressRequest struct {
+	SettlementID int    `json:"settlement_id" example:"123"`
+	StreetID     int    `json:"street_id,omitempty" example:"456"`
+	HouseNumber  string `json:"house_number" example:"2"`
+	PostalCode   string `json:"postal_code" example:"11000"`
+}
+
+// TestValidateAddress тестирует TX 6 - валидация адреса
+// @Summary Test TX 6 - ProveraAdrese (Validate Address)
+// @Description Validate address using real Post Express WSP API (Transaction 6)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestValidateAddressRequest true "Validate address request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Address validation result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/tx6-validate-address [post]
+func (h *Handler) TestValidateAddress(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestValidateAddressRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.SettlementID <= 0 || req.HouseNumber == "" || req.PostalCode == "" {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_address_data", fiber.Map{
+			"required_fields": []string{"settlement_id", "house_number", "postal_code"},
+		})
+	}
+
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing TX 6 ValidateAddress: settlement_id=%d, street_id=%d, number=%s, postal=%s",
+		req.SettlementID, req.StreetID, req.HouseNumber, req.PostalCode)
+
+	wspReq := &postexpress.AddressValidationRequest{
+		TipAdrese:     0,  // 0 = стандартный тип адреса
+		IdRukovanje:   71, // Дефолтная услуга доставки (можно любую)
+		IdNaselje:     req.SettlementID,
+		IdUlica:       req.StreetID,
+		BrojPodbroj:   req.HouseNumber,
+		PostanskiBroj: req.PostalCode,
+	}
+
+	resp, err := h.wspClient.ValidateAddress(c.Context(), wspReq)
+	if err != nil {
+		h.logger.Error("ValidateAddress failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.validate_address_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         resp.Rezultat == 0,
+		"rezultat":        resp.Rezultat,
+		"poruka":          resp.Poruka,
+		"postoji_adresa":  resp.PostojiAdresa,
+		"id_naselje":      resp.IdNaselje,
+		"naziv_naselja":   resp.NazivNaselja,
+		"id_ulica":        resp.IdUlica,
+		"naziv_ulice":     resp.NazivUlice,
+		"broj":            resp.Broj,
+		"postanski_broj":  resp.PostanskiBroj,
+		"pak":             resp.PAK,
+		"id_poste":        resp.IdPoste,
+		"naziv_poste":     resp.NazivPoste,
+		"processing_time": time.Since(startTime).Milliseconds(),
+	}
+
+	h.logger.Info("TX 6 ValidateAddress successful: postoji=%t, Rezultat=%d", resp.PostojiAdresa, resp.Rezultat)
+
+	return utils.SendSuccessResponse(c, result, fmt.Sprintf("TX 6: Address exists: %t (Rezultat: %d)", resp.PostojiAdresa, resp.Rezultat))
+}
+
+// TestCheckServiceAvailabilityRequest - запрос проверки доступности услуги (TX 9)
+type TestCheckServiceAvailabilityRequest struct {
+	ServiceID      int    `json:"service_id" example:"71"`
+	FromPostalCode string `json:"from_postal_code" example:"11000"`
+	ToPostalCode   string `json:"to_postal_code" example:"21000"`
+}
+
+// TestCheckServiceAvailability тестирует TX 9 - проверка доступности услуги
+// @Summary Test TX 9 - ProveraDostupnostiUsluge (Check Service Availability)
+// @Description Check service availability using real Post Express WSP API (Transaction 9)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestCheckServiceAvailabilityRequest true "Check service availability request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Service availability result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/tx9-service-availability [post]
+func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestCheckServiceAvailabilityRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.ServiceID <= 0 || req.FromPostalCode == "" || req.ToPostalCode == "" {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_service_data", fiber.Map{
+			"required_fields": []string{"service_id", "from_postal_code", "to_postal_code"},
+		})
+	}
+
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing TX 9 CheckServiceAvailability: service_id=%d, from=%s, to=%s",
+		req.ServiceID, req.FromPostalCode, req.ToPostalCode)
+
+	// Получаем IdNaselje для отправления и прибытия через TX3
+	idNaseljeOdlaska, err := h.getSettlementIDByPostalCode(c.Context(), req.FromPostalCode)
+	if err != nil {
+		h.logger.Error("Failed to get settlement ID for from postal code %s: %v", req.FromPostalCode, err)
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_from_postal_code", fiber.Map{
+			"postal_code": req.FromPostalCode,
+			"error":       err.Error(),
+		})
+	}
+
+	idNaseljeDolaska, err := h.getSettlementIDByPostalCode(c.Context(), req.ToPostalCode)
+	if err != nil {
+		h.logger.Error("Failed to get settlement ID for to postal code %s: %v", req.ToPostalCode, err)
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_to_postal_code", fiber.Map{
+			"postal_code": req.ToPostalCode,
+			"error":       err.Error(),
+		})
+	}
+
+	h.logger.Debug("Resolved settlement IDs: from=%d (postal=%s), to=%d (postal=%s)",
+		idNaseljeOdlaska, req.FromPostalCode, idNaseljeDolaska, req.ToPostalCode)
+
+	// ВАЖНО: TX 9 требует РЕАЛЬНЫЕ IdNaselje и IdUlica!
+	// Без них Post Express API считает адрес Postrestant
+	// Получаем список улиц для населенного пункта получателя
+	// API требует минимум 2 символа для поиска, пробуем популярные префиксы
+	var wspReq *postexpress.ServiceAvailabilityRequest
+	var streetsResp *postexpress.GetStreetsResponse
+
+	// Пробуем несколько популярных префиксов улиц
+	prefixes := []string{"Ma", "Kr", "Ga", "Ba", "Ko", "Du"}
+	for _, prefix := range prefixes {
+		resp, err := h.wspClient.GetStreets(c.Context(), idNaseljeDolaska, prefix)
+		if err == nil && resp.Rezultat == 0 && len(resp.Ulice) > 0 {
+			h.logger.Debug("Found streets with prefix '%s': count=%d", prefix, len(resp.Ulice))
+			streetsResp = resp
+			break
 		}
-		baseCost += insuranceFee
 	}
 
-	// Доплата за SMS
-	if contains(services, "SMS") {
-		baseCost += 20
+	// Проверяем результаты поиска улиц
+	if streetsResp == nil {
+		err = fmt.Errorf("no streets found with any prefix")
 	}
 
-	return baseCost
+	// Обрабатываем результаты поиска улиц
+	if err != nil || streetsResp.Rezultat != 0 || len(streetsResp.Ulice) == 0 {
+		// Fallback: используем название населенного пункта
+		h.logger.Info("Failed to get streets for settlement %d: %v, using fallback", idNaseljeDolaska, err)
+
+		settName := ""
+		switch idNaseljeDolaska {
+		case 100001:
+			settName = defaultCityBeograd
+		case 100039:
+			settName = "Novi Sad"
+		case 100040:
+			settName = "Niš"
+		case 100004:
+			settName = "Kragujevac"
+		case 100041:
+			settName = "Kragujevac"
+		}
+
+		wspReq = &postexpress.ServiceAvailabilityRequest{
+			TipAdrese:   2,
+			IdRukovanje: req.ServiceID,
+			Adresa: postexpress.AdresaUPS{
+				IdNaselje: idNaseljeDolaska,
+				Naselje:   settName,
+				IdUlica:   0,
+				Ulica:     "",
+				Broj:      "1",
+				Posta:     req.ToPostalCode,
+				Vrsta:     "S",
+			},
+			Datum: time.Now().Format("02.01.2006"),
+		}
+	} else {
+		// Используем первую найденную улицу
+		firstStreet := streetsResp.Ulice[0]
+		idUlica := firstStreet.Id
+		if idUlica == 0 {
+			idUlica = firstStreet.IdUlica
+		}
+
+		h.logger.Debug("Using street for TX 9: IdUlica=%d, Name=%s", idUlica, firstStreet.Naziv)
+
+		wspReq = &postexpress.ServiceAvailabilityRequest{
+			TipAdrese:   2, // 2 = адрес получателя (primalac)
+			IdRukovanje: req.ServiceID,
+			Adresa: postexpress.AdresaUPS{
+				IdNaselje: idNaseljeDolaska,  // ID населённого пункта
+				Naselje:   "",                // Можно не указывать если есть IdNaselje
+				IdUlica:   idUlica,           // ВАЖНО: Реальный ID улицы!
+				Ulica:     firstStreet.Naziv, // Название улицы
+				Broj:      "1",               // Номер дома
+				Posta:     req.ToPostalCode,  // Почтовый индекс
+				Vrsta:     "S",               // S = стандартная адреса
+			},
+			Datum: time.Now().Format("02.01.2006"), // Формат DD.MM.YYYY
+		}
+	}
+
+	resp, err := h.wspClient.CheckServiceAvailability(c.Context(), wspReq)
+	if err != nil {
+		h.logger.Error("CheckServiceAvailability failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.check_service_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":         resp.Rezultat == 0,
+		"rezultat":        resp.Rezultat,
+		"poruka":          resp.Poruka,
+		"dostupna":        resp.Dostupna,
+		"id_rukovanje":    resp.IdRukovanje,
+		"naziv_usluge":    resp.NazivUsluge,
+		"ocekivano_dana":  resp.OcekivanoDana,
+		"napomena":        resp.Napomena,
+		"processing_time": time.Since(startTime).Milliseconds(),
+	}
+
+	h.logger.Info("TX 9 CheckServiceAvailability successful: dostupna=%t, days=%d, Rezultat=%d",
+		resp.Dostupna, resp.OcekivanoDana, resp.Rezultat)
+
+	return utils.SendSuccessResponse(c, result, fmt.Sprintf("TX 9: Service available: %t, Expected days: %d (Rezultat: %d)", resp.Dostupna, resp.OcekivanoDana, resp.Rezultat))
 }
 
-// contains проверяет содержит ли строка подстроку
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > len(substr))
+// TestCalculatePostageRequest - запрос расчёта стоимости доставки (TX 11)
+type TestCalculatePostageRequest struct {
+	ServiceID      int    `json:"service_id" example:"71"`
+	FromPostalCode string `json:"from_postal_code" example:"11000"`
+	ToPostalCode   string `json:"to_postal_code" example:"21000"`
+	Weight         int    `json:"weight" example:"500"`                // граммы
+	CODAmount      int    `json:"cod_amount,omitempty" example:"0"`    // para (1 RSD = 100 para)
+	InsuredValue   int    `json:"insured_value,omitempty" example:"0"` // para
+	Services       string `json:"services,omitempty" example:"PNA"`    // дополнительные услуги
+}
+
+// TestCalculatePostage тестирует TX 11 - расчёт стоимости доставки
+// @Summary Test TX 11 - PostarinaPosiljke (Calculate Postage)
+// @Description Calculate postage using real Post Express WSP API (Transaction 11)
+// @Tags post-express-test
+// @Accept json
+// @Produce json
+// @Param request body TestCalculatePostageRequest true "Calculate postage request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Postage calculation result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/v1/postexpress/test/tx11-calculate-postage [post]
+func (h *Handler) TestCalculatePostage(c *fiber.Ctx) error {
+	startTime := time.Now()
+
+	var req TestCalculatePostageRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.invalid_request", nil)
+	}
+
+	if req.ServiceID <= 0 || req.FromPostalCode == "" || req.ToPostalCode == "" || req.Weight <= 0 {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "postexpress.missing_postage_data", fiber.Map{
+			"required_fields": []string{"service_id", "from_postal_code", "to_postal_code", "weight"},
+		})
+	}
+
+	if req.Services == "" {
+		req.Services = "PNA"
+	}
+
+	if h.wspClient == nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.wsp_client_not_initialized", nil)
+	}
+
+	h.logger.Info("Testing TX 11 CalculatePostage: service_id=%d, from=%s, to=%s, weight=%dg",
+		req.ServiceID, req.FromPostalCode, req.ToPostalCode, req.Weight)
+
+	wspReq := &postexpress.PostageCalculationRequest{
+		IdRukovanje:          req.ServiceID,
+		IdZemlja:             0, // 0 = domestic shipments
+		PostanskiBrojOdlaska: req.FromPostalCode,
+		PostanskiBrojDolaska: req.ToPostalCode,
+		Masa:                 req.Weight,
+		Otkupnina:            req.CODAmount,
+		Vrednost:             req.InsuredValue,
+		PosebneUsluge:        req.Services,
+	}
+
+	resp, err := h.wspClient.CalculatePostage(c.Context(), wspReq)
+	if err != nil {
+		h.logger.Error("CalculatePostage failed: %v", err)
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "postexpress.calculate_postage_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	result := fiber.Map{
+		"success":                resp.Rezultat == 0,
+		"rezultat":               resp.Rezultat,
+		"poruka":                 resp.Poruka,
+		"postarina_para":         resp.Postarina,
+		"postarina_rsd":          float64(resp.Postarina) / 100.0,
+		"id_rukovanje":           resp.IdRukovanje,
+		"naziv_usluge":           resp.NazivUsluge,
+		"postanski_broj_odlaska": resp.PostanskiBrojOdlaska,
+		"postanski_broj_dolaska": resp.PostanskiBrojDolaska,
+		"masa":                   resp.Masa,
+		"otkupnina":              resp.Otkupnina,
+		"vrednost":               resp.Vrednost,
+		"posebne_usluge":         resp.PosebneUsluge,
+		"napomena":               resp.Napomena,
+		"processing_time":        time.Since(startTime).Milliseconds(),
+	}
+
+	h.logger.Info("TX 11 CalculatePostage successful: postage=%d para (%.2f RSD), Rezultat=%d",
+		resp.Postarina, float64(resp.Postarina)/100.0, resp.Rezultat)
+
+	return utils.SendSuccessResponse(c, result, fmt.Sprintf("TX 11: Postage: %.2f RSD (Rezultat: %d)", float64(resp.Postarina)/100.0, resp.Rezultat))
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+// getSettlementIDByPostalCode получает IdNaselje по почтовому индексу через TX3
+func (h *Handler) getSettlementIDByPostalCode(ctx context.Context, postalCode string) (int, error) {
+	// Mapping популярных почтовых кодов (оптимизация для часто используемых)
+	knownPostalCodes := map[string]int{
+		"11000": 100001, // Beograd
+		"21000": 100039, // Novi Sad
+		"18000": 100040, // Niš
+		"34000": 100041, // Kragujevac
+		"31000": 100042, // Užice
+	}
+
+	// Проверяем известные коды
+	if id, ok := knownPostalCodes[postalCode]; ok {
+		h.logger.Debug("Using known postal code mapping: %s -> %d", postalCode, id)
+		return id, nil
+	}
+
+	// Для неизвестных кодов пробуем поиск через API
+	// TX3 требует минимум 2 символа, используем широкий поиск
+	searchQueries := []string{
+		"Be", "No", "Ni", "Kr", "Su", "Pa", "Le", "Sm", "Va", "Za",
+	}
+
+	for _, query := range searchQueries {
+		resp, err := h.wspClient.GetSettlements(ctx, query)
+		if err != nil {
+			continue
+		}
+
+		if resp.Rezultat != 0 {
+			continue
+		}
+
+		// Ищем населенный пункт с нужным почтовым индексом
+		for _, naselje := range resp.Naselja {
+			if naselje.PostanskiBroj == postalCode {
+				id := naselje.Id
+				if id == 0 {
+					id = naselje.IdNaselje
+				}
+				h.logger.Info("Found settlement for postal code %s: Id=%d, Naziv=%s", postalCode, id, naselje.Naziv)
+				return id, nil
+			}
+		}
+	}
+
+	return 0, fmt.Errorf("settlement not found for postal code: %s (tried multiple searches)", postalCode)
 }

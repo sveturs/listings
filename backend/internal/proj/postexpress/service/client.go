@@ -6,12 +6,14 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"backend/internal/proj/postexpress"
 	"backend/internal/proj/postexpress/models"
 	"backend/pkg/logger"
 )
@@ -42,7 +44,10 @@ type WSPConfig struct {
 	DeviceName      string
 	ApplicationName string
 	Version         string
-	PartnerID       int // Добавлено: ID партнера (10109 для svetu.rs)
+	PartnerID       int    // Добавлено: ID партнера (10109 для svetu.rs)
+	BankAccount     string // Банковский счёт для перевода откупнины
+	PaymentCode     string // Шифра плаћања (обычно "189")
+	PaymentModel    string // Модель платежа (обычно "97")
 }
 
 // NewWSPClient создает новый экземпляр WSP клиента
@@ -174,10 +179,20 @@ func (c *WSPClientImpl) executeRequest(ctx context.Context, transReq *models.Tra
 		return nil, fmt.Errorf("unexpected status code: %d", httpResp.StatusCode)
 	}
 
+	// Читаем тело ответа в байты для логирования
+	bodyBytes, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Логируем сырой ответ для диагностики
+	c.logger.Debug("WSP API Raw Response Body (first 2000 chars): %s", truncateString(string(bodyBytes), 2000))
+
 	// Декодирование ответа
 	var wspResp map[string]interface{}
-	if err := json.NewDecoder(httpResp.Body).Decode(&wspResp); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+	if err := json.Unmarshal(bodyBytes, &wspResp); err != nil {
+		c.logger.Error("Failed to parse JSON response. Full raw response: %s", string(bodyBytes))
+		return nil, fmt.Errorf("failed to parse manifest response: %w", err)
 	}
 
 	// Обработка ответа WSP
@@ -194,8 +209,99 @@ func (c *WSPClientImpl) parseWSPResponse(resp map[string]interface{}) (*models.T
 		}, nil
 	}
 
-	// Проверяем успешность
+	// Проверяем успешность транзакции
 	success := true
+
+	// Проверяем поле Rezultat (0 = успех, иначе ошибка)
+	// ВАЖНО: Для B2B Manifest API результат может быть Rezultat!=0 на уровне транзакции,
+	// но манифест может быть успешно создан (Rezultat=0 внутри StrOut)!
+	// Поэтому сначала проверяем StrOut, и только если его нет - смотрим на внешний Rezultat
+	if strOut, exists := resp["StrOut"]; exists && strOut != nil {
+		if strOutStr, ok := strOut.(string); ok {
+			// Логируем весь StrOut для диагностики
+			c.logger.Debug("Full StrOut content (length %d): %s", len(strOutStr), strOutStr)
+
+			// Парсим манифест из StrOut для проверки реального результата
+			var manifestResp struct {
+				Rezultat int    `json:"Rezultat"`
+				Poruka   string `json:"Poruka"`
+				Greske   []struct {
+					ExtIDManifest   string `json:"ExtIdManifest"`
+					ExtIDPorudzbina string `json:"ExtIdPorudzbina"`
+					Rbr             int    `json:"Rbr"`
+					PorukaGreske    string `json:"PorukaGreske"`
+				} `json:"Greske"`
+			}
+			if err := json.Unmarshal([]byte(strOutStr), &manifestResp); err != nil {
+				c.logger.Error("Failed to parse StrOut as manifest: %v", err)
+			} else {
+				c.logger.Debug("Parsed manifest - Rezultat: %d, Poruka: %s, Errors count: %d",
+					manifestResp.Rezultat, manifestResp.Poruka, len(manifestResp.Greske))
+
+				// РЕАЛЬНЫЙ результат берем из ВНУТРЕННЕГО Rezultat (в StrOut)
+				if manifestResp.Rezultat != 0 {
+					success = false
+					c.logger.Error("Manifest creation failed - Rezultat: %d, Poruka: %s", manifestResp.Rezultat, manifestResp.Poruka)
+				} else {
+					success = true
+					c.logger.Info("Manifest created successfully - Rezultat: 0")
+				}
+
+				// Логируем ошибки валидации (они могут быть даже при успехе - это warnings!)
+				if len(manifestResp.Greske) > 0 {
+					c.logger.Info("Post Express validation warnings (%d warnings):", len(manifestResp.Greske))
+					for i, validErr := range manifestResp.Greske {
+						c.logger.Info("  [%d] Manifest: %s, Order: %s, Rbr: %d, Message: %s",
+							i+1, validErr.ExtIDManifest, validErr.ExtIDPorudzbina, validErr.Rbr, validErr.PorukaGreske)
+					}
+				}
+			}
+		}
+	} else if rezultatField, exists := resp["Rezultat"]; exists {
+		// Fallback: если нет StrOut, проверяем внешний Rezultat
+		if rezultat, ok := rezultatField.(float64); ok {
+			if rezultat != 0 {
+				poruka := "unknown error"
+
+				// Сначала пытаемся извлечь детальную ошибку из StrRezultat
+				if strRezultat, exists := resp["StrRezultat"]; exists && strRezultat != nil {
+					if strRezultatStr, ok := strRezultat.(string); ok {
+						// Парсим StrRezultat как JSON для получения детальной ошибки
+						var detailErr struct {
+							Poruka         string `json:"Poruka"`
+							PorukaKorisnik string `json:"PorukaKorisnik"`
+							Info           string `json:"Info"`
+						}
+						if err := json.Unmarshal([]byte(strRezultatStr), &detailErr); err == nil {
+							// Используем PorukaKorisnik если есть, иначе Poruka
+							if detailErr.PorukaKorisnik != "" {
+								poruka = detailErr.PorukaKorisnik
+							} else if detailErr.Poruka != "" {
+								poruka = detailErr.Poruka
+							}
+						}
+					}
+				}
+
+				// Если не смогли извлечь из StrRezultat, используем обычное поле Poruka
+				if poruka == "unknown error" {
+					if porukaField, exists := resp["Poruka"]; exists && porukaField != nil {
+						poruka = fmt.Sprintf("%v", porukaField)
+					}
+				}
+
+				c.logger.Error("WSP transaction failed - Rezultat: %d, Poruka: %s", int(rezultat), poruka)
+
+				// ВАЖНО: Возвращаем ошибку сразу с детальным сообщением
+				return &models.TransactionResponse{
+					Success:      false,
+					ErrorMessage: &poruka,
+				}, nil
+			}
+		}
+	}
+
+	// Также проверяем старое поле Uspesno (для обратной совместимости)
 	if successField, exists := resp["Uspesno"]; exists {
 		if b, ok := successField.(bool); ok {
 			success = b
@@ -209,8 +315,16 @@ func (c *WSPClientImpl) parseWSPResponse(resp map[string]interface{}) (*models.T
 			outputData = dataBytes
 		}
 	} else if strOut, exists := resp["StrOut"]; exists && strOut != nil {
-		// Иногда данные приходят в поле StrOut
-		outputData = json.RawMessage(fmt.Sprintf(`"%v"`, strOut))
+		// StrOut содержит JSON как строку - нужно распарсить его
+		if strOutStr, ok := strOut.(string); ok {
+			// Это уже JSON string, просто конвертируем в []byte
+			outputData = json.RawMessage(strOutStr)
+		} else {
+			// Если не строка, пытаемся marshal
+			if dataBytes, err := json.Marshal(strOut); err == nil {
+				outputData = dataBytes
+			}
+		}
 	}
 
 	return &models.TransactionResponse{
@@ -345,7 +459,7 @@ func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmen
 	return &WSPShipmentResponse{
 		Success:         true,
 		TrackingNumber:  posiljkaResult.TrackingNumber,
-		Barcode:         "",                       // Баркод не возвращается в B2B API
+		Barcode:         "", // Баркод не возвращается в B2B API
 		ReferenceNumber: posiljkaResult.BrojPosiljke,
 	}, nil
 }
@@ -361,9 +475,9 @@ func (c *WSPClientImpl) GetShipmentStatus(ctx context.Context, trackingNumber st
 		return nil, fmt.Errorf("failed to marshal tracking request: %w", err)
 	}
 
-	// Выполнение запроса (тип транзакции 15 для отслеживания)
+	// Выполнение запроса (тип транзакции 63 для отслеживания - как указал Nikola Dmitrašinović)
 	req := &models.TransactionRequest{
-		TransactionType: 15,
+		TransactionType: 63,
 		InputData:       string(inputData),
 	}
 
@@ -547,4 +661,220 @@ func ParseBool(value interface{}) bool {
 		return v != 0
 	}
 	return false
+}
+
+// truncateString обрезает строку до максимальной длины
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
+
+// ========================================
+// TX 3-11: Новые методы для полной интеграции Post Express WSP API
+// ========================================
+
+// GetSettlements - TX 3: Поиск населённых пунктов по названию
+func (c *WSPClientImpl) GetSettlements(ctx context.Context, query string) (*postexpress.GetSettlementsResponse, error) {
+	searchReq := &postexpress.GetSettlementsRequest{
+		Naziv: query,
+	}
+
+	inputData, err := json.Marshal(searchReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal GetSettlements request: %w", err)
+	}
+
+	req := &models.TransactionRequest{
+		TransactionType: 3, // GetNaselje
+		InputData:       string(inputData),
+	}
+
+	resp, err := c.Transaction(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("GetSettlements transaction failed: %w", err)
+	}
+
+	if !resp.Success {
+		errMsg := errMsgUnknown
+		if resp.ErrorMessage != nil {
+			errMsg = *resp.ErrorMessage
+		}
+		return nil, fmt.Errorf("GetSettlements failed: %s", errMsg)
+	}
+
+	// Парсинг результатов
+	var result postexpress.GetSettlementsResponse
+	if err := json.Unmarshal(resp.OutputData, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse settlements response: %w", err)
+	}
+
+	c.logger.Debug("GetSettlements completed - Query: %s, Found: %d settlements, Rezultat: %d",
+		query, len(result.Naselja), result.Rezultat)
+
+	return &result, nil
+}
+
+// GetStreets - TX 4: Поиск улиц в населённом пункте
+func (c *WSPClientImpl) GetStreets(ctx context.Context, settlementID int, query string) (*postexpress.GetStreetsResponse, error) {
+	searchReq := &postexpress.GetStreetsRequest{
+		IdNaselje: settlementID,
+		Naziv:     query,
+	}
+
+	inputData, err := json.Marshal(searchReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal GetStreets request: %w", err)
+	}
+
+	req := &models.TransactionRequest{
+		TransactionType: 4, // GetUlica
+		InputData:       string(inputData),
+	}
+
+	resp, err := c.Transaction(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("GetStreets transaction failed: %w", err)
+	}
+
+	if !resp.Success {
+		errMsg := errMsgUnknown
+		if resp.ErrorMessage != nil {
+			errMsg = *resp.ErrorMessage
+		}
+		return nil, fmt.Errorf("GetStreets failed: %s", errMsg)
+	}
+
+	// Парсинг результатов
+	var result postexpress.GetStreetsResponse
+	if err := json.Unmarshal(resp.OutputData, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse streets response: %w", err)
+	}
+
+	c.logger.Debug("GetStreets completed - SettlementID: %d, Query: %s, Found: %d streets, Rezultat: %d",
+		settlementID, query, len(result.Ulice), result.Rezultat)
+
+	return &result, nil
+}
+
+// ValidateAddress - TX 6: Валидация адреса
+func (c *WSPClientImpl) ValidateAddress(ctx context.Context, req *postexpress.AddressValidationRequest) (*postexpress.AddressValidationResponse, error) {
+	inputData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal ValidateAddress request: %w", err)
+	}
+
+	txReq := &models.TransactionRequest{
+		TransactionType: 6, // ProveraAdrese
+		InputData:       string(inputData),
+	}
+
+	resp, err := c.Transaction(ctx, txReq)
+	if err != nil {
+		return nil, fmt.Errorf("ValidateAddress transaction failed: %w", err)
+	}
+
+	if !resp.Success {
+		errMsg := errMsgUnknown
+		if resp.ErrorMessage != nil {
+			errMsg = *resp.ErrorMessage
+		}
+		return nil, fmt.Errorf("ValidateAddress failed: %s", errMsg)
+	}
+
+	// Парсинг результатов
+	var result postexpress.AddressValidationResponse
+	if err := json.Unmarshal(resp.OutputData, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse address validation response: %w", err)
+	}
+
+	c.logger.Debug("ValidateAddress completed - SettlementID: %d, PostojiAdresa: %t, Rezultat: %d",
+		req.IdNaselje, result.PostojiAdresa, result.Rezultat)
+
+	return &result, nil
+}
+
+// CheckServiceAvailability - TX 9: Проверка доступности услуги доставки
+func (c *WSPClientImpl) CheckServiceAvailability(ctx context.Context, req *postexpress.ServiceAvailabilityRequest) (*postexpress.ServiceAvailabilityResponse, error) {
+	inputData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal CheckServiceAvailability request: %w", err)
+	}
+
+	// Логируем JSON запроса для диагностики
+	c.logger.Debug("CheckServiceAvailability request JSON: %s", string(inputData))
+
+	txReq := &models.TransactionRequest{
+		TransactionType: 9, // ProveraDostupnostiUsluge
+		InputData:       string(inputData),
+	}
+
+	resp, err := c.Transaction(ctx, txReq)
+	if err != nil {
+		return nil, fmt.Errorf("CheckServiceAvailability transaction failed: %w", err)
+	}
+
+	if !resp.Success {
+		errMsg := errMsgUnknown
+		if resp.ErrorMessage != nil {
+			errMsg = *resp.ErrorMessage
+		}
+		return nil, fmt.Errorf("CheckServiceAvailability failed: %s", errMsg)
+	}
+
+	// Парсинг результатов
+	var result postexpress.ServiceAvailabilityResponse
+	if err := json.Unmarshal(resp.OutputData, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse service availability response: %w", err)
+	}
+
+	c.logger.Debug("CheckServiceAvailability completed - ServiceID: %d, Dostupna: %t, OcekivanoDana: %d, Rezultat: %d",
+		req.IdRukovanje, result.Dostupna, result.OcekivanoDana, result.Rezultat)
+
+	return &result, nil
+}
+
+// CalculatePostage - TX 11: Расчёт стоимости доставки
+func (c *WSPClientImpl) CalculatePostage(ctx context.Context, req *postexpress.PostageCalculationRequest) (*postexpress.PostageCalculationResponse, error) {
+	inputData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal CalculatePostage request: %w", err)
+	}
+
+	txReq := &models.TransactionRequest{
+		TransactionType: 11, // PostarinaPosiljke
+		InputData:       string(inputData),
+	}
+
+	resp, err := c.Transaction(ctx, txReq)
+	if err != nil {
+		return nil, fmt.Errorf("CalculatePostage transaction failed: %w", err)
+	}
+
+	// ВАЖНО: Не проверяем resp.Success здесь!
+	// Вместо этого парсим response и возвращаем структуру с Rezultat и Poruka
+	// Это позволяет handler получить детальное сообщение об ошибке от Post Express
+
+	// Если resp.Success == false, ErrorMessage содержит детальную ошибку из StrRezultat
+	if !resp.Success && resp.ErrorMessage != nil {
+		// Возвращаем структуру response с ошибкой для handler
+		result := &postexpress.PostageCalculationResponse{
+			Rezultat: 3, // Код ошибки от Post Express
+			Poruka:   *resp.ErrorMessage,
+		}
+		c.logger.Debug("CalculatePostage failed - Rezultat: %d, Poruka: %s", result.Rezultat, result.Poruka)
+		return result, nil
+	}
+
+	// Парсинг результатов
+	var result postexpress.PostageCalculationResponse
+	if err := json.Unmarshal(resp.OutputData, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse postage calculation response: %w", err)
+	}
+
+	c.logger.Debug("CalculatePostage completed - ServiceID: %d, Weight: %dg, Postage: %d para (%.2f RSD), Rezultat: %d",
+		req.IdRukovanje, req.Masa, result.Postarina, float64(result.Postarina)/100, result.Rezultat)
+
+	return &result, nil
 }

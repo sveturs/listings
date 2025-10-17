@@ -252,7 +252,7 @@ export default function ExamplesPage() {
       title: 'Post Express - Тестирование',
       description:
         'Создание тестовых откупных пошильок и доставки в паккетоматы через WSP API',
-      href: '/examples/postexpress-test',
+      href: '/examples/postexpress-api',
       color: 'bg-gradient-to-r from-blue-600 to-indigo-600',
       icon: '📮',
       badge: 'NEW',

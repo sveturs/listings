@@ -17,6 +17,11 @@ type Config struct {
 	Timeout       time.Duration
 	RetryAttempts int
 	IsProduction  bool
+
+	// COD (Otkupnina) Configuration
+	BankAccount  string // Банковский счёт для перевода откупнины
+	PaymentCode  string // Шифра плаћања (обычно "189")
+	PaymentModel string // Модель платежа (обычно "97")
 }
 
 // LoadConfig загружает конфигурацию из переменных окружения
@@ -62,6 +67,21 @@ func LoadConfig() (*Config, error) {
 
 	isProduction := apiURL == "https://wsp.posta.rs/api"
 
+	// COD Configuration
+	bankAccount := os.Getenv("POST_EXPRESS_BANK_ACCOUNT")
+	if bankAccount == "" {
+		// Тестовый банковский счёт для COD (замените на реальный в production!)
+		bankAccount = "160-12345678-90" // default test bank account
+	}
+	paymentCode := os.Getenv("POST_EXPRESS_PAYMENT_CODE")
+	if paymentCode == "" {
+		paymentCode = "189" // default payment code
+	}
+	paymentModel := os.Getenv("POST_EXPRESS_PAYMENT_MODEL")
+	if paymentModel == "" {
+		paymentModel = "97" // default payment model
+	}
+
 	return &Config{
 		APIURL:        apiURL,
 		Username:      username,
@@ -71,5 +91,8 @@ func LoadConfig() (*Config, error) {
 		Timeout:       time.Duration(timeoutSeconds) * time.Second,
 		RetryAttempts: retryAttempts,
 		IsProduction:  isProduction,
+		BankAccount:   bankAccount,
+		PaymentCode:   paymentCode,
+		PaymentModel:  paymentModel,
 	}, nil
 }

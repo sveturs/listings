@@ -332,10 +332,16 @@ describe('Mock3DSForm', () => {
 
     it('должен восстанавливать состояние кнопок после ошибки', async () => {
       const user = userEvent.setup();
-      mockOnSubmit.mockRejectedValue(new Error('Submission failed'));
-      mockHandleSubmit.mockImplementation((fn) => (e: any) => {
+      mockOnSubmit.mockImplementation(async () => {
+        throw new Error('Submission failed');
+      });
+      mockHandleSubmit.mockImplementation((fn) => async (e: any) => {
         e.preventDefault();
-        fn({ code: '123' });
+        try {
+          await fn({ code: '123' });
+        } catch {
+          // Ошибка обработана в компоненте
+        }
       });
 
       render(<Mock3DSForm {...defaultProps} />);
@@ -358,6 +364,10 @@ describe('Mock3DSForm', () => {
   describe('кнопка отмены', () => {
     it('должен вызывать onSubmit с "cancel" при клике на Откажи', async () => {
       const user = userEvent.setup();
+      // Явно сбрасываем mock чтобы избежать наследования от предыдущих тестов
+      mockOnSubmit.mockReset();
+      mockOnSubmit.mockResolvedValue(undefined);
+
       render(<Mock3DSForm {...defaultProps} />);
 
       const cancelButton = screen.getByRole('button', { name: 'Откажи' });

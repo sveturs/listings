@@ -21,7 +21,7 @@ interface TestCard {
 }
 
 interface MockCardFormProps {
-  onSubmit: (data: any) => void;
+  onSubmit?: (data: any) => void;
   testCards: TestCard[];
 }
 
@@ -52,7 +52,9 @@ export default function MockCardForm({
   const handleFormSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(data);
+      if (onSubmit) {
+        await onSubmit(data);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -95,10 +97,11 @@ export default function MockCardForm({
 
       {/* Card Number */}
       <div className="form-control">
-        <label className="label">
+        <label htmlFor="cardNumber" className="label">
           <span className="label-text">Номер карты</span>
         </label>
         <input
+          id="cardNumber"
           type="text"
           className={`input input-bordered font-mono ${errors.cardNumber ? 'input-error' : ''}`}
           placeholder="1234 5678 9012 3456"
@@ -116,10 +119,11 @@ export default function MockCardForm({
 
       {/* Cardholder Name */}
       <div className="form-control">
-        <label className="label">
+        <label htmlFor="cardHolder" className="label">
           <span className="label-text">Имя на карте</span>
         </label>
         <input
+          id="cardHolder"
           type="text"
           className={`input input-bordered ${errors.cardHolder ? 'input-error' : ''}`}
           placeholder="JOHN DOE"
@@ -138,10 +142,11 @@ export default function MockCardForm({
       {/* Expiry and CVV */}
       <div className="grid grid-cols-3 gap-4">
         <div className="form-control">
-          <label className="label">
+          <label htmlFor="expiryMonth" className="label">
             <span className="label-text">Месяц</span>
           </label>
           <input
+            id="expiryMonth"
             type="text"
             className={`input input-bordered ${errors.expiryMonth ? 'input-error' : ''}`}
             placeholder="MM"
@@ -156,10 +161,11 @@ export default function MockCardForm({
         </div>
 
         <div className="form-control">
-          <label className="label">
+          <label htmlFor="expiryYear" className="label">
             <span className="label-text">Год</span>
           </label>
           <input
+            id="expiryYear"
             type="text"
             className={`input input-bordered ${errors.expiryYear ? 'input-error' : ''}`}
             placeholder="YY"
@@ -174,10 +180,11 @@ export default function MockCardForm({
         </div>
 
         <div className="form-control">
-          <label className="label">
+          <label htmlFor="cvv" className="label">
             <span className="label-text">CVV</span>
           </label>
           <input
+            id="cvv"
             type="text"
             className={`input input-bordered ${errors.cvv ? 'input-error' : ''}`}
             placeholder="123"

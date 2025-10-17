@@ -28847,6 +28847,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/postexpress/calculate-postage': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculate postage (TX 11)
+     * @description Рассчитать точную стоимость доставки для конкретной посылки
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные для расчёта стоимости */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['postexpress.PostageCalculationRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['postexpress.PostageCalculationResponse'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/postexpress/calculate-rate': {
     parameters: {
       query?: never;
@@ -28882,6 +28946,70 @@ export interface paths {
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
               data?: components['schemas']['backend_internal_proj_postexpress_models.CalculateRateResponse'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/check-service-availability': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Check service availability (TX 9)
+     * @description Проверить доступность услуги доставки между двумя точками
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные для проверки доступности */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['postexpress.ServiceAvailabilityRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['postexpress.ServiceAvailabilityResponse'];
             };
           };
         };
@@ -29452,6 +29580,68 @@ export interface paths {
         };
       };
     };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/settlements': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search settlements by name (TX 3)
+     * @description Поиск населённых пунктов по названию через Post Express WSP API
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Поисковый запрос (название или часть названия) */
+          query: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['postexpress.GetSettlementsResponse'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -30054,6 +30244,136 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/postexpress/streets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search streets in settlement (TX 4)
+     * @description Поиск улиц по названию в конкретном населённом пункте
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description ID населённого пункта (из TX 3) */
+          settlement_id: number;
+          /** @description Поисковый запрос (название или часть названия улицы) */
+          query: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['postexpress.GetStreetsResponse'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test cancel shipment
+     * @description Cancel shipment using real Post Express WSP API (Transaction 25)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Cancel request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestCancelRequest'];
+        };
+      };
+      responses: {
+        /** @description Cancel result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/postexpress/test/config': {
     parameters: {
       query?: never;
@@ -30138,6 +30458,204 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/postexpress/test/label': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test print label
+     * @description Print shipment label using real Post Express WSP API (Transaction 20)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Print label request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestPrintLabelRequest'];
+        };
+      };
+      responses: {
+        /** @description Label data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/locations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test search locations
+     * @description Search locations using real Post Express WSP API (Transaction 3)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Search request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestSearchLocationsRequest'];
+        };
+      };
+      responses: {
+        /** @description Locations list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/offices': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test get offices
+     * @description Get offices for location using real Post Express WSP API (Transaction 10)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Get offices request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestGetOfficesRequest'];
+        };
+      };
+      responses: {
+        /** @description Offices list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/postexpress/test/shipment': {
     parameters: {
       query?: never;
@@ -30149,7 +30667,7 @@ export interface paths {
     put?: never;
     /**
      * Create test shipment
-     * @description Create a test shipment using Post Express WSP API for visual testing
+     * @description Create a test shipment using real Post Express WSP API (B2B Manifest)
      */
     post: {
       parameters: {
@@ -30173,6 +30691,402 @@ export interface paths {
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
               data?: components['schemas']['handler.TestShipmentResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/track': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test tracking shipment
+     * @description Track shipment using real Post Express WSP API (Transaction 15)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Tracking request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestTrackingRequest'];
+        };
+      };
+      responses: {
+        /** @description Tracking result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/tx3-settlements': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test TX 3 - GetNaselje (Search Settlements)
+     * @description Search settlements using real Post Express WSP API (Transaction 3)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Search settlements request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestGetSettlementsRequest'];
+        };
+      };
+      responses: {
+        /** @description Settlements list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/tx4-streets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test TX 4 - GetUlica (Search Streets)
+     * @description Search streets in settlement using real Post Express WSP API (Transaction 4)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Search streets request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestGetStreetsRequest'];
+        };
+      };
+      responses: {
+        /** @description Streets list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/tx6-validate-address': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test TX 6 - ProveraAdrese (Validate Address)
+     * @description Validate address using real Post Express WSP API (Transaction 6)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Validate address request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestValidateAddressRequest'];
+        };
+      };
+      responses: {
+        /** @description Address validation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/tx9-service-availability': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test TX 9 - ProveraDostupnostiUsluge (Check Service Availability)
+     * @description Check service availability using real Post Express WSP API (Transaction 9)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Check service availability request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestCheckServiceAvailabilityRequest'];
+        };
+      };
+      responses: {
+        /** @description Service availability result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/tx11-calculate-postage': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Test TX 11 - PostarinaPosiljke (Calculate Postage)
+     * @description Calculate postage using real Post Express WSP API (Transaction 11)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Calculate postage request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestCalculatePostageRequest'];
+        };
+      };
+      responses: {
+        /** @description Postage calculation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
             };
           };
         };
@@ -30295,6 +31209,70 @@ export interface paths {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
               data?: string;
             };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/validate-address': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Validate address (TX 6)
+     * @description Проверка существования адреса в базе Post Express
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные для валидации адреса */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['postexpress.AddressValidationRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['postexpress.AddressValidationResponse'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
         /** @description Internal Server Error */
@@ -40694,6 +41672,70 @@ export interface components {
        */
       status?: string;
     };
+    'handler.TestCalculatePostageRequest': {
+      /**
+       * @description para (1 RSD = 100 para)
+       * @example 0
+       */
+      cod_amount?: number;
+      /** @example 11000 */
+      from_postal_code?: string;
+      /**
+       * @description para
+       * @example 0
+       */
+      insured_value?: number;
+      /** @example 71 */
+      service_id?: number;
+      /**
+       * @description дополнительные услуги
+       * @example PNA
+       */
+      services?: string;
+      /** @example 21000 */
+      to_postal_code?: string;
+      /**
+       * @description граммы
+       * @example 500
+       */
+      weight?: number;
+    };
+    'handler.TestCancelRequest': {
+      /** @example Отмена по требованию клиента */
+      reason?: string;
+      /** @example 12345 */
+      shipment_id?: string;
+    };
+    'handler.TestCheckServiceAvailabilityRequest': {
+      /** @example 11000 */
+      from_postal_code?: string;
+      /** @example 71 */
+      service_id?: number;
+      /** @example 21000 */
+      to_postal_code?: string;
+    };
+    'handler.TestGetOfficesRequest': {
+      /** @example 1 */
+      location_id?: number;
+    };
+    'handler.TestGetSettlementsRequest': {
+      /** @example Beograd */
+      query?: string;
+    };
+    'handler.TestGetStreetsRequest': {
+      /** @example Takovska */
+      query?: string;
+      /** @example 123 */
+      settlement_id?: number;
+    };
+    'handler.TestPrintLabelRequest': {
+      /** @example 12345 */
+      shipment_id?: string;
+    };
+    'handler.TestSearchLocationsRequest': {
+      /** @example Beograd */
+      query?: string;
+    };
     'handler.TestShipmentRequest': {
       /**
        * @description наложенный платеж (RSD)
@@ -40787,6 +41829,20 @@ export interface components {
       shipment_id?: number;
       success?: boolean;
       tracking_number?: string;
+    };
+    'handler.TestTrackingRequest': {
+      /** @example SVETU-TEST-123456 */
+      tracking_number?: string;
+    };
+    'handler.TestValidateAddressRequest': {
+      /** @example 2 */
+      house_number?: string;
+      /** @example 11000 */
+      postal_code?: string;
+      /** @example 123 */
+      settlement_id?: number;
+      /** @example 456 */
+      street_id?: number;
     };
     'handler.TranslateContentResponse': {
       [key: string]: {
@@ -44274,6 +45330,190 @@ export interface components {
     'opensearch.StorefrontSearchResult': {
       storefronts?: components['schemas']['opensearch.StorefrontSearchItem'][];
       total?: number;
+    };
+    'postexpress.AddressValidationRequest': {
+      /** @description Номер дома (например, "2" или "2a") */
+      BrojPodbroj?: string;
+      /** @description Дата (опционально, формат: YYYY-MM-DD) */
+      Datum?: string;
+      /** @description ID населённого пункта */
+      IdNaselje?: number;
+      /** @description ID услуги доставки */
+      IdRukovanje?: number;
+      /** @description ID улицы (опционально) */
+      IdUlica?: number;
+      /** @description Почтовый индекс */
+      PostanskiBroj?: string;
+      /** @description Тип адреса (0, 1, 2) */
+      TipAdrese?: number;
+    };
+    'postexpress.AddressValidationResponse': {
+      /** @description Номер дома */
+      Broj?: string;
+      /** @description ID населённого пункта */
+      IdNaselje?: number;
+      /** @description ID почтового отделения */
+      IdPoste?: number;
+      /** @description ID улицы */
+      IdUlica?: number;
+      /** @description Название населённого пункта */
+      NazivNaselja?: string;
+      /** @description Название почтового отделения */
+      NazivPoste?: string;
+      /** @description Название улицы */
+      NazivUlice?: string;
+      /** @description Postal Address Code */
+      PAK?: string;
+      /** @description Сообщение об ошибке */
+      Poruka?: string;
+      /** @description Почтовый индекс */
+      PostanskiBroj?: string;
+      /** @description Существует ли адрес */
+      PostojiAdresa?: boolean;
+      /** @description 0 - успех, 1 - ошибка */
+      Rezultat?: number;
+    };
+    'postexpress.AdresaUPS': {
+      /** @description Номер дома ("-1" для BB, "-2" если только подbroj) */
+      Broj?: string;
+      /** @description Номер poštanski pregatak (для Vrsta="F") */
+      BrojFaha?: string;
+      /** @description ID населённого пункта (из TX 3) */
+      IdNaselje?: number;
+      /** @description ID улицы (из TX 4) */
+      IdUlica?: number;
+      /** @description Примечание */
+      Napomena?: string;
+      /** @description Название населённого пункта */
+      Naselje?: string;
+      /** @description Муниципалитет */
+      Opstina?: string;
+      /** @description Postal Address Code (PAK) */
+      Pak?: string;
+      /** @description Подномер (буква или дополнительный номер) */
+      Podbroj?: string;
+      /** @description Почтовый индекс (5 цифр) */
+      Posta?: string;
+      /** @description Район */
+      Reon?: string;
+      /** @description Этаж */
+      Sprat?: string;
+      /** @description Квартира */
+      Stan?: string;
+      /** @description Название улицы */
+      Ulica?: string;
+      /** @description Тип адреса: S-стандартный, F-fah, P-post restant */
+      Vrsta?: string;
+    };
+    'postexpress.GetSettlementsResponse': {
+      /** @description Массив найденных населённых пунктов */
+      Naselja?: components['schemas']['postexpress.Settlement'][];
+      /** @description Сообщение об ошибке */
+      Poruka?: string;
+      /** @description 0 - успех, 1 - ошибка */
+      Rezultat?: number;
+    };
+    'postexpress.GetStreetsResponse': {
+      /** @description Сообщение об ошибке */
+      Poruka?: string;
+      /** @description 0 - успех, 1 - ошибка */
+      Rezultat?: number;
+      /** @description Массив найденных улиц */
+      Ulice?: components['schemas']['postexpress.Street'][];
+    };
+    'postexpress.PostageCalculationRequest': {
+      /** @description ID услуги доставки */
+      IdRukovanje?: number;
+      /** @description ID страны (0 = внутренние отправления) */
+      IdZemlja?: number;
+      /** @description Вес в граммах */
+      Masa?: number;
+      /** @description COD в para (1 RSD = 100 para) */
+      Otkupnina?: number;
+      /** @description Дополнительные услуги через запятую */
+      PosebneUsluge?: string;
+      /** @description Почтовый индекс прибытия */
+      PostanskiBrojDolaska?: string;
+      /** @description Почтовый индекс отправления */
+      PostanskiBrojOdlaska?: string;
+      /** @description Объявленная ценность в para */
+      Vrednost?: number;
+    };
+    'postexpress.PostageCalculationResponse': {
+      /** @description ID услуги */
+      IdRukovanje?: number;
+      /** @description Вес в граммах */
+      Masa?: number;
+      /** @description Примечание */
+      Napomena?: string;
+      /** @description Название услуги */
+      NazivUsluge?: string;
+      /** @description COD в para */
+      Otkupnina?: number;
+      /** @description Сообщение об ошибке */
+      Poruka?: string;
+      /** @description Дополнительные услуги */
+      PosebneUsluge?: string;
+      /** @description Почтовый индекс прибытия */
+      PostanskiBrojDolaska?: string;
+      /** @description Почтовый индекс отправления */
+      PostanskiBrojOdlaska?: string;
+      /** @description Стоимость в para (295 RSD = 29500 para) */
+      Postarina?: number;
+      /** @description 0 - успех, 1 - ошибка */
+      Rezultat?: number;
+      /** @description Объявленная ценность в para */
+      Vrednost?: number;
+    };
+    'postexpress.ServiceAvailabilityRequest': {
+      /** @description ОБЯЗАТЕЛЬНО: Полная структура адреса */
+      Adresa?: components['schemas']['postexpress.AdresaUPS'];
+      /** @description Дата доставки (опционально, формат: DD.MM.YYYY) */
+      Datum?: string;
+      /** @description ID услуги (29, 30, 55, 58, 59, 71, 85) */
+      IdRukovanje?: number;
+      /** @description Тип адреса: 0-адрес забора, 1-адрес отправителя, 2-адрес получателя */
+      TipAdrese?: number;
+    };
+    'postexpress.ServiceAvailabilityResponse': {
+      /** @description Доступна ли услуга */
+      Dostupna?: boolean;
+      /** @description ID услуги */
+      IdRukovanje?: number;
+      /** @description Примечание */
+      Napomena?: string;
+      /** @description Название услуги */
+      NazivUsluge?: string;
+      /** @description Ожидаемое время доставки (дни) */
+      OcekivanoDana?: number;
+      /** @description Сообщение об ошибке */
+      Poruka?: string;
+      /** @description 0 - успех, 1 - ошибка */
+      Rezultat?: number;
+    };
+    'postexpress.Settlement': {
+      /** @description ID населённого пункта (ВАЖНО: API возвращает "Id", не "IdNaselje"!) */
+      Id?: number;
+      /** @description Алиас для совместимости */
+      IdNaselje?: number;
+      /** @description ID округа */
+      IdOkrug?: number;
+      /** @description Название */
+      Naziv?: string;
+      /** @description Название округа */
+      NazivOkruga?: string;
+      /** @description Почтовый индекс */
+      PostanskiBroj?: string;
+    };
+    'postexpress.Street': {
+      /** @description ID улицы (ВАЖНО: API возвращает "Id", не "IdUlica"!) */
+      Id?: number;
+      /** @description ID населённого пункта */
+      IdNaselje?: number;
+      /** @description Алиас для совместимости */
+      IdUlica?: number;
+      /** @description Название улицы */
+      Naziv?: string;
     };
     'postgres.DashboardOrder': {
       created_at?: string;

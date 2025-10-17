@@ -499,7 +499,136 @@ type WSPAdresa struct {
 1. **ImaPrijemniBrojDN** - API всегда жалуется "Neodgovarajuće vrednost"
    - Не мешает созданию посылки
    - Данные полностью обрабатываются
-   - Может быть просто warning
+   - Является warning, не критичной ошибкой
+
+2. **Двухуровневая структура результата** - КРИТИЧЕСКИ ВАЖНО!
+   - API возвращает два уровня результатов: внешний и внутренний
+   - **Внешний уровень** (`Rezultat: 3`): индикатор того, что есть предупреждения
+   - **Внутренний уровень** (внутри `StrOut`, `Rezultat: 0`): РЕАЛЬНЫЙ результат создания манифеста
+   - ✅ **ПРАВИЛЬНО**: Сначала проверяем `StrOut`, парсим JSON внутри него, используем внутренний `Rezultat`
+   - ❌ **НЕПРАВИЛЬНО**: Проверять только внешний `Rezultat` - он может быть 3 даже при успешном создании!
+
+---
+
+## 📥 Структура ответа API
+
+### Двухуровневая структура результата
+
+Post Express B2B API возвращает ответ с двумя уровнями результатов:
+
+```json
+{
+  "Rezultat": 3,  // ← ВНЕШНИЙ результат (3 = есть предупреждения)
+  "StrOut": "{...JSON манифеста...}"  // ← ВНУТРИ этого JSON - реальный результат!
+}
+```
+
+**Пример полного ответа:**
+
+```json
+{
+  "Rezultat": 3,
+  "StrOut": "{\"IdManifest\":null,\"IdPartner\":10109,\"ExtIdManifest\":\"MANIFEST-1760451377\",\"IdTipPosiljke\":1,\"Porudzbine\":[{\"IdPorudzbina\":null,\"ExtIdPorudzbinaKupca\":null,\"ExtIdPorudzbina\":\"ORDER-1760451377\",\"IndGrupnostUrucenja\":null,\"Posiljke\":[{\"Rbr\":0,\"PrijemniBroj\":null,\"ImaPrijemniBrojDN\":\"false\",\"IdPosiljka\":null,...}]}],\"Greske\":[{\"ExtIdManifest\":\"MANIFEST-1760451377\",\"ExtIdPorudzbina\":\"ORDER-1760451377\",\"Rbr\":0,\"PorukaGreske\":\"Neodgovarajuće vrednost za ImaPrijemniBrojDN\"}]}"
+}
+```
+
+**После парсинга `StrOut` получаем:**
+
+```json
+{
+  "Rezultat": 0,  // ← РЕАЛЬНЫЙ результат! 0 = успех
+  "Poruka": "",
+  "IdManifest": null,
+  "ExtIdManifest": "MANIFEST-1760451377",
+  "IdPartner": 10109,
+  "Porudzbine": [
+    {
+      "ExtIdPorudzbina": "ORDER-1760451377",
+      "Posiljke": [
+        {
+          "Rbr": 0,
+          "ExtBrend": "SVETU",
+          "ExtMagacin": "WAREHOUSE1",
+          "IdRukovanje": 29,
+          "Posiljalac": { ... },
+          "Primalac": { ... },
+          "Masa": 500
+        }
+      ]
+    }
+  ],
+  "Greske": [  // ← Предупреждения, НЕ критичные ошибки!
+    {
+      "ExtIdManifest": "MANIFEST-1760451377",
+      "ExtIdPorudzbina": "ORDER-1760451377",
+      "Rbr": 0,
+      "PorukaGreske": "Neodgovarajuće vrednost za ImaPrijemniBrojDN"
+    }
+  ]
+}
+```
+
+### Правильная обработка результата
+
+**Go код для правильной обработки:**
+
+```go
+// 1. Получаем ответ от API
+resp, err := client.Transaction(ctx, req)
+if err != nil {
+    return nil, fmt.Errorf("transaction failed: %w", err)
+}
+
+// 2. ВАЖНО: Сначала проверяем StrOut!
+if strOut, exists := resp["StrOut"]; exists && strOut != nil {
+    if strOutStr, ok := strOut.(string); ok {
+        // 3. Парсим JSON из StrOut
+        var manifestResp struct {
+            Rezultat int    `json:"Rezultat"`
+            Poruka   string `json:"Poruka"`
+            Greske   []struct {
+                ExtIDManifest   string `json:"ExtIdManifest"`
+                ExtIDPorudzbina string `json:"ExtIdPorudzbina"`
+                Rbr             int    `json:"Rbr"`
+                PorukaGreske    string `json:"PorukaGreske"`
+            } `json:"Greske"`
+        }
+
+        if err := json.Unmarshal([]byte(strOutStr), &manifestResp); err != nil {
+            return nil, fmt.Errorf("failed to parse StrOut: %w", err)
+        }
+
+        // 4. Используем ВНУТРЕННИЙ Rezultat!
+        if manifestResp.Rezultat != 0 {
+            return nil, fmt.Errorf("manifest creation failed: %s", manifestResp.Poruka)
+        }
+
+        // 5. Логируем предупреждения (они не критичны)
+        if len(manifestResp.Greske) > 0 {
+            logger.Info("Validation warnings: %d", len(manifestResp.Greske))
+            for _, err := range manifestResp.Greske {
+                logger.Info("  - %s", err.PorukaGreske)
+            }
+        }
+
+        // 6. Успех! Манифест создан
+        return &manifestResp, nil
+    }
+}
+
+// 7. Fallback: если нет StrOut, проверяем внешний Rezultat
+if rezultat, ok := resp["Rezultat"].(float64); ok && rezultat != 0 {
+    return nil, fmt.Errorf("transaction failed with code: %d", int(rezultat))
+}
+```
+
+### Важные замечания
+
+1. **ВСЕГДА проверяй `StrOut` первым** - там находится реальный результат создания манифеста
+2. **Внешний `Rezultat`** может быть `3` даже при успешном создании манифеста (означает наличие предупреждений)
+3. **Внутренний `Rezultat`** (в `StrOut`) - это НАСТОЯЩИЙ индикатор успеха (`0` = успех, иначе ошибка)
+4. **Массив `Greske`** содержит предупреждения, которые НЕ блокируют создание манифеста
+5. **Пустой `StrOut`** или его отсутствие означает критическую ошибку транзакции
 
 ---
 
