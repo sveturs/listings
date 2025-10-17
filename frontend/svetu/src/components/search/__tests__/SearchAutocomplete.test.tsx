@@ -1,23 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SearchAutocomplete from '@/components/SearchBar/SearchAutocomplete';
-import { SearchService } from '@/services/search';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 
 jest.mock('next-intl', () => ({
   useTranslations: jest.fn(),
-}));
-
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
-}));
-
-jest.mock('@/services/search', () => ({
-  SearchService: {
-    getAutocompleteSuggestions: jest.fn(),
-  },
 }));
 
 jest.mock('next/image', () => ({
@@ -28,23 +16,25 @@ jest.mock('next/image', () => ({
 }));
 
 describe('SearchAutocomplete', () => {
-  const mockOnSearch = jest.fn();
-  const mockOnSuggestionSelect = jest.fn();
-  const mockRouter = { push: jest.fn() };
+  const mockOnSelect = jest.fn();
+  const mockOnCategorySelect = jest.fn();
+  const mockOnProductSelect = jest.fn();
   const mockTranslations = {
     suggestions: 'Suggestions',
     noSuggestions: 'No suggestions available',
-    history: 'Search History',
+    searchHistory: 'Search History',
     trending: 'Trending Searches',
-    inCategory: 'in category',
+    category: 'Category',
+    product: 'Product',
+    results: 'results',
+    clear: 'Clear',
   };
 
   const mockSuggestions = [
     {
-      id: '1',
       type: 'product' as const,
       text: 'iPhone 13',
-      highlight: '<em>iPhone</em> 13',
+      product_id: 123,
       metadata: {
         category: 'Electronics',
         price: 799,
@@ -52,19 +42,16 @@ describe('SearchAutocomplete', () => {
       },
     },
     {
-      id: '2',
       type: 'category' as const,
       text: 'Smartphones',
-      highlight: '<em>Smart</em>phones',
+      category: { id: 10, name: 'Smartphones', slug: 'smartphones' },
       metadata: {
         count: 150,
       },
     },
     {
-      id: '3',
-      type: 'query' as const,
+      type: 'text' as const,
       text: 'laptop deals',
-      highlight: 'laptop <em>deals</em>',
     },
   ];
 
@@ -73,286 +60,302 @@ describe('SearchAutocomplete', () => {
     (useTranslations as jest.Mock).mockReturnValue(
       (key: string) => mockTranslations[key] || key
     );
-    (useRouter as jest.Mock).mockReturnValue(mockRouter);
-    (SearchService.getAutocompleteSuggestions as jest.Mock).mockResolvedValue(
-      mockSuggestions
-    );
   });
 
-  it('should render search input', () => {
-    render(
+  it('should not render when showSuggestions is false', () => {
+    const { container } = render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={mockSuggestions}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={false}
+        selectedIndex={-1}
+        query="test"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 
-  it('should show suggestions when typing', async () => {
+  it('should render suggestions when showSuggestions is true', () => {
     render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={mockSuggestions}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="iphone"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'iphone' } });
-
-    await waitFor(() => {
-      expect(SearchService.getAutocompleteSuggestions).toHaveBeenCalledWith(
-        'iphone'
-      );
-      expect(screen.getByText('Suggestions')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Suggestions')).toBeInTheDocument();
+    expect(screen.getByText((content, element) => {
+      return element?.textContent === 'iPhone 13';
+    })).toBeInTheDocument();
   });
 
-  it('should display product suggestions with images', async () => {
-    render(
+  it('should display product suggestions with metadata', () => {
+    const { container } = render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={mockSuggestions}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="iphone"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'iphone' } });
-
-    await waitFor(() => {
-      const productSuggestion = screen.getByText('iPhone 13');
-      expect(productSuggestion).toBeInTheDocument();
-
-      const image = screen.getByAltText('iPhone 13');
-      expect(image).toHaveAttribute('src', '/images/iphone.jpg');
-    });
+    expect(container.textContent).toContain('iPhone 13');
+    expect(screen.getByText('Product')).toBeInTheDocument();
+    expect(container.textContent).toContain('799');
+    expect(container.textContent).toContain('RSD');
   });
 
-  it('should display category suggestions', async () => {
-    render(
+  it('should display category suggestions', () => {
+    const { container } = render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={mockSuggestions}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="smart"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'smart' } });
-
-    await waitFor(() => {
-      expect(screen.getByText('Smartphones')).toBeInTheDocument();
-      expect(screen.getByText('(150)')).toBeInTheDocument();
-    });
+    expect(container.textContent).toContain('Smartphones');
+    expect(screen.getByText('Category')).toBeInTheDocument();
+    expect(screen.getByText('(150 results)')).toBeInTheDocument();
   });
 
-  it('should handle suggestion selection', async () => {
+  it('should call onProductSelect when product is clicked', () => {
     render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={mockSuggestions}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="iphone"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'iphone' } });
+    const clickableElements = document.querySelectorAll('.cursor-pointer');
+    const productElement = Array.from(clickableElements).find(el =>
+      el.textContent?.includes('iPhone 13')
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText('iPhone 13')).toBeInTheDocument();
-    });
+    if (productElement) {
+      fireEvent.click(productElement);
+    }
 
-    fireEvent.click(screen.getByText('iPhone 13'));
-
-    expect(mockOnSuggestionSelect).toHaveBeenCalledWith(mockSuggestions[0]);
+    expect(mockOnProductSelect).toHaveBeenCalledWith(123);
   });
 
-  it('should navigate with keyboard', async () => {
+  it('should call onCategorySelect when category is clicked', () => {
     render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={mockSuggestions}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="smart"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'test' } });
+    const clickableElements = document.querySelectorAll('.cursor-pointer');
+    const categoryElement = Array.from(clickableElements).find(el =>
+      el.textContent?.includes('Smartphones')
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText('iPhone 13')).toBeInTheDocument();
-    });
+    if (categoryElement) {
+      fireEvent.click(categoryElement);
+    }
 
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
-    fireEvent.keyDown(input, { key: 'Enter' });
-
-    expect(mockOnSuggestionSelect).toHaveBeenCalledWith(mockSuggestions[1]);
+    expect(mockOnCategorySelect).toHaveBeenCalledWith(10);
   });
 
-  it('should close suggestions on escape', async () => {
+  it('should call onSelect when text suggestion is clicked', () => {
     render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={mockSuggestions}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="laptop"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'test' } });
+    const clickableElements = document.querySelectorAll('.cursor-pointer');
+    const textElement = Array.from(clickableElements).find(el =>
+      el.textContent?.includes('laptop deals')
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText('Suggestions')).toBeInTheDocument();
-    });
+    if (textElement) {
+      fireEvent.click(textElement);
+    }
 
-    fireEvent.keyDown(input, { key: 'Escape' });
-
-    await waitFor(() => {
-      expect(screen.queryByText('Suggestions')).not.toBeInTheDocument();
-    });
+    expect(mockOnSelect).toHaveBeenCalledWith('laptop deals');
   });
 
-  it('should show search history when enabled', async () => {
+  it('should show loading state', () => {
+    render(
+      <SearchAutocomplete
+        suggestions={[]}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="test"
+        isLoading={true}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
+      />
+    );
+
+    const loadingSpinner = document.querySelector('.loading-spinner');
+    expect(loadingSpinner).toBeInTheDocument();
+  });
+
+  it('should show no suggestions message', () => {
+    render(
+      <SearchAutocomplete
+        suggestions={[]}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="xyz"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
+      />
+    );
+
+    expect(screen.getByText('No suggestions available')).toBeInTheDocument();
+  });
+
+  it('should show search history when provided', () => {
     const mockHistory = ['previous search 1', 'previous search 2'];
 
     render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
-        showHistory={true}
+        suggestions={[]}
         searchHistory={mockHistory}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query=""
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.focus(input);
-
-    await waitFor(() => {
-      expect(screen.getByText('Search History')).toBeInTheDocument();
-      expect(screen.getByText('previous search 1')).toBeInTheDocument();
-      expect(screen.getByText('previous search 2')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Search History')).toBeInTheDocument();
+    expect(screen.getByText('previous search 1')).toBeInTheDocument();
+    expect(screen.getByText('previous search 2')).toBeInTheDocument();
   });
 
-  it('should show trending searches', async () => {
+  it('should show trending searches when provided', () => {
     const mockTrending = ['trending 1', 'trending 2'];
 
     render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={[]}
+        searchHistory={[]}
         trendingSearches={mockTrending}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query=""
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.focus(input);
-
-    await waitFor(() => {
-      expect(screen.getByText('Trending Searches')).toBeInTheDocument();
-      expect(screen.getByText('trending 1')).toBeInTheDocument();
-      expect(screen.getByText('trending 2')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Trending Searches')).toBeInTheDocument();
+    expect(screen.getByText('trending 1')).toBeInTheDocument();
+    expect(screen.getByText('trending 2')).toBeInTheDocument();
   });
 
-  it('should handle API error gracefully', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-    (SearchService.getAutocompleteSuggestions as jest.Mock).mockRejectedValue(
-      new Error('API Error')
-    );
+  it('should call onSelect when history item is clicked', () => {
+    const mockHistory = ['previous search'];
 
     render(
       <SearchAutocomplete
+        suggestions={[]}
+        searchHistory={mockHistory}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
         query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'test' } });
+    fireEvent.click(screen.getByText('previous search'));
 
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to fetch suggestions:',
-        expect.any(Error)
-      );
-    });
-
-    consoleErrorSpy.mockRestore();
+    expect(mockOnSelect).toHaveBeenCalledWith('previous search');
   });
 
-  it('should debounce API calls', async () => {
-    jest.useFakeTimers();
-
+  it('should highlight matching text in suggestions', () => {
     render(
       <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
+        suggestions={mockSuggestions}
+        searchHistory={[]}
+        trendingSearches={[]}
+        showSuggestions={true}
+        selectedIndex={-1}
+        query="phone"
+        isLoading={false}
+        onSelect={mockOnSelect}
+        onCategorySelect={mockOnCategorySelect}
+        onProductSelect={mockOnProductSelect}
       />
     );
 
-    const input = screen.getByRole('combobox');
-
-    fireEvent.change(input, { target: { value: 'i' } });
-    fireEvent.change(input, { target: { value: 'ip' } });
-    fireEvent.change(input, { target: { value: 'iph' } });
-    fireEvent.change(input, { target: { value: 'ipho' } });
-    fireEvent.change(input, { target: { value: 'iphone' } });
-
-    expect(SearchService.getAutocompleteSuggestions).not.toHaveBeenCalled();
-
-    jest.advanceTimersByTime(300);
-
-    await waitFor(() => {
-      expect(SearchService.getAutocompleteSuggestions).toHaveBeenCalledTimes(1);
-      expect(SearchService.getAutocompleteSuggestions).toHaveBeenCalledWith(
-        'iphone'
-      );
-    });
-
-    jest.useRealTimers();
-  });
-
-  it('should call onSearch when form is submitted', () => {
-    render(
-      <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
-      />
-    );
-
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'search query' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-
-    expect(mockOnSearch).toHaveBeenCalledWith('search query');
-  });
-
-  it('should highlight matching text in suggestions', async () => {
-    render(
-      <SearchAutocomplete
-        query=""
-        onSearch={mockOnSearch}
-        onSuggestionSelect={mockOnSuggestionSelect}
-      />
-    );
-
-    const input = screen.getByRole('combobox');
-    fireEvent.change(input, { target: { value: 'phone' } });
-
-    await waitFor(() => {
-      const highlightedText = document.querySelector('em');
-      expect(highlightedText).toHaveTextContent('iPhone');
-    });
+    const highlightedText = document.querySelector('mark');
+    expect(highlightedText).toBeTruthy();
+    expect(highlightedText?.textContent?.toLowerCase()).toContain('phone');
   });
 });
