@@ -415,8 +415,11 @@
     "attributesDescription": "Управление атрибутами",
     "attributeGroupsDescription": "Управление группами атрибутов",
     "translations": "Управление переводами",
-    "translationsDescription": "Система управления переводами, AI переводы и синхронизация"
+    "translationsDescription": "Система управления переводами, AI переводы и синхронизация",
+    "qualityTests": "Тесты качества кода",
+    "qualityTestsDescription": "Запуск комплексных проверок качества кода backend и frontend"
   },
+  "runTests": "Запустить тесты",
   "categories": {
     "title": "Категории",
     "addCategory": "Добавить категорию",
@@ -1822,5 +1825,30 @@
     "requestData": "Отправленные данные",
     "responseData": "Ответ API",
     "required": "*"
+  },
+  "qualityTests": {
+    "title": "Тесты качества кода",
+    "description": "Комплексный набор тестов для backend и frontend",
+    "runAll": "Запустить все тесты",
+    "backend": "Тесты Backend",
+    "frontend": "Тесты Frontend",
+    "running": "Выполняется...",
+    "success": "Успешно",
+    "failed": "Ошибка",
+    "warning": "Предупреждение",
+    "pending": "Ожидание",
+    "duration": "Длительность",
+    "output": "Вывод",
+    "error": "Ошибка",
+    "details": "Детали",
+    "runTest": "Запустить тест",
+    "totalTests": "Всего тестов",
+    "passed": "Пройдено",
+    "progress": "Прогресс",
+    "testsCompleted": "Тестов завершено",
+    "noTestsRun": "Тесты ещё не запускались",
+    "allGood": "Всё в порядке!",
+    "needAttention": "Требуется внимание",
+    "successRate": "процент успешности"
   }
 }
