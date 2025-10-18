@@ -1862,6 +1862,48 @@
     "noTestsRun": "Тесты ещё не запускались",
     "allGood": "Всё в порядке!",
     "needAttention": "Требуется внимание",
-    "successRate": "процент успешности"
+    "successRate": "процент успешности",
+    "tests": {
+      "api-auth-invalid-token": {
+        "name": "Тест неверного токена",
+        "description": "Проверка отклонения API запросов с невалидным токеном аутентификации"
+      },
+      "api-auth-missing-token": {
+        "name": "Тест отсутствующего токена",
+        "description": "Проверка отклонения API запросов без токена аутентификации"
+      },
+      "api-pagination-invalid": {
+        "name": "Тест невалидной пагинации",
+        "description": "Проверка обработки невалидных параметров пагинации (отрицательные значения)"
+      },
+      "api-search-empty-query": {
+        "name": "Тест пустого поискового запроса",
+        "description": "Проверка обработки пустых поисковых запросов"
+      },
+      "api-listing-invalid-id": {
+        "name": "Тест несуществующего ID",
+        "description": "Проверка обработки запросов с несуществующими ID объявлений"
+      },
+      "api-input-special-chars": {
+        "name": "Тест специальных символов",
+        "description": "Проверка обработки специальных символов и unicode в данных"
+      },
+      "api-rate-limit": {
+        "name": "Тест ограничения частоты запросов",
+        "description": "Проверка работы защиты от превышения лимитов запросов (rate limiting)"
+      },
+      "integration-redis-cache": {
+        "name": "Тест Redis кэша",
+        "description": "Проверка операций Redis кэша (SET, GET, TTL)"
+      },
+      "integration-opensearch-index": {
+        "name": "Тест индексации OpenSearch",
+        "description": "Проверка индексации и поиска в OpenSearch"
+      },
+      "integration-postgres-connection": {
+        "name": "Тест подключения PostgreSQL",
+        "description": "Проверка подключения к PostgreSQL и базовых запросов"
+      }
+    }
   }
 }

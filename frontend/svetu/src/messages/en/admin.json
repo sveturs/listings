@@ -461,7 +461,49 @@
     "noTestsRun": "No tests run yet",
     "allGood": "All good!",
     "needAttention": "Need attention",
-    "successRate": "success rate"
+    "successRate": "success rate",
+    "tests": {
+      "api-auth-invalid-token": {
+        "name": "Invalid Token Test",
+        "description": "Test API rejection with invalid authentication token"
+      },
+      "api-auth-missing-token": {
+        "name": "Missing Token Test",
+        "description": "Test API rejection when authentication token is missing"
+      },
+      "api-admin-unauthorized": {
+        "name": "Admin Unauthorized",
+        "description": "Test admin endpoint rejection for non-admin users"
+      },
+      "api-search-invalid-params": {
+        "name": "Invalid Search Params",
+        "description": "Test handling of invalid search parameters"
+      },
+      "api-search-empty-query": {
+        "name": "Empty Search Query",
+        "description": "Test search with empty query string"
+      },
+      "api-search-unicode": {
+        "name": "Unicode Search",
+        "description": "Test search with Unicode characters (Cyrillic, Emoji)"
+      },
+      "api-listings-extreme-limit": {
+        "name": "Extreme Limit Values",
+        "description": "Test listings with extreme limit values (0, 10000)"
+      },
+      "integration-redis-cache": {
+        "name": "Redis Cache Test",
+        "description": "Test Redis cache operations (SET, GET, TTL)"
+      },
+      "integration-opensearch-index": {
+        "name": "OpenSearch Test",
+        "description": "Test OpenSearch indexing and search functionality"
+      },
+      "integration-postgres-connection": {
+        "name": "PostgreSQL Test",
+        "description": "Test PostgreSQL connection and queries"
+      }
+    }
   },
   "categories": {
     "title": "Title",

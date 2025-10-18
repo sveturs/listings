@@ -1925,6 +1925,48 @@
     "noTestsRun": "Testovi još nisu pokrenuti",
     "allGood": "Sve je u redu!",
     "needAttention": "Potrebna pažnja",
-    "successRate": "stopa uspešnosti"
+    "successRate": "stopa uspešnosti",
+    "tests": {
+      "api-auth-invalid-token": {
+        "name": "Test nevažećeg tokena",
+        "description": "Provera odbijanja API zahteva sa nevažećim autentifikacionim tokenom"
+      },
+      "api-auth-missing-token": {
+        "name": "Test nedostajućeg tokena",
+        "description": "Provera odbijanja API zahteva bez autentifikacionog tokena"
+      },
+      "api-pagination-invalid": {
+        "name": "Test nevažeće paginacije",
+        "description": "Provera obrade nevažećih parametara paginacije (negativne vrednosti)"
+      },
+      "api-search-empty-query": {
+        "name": "Test praznog upita pretrage",
+        "description": "Provera obrade praznih upita pretrage"
+      },
+      "api-listing-invalid-id": {
+        "name": "Test nepostojećeg ID-a",
+        "description": "Provera obrade zahteva sa nepostojećim ID-ovima oglasa"
+      },
+      "api-input-special-chars": {
+        "name": "Test specijalnih karaktera",
+        "description": "Provera obrade specijalnih karaktera i unicode-a u podacima"
+      },
+      "api-rate-limit": {
+        "name": "Test ograničenja stope zahteva",
+        "description": "Provera zaštite od prekoračenja limita zahteva (rate limiting)"
+      },
+      "integration-redis-cache": {
+        "name": "Test Redis keša",
+        "description": "Provera operacija Redis keša (SET, GET, TTL)"
+      },
+      "integration-opensearch-index": {
+        "name": "Test indeksiranja OpenSearch",
+        "description": "Provera indeksiranja i pretrage u OpenSearch-u"
+      },
+      "integration-postgres-connection": {
+        "name": "Test PostgreSQL konekcije",
+        "description": "Provera povezivanja sa PostgreSQL i osnovnih upita"
+      }
+    }
   }
 }

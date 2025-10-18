@@ -605,10 +605,10 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
                 <div className="card-body p-4">
                   <h4 className="card-title text-sm">
                     <span>{test.icon}</span>
-                    <span>{test.name}</span>
+                    <span>{t(`tests.${test.id}.name`) || test.name}</span>
                   </h4>
                   <p className="text-xs text-base-content/70">
-                    {test.description}
+                    {t(`tests.${test.id}.description`) || test.description}
                   </p>
 
                   <div className="mt-2 space-y-2">
