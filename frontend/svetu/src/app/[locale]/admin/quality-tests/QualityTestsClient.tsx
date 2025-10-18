@@ -185,6 +185,13 @@ const TESTS: Test[] = [
     category: 'functional',
     icon: '⚙️',
   },
+  {
+    id: 'api-review-creation',
+    name: 'Review Creation',
+    description: 'Test review creation with rating (draft + publish)',
+    category: 'functional',
+    icon: '⭐',
+  },
 ];
 
 export default function QualityTestsClient({ locale }: { locale: string }) {

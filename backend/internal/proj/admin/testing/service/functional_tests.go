@@ -3,6 +3,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -56,6 +57,12 @@ var APIEndpointTests = []FunctionalTest{
 		Description: "Test admin panel operations",
 		RunFunc:     testAdminOperations,
 	},
+	{
+		Name:        "api-review-creation",
+		Category:    domain.TestCategoryAPI,
+		Description: "Test review creation with rating (draft + publish)",
+		RunFunc:     testReviewCreation,
+	},
 }
 
 // testAuthFlow tests authentication endpoints
@@ -64,7 +71,7 @@ func testAuthFlow(ctx context.Context, baseURL, token string) *domain.TestResult
 		TestName:   "api-auth-flow",
 		TestSuite:  "api",
 		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now(),
+		StartedAt:  time.Now().UTC(),
 	}
 
 	// Test /api/v1/auth/me endpoint
@@ -99,7 +106,7 @@ func testAuthFlow(ctx context.Context, baseURL, token string) *domain.TestResult
 		return failTest(result, "Missing user or email field in response", nil)
 	}
 
-	result.CompletedAt = time.Now()
+	result.CompletedAt = time.Now().UTC()
 	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
 	return result
 }
@@ -110,7 +117,7 @@ func testMarketplaceCRUD(ctx context.Context, baseURL, token string) *domain.Tes
 		TestName:   "api-marketplace-crud",
 		TestSuite:  "api",
 		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now(),
+		StartedAt:  time.Now().UTC(),
 	}
 
 	// Test GET /api/v1/unified/listings
@@ -144,7 +151,7 @@ func testMarketplaceCRUD(ctx context.Context, baseURL, token string) *domain.Tes
 		return failTest(result, "Missing data field in response", nil)
 	}
 
-	result.CompletedAt = time.Now()
+	result.CompletedAt = time.Now().UTC()
 	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
 	return result
 }
@@ -155,7 +162,7 @@ func testCategoriesFetch(ctx context.Context, baseURL, token string) *domain.Tes
 		TestName:   "api-categories-fetch",
 		TestSuite:  "api",
 		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now(),
+		StartedAt:  time.Now().UTC(),
 	}
 
 	// Test GET /api/v1/admin/categories
@@ -189,7 +196,7 @@ func testCategoriesFetch(ctx context.Context, baseURL, token string) *domain.Tes
 		return failTest(result, "Missing data field in response", nil)
 	}
 
-	result.CompletedAt = time.Now()
+	result.CompletedAt = time.Now().UTC()
 	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
 	return result
 }
@@ -200,7 +207,7 @@ func testSearchFunctionality(ctx context.Context, baseURL, token string) *domain
 		TestName:   "api-search-functionality",
 		TestSuite:  "api",
 		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now(),
+		StartedAt:  time.Now().UTC(),
 	}
 
 	// Test GET /api/v1/search - unified search endpoint
@@ -223,7 +230,7 @@ func testSearchFunctionality(ctx context.Context, baseURL, token string) *domain
 		return failTest(result, fmt.Sprintf("Expected status 200, got %d", resp.StatusCode), fmt.Errorf("response: %s", string(body)))
 	}
 
-	result.CompletedAt = time.Now()
+	result.CompletedAt = time.Now().UTC()
 	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
 	return result
 }
@@ -234,7 +241,7 @@ func testAdminOperations(ctx context.Context, baseURL, token string) *domain.Tes
 		TestName:   "api-admin-operations",
 		TestSuite:  "api",
 		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now(),
+		StartedAt:  time.Now().UTC(),
 	}
 
 	// Test GET /api/v1/admin/admins
@@ -279,7 +286,135 @@ func testAdminOperations(ctx context.Context, baseURL, token string) *domain.Tes
 		return failTest(result, "No admins returned", nil)
 	}
 
-	result.CompletedAt = time.Now()
+	result.CompletedAt = time.Now().UTC()
+	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
+	return result
+}
+
+// testReviewCreation tests review creation workflow (draft + publish)
+func testReviewCreation(ctx context.Context, baseURL, token string) *domain.TestResult {
+	result := &domain.TestResult{
+		TestName:  "api-review-creation",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Step 1: Get a listing to review
+	reqListings, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=1", nil)
+	if err != nil {
+		return failTest(result, "Failed to create listings request", err)
+	}
+	reqListings.Header.Set("Authorization", "Bearer "+token)
+
+	respListings, err := client.Do(reqListings)
+	if err != nil {
+		return failTest(result, "Failed to fetch listings", err)
+	}
+	defer respListings.Body.Close()
+
+	if respListings.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(respListings.Body)
+		return failTest(result, fmt.Sprintf("Failed to get listings, status %d", respListings.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	var listingsResp map[string]interface{}
+	if err := json.NewDecoder(respListings.Body).Decode(&listingsResp); err != nil {
+		return failTest(result, "Failed to decode listings response", err)
+	}
+
+	data, ok := listingsResp["data"].([]interface{})
+	if !ok || len(data) == 0 {
+		return failTest(result, "No listings available for review", nil)
+	}
+
+	listing := data[0].(map[string]interface{})
+	listingID := int(listing["id"].(float64))
+
+	// Step 2: Create draft review
+	reviewPayload := map[string]interface{}{
+		"entity_type":       "listing",
+		"entity_id":         listingID,
+		"rating":            5,
+		"comment":           "Отличное место! Все понравилось.",
+		"pros":              "Чисто, уютно, хороший персонал",
+		"cons":              "Нет минусов",
+		"original_language": "ru",
+	}
+
+	payloadBytes, err := json.Marshal(reviewPayload)
+	if err != nil {
+		return failTest(result, "Failed to marshal review payload", err)
+	}
+
+	reqDraft, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/api/v1/reviews/draft", bytes.NewReader(payloadBytes))
+	if err != nil {
+		return failTest(result, "Failed to create draft request", err)
+	}
+	reqDraft.Header.Set("Authorization", "Bearer "+token)
+	reqDraft.Header.Set("Content-Type", "application/json")
+
+	respDraft, err := client.Do(reqDraft)
+	if err != nil {
+		return failTest(result, "Failed to create draft review", err)
+	}
+	defer respDraft.Body.Close()
+
+	if respDraft.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(respDraft.Body)
+		return failTest(result, fmt.Sprintf("Failed to create draft review, status %d", respDraft.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	var draftResp map[string]interface{}
+	if err := json.NewDecoder(respDraft.Body).Decode(&draftResp); err != nil {
+		return failTest(result, "Failed to decode draft response", err)
+	}
+
+	// Extract review from response wrapper {success: true, data: {...}}
+	reviewData, ok := draftResp["data"].(map[string]interface{})
+	if !ok {
+		return failTest(result, "Missing data field in draft response", nil)
+	}
+
+	reviewID := int(reviewData["id"].(float64))
+
+	// Step 3: Publish review
+	reqPublish, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/api/v1/reviews/%d/publish", baseURL, reviewID), nil)
+	if err != nil {
+		return failTest(result, "Failed to create publish request", err)
+	}
+	reqPublish.Header.Set("Authorization", "Bearer "+token)
+
+	respPublish, err := client.Do(reqPublish)
+	if err != nil {
+		return failTest(result, "Failed to publish review", err)
+	}
+	defer respPublish.Body.Close()
+
+	if respPublish.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(respPublish.Body)
+		return failTest(result, fmt.Sprintf("Failed to publish review, status %d", respPublish.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	var publishResp map[string]interface{}
+	if err := json.NewDecoder(respPublish.Body).Decode(&publishResp); err != nil {
+		return failTest(result, "Failed to decode publish response", err)
+	}
+
+	// Verify review is published
+	publishedReview, ok := publishResp["data"].(map[string]interface{})
+	if !ok {
+		return failTest(result, "Missing data field in publish response", nil)
+	}
+
+	status, ok := publishedReview["status"].(string)
+	if !ok || status != "published" {
+		return failTest(result, fmt.Sprintf("Review status is %v, expected 'published'", publishedReview["status"]), nil)
+	}
+
+	result.CompletedAt = time.Now().UTC()
 	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
 	return result
 }
@@ -287,7 +422,7 @@ func testAdminOperations(ctx context.Context, baseURL, token string) *domain.Tes
 // failTest marks test as failed and returns result
 func failTest(result *domain.TestResult, message string, err error) *domain.TestResult {
 	result.Status = domain.TestResultStatusFailed
-	result.CompletedAt = time.Now()
+	result.CompletedAt = time.Now().UTC()
 	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
 
 	errMsg := message
