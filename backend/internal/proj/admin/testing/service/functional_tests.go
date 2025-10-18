@@ -302,8 +302,38 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Step 1: Get a listing to review
-	reqListings, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=1", nil)
+	// Step 1: Get current user ID from /auth/me
+	reqMe, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/auth/me", nil)
+	if err != nil {
+		return failTest(result, "Failed to create /auth/me request", err)
+	}
+	reqMe.Header.Set("Authorization", "Bearer "+token)
+
+	respMe, err := client.Do(reqMe)
+	if err != nil {
+		return failTest(result, "Failed to fetch current user", err)
+	}
+	defer respMe.Body.Close()
+
+	if respMe.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(respMe.Body)
+		return failTest(result, fmt.Sprintf("Failed to get current user, status %d", respMe.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	var meResp map[string]interface{}
+	if err := json.NewDecoder(respMe.Body).Decode(&meResp); err != nil {
+		return failTest(result, "Failed to decode /auth/me response", err)
+	}
+
+	user, ok := meResp["user"].(map[string]interface{})
+	if !ok {
+		return failTest(result, "Missing user field in /auth/me response", nil)
+	}
+
+	userID := int(user["id"].(float64))
+
+	// Step 2: Get multiple listings to find one without review
+	reqListings, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=10", nil)
 	if err != nil {
 		return failTest(result, "Failed to create listings request", err)
 	}
@@ -330,10 +360,62 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 		return failTest(result, "No listings available for review", nil)
 	}
 
-	listing := data[0].(map[string]interface{})
-	listingID := int(listing["id"].(float64))
+	// Step 3: Find listing without existing review from current user
+	var listingID int
+	found := false
 
-	// Step 2: Create draft review
+	for _, item := range data {
+		listing := item.(map[string]interface{})
+		candidateID := int(listing["id"].(float64))
+
+		// Check if review exists for this listing + user
+		reqCheck, err := http.NewRequestWithContext(ctx, "GET",
+			fmt.Sprintf("%s/api/v1/reviews?entity_type=listing&entity_id=%d&user_id=%d", baseURL, candidateID, userID), nil)
+		if err != nil {
+			continue // Skip this listing on error
+		}
+		reqCheck.Header.Set("Authorization", "Bearer "+token)
+
+		respCheck, err := client.Do(reqCheck)
+		if err != nil {
+			continue // Skip this listing on error
+		}
+
+		var checkResp map[string]interface{}
+		if err := json.NewDecoder(respCheck.Body).Decode(&checkResp); err != nil {
+			respCheck.Body.Close()
+			continue
+		}
+		respCheck.Body.Close()
+
+		// Check if no reviews exist - response structure: {data: {data: null/[], meta: {...}}}
+		dataWrapper, ok := checkResp["data"].(map[string]interface{})
+		if !ok {
+			continue // Unexpected response format
+		}
+
+		dataField := dataWrapper["data"]
+		// data can be null or empty array when no reviews exist
+		if dataField == nil {
+			listingID = candidateID
+			found = true
+			break
+		}
+
+		// Check if data is empty array
+		reviews, ok := dataField.([]interface{})
+		if ok && len(reviews) == 0 {
+			listingID = candidateID
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return failTest(result, "No listings available without existing review from current user", nil)
+	}
+
+	// Step 4: Create draft review
 	reviewPayload := map[string]interface{}{
 		"entity_type":       "listing",
 		"entity_id":         listingID,
@@ -380,7 +462,7 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 
 	reviewID := int(reviewData["id"].(float64))
 
-	// Step 3: Publish review
+	// Step 5: Publish review
 	reqPublish, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/api/v1/reviews/%d/publish", baseURL, reviewID), nil)
 	if err != nil {
 		return failTest(result, "Failed to create publish request", err)
