@@ -36,6 +36,7 @@ const (
 	TestCategoryPerformance TestCategory = "performance"
 	TestCategoryIntegration TestCategory = "integration"
 	TestCategoryE2E         TestCategory = "e2e"
+	TestCategoryAll         TestCategory = "all"
 )
 
 // TestRun represents a test suite execution

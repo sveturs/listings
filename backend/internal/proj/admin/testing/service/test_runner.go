@@ -63,6 +63,27 @@ func (r *TestRunner) GetAvailableTestSuites() []*domain.TestSuite {
 			TestCount:   len(APIEndpointTests),
 			Enabled:     true,
 		},
+		{
+			Name:        "functional-api",
+			Description: "Functional API tests (alias for api-endpoints)",
+			Category:    domain.TestCategoryAPI,
+			TestCount:   len(APIEndpointTests),
+			Enabled:     true,
+		},
+		{
+			Name:        "integration",
+			Description: "Integration tests for external services (Redis, OpenSearch, PostgreSQL)",
+			Category:    domain.TestCategoryIntegration,
+			TestCount:   len(IntegrationTests),
+			Enabled:     true,
+		},
+		{
+			Name:        "all",
+			Description: "Run all available tests",
+			Category:    domain.TestCategoryAll,
+			TestCount:   len(APIEndpointTests) + len(IntegrationTests),
+			Enabled:     true,
+		},
 	}
 }
 
@@ -279,6 +300,14 @@ func (r *TestRunner) getTestsForSuite(suite string) []FunctionalTest {
 	switch suite {
 	case "api-endpoints", "functional-api":
 		return APIEndpointTests
+	case "integration":
+		return IntegrationTests
+	case "all":
+		// Combine all test suites
+		var allTests []FunctionalTest
+		allTests = append(allTests, APIEndpointTests...)
+		allTests = append(allTests, IntegrationTests...)
+		return allTests
 	default:
 		return nil
 	}

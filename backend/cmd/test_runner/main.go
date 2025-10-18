@@ -73,11 +73,17 @@ func main() {
 		testRunner = testingService.NewTestRunner(storage, realAuthMgr, backendURL, zerologLogger)
 	}
 
+	// Get test suite from env (default: functional-api)
+	testSuite := os.Getenv("TEST_SUITE")
+	if testSuite == "" {
+		testSuite = "functional-api"
+	}
+
 	// Run tests
 	ctx := context.Background()
-	fmt.Println("=== Starting Functional API Tests ===")
+	fmt.Printf("=== Starting %s Tests ===\n", testSuite)
 
-	testRun, err := testRunner.RunTestSuite(ctx, "functional-api", 11, false)
+	testRun, err := testRunner.RunTestSuite(ctx, testSuite, 11, false)
 	if err != nil {
 		log.Fatalf("Failed to run test suite: %v", err)
 	}
