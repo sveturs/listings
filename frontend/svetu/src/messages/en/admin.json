@@ -463,6 +463,86 @@
     "needAttention": "Need attention",
     "successRate": "success rate",
     "tests": {
+      "backend-format": {
+        "name": "Backend Format",
+        "description": "Check Go code formatting (gofumpt, goimports)"
+      },
+      "backend-lint": {
+        "name": "Backend Lint",
+        "description": "Run golangci-lint for code quality"
+      },
+      "frontend-format": {
+        "name": "Frontend Format",
+        "description": "Check Prettier formatting"
+      },
+      "frontend-lint": {
+        "name": "Frontend Lint",
+        "description": "Run ESLint for code quality"
+      },
+      "backend-tests-unit": {
+        "name": "Backend Unit Tests",
+        "description": "Run Go unit tests only"
+      },
+      "frontend-tests": {
+        "name": "Frontend Unit Tests",
+        "description": "Run Jest unit tests"
+      },
+      "backend-tests-short": {
+        "name": "Backend Short Tests",
+        "description": "Quick tests (skip Integration/OpenSearch)"
+      },
+      "backend-tests-full": {
+        "name": "Backend Full Tests",
+        "description": "All tests including integration"
+      },
+      "backend-tests-postexpress": {
+        "name": "Post Express Integration",
+        "description": "Test Post Express API integration"
+      },
+      "backend-build": {
+        "name": "Backend Build",
+        "description": "Compile Go code"
+      },
+      "frontend-build": {
+        "name": "Frontend Build",
+        "description": "Next.js production build"
+      },
+      "typescript-check": {
+        "name": "TypeScript Check",
+        "description": "Type checking (tsc --noEmit)"
+      },
+      "backend-tests-coverage": {
+        "name": "Backend Test Coverage",
+        "description": "Run tests with coverage report"
+      },
+      "frontend-tests-coverage": {
+        "name": "Frontend Test Coverage",
+        "description": "Jest tests with coverage"
+      },
+      "api-auth-flow": {
+        "name": "Auth Flow Test",
+        "description": "Test authentication endpoints (login, me, logout)"
+      },
+      "api-marketplace-crud": {
+        "name": "Marketplace CRUD",
+        "description": "Test marketplace listing operations"
+      },
+      "api-categories-fetch": {
+        "name": "Categories API",
+        "description": "Test admin categories endpoints"
+      },
+      "api-search-functionality": {
+        "name": "Search API",
+        "description": "Test unified search functionality"
+      },
+      "api-admin-operations": {
+        "name": "Admin Operations",
+        "description": "Test admin panel endpoints"
+      },
+      "api-review-creation": {
+        "name": "Review Creation",
+        "description": "Test review creation with rating (draft + publish)"
+      },
       "api-auth-invalid-token": {
         "name": "Invalid Token Test",
         "description": "Test API rejection with invalid authentication token"
@@ -502,6 +582,22 @@
       "integration-postgres-connection": {
         "name": "PostgreSQL Test",
         "description": "Test PostgreSQL connection and queries"
+      },
+      "api-pagination-invalid": {
+        "name": "Invalid Pagination",
+        "description": "Test invalid pagination parameters handling (negative values)"
+      },
+      "api-listing-invalid-id": {
+        "name": "Invalid Listing ID",
+        "description": "Test handling of non-existent listing IDs"
+      },
+      "api-input-special-chars": {
+        "name": "Special Characters",
+        "description": "Test special characters and unicode in input data"
+      },
+      "api-rate-limit": {
+        "name": "Rate Limiting",
+        "description": "Test rate limiting protection against excessive requests"
       }
     }
   },

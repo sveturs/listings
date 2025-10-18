@@ -1864,6 +1864,86 @@
     "needAttention": "Требуется внимание",
     "successRate": "процент успешности",
     "tests": {
+      "backend-format": {
+        "name": "Форматирование Backend",
+        "description": "Проверка форматирования Go кода (gofumpt, goimports)"
+      },
+      "backend-lint": {
+        "name": "Линтинг Backend",
+        "description": "Запуск golangci-lint для проверки качества кода"
+      },
+      "frontend-format": {
+        "name": "Форматирование Frontend",
+        "description": "Проверка форматирования Prettier"
+      },
+      "frontend-lint": {
+        "name": "Линтинг Frontend",
+        "description": "Запуск ESLint для проверки качества кода"
+      },
+      "backend-tests-unit": {
+        "name": "Unit тесты Backend",
+        "description": "Запуск только unit тестов Go"
+      },
+      "frontend-tests": {
+        "name": "Unit тесты Frontend",
+        "description": "Запуск Jest unit тестов"
+      },
+      "backend-tests-short": {
+        "name": "Быстрые тесты Backend",
+        "description": "Быстрые тесты (без интеграционных/OpenSearch)"
+      },
+      "backend-tests-full": {
+        "name": "Полные тесты Backend",
+        "description": "Все тесты включая интеграционные"
+      },
+      "backend-tests-postexpress": {
+        "name": "Интеграция Post Express",
+        "description": "Тест интеграции с API Post Express"
+      },
+      "backend-build": {
+        "name": "Сборка Backend",
+        "description": "Компиляция Go кода"
+      },
+      "frontend-build": {
+        "name": "Сборка Frontend",
+        "description": "Production сборка Next.js"
+      },
+      "typescript-check": {
+        "name": "Проверка TypeScript",
+        "description": "Проверка типов (tsc --noEmit)"
+      },
+      "backend-tests-coverage": {
+        "name": "Покрытие тестами Backend",
+        "description": "Запуск тестов с отчетом о покрытии"
+      },
+      "frontend-tests-coverage": {
+        "name": "Покрытие тестами Frontend",
+        "description": "Jest тесты с отчетом о покрытии"
+      },
+      "api-auth-flow": {
+        "name": "Тест потока аутентификации",
+        "description": "Проверка эндпоинтов аутентификации (login, me, logout)"
+      },
+      "api-marketplace-crud": {
+        "name": "CRUD маркетплейса",
+        "description": "Проверка операций с объявлениями маркетплейса"
+      },
+      "api-categories-fetch": {
+        "name": "API категорий",
+        "description": "Проверка эндпоинтов категорий админки"
+      },
+      "api-search-functionality": {
+        "name": "API поиска",
+        "description": "Проверка функциональности унифицированного поиска"
+      },
+      "api-admin-operations": {
+        "name": "Операции администратора",
+        "description": "Проверка эндпоинтов админ-панели"
+      },
+      "api-review-creation": {
+        "name": "Создание отзывов",
+        "description": "Проверка создания отзывов с рейтингом (черновик + публикация)"
+      },
       "api-auth-invalid-token": {
         "name": "Тест неверного токена",
         "description": "Проверка отклонения API запросов с невалидным токеном аутентификации"
@@ -1872,37 +1952,53 @@
         "name": "Тест отсутствующего токена",
         "description": "Проверка отклонения API запросов без токена аутентификации"
       },
-      "api-pagination-invalid": {
-        "name": "Тест невалидной пагинации",
-        "description": "Проверка обработки невалидных параметров пагинации (отрицательные значения)"
+      "api-admin-unauthorized": {
+        "name": "Неавторизованный админ",
+        "description": "Проверка отклонения админ эндпоинтов для не-админов"
+      },
+      "api-search-invalid-params": {
+        "name": "Невалидные параметры поиска",
+        "description": "Проверка обработки невалидных параметров поиска"
       },
       "api-search-empty-query": {
-        "name": "Тест пустого поискового запроса",
-        "description": "Проверка обработки пустых поисковых запросов"
+        "name": "Пустой поисковый запрос",
+        "description": "Проверка поиска с пустой строкой запроса"
       },
-      "api-listing-invalid-id": {
-        "name": "Тест несуществующего ID",
-        "description": "Проверка обработки запросов с несуществующими ID объявлений"
+      "api-search-unicode": {
+        "name": "Unicode поиск",
+        "description": "Проверка поиска с Unicode символами (Кириллица, Эмодзи)"
       },
-      "api-input-special-chars": {
-        "name": "Тест специальных символов",
-        "description": "Проверка обработки специальных символов и unicode в данных"
-      },
-      "api-rate-limit": {
-        "name": "Тест ограничения частоты запросов",
-        "description": "Проверка работы защиты от превышения лимитов запросов (rate limiting)"
+      "api-listings-extreme-limit": {
+        "name": "Экстремальные значения лимита",
+        "description": "Проверка объявлений с экстремальными значениями лимита (0, 10000)"
       },
       "integration-redis-cache": {
         "name": "Тест Redis кэша",
         "description": "Проверка операций Redis кэша (SET, GET, TTL)"
       },
       "integration-opensearch-index": {
-        "name": "Тест индексации OpenSearch",
+        "name": "Тест OpenSearch",
         "description": "Проверка индексации и поиска в OpenSearch"
       },
       "integration-postgres-connection": {
-        "name": "Тест подключения PostgreSQL",
-        "description": "Проверка подключения к PostgreSQL и базовых запросов"
+        "name": "Тест PostgreSQL",
+        "description": "Проверка подключения к PostgreSQL и запросов"
+      },
+      "api-pagination-invalid": {
+        "name": "Невалидная пагинация",
+        "description": "Проверка обработки невалидных параметров пагинации (отрицательные значения)"
+      },
+      "api-listing-invalid-id": {
+        "name": "Невалидный ID объявления",
+        "description": "Проверка обработки несуществующих ID объявлений"
+      },
+      "api-input-special-chars": {
+        "name": "Специальные символы",
+        "description": "Проверка специальных символов и unicode во входных данных"
+      },
+      "api-rate-limit": {
+        "name": "Ограничение частоты запросов",
+        "description": "Проверка защиты от превышения лимитов запросов"
       }
     }
   }

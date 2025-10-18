@@ -1927,6 +1927,86 @@
     "needAttention": "Potrebna pažnja",
     "successRate": "stopa uspešnosti",
     "tests": {
+      "backend-format": {
+        "name": "Formatiranje Backend-a",
+        "description": "Provera formatiranja Go koda (gofumpt, goimports)"
+      },
+      "backend-lint": {
+        "name": "Linting Backend-a",
+        "description": "Pokretanje golangci-lint za proveru kvaliteta koda"
+      },
+      "frontend-format": {
+        "name": "Formatiranje Frontend-a",
+        "description": "Provera Prettier formatiranja"
+      },
+      "frontend-lint": {
+        "name": "Linting Frontend-a",
+        "description": "Pokretanje ESLint za proveru kvaliteta koda"
+      },
+      "backend-tests-unit": {
+        "name": "Unit testovi Backend-a",
+        "description": "Pokretanje samo Go unit testova"
+      },
+      "frontend-tests": {
+        "name": "Unit testovi Frontend-a",
+        "description": "Pokretanje Jest unit testova"
+      },
+      "backend-tests-short": {
+        "name": "Brzi testovi Backend-a",
+        "description": "Brzi testovi (bez integracionih/OpenSearch)"
+      },
+      "backend-tests-full": {
+        "name": "Potpuni testovi Backend-a",
+        "description": "Svi testovi uključujući integracione"
+      },
+      "backend-tests-postexpress": {
+        "name": "Post Express integracija",
+        "description": "Test integracije sa Post Express API-jem"
+      },
+      "backend-build": {
+        "name": "Izgradnja Backend-a",
+        "description": "Kompilacija Go koda"
+      },
+      "frontend-build": {
+        "name": "Izgradnja Frontend-a",
+        "description": "Next.js production build"
+      },
+      "typescript-check": {
+        "name": "TypeScript provera",
+        "description": "Provera tipova (tsc --noEmit)"
+      },
+      "backend-tests-coverage": {
+        "name": "Pokrivenost testovima Backend-a",
+        "description": "Pokretanje testova sa izveštajem o pokrivenosti"
+      },
+      "frontend-tests-coverage": {
+        "name": "Pokrivenost testovima Frontend-a",
+        "description": "Jest testovi sa izveštajem o pokrivenosti"
+      },
+      "api-auth-flow": {
+        "name": "Test toka autentifikacije",
+        "description": "Provera endpointa autentifikacije (login, me, logout)"
+      },
+      "api-marketplace-crud": {
+        "name": "CRUD marketplace-a",
+        "description": "Provera operacija sa oglasima marketplace-a"
+      },
+      "api-categories-fetch": {
+        "name": "API kategorija",
+        "description": "Provera admin kategorija endpointa"
+      },
+      "api-search-functionality": {
+        "name": "API pretrage",
+        "description": "Provera funkcionalnosti unificirane pretrage"
+      },
+      "api-admin-operations": {
+        "name": "Admin operacije",
+        "description": "Provera admin panela endpointa"
+      },
+      "api-review-creation": {
+        "name": "Kreiranje recenzija",
+        "description": "Provera kreiranja recenzija sa ocenom (nacrt + objava)"
+      },
       "api-auth-invalid-token": {
         "name": "Test nevažećeg tokena",
         "description": "Provera odbijanja API zahteva sa nevažećim autentifikacionim tokenom"
@@ -1935,37 +2015,53 @@
         "name": "Test nedostajućeg tokena",
         "description": "Provera odbijanja API zahteva bez autentifikacionog tokena"
       },
-      "api-pagination-invalid": {
-        "name": "Test nevažeće paginacije",
-        "description": "Provera obrade nevažećih parametara paginacije (negativne vrednosti)"
+      "api-admin-unauthorized": {
+        "name": "Neautorizovani admin",
+        "description": "Provera odbijanja admin endpointa za ne-admin korisnike"
+      },
+      "api-search-invalid-params": {
+        "name": "Nevažeći parametri pretrage",
+        "description": "Provera obrade nevažećih parametara pretrage"
       },
       "api-search-empty-query": {
-        "name": "Test praznog upita pretrage",
-        "description": "Provera obrade praznih upita pretrage"
+        "name": "Prazan upit pretrage",
+        "description": "Provera pretrage sa praznim stringom upita"
       },
-      "api-listing-invalid-id": {
-        "name": "Test nepostojećeg ID-a",
-        "description": "Provera obrade zahteva sa nepostojećim ID-ovima oglasa"
+      "api-search-unicode": {
+        "name": "Unicode pretraga",
+        "description": "Provera pretrage sa Unicode karakterima (Ćirilica, Emoji)"
       },
-      "api-input-special-chars": {
-        "name": "Test specijalnih karaktera",
-        "description": "Provera obrade specijalnih karaktera i unicode-a u podacima"
-      },
-      "api-rate-limit": {
-        "name": "Test ograničenja stope zahteva",
-        "description": "Provera zaštite od prekoračenja limita zahteva (rate limiting)"
+      "api-listings-extreme-limit": {
+        "name": "Ekstremne vrednosti limita",
+        "description": "Provera oglasa sa ekstremnim vrednostima limita (0, 10000)"
       },
       "integration-redis-cache": {
         "name": "Test Redis keša",
         "description": "Provera operacija Redis keša (SET, GET, TTL)"
       },
       "integration-opensearch-index": {
-        "name": "Test indeksiranja OpenSearch",
+        "name": "Test OpenSearch-a",
         "description": "Provera indeksiranja i pretrage u OpenSearch-u"
       },
       "integration-postgres-connection": {
-        "name": "Test PostgreSQL konekcije",
-        "description": "Provera povezivanja sa PostgreSQL i osnovnih upita"
+        "name": "Test PostgreSQL-a",
+        "description": "Provera povezivanja sa PostgreSQL i upita"
+      },
+      "api-pagination-invalid": {
+        "name": "Nevažeća paginacija",
+        "description": "Provera obrade nevažećih parametara paginacije (negativne vrednosti)"
+      },
+      "api-listing-invalid-id": {
+        "name": "Nevažeći ID oglasa",
+        "description": "Provera obrade nepostojećih ID-ova oglasa"
+      },
+      "api-input-special-chars": {
+        "name": "Specijalni karakteri",
+        "description": "Provera specijalnih karaktera i unicode-a u ulaznim podacima"
+      },
+      "api-rate-limit": {
+        "name": "Ograničenje stope zahteva",
+        "description": "Provera zaštite od prekoračenja limita zahteva"
       }
     }
   }
