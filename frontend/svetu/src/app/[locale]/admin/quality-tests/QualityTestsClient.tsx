@@ -133,20 +133,6 @@ const TESTS: Test[] = [
     category: 'integration',
     icon: '📮',
   },
-  {
-    id: 'backend-tests-cache',
-    name: 'Redis Cache Integration',
-    description: 'Test Redis caching functionality',
-    category: 'integration',
-    icon: '💾',
-  },
-  {
-    id: 'backend-tests-opensearch',
-    name: 'OpenSearch Integration',
-    description: 'Test search indexing and queries',
-    category: 'integration',
-    icon: '🔍',
-  },
 
   // Build & Type Checking
   {
@@ -229,6 +215,82 @@ const TESTS: Test[] = [
     description: 'Test review creation with rating (draft + publish)',
     category: 'functional',
     icon: '⭐',
+  },
+
+  // Negative Test Cases
+  {
+    id: 'api-auth-invalid-token',
+    name: 'Invalid Token Test',
+    description: 'Test API rejection with invalid authentication token',
+    category: 'functional',
+    icon: '🚫',
+  },
+  {
+    id: 'api-auth-missing-token',
+    name: 'Missing Token Test',
+    description: 'Test API rejection when authentication token is missing',
+    category: 'functional',
+    icon: '❌',
+  },
+  {
+    id: 'api-admin-unauthorized',
+    name: 'Admin Unauthorized',
+    description: 'Test admin endpoint rejection for non-admin users',
+    category: 'functional',
+    icon: '🔒',
+  },
+  {
+    id: 'api-search-invalid-params',
+    name: 'Invalid Search Params',
+    description: 'Test handling of invalid search parameters',
+    category: 'functional',
+    icon: '⚠️',
+  },
+
+  // Edge Cases
+  {
+    id: 'api-search-empty-query',
+    name: 'Empty Search Query',
+    description: 'Test search with empty query string',
+    category: 'functional',
+    icon: '🔎',
+  },
+  {
+    id: 'api-search-unicode',
+    name: 'Unicode Search',
+    description: 'Test search with Unicode characters (Cyrillic, Emoji)',
+    category: 'functional',
+    icon: '🌐',
+  },
+  {
+    id: 'api-listings-extreme-limit',
+    name: 'Extreme Limit Values',
+    description: 'Test listings with extreme limit values (0, 10000)',
+    category: 'functional',
+    icon: '🔢',
+  },
+
+  // Integration Tests
+  {
+    id: 'integration-redis-cache',
+    name: 'Redis Cache Test',
+    description: 'Test Redis cache operations (SET, GET, TTL)',
+    category: 'integration',
+    icon: '💾',
+  },
+  {
+    id: 'integration-opensearch-index',
+    name: 'OpenSearch Test',
+    description: 'Test OpenSearch indexing and search functionality',
+    category: 'integration',
+    icon: '🔍',
+  },
+  {
+    id: 'integration-postgres-connection',
+    name: 'PostgreSQL Test',
+    description: 'Test PostgreSQL connection and queries',
+    category: 'integration',
+    icon: '🐘',
   },
 ];
 
