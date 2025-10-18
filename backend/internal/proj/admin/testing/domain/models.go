@@ -91,9 +91,10 @@ type TestSuite struct {
 	Enabled     bool         `json:"enabled"`
 }
 
-// RunTestRequest represents request to run test suite
+// RunTestRequest represents request to run test suite or specific test
 type RunTestRequest struct {
 	TestSuite string `json:"test_suite" binding:"required"`
+	TestName  string `json:"test_name,omitempty"` // Optional: run only specific test
 	Parallel  bool   `json:"parallel"`
 }
 

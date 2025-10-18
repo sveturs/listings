@@ -83,7 +83,8 @@ func main() {
 	ctx := context.Background()
 	fmt.Printf("=== Starting %s Tests ===\n", testSuite)
 
-	testRun, err := testRunner.RunTestSuite(ctx, testSuite, 11, false)
+	// Empty string for testName means run all tests in suite
+	testRun, err := testRunner.RunTestSuite(ctx, testSuite, "", 11, false)
 	if err != nil {
 		log.Fatalf("Failed to run test suite: %v", err)
 	}

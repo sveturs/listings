@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -85,18 +86,27 @@ func (h *Handler) RunTest(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "User not authenticated")
 	}
 
-	// Run test suite
-	testRun, err := h.testRunner.RunTestSuite(c.Context(), req.TestSuite, userID, req.Parallel)
+	// Run test suite (or specific test if test_name provided)
+	testRun, err := h.testRunner.RunTestSuite(c.Context(), req.TestSuite, req.TestName, userID, req.Parallel)
 	if err != nil {
-		h.logger.Error().Err(err).Str("suite", req.TestSuite).Msg("Failed to run test suite")
+		h.logger.Error().
+			Err(err).
+			Str("suite", req.TestSuite).
+			Str("test_name", req.TestName).
+			Msg("Failed to run test suite")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to initiate test run")
+	}
+
+	message := "Test suite execution initiated"
+	if req.TestName != "" {
+		message = fmt.Sprintf("Test '%s' execution initiated", req.TestName)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(domain.RunTestResponse{
 		TestRunID: testRun.ID,
 		RunUUID:   testRun.RunUUID,
 		Status:    string(testRun.Status),
-		Message:   "Test suite execution initiated",
+		Message:   message,
 	})
 }
 

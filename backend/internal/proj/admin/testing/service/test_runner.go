@@ -88,9 +88,11 @@ func (r *TestRunner) GetAvailableTestSuites() []*domain.TestSuite {
 }
 
 // RunTestSuite initiates test suite execution
+// If testName is provided, only that specific test will be run
 func (r *TestRunner) RunTestSuite(
 	ctx context.Context,
 	suite string,
+	testName string,
 	userID int,
 	parallel bool,
 ) (*domain.TestRun, error) {
@@ -114,17 +116,18 @@ func (r *TestRunner) RunTestSuite(
 	r.logger.Info().
 		Int64("run_id", testRun.ID).
 		Str("suite", suite).
+		Str("test_name", testName).
 		Int("user_id", userID).
 		Msg("Test run created")
 
 	// Start test execution in background
-	go r.executeTestSuite(testRun, parallel)
+	go r.executeTestSuite(testRun, testName, parallel)
 
 	return testRun, nil
 }
 
 // executeTestSuite executes test suite in background
-func (r *TestRunner) executeTestSuite(testRun *domain.TestRun, parallel bool) {
+func (r *TestRunner) executeTestSuite(testRun *domain.TestRun, testName string, parallel bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
@@ -164,9 +167,12 @@ func (r *TestRunner) executeTestSuite(testRun *domain.TestRun, parallel bool) {
 	}
 
 	// Get tests for suite
-	tests := r.getTestsForSuite(testRun.TestSuite)
+	tests := r.getTestsForSuite(testRun.TestSuite, testName)
 	if len(tests) == 0 {
-		r.logger.Warn().Str("suite", testRun.TestSuite).Msg("No tests found for suite")
+		r.logger.Warn().
+			Str("suite", testRun.TestSuite).
+			Str("test_name", testName).
+			Msg("No tests found for suite/test")
 		r.completeTestRun(ctx, testRun.ID, domain.TestRunStatusCompleted, 0, 0, 0, 0)
 		return
 	}
@@ -296,21 +302,34 @@ func (r *TestRunner) executeTestsParallel(
 }
 
 // getTestsForSuite returns tests for specified suite
-func (r *TestRunner) getTestsForSuite(suite string) []FunctionalTest {
+func (r *TestRunner) getTestsForSuite(suite string, testName string) []FunctionalTest {
+	var tests []FunctionalTest
+
 	switch suite {
 	case "api-endpoints", "functional-api":
-		return APIEndpointTests
+		tests = APIEndpointTests
 	case "integration":
-		return IntegrationTests
+		tests = IntegrationTests
 	case "all":
 		// Combine all test suites
-		var allTests []FunctionalTest
-		allTests = append(allTests, APIEndpointTests...)
-		allTests = append(allTests, IntegrationTests...)
-		return allTests
+		tests = append(tests, APIEndpointTests...)
+		tests = append(tests, IntegrationTests...)
 	default:
 		return nil
 	}
+
+	// If specific test name is provided, filter to only that test
+	if testName != "" {
+		for _, test := range tests {
+			if test.Name == testName {
+				return []FunctionalTest{test}
+			}
+		}
+		// Test not found
+		return nil
+	}
+
+	return tests
 }
 
 // completeTestRun marks test run as completed and updates stats

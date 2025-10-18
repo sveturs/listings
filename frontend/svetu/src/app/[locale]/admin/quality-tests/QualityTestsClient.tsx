@@ -314,8 +314,10 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
 
       if (isFunctional) {
         // Functional тесты: вызываем backend API через apiClient
+        // Передаем test_name для запуска конкретного теста
         const response = await apiClient.post('/admin/tests/run', {
           test_suite: 'api-endpoints',
+          test_name: testId,
           parallel: false,
         });
 
