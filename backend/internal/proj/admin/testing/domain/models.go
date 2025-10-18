@@ -111,6 +111,32 @@ type TestRunDetail struct {
 	Logs    []*TestLog    `json:"logs,omitempty"`
 }
 
+// MarshalJSON custom JSON marshaller for TestRunDetail
+func (t *TestRunDetail) MarshalJSON() ([]byte, error) {
+	// First marshal the embedded TestRun
+	testRunJSON, err := t.TestRun.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal it to a map
+	var testRunMap map[string]interface{}
+	if err := json.Unmarshal(testRunJSON, &testRunMap); err != nil {
+		return nil, err
+	}
+
+	// Add Results and Logs fields
+	if t.Results != nil {
+		testRunMap["results"] = t.Results
+	}
+	if t.Logs != nil {
+		testRunMap["logs"] = t.Logs
+	}
+
+	// Marshal the combined map
+	return json.Marshal(testRunMap)
+}
+
 // MarshalJSON custom JSON marshaller for Metadata field
 func (t *TestRun) MarshalJSON() ([]byte, error) {
 	type Alias TestRun

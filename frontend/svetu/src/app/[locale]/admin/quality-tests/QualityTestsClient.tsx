@@ -12,6 +12,42 @@ interface Test {
   icon: string;
 }
 
+interface BackendTestResult {
+  id: number;
+  test_run_id: number;
+  test_name: string;
+  test_suite: string;
+  status: 'passed' | 'failed' | 'skipped';
+  duration_ms: number;
+  error_msg?: string | null;
+  stack_trace?: string | null;
+  started_at: string;
+  completed_at: string;
+}
+
+interface BackendTestLog {
+  id: number;
+  test_run_id: number;
+  level: string;
+  message: string;
+  timestamp: string;
+}
+
+interface BackendTestRunDetail {
+  id: number;
+  test_suite: string;
+  status: string;
+  total_tests: number;
+  passed_tests: number;
+  failed_tests: number;
+  skipped_tests: number;
+  duration_ms: number;
+  started_at: string;
+  completed_at?: string | null;
+  results?: BackendTestResult[];
+  logs?: BackendTestLog[];
+}
+
 interface TestResult {
   name: string;
   status: 'success' | 'error' | 'warning' | 'running' | 'pending';
@@ -24,6 +60,8 @@ interface TestResult {
     skipped: number;
     total: number;
   };
+  failedTests?: BackendTestResult[];
+  logs?: BackendTestLog[];
 }
 
 const TESTS: Test[] = [
@@ -233,12 +271,30 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
             const detailResponse = await apiClient.get(
               `/admin/tests/runs/${runId}`
             );
-            const detail = detailResponse.data;
+            const detail = detailResponse.data as BackendTestRunDetail;
 
             if (
               detail.status === 'completed' ||
               detail.status === 'failed'
             ) {
+              // Получаем упавшие тесты из results
+              const failedTests = detail.results?.filter(
+                (r) => r.status === 'failed'
+              ) || [];
+
+              // Формируем детальное сообщение об ошибке
+              let errorMessage = '';
+              if (failedTests.length > 0) {
+                errorMessage = `${failedTests.length} test(s) failed:\n\n`;
+                failedTests.forEach((test, idx) => {
+                  errorMessage += `${idx + 1}. ${test.test_name}`;
+                  if (test.error_msg) {
+                    errorMessage += `\n   Error: ${test.error_msg}`;
+                  }
+                  errorMessage += '\n\n';
+                });
+              }
+
               // Тесты из backend выполняются как единый suite
               // Показываем общий результат с статистикой
               setResults((prev) => ({
@@ -248,13 +304,15 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
                   status: detail.failed_tests > 0 ? 'error' : 'success',
                   duration: detail.duration_ms,
                   output: `Test suite completed: ${detail.passed_tests} passed, ${detail.failed_tests} failed`,
-                  error: detail.failed_tests > 0 ? `${detail.failed_tests} tests failed` : undefined,
+                  error: errorMessage || undefined,
                   stats: {
                     passed: detail.passed_tests,
                     failed: detail.failed_tests,
                     skipped: detail.skipped_tests,
                     total: detail.total_tests,
                   },
+                  failedTests: failedTests,
+                  logs: detail.logs,
                 },
               }));
               break;
@@ -541,16 +599,51 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
                     )}
                   </div>
 
-                  {isExpanded && (result?.output || result?.error) && (
-                    <div className="mt-3">
+                  {isExpanded && (result?.output || result?.error || result?.failedTests) && (
+                    <div className="mt-3 space-y-3">
                       {result.error && (
-                        <div className="mb-2">
+                        <div>
                           <p className="text-xs font-semibold text-error mb-1">
                             {t('error')}:
                           </p>
                           <pre className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48">
                             {result.error}
                           </pre>
+                        </div>
+                      )}
+                      {result.failedTests && result.failedTests.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-error mb-2">
+                            Детальная информация об упавших тестах:
+                          </p>
+                          <div className="space-y-2">
+                            {result.failedTests.map((failedTest, idx) => (
+                              <div key={failedTest.id} className="bg-error/10 p-2 rounded border border-error/20">
+                                <p className="text-xs font-semibold mb-1">
+                                  {idx + 1}. {failedTest.test_name}
+                                </p>
+                                {failedTest.error_msg && (
+                                  <div className="mb-1">
+                                    <p className="text-xs text-error/80">Error:</p>
+                                    <pre className="text-xs bg-base-200 p-1 rounded overflow-auto max-h-24">
+                                      {failedTest.error_msg}
+                                    </pre>
+                                  </div>
+                                )}
+                                {failedTest.stack_trace && (
+                                  <div>
+                                    <p className="text-xs text-error/80">Stack trace:</p>
+                                    <pre className="text-xs bg-base-200 p-1 rounded overflow-auto max-h-32 font-mono">
+                                      {failedTest.stack_trace}
+                                    </pre>
+                                  </div>
+                                )}
+                                <p className="text-xs text-base-content/60 mt-1">
+                                  Duration: {failedTest.duration_ms}ms
+                                </p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                       {result.output && (
@@ -561,6 +654,31 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
                           <pre className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48">
                             {result.output}
                           </pre>
+                        </div>
+                      )}
+                      {result.logs && result.logs.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold mb-1">
+                            Logs:
+                          </p>
+                          <div className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48 space-y-1">
+                            {result.logs.map((log) => (
+                              <div
+                                key={log.id}
+                                className={
+                                  log.level === 'error' ? 'text-error' :
+                                  log.level === 'warn' ? 'text-warning' :
+                                  'text-base-content/80'
+                                }
+                              >
+                                <span className="font-mono text-base-content/60">
+                                  [{new Date(log.timestamp).toLocaleTimeString()}]
+                                </span>{' '}
+                                <span className="font-semibold">[{log.level.toUpperCase()}]</span>{' '}
+                                {log.message}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
