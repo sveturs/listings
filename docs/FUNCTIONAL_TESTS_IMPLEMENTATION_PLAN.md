@@ -2,9 +2,10 @@
 
 **Дата создания:** 2025-10-17
 **Автор:** Claude
-**Версия:** 1.8
+**Версия:** 1.9
 **Статус:** ✅ ПОЛНОСТЬЮ РЕАЛИЗОВАНО - 16 тестов (13 API + 3 Integration) - 100% Success Rate
-**Последнее обновление:** 2025-10-18 17:06
+**Последнее обновление:** 2025-10-18 19:30
+**План расширения:** 📋 +21 тест (Security, Performance, Data Integrity, E2E, Monitoring, A11y)
 
 ---
 
@@ -3141,8 +3142,386 @@ feat: add functional API testing system with admin dashboard
 
 ---
 
+## 🚀 ПЛАН РАСШИРЕНИЯ: Дополнительные типы тестов (2025-10-18)
+
+**Статус:** 📋 ПЛАНИРОВАНИЕ
+**Приоритет:** ВЫСОКИЙ
+**Цель:** Расширить покрытие тестирования на критические области: безопасность, производительность, целостность данных
+
+### 📊 Текущее покрытие (34 теста):
+
+✅ **Реализовано:**
+- Code Quality (4): форматирование, линтинг
+- Unit Tests (2): backend, frontend
+- Integration Tests (5): Redis, OpenSearch, PostgreSQL, Post Express, backend short/full
+- Build & Type Checking (3): backend build, frontend build, TypeScript
+- Coverage (2): backend, frontend
+- Functional API Tests (13): auth, marketplace, categories, search, admin, reviews + негативные тесты
+- Edge Cases (5): пустые запросы, Unicode, экстремальные лимиты
+
+### 🎯 ПРИОРИТЕТ 1: Security Testing (КРИТИЧНО)
+
+**Описание:** Тесты безопасности для защиты от распространенных атак
+
+**Тесты для реализации:**
+
+```typescript
+// backend/internal/proj/admin/testing/service/security_tests.go
+{
+  id: 'security-sql-injection',
+  name: 'SQL Injection Protection',
+  description: 'Test SQL injection attempts in search/filters',
+  category: 'security',
+  icon: '💉',
+}
+{
+  id: 'security-xss-protection',
+  name: 'XSS Protection',
+  description: 'Test XSS attempts in user inputs (listings, reviews)',
+  category: 'security',
+  icon: '🛡️',
+}
+{
+  id: 'security-file-upload-validation',
+  name: 'File Upload Security',
+  description: 'Test file type/size validation, malicious file rejection',
+  category: 'security',
+  icon: '📎',
+}
+{
+  id: 'security-auth-session-expiry',
+  name: 'Session Expiry Test',
+  description: 'Test JWT token expiration and refresh logic',
+  category: 'security',
+  icon: '⏰',
+}
+{
+  id: 'security-api-rate-limiting',
+  name: 'Rate Limiting Enforcement',
+  description: 'Verify rate limits block excessive requests',
+  category: 'security',
+  icon: '🚦',
+}
+{
+  id: 'security-csrf-protection',
+  name: 'CSRF Protection',
+  description: 'Verify CSRF token validation on state-changing requests',
+  category: 'security',
+  icon: '🔐',
+}
+```
+
+**Детали реализации:**
+- Создать `backend/internal/proj/admin/testing/service/security_tests.go`
+- Добавить SecurityTests в test_runner.go
+- Обновить frontend: добавить категорию 'security' в QualityTestsClient.tsx
+- Добавить переводы для security тестов (en, ru, sr)
+- **ВАЖНО:** Добавить на страницу http://localhost:3001/ru/admin/quality-tests
+
+**Оценка времени:** 3-4 часа
+**Количество тестов:** +6
+
+### 🎯 ПРИОРИТЕТ 2: Performance Testing (КРИТИЧНО)
+
+**Описание:** Тесты производительности для контроля скорости и нагрузки
+
+**Тесты для реализации:**
+
+```typescript
+// backend/internal/proj/admin/testing/service/performance_tests.go
+{
+  id: 'performance-api-response-time',
+  name: 'API Response Time',
+  description: 'Measure API endpoint response times (should be <200ms)',
+  category: 'performance',
+  icon: '⚡',
+}
+{
+  id: 'performance-concurrent-users',
+  name: 'Concurrent Users Test',
+  description: 'Test system with 10/50/100 concurrent users',
+  category: 'performance',
+  icon: '👥',
+}
+{
+  id: 'performance-database-queries',
+  name: 'Database Query Performance',
+  description: 'Check for N+1 queries, slow queries (>100ms)',
+  category: 'performance',
+  icon: '🗄️',
+}
+{
+  id: 'performance-memory-usage',
+  name: 'Memory Usage Monitoring',
+  description: 'Monitor memory usage during test execution',
+  category: 'performance',
+  icon: '🧠',
+}
+```
+
+**Детали реализации:**
+- Создать `backend/internal/proj/admin/testing/service/performance_tests.go`
+- Использовать Go benchmarks и time.Since() для измерений
+- Добавить thresholds (response time < 200ms, memory < 500MB)
+- Обновить frontend: добавить категорию 'performance'
+- **ВАЖНО:** Добавить на страницу http://localhost:3001/ru/admin/quality-tests
+
+**Оценка времени:** 4-5 часов
+**Количество тестов:** +4
+
+### 🎯 ПРИОРИТЕТ 3: Data Integrity Testing (ВЫСОКИЙ)
+
+**Описание:** Проверка целостности данных между DB, cache, search index
+
+**Тесты для реализации:**
+
+```typescript
+// backend/internal/proj/admin/testing/service/data_integrity_tests.go
+{
+  id: 'data-integrity-marketplace-listing',
+  name: 'Listing Data Consistency',
+  description: 'Verify listing data matches across DB, cache, search index',
+  category: 'data-integrity',
+  icon: '🔄',
+}
+{
+  id: 'data-integrity-transaction-rollback',
+  name: 'Transaction Rollback Test',
+  description: 'Test database transaction rollback on errors',
+  category: 'data-integrity',
+  icon: '↩️',
+}
+{
+  id: 'data-integrity-image-orphan-cleanup',
+  name: 'Orphan Image Cleanup',
+  description: 'Verify orphaned images are cleaned up from MinIO',
+  category: 'data-integrity',
+  icon: '🗑️',
+}
+```
+
+**Детали реализации:**
+- Создать тест, который создает listing и проверяет его в DB, Redis, OpenSearch
+- Проверить что после DELETE из DB данные удаляются из всех источников
+- Обновить frontend: добавить категорию 'data-integrity'
+- **ВАЖНО:** Добавить на страницу http://localhost:3001/ru/admin/quality-tests
+
+**Оценка времени:** 3-4 часа
+**Количество тестов:** +3
+
+### 🎯 ПРИОРИТЕТ 4: E2E Testing (СРЕДНИЙ)
+
+**Описание:** End-to-end тесты пользовательских сценариев через Playwright
+
+**Тесты для реализации:**
+
+```typescript
+// backend/internal/proj/admin/testing/service/e2e_tests.go (wrapper for Playwright)
+{
+  id: 'e2e-user-journey-create-listing',
+  name: 'User Journey: Create Listing',
+  description: 'Full flow: login → create listing → upload images → publish',
+  category: 'e2e',
+  icon: '🎬',
+}
+{
+  id: 'e2e-user-journey-search-buy',
+  name: 'User Journey: Search & Contact',
+  description: 'Search → view listing → contact seller',
+  category: 'e2e',
+  icon: '🛍️',
+}
+{
+  id: 'e2e-admin-moderation',
+  name: 'Admin Moderation Flow',
+  description: 'Admin reviews and approves/rejects listing',
+  category: 'e2e',
+  icon: '👨‍⚖️',
+}
+```
+
+**Детали реализации:**
+- Создать Go wrapper для запуска Playwright тестов
+- Использовать существующие Playwright скрипты из frontend
+- Обновить frontend: добавить категорию 'e2e'
+- **ВАЖНО:** Добавить на страницу http://localhost:3001/ru/admin/quality-tests
+
+**Оценка времени:** 5-6 часов
+**Количество тестов:** +3
+
+### 🎯 ПРИОРИТЕТ 5: Monitoring & Observability (СРЕДНИЙ)
+
+**Описание:** Проверка логирования, метрик, health checks
+
+**Тесты для реализации:**
+
+```typescript
+// backend/internal/proj/admin/testing/service/monitoring_tests.go
+{
+  id: 'monitoring-error-logging',
+  name: 'Error Logging Test',
+  description: 'Verify errors are properly logged with context',
+  category: 'monitoring',
+  icon: '📝',
+}
+{
+  id: 'monitoring-health-endpoints',
+  name: 'Health Check Endpoints',
+  description: 'Test /health, /ready endpoints',
+  category: 'monitoring',
+  icon: '💓',
+}
+{
+  id: 'monitoring-metrics-collection',
+  name: 'Metrics Collection',
+  description: 'Verify metrics are being collected',
+  category: 'monitoring',
+  icon: '📊',
+}
+```
+
+**Детали реализации:**
+- Проверить что при ошибках создаются логи с правильным уровнем
+- Проверить /health и /ready endpoints
+- Обновить frontend: добавить категорию 'monitoring'
+- **ВАЖНО:** Добавить на страницу http://localhost:3001/ru/admin/quality-tests
+
+**Оценка времени:** 2-3 часа
+**Количество тестов:** +3
+
+### 🎯 ПРИОРИТЕТ 6: Accessibility Testing (НИЗКИЙ)
+
+**Описание:** Тесты доступности (a11y) для WCAG 2.1 compliance
+
+**Тесты для реализации:**
+
+```typescript
+// frontend accessibility tests through Playwright + axe-core
+{
+  id: 'a11y-wcag-compliance',
+  name: 'WCAG 2.1 Compliance',
+  description: 'Test accessibility standards (axe-core)',
+  category: 'accessibility',
+  icon: '♿',
+}
+{
+  id: 'a11y-keyboard-navigation',
+  name: 'Keyboard Navigation',
+  description: 'Test all interactive elements with keyboard only',
+  category: 'accessibility',
+  icon: '⌨️',
+}
+```
+
+**Детали реализации:**
+- Интеграция с axe-core через Playwright
+- Обновить frontend: добавить категорию 'accessibility'
+- **ВАЖНО:** Добавить на страницу http://localhost:3001/ru/admin/quality-tests
+
+**Оценка времени:** 3-4 часа
+**Количество тестов:** +2
+
+### 📋 План внедрения на страницу Quality Tests
+
+**Для КАЖДОЙ новой категории тестов необходимо:**
+
+1. **Backend:**
+   - Создать файл `backend/internal/proj/admin/testing/service/{category}_tests.go`
+   - Добавить тесты в структуру `[]FunctionalTest`
+   - Зарегистрировать в `test_runner.go` в методе `getTestsForSuite()`
+
+2. **Frontend (http://localhost:3001/ru/admin/quality-tests):**
+   - Добавить тесты в массив `TESTS` в `QualityTestsClient.tsx`
+   - Добавить новую категорию в функцию `getCategoryName()`
+   - Добавить иконку категории в функцию `getCategoryIcon()`
+   - Добавить `renderCategory('{category}')` в JSX
+   - **ОБЯЗАТЕЛЬНО:** Добавить переводы в `messages/{en,ru,sr}/admin.json`
+
+3. **Переводы (en, ru, sr):**
+   ```json
+   "qualityTests": {
+     "categories": {
+       "security": "Security Tests",
+       "performance": "Performance Tests",
+       "data-integrity": "Data Integrity Tests",
+       "e2e": "End-to-End Tests",
+       "monitoring": "Monitoring Tests",
+       "accessibility": "Accessibility Tests"
+     },
+     "tests": {
+       "security-sql-injection": {
+         "name": "SQL Injection Protection",
+         "description": "Test SQL injection attempts..."
+       },
+       // ... остальные тесты
+     }
+   }
+   ```
+
+4. **Тестирование:**
+   - Запустить backend: `go run ./cmd/api/main.go`
+   - Открыть http://localhost:3001/ru/admin/quality-tests
+   - Проверить что новая категория отображается
+   - Запустить тест и проверить результат
+   - Проверить на всех локалях (en, ru, sr)
+
+### 📊 Итоговые метрики после внедрения
+
+**Текущее состояние:** 34 теста
+**После внедрения всех приоритетов:** 55 тестов (+21)
+
+**Распределение:**
+- Security: +6 тестов
+- Performance: +4 теста
+- Data Integrity: +3 теста
+- E2E: +3 теста
+- Monitoring: +3 теста
+- Accessibility: +2 теста
+
+**Покрытие по областям:**
+- ✅ Code Quality: 4 теста
+- ✅ Unit Tests: 2 теста
+- ✅ Integration: 5 тестов
+- ✅ Build: 3 теста
+- ✅ Coverage: 2 теста
+- ✅ Functional API: 13 тестов
+- 🆕 Security: 6 тестов (NEW!)
+- 🆕 Performance: 4 теста (NEW!)
+- 🆕 Data Integrity: 3 теста (NEW!)
+- 🆕 E2E: 3 теста (NEW!)
+- 🆕 Monitoring: 3 теста (NEW!)
+- 🆕 Accessibility: 2 теста (NEW!)
+
+### 🎯 Roadmap выполнения
+
+**Неделя 1: Security (КРИТИЧНО)**
+- День 1-2: Реализация security_tests.go (6 тестов)
+- День 3: Интеграция в frontend + переводы
+- День 4: Тестирование и документация
+
+**Неделя 2: Performance (КРИТИЧНО)**
+- День 1-2: Реализация performance_tests.go (4 теста)
+- День 3: Интеграция в frontend + переводы
+- День 4: Тестирование и оптимизация thresholds
+
+**Неделя 3: Data Integrity (ВЫСОКИЙ)**
+- День 1-2: Реализация data_integrity_tests.go (3 теста)
+- День 3: Интеграция в frontend + переводы
+- День 4: Тестирование и верификация
+
+**Неделя 4: E2E + Monitoring + Accessibility**
+- День 1-2: E2E тесты (3 теста)
+- День 3: Monitoring тесты (3 теста)
+- День 4: Accessibility тесты (2 теста)
+- День 5: Финальное тестирование и документация
+
+**Общая оценка:** 4 недели (80 часов работы)
+
+---
+
 **Финальный статус:** ✅ **ПОЛНОСТЬЮ РЕАЛИЗОВАНО И ПРОТЕСТИРОВАНО**
 
-**Дата завершения:** 2025-10-17  
-**Версия:** 1.2 (Functional API Testing System - Complete)  
+**Дата завершения:** 2025-10-17
+**Версия:** 1.9 (Added expansion plan for additional test categories)
+**Последнее обновление:** 2025-10-18
 **Автор:** Claude Code + Дима
