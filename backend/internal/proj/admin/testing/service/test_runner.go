@@ -14,6 +14,12 @@ import (
 	"backend/internal/proj/admin/testing/storage"
 )
 
+// AuthTokenProvider interface for getting auth tokens (both real and mock)
+type AuthTokenProvider interface {
+	GetToken() (string, error)
+	ClearToken()
+}
+
 // TestRunContext holds context for running test
 type TestRunContext struct {
 	TestRunID   int64
@@ -24,7 +30,7 @@ type TestRunContext struct {
 // TestRunner manages test execution
 type TestRunner struct {
 	storage      storage.TestStorage
-	testAuthMgr  *TestAuthManager
+	testAuthMgr  AuthTokenProvider
 	logger       zerolog.Logger
 	backendURL   string
 	runningTests map[int64]*TestRunContext
@@ -34,7 +40,7 @@ type TestRunner struct {
 // NewTestRunner creates new test runner instance
 func NewTestRunner(
 	storage storage.TestStorage,
-	testAuthMgr *TestAuthManager,
+	testAuthMgr AuthTokenProvider,
 	backendURL string,
 	logger zerolog.Logger,
 ) *TestRunner {

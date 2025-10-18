@@ -36,27 +36,42 @@ func main() {
 	// Create storage
 	storage := testingStorage.NewStorage(db, zerologLogger)
 
-	// Get credentials from env
+	// Get backend URL from env
 	backendURL := os.Getenv("BACKEND_URL")
 	if backendURL == "" {
 		backendURL = "http://localhost:3000"
 	}
 
-	testAdminEmail := os.Getenv("TEST_ADMIN_EMAIL")
-	if testAdminEmail == "" {
-		testAdminEmail = "admin@admin.rs"
+	// Check if we should use mock auth (for local testing without auth-service)
+	useMockAuth := os.Getenv("USE_MOCK_AUTH")
+	if useMockAuth == "" {
+		useMockAuth = "true" // Default to mock auth for standalone runner
 	}
 
-	testAdminPassword := os.Getenv("TEST_ADMIN_PASSWORD")
-	if testAdminPassword == "" {
-		log.Fatal("TEST_ADMIN_PASSWORD environment variable is required")
+	var testRunner *testingService.TestRunner
+
+	if useMockAuth == "true" {
+		fmt.Println("⚠️  Using MOCK authentication (no auth-service required)")
+		mockAuthMgr, err := testingService.NewMockAuthManager(zerologLogger)
+		if err != nil {
+			log.Fatalf("Failed to create mock auth manager: %v", err)
+		}
+		testRunner = testingService.NewTestRunner(storage, mockAuthMgr, backendURL, zerologLogger)
+	} else {
+		fmt.Println("✅ Using REAL authentication (auth-service required)")
+		testAdminEmail := os.Getenv("TEST_ADMIN_EMAIL")
+		if testAdminEmail == "" {
+			testAdminEmail = "admin@admin.rs"
+		}
+
+		testAdminPassword := os.Getenv("TEST_ADMIN_PASSWORD")
+		if testAdminPassword == "" {
+			log.Fatal("TEST_ADMIN_PASSWORD environment variable is required when USE_MOCK_AUTH=false")
+		}
+
+		realAuthMgr := testingService.NewTestAuthManager(backendURL, testAdminEmail, testAdminPassword, zerologLogger)
+		testRunner = testingService.NewTestRunner(storage, realAuthMgr, backendURL, zerologLogger)
 	}
-
-	// Create test auth manager
-	testAuthMgr := testingService.NewTestAuthManager(backendURL, testAdminEmail, testAdminPassword, zerologLogger)
-
-	// Create test runner
-	testRunner := testingService.NewTestRunner(storage, testAuthMgr, backendURL, zerologLogger)
 
 	// Run tests
 	ctx := context.Background()

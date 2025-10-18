@@ -27,6 +27,7 @@ type TestRunFunc func(ctx context.Context, baseURL, token string) *domain.TestRe
 
 // APIEndpointTests returns list of API endpoint tests
 var APIEndpointTests = []FunctionalTest{
+	// ===== POSITIVE/HAPPY PATH TESTS =====
 	{
 		Name:        "api-auth-flow",
 		Category:    domain.TestCategoryAPI,
@@ -62,6 +63,52 @@ var APIEndpointTests = []FunctionalTest{
 		Category:    domain.TestCategoryAPI,
 		Description: "Test review creation with rating (draft + publish)",
 		RunFunc:     testReviewCreation,
+	},
+
+	// ===== NEGATIVE TEST CASES =====
+	{
+		Name:        "api-auth-invalid-token",
+		Category:    domain.TestCategoryAPI,
+		Description: "Test API rejection with invalid authentication token",
+		RunFunc:     testAuthInvalidToken,
+	},
+	{
+		Name:        "api-auth-missing-token",
+		Category:    domain.TestCategoryAPI,
+		Description: "Test API rejection when authentication token is missing",
+		RunFunc:     testAuthMissingToken,
+	},
+	{
+		Name:        "api-admin-unauthorized",
+		Category:    domain.TestCategoryAPI,
+		Description: "Test admin endpoint rejection for non-admin users",
+		RunFunc:     testAdminUnauthorized,
+	},
+	{
+		Name:        "api-search-invalid-params",
+		Category:    domain.TestCategoryAPI,
+		Description: "Test search with invalid query parameters",
+		RunFunc:     testSearchInvalidParams,
+	},
+
+	// ===== EDGE CASES =====
+	{
+		Name:        "api-search-empty-query",
+		Category:    domain.TestCategoryAPI,
+		Description: "Test search with empty query string",
+		RunFunc:     testSearchEmptyQuery,
+	},
+	{
+		Name:        "api-search-unicode",
+		Category:    domain.TestCategoryAPI,
+		Description: "Test search with Unicode characters (Cyrillic, Emoji)",
+		RunFunc:     testSearchUnicode,
+	},
+	{
+		Name:        "api-listings-extreme-limit",
+		Category:    domain.TestCategoryAPI,
+		Description: "Test listings with extreme limit values",
+		RunFunc:     testListingsExtremeLimit,
 	},
 }
 
@@ -494,6 +541,290 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 	status, ok := publishedReview["status"].(string)
 	if !ok || status != "published" {
 		return failTest(result, fmt.Sprintf("Review status is %v, expected 'published'", publishedReview["status"]), nil)
+	}
+
+	result.CompletedAt = time.Now().UTC()
+	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
+	return result
+}
+
+// ==================== NEGATIVE TEST CASES ====================
+
+// testAuthInvalidToken verifies that API rejects requests with invalid token
+func testAuthInvalidToken(ctx context.Context, baseURL, token string) *domain.TestResult {
+	result := &domain.TestResult{
+		TestName:  "api-auth-invalid-token",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
+	}
+
+	// Use invalid token
+	invalidToken := "invalid.jwt.token.here"
+
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/auth/me", nil)
+	if err != nil {
+		return failTest(result, "Failed to create request", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+invalidToken)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return failTest(result, "Failed to execute request", err)
+	}
+	defer resp.Body.Close()
+
+	// EXPECT 401 Unauthorized
+	if resp.StatusCode != http.StatusUnauthorized {
+		body, _ := io.ReadAll(resp.Body)
+		return failTest(result, fmt.Sprintf("Expected status 401, got %d (should reject invalid token)", resp.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	result.CompletedAt = time.Now().UTC()
+	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
+	return result
+}
+
+// testAuthMissingToken verifies that API rejects requests without token
+func testAuthMissingToken(ctx context.Context, baseURL, token string) *domain.TestResult {
+	result := &domain.TestResult{
+		TestName:  "api-auth-missing-token",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/auth/me", nil)
+	if err != nil {
+		return failTest(result, "Failed to create request", err)
+	}
+
+	// Don't set Authorization header
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return failTest(result, "Failed to execute request", err)
+	}
+	defer resp.Body.Close()
+
+	// EXPECT 401 Unauthorized
+	if resp.StatusCode != http.StatusUnauthorized {
+		body, _ := io.ReadAll(resp.Body)
+		return failTest(result, fmt.Sprintf("Expected status 401, got %d (should reject missing token)", resp.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	result.CompletedAt = time.Now().UTC()
+	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
+	return result
+}
+
+// testAdminUnauthorized verifies that non-admin users can't access admin endpoints
+// NOTE: This test requires a non-admin user token, which we don't have in test auth manager
+// For now, we'll use invalid token which should also be rejected
+func testAdminUnauthorized(ctx context.Context, baseURL, token string) *domain.TestResult {
+	result := &domain.TestResult{
+		TestName:  "api-admin-unauthorized",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
+	}
+
+	// Use invalid token to simulate non-admin access
+	fakeToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik5vbkFkbWluIFVzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/admin/categories", nil)
+	if err != nil {
+		return failTest(result, "Failed to create request", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+fakeToken)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return failTest(result, "Failed to execute request", err)
+	}
+	defer resp.Body.Close()
+
+	// EXPECT 401 or 403
+	if resp.StatusCode != http.StatusUnauthorized && resp.StatusCode != http.StatusForbidden {
+		body, _ := io.ReadAll(resp.Body)
+		return failTest(result, fmt.Sprintf("Expected status 401 or 403, got %d (should reject non-admin)", resp.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	result.CompletedAt = time.Now().UTC()
+	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
+	return result
+}
+
+// testSearchInvalidParams verifies handling of invalid search parameters
+func testSearchInvalidParams(ctx context.Context, baseURL, token string) *domain.TestResult {
+	result := &domain.TestResult{
+		TestName:  "api-search-invalid-params",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
+	}
+
+	// Test with negative limit (should be rejected or handled gracefully)
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/search?query=test&limit=-100", nil)
+	if err != nil {
+		return failTest(result, "Failed to create request", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return failTest(result, "Failed to execute request", err)
+	}
+	defer resp.Body.Close()
+
+	// Accept 200 (backend may handle gracefully) or 400 (validation error)
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusBadRequest {
+		body, _ := io.ReadAll(resp.Body)
+		return failTest(result, fmt.Sprintf("Expected status 200 or 400, got %d", resp.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	result.CompletedAt = time.Now().UTC()
+	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
+	return result
+}
+
+// ==================== EDGE CASES ====================
+
+// testSearchEmptyQuery tests search with empty query string
+func testSearchEmptyQuery(ctx context.Context, baseURL, token string) *domain.TestResult {
+	result := &domain.TestResult{
+		TestName:  "api-search-empty-query",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/search?query=&limit=5", nil)
+	if err != nil {
+		return failTest(result, "Failed to create request", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return failTest(result, "Failed to execute request", err)
+	}
+	defer resp.Body.Close()
+
+	// Should handle gracefully (200 or 400)
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusBadRequest {
+		body, _ := io.ReadAll(resp.Body)
+		return failTest(result, fmt.Sprintf("Expected status 200 or 400, got %d", resp.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+
+	result.CompletedAt = time.Now().UTC()
+	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
+	return result
+}
+
+// testSearchUnicode tests search with Unicode characters
+func testSearchUnicode(ctx context.Context, baseURL, token string) *domain.TestResult {
+	result := &domain.TestResult{
+		TestName:  "api-search-unicode",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
+	}
+
+	// Test with Cyrillic and Emoji
+	queries := []string{
+		"Москва",           // Cyrillic
+		"Београд",          // Serbian Cyrillic
+		"тест 🏠",          // Cyrillic + Emoji
+		"München",          // German umlaut
+		"日本",              // Japanese
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	for _, query := range queries {
+		req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/search?query="+query+"&limit=5", nil)
+		if err != nil {
+			return failTest(result, fmt.Sprintf("Failed to create request for query '%s'", query), err)
+		}
+
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return failTest(result, fmt.Sprintf("Failed to execute request for query '%s'", query), err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return failTest(result, fmt.Sprintf("Query '%s': Expected status 200, got %d", query, resp.StatusCode), fmt.Errorf("response: %s", string(body)))
+		}
+		resp.Body.Close()
+	}
+
+	result.CompletedAt = time.Now().UTC()
+	result.DurationMs = int(result.CompletedAt.Sub(result.StartedAt).Milliseconds())
+	return result
+}
+
+// testListingsExtremeLimit tests listings API with extreme limit values
+func testListingsExtremeLimit(ctx context.Context, baseURL, token string) *domain.TestResult {
+	result := &domain.TestResult{
+		TestName:  "api-listings-extreme-limit",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
+	}
+
+	client := &http.Client{Timeout: 15 * time.Second}
+
+	// Test with limit=0
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=0", nil)
+	if err != nil {
+		return failTest(result, "Failed to create request for limit=0", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return failTest(result, "Failed to execute request for limit=0", err)
+	}
+
+	// Should handle gracefully
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusBadRequest {
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		return failTest(result, fmt.Sprintf("limit=0: Expected status 200 or 400, got %d", resp.StatusCode), fmt.Errorf("response: %s", string(body)))
+	}
+	resp.Body.Close()
+
+	// Test with very large limit (should be capped by backend)
+	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=10000", nil)
+	if err != nil {
+		return failTest(result, "Failed to create request for limit=10000", err)
+	}
+	req2.Header.Set("Authorization", "Bearer "+token)
+
+	resp2, err := client.Do(req2)
+	if err != nil {
+		return failTest(result, "Failed to execute request for limit=10000", err)
+	}
+	defer resp2.Body.Close()
+
+	// Should handle gracefully (likely capped to max limit)
+	if resp2.StatusCode != http.StatusOK && resp2.StatusCode != http.StatusBadRequest {
+		body, _ := io.ReadAll(resp2.Body)
+		return failTest(result, fmt.Sprintf("limit=10000: Expected status 200 or 400, got %d", resp2.StatusCode), fmt.Errorf("response: %s", string(body)))
 	}
 
 	result.CompletedAt = time.Now().UTC()
