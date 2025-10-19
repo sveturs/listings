@@ -2080,6 +2080,78 @@
       "monitoring-error-logging": {
         "name": "Test logovanja grešaka",
         "description": "Provera ispravnog logovanja grešaka sa kontekstom"
+      },
+      "security-sql-injection": {
+        "name": "Test SQL injekcije",
+        "description": "Testiranje zaštite od SQL injekcije u pretrazi i filterima"
+      },
+      "security-xss-protection": {
+        "name": "XSS zaštita",
+        "description": "Testiranje zaštite od XSS napada u korisničkim unosima"
+      },
+      "security-file-upload-validation": {
+        "name": "Validacija otpremanja fajlova",
+        "description": "Testiranje autentifikacije na zaštićenim endpoints"
+      },
+      "security-auth-session-expiry": {
+        "name": "Istek sesije",
+        "description": "Testiranje isteka JWT tokena i refresh logike"
+      },
+      "security-api-rate-limiting": {
+        "name": "Ograničenje frekvencije API zahteva",
+        "description": "Testiranje primene rate limiting-a"
+      },
+      "security-csrf-protection": {
+        "name": "CSRF zaštita",
+        "description": "Testiranje validacije CSRF tokena"
+      },
+      "performance-api-response-time": {
+        "name": "Vreme odziva API-ja",
+        "description": "Merenje vremena odziva kritičnih API endpoints (<200ms)"
+      },
+      "performance-concurrent-users": {
+        "name": "Konkurentni korisnici",
+        "description": "Testiranje sa 10/50/100 konkurentnih korisnika"
+      },
+      "performance-database-queries": {
+        "name": "Spori upiti ka bazi",
+        "description": "Provera sporih upita ka bazi podataka (>500ms)"
+      },
+      "performance-memory-usage": {
+        "name": "Korišćenje memorije",
+        "description": "Praćenje korišćenja memorije tokom izvršavanja testova"
+      },
+      "data-integrity-marketplace-listing": {
+        "name": "Konzistentnost podataka listinga",
+        "description": "Provera podudaranja podataka listinga između baze, keša i indeksa pretrage"
+      },
+      "data-integrity-transaction-rollback": {
+        "name": "Rollback transakcija",
+        "description": "Testiranje ispravnog rollback-a transakcija baze pri greškama"
+      },
+      "data-integrity-image-orphan-cleanup": {
+        "name": "Čišćenje napuštenih slika",
+        "description": "Testiranje čišćenja napuštenih slika iz MinIO"
+      },
+      "e2e-user-journey-create-listing": {
+        "name": "Kreiranje listinga (E2E)",
+        "description": "Ceo tok: prijava → kreiranje → otpremanje slika → objavljivanje"
+      },
+      "e2e-user-journey-search-contact": {
+        "name": "Pretraga i kontakt (E2E)",
+        "description": "Tok: pretraga → pregled listinga → kontaktiranje prodavca"
+      },
+      "e2e-admin-moderation": {
+        "name": "Admin moderacija (E2E)",
+        "description": "Admin pregleda i odobrava/odbija listing"
+      },
+      "a11y-wcag-compliance": {
+        "name": "WCAG 2.1 usklađenost",
+        "description": "Testiranje WCAG 2.1 AA standarda pristupačnosti (axe-core)"
+      },
+      "a11y-keyboard-navigation": {
+        "name": "Navigacija tastaturom",
+        "description": "Testiranje da su svi interaktivni elementi dostupni tastaturom"
       }
     }
   }

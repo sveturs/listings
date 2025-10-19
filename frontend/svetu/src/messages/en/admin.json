@@ -616,6 +616,78 @@
       "monitoring-error-logging": {
         "name": "Error Logging Test",
         "description": "Verify errors are properly logged with context"
+      },
+      "security-sql-injection": {
+        "name": "SQL Injection Test",
+        "description": "Test protection against SQL injection in search and filters"
+      },
+      "security-xss-protection": {
+        "name": "XSS Protection",
+        "description": "Test protection against XSS attacks in user inputs"
+      },
+      "security-file-upload-validation": {
+        "name": "File Upload Validation",
+        "description": "Test authentication on protected endpoints"
+      },
+      "security-auth-session-expiry": {
+        "name": "Session Expiry",
+        "description": "Test JWT token expiration and refresh logic"
+      },
+      "security-api-rate-limiting": {
+        "name": "API Rate Limiting",
+        "description": "Test rate limiting enforcement"
+      },
+      "security-csrf-protection": {
+        "name": "CSRF Protection",
+        "description": "Test CSRF token validation"
+      },
+      "performance-api-response-time": {
+        "name": "API Response Time",
+        "description": "Measure response time of critical API endpoints (<200ms)"
+      },
+      "performance-concurrent-users": {
+        "name": "Concurrent Users",
+        "description": "Test with 10/50/100 concurrent users"
+      },
+      "performance-database-queries": {
+        "name": "Slow Database Queries",
+        "description": "Check for slow database queries (>500ms)"
+      },
+      "performance-memory-usage": {
+        "name": "Memory Usage",
+        "description": "Monitor memory usage during test execution"
+      },
+      "data-integrity-marketplace-listing": {
+        "name": "Listing Data Consistency",
+        "description": "Verify listing data matches across DB, cache, and search index"
+      },
+      "data-integrity-transaction-rollback": {
+        "name": "Transaction Rollback",
+        "description": "Test database transaction rollback on errors"
+      },
+      "data-integrity-image-orphan-cleanup": {
+        "name": "Orphan Image Cleanup",
+        "description": "Test cleanup of orphaned images from MinIO"
+      },
+      "e2e-user-journey-create-listing": {
+        "name": "Create Listing (E2E)",
+        "description": "Full flow: login → create listing → upload images → publish"
+      },
+      "e2e-user-journey-search-contact": {
+        "name": "Search & Contact (E2E)",
+        "description": "Flow: search → view listing → contact seller"
+      },
+      "e2e-admin-moderation": {
+        "name": "Admin Moderation (E2E)",
+        "description": "Admin reviews and approves/rejects listing"
+      },
+      "a11y-wcag-compliance": {
+        "name": "WCAG 2.1 Compliance",
+        "description": "Test WCAG 2.1 AA accessibility standards (axe-core)"
+      },
+      "a11y-keyboard-navigation": {
+        "name": "Keyboard Navigation",
+        "description": "Test all interactive elements are keyboard accessible"
       }
     }
   },

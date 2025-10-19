@@ -2017,6 +2017,78 @@
       "monitoring-error-logging": {
         "name": "Тест логирования ошибок",
         "description": "Проверка правильного логирования ошибок с контекстом"
+      },
+      "security-sql-injection": {
+        "name": "Тест SQL-инъекций",
+        "description": "Проверка защиты от SQL-инъекций в поиске и фильтрах"
+      },
+      "security-xss-protection": {
+        "name": "Защита от XSS",
+        "description": "Проверка защиты от XSS-атак во входных данных пользователей"
+      },
+      "security-file-upload-validation": {
+        "name": "Валидация загрузки файлов",
+        "description": "Проверка аутентификации на защищенных endpoints"
+      },
+      "security-auth-session-expiry": {
+        "name": "Истечение сессии",
+        "description": "Проверка истечения JWT токена и логики refresh"
+      },
+      "security-api-rate-limiting": {
+        "name": "Ограничение частоты запросов",
+        "description": "Проверка применения rate limiting"
+      },
+      "security-csrf-protection": {
+        "name": "Защита от CSRF",
+        "description": "Проверка валидации CSRF токенов"
+      },
+      "performance-api-response-time": {
+        "name": "Время отклика API",
+        "description": "Измерение времени отклика критических API endpoints (<200ms)"
+      },
+      "performance-concurrent-users": {
+        "name": "Одновременные пользователи",
+        "description": "Тестирование с 10/50/100 одновременными пользователями"
+      },
+      "performance-database-queries": {
+        "name": "Медленные запросы к БД",
+        "description": "Проверка медленных запросов к базе данных (>500ms)"
+      },
+      "performance-memory-usage": {
+        "name": "Использование памяти",
+        "description": "Мониторинг использования памяти при выполнении тестов"
+      },
+      "data-integrity-marketplace-listing": {
+        "name": "Консистентность данных листинга",
+        "description": "Проверка соответствия данных листинга между БД, кэшем и поисковым индексом"
+      },
+      "data-integrity-transaction-rollback": {
+        "name": "Откат транзакций",
+        "description": "Тестирование корректного отката транзакций БД при ошибках"
+      },
+      "data-integrity-image-orphan-cleanup": {
+        "name": "Очистка осиротевших изображений",
+        "description": "Проверка очистки осиротевших изображений из MinIO"
+      },
+      "e2e-user-journey-create-listing": {
+        "name": "Создание объявления (E2E)",
+        "description": "Полный сценарий: вход → создание → загрузка изображений → публикация"
+      },
+      "e2e-user-journey-search-contact": {
+        "name": "Поиск и контакт (E2E)",
+        "description": "Сценарий: поиск → просмотр объявления → контакт с продавцом"
+      },
+      "e2e-admin-moderation": {
+        "name": "Модерация администратором (E2E)",
+        "description": "Администратор проверяет и одобряет/отклоняет объявление"
+      },
+      "a11y-wcag-compliance": {
+        "name": "Соответствие WCAG 2.1",
+        "description": "Проверка соответствия стандартам доступности WCAG 2.1 AA (axe-core)"
+      },
+      "a11y-keyboard-navigation": {
+        "name": "Навигация с клавиатуры",
+        "description": "Проверка доступности всех интерактивных элементов через клавиатуру"
       }
     }
   }
