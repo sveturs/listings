@@ -91,12 +91,12 @@ func (m *TestAuthManager) GetToken() (string, error) {
 		Msg("Login request body prepared")
 
 	loginURL := fmt.Sprintf("%s/api/v1/auth/login", m.backendURL)
-	resp, err := http.Post(loginURL, "application/json", bytes.NewBuffer(reqBody))
+	resp, err := http.Post(loginURL, "application/json", bytes.NewBuffer(reqBody)) //nolint:gosec // G107: loginURL constructed from trusted backendURL config
 	if err != nil {
 		m.logger.Error().Err(err).Str("url", loginURL).Msg("Failed to send login request")
 		return "", fmt.Errorf("failed to send login request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		// Read response body for debugging

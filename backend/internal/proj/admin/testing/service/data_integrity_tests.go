@@ -60,7 +60,7 @@ func testMarketplaceListingConsistency(ctx context.Context, baseURL, token strin
 	if err != nil {
 		return failTest(result, "Failed to get listings", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -101,7 +101,7 @@ func testMarketplaceListingConsistency(ctx context.Context, baseURL, token strin
 	if err != nil {
 		return failTest(result, "Failed to get listings second time", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	if resp2.StatusCode != http.StatusOK {
 		body2, _ := io.ReadAll(resp2.Body)
@@ -178,7 +178,7 @@ func testTransactionRollback(ctx context.Context, baseURL, token string) *domain
 	if err != nil {
 		return failTest(result, "Failed to send review request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Expect 400 Bad Request (invalid data should be rejected)
 	if resp.StatusCode == http.StatusCreated {
@@ -199,7 +199,7 @@ func testTransactionRollback(ctx context.Context, baseURL, token string) *domain
 	if err != nil {
 		return failTest(result, "Failed to query after rollback test", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	if resp2.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp2.Body)
@@ -236,7 +236,7 @@ func testImageOrphanCleanup(ctx context.Context, baseURL, token string) *domain.
 	if err != nil {
 		return failTest(result, "Failed to get listings", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -300,7 +300,7 @@ func testImageOrphanCleanup(ctx context.Context, baseURL, token string) *domain.
 				orphanCount++
 				continue
 			}
-			imgResp.Body.Close()
+			_ = imgResp.Body.Close()
 
 			if imgResp.StatusCode != http.StatusOK {
 				// Image returns error - potential orphan

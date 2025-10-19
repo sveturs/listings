@@ -118,7 +118,7 @@ func (s *Storage) GetTestRunByID(ctx context.Context, id int64) (*domain.TestRun
 		&testRun.CreatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrTestRunNotFound
 	}
 	if err != nil {
@@ -165,7 +165,7 @@ func (s *Storage) GetTestRunByUUID(ctx context.Context, uuid string) (*domain.Te
 		&testRun.CreatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrTestRunNotFound
 	}
 	if err != nil {
@@ -240,7 +240,7 @@ func (s *Storage) ListTestRuns(ctx context.Context, limit, offset int) ([]*domai
 		s.logger.Error().Err(err).Msg("Failed to list test runs")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var testRuns []*domain.TestRun
 	for rows.Next() {
@@ -344,7 +344,7 @@ func (s *Storage) GetTestResultsByRunID(ctx context.Context, runID int64) ([]*do
 		s.logger.Error().Err(err).Int64("run_id", runID).Msg("Failed to get test results")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var results []*domain.TestResult
 	for rows.Next() {
@@ -391,7 +391,8 @@ func (s *Storage) CreateTestLog(ctx context.Context, log *domain.TestLog) error 
 	).Scan(&log.ID, &log.CreatedAt)
 	if err != nil {
 		// Don't log this error to avoid infinite loop
-		if pqErr, ok := err.(*pq.Error); ok {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
 			s.logger.Debug().Str("code", string(pqErr.Code)).Msg("Database error creating test log")
 		}
 		return err
@@ -415,7 +416,7 @@ func (s *Storage) GetTestLogsByRunID(ctx context.Context, runID int64, limit int
 		s.logger.Error().Err(err).Int64("run_id", runID).Msg("Failed to get test logs")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var logs []*domain.TestLog
 	for rows.Next() {

@@ -91,7 +91,7 @@ func runPlaywrightTest(ctx context.Context, testFile string, testName string, ba
 	}
 
 	// Execute Playwright test
-	cmd := exec.CommandContext(ctx, "npx", args...)
+	cmd := exec.CommandContext(ctx, "npx", args...) //nolint:gosec // G204: args constructed from internal test files, not user input
 	cmd.Dir = frontendDir
 	cmd.Env = append(os.Environ(), env...)
 
@@ -126,7 +126,8 @@ func runPlaywrightTest(ctx context.Context, testFile string, testName string, ba
 	var suiteResult PlaywrightSuiteResult
 	if jsonErr := json.Unmarshal(output, &suiteResult); jsonErr == nil {
 		// Successfully parsed JSON
-		if suiteResult.Stats.Unexpected > 0 {
+		switch {
+		case suiteResult.Stats.Unexpected > 0:
 			// Tests failed
 			errorMsg := fmt.Sprintf("%d tests failed", suiteResult.Stats.Unexpected)
 
@@ -144,10 +145,10 @@ func runPlaywrightTest(ctx context.Context, testFile string, testName string, ba
 
 			result.Status = domain.TestResultStatusFailed
 			result.ErrorMsg = &errorMsg
-		} else if suiteResult.Stats.Expected > 0 {
+		case suiteResult.Stats.Expected > 0:
 			// All tests passed
 			result.Status = domain.TestResultStatusPassed
-		} else {
+		default:
 			// Skipped
 			result.Status = domain.TestResultStatusSkipped
 		}

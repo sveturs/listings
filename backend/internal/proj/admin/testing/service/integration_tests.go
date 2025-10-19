@@ -55,7 +55,7 @@ func testRedisCache(ctx context.Context, baseURL, token string) *domain.TestResu
 	if err != nil {
 		return failTest(result, "Failed to fetch listings (first call)", err)
 	}
-	defer resp1.Body.Close()
+	defer func() { _ = resp1.Body.Close() }()
 
 	if resp1.StatusCode != http.StatusOK {
 		return failTest(result, fmt.Sprintf("Expected status 200, got %d", resp1.StatusCode), nil)
@@ -72,7 +72,7 @@ func testRedisCache(ctx context.Context, baseURL, token string) *domain.TestResu
 	if err != nil {
 		return failTest(result, "Failed to fetch listings (second call)", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	if resp2.StatusCode != http.StatusOK {
 		return failTest(result, fmt.Sprintf("Expected status 200 on cache hit, got %d", resp2.StatusCode), nil)
@@ -84,7 +84,7 @@ func testRedisCache(ctx context.Context, baseURL, token string) *domain.TestResu
 		req3.Header.Set("Authorization", "Bearer "+token)
 		resp3, err := client.Do(req3)
 		if err == nil {
-			defer resp3.Body.Close()
+			defer func() { _ = resp3.Body.Close() }()
 			// We don't fail if this optional check fails
 		}
 	}
@@ -116,7 +116,7 @@ func testOpenSearchIndex(ctx context.Context, baseURL, token string) *domain.Tes
 	if err != nil {
 		return failTest(result, "Failed to execute search", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return failTest(result, fmt.Sprintf("Expected status 200, got %d", resp.StatusCode), nil)
@@ -133,7 +133,7 @@ func testOpenSearchIndex(ctx context.Context, baseURL, token string) *domain.Tes
 	if err != nil {
 		return failTest(result, "Failed to execute empty search", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	// Empty search should return 200 (might return all or none)
 	if resp2.StatusCode != http.StatusOK {
@@ -169,7 +169,7 @@ func testPostgresConnection(ctx context.Context, baseURL, token string) *domain.
 	if err != nil {
 		return failTest(result, "Failed to fetch listings (DB query)", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return failTest(result, fmt.Sprintf("Expected status 200, got %d (DB might be down)", resp.StatusCode), nil)
@@ -186,7 +186,7 @@ func testPostgresConnection(ctx context.Context, baseURL, token string) *domain.
 	if err != nil {
 		return failTest(result, "Failed to execute search (JOIN query)", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	if resp2.StatusCode != http.StatusOK {
 		return failTest(result, fmt.Sprintf("Expected status 200 for search, got %d", resp2.StatusCode), nil)

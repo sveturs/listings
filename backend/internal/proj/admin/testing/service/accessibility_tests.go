@@ -123,7 +123,7 @@ func runPlaywrightAccessibilityTest(ctx context.Context, testFile, token string)
 
 	// Create axe tests directory if it doesn't exist
 	axeTestsDir := filepath.Join(frontendDir, "e2e", "axe")
-	if err := os.MkdirAll(axeTestsDir, 0o755); err != nil {
+	if err := os.MkdirAll(axeTestsDir, 0o755); err != nil { //nolint:gosec // G301: 0755 permissions required for Playwright test directory
 		return &PlaywrightAxeResult{
 			Success: false,
 			Error:   fmt.Sprintf("Failed to create axe tests directory: %v", err),
@@ -147,11 +147,11 @@ func runPlaywrightAccessibilityTest(ctx context.Context, testFile, token string)
 		adminEmail = "admin@admin.rs"
 	}
 	if adminPassword == "" {
-		adminPassword = "P@$S4@dmi№"
+		adminPassword = "P@$S4@dmi№" //nolint:gosec // G101: Test password from env or default
 	}
 
 	// Prepare command: npx playwright test e2e/axe/{testFile} --reporter=json
-	cmd := exec.CommandContext(ctx, "npx", "playwright", "test", fmt.Sprintf("e2e/axe/%s", testFile), "--reporter=json")
+	cmd := exec.CommandContext(ctx, "npx", "playwright", "test", fmt.Sprintf("e2e/axe/%s", testFile), "--reporter=json") //nolint:gosec // G204: testFile is from internal test registry, not user input
 	cmd.Dir = frontendDir
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("TEST_ADMIN_EMAIL=%s", adminEmail),

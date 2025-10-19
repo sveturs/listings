@@ -169,14 +169,14 @@ func (r *TestRunner) RunTestSuite(
 		Msg("Test run created")
 
 	// Start test execution in background
-	go r.executeTestSuite(testRun, testName, parallel)
+	go r.executeTestSuite(ctx, testRun, testName, parallel)
 
 	return testRun, nil
 }
 
 // executeTestSuite executes test suite in background
-func (r *TestRunner) executeTestSuite(testRun *domain.TestRun, testName string, parallel bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+func (r *TestRunner) executeTestSuite(parentCtx context.Context, testRun *domain.TestRun, testName string, parallel bool) {
+	ctx, cancel := context.WithTimeout(parentCtx, 30*time.Minute)
 	defer cancel()
 
 	// Register running test

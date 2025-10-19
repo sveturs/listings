@@ -134,7 +134,7 @@ func testAuthFlow(ctx context.Context, baseURL, token string) *domain.TestResult
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -180,7 +180,7 @@ func testMarketplaceCRUD(ctx context.Context, baseURL, token string) *domain.Tes
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -225,7 +225,7 @@ func testCategoriesFetch(ctx context.Context, baseURL, token string) *domain.Tes
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -270,7 +270,7 @@ func testSearchFunctionality(ctx context.Context, baseURL, token string) *domain
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -304,7 +304,7 @@ func testAdminOperations(ctx context.Context, baseURL, token string) *domain.Tes
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -360,7 +360,7 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 	if err != nil {
 		return failTest(result, "Failed to fetch listings", err)
 	}
-	defer respListings.Body.Close()
+	defer func() { _ = respListings.Body.Close() }()
 
 	if respListings.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(respListings.Body)
@@ -403,14 +403,14 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 								reqDel.Header.Set("Authorization", "Bearer "+token)
 								respDel, err := client.Do(reqDel)
 								if err == nil {
-									respDel.Body.Close()
+									_ = respDel.Body.Close()
 								}
 							}
 						}
 					}
 				}
 			}
-			respGetReviews.Body.Close()
+			_ = respGetReviews.Body.Close()
 		}
 	}
 
@@ -441,7 +441,7 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 	if err != nil {
 		return failTest(result, "Failed to create draft review", err)
 	}
-	defer respDraft.Body.Close()
+	defer func() { _ = respDraft.Body.Close() }()
 
 	if respDraft.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(respDraft.Body)
@@ -472,7 +472,7 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 	if err != nil {
 		return failTest(result, "Failed to publish review", err)
 	}
-	defer respPublish.Body.Close()
+	defer func() { _ = respPublish.Body.Close() }()
 
 	if respPublish.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(respPublish.Body)
@@ -502,7 +502,7 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 		reqDelete.Header.Set("Authorization", "Bearer "+token)
 		respDelete, err := client.Do(reqDelete)
 		if err == nil {
-			respDelete.Body.Close()
+			_ = respDelete.Body.Close()
 		}
 	}
 
@@ -523,7 +523,7 @@ func testAuthInvalidToken(ctx context.Context, baseURL, token string) *domain.Te
 	}
 
 	// Use invalid token
-	invalidToken := "invalid.jwt.token.here"
+	invalidToken := "invalid.jwt.token.here" //nolint:gosec // G101: Intentional invalid test token for security tests
 
 	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/auth/me", nil)
 	if err != nil {
@@ -537,7 +537,7 @@ func testAuthInvalidToken(ctx context.Context, baseURL, token string) *domain.Te
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// EXPECT 401 Unauthorized
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -571,7 +571,7 @@ func testAuthMissingToken(ctx context.Context, baseURL, token string) *domain.Te
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// EXPECT 401 Unauthorized
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -596,7 +596,7 @@ func testAdminUnauthorized(ctx context.Context, baseURL, token string) *domain.T
 	}
 
 	// Use invalid token to simulate non-admin access
-	fakeToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik5vbkFkbWluIFVzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+	fakeToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ik5vbkFkbWluIFVzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c" //nolint:gosec // G101: Intentional test JWT for negative auth testing
 
 	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/admin/categories", nil)
 	if err != nil {
@@ -610,7 +610,7 @@ func testAdminUnauthorized(ctx context.Context, baseURL, token string) *domain.T
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// EXPECT 401 or 403
 	if resp.StatusCode != http.StatusUnauthorized && resp.StatusCode != http.StatusForbidden {
@@ -645,7 +645,7 @@ func testSearchInvalidParams(ctx context.Context, baseURL, token string) *domain
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Accept 200 (backend may handle gracefully) or 400 (validation error)
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusBadRequest {
@@ -681,7 +681,7 @@ func testSearchEmptyQuery(ctx context.Context, baseURL, token string) *domain.Te
 	if err != nil {
 		return failTest(result, "Failed to execute request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Should handle gracefully (200 or 400)
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusBadRequest {
@@ -729,10 +729,10 @@ func testSearchUnicode(ctx context.Context, baseURL, token string) *domain.TestR
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			return failTest(result, fmt.Sprintf("Query '%s': Expected status 200, got %d", query, resp.StatusCode), fmt.Errorf("response: %s", string(body)))
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	result.CompletedAt = time.Now().UTC()
@@ -766,10 +766,10 @@ func testListingsExtremeLimit(ctx context.Context, baseURL, token string) *domai
 	// Should handle gracefully
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusBadRequest {
 		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return failTest(result, fmt.Sprintf("limit=0: Expected status 200 or 400, got %d", resp.StatusCode), fmt.Errorf("response: %s", string(body)))
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	// Test with very large limit (should be capped by backend)
 	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=10000", nil)
@@ -782,7 +782,7 @@ func testListingsExtremeLimit(ctx context.Context, baseURL, token string) *domai
 	if err != nil {
 		return failTest(result, "Failed to execute request for limit=10000", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	// Should handle gracefully (likely capped to max limit)
 	if resp2.StatusCode != http.StatusOK && resp2.StatusCode != http.StatusBadRequest {

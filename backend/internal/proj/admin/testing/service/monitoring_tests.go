@@ -57,7 +57,7 @@ func testHealthEndpoints(ctx context.Context, baseURL, token string) *domain.Tes
 	if err != nil {
 		return failTest(result, "Failed to execute liveness check request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -75,7 +75,7 @@ func testHealthEndpoints(ctx context.Context, baseURL, token string) *domain.Tes
 	if err != nil {
 		return failTest(result, "Failed to execute readiness check request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Readiness can be 200 (healthy) or 503 (unhealthy), both are valid responses
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusServiceUnavailable {
@@ -129,7 +129,7 @@ func testMetricsCollection(ctx context.Context, baseURL, token string) *domain.T
 	if err != nil {
 		return failTest(result, "Failed to execute metrics request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Note: /metrics endpoint might return errors due to duplicate metrics registration
 	// This is a known issue, but we still verify that metrics are being collected
@@ -206,7 +206,7 @@ func testErrorLogging(ctx context.Context, baseURL, token string) *domain.TestRe
 	if err != nil {
 		return failTest(result, "Failed to execute 404 test request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Verify 404 response is properly formatted (not 500 internal error)
 	if resp.StatusCode == http.StatusInternalServerError {
@@ -242,7 +242,7 @@ func testErrorLogging(ctx context.Context, baseURL, token string) *domain.TestRe
 	if err != nil {
 		return failTest(result, "Failed to execute 401 test request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Verify 401 response is properly formatted
 	if resp.StatusCode == http.StatusInternalServerError {

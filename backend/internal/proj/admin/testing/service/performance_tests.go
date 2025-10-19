@@ -86,7 +86,7 @@ func testAPIResponseTime(ctx context.Context, baseURL, token string) *domain.Tes
 
 		// Read and discard body to measure full response time
 		_, _ = io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		duration := time.Since(start)
 		totalDuration += duration
@@ -155,7 +155,7 @@ func testConcurrentUsers(ctx context.Context, baseURL, token string) *domain.Tes
 					failCount.Add(1)
 					return
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 
 				// Read body
 				_, _ = io.Copy(io.Discard, resp.Body)
@@ -236,7 +236,7 @@ func testDatabaseQueryPerformance(ctx context.Context, baseURL, token string) *d
 
 		// Read body
 		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		duration := time.Since(start)
 
@@ -299,7 +299,7 @@ func testMemoryUsage(ctx context.Context, baseURL, token string) *domain.TestRes
 
 		// Read and discard body
 		_, _ = io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			return failTest(result, fmt.Sprintf("Request %d returned %d", i+1, resp.StatusCode), nil)

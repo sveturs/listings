@@ -89,7 +89,7 @@ func testSQLInjection(ctx context.Context, baseURL, token string) *domain.TestRe
 		if err != nil {
 			return failTest(result, "Failed to execute SQL injection test request", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		// SQL injection should be blocked or handled safely
 		// We expect either 400 (bad request) or 200 with safe results (not 500 internal error)
@@ -145,7 +145,7 @@ func testXSSProtection(ctx context.Context, baseURL, token string) *domain.TestR
 		if err != nil {
 			return failTest(result, "Failed to execute XSS test request", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		// XSS should be sanitized or rejected
 		// We expect either 200 with sanitized data or 400 (bad request)
@@ -196,7 +196,7 @@ func testFileUploadValidation(ctx context.Context, baseURL, token string) *domai
 	if err != nil {
 		return failTest(result, "Failed to execute test request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Should return 401 Unauthorized without token (verifies auth is required)
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -215,7 +215,7 @@ func testFileUploadValidation(ctx context.Context, baseURL, token string) *domai
 	if err != nil {
 		return failTest(result, "Failed to execute authenticated test request", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	// Should NOT return 401 (auth successful) - may return 400 (bad request) which is fine
 	// We're testing that auth works, not the full functionality
@@ -250,7 +250,7 @@ func testAuthSessionExpiry(ctx context.Context, baseURL, token string) *domain.T
 	if err != nil {
 		return failTest(result, "Failed to execute auth session test request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -258,7 +258,7 @@ func testAuthSessionExpiry(ctx context.Context, baseURL, token string) *domain.T
 	}
 
 	// Test 2: Expired/invalid token should be rejected
-	expiredToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDk0NTkyMDB9.invalidSignature"
+	expiredToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDk0NTkyMDB9.invalidSignature" //nolint:gosec // G101: Intentional expired test JWT for security testing
 	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/auth/me", nil)
 	if err != nil {
 		return failTest(result, "Failed to create expired token test request", err)
@@ -270,7 +270,7 @@ func testAuthSessionExpiry(ctx context.Context, baseURL, token string) *domain.T
 	if err != nil {
 		return failTest(result, "Failed to execute expired token test request", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	// Should return 401 Unauthorized
 	if resp2.StatusCode != http.StatusUnauthorized {
@@ -309,7 +309,7 @@ func testAPIRateLimiting(ctx context.Context, baseURL, token string) *domain.Tes
 		if err != nil {
 			return failTest(result, "Failed to execute rate limit test request", err)
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
 			successCount++
@@ -359,7 +359,7 @@ func testCSRFProtection(ctx context.Context, baseURL, token string) *domain.Test
 	if err != nil {
 		return failTest(result, "Failed to execute CSRF test request", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Should return 401 Unauthorized (no token)
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -378,7 +378,7 @@ func testCSRFProtection(ctx context.Context, baseURL, token string) *domain.Test
 	if err != nil {
 		return failTest(result, "Failed to execute authenticated test request", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	// Should return 200 OK (valid token)
 	if resp2.StatusCode != http.StatusOK {

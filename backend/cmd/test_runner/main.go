@@ -12,6 +12,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 
+	"backend/internal/proj/admin/testing/domain"
 	testingService "backend/internal/proj/admin/testing/service"
 	testingStorage "backend/internal/proj/admin/testing/storage/postgres"
 )
@@ -31,7 +32,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
 
 	// Create storage
 	storage := testingStorage.NewStorage(db, zerologLogger)
@@ -54,6 +54,7 @@ func main() {
 		fmt.Println("⚠️  Using MOCK authentication (no auth-service required)")
 		mockAuthMgr, err := testingService.NewMockAuthManager(zerologLogger)
 		if err != nil {
+			_ = db.Close()
 			log.Fatalf("Failed to create mock auth manager: %v", err)
 		}
 		testRunner = testingService.NewTestRunner(storage, mockAuthMgr, backendURL, zerologLogger)
@@ -66,6 +67,7 @@ func main() {
 
 		testAdminPassword := os.Getenv("TEST_ADMIN_PASSWORD")
 		if testAdminPassword == "" {
+			_ = db.Close()
 			log.Fatal("TEST_ADMIN_PASSWORD environment variable is required when USE_MOCK_AUTH=false")
 		}
 
@@ -86,6 +88,7 @@ func main() {
 	// Empty string for testName means run all tests in suite
 	testRun, err := testRunner.RunTestSuite(ctx, testSuite, "", 11, false)
 	if err != nil {
+		_ = db.Close()
 		log.Fatalf("Failed to run test suite: %v", err)
 	}
 
@@ -121,10 +124,12 @@ func main() {
 				for _, result := range detail.Results {
 					var status string
 					switch result.Status {
-					case "failed":
+					case domain.TestResultStatusFailed:
 						status = "❌"
-					case "skipped":
+					case domain.TestResultStatusSkipped:
 						status = "⏭️"
+					case domain.TestResultStatusPassed:
+						status = "✅"
 					default:
 						status = "✅"
 					}
