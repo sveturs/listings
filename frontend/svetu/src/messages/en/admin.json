@@ -443,6 +443,7 @@
     "categoryDataIntegrity": "Data Integrity Tests",
     "categoryE2E": "End-to-End Tests",
     "categoryMonitoring": "Monitoring & Observability",
+    "categoryAccessibility": "Accessibility Tests",
     "backend": "Backend Tests",
     "frontend": "Frontend Tests",
     "running": "Running...",

@@ -110,9 +110,17 @@ test.describe('E2E: Admin Moderation Flow', () => {
     if (listingsCount > 0) {
       // Look for approve/reject buttons
       const moderationButtons = [
-        page.locator('button:has-text("Approve"), button:has-text("Accept")').first(),
-        page.locator('button:has-text("Reject"), button:has-text("Decline")').first(),
-        page.locator('[data-testid="approve-button"], [data-testid="reject-button"]').first(),
+        page
+          .locator('button:has-text("Approve"), button:has-text("Accept")')
+          .first(),
+        page
+          .locator('button:has-text("Reject"), button:has-text("Decline")')
+          .first(),
+        page
+          .locator(
+            '[data-testid="approve-button"], [data-testid="reject-button"]'
+          )
+          .first(),
       ];
 
       let moderationButtonFound = false;
@@ -128,8 +136,12 @@ test.describe('E2E: Admin Moderation Flow', () => {
           await page.waitForTimeout(1000);
 
           // Look for confirmation button if modal appeared
-          const confirmButtons = page.locator('button:has-text("Confirm"), button:has-text("Yes"), button:has-text("OK")');
-          if (await confirmButtons.isVisible({ timeout: 2000 }).catch(() => false)) {
+          const confirmButtons = page.locator(
+            'button:has-text("Confirm"), button:has-text("Yes"), button:has-text("OK")'
+          );
+          if (
+            await confirmButtons.isVisible({ timeout: 2000 }).catch(() => false)
+          ) {
             console.log('  Confirming moderation action...');
             await confirmButtons.first().click();
           }
@@ -144,7 +156,9 @@ test.describe('E2E: Admin Moderation Flow', () => {
           ];
 
           for (const indicator of successIndicators) {
-            if (await indicator.isVisible({ timeout: 3000 }).catch(() => false)) {
+            if (
+              await indicator.isVisible({ timeout: 3000 }).catch(() => false)
+            ) {
               console.log('  ✅ Moderation action completed successfully');
               break;
             }
@@ -155,7 +169,9 @@ test.describe('E2E: Admin Moderation Flow', () => {
       }
 
       if (!moderationButtonFound) {
-        console.log('  ⚠️  Moderation buttons not found - all listings might be already moderated');
+        console.log(
+          '  ⚠️  Moderation buttons not found - all listings might be already moderated'
+        );
       }
     } else {
       console.log('  ℹ️  No pending listings found to moderate');
@@ -164,7 +180,9 @@ test.describe('E2E: Admin Moderation Flow', () => {
     console.log('✅ Admin moderation flow completed');
   });
 
-  test('should access admin dashboard and view statistics', async ({ page }) => {
+  test('should access admin dashboard and view statistics', async ({
+    page,
+  }) => {
     // Login as admin
     await page.goto('/en/auth/login');
     await page.fill('input[type="email"]', ADMIN_USER.email);
@@ -205,9 +223,14 @@ test.describe('E2E: Admin Moderation Flow', () => {
     const isRestricted =
       currentURL.includes('/auth/login') ||
       currentURL.includes('/unauthorized') ||
-      (await page.locator('text=unauthorized, text=access denied, text=login required').isVisible({ timeout: 3000 }).catch(() => false));
+      (await page
+        .locator('text=unauthorized, text=access denied, text=login required')
+        .isVisible({ timeout: 3000 })
+        .catch(() => false));
 
     expect(isRestricted).toBe(true);
-    console.log('  ✅ Admin access properly restricted for non-authenticated users');
+    console.log(
+      '  ✅ Admin access properly restricted for non-authenticated users'
+    );
   });
 });

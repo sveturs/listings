@@ -106,10 +106,24 @@ func (r *TestRunner) GetAvailableTestSuites() []*domain.TestSuite {
 			Enabled:     true,
 		},
 		{
+			Name:        "monitoring",
+			Description: "Monitoring and observability tests (health endpoints, metrics, error logging)",
+			Category:    domain.TestCategoryMonitoring,
+			TestCount:   len(MonitoringTests),
+			Enabled:     true,
+		},
+		{
+			Name:        "accessibility",
+			Description: "Accessibility tests (WCAG 2.1 AA compliance, keyboard navigation)",
+			Category:    domain.TestCategoryAccessibility,
+			TestCount:   len(AccessibilityTests),
+			Enabled:     true,
+		},
+		{
 			Name:        "all",
 			Description: "Run all available tests",
 			Category:    domain.TestCategoryAll,
-			TestCount:   len(APIEndpointTests) + len(IntegrationTests) + len(SecurityTests) + len(PerformanceTests) + len(DataIntegrityTests) + len(E2ETests),
+			TestCount:   len(APIEndpointTests) + len(IntegrationTests) + len(SecurityTests) + len(PerformanceTests) + len(DataIntegrityTests) + len(E2ETests) + len(MonitoringTests) + len(AccessibilityTests),
 			Enabled:     true,
 		},
 	}
@@ -348,6 +362,8 @@ func (r *TestRunner) getTestsForSuite(suite string, testName string) []Functiona
 		tests = E2ETests
 	case "monitoring":
 		tests = MonitoringTests
+	case "accessibility":
+		tests = AccessibilityTests
 	case "all":
 		// Combine all test suites
 		tests = append(tests, APIEndpointTests...)
@@ -357,6 +373,7 @@ func (r *TestRunner) getTestsForSuite(suite string, testName string) []Functiona
 		tests = append(tests, DataIntegrityTests...)
 		tests = append(tests, E2ETests...)
 		tests = append(tests, MonitoringTests...)
+		tests = append(tests, AccessibilityTests...)
 	default:
 		return nil
 	}

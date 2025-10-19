@@ -76,7 +76,7 @@ func testMarketplaceListingConsistency(ctx context.Context, baseURL, token strin
 	}
 
 	var unifiedResp struct {
-		Success bool                   `json:"success"`
+		Success bool                     `json:"success"`
 		Data    []map[string]interface{} `json:"data"`
 	}
 
@@ -117,7 +117,7 @@ func testMarketplaceListingConsistency(ctx context.Context, baseURL, token strin
 	}
 
 	var unifiedResp2 struct {
-		Success bool                   `json:"success"`
+		Success bool                     `json:"success"`
 		Data    []map[string]interface{} `json:"data"`
 	}
 
@@ -252,7 +252,7 @@ func testImageOrphanCleanup(ctx context.Context, baseURL, token string) *domain.
 	}
 
 	var listingsResp struct {
-		Success bool                   `json:"success"`
+		Success bool                     `json:"success"`
 		Data    []map[string]interface{} `json:"data"`
 	}
 

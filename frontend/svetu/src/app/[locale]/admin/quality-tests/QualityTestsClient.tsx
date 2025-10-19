@@ -8,7 +8,19 @@ interface Test {
   id: string;
   name: string;
   description: string;
-  category: 'quality' | 'unit' | 'integration' | 'build' | 'coverage' | 'functional' | 'security' | 'performance' | 'data-integrity' | 'e2e' | 'monitoring';
+  category:
+    | 'quality'
+    | 'unit'
+    | 'integration'
+    | 'build'
+    | 'coverage'
+    | 'functional'
+    | 'security'
+    | 'performance'
+    | 'data-integrity'
+    | 'e2e'
+    | 'monitoring'
+    | 'accessibility';
   icon: string;
 }
 
@@ -348,7 +360,8 @@ const TESTS: Test[] = [
   {
     id: 'data-integrity-marketplace-listing',
     name: 'Listing Data Consistency',
-    description: 'Verify listing data matches across DB, cache, and search index',
+    description:
+      'Verify listing data matches across DB, cache, and search index',
     category: 'data-integrity',
     icon: '🔄',
   },
@@ -435,9 +448,25 @@ const TESTS: Test[] = [
     category: 'monitoring',
     icon: '📝',
   },
+
+  // Accessibility Tests
+  {
+    id: 'a11y-wcag-compliance',
+    name: 'WCAG 2.1 Compliance',
+    description: 'Test WCAG 2.1 AA compliance using axe-core',
+    category: 'accessibility',
+    icon: '♿',
+  },
+  {
+    id: 'a11y-keyboard-navigation',
+    name: 'Keyboard Navigation',
+    description: 'Test keyboard navigation on all interactive elements',
+    category: 'accessibility',
+    icon: '⌨️',
+  },
 ];
 
-export default function QualityTestsClient({ locale }: { locale: string }) {
+export default function QualityTestsClient() {
   const t = useTranslations('admin.qualityTests');
   const [results, setResults] = useState<Record<string, TestResult>>({});
   const [running, setRunning] = useState<Set<string>>(new Set());
@@ -459,10 +488,24 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
       const isDataIntegrity = test?.category === 'data-integrity';
       const isMonitoring = test?.category === 'monitoring';
 
-      if (isFunctional || isSecurity || isPerformance || isDataIntegrity || isMonitoring) {
+      if (
+        isFunctional ||
+        isSecurity ||
+        isPerformance ||
+        isDataIntegrity ||
+        isMonitoring
+      ) {
         // Functional, Security, Performance, Data Integrity и Monitoring тесты: вызываем backend API через apiClient
         // Передаем test_name для запуска конкретного теста
-        const testSuite = isSecurity ? 'security' : isPerformance ? 'performance' : isDataIntegrity ? 'data-integrity' : isMonitoring ? 'monitoring' : 'api-endpoints';
+        const testSuite = isSecurity
+          ? 'security'
+          : isPerformance
+            ? 'performance'
+            : isDataIntegrity
+              ? 'data-integrity'
+              : isMonitoring
+                ? 'monitoring'
+                : 'api-endpoints';
         const response = await apiClient.post('/admin/tests/run', {
           test_suite: testSuite,
           test_name: testId,
@@ -485,14 +528,10 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
             );
             const detail = detailResponse.data as BackendTestRunDetail;
 
-            if (
-              detail.status === 'completed' ||
-              detail.status === 'failed'
-            ) {
+            if (detail.status === 'completed' || detail.status === 'failed') {
               // Получаем упавшие тесты из results
-              const failedTests = detail.results?.filter(
-                (r) => r.status === 'failed'
-              ) || [];
+              const failedTests =
+                detail.results?.filter((r) => r.status === 'failed') || [];
 
               // Формируем детальное сообщение об ошибке
               let errorMessage = '';
@@ -599,7 +638,7 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
 
       if (data.results) {
         const newResults: Record<string, TestResult> = {};
-        data.results.forEach((result: TestResult, index: number) => {
+        data.results.forEach((result: TestResult) => {
           const test = TESTS.find((t) => result.name.includes(t.name));
           if (test) {
             newResults[test.id] = result;
@@ -702,6 +741,8 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
         return t('categoryE2E') || 'End-to-End Tests';
       case 'monitoring':
         return t('categoryMonitoring') || 'Monitoring & Observability';
+      case 'accessibility':
+        return t('categoryAccessibility') || 'Accessibility Tests';
     }
   };
 
@@ -729,6 +770,8 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
         return '🎬';
       case 'monitoring':
         return '📊';
+      case 'accessibility':
+        return '♿';
     }
   };
 
@@ -831,90 +874,107 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
                     )}
                   </div>
 
-                  {isExpanded && (result?.output || result?.error || result?.failedTests) && (
-                    <div className="mt-3 space-y-3">
-                      {result.error && (
-                        <div>
-                          <p className="text-xs font-semibold text-error mb-1">
-                            {t('error')}:
-                          </p>
-                          <pre className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48">
-                            {result.error}
-                          </pre>
-                        </div>
-                      )}
-                      {result.failedTests && result.failedTests.length > 0 && (
-                        <div>
-                          <p className="text-xs font-semibold text-error mb-2">
-                            Детальная информация об упавших тестах:
-                          </p>
-                          <div className="space-y-2">
-                            {result.failedTests.map((failedTest, idx) => (
-                              <div key={failedTest.id} className="bg-error/10 p-2 rounded border border-error/20">
-                                <p className="text-xs font-semibold mb-1">
-                                  {idx + 1}. {failedTest.test_name}
-                                </p>
-                                {failedTest.error_msg && (
-                                  <div className="mb-1">
-                                    <p className="text-xs text-error/80">Error:</p>
-                                    <pre className="text-xs bg-base-200 p-1 rounded overflow-auto max-h-24">
-                                      {failedTest.error_msg}
-                                    </pre>
-                                  </div>
-                                )}
-                                {failedTest.stack_trace && (
-                                  <div>
-                                    <p className="text-xs text-error/80">Stack trace:</p>
-                                    <pre className="text-xs bg-base-200 p-1 rounded overflow-auto max-h-32 font-mono">
-                                      {failedTest.stack_trace}
-                                    </pre>
-                                  </div>
-                                )}
-                                <p className="text-xs text-base-content/60 mt-1">
-                                  Duration: {failedTest.duration_ms}ms
-                                </p>
-                              </div>
-                            ))}
+                  {isExpanded &&
+                    (result?.output ||
+                      result?.error ||
+                      result?.failedTests) && (
+                      <div className="mt-3 space-y-3">
+                        {result.error && (
+                          <div>
+                            <p className="text-xs font-semibold text-error mb-1">
+                              {t('error')}:
+                            </p>
+                            <pre className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48">
+                              {result.error}
+                            </pre>
                           </div>
-                        </div>
-                      )}
-                      {result.output && (
-                        <div>
-                          <p className="text-xs font-semibold mb-1">
-                            {t('output')}:
-                          </p>
-                          <pre className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48">
-                            {result.output}
-                          </pre>
-                        </div>
-                      )}
-                      {result.logs && result.logs.length > 0 && (
-                        <div>
-                          <p className="text-xs font-semibold mb-1">
-                            Logs:
-                          </p>
-                          <div className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48 space-y-1">
-                            {result.logs.map((log) => (
-                              <div
-                                key={log.id}
-                                className={
-                                  log.level === 'error' ? 'text-error' :
-                                  log.level === 'warn' ? 'text-warning' :
-                                  'text-base-content/80'
-                                }
-                              >
-                                <span className="font-mono text-base-content/60">
-                                  [{new Date(log.timestamp).toLocaleTimeString()}]
-                                </span>{' '}
-                                <span className="font-semibold">[{log.level.toUpperCase()}]</span>{' '}
-                                {log.message}
+                        )}
+                        {result.failedTests &&
+                          result.failedTests.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-error mb-2">
+                                Детальная информация об упавших тестах:
+                              </p>
+                              <div className="space-y-2">
+                                {result.failedTests.map((failedTest, idx) => (
+                                  <div
+                                    key={failedTest.id}
+                                    className="bg-error/10 p-2 rounded border border-error/20"
+                                  >
+                                    <p className="text-xs font-semibold mb-1">
+                                      {idx + 1}. {failedTest.test_name}
+                                    </p>
+                                    {failedTest.error_msg && (
+                                      <div className="mb-1">
+                                        <p className="text-xs text-error/80">
+                                          Error:
+                                        </p>
+                                        <pre className="text-xs bg-base-200 p-1 rounded overflow-auto max-h-24">
+                                          {failedTest.error_msg}
+                                        </pre>
+                                      </div>
+                                    )}
+                                    {failedTest.stack_trace && (
+                                      <div>
+                                        <p className="text-xs text-error/80">
+                                          Stack trace:
+                                        </p>
+                                        <pre className="text-xs bg-base-200 p-1 rounded overflow-auto max-h-32 font-mono">
+                                          {failedTest.stack_trace}
+                                        </pre>
+                                      </div>
+                                    )}
+                                    <p className="text-xs text-base-content/60 mt-1">
+                                      Duration: {failedTest.duration_ms}ms
+                                    </p>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            </div>
+                          )}
+                        {result.output && (
+                          <div>
+                            <p className="text-xs font-semibold mb-1">
+                              {t('output')}:
+                            </p>
+                            <pre className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48">
+                              {result.output}
+                            </pre>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+                        {result.logs && result.logs.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold mb-1">Logs:</p>
+                            <div className="text-xs bg-base-200 p-2 rounded overflow-auto max-h-48 space-y-1">
+                              {result.logs.map((log) => (
+                                <div
+                                  key={log.id}
+                                  className={
+                                    log.level === 'error'
+                                      ? 'text-error'
+                                      : log.level === 'warn'
+                                        ? 'text-warning'
+                                        : 'text-base-content/80'
+                                  }
+                                >
+                                  <span className="font-mono text-base-content/60">
+                                    [
+                                    {new Date(
+                                      log.timestamp
+                                    ).toLocaleTimeString()}
+                                    ]
+                                  </span>{' '}
+                                  <span className="font-semibold">
+                                    [{log.level.toUpperCase()}]
+                                  </span>{' '}
+                                  {log.message}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
               </div>
             );
@@ -1021,6 +1081,7 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
         {renderCategory('data-integrity')}
         {renderCategory('e2e')}
         {renderCategory('monitoring')}
+        {renderCategory('accessibility')}
         {renderCategory('quality')}
         {renderCategory('unit')}
         {renderCategory('integration')}

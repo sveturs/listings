@@ -1844,6 +1844,7 @@
     "categoryDataIntegrity": "Тесты целостности данных",
     "categoryE2E": "End-to-End тесты",
     "categoryMonitoring": "Мониторинг и наблюдаемость",
+    "categoryAccessibility": "Тесты доступности",
     "backend": "Тесты Backend",
     "frontend": "Тесты Frontend",
     "running": "Выполняется...",

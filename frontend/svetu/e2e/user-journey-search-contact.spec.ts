@@ -20,7 +20,9 @@ test.describe('E2E: User Journey - Search & Contact', () => {
     // Step 1: Perform search
     console.log('Step 1: Searching for items...');
 
-    const searchInput = page.locator('input[placeholder*="Search"], input[name="query"]');
+    const searchInput = page.locator(
+      'input[placeholder*="Search"], input[name="query"]'
+    );
     await expect(searchInput).toBeVisible({ timeout: 10000 });
 
     const searchQuery = 'laptop';
@@ -31,8 +33,8 @@ test.describe('E2E: User Journey - Search & Contact', () => {
     await page.waitForResponse(
       (response) =>
         (response.url().includes('/api/v1/search') ||
-         response.url().includes('/api/v1/marketplace/search') ||
-         response.url().includes('/api/v1/unified/listings')) &&
+          response.url().includes('/api/v1/marketplace/search') ||
+          response.url().includes('/api/v1/unified/listings')) &&
         response.status() === 200,
       { timeout: 15000 }
     );
@@ -64,7 +66,11 @@ test.describe('E2E: User Journey - Search & Contact', () => {
     console.log('Step 3: Opening first listing...');
 
     // Find first clickable listing card
-    const listingCards = page.locator('[data-testid="listing-card"], .listing-card, article a, .card a').first();
+    const listingCards = page
+      .locator(
+        '[data-testid="listing-card"], .listing-card, article a, .card a'
+      )
+      .first();
 
     if (await listingCards.isVisible({ timeout: 5000 }).catch(() => false)) {
       await listingCards.click();
@@ -85,7 +91,9 @@ test.describe('E2E: User Journey - Search & Contact', () => {
 
       for (const element of listingElements) {
         if (await element.isVisible({ timeout: 3000 }).catch(() => false)) {
-          console.log(`  ✓ Listing element visible: ${await element.textContent().catch(() => 'unknown')}`);
+          console.log(
+            `  ✓ Listing element visible: ${await element.textContent().catch(() => 'unknown')}`
+          );
         }
       }
 
@@ -94,8 +102,12 @@ test.describe('E2E: User Journey - Search & Contact', () => {
 
       // Look for contact button/link
       const contactButtons = [
-        page.locator('button:has-text("Contact"), button:has-text("Message"), a:has-text("Contact")'),
-        page.locator('[data-testid="contact-seller"], [data-testid="message-seller"]'),
+        page.locator(
+          'button:has-text("Contact"), button:has-text("Message"), a:has-text("Contact")'
+        ),
+        page.locator(
+          '[data-testid="contact-seller"], [data-testid="message-seller"]'
+        ),
       ];
 
       let contactFound = false;
@@ -115,7 +127,11 @@ test.describe('E2E: User Journey - Search & Contact', () => {
             'textarea[placeholder*="message"], input[placeholder*="message"], [data-testid="chat-input"]'
           );
 
-          if (await contactInterface.isVisible({ timeout: 5000 }).catch(() => false)) {
+          if (
+            await contactInterface
+              .isVisible({ timeout: 5000 })
+              .catch(() => false)
+          ) {
             console.log('  Contact interface opened successfully');
           }
 
@@ -126,7 +142,9 @@ test.describe('E2E: User Journey - Search & Contact', () => {
       // Test passes if we reached listing detail page
       // Contact functionality might require auth, so we don't fail if not found
       if (!contactFound) {
-        console.log('  Contact button not found (might require authentication)');
+        console.log(
+          '  Contact button not found (might require authentication)'
+        );
       }
 
       console.log('✅ Search to view listing flow completed successfully');
@@ -140,10 +158,14 @@ test.describe('E2E: User Journey - Search & Contact', () => {
     console.log('Testing category filtering...');
 
     // Wait for categories to load
-    await page.waitForSelector('text=Categories, text=Filter', { timeout: 10000 });
+    await page.waitForSelector('text=Categories, text=Filter', {
+      timeout: 10000,
+    });
 
     // Try to find and click a category filter
-    const categoryCheckboxes = page.locator('input[type="checkbox"][name*="category"], [data-testid="category-filter"]');
+    const categoryCheckboxes = page.locator(
+      'input[type="checkbox"][name*="category"], [data-testid="category-filter"]'
+    );
     const count = await categoryCheckboxes.count();
 
     if (count > 0) {
@@ -154,13 +176,15 @@ test.describe('E2E: User Journey - Search & Contact', () => {
       await page.waitForTimeout(1000);
 
       // Wait for filtered results
-      await page.waitForResponse(
-        (response) =>
-          (response.url().includes('/api/v1/search') ||
-           response.url().includes('/api/v1/unified/listings')) &&
-          response.status() === 200,
-        { timeout: 10000 }
-      ).catch(() => console.log('  No API response captured'));
+      await page
+        .waitForResponse(
+          (response) =>
+            (response.url().includes('/api/v1/search') ||
+              response.url().includes('/api/v1/unified/listings')) &&
+            response.status() === 200,
+          { timeout: 10000 }
+        )
+        .catch(() => console.log('  No API response captured'));
 
       console.log('  ✅ Category filter applied');
     } else {
@@ -171,7 +195,9 @@ test.describe('E2E: User Journey - Search & Contact', () => {
   test('should handle empty search results', async ({ page }) => {
     console.log('Testing empty search results...');
 
-    const searchInput = page.locator('input[placeholder*="Search"], input[name="query"]');
+    const searchInput = page.locator(
+      'input[placeholder*="Search"], input[name="query"]'
+    );
     await expect(searchInput).toBeVisible({ timeout: 10000 });
 
     // Search for something unlikely to exist

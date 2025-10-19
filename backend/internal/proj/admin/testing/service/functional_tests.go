@@ -115,10 +115,10 @@ var APIEndpointTests = []FunctionalTest{
 // testAuthFlow tests authentication endpoints
 func testAuthFlow(ctx context.Context, baseURL, token string) *domain.TestResult {
 	result := &domain.TestResult{
-		TestName:   "api-auth-flow",
-		TestSuite:  "api",
-		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now().UTC(),
+		TestName:  "api-auth-flow",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
 	}
 
 	// Test /api/v1/auth/me endpoint
@@ -161,10 +161,10 @@ func testAuthFlow(ctx context.Context, baseURL, token string) *domain.TestResult
 // testMarketplaceCRUD tests marketplace CRUD operations
 func testMarketplaceCRUD(ctx context.Context, baseURL, token string) *domain.TestResult {
 	result := &domain.TestResult{
-		TestName:   "api-marketplace-crud",
-		TestSuite:  "api",
-		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now().UTC(),
+		TestName:  "api-marketplace-crud",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
 	}
 
 	// Test GET /api/v1/unified/listings
@@ -206,10 +206,10 @@ func testMarketplaceCRUD(ctx context.Context, baseURL, token string) *domain.Tes
 // testCategoriesFetch tests categories API
 func testCategoriesFetch(ctx context.Context, baseURL, token string) *domain.TestResult {
 	result := &domain.TestResult{
-		TestName:   "api-categories-fetch",
-		TestSuite:  "api",
-		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now().UTC(),
+		TestName:  "api-categories-fetch",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
 	}
 
 	// Test GET /api/v1/admin/categories
@@ -251,10 +251,10 @@ func testCategoriesFetch(ctx context.Context, baseURL, token string) *domain.Tes
 // testSearchFunctionality tests search API
 func testSearchFunctionality(ctx context.Context, baseURL, token string) *domain.TestResult {
 	result := &domain.TestResult{
-		TestName:   "api-search-functionality",
-		TestSuite:  "api",
-		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now().UTC(),
+		TestName:  "api-search-functionality",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
 	}
 
 	// Test GET /api/v1/search - unified search endpoint
@@ -285,10 +285,10 @@ func testSearchFunctionality(ctx context.Context, baseURL, token string) *domain
 // testAdminOperations tests admin panel endpoints
 func testAdminOperations(ctx context.Context, baseURL, token string) *domain.TestResult {
 	result := &domain.TestResult{
-		TestName:   "api-admin-operations",
-		TestSuite:  "api",
-		Status:     domain.TestResultStatusPassed,
-		StartedAt:  time.Now().UTC(),
+		TestName:  "api-admin-operations",
+		TestSuite: "api",
+		Status:    domain.TestResultStatusPassed,
+		StartedAt: time.Now().UTC(),
 	}
 
 	// Test GET /api/v1/admin/admins
@@ -705,11 +705,11 @@ func testSearchUnicode(ctx context.Context, baseURL, token string) *domain.TestR
 
 	// Test with Cyrillic and Emoji
 	queries := []string{
-		"Москва",           // Cyrillic
-		"Београд",          // Serbian Cyrillic
-		"тест 🏠",          // Cyrillic + Emoji
-		"München",          // German umlaut
-		"日本",              // Japanese
+		"Москва",  // Cyrillic
+		"Београд", // Serbian Cyrillic
+		"тест 🏠",  // Cyrillic + Emoji
+		"München", // German umlaut
+		"日本",      // Japanese
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}

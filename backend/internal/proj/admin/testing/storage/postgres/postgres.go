@@ -68,7 +68,6 @@ func (s *Storage) CreateTestRun(ctx context.Context, testRun *domain.TestRun) er
 		metadataJSON,
 		time.Now(),
 	).Scan(&testRun.ID, &testRun.RunUUID, &testRun.CreatedAt)
-
 	if err != nil {
 		s.logger.Error().Err(err).Msg("Failed to create test run")
 		return err
@@ -315,7 +314,6 @@ func (s *Storage) CreateTestResult(ctx context.Context, result *domain.TestResul
 		result.CompletedAt,
 		time.Now(),
 	).Scan(&result.ID, &result.CreatedAt)
-
 	if err != nil {
 		s.logger.Error().Err(err).Msg("Failed to create test result")
 		return err
@@ -385,7 +383,6 @@ func (s *Storage) CreateTestLog(ctx context.Context, log *domain.TestLog) error 
 		log.Timestamp,
 		time.Now(),
 	).Scan(&log.ID, &log.CreatedAt)
-
 	if err != nil {
 		// Don't log this error to avoid infinite loop
 		if pqErr, ok := err.(*pq.Error); ok {

@@ -37,7 +37,9 @@ test.describe('E2E: User Journey - Create Listing', () => {
     await page.waitForURL('**/en/**', { timeout: 10000 });
 
     // Verify logged in (check for user menu or profile)
-    await expect(page.locator('text=Profile, text=Account, text=Logout')).toBeVisible({
+    await expect(
+      page.locator('text=Profile, text=Account, text=Logout')
+    ).toBeVisible({
       timeout: 5000,
     });
 
@@ -53,12 +55,19 @@ test.describe('E2E: User Journey - Create Listing', () => {
     const testListingTitle = `E2E Test Listing ${Date.now()}`;
 
     await page.fill('input[name="title"]', testListingTitle);
-    await page.fill('textarea[name="description"]', 'This is an automated E2E test listing created by Playwright.');
+    await page.fill(
+      'textarea[name="description"]',
+      'This is an automated E2E test listing created by Playwright.'
+    );
     await page.fill('input[name="price"]', '99.99');
 
     // Select category (if available)
-    const categorySelector = page.locator('select[name="category_id"], [data-testid="category-select"]');
-    if (await categorySelector.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const categorySelector = page.locator(
+      'select[name="category_id"], [data-testid="category-select"]'
+    );
+    if (
+      await categorySelector.isVisible({ timeout: 2000 }).catch(() => false)
+    ) {
       await categorySelector.selectOption({ index: 1 });
     }
 
@@ -69,13 +78,17 @@ test.describe('E2E: User Journey - Create Listing', () => {
     if (await fileInput.isVisible({ timeout: 2000 }).catch(() => false)) {
       // Note: In real scenario, would upload actual test image
       // For now, skip if file input requires actual file
-      console.log('  Image upload input found but skipping actual upload for automated test');
+      console.log(
+        '  Image upload input found but skipping actual upload for automated test'
+      );
     }
 
     // Step 5: Publish listing
     console.log('Step 5: Publishing listing...');
 
-    const submitButton = page.locator('button[type="submit"], button:has-text("Publish"), button:has-text("Create")');
+    const submitButton = page.locator(
+      'button[type="submit"], button:has-text("Publish"), button:has-text("Create")'
+    );
     await submitButton.click();
 
     // Wait for success response
@@ -111,7 +124,9 @@ test.describe('E2E: User Journey - Create Listing', () => {
     console.log('✅ Full listing creation flow completed successfully');
   });
 
-  test('should show validation errors for incomplete form', async ({ page }) => {
+  test('should show validation errors for incomplete form', async ({
+    page,
+  }) => {
     // Login first
     await page.goto('/en/auth/login');
     await page.fill('input[type="email"]', TEST_USER.email);
@@ -124,11 +139,17 @@ test.describe('E2E: User Journey - Create Listing', () => {
     await page.waitForLoadState('networkidle');
 
     // Try to submit without filling required fields
-    const submitButton = page.locator('button[type="submit"], button:has-text("Publish"), button:has-text("Create")');
+    const submitButton = page.locator(
+      'button[type="submit"], button:has-text("Publish"), button:has-text("Create")'
+    );
     await submitButton.click();
 
     // Should show validation errors
-    await expect(page.locator('text=required, text=field is required, text=cannot be empty')).toBeVisible({
+    await expect(
+      page.locator(
+        'text=required, text=field is required, text=cannot be empty'
+      )
+    ).toBeVisible({
       timeout: 5000,
     });
   });

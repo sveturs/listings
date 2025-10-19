@@ -1907,6 +1907,7 @@
     "categoryDataIntegrity": "Testovi integriteta podataka",
     "categoryE2E": "End-to-End testovi",
     "categoryMonitoring": "Мониторинг и посматрање",
+    "categoryAccessibility": "Testovi pristupačnosti",
     "backend": "Backend testovi",
     "frontend": "Frontend testovi",
     "running": "Pokretanje...",
