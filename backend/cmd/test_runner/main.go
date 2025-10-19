@@ -110,20 +110,23 @@ func main() {
 		}
 
 		if detail != nil && detail.TestRun != nil {
-			fmt.Printf("\nStatus: %s\n", detail.TestRun.Status)
+			fmt.Printf("\nStatus: %s\n", detail.Status)
 			fmt.Printf("Total: %d, Passed: %d, Failed: %d\n",
-				detail.TestRun.TotalTests,
-				detail.TestRun.PassedTests,
-				detail.TestRun.FailedTests)
+				detail.TotalTests,
+				detail.PassedTests,
+				detail.FailedTests)
 
-			if detail.TestRun.Status == "completed" || detail.TestRun.Status == "failed" {
+			if detail.Status == "completed" || detail.Status == "failed" {
 				fmt.Println("\n=== Test Results ===")
 				for _, result := range detail.Results {
-					status := "✅"
-					if result.Status == "failed" {
+					var status string
+					switch result.Status {
+					case "failed":
 						status = "❌"
-					} else if result.Status == "skipped" {
+					case "skipped":
 						status = "⏭️"
+					default:
+						status = "✅"
 					}
 
 					fmt.Printf("%s %s (%dms)\n", status, result.TestName, result.DurationMs)

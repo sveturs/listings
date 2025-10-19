@@ -14,14 +14,6 @@ import (
 	"backend/internal/proj/admin/testing/domain"
 )
 
-// min returns minimum of two integers
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // DataIntegrityTests returns list of data integrity tests
 var DataIntegrityTests = []FunctionalTest{
 	{

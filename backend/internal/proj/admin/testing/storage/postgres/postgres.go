@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -13,6 +14,11 @@ import (
 	"github.com/rs/zerolog"
 
 	"backend/internal/proj/admin/testing/domain"
+)
+
+// Sentinel errors
+var (
+	ErrTestRunNotFound = errors.New("test run not found")
 )
 
 // Storage implements TestStorage interface using PostgreSQL
@@ -113,7 +119,7 @@ func (s *Storage) GetTestRunByID(ctx context.Context, id int64) (*domain.TestRun
 	)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, ErrTestRunNotFound
 	}
 	if err != nil {
 		s.logger.Error().Err(err).Int64("id", id).Msg("Failed to get test run")
@@ -160,7 +166,7 @@ func (s *Storage) GetTestRunByUUID(ctx context.Context, uuid string) (*domain.Te
 	)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, ErrTestRunNotFound
 	}
 	if err != nil {
 		s.logger.Error().Err(err).Str("uuid", uuid).Msg("Failed to get test run")

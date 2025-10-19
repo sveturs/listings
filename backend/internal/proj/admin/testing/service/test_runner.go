@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -12,6 +13,11 @@ import (
 
 	"backend/internal/proj/admin/testing/domain"
 	"backend/internal/proj/admin/testing/storage"
+)
+
+// Sentinel errors
+var (
+	ErrTestRunNotFound = errors.New("test run not found")
 )
 
 // AuthTokenProvider interface for getting auth tokens (both real and mock)
@@ -460,10 +466,6 @@ func (r *TestRunner) GetTestRunDetail(ctx context.Context, runID int64) (*domain
 		return nil, err
 	}
 
-	if testRun == nil {
-		return nil, nil
-	}
-
 	// Get results
 	results, err := r.storage.GetTestResultsByRunID(ctx, runID)
 	if err != nil {
@@ -505,7 +507,7 @@ func (r *TestRunner) CancelTestRun(runID int64) error {
 	// Wait for completion with timeout
 	select {
 	case <-testCtx.CompletedCh:
-		r.logger.Info().Int64("run_id", runID).Msg("Test run cancelled")
+		r.logger.Info().Int64("run_id", runID).Msg("Test run canceled")
 	case <-time.After(10 * time.Second):
 		r.logger.Warn().Int64("run_id", runID).Msg("Test run cancellation timeout")
 	}

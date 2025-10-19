@@ -15,7 +15,7 @@ const (
 	TestRunStatusRunning   TestRunStatus = "running"
 	TestRunStatusCompleted TestRunStatus = "completed"
 	TestRunStatusFailed    TestRunStatus = "failed"
-	TestRunStatusCancelled TestRunStatus = "cancelled"
+	TestRunStatusCanceled  TestRunStatus = "canceled"
 )
 
 // TestResultStatus represents individual test result status

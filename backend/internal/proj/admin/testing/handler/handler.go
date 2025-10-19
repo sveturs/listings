@@ -281,7 +281,7 @@ func (h *Handler) CancelTestRun(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"success": true,
-		"message": "Test run cancelled successfully",
+		"message": "Test run canceled successfully",
 	})
 }
 
