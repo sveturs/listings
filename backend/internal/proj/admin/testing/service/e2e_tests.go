@@ -84,7 +84,7 @@ func runPlaywrightTest(ctx context.Context, testFile string, testName string, ba
 
 	// Set environment variables
 	env := []string{
-		fmt.Sprintf("NEXT_PUBLIC_FRONTEND_URL=http://localhost:3001"),
+		"NEXT_PUBLIC_FRONTEND_URL=http://localhost:3001",
 		fmt.Sprintf("TEST_ADMIN_EMAIL=%s", getEnvOrDefault("TEST_ADMIN_EMAIL", "admin@admin.rs")),
 		fmt.Sprintf("TEST_ADMIN_PASSWORD=%s", getEnvOrDefault("TEST_ADMIN_PASSWORD", "P@$S4@dmi№")),
 		"CI=true", // Don't start dev server, assume it's already running
