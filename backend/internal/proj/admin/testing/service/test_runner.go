@@ -78,10 +78,38 @@ func (r *TestRunner) GetAvailableTestSuites() []*domain.TestSuite {
 			Enabled:     true,
 		},
 		{
+			Name:        "security",
+			Description: "Security tests (SQL injection, XSS, file upload, auth, rate limiting, CSRF)",
+			Category:    domain.TestCategorySecurity,
+			TestCount:   len(SecurityTests),
+			Enabled:     true,
+		},
+		{
+			Name:        "performance",
+			Description: "Performance tests (response time, concurrent users, database queries, memory)",
+			Category:    domain.TestCategoryPerformance,
+			TestCount:   len(PerformanceTests),
+			Enabled:     true,
+		},
+		{
+			Name:        "data-integrity",
+			Description: "Data integrity tests (listing consistency, transaction rollback, orphan cleanup)",
+			Category:    domain.TestCategoryDataIntegrity,
+			TestCount:   len(DataIntegrityTests),
+			Enabled:     true,
+		},
+		{
+			Name:        "e2e",
+			Description: "End-to-end tests (create listing, search & contact, admin moderation)",
+			Category:    domain.TestCategoryE2E,
+			TestCount:   len(E2ETests),
+			Enabled:     true,
+		},
+		{
 			Name:        "all",
 			Description: "Run all available tests",
 			Category:    domain.TestCategoryAll,
-			TestCount:   len(APIEndpointTests) + len(IntegrationTests),
+			TestCount:   len(APIEndpointTests) + len(IntegrationTests) + len(SecurityTests) + len(PerformanceTests) + len(DataIntegrityTests) + len(E2ETests),
 			Enabled:     true,
 		},
 	}
@@ -310,10 +338,22 @@ func (r *TestRunner) getTestsForSuite(suite string, testName string) []Functiona
 		tests = APIEndpointTests
 	case "integration":
 		tests = IntegrationTests
+	case "security":
+		tests = SecurityTests
+	case "performance":
+		tests = PerformanceTests
+	case "data-integrity":
+		tests = DataIntegrityTests
+	case "e2e":
+		tests = E2ETests
 	case "all":
 		// Combine all test suites
 		tests = append(tests, APIEndpointTests...)
 		tests = append(tests, IntegrationTests...)
+		tests = append(tests, SecurityTests...)
+		tests = append(tests, PerformanceTests...)
+		tests = append(tests, DataIntegrityTests...)
+		tests = append(tests, E2ETests...)
 	default:
 		return nil
 	}

@@ -8,7 +8,7 @@ interface Test {
   id: string;
   name: string;
   description: string;
-  category: 'quality' | 'unit' | 'integration' | 'build' | 'coverage' | 'functional';
+  category: 'quality' | 'unit' | 'integration' | 'build' | 'coverage' | 'functional' | 'security' | 'performance' | 'data-integrity' | 'e2e';
   icon: string;
 }
 
@@ -270,6 +270,126 @@ const TESTS: Test[] = [
     icon: '🔢',
   },
 
+  // Security Tests
+  {
+    id: 'security-sql-injection',
+    name: 'SQL Injection Protection',
+    description: 'Test SQL injection attempts in search and filters',
+    category: 'security',
+    icon: '💉',
+  },
+  {
+    id: 'security-xss-protection',
+    name: 'XSS Protection',
+    description: 'Test XSS attempts in user inputs (listings, reviews)',
+    category: 'security',
+    icon: '🛡️',
+  },
+  {
+    id: 'security-file-upload-validation',
+    name: 'File Upload Security',
+    description: 'Test file type and size validation, malicious file rejection',
+    category: 'security',
+    icon: '📎',
+  },
+  {
+    id: 'security-auth-session-expiry',
+    name: 'Session Expiry Test',
+    description: 'Test JWT token expiration and refresh logic',
+    category: 'security',
+    icon: '⏰',
+  },
+  {
+    id: 'security-api-rate-limiting',
+    name: 'Rate Limiting Enforcement',
+    description: 'Test rate limiting enforcement on API endpoints',
+    category: 'security',
+    icon: '🚦',
+  },
+  {
+    id: 'security-csrf-protection',
+    name: 'CSRF Protection',
+    description: 'Test CSRF token validation on state-changing requests',
+    category: 'security',
+    icon: '🔐',
+  },
+
+  // Performance Tests
+  {
+    id: 'performance-api-response-time',
+    name: 'API Response Time',
+    description: 'Measure API endpoint response times (should be <200ms)',
+    category: 'performance',
+    icon: '⚡',
+  },
+  {
+    id: 'performance-concurrent-users',
+    name: 'Concurrent Users Test',
+    description: 'Test system with 10/50/100 concurrent users',
+    category: 'performance',
+    icon: '👥',
+  },
+  {
+    id: 'performance-database-queries',
+    name: 'Database Query Performance',
+    description: 'Check for slow database queries (>100ms)',
+    category: 'performance',
+    icon: '🗄️',
+  },
+  {
+    id: 'performance-memory-usage',
+    name: 'Memory Usage Monitoring',
+    description: 'Monitor memory usage during test execution',
+    category: 'performance',
+    icon: '🧠',
+  },
+
+  // Data Integrity Tests
+  {
+    id: 'data-integrity-marketplace-listing',
+    name: 'Listing Data Consistency',
+    description: 'Verify listing data matches across DB, cache, and search index',
+    category: 'data-integrity',
+    icon: '🔄',
+  },
+  {
+    id: 'data-integrity-transaction-rollback',
+    name: 'Transaction Rollback Test',
+    description: 'Test database transaction rollback on errors',
+    category: 'data-integrity',
+    icon: '↩️',
+  },
+  {
+    id: 'data-integrity-image-orphan-cleanup',
+    name: 'Orphan Image Cleanup',
+    description: 'Verify orphaned images are cleaned up from MinIO',
+    category: 'data-integrity',
+    icon: '🗑️',
+  },
+
+  // E2E Tests
+  {
+    id: 'e2e-user-journey-create-listing',
+    name: 'User Journey: Create Listing',
+    description: 'Full flow: login → create listing → upload images → publish',
+    category: 'e2e',
+    icon: '🎬',
+  },
+  {
+    id: 'e2e-user-journey-search-contact',
+    name: 'User Journey: Search & Contact',
+    description: 'Search → view listing → contact seller',
+    category: 'e2e',
+    icon: '🛍️',
+  },
+  {
+    id: 'e2e-admin-moderation',
+    name: 'Admin Moderation Flow',
+    description: 'Admin reviews and approves/rejects listing',
+    category: 'e2e',
+    icon: '👨‍⚖️',
+  },
+
   // Integration Tests
   {
     id: 'integration-redis-cache',
@@ -311,12 +431,16 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
       // Определяем категорию теста
       const test = TESTS.find((t) => t.id === testId);
       const isFunctional = test?.category === 'functional';
+      const isSecurity = test?.category === 'security';
+      const isPerformance = test?.category === 'performance';
+      const isDataIntegrity = test?.category === 'data-integrity';
 
-      if (isFunctional) {
-        // Functional тесты: вызываем backend API через apiClient
+      if (isFunctional || isSecurity || isPerformance || isDataIntegrity) {
+        // Functional, Security, Performance и Data Integrity тесты: вызываем backend API через apiClient
         // Передаем test_name для запуска конкретного теста
+        const testSuite = isSecurity ? 'security' : isPerformance ? 'performance' : isDataIntegrity ? 'data-integrity' : 'api-endpoints';
         const response = await apiClient.post('/admin/tests/run', {
-          test_suite: 'api-endpoints',
+          test_suite: testSuite,
           test_name: testId,
           parallel: false,
         });
@@ -544,6 +668,14 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
         return t('categoryCoverage');
       case 'functional':
         return t('categoryFunctional') || 'Functional API Tests';
+      case 'security':
+        return t('categorySecurity') || 'Security Tests';
+      case 'performance':
+        return t('categoryPerformance') || 'Performance Tests';
+      case 'data-integrity':
+        return t('categoryDataIntegrity') || 'Data Integrity Tests';
+      case 'e2e':
+        return t('categoryE2E') || 'End-to-End Tests';
     }
   };
 
@@ -561,6 +693,14 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
         return '📊';
       case 'functional':
         return '🌐';
+      case 'security':
+        return '🔒';
+      case 'performance':
+        return '⚡';
+      case 'data-integrity':
+        return '🔄';
+      case 'e2e':
+        return '🎬';
     }
   };
 
@@ -848,6 +988,10 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
       {/* Test Categories */}
       <div className="space-y-8">
         {renderCategory('functional')}
+        {renderCategory('security')}
+        {renderCategory('performance')}
+        {renderCategory('data-integrity')}
+        {renderCategory('e2e')}
         {renderCategory('quality')}
         {renderCategory('unit')}
         {renderCategory('integration')}

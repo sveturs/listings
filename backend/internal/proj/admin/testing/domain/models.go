@@ -31,12 +31,16 @@ const (
 type TestCategory string
 
 const (
-	TestCategoryAPI         TestCategory = "api"
-	TestCategoryDatabase    TestCategory = "database"
-	TestCategoryPerformance TestCategory = "performance"
-	TestCategoryIntegration TestCategory = "integration"
-	TestCategoryE2E         TestCategory = "e2e"
-	TestCategoryAll         TestCategory = "all"
+	TestCategoryAPI           TestCategory = "api"
+	TestCategoryDatabase      TestCategory = "database"
+	TestCategoryPerformance   TestCategory = "performance"
+	TestCategoryIntegration   TestCategory = "integration"
+	TestCategoryE2E           TestCategory = "e2e"
+	TestCategorySecurity      TestCategory = "security"
+	TestCategoryDataIntegrity TestCategory = "data-integrity"
+	TestCategoryMonitoring    TestCategory = "monitoring"
+	TestCategoryAccessibility TestCategory = "accessibility"
+	TestCategoryAll           TestCategory = "all"
 )
 
 // TestRun represents a test suite execution
