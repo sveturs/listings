@@ -346,6 +346,8 @@ func (r *TestRunner) getTestsForSuite(suite string, testName string) []Functiona
 		tests = DataIntegrityTests
 	case "e2e":
 		tests = E2ETests
+	case "monitoring":
+		tests = MonitoringTests
 	case "all":
 		// Combine all test suites
 		tests = append(tests, APIEndpointTests...)
@@ -354,6 +356,7 @@ func (r *TestRunner) getTestsForSuite(suite string, testName string) []Functiona
 		tests = append(tests, PerformanceTests...)
 		tests = append(tests, DataIntegrityTests...)
 		tests = append(tests, E2ETests...)
+		tests = append(tests, MonitoringTests...)
 	default:
 		return nil
 	}

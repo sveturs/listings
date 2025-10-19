@@ -1906,6 +1906,7 @@
     "categoryPerformance": "Testovi performansi",
     "categoryDataIntegrity": "Testovi integriteta podataka",
     "categoryE2E": "End-to-End testovi",
+    "categoryMonitoring": "Мониторинг и посматрање",
     "backend": "Backend testovi",
     "frontend": "Frontend testovi",
     "running": "Pokretanje...",
@@ -2066,6 +2067,18 @@
       "api-rate-limit": {
         "name": "Ograničenje stope zahteva",
         "description": "Provera zaštite od prekoračenja limita zahteva"
+      },
+      "monitoring-health-endpoints": {
+        "name": "Provera zdravlja",
+        "description": "Testiranje /health/live i /health/ready endpointa"
+      },
+      "monitoring-metrics-collection": {
+        "name": "Prikupljanje metrika",
+        "description": "Provera prikupljanja Prometheus metrika"
+      },
+      "monitoring-error-logging": {
+        "name": "Test logovanja grešaka",
+        "description": "Provera ispravnog logovanja grešaka sa kontekstom"
       }
     }
   }

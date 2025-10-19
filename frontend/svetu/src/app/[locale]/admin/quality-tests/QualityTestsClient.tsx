@@ -8,7 +8,7 @@ interface Test {
   id: string;
   name: string;
   description: string;
-  category: 'quality' | 'unit' | 'integration' | 'build' | 'coverage' | 'functional' | 'security' | 'performance' | 'data-integrity' | 'e2e';
+  category: 'quality' | 'unit' | 'integration' | 'build' | 'coverage' | 'functional' | 'security' | 'performance' | 'data-integrity' | 'e2e' | 'monitoring';
   icon: string;
 }
 
@@ -412,6 +412,29 @@ const TESTS: Test[] = [
     category: 'integration',
     icon: '🐘',
   },
+
+  // Monitoring & Observability Tests
+  {
+    id: 'monitoring-health-endpoints',
+    name: 'Health Check Endpoints',
+    description: 'Test /health/live and /health/ready endpoints',
+    category: 'monitoring',
+    icon: '💓',
+  },
+  {
+    id: 'monitoring-metrics-collection',
+    name: 'Metrics Collection',
+    description: 'Verify Prometheus metrics are being collected',
+    category: 'monitoring',
+    icon: '📊',
+  },
+  {
+    id: 'monitoring-error-logging',
+    name: 'Error Logging Test',
+    description: 'Verify errors are properly logged with context',
+    category: 'monitoring',
+    icon: '📝',
+  },
 ];
 
 export default function QualityTestsClient({ locale }: { locale: string }) {
@@ -434,11 +457,12 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
       const isSecurity = test?.category === 'security';
       const isPerformance = test?.category === 'performance';
       const isDataIntegrity = test?.category === 'data-integrity';
+      const isMonitoring = test?.category === 'monitoring';
 
-      if (isFunctional || isSecurity || isPerformance || isDataIntegrity) {
-        // Functional, Security, Performance и Data Integrity тесты: вызываем backend API через apiClient
+      if (isFunctional || isSecurity || isPerformance || isDataIntegrity || isMonitoring) {
+        // Functional, Security, Performance, Data Integrity и Monitoring тесты: вызываем backend API через apiClient
         // Передаем test_name для запуска конкретного теста
-        const testSuite = isSecurity ? 'security' : isPerformance ? 'performance' : isDataIntegrity ? 'data-integrity' : 'api-endpoints';
+        const testSuite = isSecurity ? 'security' : isPerformance ? 'performance' : isDataIntegrity ? 'data-integrity' : isMonitoring ? 'monitoring' : 'api-endpoints';
         const response = await apiClient.post('/admin/tests/run', {
           test_suite: testSuite,
           test_name: testId,
@@ -676,6 +700,8 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
         return t('categoryDataIntegrity') || 'Data Integrity Tests';
       case 'e2e':
         return t('categoryE2E') || 'End-to-End Tests';
+      case 'monitoring':
+        return t('categoryMonitoring') || 'Monitoring & Observability';
     }
   };
 
@@ -701,6 +727,8 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
         return '🔄';
       case 'e2e':
         return '🎬';
+      case 'monitoring':
+        return '📊';
     }
   };
 
@@ -992,6 +1020,7 @@ export default function QualityTestsClient({ locale }: { locale: string }) {
         {renderCategory('performance')}
         {renderCategory('data-integrity')}
         {renderCategory('e2e')}
+        {renderCategory('monitoring')}
         {renderCategory('quality')}
         {renderCategory('unit')}
         {renderCategory('integration')}

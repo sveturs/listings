@@ -442,6 +442,7 @@
     "categoryPerformance": "Performance Tests",
     "categoryDataIntegrity": "Data Integrity Tests",
     "categoryE2E": "End-to-End Tests",
+    "categoryMonitoring": "Monitoring & Observability",
     "backend": "Backend Tests",
     "frontend": "Frontend Tests",
     "running": "Running...",
@@ -602,6 +603,18 @@
       "api-rate-limit": {
         "name": "Rate Limiting",
         "description": "Test rate limiting protection against excessive requests"
+      },
+      "monitoring-health-endpoints": {
+        "name": "Health Check Endpoints",
+        "description": "Test /health/live and /health/ready endpoints"
+      },
+      "monitoring-metrics-collection": {
+        "name": "Metrics Collection",
+        "description": "Verify Prometheus metrics are being collected"
+      },
+      "monitoring-error-logging": {
+        "name": "Error Logging Test",
+        "description": "Verify errors are properly logged with context"
       }
     }
   },

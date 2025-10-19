@@ -1843,6 +1843,7 @@
     "categoryPerformance": "Тесты производительности",
     "categoryDataIntegrity": "Тесты целостности данных",
     "categoryE2E": "End-to-End тесты",
+    "categoryMonitoring": "Мониторинг и наблюдаемость",
     "backend": "Тесты Backend",
     "frontend": "Тесты Frontend",
     "running": "Выполняется...",
@@ -2003,6 +2004,18 @@
       "api-rate-limit": {
         "name": "Ограничение частоты запросов",
         "description": "Проверка защиты от превышения лимитов запросов"
+      },
+      "monitoring-health-endpoints": {
+        "name": "Проверка здоровья",
+        "description": "Тестирование /health/live и /health/ready эндпоинтов"
+      },
+      "monitoring-metrics-collection": {
+        "name": "Сбор метрик",
+        "description": "Проверка сбора метрик Prometheus"
+      },
+      "monitoring-error-logging": {
+        "name": "Тест логирования ошибок",
+        "description": "Проверка правильного логирования ошибок с контекстом"
       }
     }
   }
