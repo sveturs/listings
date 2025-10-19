@@ -2,10 +2,10 @@
 
 **Дата создания:** 2025-10-17
 **Автор:** Claude
-**Версия:** 2.6
-**Статус:** ✅ 100% ПОЛНОСТЬЮ ЗАВЕРШЕНО - 37 тестов (13 API + 3 Integration + 6 Security + 4 Performance + 3 Data Integrity + 3 E2E + 3 Monitoring + 2 Accessibility) - ALL PRIORITIES DONE!
-**Последнее обновление:** 2025-10-19 18:30
-**План расширения:** 🎉 ВСЕ ПРИОРИТЕТЫ ВЫПОЛНЕНЫ! Security ✅ Performance ✅ Data Integrity ✅ E2E ✅ Monitoring ✅ **Accessibility ✅ DONE!**
+**Версия:** 2.7
+**Статус:** ✅ 86% РАБОТАЕТ - 32/37 тестов проходят (13 API + 3 Integration + 6 Security + 4 Performance + 3 Data Integrity + 3 Monitoring) | ⚠️ E2E и Accessibility требуют Playwright браузер
+**Последнее обновление:** 2025-10-19 15:20
+**План расширения:** ✅ Все backend тесты работают! E2E и Accessibility файлы созданы, исправлены пути.
 **Тестовая учетка:** admin@admin.rs / P@$S4@dmi№
 ---
 
@@ -25,28 +25,31 @@
 
 ---
 
-## 📊 ТЕКУЩИЙ ПРОГРЕСС (2025-10-19 18:30)
+## 📊 ТЕКУЩИЙ ПРОГРЕСС (2025-10-19 15:20)
 
 ### ✅ Что реализовано:
 
-**🎉 СИСТЕМА НА 100% ЗАВЕРШЕНА!** Все 37 тестов работают. **NEW:** Добавлены 2 Accessibility теста! (2025-10-19 18:30)
-**ВСЕ ПРИОРИТЕТЫ (1-6) РЕАЛИЗОВАНЫ ПОЛНОСТЬЮ!**
+**🎉 BACKEND ТЕСТЫ НА 100%!** 32 из 37 тестов работают идеально! **NEW:** Исправлены пути и команды для E2E/Accessibility! (2025-10-19 15:20)
+**ВСЕ BACKEND ПРИОРИТЕТЫ (1-5) РЕАЛИЗОВАНЫ ПОЛНОСТЬЮ!**
+**E2E и Accessibility (PRIORITY 6):** Файлы созданы, код исправлен, требуют запущенный Playwright браузер для выполнения.
 
 **Backend Infrastructure (100% завершено):**
 - ✅ Миграции БД (test_runs, test_results, test_logs) - применены и протестированы
-- ✅ Domain models - полная структура данных + **TestCategorySecurity** (NEW! 2025-10-19)
+- ✅ Domain models - полная структура данных + **AvailableTest, AvailableTestsResponse** (NEW! 2025-10-19 15:00)
 - ✅ Storage layer - PostgreSQL CRUD операции (исправлен NULL metadata bug)
 - ✅ Test Auth Manager - аутентификация с кэшированием токенов (1 час TTL)
 - ✅ **Mock Auth Manager** - для unit-тестирования без зависимости от auth-service
 - ✅ **AuthTokenProvider interface** - общий интерфейс для real и mock auth
-- ✅ TestRunner Service - async выполнение тестов с персистентностью
-- ✅ HTTP Handlers - 6 REST API endpoints зарегистрированы
-- ✅ Functional Tests - **13 API тестов (6 positive + 7 negative/edge)** + **3 Integration теста** + **6 Security тестов** (NEW! 2025-10-19)
+- ✅ TestRunner Service - async выполнение тестов с персистентностью + **GetAllAvailableTests()** (NEW! 2025-10-19 15:00)
+- ✅ HTTP Handlers - **7 REST API endpoints** (добавлен GET /available) (NEW! 2025-10-19 15:00)
+- ✅ Functional Tests - **13 API тестов** + **3 Integration** + **6 Security** + **4 Performance** + **3 Data Integrity** + **3 Monitoring**
+- ✅ E2E Tests - **3 Playwright теста** (файлы созданы, пути исправлены) (FIXED! 2025-10-19 15:10)
+- ✅ Accessibility Tests - **2 Playwright теста с axe-core** (файлы созданы, пути исправлены) (FIXED! 2025-10-19 15:10)
 - ✅ Standalone test runner (cmd/test_runner/main.go) - для прямого запуска без HTTP
 - ✅ **Custom JSON marshaller для TestRunDetail** - исправлена сериализация results и logs
 - ✅ **Integration tests infrastructure** - Redis, OpenSearch, PostgreSQL тесты
-- ✅ **Security tests infrastructure** - SQL injection, XSS, auth, rate limiting, CSRF (NEW! 2025-10-19)
-- ✅ **Multi-suite support** - functional-api, integration, security, all (NEW! 2025-10-19)
+- ✅ **Security tests infrastructure** - SQL injection, XSS, auth, rate limiting, CSRF
+- ✅ **Multi-suite support** - functional-api, integration, security, performance, data-integrity, e2e, monitoring, accessibility, all
 
 **API Functional Tests (13 тестов - 100% SUCCESS):**
 
@@ -195,14 +198,20 @@ Total duration: ~3 seconds
 - 🔧 **Integration tests endpoints** - исправлены URLs на рабочие endpoints (/api/v1/unified/listings, /api/v1/search) (2025-10-18)
 - 🔧 **security-file-upload-validation endpoint** - заменен несуществующий /api/v1/images/upload на /api/v1/marketplace/listings для проверки auth (2025-10-19)
 - 🔧 **Security tests с real auth** - все 6 тестов теперь проходят с тестовой учеткой (100% success) (2025-10-19)
+- 🔧 **E2E tests пути к frontend** - исправлена функция getProjectRoot() с абсолютным путём /data/hostel-booking-system (2025-10-19 15:10)
+- 🔧 **E2E tests команда Playwright** - исправлено с `npx test` на `npx playwright test` (2025-10-19 15:10)
+- 🔧 **E2E tests переменные окружения** - добавлен os.Environ() для корректной передачи env vars (2025-10-19 15:10)
+- 🔧 **Accessibility tests пути** - приоритет абсолютному пути /data/hostel-booking-system/frontend/svetu (2025-10-19 15:10)
 
-**API Endpoints (6/6 работают):**
+**API Endpoints (7/7 работают):**
 - ✅ POST /api/v1/admin/tests/run - запуск тестов
+- ✅ GET /api/v1/admin/tests/available - список всех 37 доступных тестов (NEW! 2025-10-19 15:00)
+- ✅ GET /api/v1/admin/tests/suites - список test suites
 - ✅ GET /api/v1/admin/tests/runs - список запусков
 - ✅ GET /api/v1/admin/tests/runs/:id - детали запуска
 - ✅ GET /api/v1/admin/tests/runs/:id/status - real-time статус
 - ✅ GET /api/v1/admin/tests/runs/latest - последний запуск
-- ✅ GET /api/v1/admin/tests/suites - доступные test suites
+- ✅ DELETE /api/v1/admin/tests/runs/:id - отмена запуска
 
 **Frontend Integration (100% завершено):**
 - ✅ Добавлены категории 'functional' и 'security' в Test interface (2025-10-18, 2025-10-19)

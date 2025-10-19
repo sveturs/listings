@@ -40,6 +40,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App) {
 	// All testing endpoints require admin role
 	tests := app.Group("/api/v1/admin/tests", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))
 
+	tests.Get("/available", h.GetAvailableTests)
 	tests.Post("/run", h.RunTest)
 	tests.Get("/suites", h.GetTestSuites)
 	tests.Get("/runs", h.ListTestRuns)
@@ -281,5 +282,23 @@ func (h *Handler) CancelTestRun(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"success": true,
 		"message": "Test run cancelled successfully",
+	})
+}
+
+// GetAvailableTests godoc
+// @Summary Get all available tests
+// @Description Returns list of all available tests across all suites
+// @Tags testing
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.AvailableTestsResponse
+// @Failure 401 {object} utils.ErrorResponse
+// @Router /api/v1/admin/tests/available [get]
+func (h *Handler) GetAvailableTests(c *fiber.Ctx) error {
+	tests := h.testRunner.GetAllAvailableTests()
+
+	return c.Status(fiber.StatusOK).JSON(domain.AvailableTestsResponse{
+		Tests: tests,
+		Total: len(tests),
 	})
 }

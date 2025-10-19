@@ -75,6 +75,7 @@ func runPlaywrightTest(ctx context.Context, testFile string, testName string, ba
 	// Prepare Playwright command
 	// Run specific test file with grep pattern for test name
 	args := []string{
+		"playwright",
 		"test",
 		filepath.Join("e2e", testFile),
 		"--reporter=json",
@@ -92,7 +93,7 @@ func runPlaywrightTest(ctx context.Context, testFile string, testName string, ba
 	// Execute Playwright test
 	cmd := exec.CommandContext(ctx, "npx", args...)
 	cmd.Dir = frontendDir
-	cmd.Env = append(cmd.Env, env...)
+	cmd.Env = append(os.Environ(), env...)
 
 	output, err := cmd.CombinedOutput()
 	duration := int(time.Since(startTime).Milliseconds())
@@ -203,8 +204,26 @@ func getProjectRoot() string {
 		return root
 	}
 
-	// Default: assume we're in backend/internal/proj/admin/testing/service
-	// Need to go up 6 levels to reach project root
+	// Try absolute path first (production deployment)
+	absolutePath := "/data/hostel-booking-system"
+	if _, err := os.Stat(absolutePath); err == nil {
+		return absolutePath
+	}
+
+	// Fallback: try relative path from current working directory
+	cwd, err := os.Getwd()
+	if err == nil {
+		// If we're in backend directory, go up one level
+		if strings.Contains(cwd, "/backend") {
+			return filepath.Join(cwd, "..")
+		}
+		// If we're already at project root
+		if strings.Contains(cwd, "hostel-booking-system") && !strings.Contains(cwd, "/backend") {
+			return cwd
+		}
+	}
+
+	// Last resort: assume we're in backend/internal/proj/admin/testing/service
 	return filepath.Join("..", "..", "..", "..", "..", "..")
 }
 

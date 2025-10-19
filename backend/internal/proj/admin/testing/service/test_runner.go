@@ -512,3 +512,61 @@ func (r *TestRunner) CancelTestRun(runID int64) error {
 
 	return nil
 }
+
+// GetAllAvailableTests returns list of all available tests across all suites
+func (r *TestRunner) GetAllAvailableTests() []domain.AvailableTest {
+	var allTests []domain.AvailableTest
+
+	// Helper function to convert FunctionalTest to AvailableTest
+	convertTest := func(test FunctionalTest, suite string) domain.AvailableTest {
+		return domain.AvailableTest{
+			ID:          test.Name,
+			Name:        test.Name,
+			Description: test.Description,
+			Category:    test.Category,
+			Suite:       suite,
+		}
+	}
+
+	// Add API tests
+	for _, test := range APIEndpointTests {
+		allTests = append(allTests, convertTest(test, "functional-api"))
+	}
+
+	// Add Integration tests
+	for _, test := range IntegrationTests {
+		allTests = append(allTests, convertTest(test, "integration"))
+	}
+
+	// Add Security tests
+	for _, test := range SecurityTests {
+		allTests = append(allTests, convertTest(test, "security"))
+	}
+
+	// Add Performance tests
+	for _, test := range PerformanceTests {
+		allTests = append(allTests, convertTest(test, "performance"))
+	}
+
+	// Add Data Integrity tests
+	for _, test := range DataIntegrityTests {
+		allTests = append(allTests, convertTest(test, "data-integrity"))
+	}
+
+	// Add E2E tests
+	for _, test := range E2ETests {
+		allTests = append(allTests, convertTest(test, "e2e"))
+	}
+
+	// Add Monitoring tests
+	for _, test := range MonitoringTests {
+		allTests = append(allTests, convertTest(test, "monitoring"))
+	}
+
+	// Add Accessibility tests
+	for _, test := range AccessibilityTests {
+		allTests = append(allTests, convertTest(test, "accessibility"))
+	}
+
+	return allTests
+}

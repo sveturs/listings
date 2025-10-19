@@ -110,6 +110,21 @@ type RunTestResponse struct {
 	Message   string `json:"message"`
 }
 
+// AvailableTest represents single available test information
+type AvailableTest struct {
+	ID          string       `json:"id"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Category    TestCategory `json:"category"`
+	Suite       string       `json:"suite"`
+}
+
+// AvailableTestsResponse represents response with all available tests
+type AvailableTestsResponse struct {
+	Tests []AvailableTest `json:"tests"`
+	Total int             `json:"total"`
+}
+
 // TestRunDetail represents detailed test run information with results
 type TestRunDetail struct {
 	*TestRun

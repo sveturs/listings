@@ -104,18 +104,19 @@ func testKeyboardNavigation(ctx context.Context, baseURL, token string) *domain.
 
 // runPlaywrightAccessibilityTest executes a Playwright accessibility test and returns JSON result
 func runPlaywrightAccessibilityTest(ctx context.Context, testFile, token string) *PlaywrightAxeResult {
-	// Find frontend directory (relative to backend)
-	backendDir, _ := os.Getwd()
-	frontendDir := filepath.Join(backendDir, "..", "frontend", "svetu")
+	// Find frontend directory using absolute path
+	frontendDir := "/data/hostel-booking-system/frontend/svetu"
 
 	// Check if frontend directory exists
 	if _, err := os.Stat(frontendDir); os.IsNotExist(err) {
-		// Try alternative path
-		frontendDir = "/data/hostel-booking-system/frontend/svetu"
+		// Try relative path from current working directory
+		cwd, _ := os.Getwd()
+		frontendDir = filepath.Join(cwd, "..", "frontend", "svetu")
+
 		if _, err := os.Stat(frontendDir); os.IsNotExist(err) {
 			return &PlaywrightAxeResult{
 				Success: false,
-				Error:   fmt.Sprintf("Frontend directory not found: %s", frontendDir),
+				Error:   fmt.Sprintf("Frontend directory not found at %s or relative path", frontendDir),
 			}
 		}
 	}
