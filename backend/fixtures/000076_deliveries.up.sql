@@ -1,0 +1,6 @@
+INSERT INTO public.deliveries (id, order_id, courier_id, status, pickup_address, pickup_latitude, pickup_longitude, pickup_contact_name, pickup_contact_phone, delivery_address, delivery_latitude, delivery_longitude, delivery_contact_name, delivery_contact_phone, assigned_at, accepted_at, picked_up_at, delivered_at, cancelled_at, estimated_pickup_time, estimated_delivery_time, actual_delivery_time, tracking_token, tracking_url, share_location_enabled, distance_meters, duration_seconds, route_polyline, courier_fee, courier_tip, notes, package_size, package_weight_kg, requires_signature, photo_proof_url, customer_rating, customer_feedback, created_at, updated_at) VALUES (3, NULL, NULL, 'in_transit', 'Trg Republike 5, Beograd, Serbia', 44.81250000, 20.46120000, NULL, NULL, 'Knez Mihailova 12, Beograd, Serbia', 44.81760000, 20.45690000, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-09 14:11:00.837802+00', NULL, '27f2e874-6051-4989-bdf9-b104628e536b', NULL, true, NULL, NULL, NULL, NULL, 0.00, NULL, NULL, NULL, false, NULL, NULL, NULL, '2025-10-09 13:41:00.837802+00', '2025-10-09 13:41:00.837802+00');
+
+
+--
+-- Data for Name: delivery_category_defaults; Type: TABLE DATA; Schema: public; Owner: -
+--
