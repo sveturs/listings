@@ -22,6 +22,7 @@ interface Test {
     | 'monitoring'
     | 'accessibility';
   icon: string;
+  localOnly?: boolean; // Only works on localhost (uses Next.js API route)
 }
 
 interface BackendTestResult {
@@ -77,13 +78,14 @@ interface TestResult {
 }
 
 const TESTS: Test[] = [
-  // Code Quality
+  // Code Quality (LOCAL ONLY - requires Next.js API route)
   {
     id: 'backend-format',
     name: 'Backend Format',
     description: 'Check Go code formatting (gofumpt, goimports)',
     category: 'quality',
     icon: '🎨',
+    localOnly: true,
   },
   {
     id: 'backend-lint',
@@ -91,6 +93,7 @@ const TESTS: Test[] = [
     description: 'Run golangci-lint for code quality',
     category: 'quality',
     icon: '🔍',
+    localOnly: true,
   },
   {
     id: 'frontend-format',
@@ -98,6 +101,7 @@ const TESTS: Test[] = [
     description: 'Check Prettier formatting',
     category: 'quality',
     icon: '✨',
+    localOnly: true,
   },
   {
     id: 'frontend-lint',
@@ -105,15 +109,17 @@ const TESTS: Test[] = [
     description: 'Run ESLint for code quality',
     category: 'quality',
     icon: '🔎',
+    localOnly: true,
   },
 
-  // Unit Tests
+  // Unit Tests (LOCAL ONLY - requires Next.js API route)
   {
     id: 'backend-tests-unit',
     name: 'Backend Unit Tests',
     description: 'Run Go unit tests only',
     category: 'unit',
     icon: '🧪',
+    localOnly: true,
   },
   {
     id: 'frontend-tests',
@@ -121,9 +127,10 @@ const TESTS: Test[] = [
     description: 'Run Jest unit tests',
     category: 'unit',
     icon: '🔬',
+    localOnly: true,
   },
 
-  // New Frontend Unit Tests (from test coverage improvement plan)
+  // New Frontend Unit Tests (LOCAL ONLY - from test coverage improvement plan)
   {
     id: 'frontend-unit-autocomplete-field',
     name: 'AutocompleteAttributeField Tests',
@@ -131,6 +138,7 @@ const TESTS: Test[] = [
       'Unit tests for AutocompleteAttributeField component (40 tests)',
     category: 'unit',
     icon: '🎯',
+    localOnly: true,
   },
   {
     id: 'frontend-unit-autocomplete-hook',
@@ -138,6 +146,7 @@ const TESTS: Test[] = [
     description: 'Unit tests for autocomplete hook (35 tests)',
     category: 'unit',
     icon: '🪝',
+    localOnly: true,
   },
   {
     id: 'frontend-unit-cars-service',
@@ -145,6 +154,7 @@ const TESTS: Test[] = [
     description: 'Unit tests for cars API service (45 tests)',
     category: 'unit',
     icon: '🚗',
+    localOnly: true,
   },
   {
     id: 'frontend-unit-icon-mapper',
@@ -152,6 +162,7 @@ const TESTS: Test[] = [
     description: 'Unit tests for icon mapping utility (80 tests)',
     category: 'unit',
     icon: '🎨',
+    localOnly: true,
   },
   {
     id: 'frontend-unit-env-utils',
@@ -159,15 +170,17 @@ const TESTS: Test[] = [
     description: 'Unit tests for environment utilities (60 tests)',
     category: 'unit',
     icon: '⚙️',
+    localOnly: true,
   },
 
-  // Integration Tests
+  // Integration Tests (LOCAL ONLY - requires Next.js API route)
   {
     id: 'backend-tests-short',
     name: 'Backend Short Tests',
     description: 'Quick tests (skip Integration/OpenSearch)',
     category: 'integration',
     icon: '⚡',
+    localOnly: true,
   },
   {
     id: 'backend-tests-full',
@@ -175,6 +188,7 @@ const TESTS: Test[] = [
     description: 'All tests including integration',
     category: 'integration',
     icon: '🔥',
+    localOnly: true,
   },
   {
     id: 'backend-tests-postexpress',
@@ -182,15 +196,17 @@ const TESTS: Test[] = [
     description: 'Test Post Express API integration',
     category: 'integration',
     icon: '📮',
+    localOnly: true,
   },
 
-  // Build & Type Checking
+  // Build & Type Checking (LOCAL ONLY - requires Next.js API route)
   {
     id: 'backend-build',
     name: 'Backend Build',
     description: 'Compile Go code',
     category: 'build',
     icon: '🔨',
+    localOnly: true,
   },
   {
     id: 'frontend-build',
@@ -198,6 +214,7 @@ const TESTS: Test[] = [
     description: 'Next.js production build',
     category: 'build',
     icon: '⚙️',
+    localOnly: true,
   },
   {
     id: 'typescript-check',
@@ -205,15 +222,17 @@ const TESTS: Test[] = [
     description: 'Type checking (tsc --noEmit)',
     category: 'build',
     icon: '📘',
+    localOnly: true,
   },
 
-  // Coverage
+  // Coverage (LOCAL ONLY - requires Next.js API route)
   {
     id: 'backend-tests-coverage',
     name: 'Backend Test Coverage',
     description: 'Run tests with coverage report',
     category: 'coverage',
     icon: '📊',
+    localOnly: true,
   },
   {
     id: 'frontend-tests-coverage',
@@ -221,6 +240,7 @@ const TESTS: Test[] = [
     description: 'Jest tests with coverage',
     category: 'coverage',
     icon: '📈',
+    localOnly: true,
   },
 
   // Functional API Tests (Backend API Testing)
@@ -910,6 +930,11 @@ export default function QualityTestsClient({
                   <h4 className="card-title text-sm">
                     <span>{test.icon}</span>
                     <span>{t(`tests.${test.id}.name`) || test.name}</span>
+                    {test.localOnly && (
+                      <span className="badge badge-warning badge-xs ml-2" title="This test only works on localhost development environment">
+                        🏠 Local Only
+                      </span>
+                    )}
                   </h4>
                   <p className="text-xs text-base-content/70">
                     {t(`tests.${test.id}.description`) || test.description}
@@ -1081,7 +1106,7 @@ export default function QualityTestsClient({
       <p className="text-base-content/70 mb-6">{t('description')}</p>
 
       {/* Info Alert */}
-      <div className="alert alert-info mb-8">
+      <div className="alert alert-info mb-4">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -1096,6 +1121,30 @@ export default function QualityTestsClient({
           ></path>
         </svg>
         <span>{t('testSuitesInfo')}</span>
+      </div>
+
+      {/* Local Only Tests Warning */}
+      <div className="alert alert-warning mb-8">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          className="stroke-current shrink-0 w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          ></path>
+        </svg>
+        <div>
+          <div className="font-bold">🏠 Local Development Tests</div>
+          <div className="text-sm">
+            Tests marked with "🏠 Local Only" badge only work on localhost development environment.
+            They use Next.js API routes to execute shell commands and are not available on production servers.
+          </div>
+        </div>
       </div>
 
       {/* Overall Statistics */}
