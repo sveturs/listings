@@ -1,0 +1,111 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - link "SveTu SveTu v0.2.4":
+    - /url: /en
+    - img "SveTu"
+    - text: SveTu v0.2.4
+  - textbox "Search for products and services..."
+  - button "Поиск":
+    - img
+  - link "Map":
+    - /url: /en/map
+  - link "Cars":
+    - /url: /en/cars
+    - text: Cars Cars
+  - link "Create Listing":
+    - /url: /en/create-listing-choice
+  - status "Loading theme toggle": Loading...
+  - button "Switch language": EN
+  - status "Loading authentication status"
+- main:
+  - textbox "Search for products and services..."
+  - button [disabled]:
+    - img
+  - checkbox "Fuzzy Search Search will work even with small typos" [checked]
+  - text: Fuzzy Search Search will work even with small typos
+  - img
+  - button "Listings"
+  - button "Filter by storefront items" [pressed]: Store Products
+  - button "By Price":
+    - img
+    - text: By Price
+  - button "By Date":
+    - img
+    - text: By Date
+  - complementary:
+    - heading "Popular Categories" [level=3]
+    - button "Automotive"
+    - button "Real Estate"
+    - button "Electronics"
+    - button "Clothing"
+    - button "Furniture"
+    - button "Industry"
+    - button "All Categories"
+    - text: Quick Filters
+    - button "New Items"
+    - button "Hot Deals"
+    - button "Near Me"
+    - button "Cars under €10000"
+    - button "Premium Electronics"
+    - button "Quick Sale"
+    - button "Free Shipping"
+    - button "Added Today"
+    - text: or customize filters manually
+    - heading "Filters" [level=3]:
+      - img
+      - text: Filters
+    - heading "Base Filters" [level=3]
+    - text: Price range
+    - spinbutton
+    - spinbutton
+    - text: Condition
+    - combobox:
+      - option "All conditions" [selected]
+      - option "New"
+      - option "Like new"
+      - option "Good"
+      - option "Used"
+    - text: Location
+    - textbox "Enter city name"
+    - text: Sort by
+    - combobox:
+      - option "Relevance" [selected]
+      - option "Price (Low to High)"
+      - option "Price (High to Low)"
+      - option "Newest First"
+      - option "Most Popular"
+    - text: Product types
+    - img
+    - text: Private
+    - img
+    - text: Stores
+    - img
+    - text: Price range From
+    - spinbutton "From"
+    - text: To
+    - spinbutton "To"
+    - img
+    - text: Condition
+    - combobox:
+      - option "All conditions" [selected]
+      - option "New"
+      - option "Like new"
+      - option "Good"
+      - option "Used"
+    - img
+    - text: Location
+    - textbox "Enter city name"
+    - text: Search radius
+    - slider: "0"
+    - text: 0 km
+    - img
+    - text: Sort by
+    - combobox:
+      - option "Relevance" [selected]
+      - option "Price"
+      - option "Date"
+      - option "Popularity"
+  - main
+```

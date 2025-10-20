@@ -158,13 +158,14 @@ func testTransactionRollback(ctx context.Context, baseURL, token string) *domain
 	// Step 1: Try to create a review with invalid data (should rollback transaction)
 	// This tests that failed transactions don't leave partial data in DB
 	invalidReviewPayload := map[string]interface{}{
-		"listing_id": -999999, // Invalid listing ID
-		"rating":     11,      // Invalid rating (should be 1-5)
-		"comment":    "Test rollback review",
+		"entity_type": "listing",
+		"entity_id":   -999999, // Invalid listing ID
+		"rating":      11,      // Invalid rating (should be 1-5)
+		"comment":     "Test rollback review",
 	}
 
 	payloadBytes, _ := json.Marshal(invalidReviewPayload)
-	reviewURL := fmt.Sprintf("%s/api/v1/marketplace/reviews", baseURL)
+	reviewURL := fmt.Sprintf("%s/api/v1/reviews/draft", baseURL)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", reviewURL, strings.NewReader(string(payloadBytes)))
 	if err != nil {

@@ -126,6 +126,7 @@ export const EnhancedMobileBottomNav: React.FC<
                   active ? 'bg-primary/10 text-primary' : 'hover:bg-base-200'
                 }`}
                 data-tip={item.label}
+                aria-label={item.label}
                 onClick={() => setActiveIndex(index)}
               >
                 {/* Иконка */}

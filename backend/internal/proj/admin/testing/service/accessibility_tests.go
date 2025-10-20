@@ -104,6 +104,12 @@ func testKeyboardNavigation(ctx context.Context, baseURL, token string) *domain.
 
 // runPlaywrightAccessibilityTest executes a Playwright accessibility test and returns JSON result
 func runPlaywrightAccessibilityTest(ctx context.Context, testFile, token string) *PlaywrightAxeResult {
+	// Create context with timeout for Playwright execution
+	// Accessibility tests run 6-12 subtests, each can take up to 5 minutes with axe scans
+	// Allow 30 minutes total to handle all scenarios and slow network
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
+	defer cancel()
+
 	// Find frontend directory using absolute path
 	frontendDir := "/data/hostel-booking-system/frontend/svetu"
 

@@ -594,9 +594,9 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
               <button
                 onClick={handleQuickView}
                 className="btn btn-circle btn-sm btn-ghost bg-base-100/80 backdrop-blur-sm"
-                title={t('quickView')}
+                aria-label={t('quickView')}
               >
-                <Expand className="w-4 h-4" />
+                <Expand className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           )}
@@ -769,17 +769,24 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
               <button
                 onClick={handleQuickView}
                 className="btn btn-circle btn-sm btn-ghost bg-base-100/80 backdrop-blur-sm"
-                title={t('quickView')}
+                aria-label={t('quickView')}
               >
-                <Expand className="w-4 h-4" />
+                <Expand className="w-4 h-4" aria-hidden="true" />
               </button>
               <button
                 onClick={handleFavoriteClick}
                 className="btn btn-circle btn-sm btn-ghost bg-base-100/80 backdrop-blur-sm"
                 disabled={isProcessingFavorite}
+                aria-label={
+                  isFavorite
+                    ? t('product.removeFromFavorites')
+                    : t('product.addToFavorites')
+                }
+                aria-pressed={isFavorite}
               >
                 <Heart
                   className={`w-4 h-4 ${isFavorite ? 'fill-error text-error' : ''}`}
+                  aria-hidden="true"
                 />
               </button>
             </div>
@@ -950,9 +957,9 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
                   <button
                     onClick={handleBuyClick}
                     className="btn btn-primary btn-xs"
-                    title={t('addToCart')}
+                    aria-label={t('addToCart')}
                   >
-                    <ShoppingCart className="w-3 h-3" />
+                    <ShoppingCart className="w-3 h-3" aria-hidden="true" />
                   </button>
                 )}
                 {/* Кнопка добавления в корзину для обычных товаров - только для авторизованных */}
@@ -963,17 +970,17 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
                     <button
                       onClick={handleBuyClick}
                       className="btn btn-primary btn-xs"
-                      title={t('addToCart')}
+                      aria-label={t('addToCart')}
                     >
-                      <ShoppingCart className="w-3 h-3" />
+                      <ShoppingCart className="w-3 h-3" aria-hidden="true" />
                     </button>
                   )}
                 <button
                   onClick={handleQuickView}
                   className="btn btn-outline btn-xs"
-                  title={t('quickView')}
+                  aria-label={t('quickView')}
                 >
-                  <Expand className="w-3 h-3" />
+                  <Expand className="w-3 h-3" aria-hidden="true" />
                 </button>
                 {canChat && (
                   <button

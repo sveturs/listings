@@ -203,7 +203,9 @@ test.describe('E2E: Admin Moderation Flow', () => {
 
     // Dashboard might not have specific elements - just check we can access /admin
     if (!dashboardFound) {
-      console.log('  ℹ️  Dashboard elements not found, but admin page is accessible');
+      console.log(
+        '  ℹ️  Dashboard elements not found, but admin page is accessible'
+      );
     }
 
     // Test passes if we reached admin page without redirect

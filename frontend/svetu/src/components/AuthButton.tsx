@@ -64,6 +64,7 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
     return (
       <div
         className="skeleton h-10 w-24"
+        role="status"
         aria-label="Loading authentication status"
       ></div>
     );
@@ -88,7 +89,11 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
     return (
       <>
         {/* Иконка чата */}
-        <Link href="/chat" className="btn btn-ghost btn-circle">
+        <Link
+          href="/chat"
+          className="btn btn-ghost btn-circle"
+          aria-label={tCommon('chat.openChat')}
+        >
           <div className="indicator">
             <svg
               className="w-5 h-5"

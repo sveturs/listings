@@ -184,9 +184,9 @@ func testFileUploadValidation(ctx context.Context, baseURL, token string) *domai
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Test 1: Test marketplace listing creation endpoint (this exists and requires auth)
+	// Test 1: Test marketplace listing creation endpoint (correct path: /api/v1/c2c/listings)
 	// Without token - should be rejected
-	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/api/v1/marketplace/listings", strings.NewReader("{}"))
+	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/api/v1/c2c/listings", strings.NewReader("{}"))
 	if err != nil {
 		return failTest(result, "Failed to create test request", err)
 	}
@@ -204,7 +204,7 @@ func testFileUploadValidation(ctx context.Context, baseURL, token string) *domai
 	}
 
 	// Test 2: With valid token - should NOT return 401 (auth works)
-	req2, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/api/v1/marketplace/listings", strings.NewReader("{}"))
+	req2, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/api/v1/c2c/listings", strings.NewReader("{}"))
 	if err != nil {
 		return failTest(result, "Failed to create authenticated test request", err)
 	}
@@ -347,7 +347,7 @@ func testCSRFProtection(ctx context.Context, baseURL, token string) *domain.Test
 
 	// Test that state-changing operations require authentication
 	// Example: trying to create a listing without token should fail
-	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/api/v1/marketplace/listings", strings.NewReader("{}"))
+	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/api/v1/c2c/listings", strings.NewReader("{}"))
 	if err != nil {
 		return failTest(result, "Failed to create CSRF test request", err)
 	}

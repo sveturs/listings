@@ -11,6 +11,11 @@
   "loadingIsochrone": "Učitavanje zone pristupačnosti...",
   "clickToChangeMode": "Kliknite na ikonu za promenu režima",
   "holdForSettings": "Držite za podešavanja",
+  "toggleFullscreen": "Prebaci pun ekran",
+  "exitFullscreen": "Izađi iz punog ekrana",
+  "enterFullscreen": "Uđi u pun ekran",
+  "toggleFilters": "Prebaci filtere",
+  "expandControls": "Proširi kontrole",
   "gis": {
     "accessibilitySettings": "Podešavanja pristupačnosti",
     "meters": "m",

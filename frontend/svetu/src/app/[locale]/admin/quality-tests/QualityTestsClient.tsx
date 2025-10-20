@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiClient } from '@/services/api-client';
 
 interface Test {
@@ -466,11 +466,45 @@ const TESTS: Test[] = [
   },
 ];
 
-export default function QualityTestsClient() {
+const STORAGE_KEY = 'quality-tests-results';
+
+interface QualityTestsClientProps {
+  locale: string;
+}
+
+export default function QualityTestsClient({
+  locale,
+}: QualityTestsClientProps) {
   const t = useTranslations('admin.qualityTests');
+
+  // Initialize with empty state (same for SSR and CSR)
   const [results, setResults] = useState<Record<string, TestResult>>({});
   const [running, setRunning] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Load from localStorage after hydration (client-side only)
+  useEffect(() => {
+    setIsHydrated(true);
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setResults(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Failed to load test results from localStorage:', error);
+    }
+  }, []);
+
+  // Save results to localStorage whenever they change (client-side only)
+  useEffect(() => {
+    if (!isHydrated) return; // Don't save during hydration
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(results));
+    } catch (error) {
+      console.error('Failed to save test results to localStorage:', error);
+    }
+  }, [results, isHydrated]);
 
   const runTest = async (testId: string) => {
     setRunning((prev) => new Set(prev).add(testId));
@@ -487,15 +521,19 @@ export default function QualityTestsClient() {
       const isPerformance = test?.category === 'performance';
       const isDataIntegrity = test?.category === 'data-integrity';
       const isMonitoring = test?.category === 'monitoring';
+      const isE2E = test?.category === 'e2e';
+      const isAccessibility = test?.category === 'accessibility';
 
       if (
         isFunctional ||
         isSecurity ||
         isPerformance ||
         isDataIntegrity ||
-        isMonitoring
+        isMonitoring ||
+        isE2E ||
+        isAccessibility
       ) {
-        // Functional, Security, Performance, Data Integrity и Monitoring тесты: вызываем backend API через apiClient
+        // Functional, Security, Performance, Data Integrity, Monitoring, E2E и Accessibility тесты: вызываем backend API через apiClient
         // Передаем test_name для запуска конкретного теста
         const testSuite = isSecurity
           ? 'security'
@@ -505,7 +543,11 @@ export default function QualityTestsClient() {
               ? 'data-integrity'
               : isMonitoring
                 ? 'monitoring'
-                : 'api-endpoints';
+                : isE2E
+                  ? 'e2e'
+                  : isAccessibility
+                    ? 'accessibility'
+                    : 'api-endpoints';
         const response = await apiClient.post('/admin/tests/run', {
           test_suite: testSuite,
           test_name: testId,
@@ -667,6 +709,17 @@ export default function QualityTestsClient() {
       }
       return newSet;
     });
+  };
+
+  const clearResults = () => {
+    setResults({});
+    setExpanded(new Set());
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      // localStorage not available (SSR or private mode)
+      console.error('Failed to clear localStorage:', error);
+    }
   };
 
   const getStatusBadge = (status: TestResult['status']) => {
@@ -1071,6 +1124,11 @@ export default function QualityTestsClient() {
         >
           {running.has('all-builds') ? t('running') : '🔨 ' + t('runAllBuilds')}
         </button>
+        {allStats.completed > 0 && (
+          <button className="btn btn-outline btn-error" onClick={clearResults}>
+            🗑️ {t('clearResults') || 'Clear Results'}
+          </button>
+        )}
       </div>
 
       {/* Test Categories */}

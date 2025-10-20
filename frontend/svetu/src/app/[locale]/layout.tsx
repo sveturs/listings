@@ -35,11 +35,12 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+// WCAG 2.1 AA: Reflow (1.4.10) - Allow user scaling
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5, // Allow up to 5x zoom for accessibility
+  userScalable: true,
 };
 
 export async function generateMetadata({

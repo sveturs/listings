@@ -1833,6 +1833,7 @@
     "runAllQuality": "Запустить все тесты качества",
     "runAllUnit": "Запустить все unit-тесты",
     "runAllBuilds": "Запустить все сборки",
+    "clearResults": "Очистить результаты",
     "categoryQuality": "Качество кода",
     "categoryUnit": "Unit-тесты",
     "categoryIntegration": "Интеграционные тесты",

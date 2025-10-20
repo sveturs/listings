@@ -23,18 +23,20 @@ export default function ViewToggle({
         className={`btn btn-sm ${
           currentView === 'grid' ? 'btn-primary' : 'btn-ghost'
         }`}
-        title={t('viewGrid')}
+        aria-label={t('view.gridView')}
+        aria-current={currentView === 'grid' ? 'true' : 'false'}
       >
-        <Squares2X2Icon className="w-4 h-4" />
+        <Squares2X2Icon className="w-4 h-4" aria-hidden="true" />
       </button>
       <button
         onClick={() => onViewChange('list')}
         className={`btn btn-sm ${
           currentView === 'list' ? 'btn-primary' : 'btn-ghost'
         }`}
-        title={t('viewList')}
+        aria-label={t('view.listView')}
+        aria-current={currentView === 'list' ? 'true' : 'false'}
       >
-        <ListBulletIcon className="w-4 h-4" />
+        <ListBulletIcon className="w-4 h-4" aria-hidden="true" />
       </button>
     </div>
   );

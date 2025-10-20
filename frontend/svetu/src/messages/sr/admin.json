@@ -1896,6 +1896,7 @@
     "runAllQuality": "Pokreni sve testove kvaliteta",
     "runAllUnit": "Pokreni sve unit testove",
     "runAllBuilds": "Pokreni sve build testove",
+    "clearResults": "Obriši rezultate",
     "categoryQuality": "Kvalitet koda",
     "categoryUnit": "Unit testovi",
     "categoryIntegration": "Integracioni testovi",

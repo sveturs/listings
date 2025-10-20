@@ -17,6 +17,19 @@ export default function GridColumnsToggle({
 
   const columns: GridColumns[] = [1, 2, 3];
 
+  const getColumnLabel = (col: GridColumns) => {
+    switch (col) {
+      case 1:
+        return t('view.oneColumn');
+      case 2:
+        return t('view.twoColumns');
+      case 3:
+        return t('view.threeColumns');
+      default:
+        return t('columns', { count: col });
+    }
+  };
+
   return (
     <div className="flex gap-1 bg-base-200 p-1 rounded-lg">
       {columns.map((col) => (
@@ -26,9 +39,10 @@ export default function GridColumnsToggle({
           className={`btn btn-sm ${
             currentColumns === col ? 'btn-primary' : 'btn-ghost'
           } min-w-[2.5rem]`}
-          title={t('columns', { count: col })}
+          aria-label={getColumnLabel(col)}
+          aria-current={currentColumns === col ? 'true' : 'false'}
         >
-          <div className="flex gap-0.5">
+          <div className="flex gap-0.5" aria-hidden="true">
             {Array.from({ length: col }).map((_, i) => (
               <div
                 key={i}

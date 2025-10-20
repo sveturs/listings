@@ -432,6 +432,7 @@
     "runAllQuality": "Run All Quality",
     "runAllUnit": "Run All Unit Tests",
     "runAllBuilds": "Run All Builds",
+    "clearResults": "Clear Results",
     "categoryQuality": "Code Quality",
     "categoryUnit": "Unit Tests",
     "categoryIntegration": "Integration Tests",

@@ -37,6 +37,7 @@ export const CategoryTreeModal: React.FC<CategoryTreeModalProps> = ({
   onCategorySelect,
 }) => {
   const t = useTranslations('search');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,11 +167,16 @@ export const CategoryTreeModal: React.FC<CategoryTreeModalProps> = ({
                   toggleExpand(item.id);
                 }}
                 className="btn btn-xs btn-ghost p-0 min-h-0 h-5 w-5"
+                aria-label={tCommon('categories.toggleCategory', {
+                  name: item.name,
+                })}
+                aria-expanded={isExpanded}
+                aria-controls={`category-${item.id}-children`}
               >
                 {isExpanded ? (
-                  <ChevronDown size={16} />
+                  <ChevronDown size={16} aria-hidden="true" />
                 ) : (
-                  <ChevronRight size={16} />
+                  <ChevronRight size={16} aria-hidden="true" />
                 )}
               </button>
             )}
@@ -186,7 +192,9 @@ export const CategoryTreeModal: React.FC<CategoryTreeModalProps> = ({
           </div>
 
           {hasChildren && isExpanded && (
-            <div>{renderTree(item.children!, level + 1)}</div>
+            <div id={`category-${item.id}-children`}>
+              {renderTree(item.children!, level + 1)}
+            </div>
           )}
         </div>
       );
@@ -201,15 +209,19 @@ export const CategoryTreeModal: React.FC<CategoryTreeModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-base-300">
           <h3 className="text-lg font-semibold">{t('allCategories')}</h3>
-          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="btn btn-ghost btn-sm btn-circle"
+            aria-label={tCommon('close')}
+          >
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
         {/* Search */}
         <div className="p-4 border-b border-base-300">
           <div className="input input-bordered flex items-center gap-2">
-            <Search size={16} />
+            <Search size={16} aria-hidden="true" />
             <input
               type="text"
               placeholder={t('searchCategories') || 'Поиск категорий...'}
@@ -221,8 +233,9 @@ export const CategoryTreeModal: React.FC<CategoryTreeModalProps> = ({
               <button
                 onClick={() => setSearchQuery('')}
                 className="btn btn-ghost btn-xs p-0 min-h-0 h-5 w-5"
+                aria-label={t('clearSearch')}
               >
-                <X size={16} />
+                <X size={16} aria-hidden="true" />
               </button>
             )}
           </div>

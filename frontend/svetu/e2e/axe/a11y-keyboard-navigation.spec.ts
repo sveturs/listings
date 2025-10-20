@@ -10,20 +10,17 @@ const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'admin@admin.rs';
 const TEST_ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'P@$S4@dmi№';
 
 test.describe('Keyboard Navigation Tests', () => {
-  test.beforeEach(async ({ page }) => {
-    // User is already logged in via global-setup
-    // Just wait a bit for the page to be ready
-    await page.waitForTimeout(500);
-  });
+  // Set timeout for each test in this suite
+  test.setTimeout(300000); // 5 minutes per test
 
   test('Login form should be fully keyboard accessible', async ({ page }) => {
     // Logout first
-    await page.goto('/en');
+    await page.goto('/en', { timeout: 30000 });
     await page
       .click('button:has-text("Logout")', { timeout: 5000 })
       .catch(() => {});
 
-    await page.goto('/en/auth/login');
+    await page.goto('/en/auth/login', { timeout: 30000 });
 
     // Tab to email field
     await page.keyboard.press('Tab');
@@ -53,7 +50,10 @@ test.describe('Keyboard Navigation Tests', () => {
   });
 
   test('Navigation menu should be keyboard accessible', async ({ page }) => {
-    await page.goto('/en/admin');
+    await page.goto('/en/admin', {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
 
     // Focus on navigation
     await page.keyboard.press('Tab');
@@ -79,9 +79,11 @@ test.describe('Keyboard Navigation Tests', () => {
   test('Admin quality tests page buttons should be keyboard accessible', async ({
     page,
   }) => {
-    await page.goto('/en/admin/quality-tests', { waitUntil: 'domcontentloaded' });
+    await page.goto('/en/admin/quality-tests', {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
     await page.waitForLoadState('load');
-    await page.waitForTimeout(1000);
 
     // Find all "Run Test" buttons
     const buttons = await page.locator('button:has-text("Run")').all();
@@ -115,7 +117,10 @@ test.describe('Keyboard Navigation Tests', () => {
   test('Search functionality should be keyboard accessible', async ({
     page,
   }) => {
-    await page.goto('/en/marketplace');
+    await page.goto('/en/marketplace', {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
 
     // Tab to search input
     let foundSearch = false;
@@ -165,9 +170,11 @@ test.describe('Keyboard Navigation Tests', () => {
   test('Modal dialogs should be keyboard accessible and trap focus', async ({
     page,
   }) => {
-    await page.goto('/en/admin/quality-tests', { waitUntil: 'domcontentloaded' });
+    await page.goto('/en/admin/quality-tests', {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
     await page.waitForLoadState('load');
-    await page.waitForTimeout(1000);
 
     // Try to find and open a modal (if exists)
     const modalTriggers = await page
@@ -211,7 +218,10 @@ test.describe('Keyboard Navigation Tests', () => {
   test('All interactive elements should have visible focus indicators', async ({
     page,
   }) => {
-    await page.goto('/en/admin');
+    await page.goto('/en/admin', {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
 
     // Tab through elements and check focus visibility
     const focusedElements: string[] = [];

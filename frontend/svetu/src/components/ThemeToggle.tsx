@@ -33,9 +33,15 @@ export const ThemeToggle: React.FC = () => {
   // Предотвращаем гидратационные ошибки
   if (!mounted) {
     return (
-      <button className="btn btn-ghost btn-circle">
+      <div
+        className="btn btn-ghost btn-circle"
+        role="status"
+        aria-live="polite"
+        aria-label={t('theme.loadingToggle')}
+      >
+        <span className="sr-only">{t('loading')}</span>
         <div className="w-5 h-5" />
-      </button>
+      </div>
     );
   }
 

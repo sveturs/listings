@@ -242,8 +242,9 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                   href="/map"
                   className="btn btn-ghost btn-circle tooltip tooltip-bottom hidden sm:inline-flex"
                   data-tip={t('header.nav.map')}
+                  aria-label={t('header.nav.map')}
                 >
-                  <FiMapPin className="w-5 h-5" />
+                  <FiMapPin className="w-5 h-5" aria-hidden="true" />
                 </Link>
 
                 {/* Ссылка на автомобильный раздел */}
@@ -251,8 +252,9 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                   href="/cars"
                   className="btn btn-ghost tooltip tooltip-bottom hidden md:inline-flex"
                   data-tip={t('header.nav.cars')}
+                  aria-label={t('header.nav.cars')}
                 >
-                  <FaCar className="w-5 h-5" />
+                  <FaCar className="w-5 h-5" aria-hidden="true" />
                   <span className="ml-2 hidden lg:inline">
                     {t('header.nav.cars')}
                   </span>
@@ -285,11 +287,14 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                 <button
                   className="btn btn-ghost btn-circle lg:hidden"
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  aria-label={t('navigation.toggleMenu')}
+                  aria-expanded={showMobileMenu}
+                  aria-controls="mobile-menu"
                 >
                   {showMobileMenu ? (
-                    <FiX className="w-5 h-5" />
+                    <FiX className="w-5 h-5" aria-hidden="true" />
                   ) : (
-                    <FiMenu className="w-5 h-5" />
+                    <FiMenu className="w-5 h-5" aria-hidden="true" />
                   )}
                 </button>
               </div>
@@ -322,6 +327,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
               onClick={() => setShowMobileMenu(false)}
             />
             <motion.div
+              id="mobile-menu"
               className="fixed right-0 top-0 h-full w-64 bg-base-100 z-[91] lg:hidden shadow-xl"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -336,8 +342,9 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                   <button
                     className="btn btn-ghost btn-circle btn-sm"
                     onClick={() => setShowMobileMenu(false)}
+                    aria-label={t('navigation.closeMenu')}
                   >
-                    <FiX className="w-5 h-5" />
+                    <FiX className="w-5 h-5" aria-hidden="true" />
                   </button>
                 </div>
 

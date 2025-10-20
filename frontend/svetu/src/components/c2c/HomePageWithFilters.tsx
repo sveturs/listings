@@ -231,7 +231,9 @@ export default function HomePageWithFilters({
 
             {/* Переключатель карта/список */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-base-content/70">{t('view')}:</span>
+              <span className="text-sm text-base-content/70">
+                {t('viewAction')}:
+              </span>
               <button
                 onClick={() => setShowMap(!showMap)}
                 className={`btn btn-sm ${showMap ? 'btn-primary' : 'btn-ghost'}`}

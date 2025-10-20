@@ -911,6 +911,10 @@ export default function HomePageClient({
                               : 'bg-white/50'
                           }`}
                           onClick={() => setCurrentBanner(idx)}
+                          aria-label={_tCommon('carousel.goToSlide', {
+                            index: (idx + 1).toString(),
+                          })}
+                          aria-current={idx === currentBanner}
                         />
                       ))}
                     </div>
@@ -1019,14 +1023,18 @@ export default function HomePageClient({
               <button
                 onClick={() => setViewMode('grid')}
                 className={`btn btn-sm ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`}
+                aria-label={_tCommon('view.gridView')}
+                aria-pressed={viewMode === 'grid'}
               >
-                <FiGrid className="w-4 h-4" />
+                <FiGrid className="w-4 h-4" aria-hidden="true" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
                 className={`btn btn-sm ${viewMode === 'list' ? 'btn-primary' : 'btn-ghost'}`}
+                aria-label={_tCommon('view.listView')}
+                aria-pressed={viewMode === 'list'}
               >
-                <FiList className="w-4 h-4" />
+                <FiList className="w-4 h-4" aria-hidden="true" />
               </button>
               <Link href="/hot" className="btn btn-sm btn-ghost">
                 {t('allDeals')}
@@ -1150,9 +1158,15 @@ export default function HomePageClient({
                             );
                           }
                         }}
+                        aria-label={
+                          deal.isFavorite
+                            ? _tCommon('product.removeFromFavorites')
+                            : _tCommon('product.addToFavorites')
+                        }
                       >
                         <FiHeart
                           className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
+                          aria-hidden="true"
                         />
                       </button>
                     </figure>
@@ -1256,6 +1270,18 @@ export default function HomePageClient({
                                   : `sp_${deal.id || deal.product_id}`;
                               handleToggleFavorite(productId, e);
                             }}
+                            aria-label={
+                              favoriteIds.has(
+                                parseInt(
+                                  String(deal.id || deal.product_id).replace(
+                                    'sp_',
+                                    ''
+                                  )
+                                )
+                              )
+                                ? _tCommon('product.removeFromFavorites')
+                                : _tCommon('product.addToFavorites')
+                            }
                           >
                             <FiHeart
                               className={`w-4 h-4 ${
@@ -1270,6 +1296,7 @@ export default function HomePageClient({
                                   ? 'fill-current text-error'
                                   : ''
                               }`}
+                              aria-hidden="true"
                             />
                           </button>
                           <button
@@ -1279,8 +1306,12 @@ export default function HomePageClient({
                               e.stopPropagation();
                               handleStartChat(deal);
                             }}
+                            aria-label={_tCommon('chat.startChat')}
                           >
-                            <FiMessageCircle className="w-4 h-4" />
+                            <FiMessageCircle
+                              className="w-4 h-4"
+                              aria-hidden="true"
+                            />
                           </button>
                         </div>
                       ) : (
@@ -1341,9 +1372,15 @@ export default function HomePageClient({
                                 );
                               }
                             }}
+                            aria-label={
+                              deal.isFavorite
+                                ? _tCommon('product.removeFromFavorites')
+                                : _tCommon('product.addToFavorites')
+                            }
                           >
                             <FiHeart
                               className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
+                              aria-hidden="true"
                             />
                           </button>
                         </div>
@@ -1641,9 +1678,15 @@ export default function HomePageClient({
                               );
                             }
                           }}
+                          aria-label={
+                            deal.isFavorite
+                              ? _tCommon('product.removeFromFavorites')
+                              : _tCommon('product.addToFavorites')
+                          }
                         >
                           <FiHeart
                             className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
+                            aria-hidden="true"
                           />
                         </button>
                       </figure>

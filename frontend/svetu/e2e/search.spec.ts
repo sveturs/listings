@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Search Page E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3001/en/search');
+    await page.goto('/en/search');
   });
 
   test('should load search page with all components', async ({ page }) => {
@@ -284,7 +284,7 @@ test.describe('Search Page Mobile Tests', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
   test('should be responsive on mobile', async ({ page }) => {
-    await page.goto('http://localhost:3001/en/search');
+    await page.goto('/en/search');
 
     // Check search input is visible
     await expect(page.locator('input[placeholder*="Search"]')).toBeVisible();
@@ -298,7 +298,7 @@ test.describe('Search Page Mobile Tests', () => {
   });
 
   test('should handle touch interactions', async ({ page }) => {
-    await page.goto('http://localhost:3001/en/search');
+    await page.goto('/en/search');
 
     // Tap on search input
     const searchInput = page.locator('input[placeholder*="Search"]');

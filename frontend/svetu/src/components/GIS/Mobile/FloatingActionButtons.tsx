@@ -68,13 +68,16 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
           style={{
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
           }}
-          aria-label={t('filters.title')}
+          aria-label={t('fabMenu')}
+          aria-expanded={isExpanded}
+          aria-controls="fab-menu"
         >
           <svg
             className="w-6 h-6 text-gray-700 transition-transform duration-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -87,6 +90,7 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
 
         {/* Вторичные кнопки */}
         <div
+          id="fab-menu"
           className={`flex flex-col gap-3 transition-all duration-300 ${
             isExpanded
               ? 'opacity-100 translate-y-0'
@@ -104,13 +108,14 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
                 ? 'bg-orange-600 hover:bg-orange-700 text-white'
                 : 'bg-white hover:bg-gray-50 text-gray-700'
             }`}
-            title={t('filters.title')}
+            aria-label={t('openFilters')}
           >
             <svg
               className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -131,13 +136,14 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
               setIsExpanded(false);
             }}
             className="bg-green-600 hover:bg-green-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200"
-            title={t('geolocation.findMe')}
+            aria-label={t('findMyLocation')}
           >
             <svg
               className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -162,13 +168,14 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
                 setIsExpanded(false);
               }}
               className="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 relative"
-              title={t('showAll.title')}
+              aria-label={t('showAllListings')}
             >
               <svg
                 className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"

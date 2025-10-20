@@ -50,7 +50,9 @@ test.describe('E2E: User Journey - Search & Contact', () => {
     console.log('Step 3: Opening first listing...');
 
     // Find first clickable listing card - look for links inside figures or headings
-    const listingLink = page.locator('figure a, h3 a, [href^="/en/c2c/"]').first();
+    const listingLink = page
+      .locator('figure a, h3 a, [href^="/en/c2c/"]')
+      .first();
 
     if (await listingLink.isVisible({ timeout: 5000 }).catch(() => false)) {
       await listingLink.click();
