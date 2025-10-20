@@ -13,6 +13,8 @@ import (
 // Список путей, которые не нужно логировать (слишком шумные)
 var noiseLogPaths = []string{
 	"/api/v1/admin/marketplace-translations/status",
+	"/api/v1/admin/c2c-translations/status",
+	"/api/v1/admin/tests/runs/", // Frequent polling during test execution
 }
 
 // shouldSkipLogging проверяет нужно ли пропустить логирование для данного пути

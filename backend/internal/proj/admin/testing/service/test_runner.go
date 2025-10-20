@@ -175,6 +175,8 @@ func (r *TestRunner) RunTestSuite(
 }
 
 // executeTestSuite executes test suite in background
+//
+//nolint:contextcheck // Uses background context to avoid HTTP request timeout cancellation
 func (r *TestRunner) executeTestSuite(parentCtx context.Context, testRun *domain.TestRun, testName string, parallel bool) {
 	// Use background context instead of parentCtx to avoid HTTP request timeout cancellation
 	// Tests can run for up to 30 minutes independently of the HTTP request that initiated them
@@ -191,8 +193,22 @@ func (r *TestRunner) executeTestSuite(parentCtx context.Context, testRun *domain
 	}
 	r.mu.Unlock()
 
+	// Track if test was completed normally
+	testCompleted := false
+
 	// Cleanup on completion
 	defer func() {
+		// If test was not completed normally (timeout or panic), mark as failed
+		if !testCompleted {
+			// Use background context because main context may already be canceled
+			cleanupCtx := context.Background() //nolint:contextcheck // Background context needed for cleanup after timeout
+			r.logger.Warn().
+				Int64("run_id", testRun.ID).
+				Msg("Test run terminated abnormally (timeout or panic), marking as failed")
+			r.logTestError(cleanupCtx, testRun.ID, "Test execution timeout - process terminated without completing")
+			r.completeTestRun(cleanupCtx, testRun.ID, domain.TestRunStatusFailed, 0, 0, 0, 0)
+		}
+
 		r.mu.Lock()
 		delete(r.runningTests, testRun.ID)
 		r.mu.Unlock()
@@ -260,6 +276,9 @@ func (r *TestRunner) executeTestSuite(parentCtx context.Context, testRun *domain
 
 	// Complete test run
 	r.completeTestRun(ctx, testRun.ID, finalStatus, totalTests, passedTests, failedTests, skippedTests)
+
+	// Mark test as completed to prevent defer cleanup
+	testCompleted = true
 
 	r.logger.Info().
 		Int64("run_id", testRun.ID).

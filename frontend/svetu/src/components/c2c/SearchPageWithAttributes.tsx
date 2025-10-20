@@ -189,6 +189,7 @@ export default function SearchPageWithAttributes({
                 )
               }
               className="select select-bordered w-full md:w-auto"
+              aria-label={t('search.category') || 'Category'}
             >
               <option value="">{t('search.allCategories')}</option>
               {categories.map((cat) => (
@@ -354,6 +355,7 @@ export default function SearchPageWithAttributes({
                 value={filters.sortBy || 'relevance'}
                 onChange={(e) => updateFilter('sortBy', e.target.value)}
                 className="select select-bordered select-sm"
+                aria-label={t('sort.sortBy') || 'Sort by'}
               >
                 <option value="relevance">{t('sort.relevance')}</option>
                 <option value="price_asc">{t('sort.priceAsc')}</option>

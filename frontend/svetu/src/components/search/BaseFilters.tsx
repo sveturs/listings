@@ -77,6 +77,7 @@ export const BaseFilters: React.FC<BaseFiltersProps> = ({
           value={condition}
           onChange={(e) => setCondition(e.target.value)}
           className="select select-bordered select-sm w-full"
+          aria-label={t('condition')}
         >
           <option value="">{t('allConditions')}</option>
           <option value="new">{t('conditions.new')}</option>
@@ -124,6 +125,7 @@ export const BaseFilters: React.FC<BaseFiltersProps> = ({
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
           className="select select-bordered select-sm w-full"
+          aria-label={t('sortBy')}
         >
           <option value="relevance">{t('sortOptions.relevance')}</option>
           <option value="price_asc">{t('sortOptions.priceAsc')}</option>

@@ -527,7 +527,9 @@ const StorefrontDashboard = () => {
                       >
                         68%
                       </div>
-                      <p className="mt-2 font-semibold">Мужчины</p>
+                      <p className="mt-2 font-semibold text-base-content">
+                        Мужчины
+                      </p>
                     </div>
                     <div className="text-center">
                       <div
@@ -536,7 +538,9 @@ const StorefrontDashboard = () => {
                       >
                         32%
                       </div>
-                      <p className="mt-2 font-semibold">Женщины</p>
+                      <p className="mt-2 font-semibold text-base-content">
+                        Женщины
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <h4 className="font-semibold">Возрастные группы:</h4>
