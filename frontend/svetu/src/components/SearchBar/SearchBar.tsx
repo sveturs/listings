@@ -450,6 +450,7 @@ export default function SearchBar({
               className={`btn btn-ghost btn-xs btn-circle ${!query.trim() ? 'btn-disabled' : ''}`}
               onClick={() => handleSearch()}
               disabled={!query.trim()}
+              aria-label={isLoadingSuggestions ? t('searching') : t('searchButton')}
             >
               {isLoadingSuggestions ? (
                 <span className="loading loading-spinner loading-xs"></span>
