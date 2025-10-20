@@ -502,13 +502,10 @@ async function runAccessibilityTests(): Promise<TestResult> {
 async function runFrontendFormat(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise(
-      'yarn format',
-      {
-        timeout: 60000,
-        cwd: process.cwd(),
-      }
-    );
+    const { stdout, stderr } = await execPromise('yarn format', {
+      timeout: 60000,
+      cwd: process.cwd(),
+    });
     return {
       name: 'Frontend Format (yarn format)',
       status: 'success',
@@ -530,13 +527,10 @@ async function runFrontendFormat(): Promise<TestResult> {
 async function runFrontendLint(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise(
-      'yarn lint',
-      {
-        timeout: 120000,
-        cwd: process.cwd(),
-      }
-    );
+    const { stdout, stderr } = await execPromise('yarn lint', {
+      timeout: 120000,
+      cwd: process.cwd(),
+    });
     // ESLint успешен если есть сообщение "No ESLint warnings or errors"
     const isSuccess = stdout.includes('No ESLint warnings or errors');
     return {
@@ -560,13 +554,10 @@ async function runFrontendLint(): Promise<TestResult> {
 async function runFrontendTests(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise(
-      'yarn test --watchAll=false',
-      {
-        timeout: 180000,
-        cwd: process.cwd(),
-      }
-    );
+    const { stdout, stderr } = await execPromise('yarn test --watchAll=false', {
+      timeout: 180000,
+      cwd: process.cwd(),
+    });
     const stats = parseJestOutput(stdout);
     const hasFailed = stats.failed > 0;
     return {
@@ -697,14 +688,11 @@ async function runFrontendBuild(): Promise<TestResult> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { NODE_ENV, ...buildEnv } = process.env;
 
-    const { stdout, stderr } = await execPromise(
-      'yarn build',
-      {
-        timeout: 180000,
-        cwd: process.cwd(),
-        env: buildEnv as NodeJS.ProcessEnv,
-      }
-    );
+    const { stdout, stderr } = await execPromise('yarn build', {
+      timeout: 180000,
+      cwd: process.cwd(),
+      env: buildEnv as NodeJS.ProcessEnv,
+    });
     return {
       name: 'Frontend Build (yarn build)',
       status: 'success',
@@ -759,13 +747,10 @@ async function runFrontendTestsCoverage(): Promise<TestResult> {
 async function runTypeScriptCheck(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise(
-      'yarn tsc --noEmit',
-      {
-        timeout: 120000,
-        cwd: process.cwd(),
-      }
-    );
+    const { stdout, stderr } = await execPromise('yarn tsc --noEmit', {
+      timeout: 120000,
+      cwd: process.cwd(),
+    });
     return {
       name: 'TypeScript Check (tsc --noEmit)',
       status: 'success',

@@ -4214,34 +4214,22 @@
         },
         "/api/v1/admin/delivery/analytics": {
             "get": {
-                "description": "Get analytics and statistics for deliveries",
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "tags": [
-                    "admin-delivery"
+                    "delivery-admin"
                 ],
                 "summary": "Get delivery analytics",
                 "parameters": [
                     {
-                        "description": "From date (YYYY-MM-DD)",
-                        "name": "from",
+                        "description": "Time period (7d, 30d, 90d, 365d)",
+                        "name": "period",
                         "in": "query",
                         "schema": {
                             "type": "string"
-                        }
-                    },
-                    {
-                        "description": "To date (YYYY-MM-DD)",
-                        "name": "to",
-                        "in": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Provider ID",
-                        "name": "provider_id",
-                        "in": "query",
-                        "schema": {
-                            "type": "integer"
                         }
                     }
                 ],
@@ -4259,7 +4247,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "data": {
-                                                    "$ref": "#/components/schemas/service.DeliveryAnalytics"
+                                                    "$ref": "#/components/schemas/models.AnalyticsData"
                                                 }
                                             }
                                         }
@@ -4268,8 +4256,8 @@
                             }
                         }
                     },
-                    "500": {
-                        "description": "Server error",
+                    "401": {
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4378,9 +4366,13 @@
                 }
             },
             "post": {
-                "description": "Create new pricing rule for provider",
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "tags": [
-                    "admin-delivery"
+                    "delivery-admin"
                 ],
                 "summary": "Create pricing rule",
                 "requestBody": {
@@ -4409,18 +4401,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Invalid request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
+                    "401": {
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4757,106 +4739,36 @@
         },
         "/api/v1/admin/delivery/providers": {
             "get": {
-                "description": "Get detailed list of all providers for admin panel",
-                "tags": [
-                    "admin-delivery"
+                "security": [
+                    {
+                        "Bearer": []
+                    }
                 ],
-                "summary": "Get providers for admin",
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Get delivery providers for admin",
                 "responses": {
                     "200": {
                         "description": "List of providers",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/models.Provider"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "type": "object",
+                                    "additionalProperties": true
                                 }
                             }
                         }
                     },
-                    "500": {
-                        "description": "Server error",
+                    "401": {
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/delivery/providers/{id}": {
-            "put": {
-                "description": "Update provider settings",
-                "tags": [
-                    "admin-delivery"
-                ],
-                "summary": "Update provider",
-                "parameters": [
-                    {
-                        "description": "Provider ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/models.Provider"
-                            }
-                        }
-                    },
-                    "description": "Provider data",
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.SuccessResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
@@ -9712,6 +9624,512 @@
                     },
                     "500": {
                         "description": "marketplace.syncError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/available": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns list of all available tests across all suites",
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Get all available tests",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/domain.AvailableTestsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/run": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Initiates execution of specified test suite",
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Run test suite",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domain.RunTestRequest"
+                            }
+                        }
+                    },
+                    "description": "Test run request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/domain.RunTestResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/runs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns paginated list of test runs",
+                "tags": [
+                    "testing"
+                ],
+                "summary": "List test runs",
+                "parameters": [
+                    {
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/domain.TestRun"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/runs/latest": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the most recent test run with details",
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Get latest test run",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/domain.TestRunDetail"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/runs/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns detailed information about test run including results and logs",
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Get test run details",
+                "parameters": [
+                    {
+                        "description": "Test Run ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/domain.TestRunDetail"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancels running test execution",
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Cancel test run",
+                "parameters": [
+                    {
+                        "description": "Test Run ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/runs/{id}/status": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns current status of test run (for polling)",
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Get test run status",
+                "parameters": [
+                    {
+                        "description": "Test Run ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/domain.TestRun"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/suites": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns list of all available test suites",
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Get available test suites",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/domain.TestSuite"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -18277,11 +18695,11 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Permanently deletes a product and all related data (reviews, favorites, images, etc.)",
+                "description": "Deletes a product. Use query param hard=true for permanent deletion of all related data",
                 "tags": [
                     "storefront-products"
                 ],
-                "summary": "Hard delete a storefront product",
+                "summary": "Delete a storefront product",
                 "parameters": [
                     {
                         "description": "Storefront slug",
@@ -18302,10 +18720,9 @@
                         }
                     },
                     {
-                        "description": "Must be true for hard delete",
+                        "description": "Set to true for permanent hard delete (default: false)",
                         "name": "hard",
                         "in": "query",
-                        "required": true,
                         "schema": {
                             "type": "boolean"
                         }
@@ -18313,7 +18730,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Product permanently deleted",
+                        "description": "Product deleted successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -46534,6 +46951,75 @@
                     }
                 }
             },
+            "domain.AvailableTest": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "$ref": "#/components/schemas/domain.TestCategory"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "suite": {
+                        "type": "string"
+                    }
+                }
+            },
+            "domain.AvailableTestsResponse": {
+                "type": "object",
+                "properties": {
+                    "tests": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/domain.AvailableTest"
+                        }
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "domain.RunTestRequest": {
+                "type": "object",
+                "required": [
+                    "test_suite"
+                ],
+                "properties": {
+                    "parallel": {
+                        "type": "boolean"
+                    },
+                    "test_name": {
+                        "description": "Optional: run only specific test",
+                        "type": "string"
+                    },
+                    "test_suite": {
+                        "type": "string"
+                    }
+                }
+            },
+            "domain.RunTestResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "run_uuid": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "test_run_id": {
+                        "type": "integer"
+                    }
+                }
+            },
             "domain.SearchConfig": {
                 "type": "object",
                 "properties": {
@@ -46638,6 +47124,253 @@
                     },
                     "weight": {
                         "type": "number"
+                    }
+                }
+            },
+            "domain.TestCategory": {
+                "type": "string",
+                "enum": [
+                    "api",
+                    "database",
+                    "performance",
+                    "integration",
+                    "e2e",
+                    "security",
+                    "data-integrity",
+                    "monitoring",
+                    "accessibility",
+                    "all"
+                ],
+                "x-enum-varnames": [
+                    "TestCategoryAPI",
+                    "TestCategoryDatabase",
+                    "TestCategoryPerformance",
+                    "TestCategoryIntegration",
+                    "TestCategoryE2E",
+                    "TestCategorySecurity",
+                    "TestCategoryDataIntegrity",
+                    "TestCategoryMonitoring",
+                    "TestCategoryAccessibility",
+                    "TestCategoryAll"
+                ]
+            },
+            "domain.TestLog": {
+                "type": "object",
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "level": {
+                        "description": "info, warn, error, debug",
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "test_run_id": {
+                        "type": "integer"
+                    },
+                    "timestamp": {
+                        "type": "string"
+                    }
+                }
+            },
+            "domain.TestResult": {
+                "type": "object",
+                "properties": {
+                    "completed_at": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "duration_ms": {
+                        "type": "integer"
+                    },
+                    "error_msg": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "stack_trace": {
+                        "type": "string"
+                    },
+                    "started_at": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/domain.TestResultStatus"
+                    },
+                    "test_name": {
+                        "type": "string"
+                    },
+                    "test_run_id": {
+                        "type": "integer"
+                    },
+                    "test_suite": {
+                        "type": "string"
+                    }
+                }
+            },
+            "domain.TestResultStatus": {
+                "type": "string",
+                "enum": [
+                    "passed",
+                    "failed",
+                    "skipped"
+                ],
+                "x-enum-varnames": [
+                    "TestResultStatusPassed",
+                    "TestResultStatusFailed",
+                    "TestResultStatusSkipped"
+                ]
+            },
+            "domain.TestRun": {
+                "type": "object",
+                "properties": {
+                    "completed_at": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "duration_ms": {
+                        "type": "integer"
+                    },
+                    "failed_tests": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "passed_tests": {
+                        "type": "integer"
+                    },
+                    "run_uuid": {
+                        "type": "string"
+                    },
+                    "skipped_tests": {
+                        "type": "integer"
+                    },
+                    "started_at": {
+                        "type": "string"
+                    },
+                    "started_by_user_id": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/domain.TestRunStatus"
+                    },
+                    "test_suite": {
+                        "type": "string"
+                    },
+                    "total_tests": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "domain.TestRunDetail": {
+                "type": "object",
+                "properties": {
+                    "completed_at": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "duration_ms": {
+                        "type": "integer"
+                    },
+                    "failed_tests": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "logs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/domain.TestLog"
+                        }
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "passed_tests": {
+                        "type": "integer"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/domain.TestResult"
+                        }
+                    },
+                    "run_uuid": {
+                        "type": "string"
+                    },
+                    "skipped_tests": {
+                        "type": "integer"
+                    },
+                    "started_at": {
+                        "type": "string"
+                    },
+                    "started_by_user_id": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/domain.TestRunStatus"
+                    },
+                    "test_suite": {
+                        "type": "string"
+                    },
+                    "total_tests": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "domain.TestRunStatus": {
+                "type": "string",
+                "enum": [
+                    "pending",
+                    "running",
+                    "completed",
+                    "failed",
+                    "canceled"
+                ],
+                "x-enum-varnames": [
+                    "TestRunStatusPending",
+                    "TestRunStatusRunning",
+                    "TestRunStatusCompleted",
+                    "TestRunStatusFailed",
+                    "TestRunStatusCanceled"
+                ]
+            },
+            "domain.TestSuite": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "$ref": "#/components/schemas/domain.TestCategory"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "test_count": {
+                        "type": "integer"
                     }
                 }
             },
@@ -60141,17 +60874,6 @@
                     }
                 }
             },
-            "service.AnalyticsPeriod": {
-                "type": "object",
-                "properties": {
-                    "from": {
-                        "type": "string"
-                    },
-                    "to": {
-                        "type": "string"
-                    }
-                }
-            },
             "service.CategoryAnalysisResult": {
                 "type": "object",
                 "properties": {
@@ -60279,48 +61001,6 @@
                     },
                     "to_address": {
                         "$ref": "#/components/schemas/interfaces.Address"
-                    }
-                }
-            },
-            "service.DeliveryAnalytics": {
-                "type": "object",
-                "properties": {
-                    "average_cost": {
-                        "type": "number"
-                    },
-                    "average_delivery_days": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "number",
-                            "format": "float64"
-                        }
-                    },
-                    "period": {
-                        "$ref": "#/components/schemas/service.AnalyticsPeriod"
-                    },
-                    "provider_breakdown": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/service.ProviderStatistics"
-                        }
-                    },
-                    "status_breakdown": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "integer"
-                        }
-                    },
-                    "top_routes": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/service.RouteStatistics"
-                        }
-                    },
-                    "total_cost": {
-                        "type": "number"
-                    },
-                    "total_shipments": {
-                        "type": "integer"
                     }
                 }
             },
@@ -60570,49 +61250,6 @@
                         "type": "boolean"
                     },
                     "redirect_url": {
-                        "type": "string"
-                    }
-                }
-            },
-            "service.ProviderStatistics": {
-                "type": "object",
-                "properties": {
-                    "average_cost": {
-                        "type": "number"
-                    },
-                    "provider_id": {
-                        "type": "integer"
-                    },
-                    "provider_name": {
-                        "type": "string"
-                    },
-                    "shipment_count": {
-                        "type": "integer"
-                    },
-                    "success_rate": {
-                        "type": "number"
-                    },
-                    "total_cost": {
-                        "type": "number"
-                    }
-                }
-            },
-            "service.RouteStatistics": {
-                "type": "object",
-                "properties": {
-                    "average_cost": {
-                        "type": "number"
-                    },
-                    "average_days": {
-                        "type": "number"
-                    },
-                    "from_city": {
-                        "type": "string"
-                    },
-                    "shipment_count": {
-                        "type": "integer"
-                    },
-                    "to_city": {
                         "type": "string"
                     }
                 }

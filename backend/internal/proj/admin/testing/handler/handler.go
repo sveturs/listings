@@ -64,9 +64,9 @@ func (h *Handler) GetPrefix() string {
 // @Security BearerAuth
 // @Param request body domain.RunTestRequest true "Test run request"
 // @Success 200 {object} domain.RunTestResponse
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/tests/run [post]
 func (h *Handler) RunTest(c *fiber.Ctx) error {
 	var req domain.RunTestRequest
@@ -118,7 +118,7 @@ func (h *Handler) RunTest(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {array} domain.TestSuite
-// @Failure 401 {object} utils.ErrorResponse
+// @Failure 401 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/tests/suites [get]
 func (h *Handler) GetTestSuites(c *fiber.Ctx) error {
 	suites := h.testRunner.GetAvailableTestSuites()
@@ -132,9 +132,9 @@ func (h *Handler) GetTestSuites(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} domain.TestRunDetail
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/tests/runs/latest [get]
 func (h *Handler) GetLatestTestRun(c *fiber.Ctx) error {
 	testRuns, err := h.testRunner.ListTestRuns(c.Context(), 1, 0)
@@ -166,9 +166,9 @@ func (h *Handler) GetLatestTestRun(c *fiber.Ctx) error {
 // @Param limit query int false "Limit" default(20)
 // @Param offset query int false "Offset" default(0)
 // @Success 200 {array} domain.TestRun
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/tests/runs [get]
 func (h *Handler) ListTestRuns(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 20)
@@ -199,10 +199,10 @@ func (h *Handler) ListTestRuns(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Param id path int true "Test Run ID"
 // @Success 200 {object} domain.TestRunDetail
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/tests/runs/{id} [get]
 func (h *Handler) GetTestRunDetail(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -231,10 +231,10 @@ func (h *Handler) GetTestRunDetail(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Param id path int true "Test Run ID"
 // @Success 200 {object} domain.TestRun
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/tests/runs/{id}/status [get]
 func (h *Handler) GetTestRunStatus(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -262,11 +262,11 @@ func (h *Handler) GetTestRunStatus(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Test Run ID"
-// @Success 200 {object} utils.SuccessResponse
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/tests/runs/{id} [delete]
 func (h *Handler) CancelTestRun(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -292,7 +292,7 @@ func (h *Handler) CancelTestRun(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} domain.AvailableTestsResponse
-// @Failure 401 {object} utils.ErrorResponse
+// @Failure 401 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/tests/available [get]
 func (h *Handler) GetAvailableTests(c *fiber.Ctx) error {
 	tests := h.testRunner.GetAllAvailableTests()

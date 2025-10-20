@@ -21,7 +21,9 @@ test.describe('E2E: User Journey - Create Listing', () => {
 
     // Wait for authentication and theme to load (usually takes 3-5 seconds)
     // The page shows a loading spinner until AuthContext completes
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+    await page
+      .waitForLoadState('networkidle', { timeout: 15000 })
+      .catch(() => {});
 
     // Verify we're on the create listing page
     await expect(page.url()).toContain('/create-listing-smart');

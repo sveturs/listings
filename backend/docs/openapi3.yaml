@@ -2465,23 +2465,12 @@ paths:
         - proposals
   /api/v1/admin/delivery/analytics:
     get:
-      description: Get analytics and statistics for deliveries
       parameters:
-        - description: From date (YYYY-MM-DD)
+        - description: Time period (7d, 30d, 90d, 365d)
           in: query
-          name: from
+          name: period
           schema:
             type: string
-        - description: To date (YYYY-MM-DD)
-          in: query
-          name: to
-          schema:
-            type: string
-        - description: Provider ID
-          in: query
-          name: provider_id
-          schema:
-            type: integer
       responses:
         "200":
           description: Analytics data
@@ -2492,17 +2481,19 @@ paths:
                   - $ref: "#/components/schemas/utils.SuccessResponseSwag"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/service.DeliveryAnalytics"
+                        $ref: "#/components/schemas/models.AnalyticsData"
                     type: object
-        "500":
-          description: Server error
+        "401":
+          description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - Bearer: []
       summary: Get delivery analytics
       tags:
-        - admin-delivery
+        - delivery-admin
   /api/v1/admin/delivery/dashboard:
     get:
       responses:
@@ -2556,7 +2547,6 @@ paths:
       tags:
         - delivery-admin
     post:
-      description: Create new pricing rule for provider
       requestBody:
         $ref: "#/components/requestBodies/models.PricingRule"
       responses:
@@ -2571,21 +2561,17 @@ paths:
                       data:
                         $ref: "#/components/schemas/models.PricingRule"
                     type: object
-        "400":
-          description: Invalid request
+        "401":
+          description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - Bearer: []
       summary: Create pricing rule
       tags:
-        - admin-delivery
+        - delivery-admin
   "/api/v1/admin/delivery/pricing-rules/{id}":
     delete:
       parameters:
@@ -2769,69 +2755,27 @@ paths:
         - delivery-admin
   /api/v1/admin/delivery/providers:
     get:
-      description: Get detailed list of all providers for admin panel
       responses:
         "200":
           description: List of providers
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/models.Provider"
-                        type: array
-                    type: object
-        "500":
-          description: Server error
+                additionalProperties: true
+                type: object
+        "401":
+          description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get providers for admin
+                additionalProperties:
+                  type: string
+                type: object
+      security:
+        - Bearer: []
+      summary: Get delivery providers for admin
       tags:
-        - admin-delivery
-  "/api/v1/admin/delivery/providers/{id}":
-    put:
-      description: Update provider settings
-      parameters:
-        - description: Provider ID
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/models.Provider"
-        description: Provider data
-        required: true
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.SuccessResponseSwag"
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Update provider
-      tags:
-        - admin-delivery
+        - delivery-admin
   "/api/v1/admin/delivery/providers/{id}/config":
     put:
       parameters:
@@ -5646,6 +5590,308 @@ paths:
       summary: Synchronize discount data
       tags:
         - marketplace-admin
+  /api/v1/admin/tests/available:
+    get:
+      description: Returns list of all available tests across all suites
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/domain.AvailableTestsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get all available tests
+      tags:
+        - testing
+  /api/v1/admin/tests/run:
+    post:
+      description: Initiates execution of specified test suite
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/domain.RunTestRequest"
+        description: Test run request
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/domain.RunTestResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Run test suite
+      tags:
+        - testing
+  /api/v1/admin/tests/runs:
+    get:
+      description: Returns paginated list of test runs
+      parameters:
+        - description: Limit
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - description: Offset
+          in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/domain.TestRun"
+                type: array
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: List test runs
+      tags:
+        - testing
+  "/api/v1/admin/tests/runs/{id}":
+    delete:
+      description: Cancels running test execution
+      parameters:
+        - description: Test Run ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Cancel test run
+      tags:
+        - testing
+    get:
+      description: Returns detailed information about test run including results and logs
+      parameters:
+        - description: Test Run ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/domain.TestRunDetail"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get test run details
+      tags:
+        - testing
+  "/api/v1/admin/tests/runs/{id}/status":
+    get:
+      description: Returns current status of test run (for polling)
+      parameters:
+        - description: Test Run ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/domain.TestRun"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get test run status
+      tags:
+        - testing
+  /api/v1/admin/tests/runs/latest:
+    get:
+      description: Returns the most recent test run with details
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/domain.TestRunDetail"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get latest test run
+      tags:
+        - testing
+  /api/v1/admin/tests/suites:
+    get:
+      description: Returns list of all available test suites
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/domain.TestSuite"
+                type: array
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get available test suites
+      tags:
+        - testing
   /api/v1/admin/translations/ai/apply:
     post:
       description: Apply translations generated by AI providers
@@ -9604,8 +9850,8 @@ paths:
         - storefront-products
   "/api/v1/b2c_stores/{slug}/products/{id}":
     delete:
-      description: Permanently deletes a product and all related data (reviews,
-        favorites, images, etc.)
+      description: Deletes a product. Use query param hard=true for permanent deletion
+        of all related data
       parameters:
         - description: Storefront slug
           in: path
@@ -9619,15 +9865,14 @@ paths:
           required: true
           schema:
             type: integer
-        - description: Must be true for hard delete
+        - description: "Set to true for permanent hard delete (default: false)"
           in: query
           name: hard
-          required: true
           schema:
             type: boolean
       responses:
         "200":
-          description: Product permanently deleted
+          description: Product deleted successfully
           content:
             application/json:
               schema:
@@ -9658,7 +9903,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       security:
         - BearerAuth: []
-      summary: Hard delete a storefront product
+      summary: Delete a storefront product
       tags:
         - storefront-products
     get:
@@ -27562,6 +27807,51 @@ components:
         remaining_balance:
           type: number
       type: object
+    domain.AvailableTest:
+      properties:
+        category:
+          $ref: "#/components/schemas/domain.TestCategory"
+        description:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        suite:
+          type: string
+      type: object
+    domain.AvailableTestsResponse:
+      properties:
+        tests:
+          items:
+            $ref: "#/components/schemas/domain.AvailableTest"
+          type: array
+        total:
+          type: integer
+      type: object
+    domain.RunTestRequest:
+      properties:
+        parallel:
+          type: boolean
+        test_name:
+          description: "Optional: run only specific test"
+          type: string
+        test_suite:
+          type: string
+      required:
+        - test_suite
+      type: object
+    domain.RunTestResponse:
+      properties:
+        message:
+          type: string
+        run_uuid:
+          type: string
+        status:
+          type: string
+        test_run_id:
+          type: integer
+      type: object
     domain.SearchConfig:
       properties:
         created_at:
@@ -27631,6 +27921,180 @@ components:
           type: string
         weight:
           type: number
+      type: object
+    domain.TestCategory:
+      enum:
+        - api
+        - database
+        - performance
+        - integration
+        - e2e
+        - security
+        - data-integrity
+        - monitoring
+        - accessibility
+        - all
+      type: string
+      x-enum-varnames:
+        - TestCategoryAPI
+        - TestCategoryDatabase
+        - TestCategoryPerformance
+        - TestCategoryIntegration
+        - TestCategoryE2E
+        - TestCategorySecurity
+        - TestCategoryDataIntegrity
+        - TestCategoryMonitoring
+        - TestCategoryAccessibility
+        - TestCategoryAll
+    domain.TestLog:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: integer
+        level:
+          description: info, warn, error, debug
+          type: string
+        message:
+          type: string
+        test_run_id:
+          type: integer
+        timestamp:
+          type: string
+      type: object
+    domain.TestResult:
+      properties:
+        completed_at:
+          type: string
+        created_at:
+          type: string
+        duration_ms:
+          type: integer
+        error_msg:
+          type: string
+        id:
+          type: integer
+        stack_trace:
+          type: string
+        started_at:
+          type: string
+        status:
+          $ref: "#/components/schemas/domain.TestResultStatus"
+        test_name:
+          type: string
+        test_run_id:
+          type: integer
+        test_suite:
+          type: string
+      type: object
+    domain.TestResultStatus:
+      enum:
+        - passed
+        - failed
+        - skipped
+      type: string
+      x-enum-varnames:
+        - TestResultStatusPassed
+        - TestResultStatusFailed
+        - TestResultStatusSkipped
+    domain.TestRun:
+      properties:
+        completed_at:
+          type: string
+        created_at:
+          type: string
+        duration_ms:
+          type: integer
+        failed_tests:
+          type: integer
+        id:
+          type: integer
+        metadata:
+          additionalProperties: true
+          type: object
+        passed_tests:
+          type: integer
+        run_uuid:
+          type: string
+        skipped_tests:
+          type: integer
+        started_at:
+          type: string
+        started_by_user_id:
+          type: integer
+        status:
+          $ref: "#/components/schemas/domain.TestRunStatus"
+        test_suite:
+          type: string
+        total_tests:
+          type: integer
+      type: object
+    domain.TestRunDetail:
+      properties:
+        completed_at:
+          type: string
+        created_at:
+          type: string
+        duration_ms:
+          type: integer
+        failed_tests:
+          type: integer
+        id:
+          type: integer
+        logs:
+          items:
+            $ref: "#/components/schemas/domain.TestLog"
+          type: array
+        metadata:
+          additionalProperties: true
+          type: object
+        passed_tests:
+          type: integer
+        results:
+          items:
+            $ref: "#/components/schemas/domain.TestResult"
+          type: array
+        run_uuid:
+          type: string
+        skipped_tests:
+          type: integer
+        started_at:
+          type: string
+        started_by_user_id:
+          type: integer
+        status:
+          $ref: "#/components/schemas/domain.TestRunStatus"
+        test_suite:
+          type: string
+        total_tests:
+          type: integer
+      type: object
+    domain.TestRunStatus:
+      enum:
+        - pending
+        - running
+        - completed
+        - failed
+        - canceled
+      type: string
+      x-enum-varnames:
+        - TestRunStatusPending
+        - TestRunStatusRunning
+        - TestRunStatusCompleted
+        - TestRunStatusFailed
+        - TestRunStatusCanceled
+    domain.TestSuite:
+      properties:
+        category:
+          $ref: "#/components/schemas/domain.TestCategory"
+        description:
+          type: string
+        enabled:
+          type: boolean
+        name:
+          type: string
+        test_count:
+          type: integer
       type: object
     domain.TransliterationRule:
       properties:
@@ -36760,13 +37224,6 @@ components:
         transport_mode:
           type: string
       type: object
-    service.AnalyticsPeriod:
-      properties:
-        from:
-          type: string
-        to:
-          type: string
-      type: object
     service.CategoryAnalysisResult:
       properties:
         insights:
@@ -36852,34 +37309,6 @@ components:
           type: array
         to_address:
           $ref: "#/components/schemas/interfaces.Address"
-      type: object
-    service.DeliveryAnalytics:
-      properties:
-        average_cost:
-          type: number
-        average_delivery_days:
-          additionalProperties:
-            format: float64
-            type: number
-          type: object
-        period:
-          $ref: "#/components/schemas/service.AnalyticsPeriod"
-        provider_breakdown:
-          items:
-            $ref: "#/components/schemas/service.ProviderStatistics"
-          type: array
-        status_breakdown:
-          additionalProperties:
-            type: integer
-          type: object
-        top_routes:
-          items:
-            $ref: "#/components/schemas/service.RouteStatistics"
-          type: array
-        total_cost:
-          type: number
-        total_shipments:
-          type: integer
       type: object
     service.IndexInfo:
       properties:
@@ -37047,34 +37476,6 @@ components:
         payment_required:
           type: boolean
         redirect_url:
-          type: string
-      type: object
-    service.ProviderStatistics:
-      properties:
-        average_cost:
-          type: number
-        provider_id:
-          type: integer
-        provider_name:
-          type: string
-        shipment_count:
-          type: integer
-        success_rate:
-          type: number
-        total_cost:
-          type: number
-      type: object
-    service.RouteStatistics:
-      properties:
-        average_cost:
-          type: number
-        average_days:
-          type: number
-        from_city:
-          type: string
-        shipment_count:
-          type: integer
-        to_city:
           type: string
       type: object
     service.SearchMetrics:
