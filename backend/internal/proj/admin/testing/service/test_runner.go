@@ -176,7 +176,9 @@ func (r *TestRunner) RunTestSuite(
 
 // executeTestSuite executes test suite in background
 func (r *TestRunner) executeTestSuite(parentCtx context.Context, testRun *domain.TestRun, testName string, parallel bool) {
-	ctx, cancel := context.WithTimeout(parentCtx, 30*time.Minute)
+	// Use background context instead of parentCtx to avoid HTTP request timeout cancellation
+	// Tests can run for up to 30 minutes independently of the HTTP request that initiated them
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
 	// Register running test

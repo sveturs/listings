@@ -14,11 +14,18 @@
   - link "Cars":
     - /url: /en/cars
     - text: Cars Cars
+  - link "Open chat":
+    - /url: /en/chat
+  - button "Shopping cart":
+    - img
   - link "Create Listing":
     - /url: /en/create-listing-choice
-  - status "Loading theme toggle": Loading...
+  - button "Включить темную тему": Dark theme
   - button "Switch language": EN
-  - status "Loading authentication status"
+  - link "Open chat":
+    - /url: /en/chat
+    - img
+  - button "A"
 - main:
   - heading "Buyer Protection" [level=1]
   - paragraph: 100% money back guarantee
@@ -396,8 +403,5 @@
     - img
 - alert
 - button "Open Next.js Dev Tools":
-  - img
-- button "Open issues overlay": 4 Issue
-- button "Collapse issues badge":
   - img
 ```
