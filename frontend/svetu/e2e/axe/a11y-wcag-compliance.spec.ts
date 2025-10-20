@@ -9,24 +9,16 @@ import AxeBuilder from '@axe-core/playwright';
 
 const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'admin@admin.rs';
 const TEST_ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'P@$S4@dmi№';
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
 test.describe('WCAG 2.1 AA Compliance Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Login as admin before each test
-    await page.goto(`${BASE_URL}/en/login`);
-    await page.fill('input[type="email"]', TEST_ADMIN_EMAIL);
-    await page.fill('input[type="password"]', TEST_ADMIN_PASSWORD);
-    await page.click('button[type="submit"]');
-
-    // Wait for successful login
-    await page.waitForURL(/\/(en|ru|sr)\/(marketplace|admin)/, {
-      timeout: 10000,
-    });
+    // User is already logged in via global-setup
+    // Just wait a bit for the page to be ready
+    await page.waitForTimeout(500);
   });
 
   test('Homepage should have no accessibility violations', async ({ page }) => {
-    await page.goto(`${BASE_URL}/en`);
+    await page.goto('/en');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -38,8 +30,9 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
   test('Marketplace listing page should have no accessibility violations', async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}/en/marketplace`);
-    await page.waitForLoadState('networkidle');
+    await page.goto('/en/marketplace', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(1000);
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -51,8 +44,9 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
   test('Admin dashboard should have no accessibility violations', async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}/en/admin`);
-    await page.waitForLoadState('networkidle');
+    await page.goto('/en/admin', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(1000);
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -64,8 +58,9 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
   test('Admin quality tests page should have no accessibility violations', async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}/en/admin/quality-tests`);
-    await page.waitForLoadState('networkidle');
+    await page.goto('/en/admin/quality-tests', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(1000);
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -77,8 +72,9 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
   test('Search results page should have no accessibility violations', async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}/en/search?query=test`);
-    await page.waitForLoadState('networkidle');
+    await page.goto('/en/search?query=test', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(1000);
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -90,8 +86,9 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
   test('Admin categories page should have no accessibility violations', async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}/en/admin/categories`);
-    await page.waitForLoadState('networkidle');
+    await page.goto('/en/admin/categories', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(1000);
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

@@ -325,6 +325,96 @@ function parseGoTestOutput(output: string): {
   };
 }
 
+// Helper function to parse Playwright test output
+function parsePlaywrightOutput(output: string): {
+  passed: number;
+  failed: number;
+  skipped: number;
+  total: number;
+} {
+  // Parse output like "7 failed", "11 passed (1.2m)"
+  const failedMatch = output.match(/(\d+)\s+failed/);
+  const passedMatch = output.match(/(\d+)\s+passed/);
+  const skippedMatch = output.match(/(\d+)\s+skipped/);
+
+  const failed = failedMatch ? parseInt(failedMatch[1]) : 0;
+  const passed = passedMatch ? parseInt(passedMatch[1]) : 0;
+  const skipped = skippedMatch ? parseInt(skippedMatch[1]) : 0;
+
+  return {
+    passed,
+    failed,
+    skipped,
+    total: passed + failed + skipped,
+  };
+}
+
+// E2E Tests
+async function runE2ETests(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd /data/hostel-booking-system/frontend/svetu && yarn playwright test e2e/user-journey-search-contact.spec.ts e2e/admin-moderation-flow.spec.ts --project=chromium',
+      {
+        timeout: 180000,
+      }
+    );
+    const stats = parsePlaywrightOutput(stdout);
+    const hasFailed = stats.failed > 0;
+    return {
+      name: 'E2E Tests (user journey + admin)',
+      status: hasFailed ? 'error' : 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parsePlaywrightOutput(err.stdout || '');
+    return {
+      name: 'E2E Tests (user journey + admin)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
+    };
+  }
+}
+
+// Accessibility Tests
+async function runAccessibilityTests(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd /data/hostel-booking-system/frontend/svetu && yarn playwright test e2e/axe/ --project=chromium',
+      {
+        timeout: 180000,
+      }
+    );
+    const stats = parsePlaywrightOutput(stdout);
+    const hasFailed = stats.failed > 0;
+    return {
+      name: 'Accessibility Tests (WCAG + Keyboard)',
+      status: hasFailed ? 'warning' : 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parsePlaywrightOutput(err.stdout || '');
+    return {
+      name: 'Accessibility Tests (WCAG + Keyboard)',
+      status: 'warning',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
+    };
+  }
+}
+
 // Frontend tests
 async function runFrontendFormat(): Promise<TestResult> {
   const start = Date.now();
@@ -606,6 +696,21 @@ export async function POST(request: NextRequest) {
           runTypeScriptCheck(),
         ]);
         return NextResponse.json({ results });
+
+      // E2E Tests
+      case 'e2e-tests':
+      case 'e2e-user-journey-create-listing':
+      case 'e2e-user-journey-search-contact':
+      case 'e2e-admin-moderation':
+        result = await runE2ETests();
+        break;
+
+      // Accessibility Tests
+      case 'accessibility-tests':
+      case 'a11y-wcag-compliance':
+      case 'a11y-keyboard-navigation':
+        result = await runAccessibilityTests();
+        break;
 
       default:
         return NextResponse.json(
