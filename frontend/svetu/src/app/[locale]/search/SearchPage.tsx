@@ -1178,6 +1178,7 @@ export default function SearchPage() {
                               <input
                                 type="number"
                                 className="input input-bordered w-full"
+                                aria-label={t('priceMin')}
                                 value={filters.price_min || ''}
                                 onChange={(e) =>
                                   handleFilterChange({
@@ -1195,6 +1196,7 @@ export default function SearchPage() {
                               <input
                                 type="number"
                                 className="input input-bordered w-full"
+                                aria-label={t('priceMax')}
                                 value={filters.price_max || ''}
                                 onChange={(e) =>
                                   handleFilterChange({
@@ -1234,6 +1236,7 @@ export default function SearchPage() {
                         <select
                           className="select select-bordered w-full bg-base-100"
                           value={filters.condition || ''}
+                          aria-label={t('condition')}
                           onChange={(e) =>
                             handleFilterChange({
                               condition: e.target.value || undefined,
@@ -1282,6 +1285,7 @@ export default function SearchPage() {
                           type="text"
                           className="input input-bordered w-full"
                           placeholder={t('enterCity')}
+                          aria-label={t('location')}
                           value={filters.city || ''}
                           onChange={(e) =>
                             handleFilterChange({
@@ -1303,6 +1307,7 @@ export default function SearchPage() {
                             max="100"
                             value={filters.distance || 0}
                             className="range range-primary range-sm flex-1"
+                            aria-label={t('searchRadius')}
                             onChange={(e) =>
                               handleFilterChange({
                                 distance: Number(e.target.value) || undefined,
@@ -1340,6 +1345,7 @@ export default function SearchPage() {
                         <select
                           className="select select-bordered w-full bg-base-100"
                           value={filters.sort_by}
+                          aria-label={t('sortBy')}
                           onChange={async (e) => {
                             const newSortBy = e.target.value;
                             const previousSort = filters.sort_by;

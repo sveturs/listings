@@ -156,8 +156,9 @@ func runPlaywrightAccessibilityTest(ctx context.Context, testFile, token string)
 		adminPassword = "P@$S4@dmi№" //nolint:gosec // G101: Test password from env or default
 	}
 
-	// Prepare command: npx playwright test e2e/axe/{testFile} --reporter=json
-	cmd := exec.CommandContext(ctx, "npx", "playwright", "test", fmt.Sprintf("e2e/axe/%s", testFile), "--reporter=json") //nolint:gosec // G204: testFile is from internal test registry, not user input
+	// Prepare command: npx playwright test e2e/axe/{testFile} --reporter=json --timeout=600000
+	// Timeout must be passed explicitly: 600000ms = 10 minutes per test (increased for axe scans + networkidle)
+	cmd := exec.CommandContext(ctx, "npx", "playwright", "test", fmt.Sprintf("e2e/axe/%s", testFile), "--reporter=json", "--timeout=600000") //nolint:gosec // G204: testFile is from internal test registry, not user input
 	cmd.Dir = frontendDir
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("TEST_ADMIN_EMAIL=%s", adminEmail),
