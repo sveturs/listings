@@ -88,7 +88,9 @@ describe('AutocompleteAttributeField', () => {
     });
 
     test('отображает label с display_name', () => {
-      const attribute = createMockAttribute({ display_name: 'Марка автомобиля' });
+      const attribute = createMockAttribute({
+        display_name: 'Марка автомобиля',
+      });
 
       render(
         <AutocompleteAttributeField
@@ -222,9 +224,12 @@ describe('AutocompleteAttributeField', () => {
 
       fireEvent.blur(input);
 
-      await waitFor(() => {
-        expect(screen.queryByText('Apple')).not.toBeInTheDocument();
-      }, { timeout: 200 });
+      await waitFor(
+        () => {
+          expect(screen.queryByText('Apple')).not.toBeInTheDocument();
+        },
+        { timeout: 200 }
+      );
     });
 
     test('скрывает предложения при выборе', async () => {

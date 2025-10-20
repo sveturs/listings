@@ -394,5 +394,10 @@
     "variants": "variants",
     "tip": "Pro Tip",
     "tip_description": "You can edit SKU, price and stock for each variant individually"
+  },
+
+  "modes": {
+    "super_quick": "Super Quick",
+    "super_quick_description": "Only the essentials"
   }
 }

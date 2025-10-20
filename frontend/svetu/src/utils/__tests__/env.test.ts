@@ -1,5 +1,5 @@
 // Mock next-runtime-env BEFORE imports
-const mockEnvFunction = jest.fn((key: string) => {
+const mockEnvFunction = jest.fn((key: string): string | undefined => {
   const mockEnv: Record<string, string> = {
     NEXT_PUBLIC_API_URL: 'http://test-api.com',
     NEXT_PUBLIC_MINIO_URL: 'http://test-minio.com',
@@ -11,7 +11,7 @@ const mockEnvFunction = jest.fn((key: string) => {
 });
 
 jest.mock('next-runtime-env', () => ({
-  env: (key: string) => mockEnvFunction(key),
+  env: (key: string) => mockEnvFunction(key) ?? '',
 }));
 
 import { getEnv, publicEnv } from '../env';
@@ -169,8 +169,8 @@ describe('env utilities', () => {
       test('API_URL геттер вызывается при каждом обращении', () => {
         mockEnvFunction.mockClear();
 
-        const url1 = publicEnv.API_URL;
-        const url2 = publicEnv.API_URL;
+        const _url1 = publicEnv.API_URL;
+        const _url2 = publicEnv.API_URL;
 
         // Должно быть 2 вызова getEnv
         expect(mockEnvFunction).toHaveBeenCalledTimes(2);
@@ -179,8 +179,8 @@ describe('env utilities', () => {
       test('ENABLE_PAYMENTS геттер вызывается при каждом обращении', () => {
         mockEnvFunction.mockClear();
 
-        const enabled1 = publicEnv.ENABLE_PAYMENTS;
-        const enabled2 = publicEnv.ENABLE_PAYMENTS;
+        const _enabled1 = publicEnv.ENABLE_PAYMENTS;
+        const _enabled2 = publicEnv.ENABLE_PAYMENTS;
 
         expect(mockEnvFunction).toHaveBeenCalledTimes(2);
       });

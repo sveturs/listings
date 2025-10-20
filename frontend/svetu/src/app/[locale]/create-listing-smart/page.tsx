@@ -921,9 +921,9 @@ export default function CreateListingSmartPage() {
                 <div className="card-body flex-row items-center">
                   <Zap className="w-12 h-12 text-secondary mr-4" />
                   <div className="text-left">
-                    <h3 className="font-bold">Супер-быстро</h3>
+                    <h3 className="font-bold">{t('modes.super_quick')}</h3>
                     <p className="text-sm text-base-content/60">
-                      Только самое необходимое
+                      {t('modes.super_quick_description')}
                     </p>
                   </div>
                 </div>

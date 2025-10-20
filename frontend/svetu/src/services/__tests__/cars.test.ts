@@ -71,7 +71,9 @@ describe('CarsService', () => {
     });
 
     test('обрабатывает network ошибку', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Network error')
+      );
 
       const result = await CarsService.getMakes();
 
@@ -93,7 +95,9 @@ describe('CarsService', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Test error')
+      );
 
       await CarsService.getMakes();
 
@@ -169,7 +173,9 @@ describe('CarsService', () => {
     });
 
     test('обрабатывает network ошибку', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Connection failed'));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Connection failed')
+      );
 
       const result = await CarsService.getModelsByMake('bmw');
 
@@ -182,7 +188,9 @@ describe('CarsService', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Test error')
+      );
 
       await CarsService.getModelsByMake('bmw');
 
@@ -273,7 +281,9 @@ describe('CarsService', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Test error')
+      );
 
       await CarsService.getGenerationsByModel(10);
 
@@ -390,7 +400,9 @@ describe('CarsService', () => {
     });
 
     test('обрабатывает network ошибку', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('DNS lookup failed'));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('DNS lookup failed')
+      );
 
       const result = await CarsService.searchMakes('test');
 
@@ -403,7 +415,9 @@ describe('CarsService', () => {
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Test error')
+      );
 
       await CarsService.searchMakes('test');
 

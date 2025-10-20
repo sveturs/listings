@@ -127,7 +127,8 @@ const TESTS: Test[] = [
   {
     id: 'frontend-unit-autocomplete-field',
     name: 'AutocompleteAttributeField Tests',
-    description: 'Unit tests for AutocompleteAttributeField component (40 tests)',
+    description:
+      'Unit tests for AutocompleteAttributeField component (40 tests)',
     category: 'unit',
     icon: '🎯',
   },
@@ -510,7 +511,7 @@ interface QualityTestsClientProps {
 }
 
 export default function QualityTestsClient({
-  locale,
+  locale: _locale,
 }: QualityTestsClientProps) {
   const t = useTranslations('admin.qualityTests');
 

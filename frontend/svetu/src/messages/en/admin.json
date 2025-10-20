@@ -460,7 +460,7 @@
     "totalTests": "Total Tests",
     "totalTestSuites": "Test Suites",
     "testSuitesDesc": "Groups of related tests",
-    "testSuitesInfo": "💡 These 17 test suites contain 550+ individual tests: 414 Jest tests in frontend and 136 Go tests in backend, plus integration tests (cache, OpenSearch), linting, formatting, and build checks.",
+    "testSuitesInfo": "💡 These 56 test suites contain 727+ individual tests: 591 Jest tests in frontend and 136 Go tests in backend, plus integration tests (cache, OpenSearch, PostgreSQL), linting, formatting, and build checks.",
     "suitesCompleted": "{count} of {total} suites completed",
     "passed": "Passed",
     "progress": "Progress",

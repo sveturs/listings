@@ -25,7 +25,7 @@ async function runBackendFormat(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && make format',
+      'cd ../../backend && make format',
       {
         timeout: 60000,
       }
@@ -52,7 +52,7 @@ async function runBackendLint(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && make lint',
+      'cd ../../backend && make lint',
       {
         timeout: 120000,
       }
@@ -80,7 +80,7 @@ async function runBackendBuild(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && go build ./...',
+      'cd ../../backend && go build ./...',
       {
         timeout: 120000,
       }
@@ -109,7 +109,7 @@ async function runBackendTestsShort(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && make test-short',
+      'cd ../../backend && make test-short',
       {
         timeout: 180000,
       }
@@ -136,7 +136,7 @@ async function runBackendTestsUnit(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && make test-unit',
+      'cd ../../backend && make test-unit',
       {
         timeout: 180000,
       }
@@ -163,7 +163,7 @@ async function runBackendTestsFull(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && make test',
+      'cd ../../backend && make test',
       {
         timeout: 300000,
       }
@@ -190,7 +190,7 @@ async function runBackendTestsCoverage(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && make test-coverage',
+      'cd ../../backend && make test-coverage',
       {
         timeout: 300000,
       }
@@ -217,7 +217,7 @@ async function runBackendTestsPostExpress(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && make test-postexpress',
+      'cd ../../backend && make test-postexpress',
       {
         timeout: 60000,
       }
@@ -244,7 +244,7 @@ async function runBackendTestsCache(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && go test ./internal/cache -v',
+      'cd ../../backend && go test ./internal/cache -v',
       {
         timeout: 120000,
       }
@@ -271,11 +271,38 @@ async function runBackendTestsCache(): Promise<TestResult> {
   }
 }
 
+async function runBackendTestsRedis(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-redis',
+      {
+        timeout: 60000,
+      }
+    );
+    return {
+      name: 'Redis Cache Test (make test-redis)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'Redis Cache Test (make test-redis)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
 async function runBackendTestsOpenSearch(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/backend && go test ./pkg/transliteration -v -run Integration',
+      'cd ../../backend && go test ./pkg/transliteration -v -run Integration',
       {
         timeout: 120000,
       }
@@ -298,6 +325,60 @@ async function runBackendTestsOpenSearch(): Promise<TestResult> {
       output: err.stdout || '',
       error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
       stats,
+    };
+  }
+}
+
+async function runOpenSearchTest(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-opensearch',
+      {
+        timeout: 60000,
+      }
+    );
+    return {
+      name: 'OpenSearch Test (make test-opensearch)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'OpenSearch Test (make test-opensearch)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+async function runPostgresTest(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-postgres',
+      {
+        timeout: 60000,
+      }
+    );
+    return {
+      name: 'PostgreSQL Test (make test-postgres)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'PostgreSQL Test (make test-postgres)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
     };
   }
 }
@@ -354,9 +435,10 @@ async function runE2ETests(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn playwright test e2e/user-journey-search-contact.spec.ts e2e/admin-moderation-flow.spec.ts --project=chromium',
+      'yarn playwright test e2e/user-journey-search-contact.spec.ts e2e/admin-moderation-flow.spec.ts --project=chromium',
       {
         timeout: 180000,
+        cwd: process.cwd(),
       }
     );
     const stats = parsePlaywrightOutput(stdout);
@@ -387,9 +469,10 @@ async function runAccessibilityTests(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn playwright test e2e/axe/ --project=chromium',
+      'yarn playwright test e2e/axe/ --project=chromium',
       {
         timeout: 180000,
+        cwd: process.cwd(),
       }
     );
     const stats = parsePlaywrightOutput(stdout);
@@ -420,9 +503,10 @@ async function runFrontendFormat(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn format',
+      'yarn format',
       {
         timeout: 60000,
+        cwd: process.cwd(),
       }
     );
     return {
@@ -447,15 +531,17 @@ async function runFrontendLint(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn lint',
+      'yarn lint',
       {
         timeout: 120000,
+        cwd: process.cwd(),
       }
     );
-    const hasErrors = stdout.includes('error') || stderr.includes('error');
+    // ESLint успешен если есть сообщение "No ESLint warnings or errors"
+    const isSuccess = stdout.includes('No ESLint warnings or errors');
     return {
       name: 'Frontend Lint (yarn lint)',
-      status: hasErrors ? 'error' : 'success',
+      status: isSuccess ? 'success' : 'error',
       duration: Date.now() - start,
       output: stdout + (stderr ? `\n${stderr}` : ''),
     };
@@ -475,26 +561,31 @@ async function runFrontendTests(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn test --watchAll=false',
+      'yarn test --watchAll=false',
       {
         timeout: 180000,
+        cwd: process.cwd(),
       }
     );
-    const hasFailed = stdout.includes('failed') || stderr.includes('failed');
+    const stats = parseJestOutput(stdout);
+    const hasFailed = stats.failed > 0;
     return {
       name: 'Frontend Tests (yarn test)',
       status: hasFailed ? 'error' : 'success',
       duration: Date.now() - start,
       output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
     };
   } catch (error: unknown) {
     const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parseJestOutput(err.stdout || '');
     return {
       name: 'Frontend Tests (yarn test)',
       status: 'error',
       duration: Date.now() - start,
       output: err.stdout || '',
       error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
     };
   }
 }
@@ -534,9 +625,10 @@ async function runFrontendUnitTest(
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      `cd /data/hostel-booking-system/frontend/svetu && yarn test ${testFile} --watchAll=false`,
+      `yarn test ${testFile} --watchAll=false`,
       {
         timeout: 120000,
+        cwd: process.cwd(),
       }
     );
     const stats = parseJestOutput(stdout);
@@ -601,10 +693,16 @@ async function runEnvUtilsTests(): Promise<TestResult> {
 async function runFrontendBuild(): Promise<TestResult> {
   const start = Date.now();
   try {
+    // Clear NODE_ENV before build - Next.js will set it to 'production' automatically
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { NODE_ENV, ...buildEnv } = process.env;
+
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn build',
+      'yarn build',
       {
         timeout: 180000,
+        cwd: process.cwd(),
+        env: buildEnv as NodeJS.ProcessEnv,
       }
     );
     return {
@@ -629,26 +727,31 @@ async function runFrontendTestsCoverage(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn test:coverage --watchAll=false',
+      'yarn test:coverage --watchAll=false',
       {
         timeout: 240000,
+        cwd: process.cwd(),
       }
     );
-    const hasFailed = stdout.includes('failed') || stderr.includes('failed');
+    const stats = parseJestOutput(stdout);
+    const hasFailed = stats.failed > 0;
     return {
       name: 'Frontend Test Coverage (yarn test:coverage)',
       status: hasFailed ? 'error' : 'success',
       duration: Date.now() - start,
       output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
     };
   } catch (error: unknown) {
     const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parseJestOutput(err.stdout || '');
     return {
       name: 'Frontend Test Coverage (yarn test:coverage)',
       status: 'error',
       duration: Date.now() - start,
       output: err.stdout || '',
       error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
     };
   }
 }
@@ -657,9 +760,10 @@ async function runTypeScriptCheck(): Promise<TestResult> {
   const start = Date.now();
   try {
     const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn tsc --noEmit',
+      'yarn tsc --noEmit',
       {
         timeout: 120000,
+        cwd: process.cwd(),
       }
     );
     return {
@@ -748,8 +852,17 @@ export async function POST(request: NextRequest) {
       case 'backend-tests-cache':
         result = await runBackendTestsCache();
         break;
+      case 'integration-redis-cache':
+        result = await runBackendTestsRedis();
+        break;
       case 'backend-tests-opensearch':
         result = await runBackendTestsOpenSearch();
+        break;
+      case 'integration-opensearch-index':
+        result = await runOpenSearchTest();
+        break;
+      case 'integration-postgres-connection':
+        result = await runPostgresTest();
         break;
 
       // Build & Type Checking

@@ -96,14 +96,70 @@ test-unit:
 
 test-coverage:
 	@echo "Running Go tests with coverage..."
-	go test ./... -cover -coverprofile=coverage.out
-	go tool cover -html=coverage.out -o coverage.html
-	@echo "✅ Coverage report generated: coverage.html"
+	@PKG_LIST=$$(go list ./... | grep -v '/cmd/'); \
+	go test $$PKG_LIST -cover -coverprofile=coverage.out 2>&1 | grep -v "go: no such tool"; \
+	if [ -f coverage.out ]; then \
+		go tool cover -html=coverage.out -o coverage.html; \
+		echo "✅ Coverage report generated: coverage.html"; \
+		echo "📊 Coverage summary:"; \
+		go tool cover -func=coverage.out | tail -1; \
+	else \
+		echo "❌ Failed to generate coverage.out"; \
+		exit 1; \
+	fi
+
+test-coverage-detailed:
+	@echo "Running Go tests with detailed coverage report..."
+	@PKG_LIST=$$(go list ./... | grep -v '/cmd/'); \
+	go test $$PKG_LIST -cover -coverprofile=coverage.out 2>&1 | grep -v "go: no such tool"; \
+	if [ -f coverage.out ]; then \
+		go tool cover -html=coverage.out -o coverage.html; \
+		echo "✅ Coverage report generated: coverage.html"; \
+		echo ""; \
+		echo "📊 Top 20 files by coverage:"; \
+		go tool cover -func=coverage.out | grep -v "total:" | sort -k3 -rn | head -20; \
+		echo ""; \
+		echo "📉 Bottom 20 files by coverage:"; \
+		go tool cover -func=coverage.out | grep -v "total:" | sort -k3 -n | head -20; \
+		echo ""; \
+		echo "📊 Overall summary:"; \
+		go tool cover -func=coverage.out | tail -1; \
+	else \
+		echo "❌ Failed to generate coverage.out"; \
+		exit 1; \
+	fi
+
+test-coverage-json:
+	@echo "Running Go tests and generating JSON coverage report..."
+	@PKG_LIST=$$(go list ./... | grep -v '/cmd/'); \
+	go test $$PKG_LIST -cover -coverprofile=coverage.out 2>&1 | grep -v "go: no such tool" > /dev/null; \
+	if [ -f coverage.out ]; then \
+		TOTAL=$$(go tool cover -func=coverage.out | tail -1 | awk '{print $$NF}' | sed 's/%//'); \
+		echo "{\"total\": $$TOTAL, \"html\": \"coverage.html\"}"; \
+	else \
+		echo "{\"error\": \"Failed to generate coverage report\"}"; \
+		exit 1; \
+	fi
 
 test-postexpress:
 	@echo "Running Post Express integration test..."
 	cd scripts && go run test_postexpress.go
 	@echo "✅ Post Express test completed!"
+
+test-redis:
+	@echo "Running Redis cache integration test..."
+	cd scripts && go run test_redis.go
+	@echo "✅ Redis test completed!"
+
+test-opensearch:
+	@echo "Running OpenSearch integration test..."
+	cd scripts && go run test_opensearch.go
+	@echo "✅ OpenSearch test completed!"
+
+test-postgres:
+	@echo "Running PostgreSQL integration test..."
+	cd scripts && go run test_postgres.go
+	@echo "✅ PostgreSQL test completed!"
 
 pre-commit: format-check lint test-short
 	@echo "✅ Pre-commit checks passed!"

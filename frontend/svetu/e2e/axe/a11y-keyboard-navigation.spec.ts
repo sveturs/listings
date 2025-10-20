@@ -103,7 +103,8 @@ test.describe('Keyboard Navigation Tests', () => {
       // Check if we found a Run Test button (has "Run" in text and btn-primary class)
       if (
         focused.tagName === 'BUTTON' &&
-        (focused.text?.includes('Run') || focused.className.includes('btn-primary'))
+        (focused.text?.includes('Run') ||
+          focused.className.includes('btn-primary'))
       ) {
         foundRunButton = true;
         break; // Test passed

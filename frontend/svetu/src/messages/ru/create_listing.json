@@ -396,5 +396,10 @@
 
   "cars": {
     "selectCar": "Выберите автомобиль"
+  },
+
+  "modes": {
+    "super_quick": "Супер-быстро",
+    "super_quick_description": "Только самое необходимое"
   }
 }

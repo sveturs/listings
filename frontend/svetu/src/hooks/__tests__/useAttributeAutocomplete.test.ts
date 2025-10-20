@@ -544,7 +544,9 @@ describe('useAttributeAutocomplete', () => {
       // Mock setItem to throw QuotaExceededError
       const originalSetItem = global.Storage.prototype.setItem;
       global.Storage.prototype.setItem = jest.fn(() => {
-        const error = new DOMException('QuotaExceededError');
+        const error: DOMException & { name: string } = new DOMException(
+          'QuotaExceededError'
+        ) as any;
         error.name = 'QuotaExceededError';
         throw error;
       });

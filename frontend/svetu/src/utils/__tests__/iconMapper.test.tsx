@@ -320,9 +320,7 @@ describe('iconMapper', () => {
       });
 
       test('рендерит Package для неизвестных иконок', () => {
-        const { container } = render(
-          <>{renderCategoryIcon('unknown-icon')}</>
-        );
+        const { container } = render(<>{renderCategoryIcon('unknown-icon')}</>);
 
         expect(container.querySelector('svg')).toBeInTheDocument();
       });

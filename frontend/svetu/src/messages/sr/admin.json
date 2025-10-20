@@ -1924,7 +1924,7 @@
     "totalTests": "Ukupno testova",
     "totalTestSuites": "Testnih svita",
     "testSuitesDesc": "Grupe povezanih testova",
-    "testSuitesInfo": "💡 Ovih 17 test svita sadrži 550+ pojedinačnih testova: 414 Jest testova u frontend-u i 136 Go testova u backend-u, plus integracioni testovi (cache, OpenSearch), provere linting-a, formatiranja i build-a.",
+    "testSuitesInfo": "💡 Ovih 56 test svita sadrži 727+ pojedinačnih testova: 591 Jest test u frontend-u i 136 Go testova u backend-u, plus integracioni testovi (cache, OpenSearch, PostgreSQL), provere linting-a, formatiranja i build-a.",
     "suitesCompleted": "Završeno {count} od {total} svita",
     "passed": "Prošlo",
     "progress": "Napredak",

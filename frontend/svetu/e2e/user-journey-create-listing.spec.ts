@@ -19,20 +19,22 @@ test.describe('E2E: User Journey - Create Listing', () => {
     await page.goto('/en/create-listing-smart');
     await page.waitForLoadState('domcontentloaded');
 
+    // Wait for authentication and theme to load (usually takes 3-5 seconds)
+    // The page shows a loading spinner until AuthContext completes
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+
     // Verify we're on the create listing page
     await expect(page.url()).toContain('/create-listing-smart');
 
-    // Step 1.5: Click "Супер-быстро" (Super-fast) button to proceed to the form
-    console.log('Step 1.5: Clicking Super-fast button...');
+    // Step 1.5: Click "Super Quick" button to proceed to the form
+    console.log('Step 1.5: Clicking Super Quick button...');
 
-    // Wait for page to fully load
-    await page.waitForTimeout(1000);
-
-    // Click the "Супер-быстро" button (has Zap icon and "Супер-быстро" text)
-    const quickStartButton = page.locator('button:has-text("Супер-быстро")');
-    await quickStartButton.waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for the "Super Quick" button to appear (page content loads after auth)
+    // Use a more robust selector that waits for the actual button with both icon and text
+    const quickStartButton = page.locator('button:has-text("Super Quick")');
+    await quickStartButton.waitFor({ state: 'visible', timeout: 30000 });
     await quickStartButton.click();
-    console.log('✓ Super-fast button clicked');
+    console.log('✓ Super Quick button clicked');
 
     // Wait for form to appear
     await page.waitForTimeout(1500);

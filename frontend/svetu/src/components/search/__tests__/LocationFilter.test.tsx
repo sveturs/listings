@@ -45,7 +45,8 @@ describe('LocationFilter', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useTranslations as jest.Mock).mockReturnValue(
-      (key: string) => mockTranslations[key] || key
+      (key: string) =>
+        mockTranslations[key as keyof typeof mockTranslations] || key
     );
     (LocationService.searchCities as jest.Mock).mockResolvedValue(mockCities);
   });
