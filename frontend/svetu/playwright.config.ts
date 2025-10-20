@@ -23,7 +23,7 @@ export default defineConfig({
   globalSetup: require.resolve('./e2e/global-setup.ts'),
 
   /* Maximum time test can run - increased for accessibility tests */
-  timeout: 300000, // 5 minutes per test (accessibility tests need more time for axe scans)
+  timeout: 600000, // 10 minutes per test (accessibility tests need more time for axe scans + networkidle)
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -40,7 +40,7 @@ export default defineConfig({
     video: 'retain-on-failure',
 
     /* Maximum time each action can take */
-    actionTimeout: 30000, // Increased for slower pages during accessibility scans
+    actionTimeout: 60000, // Increased for slower pages during accessibility scans and networkidle
 
     /* Headless mode - always true for CI, configurable for local */
     headless: process.env.HEADLESS !== 'false',
