@@ -931,8 +931,8 @@ export default function QualityTestsClient({
                     <span>{test.icon}</span>
                     <span>{t(`tests.${test.id}.name`) || test.name}</span>
                     {test.localOnly && (
-                      <span className="badge badge-warning badge-xs ml-2" title="This test only works on localhost development environment">
-                        🏠 Local Only
+                      <span className="ml-2 cursor-help" title={t('localOnlyTooltip')}>
+                        🏠
                       </span>
                     )}
                   </h4>
@@ -1139,11 +1139,8 @@ export default function QualityTestsClient({
           ></path>
         </svg>
         <div>
-          <div className="font-bold">🏠 Local Development Tests</div>
-          <div className="text-sm">
-            Tests marked with "🏠 Local Only" badge only work on localhost development environment.
-            They use Next.js API routes to execute shell commands and are not available on production servers.
-          </div>
+          <div className="font-bold">{t('localOnlyTestsTitle')}</div>
+          <div className="text-sm">{t('localOnlyTestsDescription')}</div>
         </div>
       </div>
 
