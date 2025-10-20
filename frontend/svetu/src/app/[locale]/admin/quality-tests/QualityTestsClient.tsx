@@ -931,7 +931,10 @@ export default function QualityTestsClient({
                     <span>{test.icon}</span>
                     <span>{t(`tests.${test.id}.name`) || test.name}</span>
                     {test.localOnly && (
-                      <span className="ml-2 cursor-help" title={t('localOnlyTooltip')}>
+                      <span
+                        className="ml-2 cursor-help"
+                        title={t('localOnlyTooltip')}
+                      >
                         🏠
                       </span>
                     )}
