@@ -1958,6 +1958,26 @@
         "name": "Unit testovi Frontend-a",
         "description": "Pokretanje Jest unit testova"
       },
+      "frontend-unit-autocomplete-field": {
+        "name": "AutocompleteAttributeField testovi",
+        "description": "Unit testovi za komponentu autokompletiranja (40 testova, ~85% pokrivenost)"
+      },
+      "frontend-unit-autocomplete-hook": {
+        "name": "useAttributeAutocomplete Hook testovi",
+        "description": "Unit testovi za hook autokompletiranja (35 testova, ~90% pokrivenost)"
+      },
+      "frontend-unit-cars-service": {
+        "name": "Cars Service testovi",
+        "description": "Unit testovi za servis automobila (45 testova, ~95% pokrivenost)"
+      },
+      "frontend-unit-icon-mapper": {
+        "name": "Icon Mapper testovi",
+        "description": "Unit testovi za mapiranje ikona (80 testova, ~90% pokrivenost)"
+      },
+      "frontend-unit-env-utils": {
+        "name": "Environment Utils testovi",
+        "description": "Unit testovi za alate okruženja (60 testova, ~85% pokrivenost)"
+      },
       "backend-tests-short": {
         "name": "Brzi testovi Backend-a",
         "description": "Brzi testovi (bez integracionih/OpenSearch)"

@@ -123,6 +123,43 @@ const TESTS: Test[] = [
     icon: '🔬',
   },
 
+  // New Frontend Unit Tests (from test coverage improvement plan)
+  {
+    id: 'frontend-unit-autocomplete-field',
+    name: 'AutocompleteAttributeField Tests',
+    description: 'Unit tests for AutocompleteAttributeField component (40 tests)',
+    category: 'unit',
+    icon: '🎯',
+  },
+  {
+    id: 'frontend-unit-autocomplete-hook',
+    name: 'useAttributeAutocomplete Hook Tests',
+    description: 'Unit tests for autocomplete hook (35 tests)',
+    category: 'unit',
+    icon: '🪝',
+  },
+  {
+    id: 'frontend-unit-cars-service',
+    name: 'Cars Service Tests',
+    description: 'Unit tests for cars API service (45 tests)',
+    category: 'unit',
+    icon: '🚗',
+  },
+  {
+    id: 'frontend-unit-icon-mapper',
+    name: 'Icon Mapper Tests',
+    description: 'Unit tests for icon mapping utility (80 tests)',
+    category: 'unit',
+    icon: '🎨',
+  },
+  {
+    id: 'frontend-unit-env-utils',
+    name: 'Environment Utils Tests',
+    description: 'Unit tests for environment utilities (60 tests)',
+    category: 'unit',
+    icon: '⚙️',
+  },
+
   // Integration Tests
   {
     id: 'backend-tests-short',

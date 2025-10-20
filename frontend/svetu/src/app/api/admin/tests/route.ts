@@ -499,6 +499,105 @@ async function runFrontendTests(): Promise<TestResult> {
   }
 }
 
+// Helper function to parse Jest JSON output
+function parseJestOutput(output: string): {
+  passed: number;
+  failed: number;
+  skipped: number;
+  total: number;
+} {
+  try {
+    // Jest output может быть в виде: "Tests: X failed, Y passed, Z total"
+    const failedMatch = output.match(/(\d+)\s+failed/);
+    const passedMatch = output.match(/(\d+)\s+passed/);
+    const skippedMatch = output.match(/(\d+)\s+skipped/);
+    const totalMatch = output.match(/(\d+)\s+total/);
+
+    const failed = failedMatch ? parseInt(failedMatch[1]) : 0;
+    const passed = passedMatch ? parseInt(passedMatch[1]) : 0;
+    const skipped = skippedMatch ? parseInt(skippedMatch[1]) : 0;
+    const total = totalMatch
+      ? parseInt(totalMatch[1])
+      : passed + failed + skipped;
+
+    return { passed, failed, skipped, total };
+  } catch {
+    return { passed: 0, failed: 0, skipped: 0, total: 0 };
+  }
+}
+
+// Specific Frontend Unit Tests (from test coverage improvement plan)
+async function runFrontendUnitTest(
+  testFile: string,
+  testName: string
+): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      `cd /data/hostel-booking-system/frontend/svetu && yarn test ${testFile} --watchAll=false`,
+      {
+        timeout: 120000,
+      }
+    );
+    const stats = parseJestOutput(stdout);
+    const hasFailed = stats.failed > 0 || stdout.includes('FAIL');
+
+    return {
+      name: testName,
+      status: hasFailed ? 'error' : 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parseJestOutput(err.stdout || '');
+    return {
+      name: testName,
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
+    };
+  }
+}
+
+async function runAutocompleteFieldTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/components/shared/__tests__/AutocompleteAttributeField.test.tsx',
+    'AutocompleteAttributeField Tests'
+  );
+}
+
+async function runAutocompleteHookTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/hooks/__tests__/useAttributeAutocomplete.test.ts',
+    'useAttributeAutocomplete Hook Tests'
+  );
+}
+
+async function runCarsServiceTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/services/__tests__/cars.test.ts',
+    'Cars Service Tests'
+  );
+}
+
+async function runIconMapperTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/utils/__tests__/iconMapper.test.tsx',
+    'Icon Mapper Tests'
+  );
+}
+
+async function runEnvUtilsTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/utils/__tests__/env.test.ts',
+    'Environment Utils Tests'
+  );
+}
+
 async function runFrontendBuild(): Promise<TestResult> {
   const start = Date.now();
   try {
@@ -617,6 +716,23 @@ export async function POST(request: NextRequest) {
         break;
       case 'frontend-tests':
         result = await runFrontendTests();
+        break;
+
+      // New Frontend Unit Tests (specific test suites)
+      case 'frontend-unit-autocomplete-field':
+        result = await runAutocompleteFieldTests();
+        break;
+      case 'frontend-unit-autocomplete-hook':
+        result = await runAutocompleteHookTests();
+        break;
+      case 'frontend-unit-cars-service':
+        result = await runCarsServiceTests();
+        break;
+      case 'frontend-unit-icon-mapper':
+        result = await runIconMapperTests();
+        break;
+      case 'frontend-unit-env-utils':
+        result = await runEnvUtilsTests();
         break;
 
       // Integration Tests

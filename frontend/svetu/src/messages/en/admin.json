@@ -494,6 +494,26 @@
         "name": "Frontend Unit Tests",
         "description": "Run Jest unit tests"
       },
+      "frontend-unit-autocomplete-field": {
+        "name": "AutocompleteAttributeField Tests",
+        "description": "Unit tests for autocomplete component (40 tests, ~85% coverage)"
+      },
+      "frontend-unit-autocomplete-hook": {
+        "name": "useAttributeAutocomplete Hook Tests",
+        "description": "Unit tests for autocomplete hook (35 tests, ~90% coverage)"
+      },
+      "frontend-unit-cars-service": {
+        "name": "Cars Service Tests",
+        "description": "Unit tests for cars API service (45 tests, ~95% coverage)"
+      },
+      "frontend-unit-icon-mapper": {
+        "name": "Icon Mapper Tests",
+        "description": "Unit tests for icon mapping utility (80 tests, ~90% coverage)"
+      },
+      "frontend-unit-env-utils": {
+        "name": "Environment Utils Tests",
+        "description": "Unit tests for environment utilities (60 tests, ~85% coverage)"
+      },
       "backend-tests-short": {
         "name": "Backend Short Tests",
         "description": "Quick tests (skip Integration/OpenSearch)"

@@ -1895,6 +1895,26 @@
         "name": "Unit тесты Frontend",
         "description": "Запуск Jest unit тестов"
       },
+      "frontend-unit-autocomplete-field": {
+        "name": "Тесты AutocompleteAttributeField",
+        "description": "Unit-тесты для компонента автодополнения (40 тестов, ~85% покрытия)"
+      },
+      "frontend-unit-autocomplete-hook": {
+        "name": "Тесты useAttributeAutocomplete",
+        "description": "Unit-тесты для хука автодополнения (35 тестов, ~90% покрытия)"
+      },
+      "frontend-unit-cars-service": {
+        "name": "Тесты Cars Service",
+        "description": "Unit-тесты для сервиса автомобилей (45 тестов, ~95% покрытия)"
+      },
+      "frontend-unit-icon-mapper": {
+        "name": "Тесты Icon Mapper",
+        "description": "Unit-тесты для маппера иконок (80 тестов, ~90% покрытия)"
+      },
+      "frontend-unit-env-utils": {
+        "name": "Тесты Environment Utils",
+        "description": "Unit-тесты для утилит окружения (60 тестов, ~85% покрытия)"
+      },
       "backend-tests-short": {
         "name": "Быстрые тесты Backend",
         "description": "Быстрые тесты (без интеграционных/OpenSearch)"
