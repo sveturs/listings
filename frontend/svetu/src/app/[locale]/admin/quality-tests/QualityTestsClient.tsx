@@ -560,7 +560,7 @@ export default function QualityTestsClient({
 
           // Polling для получения результатов
           let attempts = 0;
-          const maxAttempts = 30; // 30 секунд
+          const maxAttempts = 1500; // 25 минут (для долгих тестов типа accessibility)
 
           while (attempts < maxAttempts) {
             await new Promise((resolve) => setTimeout(resolve, 1000));

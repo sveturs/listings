@@ -1,0 +1,403 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - link "SveTu SveTu v0.2.4":
+    - /url: /en
+    - img "SveTu"
+    - text: SveTu v0.2.4
+  - textbox "Search for products and services..."
+  - button "Поиск":
+    - img
+  - link "Map":
+    - /url: /en/map
+  - link "Cars":
+    - /url: /en/cars
+    - text: Cars Cars
+  - link "Create Listing":
+    - /url: /en/create-listing-choice
+  - status "Loading theme toggle": Loading...
+  - button "Switch language": EN
+  - status "Loading authentication status"
+- main:
+  - heading "Buyer Protection" [level=1]
+  - paragraph: 100% money back guarantee
+  - button "Learn More":
+    - text: Learn More
+    - img
+  - text: 🔒
+  - button "Go to slide 1"
+  - button "Go to slide 2"
+  - button "Go to slide 3"
+  - heading "Lightning Deals" [level=3]
+  - paragraph: Limited time, big discounts
+  - text: 02:45:18
+  - button "Watch"
+  - heading "New User Gift" [level=3]
+  - paragraph: Get 10% off your first order
+  - button "Get"
+  - heading "Popular Categories" [level=2]
+  - button "All Categories":
+    - img
+    - text: All Categories
+    - img
+  - link "Electronics & Technology 5":
+    - /url: /search?category=1001
+    - img
+    - heading "Electronics & Technology" [level=3]
+    - paragraph: "5"
+  - link "Antiques & Art 0":
+    - /url: /search?category=1017
+    - img
+    - heading "Antiques & Art" [level=3]
+    - paragraph: "0"
+  - link "Automotive 0":
+    - /url: /search?category=1003
+    - img
+    - heading "Automotive" [level=3]
+    - paragraph: "0"
+  - link "Books & Stationery 0":
+    - /url: /search?category=1012
+    - img
+    - heading "Books & Stationery" [level=3]
+    - paragraph: "0"
+  - link "Home & Garden 0":
+    - /url: /search?category=1005
+    - img
+    - heading "Home & Garden" [level=3]
+    - paragraph: "0"
+  - link "Education 0":
+    - /url: /search?category=1019
+    - img
+    - heading "Education" [level=3]
+    - paragraph: "0"
+  - link "Events & Tickets 0":
+    - /url: /search?category=1020
+    - img
+    - heading "Events & Tickets" [level=3]
+    - paragraph: "0"
+  - link "Health & Beauty 0":
+    - /url: /search?category=1014
+    - img
+    - heading "Health & Beauty" [level=3]
+    - paragraph: "0"
+  - heading "Hot Deals" [level=2]
+  - button "Grid view" [pressed]
+  - button "List view"
+  - link "All Deals":
+    - /url: /hot
+  - link "E2E Test Listing 1760908394016 Белград, Србија 9999 RSD Write to seller common.product.addToFavorites":
+    - /url: /en/c2c/1086
+    - figure:
+      - img "E2E Test Listing 1760908394016"
+      - text: NEW
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760908394016" [level=3]
+    - img
+    - text: Белград, Србија
+    - paragraph: 9999 RSD
+    - button "Write to seller":
+      - img
+      - text: Write to seller
+    - button "common.product.addToFavorites"
+  - link "E2E Test Listing 1760908312949 Белград, Србија 9999 RSD Write to seller common.product.addToFavorites":
+    - /url: /en/c2c/1085
+    - figure:
+      - img "E2E Test Listing 1760908312949"
+      - text: NEW
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760908312949" [level=3]
+    - img
+    - text: Белград, Србија
+    - paragraph: 9999 RSD
+    - button "Write to seller":
+      - img
+      - text: Write to seller
+    - button "common.product.addToFavorites"
+  - link "Baterija za Nokia BL-6F (N95 8GB) 1000 mAh 390 RSD Add to cart common.product.addToFavorites Start conversation":
+    - /url: /en/c2c/1072
+    - figure:
+      - img "Baterija za Nokia BL-6F (N95 8GB) 1000 mAh"
+      - img
+      - text: Storefront
+      - button "common.product.addToFavorites"
+    - heading "Baterija za Nokia BL-6F (N95 8GB) 1000 mAh" [level=3]
+    - img
+    - paragraph: 390 RSD
+    - button "Add to cart"
+    - button "common.product.addToFavorites"
+    - button "Start conversation"
+  - link "E2E Test Listing 1760907494556 Белград, Србија 9999 RSD Write to seller common.product.addToFavorites":
+    - /url: /en/c2c/1084
+    - figure:
+      - img "E2E Test Listing 1760907494556"
+      - text: NEW
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760907494556" [level=3]
+    - img
+    - text: Белград, Србија
+    - paragraph: 9999 RSD
+    - button "Write to seller":
+      - img
+      - text: Write to seller
+    - button "common.product.addToFavorites"
+  - link "E2E Test Listing 1760907135051 Белград, Србија 9999 RSD Write to seller common.product.addToFavorites":
+    - /url: /en/c2c/1083
+    - figure:
+      - img "E2E Test Listing 1760907135051"
+      - text: NEW
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760907135051" [level=3]
+    - img
+    - text: Белград, Србија
+    - paragraph: 9999 RSD
+    - button "Write to seller":
+      - img
+      - text: Write to seller
+    - button "common.product.addToFavorites"
+  - link "Baterija za LG B2050 950 mAh 590 RSD Add to cart common.product.addToFavorites Start conversation":
+    - /url: /en/c2c/1073
+    - figure:
+      - img "Baterija za LG B2050 950 mAh"
+      - img
+      - text: Storefront
+      - button "common.product.addToFavorites"
+    - heading "Baterija za LG B2050 950 mAh" [level=3]
+    - img
+    - paragraph: 590 RSD
+    - button "Add to cart"
+    - button "common.product.addToFavorites"
+    - button "Start conversation"
+  - link "E2E Test Listing 1760906968086 Белград, Србија 9999 RSD Write to seller common.product.addToFavorites":
+    - /url: /en/c2c/1082
+    - figure:
+      - img "E2E Test Listing 1760906968086"
+      - text: NEW
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760906968086" [level=3]
+    - img
+    - text: Белград, Србија
+    - paragraph: 9999 RSD
+    - button "Write to seller":
+      - img
+      - text: Write to seller
+    - button "common.product.addToFavorites"
+  - link "0 RSD Write to seller common.product.addToFavorites":
+    - /url: /en/c2c/1081
+    - figure:
+      - img "Image"
+      - text: NEW
+      - button "common.product.addToFavorites"
+    - heading [level=3]
+    - img
+    - paragraph: 0 RSD
+    - button "Write to seller":
+      - img
+      - text: Write to seller
+    - button "common.product.addToFavorites"
+  - heading "Products Near You" [level=2]:
+    - img
+    - text: Products Near You
+  - region "Map"
+  - img "Map marker":
+    - img
+  - button "Zoom in"
+  - button "Zoom out"
+  - button "Reset bearing to north"
+  - button "Find my location"
+  - link "Mapbox homepage":
+    - /url: https://www.mapbox.com/
+  - button "Enter fullscreen"
+  - button "Toggle filters"
+  - button "Expand controls": 📏 5км
+  - text: Listings Storefronts
+  - paragraph: "Showing: 8 of 8"
+  - heading "In Your Area" [level=3]
+  - text: Total Listings 11 New Today +0 Within 5 km 0 AI ПРОВЕРКА
+  - heading "How Black Friday Works" [level=3]
+  - text: 📊
+  - heading "Price History" [level=4]
+  - paragraph: Track price changes for products
+  - text: 🤖
+  - heading "AI Analysis" [level=4]
+  - paragraph: Smart recommendations based on your preferences
+  - text: ✅
+  - heading "Minimum -25%" [level=4]
+  - paragraph: Only products with at least 25% discount
+  - text: 🏆
+  - heading "Quality Badge" [level=4]
+  - paragraph: Verified sellers and products
+  - img
+  - strong: "Important:"
+  - text: All transactions are protected by our secure payment system
+  - heading "Official Stores" [level=2]:
+    - img
+    - text: Official Stores
+  - link "All Stores":
+    - /url: /stores
+  - heading "Recommended for You" [level=2]:
+    - img
+    - text: Recommended for You
+  - link "E2E Test Listing 1760908394016 9999 RSD":
+    - /url: /en/c2c/1086
+    - figure:
+      - img "E2E Test Listing 1760908394016"
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760908394016" [level=3]
+    - paragraph: 9999 RSD
+  - link "E2E Test Listing 1760908312949 9999 RSD":
+    - /url: /en/c2c/1085
+    - figure:
+      - img "E2E Test Listing 1760908312949"
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760908312949" [level=3]
+    - paragraph: 9999 RSD
+  - link "Baterija za Nokia BL-6F (N95 8GB) 1000 mAh 390 RSD":
+    - /url: /en/c2c/1072
+    - figure:
+      - img "Baterija za Nokia BL-6F (N95 8GB) 1000 mAh"
+      - button "common.product.addToFavorites"
+    - heading "Baterija za Nokia BL-6F (N95 8GB) 1000 mAh" [level=3]
+    - paragraph: 390 RSD
+  - link "E2E Test Listing 1760907494556 9999 RSD":
+    - /url: /en/c2c/1084
+    - figure:
+      - img "E2E Test Listing 1760907494556"
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760907494556" [level=3]
+    - paragraph: 9999 RSD
+  - link "E2E Test Listing 1760907135051 9999 RSD":
+    - /url: /en/c2c/1083
+    - figure:
+      - img "E2E Test Listing 1760907135051"
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760907135051" [level=3]
+    - paragraph: 9999 RSD
+  - link "Baterija za LG B2050 950 mAh 590 RSD":
+    - /url: /en/c2c/1073
+    - figure:
+      - img "Baterija za LG B2050 950 mAh"
+      - button "common.product.addToFavorites"
+    - heading "Baterija za LG B2050 950 mAh" [level=3]
+    - paragraph: 590 RSD
+  - link "E2E Test Listing 1760906968086 9999 RSD":
+    - /url: /en/c2c/1082
+    - figure:
+      - img "E2E Test Listing 1760906968086"
+      - button "common.product.addToFavorites"
+    - heading "E2E Test Listing 1760906968086" [level=3]
+    - paragraph: 9999 RSD
+  - link "0 RSD":
+    - /url: /en/c2c/1081
+    - figure:
+      - img "Image"
+      - button "common.product.addToFavorites"
+    - heading [level=3]
+    - paragraph: 0 RSD
+  - heading "Trending Searches" [level=2]:
+    - img
+    - text: Trending Searches
+  - button "iPhone 15"
+  - button "PS5"
+  - button "Квартира центр"
+  - button "MacBook"
+  - button "Электросамокат"
+  - button "Диван"
+  - button "AirPods"
+  - button "Nike кроссовки"
+  - button "Холодильник"
+  - button "Велосипед"
+  - heading "Why Choose Us" [level=2]
+  - img
+  - heading "Fast Delivery" [level=3]
+  - paragraph: Nationwide delivery in 1-3 days
+  - img
+  - heading "Deal Protection" [level=3]
+  - paragraph: Secure payments and money back guarantee
+  - img
+  - heading "Convenient Payment" [level=3]
+  - paragraph: Multiple payment options to choose from
+  - img
+  - heading "24/7 Support" [level=3]
+  - paragraph: We're always here to help you
+  - heading "Start Buying and Selling Now!" [level=2]
+  - paragraph: Join thousands of sellers
+  - button "Create Account"
+  - button "Post Listing"
+  - heading "SveTu" [level=3]
+  - paragraph: Largest marketplace in Serbia
+  - button "App Store":
+    - img
+    - text: App Store
+  - button "Google Play":
+    - img
+    - text: Google Play
+  - heading "Buyers" [level=4]
+  - list:
+    - listitem:
+      - text: "2."
+      - link "How to buy":
+        - /url: /how-to-buy
+    - listitem:
+      - link "Delivery":
+        - /url: /delivery
+    - listitem:
+      - link "Payment":
+        - /url: /payment
+    - listitem:
+      - link "Return":
+        - /url: /return
+    - listitem:
+      - link "Warranty":
+        - /url: /warranty
+  - heading "Sellers" [level=4]
+  - list:
+    - listitem:
+      - link "How to sell":
+        - /url: /how-to-sell
+    - listitem:
+      - link "Tariffs":
+        - /url: /tariffs
+    - listitem:
+      - link "Promotion":
+        - /url: /promotion
+    - listitem:
+      - link "Storefronts":
+        - /url: /stores
+    - listitem:
+      - link "API for developers":
+        - /url: /api
+  - heading "Help" [level=4]
+  - list:
+    - listitem:
+      - link "Frequently Asked Questions":
+        - /url: /faq
+    - listitem:
+      - link "Support":
+        - /url: /support
+    - listitem:
+      - link "Rules":
+        - /url: /rules
+    - listitem:
+      - link "Blog":
+        - /url: /blog
+    - listitem:
+      - link "Contacts":
+        - /url: /contacts
+  - paragraph: © 2024 SveTu. All rights reserved. • v0.2.4
+  - link "Terms of Use":
+    - /url: /terms
+  - link "Privacy":
+    - /url: /privacy
+  - link "Cookie":
+    - /url: /cookies
+  - link "Create Listing":
+    - /url: /create-listing-choice
+    - img
+- alert
+- button "Open Next.js Dev Tools":
+  - img
+- button "Open issues overlay": 4 Issue
+- button "Collapse issues badge":
+  - img
+```
