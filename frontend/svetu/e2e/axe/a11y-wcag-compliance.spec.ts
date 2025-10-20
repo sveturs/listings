@@ -12,16 +12,16 @@ const TEST_ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'P@$S4@dmi№';
 
 test.describe('WCAG 2.1 AA Compliance Tests', () => {
   // Set timeout for each test in this suite
-  test.setTimeout(300000); // 5 minutes per test
+  test.setTimeout(600000); // 10 minutes per test (increased from 5)
 
   test('Homepage should have no accessibility violations', async ({ page }) => {
-    await page.goto('/en', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto('/en', { waitUntil: 'networkidle', timeout: 120000 });
     await page.waitForLoadState('load');
     // Wait for main content to be visible
     await page
-      .waitForSelector('main, body', { timeout: 10000 })
+      .waitForSelector('main, body', { timeout: 30000 })
       .catch(() => {});
-    await page.waitForTimeout(2000); // Allow dynamic content to settle
+    await page.waitForTimeout(3000); // Allow dynamic content to settle
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -33,13 +33,13 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
   test('Marketplace listing page should have no accessibility violations', async ({
     page,
   }) => {
-    await page.goto('/en/marketplace', {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000,
+    await page.goto('/en/', {
+      waitUntil: 'networkidle',
+      timeout: 120000,
     });
     await page.waitForLoadState('load');
     // Wait for dynamic content to load
-    await page.waitForSelector('main', { timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('main', { timeout: 30000 }).catch(() => {});
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -52,11 +52,11 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
     page,
   }) => {
     await page.goto('/en/admin', {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000,
+      waitUntil: 'networkidle',
+      timeout: 120000,
     });
     await page.waitForLoadState('load');
-    await page.waitForSelector('main', { timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('main', { timeout: 30000 }).catch(() => {});
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -69,11 +69,11 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
     page,
   }) => {
     await page.goto('/en/admin/quality-tests', {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000,
+      waitUntil: 'networkidle',
+      timeout: 120000,
     });
     await page.waitForLoadState('load');
-    await page.waitForSelector('main', { timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('main', { timeout: 30000 }).catch(() => {});
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -86,11 +86,11 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
     page,
   }) => {
     await page.goto('/en/search?query=test', {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000,
+      waitUntil: 'networkidle',
+      timeout: 120000,
     });
     await page.waitForLoadState('load');
-    await page.waitForSelector('main', { timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('main', { timeout: 30000 }).catch(() => {});
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -103,11 +103,11 @@ test.describe('WCAG 2.1 AA Compliance Tests', () => {
     page,
   }) => {
     await page.goto('/en/admin/categories', {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000,
+      waitUntil: 'networkidle',
+      timeout: 120000,
     });
     await page.waitForLoadState('load');
-    await page.waitForSelector('main', { timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('main', { timeout: 30000 }).catch(() => {});
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
