@@ -117,7 +117,7 @@ export default function TestDataCleanupClient() {
       const response = await apiClient.get<TestDataStats>(
         '/admin/tests/data/stats'
       );
-      setStats(response.data);
+      setStats(response.data ?? null);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     } finally {
@@ -156,7 +156,7 @@ export default function TestDataCleanupClient() {
       const response = await apiClient.delete<CleanupResponse>(
         `/admin/tests/data/cleanup?types=${typesParam}`
       );
-      setCleanupResult(response.data);
+      setCleanupResult(response.data ?? null);
       setShowConfirm(false);
       setSelectedTypes(new Set());
       // Refresh stats
