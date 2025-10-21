@@ -379,6 +379,10 @@
   "contactSeller": "Связаться с продавцом",
   "addToFavorites": "Добавить в избранное",
   "share": "Поделиться",
+  "product": {
+    "addToFavorites": "Добавить в избранное",
+    "removeFromFavorites": "Удалить из избранного"
+  },
   "q": "Поиск",
   "fuzzy": "Нечёткий поиск",
   "lat": "Широта",

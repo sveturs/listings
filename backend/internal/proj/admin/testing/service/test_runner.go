@@ -593,3 +593,41 @@ func (r *TestRunner) GetAllAvailableTests() []domain.AvailableTest {
 
 	return allTests
 }
+
+// GetTestDataStats retrieves statistics about test data in database
+func (tr *TestRunner) GetTestDataStats(ctx context.Context) (*domain.TestDataStats, error) {
+	return tr.storage.GetTestDataStats(ctx)
+}
+
+// CleanupTestData removes test data from database
+func (tr *TestRunner) CleanupTestData(ctx context.Context, types []string) (*domain.CleanupResponse, error) {
+	// Get stats before cleanup to calculate freed space
+	statsBefore, err := tr.storage.GetTestDataStats(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats before cleanup: %w", err)
+	}
+
+	// Perform cleanup
+	deletedCount, err := tr.storage.CleanupTestData(ctx, types)
+	if err != nil {
+		return nil, fmt.Errorf("failed to cleanup data: %w", err)
+	}
+
+	// Get stats after cleanup
+	statsAfter, err := tr.storage.GetTestDataStats(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats after cleanup: %w", err)
+	}
+
+	// Calculate freed space
+	freedBytes := statsBefore.TotalSizeBytes - statsAfter.TotalSizeBytes
+	freedMB := float64(freedBytes) / 1024 / 1024
+
+	return &domain.CleanupResponse{
+		Success:      true,
+		DeletedCount: deletedCount,
+		FreedSpaceMB: fmt.Sprintf("%.2f MB", freedMB),
+		Message:      "Test data cleaned successfully",
+		CleanedAt:    time.Now(),
+	}, nil
+}

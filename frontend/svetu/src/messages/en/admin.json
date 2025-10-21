@@ -428,6 +428,7 @@
   "qualityTests": {
     "title": "Code Quality Tests",
     "description": "Comprehensive testing suite for backend and frontend",
+    "cleanup_test_data": "Cleanup Test Data",
     "runAll": "Run All Tests",
     "runAllQuality": "Run All Quality",
     "runAllUnit": "Run All Unit Tests",
@@ -2196,5 +2197,62 @@
     "requestData": "Request Data",
     "responseData": "API Response",
     "required": "*"
+  },
+  "test_data_cleanup": {
+    "title": "Test Data Cleanup",
+    "description": "Manage and cleanup test data accumulated during development and testing",
+    "refresh": "Refresh",
+    "stats": {
+      "total_size": "Test Data Size",
+      "database_size": "Database Size",
+      "total_records": "Total Records"
+    },
+    "data_types": {
+      "test_runs": {
+        "label": "Test Runs",
+        "description": "Test suite execution records and metadata"
+      },
+      "logs": {
+        "label": "Test Logs",
+        "description": "Execution logs from test runs"
+      },
+      "results": {
+        "label": "Test Results",
+        "description": "Individual test execution results"
+      },
+      "behavior": {
+        "label": "Behavior Events",
+        "description": "User behavior tracking data (searches, clicks)"
+      },
+      "feedback": {
+        "label": "Category Feedback",
+        "description": "AI category detection feedback"
+      },
+      "price_history": {
+        "label": "Price History",
+        "description": "Historical price change records"
+      },
+      "ai_decisions": {
+        "label": "AI Decisions",
+        "description": "AI-generated category decisions"
+      }
+    },
+    "records": "Records",
+    "size": "Size",
+    "event_types": "Event Types",
+    "select_data_types": "Select Data Types to Clean",
+    "select_all": "Select All",
+    "deselect_all": "Deselect All",
+    "selected_count": "{count} types selected",
+    "no_selection": "No types selected",
+    "cleanup_button": "Cleanup Selected Data",
+    "cleaning": "Cleaning...",
+    "cleanup_success": "Cleanup completed successfully!",
+    "freed_space": "Freed space",
+    "confirm_title": "Confirm Cleanup",
+    "confirm_message": "Are you sure you want to permanently delete the following data types? This action cannot be undone:",
+    "cancel": "Cancel",
+    "confirm_cleanup": "Yes, Delete",
+    "info_message": "💡 Tip: Cleaning test data regularly helps maintain optimal database performance. After cleanup, VACUUM FULL will be recommended for tables."
   }
 }

@@ -28,4 +28,8 @@ type TestStorage interface {
 	// TestLogs
 	CreateTestLog(ctx context.Context, log *domain.TestLog) error
 	GetTestLogsByRunID(ctx context.Context, runID int64, limit int) ([]*domain.TestLog, error)
+
+	// Test Data Management
+	GetTestDataStats(ctx context.Context) (*domain.TestDataStats, error)
+	CleanupTestData(ctx context.Context, types []string) (map[string]int64, error)
 }

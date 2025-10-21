@@ -379,6 +379,10 @@
   "contactSeller": "Contact seller",
   "addToFavorites": "Add to favorites",
   "share": "Share",
+  "product": {
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
+  },
   "q": "Search",
   "fuzzy": "Fuzzy search",
   "lat": "Latitude",

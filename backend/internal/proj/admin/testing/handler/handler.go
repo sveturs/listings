@@ -5,6 +5,7 @@ package handler
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
@@ -48,6 +49,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App) {
 	tests.Get("/runs/:id", h.GetTestRunDetail)
 	tests.Get("/runs/:id/status", h.GetTestRunStatus)
 	tests.Delete("/runs/:id", h.CancelTestRun)
+
+	// Test data management endpoints
+	tests.Get("/data/stats", h.GetTestDataStats)
+	tests.Delete("/data/cleanup", h.CleanupTestData)
 }
 
 // GetPrefix returns routing prefix for this handler
@@ -301,4 +306,57 @@ func (h *Handler) GetAvailableTests(c *fiber.Ctx) error {
 		Tests: tests,
 		Total: len(tests),
 	})
+}
+
+// GetTestDataStats godoc
+// @Summary Get test data statistics
+// @Description Returns statistics about test data in database (logs, results, behavior events, etc.)
+// @Tags testing
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.TestDataStats
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/tests/data/stats [get]
+func (h *Handler) GetTestDataStats(c *fiber.Ctx) error {
+	stats, err := h.testRunner.GetTestDataStats(c.Context())
+	if err != nil {
+		h.logger.Error().Err(err).Msg("Failed to get test data stats")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to retrieve test data statistics")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(stats)
+}
+
+// CleanupTestData godoc
+// @Summary Cleanup test data
+// @Description Deletes test data from database (logs, results, behavior events, etc.)
+// @Tags testing
+// @Produce json
+// @Security BearerAuth
+// @Param types query string false "Comma-separated list of data types to clean (logs,results,behavior,feedback,price_history,ai_decisions)"
+// @Success 200 {object} domain.CleanupResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/tests/data/cleanup [delete]
+func (h *Handler) CleanupTestData(c *fiber.Ctx) error {
+	typesStr := c.Query("types", "")
+	var types []string
+	if typesStr != "" {
+		// Split comma-separated string
+		types = strings.Split(typesStr, ",")
+		// Trim whitespace from each type
+		for i, t := range types {
+			types[i] = strings.TrimSpace(t)
+		}
+	}
+
+	result, err := h.testRunner.CleanupTestData(c.Context(), types)
+	if err != nil {
+		h.logger.Error().Err(err).Strs("types", types).Msg("Failed to cleanup test data")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "Failed to cleanup test data")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(result)
 }

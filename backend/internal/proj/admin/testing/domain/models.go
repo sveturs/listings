@@ -177,3 +177,63 @@ func mustMarshalMetadata(m map[string]interface{}) json.RawMessage {
 	b, _ := json.Marshal(m)
 	return b
 }
+
+// TestDataStats represents statistics about test data in database
+type TestDataStats struct {
+	TestRuns struct {
+		Count     int64  `json:"count"`
+		SizeMB    string `json:"size_mb"`
+		SizeBytes int64  `json:"size_bytes"`
+	} `json:"test_runs"`
+
+	TestLogs struct {
+		Count     int64  `json:"count"`
+		SizeMB    string `json:"size_mb"`
+		SizeBytes int64  `json:"size_bytes"`
+	} `json:"test_logs"`
+
+	TestResults struct {
+		Count     int64  `json:"count"`
+		SizeMB    string `json:"size_mb"`
+		SizeBytes int64  `json:"size_bytes"`
+	} `json:"test_results"`
+
+	BehaviorEvents struct {
+		Count     int64            `json:"count"`
+		SizeMB    string           `json:"size_mb"`
+		SizeBytes int64            `json:"size_bytes"`
+		ByType    map[string]int64 `json:"by_type"`
+	} `json:"behavior_events"`
+
+	CategoryFeedback struct {
+		Count     int64  `json:"count"`
+		SizeMB    string `json:"size_mb"`
+		SizeBytes int64  `json:"size_bytes"`
+	} `json:"category_feedback"`
+
+	PriceHistory struct {
+		Count     int64  `json:"count"`
+		SizeMB    string `json:"size_mb"`
+		SizeBytes int64  `json:"size_bytes"`
+	} `json:"price_history"`
+
+	AIDecisions struct {
+		Count     int64  `json:"count"`
+		SizeMB    string `json:"size_mb"`
+		SizeBytes int64  `json:"size_bytes"`
+	} `json:"ai_decisions"`
+
+	TotalSizeMB    string    `json:"total_size_mb"`
+	TotalSizeBytes int64     `json:"total_size_bytes"`
+	DatabaseSizeMB string    `json:"database_size_mb"`
+	CollectedAt    time.Time `json:"collected_at"`
+}
+
+// CleanupResponse represents result of cleanup operation
+type CleanupResponse struct {
+	Success      bool             `json:"success"`
+	DeletedCount map[string]int64 `json:"deleted_count"`
+	FreedSpaceMB string           `json:"freed_space_mb"`
+	Message      string           `json:"message"`
+	CleanedAt    time.Time        `json:"cleaned_at"`
+}

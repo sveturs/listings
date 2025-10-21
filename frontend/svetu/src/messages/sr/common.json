@@ -380,6 +380,10 @@
   "contactSeller": "Kontaktiraj prodavca",
   "addToFavorites": "Dodaj u omiljene",
   "share": "Podeli",
+  "product": {
+    "addToFavorites": "Dodaj u omiljene",
+    "removeFromFavorites": "Ukloni iz omiljenih"
+  },
   "q": "Pretraga",
   "fuzzy": "Neodređena pretraga",
   "lat": "Geog. širina",

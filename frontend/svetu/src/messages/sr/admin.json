@@ -1892,6 +1892,7 @@
   "qualityTests": {
     "title": "Testovi kvaliteta koda",
     "description": "Sveobuhvatan skup testova za backend i frontend",
+    "cleanup_test_data": "Čišćenje test podataka",
     "runAll": "Pokreni sve testove",
     "runAllQuality": "Pokreni sve testove kvaliteta",
     "runAllUnit": "Pokreni sve unit testove",
@@ -2178,5 +2179,62 @@
         "description": "Testiranje da su svi interaktivni elementi dostupni tastaturom"
       }
     }
+  },
+  "test_data_cleanup": {
+    "title": "Čišćenje test podataka",
+    "description": "Upravljanje i čišćenje test podataka akumuliranih tokom razvoja i testiranja",
+    "refresh": "Osveži",
+    "stats": {
+      "total_size": "Veličina test podataka",
+      "database_size": "Veličina baze",
+      "total_records": "Ukupno zapisa"
+    },
+    "data_types": {
+      "test_runs": {
+        "label": "Pokretanja testova",
+        "description": "Zapisi o izvršavanju test paketa i metapodaci"
+      },
+      "logs": {
+        "label": "Test logovi",
+        "description": "Logovi izvršavanja testova"
+      },
+      "results": {
+        "label": "Rezultati testova",
+        "description": "Pojedinačni rezultati izvršavanja testova"
+      },
+      "behavior": {
+        "label": "Događaji ponašanja",
+        "description": "Podaci praćenja ponašanja korisnika (pretrage, klikovi)"
+      },
+      "feedback": {
+        "label": "Povratne informacije o kategorijama",
+        "description": "Povratne informacije o detekciji kategorija od strane AI"
+      },
+      "price_history": {
+        "label": "Istorija cena",
+        "description": "Istorijski zapisi promena cena"
+      },
+      "ai_decisions": {
+        "label": "AI odluke",
+        "description": "Odluke o kategorijama generisane od strane AI"
+      }
+    },
+    "records": "Zapisi",
+    "size": "Veličina",
+    "event_types": "Tipovi događaja",
+    "select_data_types": "Izaberite tipove podataka za čišćenje",
+    "select_all": "Izaberi sve",
+    "deselect_all": "Poništi izbor",
+    "selected_count": "Izabrano tipova: {count}",
+    "no_selection": "Ništa nije izabrano",
+    "cleanup_button": "Očisti izabrane podatke",
+    "cleaning": "Čišćenje...",
+    "cleanup_success": "Čišćenje uspešno završeno!",
+    "freed_space": "Oslobođeno prostora",
+    "confirm_title": "Potvrda čišćenja",
+    "confirm_message": "Da li ste sigurni da želite trajno obrisati sledeće tipove podataka? Ova akcija se ne može opozvati:",
+    "cancel": "Otkaži",
+    "confirm_cleanup": "Da, obriši",
+    "info_message": "💡 Savet: Redovno čišćenje test podataka pomaže u održavanju optimalne performanse baze podataka. Posle čišćenja, preporučiće se izvršavanje VACUUM FULL za tabele."
   }
 }

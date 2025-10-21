@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -19,6 +20,12 @@ import (
 // Sentinel errors
 var (
 	ErrTestRunNotFound = errors.New("test run not found")
+)
+
+// Data type constants
+const (
+	DataTypeTestRuns     = "test_runs"
+	DataTypePriceHistory = "price_history"
 )
 
 // Storage implements TestStorage interface using PostgreSQL
@@ -437,4 +444,215 @@ func (s *Storage) GetTestLogsByRunID(ctx context.Context, runID int64, limit int
 	}
 
 	return logs, nil
+}
+
+// GetTestDataStats retrieves statistics about test data in database
+func (s *Storage) GetTestDataStats(ctx context.Context) (*domain.TestDataStats, error) {
+	stats := &domain.TestDataStats{}
+	stats.CollectedAt = time.Now()
+
+	// Get test_runs stats
+	err := s.db.QueryRowContext(ctx, `
+		SELECT
+			COUNT(*),
+			pg_size_pretty(pg_total_relation_size('test_runs')),
+			pg_total_relation_size('test_runs')
+		FROM test_runs
+	`).Scan(&stats.TestRuns.Count, &stats.TestRuns.SizeMB, &stats.TestRuns.SizeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get test_runs stats: %w", err)
+	}
+
+	// Get test_logs stats
+	err = s.db.QueryRowContext(ctx, `
+		SELECT
+			COUNT(*),
+			pg_size_pretty(pg_total_relation_size('test_logs')),
+			pg_total_relation_size('test_logs')
+		FROM test_logs
+	`).Scan(&stats.TestLogs.Count, &stats.TestLogs.SizeMB, &stats.TestLogs.SizeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get test_logs stats: %w", err)
+	}
+
+	// Get test_results stats
+	err = s.db.QueryRowContext(ctx, `
+		SELECT
+			COUNT(*),
+			pg_size_pretty(pg_total_relation_size('test_results')),
+			pg_total_relation_size('test_results')
+		FROM test_results
+	`).Scan(&stats.TestResults.Count, &stats.TestResults.SizeMB, &stats.TestResults.SizeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get test_results stats: %w", err)
+	}
+
+	// Get user_behavior_events stats
+	err = s.db.QueryRowContext(ctx, `
+		SELECT
+			COUNT(*),
+			pg_size_pretty(pg_total_relation_size('user_behavior_events')),
+			pg_total_relation_size('user_behavior_events')
+		FROM user_behavior_events
+	`).Scan(&stats.BehaviorEvents.Count, &stats.BehaviorEvents.SizeMB, &stats.BehaviorEvents.SizeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user_behavior_events stats: %w", err)
+	}
+
+	// Get behavior events by type
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT event_type, COUNT(*)
+		FROM user_behavior_events
+		GROUP BY event_type
+		ORDER BY COUNT(*) DESC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get behavior events by type: %w", err)
+	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			s.logger.Error().Err(closeErr).Msg("Failed to close rows")
+		}
+	}()
+
+	stats.BehaviorEvents.ByType = make(map[string]int64)
+	for rows.Next() {
+		var eventType string
+		var count int64
+		if err := rows.Scan(&eventType, &count); err != nil {
+			continue
+		}
+		stats.BehaviorEvents.ByType[eventType] = count
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate behavior events: %w", err)
+	}
+
+	// Get category_detection_feedback stats
+	err = s.db.QueryRowContext(ctx, `
+		SELECT
+			COUNT(*),
+			pg_size_pretty(pg_total_relation_size('category_detection_feedback')),
+			pg_total_relation_size('category_detection_feedback')
+		FROM category_detection_feedback
+	`).Scan(&stats.CategoryFeedback.Count, &stats.CategoryFeedback.SizeMB, &stats.CategoryFeedback.SizeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get category_detection_feedback stats: %w", err)
+	}
+
+	// Get price_history stats
+	err = s.db.QueryRowContext(ctx, `
+		SELECT
+			COUNT(*),
+			pg_size_pretty(pg_total_relation_size('price_history')),
+			pg_total_relation_size('price_history')
+		FROM price_history
+	`).Scan(&stats.PriceHistory.Count, &stats.PriceHistory.SizeMB, &stats.PriceHistory.SizeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get price_history stats: %w", err)
+	}
+
+	// Get ai_category_decisions stats
+	err = s.db.QueryRowContext(ctx, `
+		SELECT
+			COUNT(*),
+			pg_size_pretty(pg_total_relation_size('ai_category_decisions')),
+			pg_total_relation_size('ai_category_decisions')
+		FROM ai_category_decisions
+	`).Scan(&stats.AIDecisions.Count, &stats.AIDecisions.SizeMB, &stats.AIDecisions.SizeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ai_category_decisions stats: %w", err)
+	}
+
+	// Calculate total size
+	stats.TotalSizeBytes = stats.TestRuns.SizeBytes +
+		stats.TestLogs.SizeBytes +
+		stats.TestResults.SizeBytes +
+		stats.BehaviorEvents.SizeBytes +
+		stats.CategoryFeedback.SizeBytes +
+		stats.PriceHistory.SizeBytes +
+		stats.AIDecisions.SizeBytes
+
+	// Get database size
+	err = s.db.QueryRowContext(ctx, `
+		SELECT pg_size_pretty(pg_database_size(current_database())),
+		       pg_size_pretty($1::bigint)
+	`, stats.TotalSizeBytes).Scan(&stats.DatabaseSizeMB, &stats.TotalSizeMB)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get database size: %w", err)
+	}
+
+	return stats, nil
+}
+
+// CleanupTestData removes test data from database
+func (s *Storage) CleanupTestData(ctx context.Context, types []string) (map[string]int64, error) {
+	deletedCount := make(map[string]int64)
+
+	// If no types specified, clean all
+	if len(types) == 0 {
+		types = []string{DataTypeTestRuns, "logs", "results", "behavior", "feedback", DataTypePriceHistory, "ai_decisions"}
+	}
+
+	for _, dataType := range types {
+		var err error
+
+		switch dataType {
+		case DataTypeTestRuns:
+			_, err = s.db.ExecContext(ctx, "TRUNCATE TABLE test_runs CASCADE")
+		case "logs":
+			_, err = s.db.ExecContext(ctx, "TRUNCATE TABLE test_logs CASCADE")
+		case "results":
+			_, err = s.db.ExecContext(ctx, "TRUNCATE TABLE test_results CASCADE")
+		case "behavior":
+			_, err = s.db.ExecContext(ctx, "TRUNCATE TABLE user_behavior_events CASCADE")
+		case "feedback":
+			_, err = s.db.ExecContext(ctx, "TRUNCATE TABLE category_detection_feedback CASCADE")
+		case DataTypePriceHistory:
+			_, err = s.db.ExecContext(ctx, "TRUNCATE TABLE price_history CASCADE")
+		case "ai_decisions":
+			_, err = s.db.ExecContext(ctx, "TRUNCATE TABLE ai_category_decisions CASCADE")
+		default:
+			s.logger.Warn().Str("type", dataType).Msg("Unknown data type for cleanup")
+			continue
+		}
+
+		if err != nil {
+			s.logger.Error().Err(err).Str("type", dataType).Msg("Failed to cleanup data")
+			return nil, fmt.Errorf("failed to cleanup %s: %w", dataType, err)
+		}
+
+		// For TRUNCATE, RowsAffected always returns 0, so we'll just mark as cleaned
+		deletedCount[dataType] = 1
+	}
+
+	// Run VACUUM to reclaim space
+	for _, dataType := range types {
+		var tableName string
+		switch dataType {
+		case DataTypeTestRuns:
+			tableName = DataTypeTestRuns
+		case "logs":
+			tableName = "test_logs"
+		case "results":
+			tableName = "test_results"
+		case "behavior":
+			tableName = "user_behavior_events"
+		case "feedback":
+			tableName = "category_detection_feedback"
+		case DataTypePriceHistory:
+			tableName = DataTypePriceHistory
+		case "ai_decisions":
+			tableName = "ai_category_decisions"
+		default:
+			continue
+		}
+
+		// VACUUM FULL must be run outside transaction
+		// We'll just log it for now, the DBA can run it manually
+		s.logger.Info().Str("table", tableName).Msg("Table cleaned, consider running VACUUM FULL")
+	}
+
+	return deletedCount, nil
 }
