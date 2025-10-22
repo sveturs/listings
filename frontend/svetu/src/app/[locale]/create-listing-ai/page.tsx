@@ -3051,9 +3051,9 @@ export default function AIPoweredListingCreationPage() {
   return (
     <>
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-2">
         {/* Header с кнопкой назад и badge */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <Link
             href={`/${locale}/create-listing-choice`}
             className="btn btn-ghost gap-2"

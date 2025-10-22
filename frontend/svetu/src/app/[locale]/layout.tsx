@@ -126,7 +126,7 @@ export default async function RootLayout({
                       <LocaleSync />
                       <HeaderWrapper />
                       <Toaster position="top-right" />
-                      <main className="min-h-screen pt-16 pb-16 md:pb-0">
+                      <main className="min-h-screen pt-4 pb-16 md:pb-4">
                         {children}
                       </main>
                       <SmartMobileBottomNav />
