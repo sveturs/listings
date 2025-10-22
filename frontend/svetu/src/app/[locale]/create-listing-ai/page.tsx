@@ -64,7 +64,7 @@ export default function AIPoweredListingCreationPage() {
   const router = useRouter();
   const t = useTranslations('create_listing');
   const locale = useLocale();
-  const { user } = useAuthContext();
+  const { user, isLoading: authLoading } = useAuthContext();
   const [currentView, setCurrentView] = useState<
     'upload' | 'process' | 'enhance' | 'publish'
   >('upload');
@@ -158,6 +158,12 @@ export default function AIPoweredListingCreationPage() {
   const profileLoadedRef = useRef(false);
 
   useEffect(() => {
+    // Ждем завершения загрузки аутентификации
+    if (authLoading) {
+      return;
+    }
+
+    // Если пользователь не авторизован - редирект
     if (!user) {
       toast.error(t('auth_required'));
       router.push('/');
@@ -204,7 +210,7 @@ export default function AIPoweredListingCreationPage() {
     };
 
     loadUserProfile();
-  }, [user, router, t]); // Убираем validateAddress из зависимостей
+  }, [user, router, t, authLoading]); // Добавляем authLoading в зависимости
 
   // Загружаем категории при монтировании компонента
   useEffect(() => {
@@ -3044,6 +3050,18 @@ export default function AIPoweredListingCreationPage() {
       </div>
     </motion.div>
   );
+
+  // Показываем индикатор загрузки, пока проверяется аутентификация
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-base-content/70">{t('loading')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

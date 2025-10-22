@@ -1,4 +1,5 @@
 {
+  "loading": "Loading...",
   "auth_required": "You need to log in to create a listing",
   "location_detected_from_photo": "Location detected from photo",
   "privacy_settings": "Privacy settings",
