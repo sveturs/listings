@@ -13,10 +13,8 @@ import (
 	pb "backend/pkg/grpc/delivery/v1"
 )
 
-var (
-	// ErrNilShipment returned when nil shipment is passed to mapper
-	ErrNilShipment = errors.New("nil shipment provided")
-)
+// ErrNilShipment returned when nil shipment is passed to mapper
+var ErrNilShipment = errors.New("nil shipment provided")
 
 // MapShipmentFromProto конвертирует протобуф Shipment в модель БД
 func MapShipmentFromProto(pbShipment *pb.Shipment) (*models.Shipment, error) {

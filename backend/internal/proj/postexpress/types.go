@@ -113,12 +113,6 @@ type ReceiverInfo struct {
 	PAK           string       `json:"PAK,omitempty"`          // Postal Address Code
 }
 
-// ServiceRequest - дополнительная услуга (DEPRECATED - используйте PosebneUsluge string)
-type ServiceRequest struct {
-	SifraUsluge string      `json:"SifraUsluge"`         // Код услуги (например, "SMS")
-	Parametri   interface{} `json:"Parametri,omitempty"` // Параметры услуги
-}
-
 // ManifestResponse - ответ на создание манифеста
 type ManifestResponse struct {
 	Rezultat       int               `json:"Rezultat"`                   // 0 - успех, иначе ошибка

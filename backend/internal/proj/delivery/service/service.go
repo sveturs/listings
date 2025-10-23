@@ -497,19 +497,6 @@ type WebhookResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
-// DeliveryProvider представляет интерфейс провайдера доставки (DEPRECATED)
-type DeliveryProvider interface{}
-
-// HandleProviderWebhook - DEPRECATED: webhook обработка перенесена в delivery microservice
-func (s *Service) HandleProviderWebhook(ctx context.Context, providerCode string, payload []byte, headers map[string]string) (*WebhookResponse, error) {
-	return nil, fmt.Errorf("webhook processing has been moved to delivery microservice - configure webhooks to point directly to the delivery service")
-}
-
-// GetProviderByCode - DEPRECATED: прямой доступ к провайдерам больше не поддерживается
-func (s *Service) GetProviderByCode(providerCode string) (DeliveryProvider, error) {
-	return nil, fmt.Errorf("direct provider access is deprecated - all delivery operations go through delivery microservice via gRPC")
-}
-
 // GetShipment - получает отправление по ID через gRPC микросервис
 func (s *Service) GetShipment(ctx context.Context, shipmentID int) (*models.Shipment, error) {
 	if s.grpcClient == nil {

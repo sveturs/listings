@@ -497,47 +497,21 @@ func (h *Handler) GetAnalytics(c *fiber.Ctx) error {
 	return utils.SendSuccessResponse(c, analytics, "Аналитика доставок")
 }
 
-// HandleTrackingWebhook - обработка webhook для отслеживания
-// @Summary Handle tracking webhook
-// @Description Process tracking status updates from delivery providers
+// HandleTrackingWebhook - DEPRECATED: webhook обработка перенесена в delivery microservice
+// @Summary Handle tracking webhook (DEPRECATED)
+// @Description DEPRECATED: Webhook processing moved to delivery microservice. Configure webhooks to point directly to delivery service.
 // @Tags delivery
 // @Accept json
 // @Produce json
 // @Param provider path string true "Provider code (post_express, bex_express, etc.)"
 // @Param payload body object true "Webhook payload from provider"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object} "Webhook processed successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 404 {object} utils.ErrorResponseSwag "Provider not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 501 {object} utils.ErrorResponseSwag "Moved to microservice"
 // @Router /api/v1/delivery/webhooks/{provider}/tracking [post]
 func (h *Handler) HandleTrackingWebhook(c *fiber.Ctx) error {
-	providerCode := c.Params("provider")
-	if providerCode == "" {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "delivery.webhook.provider_required", nil)
-	}
-
-	// Получаем тело запроса
-	payload := c.Body()
-	if len(payload) == 0 {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "delivery.webhook.empty_payload", nil)
-	}
-
-	// Собираем заголовки
-	headers := make(map[string]string)
-	c.GetReqHeaders()
-	for key, values := range c.GetReqHeaders() {
-		if len(values) > 0 {
-			headers[key] = values[0]
-		}
-	}
-
-	// Обрабатываем webhook через сервис
-	result, err := h.service.HandleProviderWebhook(c.Context(), providerCode, payload, headers)
-	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "delivery.webhook.processing_error", nil)
-	}
-
-	return utils.SendSuccessResponse(c, result, "Webhook processed successfully")
+	return utils.SendErrorResponse(c, fiber.StatusNotImplemented, "delivery.webhook.moved_to_microservice", map[string]interface{}{
+		"message": "Webhook processing has been moved to delivery microservice",
+		"note":    "Configure webhooks to point directly to the delivery service",
+	})
 }
 
 // Структуры запросов
@@ -568,26 +542,6 @@ type ItemWithAttrs struct {
 	Fragile     bool           `json:"fragile,omitempty"`
 	Refrigerate bool           `json:"refrigerate,omitempty"`
 	Category    string         `json:"category,omitempty"`
-}
-
-// CalculationRequest - запрос расчета стоимости доставки (DEPRECATED)
-type CalculationRequest struct {
-	FromLocation   Location        `json:"from_location"`
-	ToLocation     Location        `json:"to_location"`
-	Items          []ItemWithAttrs `json:"items"`
-	InsuranceValue float64         `json:"insurance_value,omitempty"`
-	CODAmount      float64         `json:"cod_amount,omitempty"`
-	DeliveryType   string          `json:"delivery_type,omitempty"`
-}
-
-// CartCalculationRequest - запрос расчета для корзины (DEPRECATED)
-type CartCalculationRequest struct {
-	FromLocation   Location        `json:"from_location"`
-	ToLocation     Location        `json:"to_location"`
-	Items          []ItemWithAttrs `json:"items"`
-	InsuranceValue float64         `json:"insurance_value,omitempty"`
-	CODAmount      float64         `json:"cod_amount,omitempty"`
-	DeliveryType   string          `json:"delivery_type,omitempty"`
 }
 
 // CancelRequest - запрос отмены
