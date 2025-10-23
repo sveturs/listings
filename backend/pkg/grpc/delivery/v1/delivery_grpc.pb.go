@@ -2,13 +2,12 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.21.12
-// source: delivery/v1/delivery.proto
+// source: proto/delivery/v1/delivery.proto
 
 package deliveryv1
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -20,11 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DeliveryService_CreateShipment_FullMethodName = "/delivery.v1.DeliveryService/CreateShipment"
-	DeliveryService_GetShipment_FullMethodName    = "/delivery.v1.DeliveryService/GetShipment"
-	DeliveryService_TrackShipment_FullMethodName  = "/delivery.v1.DeliveryService/TrackShipment"
-	DeliveryService_CancelShipment_FullMethodName = "/delivery.v1.DeliveryService/CancelShipment"
-	DeliveryService_CalculateRate_FullMethodName  = "/delivery.v1.DeliveryService/CalculateRate"
+	DeliveryService_CreateShipment_FullMethodName   = "/delivery.v1.DeliveryService/CreateShipment"
+	DeliveryService_GetShipment_FullMethodName      = "/delivery.v1.DeliveryService/GetShipment"
+	DeliveryService_TrackShipment_FullMethodName    = "/delivery.v1.DeliveryService/TrackShipment"
+	DeliveryService_CancelShipment_FullMethodName   = "/delivery.v1.DeliveryService/CancelShipment"
+	DeliveryService_CalculateRate_FullMethodName    = "/delivery.v1.DeliveryService/CalculateRate"
+	DeliveryService_GetSettlements_FullMethodName   = "/delivery.v1.DeliveryService/GetSettlements"
+	DeliveryService_GetStreets_FullMethodName       = "/delivery.v1.DeliveryService/GetStreets"
+	DeliveryService_GetParcelLockers_FullMethodName = "/delivery.v1.DeliveryService/GetParcelLockers"
 )
 
 // DeliveryServiceClient is the client API for DeliveryService service.
@@ -43,6 +45,12 @@ type DeliveryServiceClient interface {
 	CancelShipment(ctx context.Context, in *CancelShipmentRequest, opts ...grpc.CallOption) (*CancelShipmentResponse, error)
 	// CalculateRate calculates delivery cost
 	CalculateRate(ctx context.Context, in *CalculateRateRequest, opts ...grpc.CallOption) (*CalculateRateResponse, error)
+	// GetSettlements returns list of available settlements/cities
+	GetSettlements(ctx context.Context, in *GetSettlementsRequest, opts ...grpc.CallOption) (*GetSettlementsResponse, error)
+	// GetStreets returns list of streets for a settlement
+	GetStreets(ctx context.Context, in *GetStreetsRequest, opts ...grpc.CallOption) (*GetStreetsResponse, error)
+	// GetParcelLockers returns list of available parcel lockers
+	GetParcelLockers(ctx context.Context, in *GetParcelLockersRequest, opts ...grpc.CallOption) (*GetParcelLockersResponse, error)
 }
 
 type deliveryServiceClient struct {
@@ -103,6 +111,36 @@ func (c *deliveryServiceClient) CalculateRate(ctx context.Context, in *Calculate
 	return out, nil
 }
 
+func (c *deliveryServiceClient) GetSettlements(ctx context.Context, in *GetSettlementsRequest, opts ...grpc.CallOption) (*GetSettlementsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSettlementsResponse)
+	err := c.cc.Invoke(ctx, DeliveryService_GetSettlements_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deliveryServiceClient) GetStreets(ctx context.Context, in *GetStreetsRequest, opts ...grpc.CallOption) (*GetStreetsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetStreetsResponse)
+	err := c.cc.Invoke(ctx, DeliveryService_GetStreets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deliveryServiceClient) GetParcelLockers(ctx context.Context, in *GetParcelLockersRequest, opts ...grpc.CallOption) (*GetParcelLockersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetParcelLockersResponse)
+	err := c.cc.Invoke(ctx, DeliveryService_GetParcelLockers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DeliveryServiceServer is the server API for DeliveryService service.
 // All implementations must embed UnimplementedDeliveryServiceServer
 // for forward compatibility.
@@ -119,6 +157,12 @@ type DeliveryServiceServer interface {
 	CancelShipment(context.Context, *CancelShipmentRequest) (*CancelShipmentResponse, error)
 	// CalculateRate calculates delivery cost
 	CalculateRate(context.Context, *CalculateRateRequest) (*CalculateRateResponse, error)
+	// GetSettlements returns list of available settlements/cities
+	GetSettlements(context.Context, *GetSettlementsRequest) (*GetSettlementsResponse, error)
+	// GetStreets returns list of streets for a settlement
+	GetStreets(context.Context, *GetStreetsRequest) (*GetStreetsResponse, error)
+	// GetParcelLockers returns list of available parcel lockers
+	GetParcelLockers(context.Context, *GetParcelLockersRequest) (*GetParcelLockersResponse, error)
 	mustEmbedUnimplementedDeliveryServiceServer()
 }
 
@@ -143,6 +187,15 @@ func (UnimplementedDeliveryServiceServer) CancelShipment(context.Context, *Cance
 }
 func (UnimplementedDeliveryServiceServer) CalculateRate(context.Context, *CalculateRateRequest) (*CalculateRateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CalculateRate not implemented")
+}
+func (UnimplementedDeliveryServiceServer) GetSettlements(context.Context, *GetSettlementsRequest) (*GetSettlementsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSettlements not implemented")
+}
+func (UnimplementedDeliveryServiceServer) GetStreets(context.Context, *GetStreetsRequest) (*GetStreetsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStreets not implemented")
+}
+func (UnimplementedDeliveryServiceServer) GetParcelLockers(context.Context, *GetParcelLockersRequest) (*GetParcelLockersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetParcelLockers not implemented")
 }
 func (UnimplementedDeliveryServiceServer) mustEmbedUnimplementedDeliveryServiceServer() {}
 func (UnimplementedDeliveryServiceServer) testEmbeddedByValue()                         {}
@@ -255,6 +308,60 @@ func _DeliveryService_CalculateRate_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeliveryService_GetSettlements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSettlementsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeliveryServiceServer).GetSettlements(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeliveryService_GetSettlements_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeliveryServiceServer).GetSettlements(ctx, req.(*GetSettlementsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeliveryService_GetStreets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStreetsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeliveryServiceServer).GetStreets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeliveryService_GetStreets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeliveryServiceServer).GetStreets(ctx, req.(*GetStreetsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeliveryService_GetParcelLockers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetParcelLockersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeliveryServiceServer).GetParcelLockers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeliveryService_GetParcelLockers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeliveryServiceServer).GetParcelLockers(ctx, req.(*GetParcelLockersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DeliveryService_ServiceDesc is the grpc.ServiceDesc for DeliveryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -282,7 +389,19 @@ var DeliveryService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "CalculateRate",
 			Handler:    _DeliveryService_CalculateRate_Handler,
 		},
+		{
+			MethodName: "GetSettlements",
+			Handler:    _DeliveryService_GetSettlements_Handler,
+		},
+		{
+			MethodName: "GetStreets",
+			Handler:    _DeliveryService_GetStreets_Handler,
+		},
+		{
+			MethodName: "GetParcelLockers",
+			Handler:    _DeliveryService_GetParcelLockers_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "delivery/v1/delivery.proto",
+	Metadata: "proto/delivery/v1/delivery.proto",
 }

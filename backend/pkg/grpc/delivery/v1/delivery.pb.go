@@ -2,18 +2,17 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v3.21.12
-// source: delivery/v1/delivery.proto
+// source: proto/delivery/v1/delivery.proto
 
 package deliveryv1
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -75,11 +74,11 @@ func (x ShipmentStatus) String() string {
 }
 
 func (ShipmentStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_delivery_v1_delivery_proto_enumTypes[0].Descriptor()
+	return file_proto_delivery_v1_delivery_proto_enumTypes[0].Descriptor()
 }
 
 func (ShipmentStatus) Type() protoreflect.EnumType {
-	return &file_delivery_v1_delivery_proto_enumTypes[0]
+	return &file_proto_delivery_v1_delivery_proto_enumTypes[0]
 }
 
 func (x ShipmentStatus) Number() protoreflect.EnumNumber {
@@ -88,7 +87,7 @@ func (x ShipmentStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ShipmentStatus.Descriptor instead.
 func (ShipmentStatus) EnumDescriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{0}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{0}
 }
 
 // Delivery provider enumeration
@@ -134,11 +133,11 @@ func (x DeliveryProvider) String() string {
 }
 
 func (DeliveryProvider) Descriptor() protoreflect.EnumDescriptor {
-	return file_delivery_v1_delivery_proto_enumTypes[1].Descriptor()
+	return file_proto_delivery_v1_delivery_proto_enumTypes[1].Descriptor()
 }
 
 func (DeliveryProvider) Type() protoreflect.EnumType {
-	return &file_delivery_v1_delivery_proto_enumTypes[1]
+	return &file_proto_delivery_v1_delivery_proto_enumTypes[1]
 }
 
 func (x DeliveryProvider) Number() protoreflect.EnumNumber {
@@ -147,7 +146,7 @@ func (x DeliveryProvider) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DeliveryProvider.Descriptor instead.
 func (DeliveryProvider) EnumDescriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{1}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{1}
 }
 
 // Address message
@@ -166,7 +165,7 @@ type Address struct {
 
 func (x *Address) Reset() {
 	*x = Address{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[0]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -178,7 +177,7 @@ func (x *Address) String() string {
 func (*Address) ProtoMessage() {}
 
 func (x *Address) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[0]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -191,7 +190,7 @@ func (x *Address) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Address.ProtoReflect.Descriptor instead.
 func (*Address) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{0}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Address) GetStreet() string {
@@ -258,7 +257,7 @@ type Package struct {
 
 func (x *Package) Reset() {
 	*x = Package{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[1]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -270,7 +269,7 @@ func (x *Package) String() string {
 func (*Package) ProtoMessage() {}
 
 func (x *Package) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[1]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -283,7 +282,7 @@ func (x *Package) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Package.ProtoReflect.Descriptor instead.
 func (*Package) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{1}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Package) GetWeight() string {
@@ -350,7 +349,7 @@ type Shipment struct {
 
 func (x *Shipment) Reset() {
 	*x = Shipment{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[2]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -362,7 +361,7 @@ func (x *Shipment) String() string {
 func (*Shipment) ProtoMessage() {}
 
 func (x *Shipment) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[2]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -375,7 +374,7 @@ func (x *Shipment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Shipment.ProtoReflect.Descriptor instead.
 func (*Shipment) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{2}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Shipment) GetId() string {
@@ -483,7 +482,7 @@ type CreateShipmentRequest struct {
 
 func (x *CreateShipmentRequest) Reset() {
 	*x = CreateShipmentRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[3]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -495,7 +494,7 @@ func (x *CreateShipmentRequest) String() string {
 func (*CreateShipmentRequest) ProtoMessage() {}
 
 func (x *CreateShipmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[3]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -508,7 +507,7 @@ func (x *CreateShipmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateShipmentRequest.ProtoReflect.Descriptor instead.
 func (*CreateShipmentRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{3}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreateShipmentRequest) GetProvider() DeliveryProvider {
@@ -555,7 +554,7 @@ type CreateShipmentResponse struct {
 
 func (x *CreateShipmentResponse) Reset() {
 	*x = CreateShipmentResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[4]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -567,7 +566,7 @@ func (x *CreateShipmentResponse) String() string {
 func (*CreateShipmentResponse) ProtoMessage() {}
 
 func (x *CreateShipmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[4]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -580,7 +579,7 @@ func (x *CreateShipmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateShipmentResponse.ProtoReflect.Descriptor instead.
 func (*CreateShipmentResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{4}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateShipmentResponse) GetShipment() *Shipment {
@@ -600,7 +599,7 @@ type GetShipmentRequest struct {
 
 func (x *GetShipmentRequest) Reset() {
 	*x = GetShipmentRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[5]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -612,7 +611,7 @@ func (x *GetShipmentRequest) String() string {
 func (*GetShipmentRequest) ProtoMessage() {}
 
 func (x *GetShipmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[5]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -625,7 +624,7 @@ func (x *GetShipmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetShipmentRequest.ProtoReflect.Descriptor instead.
 func (*GetShipmentRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{5}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetShipmentRequest) GetId() string {
@@ -644,7 +643,7 @@ type GetShipmentResponse struct {
 
 func (x *GetShipmentResponse) Reset() {
 	*x = GetShipmentResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[6]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -656,7 +655,7 @@ func (x *GetShipmentResponse) String() string {
 func (*GetShipmentResponse) ProtoMessage() {}
 
 func (x *GetShipmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[6]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -669,7 +668,7 @@ func (x *GetShipmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetShipmentResponse.ProtoReflect.Descriptor instead.
 func (*GetShipmentResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{6}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetShipmentResponse) GetShipment() *Shipment {
@@ -689,7 +688,7 @@ type TrackShipmentRequest struct {
 
 func (x *TrackShipmentRequest) Reset() {
 	*x = TrackShipmentRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[7]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -701,7 +700,7 @@ func (x *TrackShipmentRequest) String() string {
 func (*TrackShipmentRequest) ProtoMessage() {}
 
 func (x *TrackShipmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[7]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -714,7 +713,7 @@ func (x *TrackShipmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrackShipmentRequest.ProtoReflect.Descriptor instead.
 func (*TrackShipmentRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{7}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *TrackShipmentRequest) GetTrackingNumber() string {
@@ -734,7 +733,7 @@ type TrackShipmentResponse struct {
 
 func (x *TrackShipmentResponse) Reset() {
 	*x = TrackShipmentResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[8]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -746,7 +745,7 @@ func (x *TrackShipmentResponse) String() string {
 func (*TrackShipmentResponse) ProtoMessage() {}
 
 func (x *TrackShipmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[8]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -759,7 +758,7 @@ func (x *TrackShipmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrackShipmentResponse.ProtoReflect.Descriptor instead.
 func (*TrackShipmentResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{8}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *TrackShipmentResponse) GetShipment() *Shipment {
@@ -788,7 +787,7 @@ type TrackingEvent struct {
 
 func (x *TrackingEvent) Reset() {
 	*x = TrackingEvent{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[9]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -800,7 +799,7 @@ func (x *TrackingEvent) String() string {
 func (*TrackingEvent) ProtoMessage() {}
 
 func (x *TrackingEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[9]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -813,7 +812,7 @@ func (x *TrackingEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrackingEvent.ProtoReflect.Descriptor instead.
 func (*TrackingEvent) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{9}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *TrackingEvent) GetStatus() ShipmentStatus {
@@ -855,7 +854,7 @@ type CancelShipmentRequest struct {
 
 func (x *CancelShipmentRequest) Reset() {
 	*x = CancelShipmentRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[10]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -867,7 +866,7 @@ func (x *CancelShipmentRequest) String() string {
 func (*CancelShipmentRequest) ProtoMessage() {}
 
 func (x *CancelShipmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[10]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -880,7 +879,7 @@ func (x *CancelShipmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelShipmentRequest.ProtoReflect.Descriptor instead.
 func (*CancelShipmentRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{10}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CancelShipmentRequest) GetId() string {
@@ -906,7 +905,7 @@ type CancelShipmentResponse struct {
 
 func (x *CancelShipmentResponse) Reset() {
 	*x = CancelShipmentResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[11]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -918,7 +917,7 @@ func (x *CancelShipmentResponse) String() string {
 func (*CancelShipmentResponse) ProtoMessage() {}
 
 func (x *CancelShipmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[11]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -931,7 +930,7 @@ func (x *CancelShipmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelShipmentResponse.ProtoReflect.Descriptor instead.
 func (*CancelShipmentResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{11}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CancelShipmentResponse) GetShipment() *Shipment {
@@ -954,7 +953,7 @@ type CalculateRateRequest struct {
 
 func (x *CalculateRateRequest) Reset() {
 	*x = CalculateRateRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[12]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -966,7 +965,7 @@ func (x *CalculateRateRequest) String() string {
 func (*CalculateRateRequest) ProtoMessage() {}
 
 func (x *CalculateRateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[12]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -979,7 +978,7 @@ func (x *CalculateRateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalculateRateRequest.ProtoReflect.Descriptor instead.
 func (*CalculateRateRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{12}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CalculateRateRequest) GetProvider() DeliveryProvider {
@@ -1021,7 +1020,7 @@ type CalculateRateResponse struct {
 
 func (x *CalculateRateResponse) Reset() {
 	*x = CalculateRateResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[13]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1033,7 +1032,7 @@ func (x *CalculateRateResponse) String() string {
 func (*CalculateRateResponse) ProtoMessage() {}
 
 func (x *CalculateRateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[13]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1046,7 +1045,7 @@ func (x *CalculateRateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalculateRateResponse.ProtoReflect.Descriptor instead.
 func (*CalculateRateResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{13}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CalculateRateResponse) GetCost() string {
@@ -1070,11 +1069,565 @@ func (x *CalculateRateResponse) GetEstimatedDelivery() *timestamppb.Timestamp {
 	return nil
 }
 
-var File_delivery_v1_delivery_proto protoreflect.FileDescriptor
+// Settlement/City information
+type Settlement struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	ZipCode       string                 `protobuf:"bytes,3,opt,name=zip_code,json=zipCode,proto3" json:"zip_code,omitempty"`
+	Country       string                 `protobuf:"bytes,4,opt,name=country,proto3" json:"country,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
 
-const file_delivery_v1_delivery_proto_rawDesc = "" +
+func (x *Settlement) Reset() {
+	*x = Settlement{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Settlement) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Settlement) ProtoMessage() {}
+
+func (x *Settlement) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Settlement.ProtoReflect.Descriptor instead.
+func (*Settlement) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *Settlement) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Settlement) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Settlement) GetZipCode() string {
+	if x != nil {
+		return x.ZipCode
+	}
+	return ""
+}
+
+func (x *Settlement) GetCountry() string {
+	if x != nil {
+		return x.Country
+	}
+	return ""
+}
+
+// GetSettlements messages
+type GetSettlementsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      DeliveryProvider       `protobuf:"varint,1,opt,name=provider,proto3,enum=delivery.v1.DeliveryProvider" json:"provider,omitempty"`
+	Country       string                 `protobuf:"bytes,2,opt,name=country,proto3" json:"country,omitempty"`                            // Optional filter by country (e.g., "RS")
+	SearchQuery   string                 `protobuf:"bytes,3,opt,name=search_query,json=searchQuery,proto3" json:"search_query,omitempty"` // Optional search by name
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSettlementsRequest) Reset() {
+	*x = GetSettlementsRequest{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSettlementsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSettlementsRequest) ProtoMessage() {}
+
+func (x *GetSettlementsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSettlementsRequest.ProtoReflect.Descriptor instead.
+func (*GetSettlementsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *GetSettlementsRequest) GetProvider() DeliveryProvider {
+	if x != nil {
+		return x.Provider
+	}
+	return DeliveryProvider_DELIVERY_PROVIDER_UNSPECIFIED
+}
+
+func (x *GetSettlementsRequest) GetCountry() string {
+	if x != nil {
+		return x.Country
+	}
+	return ""
+}
+
+func (x *GetSettlementsRequest) GetSearchQuery() string {
+	if x != nil {
+		return x.SearchQuery
+	}
+	return ""
+}
+
+type GetSettlementsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Settlements   []*Settlement          `protobuf:"bytes,1,rep,name=settlements,proto3" json:"settlements,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSettlementsResponse) Reset() {
+	*x = GetSettlementsResponse{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSettlementsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSettlementsResponse) ProtoMessage() {}
+
+func (x *GetSettlementsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSettlementsResponse.ProtoReflect.Descriptor instead.
+func (*GetSettlementsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *GetSettlementsResponse) GetSettlements() []*Settlement {
+	if x != nil {
+		return x.Settlements
+	}
+	return nil
+}
+
+// Street information
+type Street struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	SettlementName string                 `protobuf:"bytes,3,opt,name=settlement_name,json=settlementName,proto3" json:"settlement_name,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Street) Reset() {
+	*x = Street{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Street) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Street) ProtoMessage() {}
+
+func (x *Street) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Street.ProtoReflect.Descriptor instead.
+func (*Street) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *Street) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Street) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Street) GetSettlementName() string {
+	if x != nil {
+		return x.SettlementName
+	}
+	return ""
+}
+
+// GetStreets messages
+type GetStreetsRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Provider       DeliveryProvider       `protobuf:"varint,1,opt,name=provider,proto3,enum=delivery.v1.DeliveryProvider" json:"provider,omitempty"`
+	SettlementName string                 `protobuf:"bytes,2,opt,name=settlement_name,json=settlementName,proto3" json:"settlement_name,omitempty"` // Required: settlement name
+	SearchQuery    string                 `protobuf:"bytes,3,opt,name=search_query,json=searchQuery,proto3" json:"search_query,omitempty"`          // Optional search by street name
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *GetStreetsRequest) Reset() {
+	*x = GetStreetsRequest{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetStreetsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetStreetsRequest) ProtoMessage() {}
+
+func (x *GetStreetsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetStreetsRequest.ProtoReflect.Descriptor instead.
+func (*GetStreetsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetStreetsRequest) GetProvider() DeliveryProvider {
+	if x != nil {
+		return x.Provider
+	}
+	return DeliveryProvider_DELIVERY_PROVIDER_UNSPECIFIED
+}
+
+func (x *GetStreetsRequest) GetSettlementName() string {
+	if x != nil {
+		return x.SettlementName
+	}
+	return ""
+}
+
+func (x *GetStreetsRequest) GetSearchQuery() string {
+	if x != nil {
+		return x.SearchQuery
+	}
+	return ""
+}
+
+type GetStreetsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Streets       []*Street              `protobuf:"bytes,1,rep,name=streets,proto3" json:"streets,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetStreetsResponse) Reset() {
+	*x = GetStreetsResponse{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetStreetsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetStreetsResponse) ProtoMessage() {}
+
+func (x *GetStreetsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetStreetsResponse.ProtoReflect.Descriptor instead.
+func (*GetStreetsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *GetStreetsResponse) GetStreets() []*Street {
+	if x != nil {
+		return x.Streets
+	}
+	return nil
+}
+
+// Parcel locker information
+type ParcelLocker struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"` // Locker code (e.g., "BG001")
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Address       string                 `protobuf:"bytes,4,opt,name=address,proto3" json:"address,omitempty"`
+	City          string                 `protobuf:"bytes,5,opt,name=city,proto3" json:"city,omitempty"`
+	ZipCode       string                 `protobuf:"bytes,6,opt,name=zip_code,json=zipCode,proto3" json:"zip_code,omitempty"`
+	Latitude      float64                `protobuf:"fixed64,7,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	Longitude     float64                `protobuf:"fixed64,8,opt,name=longitude,proto3" json:"longitude,omitempty"`
+	Available     bool                   `protobuf:"varint,9,opt,name=available,proto3" json:"available,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ParcelLocker) Reset() {
+	*x = ParcelLocker{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ParcelLocker) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ParcelLocker) ProtoMessage() {}
+
+func (x *ParcelLocker) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ParcelLocker.ProtoReflect.Descriptor instead.
+func (*ParcelLocker) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ParcelLocker) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *ParcelLocker) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *ParcelLocker) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ParcelLocker) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *ParcelLocker) GetCity() string {
+	if x != nil {
+		return x.City
+	}
+	return ""
+}
+
+func (x *ParcelLocker) GetZipCode() string {
+	if x != nil {
+		return x.ZipCode
+	}
+	return ""
+}
+
+func (x *ParcelLocker) GetLatitude() float64 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *ParcelLocker) GetLongitude() float64 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
+}
+
+func (x *ParcelLocker) GetAvailable() bool {
+	if x != nil {
+		return x.Available
+	}
+	return false
+}
+
+// GetParcelLockers messages
+type GetParcelLockersRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      DeliveryProvider       `protobuf:"varint,1,opt,name=provider,proto3,enum=delivery.v1.DeliveryProvider" json:"provider,omitempty"`
+	City          string                 `protobuf:"bytes,2,opt,name=city,proto3" json:"city,omitempty"`                                  // Optional filter by city
+	SearchQuery   string                 `protobuf:"bytes,3,opt,name=search_query,json=searchQuery,proto3" json:"search_query,omitempty"` // Optional search by name/code
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetParcelLockersRequest) Reset() {
+	*x = GetParcelLockersRequest{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetParcelLockersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetParcelLockersRequest) ProtoMessage() {}
+
+func (x *GetParcelLockersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetParcelLockersRequest.ProtoReflect.Descriptor instead.
+func (*GetParcelLockersRequest) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *GetParcelLockersRequest) GetProvider() DeliveryProvider {
+	if x != nil {
+		return x.Provider
+	}
+	return DeliveryProvider_DELIVERY_PROVIDER_UNSPECIFIED
+}
+
+func (x *GetParcelLockersRequest) GetCity() string {
+	if x != nil {
+		return x.City
+	}
+	return ""
+}
+
+func (x *GetParcelLockersRequest) GetSearchQuery() string {
+	if x != nil {
+		return x.SearchQuery
+	}
+	return ""
+}
+
+type GetParcelLockersResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ParcelLockers []*ParcelLocker        `protobuf:"bytes,1,rep,name=parcel_lockers,json=parcelLockers,proto3" json:"parcel_lockers,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetParcelLockersResponse) Reset() {
+	*x = GetParcelLockersResponse{}
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetParcelLockersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetParcelLockersResponse) ProtoMessage() {}
+
+func (x *GetParcelLockersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetParcelLockersResponse.ProtoReflect.Descriptor instead.
+func (*GetParcelLockersResponse) Descriptor() ([]byte, []int) {
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *GetParcelLockersResponse) GetParcelLockers() []*ParcelLocker {
+	if x != nil {
+		return x.ParcelLockers
+	}
+	return nil
+}
+
+var File_proto_delivery_v1_delivery_proto protoreflect.FileDescriptor
+
+const file_proto_delivery_v1_delivery_proto_rawDesc = "" +
 	"\n" +
-	"\x1adelivery/v1/delivery.proto\x12\vdelivery.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xce\x01\n" +
+	" proto/delivery/v1/delivery.proto\x12\vdelivery.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xce\x01\n" +
 	"\aAddress\x12\x16\n" +
 	"\x06street\x18\x01 \x01(\tR\x06street\x12\x12\n" +
 	"\x04city\x18\x02 \x01(\tR\x04city\x12\x14\n" +
@@ -1146,7 +1699,45 @@ const file_delivery_v1_delivery_proto_rawDesc = "" +
 	"\x15CalculateRateResponse\x12\x12\n" +
 	"\x04cost\x18\x01 \x01(\tR\x04cost\x12\x1a\n" +
 	"\bcurrency\x18\x02 \x01(\tR\bcurrency\x12I\n" +
-	"\x12estimated_delivery\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x11estimatedDelivery*\xab\x02\n" +
+	"\x12estimated_delivery\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x11estimatedDelivery\"e\n" +
+	"\n" +
+	"Settlement\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x19\n" +
+	"\bzip_code\x18\x03 \x01(\tR\azipCode\x12\x18\n" +
+	"\acountry\x18\x04 \x01(\tR\acountry\"\x8f\x01\n" +
+	"\x15GetSettlementsRequest\x129\n" +
+	"\bprovider\x18\x01 \x01(\x0e2\x1d.delivery.v1.DeliveryProviderR\bprovider\x12\x18\n" +
+	"\acountry\x18\x02 \x01(\tR\acountry\x12!\n" +
+	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"S\n" +
+	"\x16GetSettlementsResponse\x129\n" +
+	"\vsettlements\x18\x01 \x03(\v2\x17.delivery.v1.SettlementR\vsettlements\"U\n" +
+	"\x06Street\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12'\n" +
+	"\x0fsettlement_name\x18\x03 \x01(\tR\x0esettlementName\"\x9a\x01\n" +
+	"\x11GetStreetsRequest\x129\n" +
+	"\bprovider\x18\x01 \x01(\x0e2\x1d.delivery.v1.DeliveryProviderR\bprovider\x12'\n" +
+	"\x0fsettlement_name\x18\x02 \x01(\tR\x0esettlementName\x12!\n" +
+	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"C\n" +
+	"\x12GetStreetsResponse\x12-\n" +
+	"\astreets\x18\x01 \x03(\v2\x13.delivery.v1.StreetR\astreets\"\xe7\x01\n" +
+	"\fParcelLocker\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
+	"\x04code\x18\x02 \x01(\tR\x04code\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x18\n" +
+	"\aaddress\x18\x04 \x01(\tR\aaddress\x12\x12\n" +
+	"\x04city\x18\x05 \x01(\tR\x04city\x12\x19\n" +
+	"\bzip_code\x18\x06 \x01(\tR\azipCode\x12\x1a\n" +
+	"\blatitude\x18\a \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\b \x01(\x01R\tlongitude\x12\x1c\n" +
+	"\tavailable\x18\t \x01(\bR\tavailable\"\x8b\x01\n" +
+	"\x17GetParcelLockersRequest\x129\n" +
+	"\bprovider\x18\x01 \x01(\x0e2\x1d.delivery.v1.DeliveryProviderR\bprovider\x12\x12\n" +
+	"\x04city\x18\x02 \x01(\tR\x04city\x12!\n" +
+	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"\\\n" +
+	"\x18GetParcelLockersResponse\x12@\n" +
+	"\x0eparcel_lockers\x18\x01 \x03(\v2\x19.delivery.v1.ParcelLockerR\rparcelLockers*\xab\x02\n" +
 	"\x0eShipmentStatus\x12\x1f\n" +
 	"\x1bSHIPMENT_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17SHIPMENT_STATUS_PENDING\x10\x01\x12\x1d\n" +
@@ -1163,57 +1754,70 @@ const file_delivery_v1_delivery_proto_rawDesc = "" +
 	"\x1dDELIVERY_PROVIDER_BEX_EXPRESS\x10\x02\x12!\n" +
 	"\x1dDELIVERY_PROVIDER_AKS_EXPRESS\x10\x03\x12\x1f\n" +
 	"\x1bDELIVERY_PROVIDER_D_EXPRESS\x10\x04\x12\"\n" +
-	"\x1eDELIVERY_PROVIDER_CITY_EXPRESS\x10\x052\xc9\x03\n" +
+	"\x1eDELIVERY_PROVIDER_CITY_EXPRESS\x10\x052\xd4\x05\n" +
 	"\x0fDeliveryService\x12Y\n" +
 	"\x0eCreateShipment\x12\".delivery.v1.CreateShipmentRequest\x1a#.delivery.v1.CreateShipmentResponse\x12P\n" +
 	"\vGetShipment\x12\x1f.delivery.v1.GetShipmentRequest\x1a .delivery.v1.GetShipmentResponse\x12V\n" +
 	"\rTrackShipment\x12!.delivery.v1.TrackShipmentRequest\x1a\".delivery.v1.TrackShipmentResponse\x12Y\n" +
 	"\x0eCancelShipment\x12\".delivery.v1.CancelShipmentRequest\x1a#.delivery.v1.CancelShipmentResponse\x12V\n" +
-	"\rCalculateRate\x12!.delivery.v1.CalculateRateRequest\x1a\".delivery.v1.CalculateRateResponseB;Z9github.com/sveturs/delivery/gen/go/delivery/v1;deliveryv1b\x06proto3"
+	"\rCalculateRate\x12!.delivery.v1.CalculateRateRequest\x1a\".delivery.v1.CalculateRateResponse\x12Y\n" +
+	"\x0eGetSettlements\x12\".delivery.v1.GetSettlementsRequest\x1a#.delivery.v1.GetSettlementsResponse\x12M\n" +
+	"\n" +
+	"GetStreets\x12\x1e.delivery.v1.GetStreetsRequest\x1a\x1f.delivery.v1.GetStreetsResponse\x12_\n" +
+	"\x10GetParcelLockers\x12$.delivery.v1.GetParcelLockersRequest\x1a%.delivery.v1.GetParcelLockersResponseB)Z'backend/pkg/grpc/delivery/v1;deliveryv1b\x06proto3"
 
 var (
-	file_delivery_v1_delivery_proto_rawDescOnce sync.Once
-	file_delivery_v1_delivery_proto_rawDescData []byte
+	file_proto_delivery_v1_delivery_proto_rawDescOnce sync.Once
+	file_proto_delivery_v1_delivery_proto_rawDescData []byte
 )
 
-func file_delivery_v1_delivery_proto_rawDescGZIP() []byte {
-	file_delivery_v1_delivery_proto_rawDescOnce.Do(func() {
-		file_delivery_v1_delivery_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_delivery_v1_delivery_proto_rawDesc), len(file_delivery_v1_delivery_proto_rawDesc)))
+func file_proto_delivery_v1_delivery_proto_rawDescGZIP() []byte {
+	file_proto_delivery_v1_delivery_proto_rawDescOnce.Do(func() {
+		file_proto_delivery_v1_delivery_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_delivery_v1_delivery_proto_rawDesc), len(file_proto_delivery_v1_delivery_proto_rawDesc)))
 	})
-	return file_delivery_v1_delivery_proto_rawDescData
+	return file_proto_delivery_v1_delivery_proto_rawDescData
 }
 
-var file_delivery_v1_delivery_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_delivery_v1_delivery_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
-var file_delivery_v1_delivery_proto_goTypes = []any{
-	(ShipmentStatus)(0),            // 0: delivery.v1.ShipmentStatus
-	(DeliveryProvider)(0),          // 1: delivery.v1.DeliveryProvider
-	(*Address)(nil),                // 2: delivery.v1.Address
-	(*Package)(nil),                // 3: delivery.v1.Package
-	(*Shipment)(nil),               // 4: delivery.v1.Shipment
-	(*CreateShipmentRequest)(nil),  // 5: delivery.v1.CreateShipmentRequest
-	(*CreateShipmentResponse)(nil), // 6: delivery.v1.CreateShipmentResponse
-	(*GetShipmentRequest)(nil),     // 7: delivery.v1.GetShipmentRequest
-	(*GetShipmentResponse)(nil),    // 8: delivery.v1.GetShipmentResponse
-	(*TrackShipmentRequest)(nil),   // 9: delivery.v1.TrackShipmentRequest
-	(*TrackShipmentResponse)(nil),  // 10: delivery.v1.TrackShipmentResponse
-	(*TrackingEvent)(nil),          // 11: delivery.v1.TrackingEvent
-	(*CancelShipmentRequest)(nil),  // 12: delivery.v1.CancelShipmentRequest
-	(*CancelShipmentResponse)(nil), // 13: delivery.v1.CancelShipmentResponse
-	(*CalculateRateRequest)(nil),   // 14: delivery.v1.CalculateRateRequest
-	(*CalculateRateResponse)(nil),  // 15: delivery.v1.CalculateRateResponse
-	(*timestamppb.Timestamp)(nil),  // 16: google.protobuf.Timestamp
+var file_proto_delivery_v1_delivery_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_proto_delivery_v1_delivery_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_proto_delivery_v1_delivery_proto_goTypes = []any{
+	(ShipmentStatus)(0),              // 0: delivery.v1.ShipmentStatus
+	(DeliveryProvider)(0),            // 1: delivery.v1.DeliveryProvider
+	(*Address)(nil),                  // 2: delivery.v1.Address
+	(*Package)(nil),                  // 3: delivery.v1.Package
+	(*Shipment)(nil),                 // 4: delivery.v1.Shipment
+	(*CreateShipmentRequest)(nil),    // 5: delivery.v1.CreateShipmentRequest
+	(*CreateShipmentResponse)(nil),   // 6: delivery.v1.CreateShipmentResponse
+	(*GetShipmentRequest)(nil),       // 7: delivery.v1.GetShipmentRequest
+	(*GetShipmentResponse)(nil),      // 8: delivery.v1.GetShipmentResponse
+	(*TrackShipmentRequest)(nil),     // 9: delivery.v1.TrackShipmentRequest
+	(*TrackShipmentResponse)(nil),    // 10: delivery.v1.TrackShipmentResponse
+	(*TrackingEvent)(nil),            // 11: delivery.v1.TrackingEvent
+	(*CancelShipmentRequest)(nil),    // 12: delivery.v1.CancelShipmentRequest
+	(*CancelShipmentResponse)(nil),   // 13: delivery.v1.CancelShipmentResponse
+	(*CalculateRateRequest)(nil),     // 14: delivery.v1.CalculateRateRequest
+	(*CalculateRateResponse)(nil),    // 15: delivery.v1.CalculateRateResponse
+	(*Settlement)(nil),               // 16: delivery.v1.Settlement
+	(*GetSettlementsRequest)(nil),    // 17: delivery.v1.GetSettlementsRequest
+	(*GetSettlementsResponse)(nil),   // 18: delivery.v1.GetSettlementsResponse
+	(*Street)(nil),                   // 19: delivery.v1.Street
+	(*GetStreetsRequest)(nil),        // 20: delivery.v1.GetStreetsRequest
+	(*GetStreetsResponse)(nil),       // 21: delivery.v1.GetStreetsResponse
+	(*ParcelLocker)(nil),             // 22: delivery.v1.ParcelLocker
+	(*GetParcelLockersRequest)(nil),  // 23: delivery.v1.GetParcelLockersRequest
+	(*GetParcelLockersResponse)(nil), // 24: delivery.v1.GetParcelLockersResponse
+	(*timestamppb.Timestamp)(nil),    // 25: google.protobuf.Timestamp
 }
-var file_delivery_v1_delivery_proto_depIdxs = []int32{
+var file_proto_delivery_v1_delivery_proto_depIdxs = []int32{
 	1,  // 0: delivery.v1.Shipment.provider:type_name -> delivery.v1.DeliveryProvider
 	0,  // 1: delivery.v1.Shipment.status:type_name -> delivery.v1.ShipmentStatus
 	2,  // 2: delivery.v1.Shipment.from_address:type_name -> delivery.v1.Address
 	2,  // 3: delivery.v1.Shipment.to_address:type_name -> delivery.v1.Address
 	3,  // 4: delivery.v1.Shipment.package:type_name -> delivery.v1.Package
-	16, // 5: delivery.v1.Shipment.created_at:type_name -> google.protobuf.Timestamp
-	16, // 6: delivery.v1.Shipment.updated_at:type_name -> google.protobuf.Timestamp
-	16, // 7: delivery.v1.Shipment.estimated_delivery:type_name -> google.protobuf.Timestamp
-	16, // 8: delivery.v1.Shipment.actual_delivery:type_name -> google.protobuf.Timestamp
+	25, // 5: delivery.v1.Shipment.created_at:type_name -> google.protobuf.Timestamp
+	25, // 6: delivery.v1.Shipment.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 7: delivery.v1.Shipment.estimated_delivery:type_name -> google.protobuf.Timestamp
+	25, // 8: delivery.v1.Shipment.actual_delivery:type_name -> google.protobuf.Timestamp
 	1,  // 9: delivery.v1.CreateShipmentRequest.provider:type_name -> delivery.v1.DeliveryProvider
 	2,  // 10: delivery.v1.CreateShipmentRequest.from_address:type_name -> delivery.v1.Address
 	2,  // 11: delivery.v1.CreateShipmentRequest.to_address:type_name -> delivery.v1.Address
@@ -1223,51 +1827,63 @@ var file_delivery_v1_delivery_proto_depIdxs = []int32{
 	4,  // 15: delivery.v1.TrackShipmentResponse.shipment:type_name -> delivery.v1.Shipment
 	11, // 16: delivery.v1.TrackShipmentResponse.events:type_name -> delivery.v1.TrackingEvent
 	0,  // 17: delivery.v1.TrackingEvent.status:type_name -> delivery.v1.ShipmentStatus
-	16, // 18: delivery.v1.TrackingEvent.timestamp:type_name -> google.protobuf.Timestamp
+	25, // 18: delivery.v1.TrackingEvent.timestamp:type_name -> google.protobuf.Timestamp
 	4,  // 19: delivery.v1.CancelShipmentResponse.shipment:type_name -> delivery.v1.Shipment
 	1,  // 20: delivery.v1.CalculateRateRequest.provider:type_name -> delivery.v1.DeliveryProvider
 	2,  // 21: delivery.v1.CalculateRateRequest.from_address:type_name -> delivery.v1.Address
 	2,  // 22: delivery.v1.CalculateRateRequest.to_address:type_name -> delivery.v1.Address
 	3,  // 23: delivery.v1.CalculateRateRequest.package:type_name -> delivery.v1.Package
-	16, // 24: delivery.v1.CalculateRateResponse.estimated_delivery:type_name -> google.protobuf.Timestamp
-	5,  // 25: delivery.v1.DeliveryService.CreateShipment:input_type -> delivery.v1.CreateShipmentRequest
-	7,  // 26: delivery.v1.DeliveryService.GetShipment:input_type -> delivery.v1.GetShipmentRequest
-	9,  // 27: delivery.v1.DeliveryService.TrackShipment:input_type -> delivery.v1.TrackShipmentRequest
-	12, // 28: delivery.v1.DeliveryService.CancelShipment:input_type -> delivery.v1.CancelShipmentRequest
-	14, // 29: delivery.v1.DeliveryService.CalculateRate:input_type -> delivery.v1.CalculateRateRequest
-	6,  // 30: delivery.v1.DeliveryService.CreateShipment:output_type -> delivery.v1.CreateShipmentResponse
-	8,  // 31: delivery.v1.DeliveryService.GetShipment:output_type -> delivery.v1.GetShipmentResponse
-	10, // 32: delivery.v1.DeliveryService.TrackShipment:output_type -> delivery.v1.TrackShipmentResponse
-	13, // 33: delivery.v1.DeliveryService.CancelShipment:output_type -> delivery.v1.CancelShipmentResponse
-	15, // 34: delivery.v1.DeliveryService.CalculateRate:output_type -> delivery.v1.CalculateRateResponse
-	30, // [30:35] is the sub-list for method output_type
-	25, // [25:30] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	25, // 24: delivery.v1.CalculateRateResponse.estimated_delivery:type_name -> google.protobuf.Timestamp
+	1,  // 25: delivery.v1.GetSettlementsRequest.provider:type_name -> delivery.v1.DeliveryProvider
+	16, // 26: delivery.v1.GetSettlementsResponse.settlements:type_name -> delivery.v1.Settlement
+	1,  // 27: delivery.v1.GetStreetsRequest.provider:type_name -> delivery.v1.DeliveryProvider
+	19, // 28: delivery.v1.GetStreetsResponse.streets:type_name -> delivery.v1.Street
+	1,  // 29: delivery.v1.GetParcelLockersRequest.provider:type_name -> delivery.v1.DeliveryProvider
+	22, // 30: delivery.v1.GetParcelLockersResponse.parcel_lockers:type_name -> delivery.v1.ParcelLocker
+	5,  // 31: delivery.v1.DeliveryService.CreateShipment:input_type -> delivery.v1.CreateShipmentRequest
+	7,  // 32: delivery.v1.DeliveryService.GetShipment:input_type -> delivery.v1.GetShipmentRequest
+	9,  // 33: delivery.v1.DeliveryService.TrackShipment:input_type -> delivery.v1.TrackShipmentRequest
+	12, // 34: delivery.v1.DeliveryService.CancelShipment:input_type -> delivery.v1.CancelShipmentRequest
+	14, // 35: delivery.v1.DeliveryService.CalculateRate:input_type -> delivery.v1.CalculateRateRequest
+	17, // 36: delivery.v1.DeliveryService.GetSettlements:input_type -> delivery.v1.GetSettlementsRequest
+	20, // 37: delivery.v1.DeliveryService.GetStreets:input_type -> delivery.v1.GetStreetsRequest
+	23, // 38: delivery.v1.DeliveryService.GetParcelLockers:input_type -> delivery.v1.GetParcelLockersRequest
+	6,  // 39: delivery.v1.DeliveryService.CreateShipment:output_type -> delivery.v1.CreateShipmentResponse
+	8,  // 40: delivery.v1.DeliveryService.GetShipment:output_type -> delivery.v1.GetShipmentResponse
+	10, // 41: delivery.v1.DeliveryService.TrackShipment:output_type -> delivery.v1.TrackShipmentResponse
+	13, // 42: delivery.v1.DeliveryService.CancelShipment:output_type -> delivery.v1.CancelShipmentResponse
+	15, // 43: delivery.v1.DeliveryService.CalculateRate:output_type -> delivery.v1.CalculateRateResponse
+	18, // 44: delivery.v1.DeliveryService.GetSettlements:output_type -> delivery.v1.GetSettlementsResponse
+	21, // 45: delivery.v1.DeliveryService.GetStreets:output_type -> delivery.v1.GetStreetsResponse
+	24, // 46: delivery.v1.DeliveryService.GetParcelLockers:output_type -> delivery.v1.GetParcelLockersResponse
+	39, // [39:47] is the sub-list for method output_type
+	31, // [31:39] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
-func init() { file_delivery_v1_delivery_proto_init() }
-func file_delivery_v1_delivery_proto_init() {
-	if File_delivery_v1_delivery_proto != nil {
+func init() { file_proto_delivery_v1_delivery_proto_init() }
+func file_proto_delivery_v1_delivery_proto_init() {
+	if File_proto_delivery_v1_delivery_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_delivery_v1_delivery_proto_rawDesc), len(file_delivery_v1_delivery_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_delivery_v1_delivery_proto_rawDesc), len(file_proto_delivery_v1_delivery_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   14,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_delivery_v1_delivery_proto_goTypes,
-		DependencyIndexes: file_delivery_v1_delivery_proto_depIdxs,
-		EnumInfos:         file_delivery_v1_delivery_proto_enumTypes,
-		MessageInfos:      file_delivery_v1_delivery_proto_msgTypes,
+		GoTypes:           file_proto_delivery_v1_delivery_proto_goTypes,
+		DependencyIndexes: file_proto_delivery_v1_delivery_proto_depIdxs,
+		EnumInfos:         file_proto_delivery_v1_delivery_proto_enumTypes,
+		MessageInfos:      file_proto_delivery_v1_delivery_proto_msgTypes,
 	}.Build()
-	File_delivery_v1_delivery_proto = out.File
-	file_delivery_v1_delivery_proto_goTypes = nil
-	file_delivery_v1_delivery_proto_depIdxs = nil
+	File_proto_delivery_v1_delivery_proto = out.File
+	file_proto_delivery_v1_delivery_proto_goTypes = nil
+	file_proto_delivery_v1_delivery_proto_depIdxs = nil
 }

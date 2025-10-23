@@ -33,6 +33,9 @@ type grpcClientInterface interface {
 	TrackShipment(ctx context.Context, req *pb.TrackShipmentRequest) (*pb.TrackShipmentResponse, error)
 	CancelShipment(ctx context.Context, req *pb.CancelShipmentRequest) (*pb.CancelShipmentResponse, error)
 	CalculateRate(ctx context.Context, req *pb.CalculateRateRequest) (*pb.CalculateRateResponse, error)
+	GetSettlements(ctx context.Context, req *pb.GetSettlementsRequest) (*pb.GetSettlementsResponse, error)
+	GetStreets(ctx context.Context, req *pb.GetStreetsRequest) (*pb.GetStreetsResponse, error)
+	GetParcelLockers(ctx context.Context, req *pb.GetParcelLockersRequest) (*pb.GetParcelLockersResponse, error)
 	Close() error
 }
 

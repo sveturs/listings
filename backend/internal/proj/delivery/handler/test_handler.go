@@ -341,89 +341,153 @@ func (h *Handler) CalculateTestRate(c *fiber.Ctx) error {
 	}, "Delivery rate calculated successfully")
 }
 
-// GetTestSettlements возвращает список населенных пунктов
-// @Summary Get settlements list (MOCK)
-// @Description Get list of settlements (currently returns mock data, will be implemented in microservice)
+// GetTestSettlements возвращает список населенных пунктов через gRPC
+// @Summary Get settlements list via gRPC
+// @Description Get list of settlements from delivery microservice
 // @Tags delivery-test
 // @Produce json
+// @Param country query string false "Country code (e.g., RS)" default(RS)
+// @Param search_query query string false "Search query for settlement name"
 // @Success 200 {object} utils.SuccessResponseSwag "Settlements list"
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/public/delivery/test/settlements [get]
 func (h *Handler) GetTestSettlements(c *fiber.Ctx) error {
-	// TODO: Добавить RPC метод в микросервис для получения settlements
-	// Пока возвращаем mock данные для совместимости
-	h.logger.Warn().Msg("GetTestSettlements called - using mock data (implement RPC method in microservice)")
+	country := c.Query("country", "RS")
+	searchQuery := c.Query("search_query", "")
 
-	mockSettlements := []fiber.Map{
-		{"id": 1, "name": "Beograd", "zip_code": "11000"},
-		{"id": 2, "name": "Novi Sad", "zip_code": "21000"},
-		{"id": 3, "name": "Niš", "zip_code": "18000"},
-		{"id": 4, "name": "Kragujevac", "zip_code": "34000"},
-		{"id": 5, "name": "Subotica", "zip_code": "24000"},
+	// Вызываем gRPC микросервис
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	grpcReq := &pb.GetSettlementsRequest{
+		Provider:    pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
+		Country:     country,
+		SearchQuery: searchQuery,
 	}
 
+	resp, err := h.service.GetGRPCClient().GetSettlements(ctx, grpcReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Str("country", country).
+			Str("search_query", searchQuery).
+			Msg("Failed to get settlements via gRPC")
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "delivery.settlements_fetch_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	h.logger.Info().
+		Int("count", len(resp.Settlements)).
+		Str("country", country).
+		Msg("Settlements retrieved successfully via gRPC")
+
 	return utils.SendSuccessResponse(c, fiber.Map{
-		"settlements": mockSettlements,
-		"note":        "Mock data - implement GetSettlements RPC method in microservice",
-	}, "Settlements list retrieved successfully (mock data)")
+		"settlements": resp.Settlements,
+		"count":       len(resp.Settlements),
+	}, "Settlements list retrieved successfully")
 }
 
-// GetTestStreets возвращает список улиц по городу
-// @Summary Get streets by settlement (MOCK)
-// @Description Get list of streets for a settlement (currently returns mock data, will be implemented in microservice)
+// GetTestStreets возвращает список улиц по городу через gRPC
+// @Summary Get streets by settlement via gRPC
+// @Description Get list of streets for a settlement from delivery microservice
 // @Tags delivery-test
 // @Produce json
-// @Param settlement path string true "Settlement name"
+// @Param settlement_name query string true "Settlement name"
+// @Param search_query query string false "Search query for street name"
 // @Success 200 {object} utils.SuccessResponseSwag "Streets list"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid settlement"
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
-// @Router /api/public/delivery/test/streets/{settlement} [get]
+// @Router /api/public/delivery/test/streets [get]
 func (h *Handler) GetTestStreets(c *fiber.Ctx) error {
-	settlement := c.Params("settlement")
-	if settlement == "" {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "delivery.missing_settlement", nil)
+	settlementName := c.Query("settlement_name")
+	if settlementName == "" {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "delivery.missing_settlement", fiber.Map{
+			"missing_fields": []string{"settlement_name"},
+		})
 	}
 
-	// TODO: Добавить RPC метод в микросервис для получения streets
-	h.logger.Warn().
-		Str("settlement", settlement).
-		Msg("GetTestStreets called - using mock data (implement RPC method in microservice)")
+	searchQuery := c.Query("search_query", "")
 
-	mockStreets := []fiber.Map{
-		{"id": 1, "name": "Kneza Miloša", "settlement": settlement},
-		{"id": 2, "name": "Bulevar kralja Aleksandra", "settlement": settlement},
-		{"id": 3, "name": "Terazije", "settlement": settlement},
+	// Вызываем gRPC микросервис
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	grpcReq := &pb.GetStreetsRequest{
+		Provider:       pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
+		SettlementName: settlementName,
+		SearchQuery:    searchQuery,
 	}
+
+	resp, err := h.service.GetGRPCClient().GetStreets(ctx, grpcReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Str("settlement_name", settlementName).
+			Str("search_query", searchQuery).
+			Msg("Failed to get streets via gRPC")
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "delivery.streets_fetch_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	h.logger.Info().
+		Int("count", len(resp.Streets)).
+		Str("settlement_name", settlementName).
+		Msg("Streets retrieved successfully via gRPC")
 
 	return utils.SendSuccessResponse(c, fiber.Map{
-		"streets":    mockStreets,
-		"settlement": settlement,
-		"note":       "Mock data - implement GetStreets RPC method in microservice",
-	}, "Streets list retrieved successfully (mock data)")
+		"streets":         resp.Streets,
+		"count":           len(resp.Streets),
+		"settlement_name": settlementName,
+	}, "Streets list retrieved successfully")
 }
 
-// GetTestParcelLockers возвращает список паккетоматов
-// @Summary Get parcel lockers list (MOCK)
-// @Description Get list of parcel lockers (currently returns mock data, will be implemented in microservice)
+// GetTestParcelLockers возвращает список паккетоматов через gRPC
+// @Summary Get parcel lockers list via gRPC
+// @Description Get list of parcel lockers from delivery microservice
 // @Tags delivery-test
 // @Produce json
+// @Param city query string false "Filter by city"
+// @Param search_query query string false "Search query for locker name/code"
 // @Success 200 {object} utils.SuccessResponseSwag "Parcel lockers list"
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/public/delivery/test/parcel-lockers [get]
 func (h *Handler) GetTestParcelLockers(c *fiber.Ctx) error {
-	// TODO: Добавить RPC метод в микросервис для получения parcel lockers
-	h.logger.Warn().Msg("GetTestParcelLockers called - using mock data (implement RPC method in microservice)")
+	city := c.Query("city", "")
+	searchQuery := c.Query("search_query", "")
 
-	mockLockers := []fiber.Map{
-		{"id": 1, "code": "BG001", "name": "Beograd - Terazije", "address": "Terazije 1, Beograd"},
-		{"id": 2, "code": "BG002", "name": "Beograd - Savski venac", "address": "Kneza Miloša 10, Beograd"},
-		{"id": 3, "code": "NS001", "name": "Novi Sad - Centar", "address": "Bulevar Oslobodjenja 1, Novi Sad"},
+	// Вызываем gRPC микросервис
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	grpcReq := &pb.GetParcelLockersRequest{
+		Provider:    pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
+		City:        city,
+		SearchQuery: searchQuery,
 	}
 
+	resp, err := h.service.GetGRPCClient().GetParcelLockers(ctx, grpcReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Str("city", city).
+			Str("search_query", searchQuery).
+			Msg("Failed to get parcel lockers via gRPC")
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "delivery.parcel_lockers_fetch_failed", fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	h.logger.Info().
+		Int("count", len(resp.ParcelLockers)).
+		Str("city", city).
+		Msg("Parcel lockers retrieved successfully via gRPC")
+
 	return utils.SendSuccessResponse(c, fiber.Map{
-		"parcel_lockers": mockLockers,
-		"note":           "Mock data - implement GetParcelLockers RPC method in microservice",
-	}, "Parcel lockers list retrieved successfully (mock data)")
+		"parcel_lockers": resp.ParcelLockers,
+		"count":          len(resp.ParcelLockers),
+	}, "Parcel lockers list retrieved successfully")
 }
 
 // GetTestDeliveryServices возвращает список услуг доставки

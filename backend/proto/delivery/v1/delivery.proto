@@ -22,6 +22,15 @@ service DeliveryService {
 
   // CalculateRate calculates delivery cost
   rpc CalculateRate(CalculateRateRequest) returns (CalculateRateResponse);
+
+  // GetSettlements returns list of available settlements/cities
+  rpc GetSettlements(GetSettlementsRequest) returns (GetSettlementsResponse);
+
+  // GetStreets returns list of streets for a settlement
+  rpc GetStreets(GetStreetsRequest) returns (GetStreetsResponse);
+
+  // GetParcelLockers returns list of available parcel lockers
+  rpc GetParcelLockers(GetParcelLockersRequest) returns (GetParcelLockersResponse);
 }
 
 // Shipment status enumeration
@@ -146,4 +155,65 @@ message CalculateRateResponse {
   string cost = 1; // Cost in currency
   string currency = 2;
   google.protobuf.Timestamp estimated_delivery = 3;
+}
+
+// Settlement/City information
+message Settlement {
+  int32 id = 1;
+  string name = 2;
+  string zip_code = 3;
+  string country = 4;
+}
+
+// GetSettlements messages
+message GetSettlementsRequest {
+  DeliveryProvider provider = 1;
+  string country = 2; // Optional filter by country (e.g., "RS")
+  string search_query = 3; // Optional search by name
+}
+
+message GetSettlementsResponse {
+  repeated Settlement settlements = 1;
+}
+
+// Street information
+message Street {
+  int32 id = 1;
+  string name = 2;
+  string settlement_name = 3;
+}
+
+// GetStreets messages
+message GetStreetsRequest {
+  DeliveryProvider provider = 1;
+  string settlement_name = 2; // Required: settlement name
+  string search_query = 3; // Optional search by street name
+}
+
+message GetStreetsResponse {
+  repeated Street streets = 1;
+}
+
+// Parcel locker information
+message ParcelLocker {
+  int32 id = 1;
+  string code = 2; // Locker code (e.g., "BG001")
+  string name = 3;
+  string address = 4;
+  string city = 5;
+  string zip_code = 6;
+  double latitude = 7;
+  double longitude = 8;
+  bool available = 9;
+}
+
+// GetParcelLockers messages
+message GetParcelLockersRequest {
+  DeliveryProvider provider = 1;
+  string city = 2; // Optional filter by city
+  string search_query = 3; // Optional search by name/code
+}
+
+message GetParcelLockersResponse {
+  repeated ParcelLocker parcel_lockers = 1;
 }

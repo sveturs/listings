@@ -311,3 +311,138 @@ func (c *Client) onFailure() {
 		c.logger.Info("Circuit breaker opened due to consecutive failures: %d", c.failureCount)
 	}
 }
+
+// GetSettlements получает список населенных пунктов
+func (c *Client) GetSettlements(ctx context.Context, req *pb.GetSettlementsRequest) (*pb.GetSettlementsResponse, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Info("Circuit breaker is open, rejecting GetSettlements request")
+		return nil, fmt.Errorf("delivery service temporarily unavailable")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var resp *pb.GetSettlementsResponse
+	var err error
+
+	backoff := initialBackoff
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info("Retrying GetSettlements, attempt: %d", attempt+1)
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetSettlements(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Info("GetSettlements successful: %d settlements found", len(resp.Settlements))
+			return resp, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error("Non-retryable error in GetSettlements: %v", err)
+			return nil, err
+		}
+
+		c.logger.Info("Retryable error in GetSettlements, attempt %d: %v", attempt+1, err)
+	}
+
+	c.onFailure()
+	c.logger.Error("GetSettlements failed after all retries: %v", err)
+	return nil, fmt.Errorf("failed to get settlements after %d attempts: %w", maxRetries, err)
+}
+
+// GetStreets получает список улиц для населенного пункта
+func (c *Client) GetStreets(ctx context.Context, req *pb.GetStreetsRequest) (*pb.GetStreetsResponse, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Info("Circuit breaker is open, rejecting GetStreets request")
+		return nil, fmt.Errorf("delivery service temporarily unavailable")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var resp *pb.GetStreetsResponse
+	var err error
+
+	backoff := initialBackoff
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info("Retrying GetStreets, attempt: %d", attempt+1)
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetStreets(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Info("GetStreets successful: %d streets found", len(resp.Streets))
+			return resp, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error("Non-retryable error in GetStreets: %v", err)
+			return nil, err
+		}
+
+		c.logger.Info("Retryable error in GetStreets, attempt %d: %v", attempt+1, err)
+	}
+
+	c.onFailure()
+	c.logger.Error("GetStreets failed after all retries: %v", err)
+	return nil, fmt.Errorf("failed to get streets after %d attempts: %w", maxRetries, err)
+}
+
+// GetParcelLockers получает список паккетоматов
+func (c *Client) GetParcelLockers(ctx context.Context, req *pb.GetParcelLockersRequest) (*pb.GetParcelLockersResponse, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Info("Circuit breaker is open, rejecting GetParcelLockers request")
+		return nil, fmt.Errorf("delivery service temporarily unavailable")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var resp *pb.GetParcelLockersResponse
+	var err error
+
+	backoff := initialBackoff
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info("Retrying GetParcelLockers, attempt: %d", attempt+1)
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetParcelLockers(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Info("GetParcelLockers successful: %d parcel lockers found", len(resp.ParcelLockers))
+			return resp, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error("Non-retryable error in GetParcelLockers: %v", err)
+			return nil, err
+		}
+
+		c.logger.Info("Retryable error in GetParcelLockers, attempt %d: %v", attempt+1, err)
+	}
+
+	c.onFailure()
+	c.logger.Error("GetParcelLockers failed after all retries: %v", err)
+	return nil, fmt.Errorf("failed to get parcel lockers after %d attempts: %w", maxRetries, err)
+}
