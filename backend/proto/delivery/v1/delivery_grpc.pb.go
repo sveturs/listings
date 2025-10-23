@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.21.12
-// source: delivery/v1/delivery.proto
+// source: proto/delivery/v1/delivery.proto
 
 package deliveryv1
 
@@ -284,5 +284,5 @@ var DeliveryService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "delivery/v1/delivery.proto",
+	Metadata: "proto/delivery/v1/delivery.proto",
 }

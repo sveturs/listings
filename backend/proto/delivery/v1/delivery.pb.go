@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v3.21.12
-// source: delivery/v1/delivery.proto
+// source: proto/delivery/v1/delivery.proto
 
 package deliveryv1
 
@@ -75,11 +75,11 @@ func (x ShipmentStatus) String() string {
 }
 
 func (ShipmentStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_delivery_v1_delivery_proto_enumTypes[0].Descriptor()
+	return file_proto_delivery_v1_delivery_proto_enumTypes[0].Descriptor()
 }
 
 func (ShipmentStatus) Type() protoreflect.EnumType {
-	return &file_delivery_v1_delivery_proto_enumTypes[0]
+	return &file_proto_delivery_v1_delivery_proto_enumTypes[0]
 }
 
 func (x ShipmentStatus) Number() protoreflect.EnumNumber {
@@ -88,7 +88,7 @@ func (x ShipmentStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ShipmentStatus.Descriptor instead.
 func (ShipmentStatus) EnumDescriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{0}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{0}
 }
 
 // Delivery provider enumeration
@@ -134,11 +134,11 @@ func (x DeliveryProvider) String() string {
 }
 
 func (DeliveryProvider) Descriptor() protoreflect.EnumDescriptor {
-	return file_delivery_v1_delivery_proto_enumTypes[1].Descriptor()
+	return file_proto_delivery_v1_delivery_proto_enumTypes[1].Descriptor()
 }
 
 func (DeliveryProvider) Type() protoreflect.EnumType {
-	return &file_delivery_v1_delivery_proto_enumTypes[1]
+	return &file_proto_delivery_v1_delivery_proto_enumTypes[1]
 }
 
 func (x DeliveryProvider) Number() protoreflect.EnumNumber {
@@ -147,7 +147,7 @@ func (x DeliveryProvider) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DeliveryProvider.Descriptor instead.
 func (DeliveryProvider) EnumDescriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{1}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{1}
 }
 
 // Address message
@@ -166,7 +166,7 @@ type Address struct {
 
 func (x *Address) Reset() {
 	*x = Address{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[0]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -178,7 +178,7 @@ func (x *Address) String() string {
 func (*Address) ProtoMessage() {}
 
 func (x *Address) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[0]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -191,7 +191,7 @@ func (x *Address) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Address.ProtoReflect.Descriptor instead.
 func (*Address) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{0}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Address) GetStreet() string {
@@ -258,7 +258,7 @@ type Package struct {
 
 func (x *Package) Reset() {
 	*x = Package{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[1]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -270,7 +270,7 @@ func (x *Package) String() string {
 func (*Package) ProtoMessage() {}
 
 func (x *Package) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[1]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -283,7 +283,7 @@ func (x *Package) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Package.ProtoReflect.Descriptor instead.
 func (*Package) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{1}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Package) GetWeight() string {
@@ -350,7 +350,7 @@ type Shipment struct {
 
 func (x *Shipment) Reset() {
 	*x = Shipment{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[2]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -362,7 +362,7 @@ func (x *Shipment) String() string {
 func (*Shipment) ProtoMessage() {}
 
 func (x *Shipment) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[2]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -375,7 +375,7 @@ func (x *Shipment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Shipment.ProtoReflect.Descriptor instead.
 func (*Shipment) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{2}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Shipment) GetId() string {
@@ -483,7 +483,7 @@ type CreateShipmentRequest struct {
 
 func (x *CreateShipmentRequest) Reset() {
 	*x = CreateShipmentRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[3]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -495,7 +495,7 @@ func (x *CreateShipmentRequest) String() string {
 func (*CreateShipmentRequest) ProtoMessage() {}
 
 func (x *CreateShipmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[3]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -508,7 +508,7 @@ func (x *CreateShipmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateShipmentRequest.ProtoReflect.Descriptor instead.
 func (*CreateShipmentRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{3}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreateShipmentRequest) GetProvider() DeliveryProvider {
@@ -555,7 +555,7 @@ type CreateShipmentResponse struct {
 
 func (x *CreateShipmentResponse) Reset() {
 	*x = CreateShipmentResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[4]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -567,7 +567,7 @@ func (x *CreateShipmentResponse) String() string {
 func (*CreateShipmentResponse) ProtoMessage() {}
 
 func (x *CreateShipmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[4]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -580,7 +580,7 @@ func (x *CreateShipmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateShipmentResponse.ProtoReflect.Descriptor instead.
 func (*CreateShipmentResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{4}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateShipmentResponse) GetShipment() *Shipment {
@@ -600,7 +600,7 @@ type GetShipmentRequest struct {
 
 func (x *GetShipmentRequest) Reset() {
 	*x = GetShipmentRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[5]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -612,7 +612,7 @@ func (x *GetShipmentRequest) String() string {
 func (*GetShipmentRequest) ProtoMessage() {}
 
 func (x *GetShipmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[5]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -625,7 +625,7 @@ func (x *GetShipmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetShipmentRequest.ProtoReflect.Descriptor instead.
 func (*GetShipmentRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{5}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetShipmentRequest) GetId() string {
@@ -644,7 +644,7 @@ type GetShipmentResponse struct {
 
 func (x *GetShipmentResponse) Reset() {
 	*x = GetShipmentResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[6]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -656,7 +656,7 @@ func (x *GetShipmentResponse) String() string {
 func (*GetShipmentResponse) ProtoMessage() {}
 
 func (x *GetShipmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[6]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -669,7 +669,7 @@ func (x *GetShipmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetShipmentResponse.ProtoReflect.Descriptor instead.
 func (*GetShipmentResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{6}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetShipmentResponse) GetShipment() *Shipment {
@@ -689,7 +689,7 @@ type TrackShipmentRequest struct {
 
 func (x *TrackShipmentRequest) Reset() {
 	*x = TrackShipmentRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[7]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -701,7 +701,7 @@ func (x *TrackShipmentRequest) String() string {
 func (*TrackShipmentRequest) ProtoMessage() {}
 
 func (x *TrackShipmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[7]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -714,7 +714,7 @@ func (x *TrackShipmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrackShipmentRequest.ProtoReflect.Descriptor instead.
 func (*TrackShipmentRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{7}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *TrackShipmentRequest) GetTrackingNumber() string {
@@ -734,7 +734,7 @@ type TrackShipmentResponse struct {
 
 func (x *TrackShipmentResponse) Reset() {
 	*x = TrackShipmentResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[8]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -746,7 +746,7 @@ func (x *TrackShipmentResponse) String() string {
 func (*TrackShipmentResponse) ProtoMessage() {}
 
 func (x *TrackShipmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[8]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -759,7 +759,7 @@ func (x *TrackShipmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrackShipmentResponse.ProtoReflect.Descriptor instead.
 func (*TrackShipmentResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{8}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *TrackShipmentResponse) GetShipment() *Shipment {
@@ -788,7 +788,7 @@ type TrackingEvent struct {
 
 func (x *TrackingEvent) Reset() {
 	*x = TrackingEvent{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[9]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -800,7 +800,7 @@ func (x *TrackingEvent) String() string {
 func (*TrackingEvent) ProtoMessage() {}
 
 func (x *TrackingEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[9]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -813,7 +813,7 @@ func (x *TrackingEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrackingEvent.ProtoReflect.Descriptor instead.
 func (*TrackingEvent) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{9}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *TrackingEvent) GetStatus() ShipmentStatus {
@@ -855,7 +855,7 @@ type CancelShipmentRequest struct {
 
 func (x *CancelShipmentRequest) Reset() {
 	*x = CancelShipmentRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[10]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -867,7 +867,7 @@ func (x *CancelShipmentRequest) String() string {
 func (*CancelShipmentRequest) ProtoMessage() {}
 
 func (x *CancelShipmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[10]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -880,7 +880,7 @@ func (x *CancelShipmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelShipmentRequest.ProtoReflect.Descriptor instead.
 func (*CancelShipmentRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{10}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CancelShipmentRequest) GetId() string {
@@ -906,7 +906,7 @@ type CancelShipmentResponse struct {
 
 func (x *CancelShipmentResponse) Reset() {
 	*x = CancelShipmentResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[11]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -918,7 +918,7 @@ func (x *CancelShipmentResponse) String() string {
 func (*CancelShipmentResponse) ProtoMessage() {}
 
 func (x *CancelShipmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[11]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -931,7 +931,7 @@ func (x *CancelShipmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelShipmentResponse.ProtoReflect.Descriptor instead.
 func (*CancelShipmentResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{11}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CancelShipmentResponse) GetShipment() *Shipment {
@@ -954,7 +954,7 @@ type CalculateRateRequest struct {
 
 func (x *CalculateRateRequest) Reset() {
 	*x = CalculateRateRequest{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[12]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -966,7 +966,7 @@ func (x *CalculateRateRequest) String() string {
 func (*CalculateRateRequest) ProtoMessage() {}
 
 func (x *CalculateRateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[12]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -979,7 +979,7 @@ func (x *CalculateRateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalculateRateRequest.ProtoReflect.Descriptor instead.
 func (*CalculateRateRequest) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{12}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CalculateRateRequest) GetProvider() DeliveryProvider {
@@ -1021,7 +1021,7 @@ type CalculateRateResponse struct {
 
 func (x *CalculateRateResponse) Reset() {
 	*x = CalculateRateResponse{}
-	mi := &file_delivery_v1_delivery_proto_msgTypes[13]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1033,7 +1033,7 @@ func (x *CalculateRateResponse) String() string {
 func (*CalculateRateResponse) ProtoMessage() {}
 
 func (x *CalculateRateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_delivery_v1_delivery_proto_msgTypes[13]
+	mi := &file_proto_delivery_v1_delivery_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1046,7 +1046,7 @@ func (x *CalculateRateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalculateRateResponse.ProtoReflect.Descriptor instead.
 func (*CalculateRateResponse) Descriptor() ([]byte, []int) {
-	return file_delivery_v1_delivery_proto_rawDescGZIP(), []int{13}
+	return file_proto_delivery_v1_delivery_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CalculateRateResponse) GetCost() string {
@@ -1070,11 +1070,11 @@ func (x *CalculateRateResponse) GetEstimatedDelivery() *timestamppb.Timestamp {
 	return nil
 }
 
-var File_delivery_v1_delivery_proto protoreflect.FileDescriptor
+var File_proto_delivery_v1_delivery_proto protoreflect.FileDescriptor
 
-const file_delivery_v1_delivery_proto_rawDesc = "" +
+const file_proto_delivery_v1_delivery_proto_rawDesc = "" +
 	"\n" +
-	"\x1adelivery/v1/delivery.proto\x12\vdelivery.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xce\x01\n" +
+	" proto/delivery/v1/delivery.proto\x12\vdelivery.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xce\x01\n" +
 	"\aAddress\x12\x16\n" +
 	"\x06street\x18\x01 \x01(\tR\x06street\x12\x12\n" +
 	"\x04city\x18\x02 \x01(\tR\x04city\x12\x14\n" +
@@ -1169,23 +1169,23 @@ const file_delivery_v1_delivery_proto_rawDesc = "" +
 	"\vGetShipment\x12\x1f.delivery.v1.GetShipmentRequest\x1a .delivery.v1.GetShipmentResponse\x12V\n" +
 	"\rTrackShipment\x12!.delivery.v1.TrackShipmentRequest\x1a\".delivery.v1.TrackShipmentResponse\x12Y\n" +
 	"\x0eCancelShipment\x12\".delivery.v1.CancelShipmentRequest\x1a#.delivery.v1.CancelShipmentResponse\x12V\n" +
-	"\rCalculateRate\x12!.delivery.v1.CalculateRateRequest\x1a\".delivery.v1.CalculateRateResponseB;Z9github.com/sveturs/delivery/gen/go/delivery/v1;deliveryv1b\x06proto3"
+	"\rCalculateRate\x12!.delivery.v1.CalculateRateRequest\x1a\".delivery.v1.CalculateRateResponseB)Z'backend/pkg/grpc/delivery/v1;deliveryv1b\x06proto3"
 
 var (
-	file_delivery_v1_delivery_proto_rawDescOnce sync.Once
-	file_delivery_v1_delivery_proto_rawDescData []byte
+	file_proto_delivery_v1_delivery_proto_rawDescOnce sync.Once
+	file_proto_delivery_v1_delivery_proto_rawDescData []byte
 )
 
-func file_delivery_v1_delivery_proto_rawDescGZIP() []byte {
-	file_delivery_v1_delivery_proto_rawDescOnce.Do(func() {
-		file_delivery_v1_delivery_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_delivery_v1_delivery_proto_rawDesc), len(file_delivery_v1_delivery_proto_rawDesc)))
+func file_proto_delivery_v1_delivery_proto_rawDescGZIP() []byte {
+	file_proto_delivery_v1_delivery_proto_rawDescOnce.Do(func() {
+		file_proto_delivery_v1_delivery_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_delivery_v1_delivery_proto_rawDesc), len(file_proto_delivery_v1_delivery_proto_rawDesc)))
 	})
-	return file_delivery_v1_delivery_proto_rawDescData
+	return file_proto_delivery_v1_delivery_proto_rawDescData
 }
 
-var file_delivery_v1_delivery_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_delivery_v1_delivery_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
-var file_delivery_v1_delivery_proto_goTypes = []any{
+var file_proto_delivery_v1_delivery_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_proto_delivery_v1_delivery_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_proto_delivery_v1_delivery_proto_goTypes = []any{
 	(ShipmentStatus)(0),            // 0: delivery.v1.ShipmentStatus
 	(DeliveryProvider)(0),          // 1: delivery.v1.DeliveryProvider
 	(*Address)(nil),                // 2: delivery.v1.Address
@@ -1204,7 +1204,7 @@ var file_delivery_v1_delivery_proto_goTypes = []any{
 	(*CalculateRateResponse)(nil),  // 15: delivery.v1.CalculateRateResponse
 	(*timestamppb.Timestamp)(nil),  // 16: google.protobuf.Timestamp
 }
-var file_delivery_v1_delivery_proto_depIdxs = []int32{
+var file_proto_delivery_v1_delivery_proto_depIdxs = []int32{
 	1,  // 0: delivery.v1.Shipment.provider:type_name -> delivery.v1.DeliveryProvider
 	0,  // 1: delivery.v1.Shipment.status:type_name -> delivery.v1.ShipmentStatus
 	2,  // 2: delivery.v1.Shipment.from_address:type_name -> delivery.v1.Address
@@ -1247,27 +1247,27 @@ var file_delivery_v1_delivery_proto_depIdxs = []int32{
 	0,  // [0:25] is the sub-list for field type_name
 }
 
-func init() { file_delivery_v1_delivery_proto_init() }
-func file_delivery_v1_delivery_proto_init() {
-	if File_delivery_v1_delivery_proto != nil {
+func init() { file_proto_delivery_v1_delivery_proto_init() }
+func file_proto_delivery_v1_delivery_proto_init() {
+	if File_proto_delivery_v1_delivery_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_delivery_v1_delivery_proto_rawDesc), len(file_delivery_v1_delivery_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_delivery_v1_delivery_proto_rawDesc), len(file_proto_delivery_v1_delivery_proto_rawDesc)),
 			NumEnums:      2,
 			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_delivery_v1_delivery_proto_goTypes,
-		DependencyIndexes: file_delivery_v1_delivery_proto_depIdxs,
-		EnumInfos:         file_delivery_v1_delivery_proto_enumTypes,
-		MessageInfos:      file_delivery_v1_delivery_proto_msgTypes,
+		GoTypes:           file_proto_delivery_v1_delivery_proto_goTypes,
+		DependencyIndexes: file_proto_delivery_v1_delivery_proto_depIdxs,
+		EnumInfos:         file_proto_delivery_v1_delivery_proto_enumTypes,
+		MessageInfos:      file_proto_delivery_v1_delivery_proto_msgTypes,
 	}.Build()
-	File_delivery_v1_delivery_proto = out.File
-	file_delivery_v1_delivery_proto_goTypes = nil
-	file_delivery_v1_delivery_proto_depIdxs = nil
+	File_proto_delivery_v1_delivery_proto = out.File
+	file_proto_delivery_v1_delivery_proto_goTypes = nil
+	file_proto_delivery_v1_delivery_proto_depIdxs = nil
 }

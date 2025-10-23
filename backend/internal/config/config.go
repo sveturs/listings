@@ -215,7 +215,7 @@ func NewConfig() (*Config, error) {
 	// Delivery gRPC service configuration
 	deliveryGRPCURL := os.Getenv("DELIVERY_GRPC_URL")
 	if deliveryGRPCURL == "" {
-		deliveryGRPCURL = "localhost:50052" // Default: внутренний порт микросервиса
+		deliveryGRPCURL = "svetu.rs:30051" // Default: production delivery microservice
 	}
 	config.DeliveryGRPCURL = deliveryGRPCURL
 

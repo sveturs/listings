@@ -4,7 +4,7 @@ package delivery.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/sveturs/delivery/gen/go/delivery/v1;deliveryv1";
+option go_package = "backend/pkg/grpc/delivery/v1;deliveryv1";
 
 // DeliveryService provides delivery operations
 service DeliveryService {

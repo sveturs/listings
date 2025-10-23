@@ -1,6 +1,8 @@
 package delivery
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -9,7 +11,6 @@ import (
 	"backend/internal/config"
 	"backend/internal/middleware"
 	adminLogistics "backend/internal/proj/admin/logistics/service"
-	"backend/internal/proj/delivery/factory"
 	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/proj/delivery/handler"
 	"backend/internal/proj/delivery/service"
@@ -31,35 +32,25 @@ type Module struct {
 
 // NewModule создает новый модуль доставки
 func NewModule(db *sqlx.DB, cfg *config.Config, logger *logger.Logger) (*Module, error) {
-	// Инициализируем фабрику провайдеров с автоинициализацией Post Express
-	providerFactory, err := factory.NewProviderFactoryWithDefaults(db)
+	// Используем дефолтное значение если не задано
+	grpcURL := cfg.DeliveryGRPCURL
+	if grpcURL == "" {
+		grpcURL = "svetu.rs:30051" // Default: production delivery microservice
+		log.Info().Str("url", grpcURL).Msg("Using default delivery gRPC URL")
+	}
+
+	// Создаем gRPC клиент для delivery микросервиса (ОБЯЗАТЕЛЬНО)
+	grpcClient, err := grpcclient.NewClient(grpcURL, logger)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to initialize provider factory with defaults, using basic factory")
-		providerFactory = factory.NewProviderFactory(db, nil)
+		return nil, fmt.Errorf("failed to connect to delivery gRPC service at %s: %w", grpcURL, err)
 	}
+	log.Info().Str("url", grpcURL).Msg("Successfully connected to delivery gRPC service")
 
-	// Создаем gRPC клиент для delivery микросервиса
-	var grpcClient *grpcclient.Client
-	if cfg.DeliveryGRPCURL != "" {
-		grpcClient, err = grpcclient.NewClient(cfg.DeliveryGRPCURL, logger)
-		if err != nil {
-			log.Warn().Err(err).Str("url", cfg.DeliveryGRPCURL).Msg("Failed to connect to delivery gRPC service, using local implementation")
-			grpcClient = nil
-		} else {
-			log.Info().Str("url", cfg.DeliveryGRPCURL).Msg("Successfully connected to delivery gRPC service")
-		}
-	}
+	// Создаем сервис с обязательным gRPC клиентом
+	svc := service.NewService(db, grpcClient)
 
-	// Создаем сервис
-	svc := service.NewService(db, providerFactory)
-
-	// Если gRPC клиент доступен, устанавливаем его в сервис
-	if grpcClient != nil {
-		svc.SetGRPCClient(grpcClient)
-	}
-
-	// Создаем основной обработчик
-	h := handler.NewHandler(db, providerFactory)
+	// Создаем основной обработчик (он больше не нуждается в providerFactory)
+	h := handler.NewHandler(svc)
 
 	// Получаем admin обработчик из основного handler
 	adminHandler := h.GetAdminHandler()

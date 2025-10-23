@@ -5,10 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jmoiron/sqlx"
 
-	"backend/internal/proj/delivery/calculator"
-	"backend/internal/proj/delivery/factory"
 	"backend/internal/proj/delivery/models"
 	"backend/internal/proj/delivery/service"
 	"backend/pkg/utils"
@@ -21,8 +18,7 @@ type Handler struct {
 }
 
 // NewHandler создает новый обработчик
-func NewHandler(db *sqlx.DB, providerFactory *factory.ProviderFactory) *Handler {
-	svc := service.NewService(db, providerFactory)
+func NewHandler(svc *service.Service) *Handler {
 	return &Handler{
 		service:      svc,
 		adminHandler: NewAdminHandler(svc),
@@ -75,66 +71,44 @@ func (h *Handler) RegisterWebhookRoutes(router fiber.Router) {
 	router.Post("/:provider/tracking", h.HandleTrackingWebhook)
 }
 
-// CalculateUniversal - универсальный расчет стоимости доставки для всех провайдеров
-// @Summary Calculate universal delivery rates
-// @Description Calculate delivery rates across all available providers
+// CalculateUniversal - DEPRECATED: расчет перенесен в delivery microservice
+// @Summary Calculate universal delivery rates (DEPRECATED)
+// @Description DEPRECATED: This endpoint has been moved to delivery microservice. Use gRPC CalculateRate instead.
 // @Tags delivery
 // @Accept json
 // @Produce json
-// @Param request body calculator.CalculationRequest true "Calculation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=calculator.CalculationResponse} "Calculation results"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Param request body CalculationRequest true "Calculation request"
+// @Success 501 {object} utils.ErrorResponseSwag "Not implemented"
 // @Router /api/v1/delivery/calculate-universal [post]
 func (h *Handler) CalculateUniversal(c *fiber.Ctx) error {
-	var req calculator.CalculationRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
-	}
-
-	// Используем мок калькулятор для демонстрации
-	mockCalc := calculator.NewMockCalculator()
-	resp, err := mockCalc.CalculateMock(c.Context(), &req)
-	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.calculation_failed", nil)
-	}
-
-	return utils.SendSuccessResponse(c, resp, "Стоимость доставки рассчитана")
+	return utils.SendErrorResponse(
+		c,
+		fiber.StatusNotImplemented,
+		"delivery.calculation_moved_to_microservice",
+		fiber.Map{
+			"message": "Calculation functionality has been moved to delivery microservice. Use gRPC CalculateRate method instead.",
+		},
+	)
 }
 
-// CalculateCart - расчет стоимости доставки для корзины
-// @Summary Calculate delivery for cart
-// @Description Calculate delivery rates for cart items with optimization
+// CalculateCart - DEPRECATED: расчет перенесен в delivery microservice
+// @Summary Calculate delivery for cart (DEPRECATED)
+// @Description DEPRECATED: This endpoint has been moved to delivery microservice. Use gRPC CalculateRate instead.
 // @Tags delivery
 // @Accept json
 // @Produce json
 // @Param request body CartCalculationRequest true "Cart calculation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=calculator.CalculationResponse} "Calculation results"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 501 {object} utils.ErrorResponseSwag "Not implemented"
 // @Router /api/v1/delivery/calculate-cart [post]
 func (h *Handler) CalculateCart(c *fiber.Ctx) error {
-	var req CartCalculationRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
-	}
-
-	// Конвертируем в стандартный запрос расчета
-	calcReq := &calculator.CalculationRequest{
-		FromLocation:   req.FromLocation,
-		ToLocation:     req.ToLocation,
-		Items:          req.Items,
-		InsuranceValue: req.InsuranceValue,
-		CODAmount:      req.CODAmount,
-		DeliveryType:   req.DeliveryType,
-	}
-
-	resp, err := h.service.CalculateDelivery(c.Context(), calcReq)
-	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.calculation_failed", nil)
-	}
-
-	return utils.SendSuccessResponse(c, resp, "Стоимость доставки для корзины рассчитана")
+	return utils.SendErrorResponse(
+		c,
+		fiber.StatusNotImplemented,
+		"delivery.calculation_moved_to_microservice",
+		fiber.Map{
+			"message": "Cart calculation functionality has been moved to delivery microservice. Use gRPC CalculateRate method instead.",
+		},
+	)
 }
 
 // GetProviders - получает список доступных провайдеров
@@ -543,14 +517,52 @@ func (h *Handler) HandleTrackingWebhook(c *fiber.Ctx) error {
 
 // Структуры запросов
 
-// CartCalculationRequest - запрос расчета для корзины
+// Location представляет локацию для расчета доставки
+type Location struct {
+	City       string  `json:"city"`
+	PostalCode string  `json:"postal_code,omitempty"`
+	Country    string  `json:"country"`
+	Latitude   float64 `json:"latitude,omitempty"`
+	Longitude  float64 `json:"longitude,omitempty"`
+}
+
+// ItemDimensions представляет размеры товара
+type ItemDimensions struct {
+	Length float64 `json:"length"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
+}
+
+// ItemWithAttrs представляет товар с атрибутами для расчета доставки
+type ItemWithAttrs struct {
+	ProductID   int            `json:"product_id"`
+	Quantity    int            `json:"quantity"`
+	Weight      float64        `json:"weight"`
+	Dimensions  ItemDimensions `json:"dimensions"`
+	Value       float64        `json:"value"`
+	Fragile     bool           `json:"fragile,omitempty"`
+	Refrigerate bool           `json:"refrigerate,omitempty"`
+	Category    string         `json:"category,omitempty"`
+}
+
+// CalculationRequest - запрос расчета стоимости доставки (DEPRECATED)
+type CalculationRequest struct {
+	FromLocation   Location        `json:"from_location"`
+	ToLocation     Location        `json:"to_location"`
+	Items          []ItemWithAttrs `json:"items"`
+	InsuranceValue float64         `json:"insurance_value,omitempty"`
+	CODAmount      float64         `json:"cod_amount,omitempty"`
+	DeliveryType   string          `json:"delivery_type,omitempty"`
+}
+
+// CartCalculationRequest - запрос расчета для корзины (DEPRECATED)
 type CartCalculationRequest struct {
-	FromLocation   calculator.Location        `json:"from_location"`
-	ToLocation     calculator.Location        `json:"to_location"`
-	Items          []calculator.ItemWithAttrs `json:"items"`
-	InsuranceValue float64                    `json:"insurance_value,omitempty"`
-	CODAmount      float64                    `json:"cod_amount,omitempty"`
-	DeliveryType   string                     `json:"delivery_type,omitempty"`
+	FromLocation   Location        `json:"from_location"`
+	ToLocation     Location        `json:"to_location"`
+	Items          []ItemWithAttrs `json:"items"`
+	InsuranceValue float64         `json:"insurance_value,omitempty"`
+	CODAmount      float64         `json:"cod_amount,omitempty"`
+	DeliveryType   string          `json:"delivery_type,omitempty"`
 }
 
 // CancelRequest - запрос отмены
