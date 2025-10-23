@@ -50,24 +50,34 @@ type TestShipmentRequest struct {
 	ParcelLockerCode string `json:"parcel_locker_code,omitempty" example:""` // Код паккетомата (для IdRukovanje = 85)
 }
 
+// DeprecationNotice содержит информацию о deprecated эндпоинте
+type DeprecationNotice struct {
+	Message     string `json:"message"`
+	NewEndpoint string `json:"new_endpoint"`
+	SunsetDate  string `json:"sunset_date,omitempty"`
+	DocsURL     string `json:"docs_url,omitempty"`
+}
+
 // TestShipmentResponse - ответ с результатом создания
 type TestShipmentResponse struct {
-	Success        bool        `json:"success"`
-	TrackingNumber string      `json:"tracking_number,omitempty"`
-	ManifestID     int         `json:"manifest_id,omitempty"`
-	ShipmentID     int         `json:"shipment_id,omitempty"`
-	ExternalID     string      `json:"external_id,omitempty"`
-	Cost           int         `json:"cost,omitempty"` // RSD
-	Errors         []string    `json:"errors,omitempty"`
-	RequestData    interface{} `json:"request_data,omitempty"`
-	ResponseData   interface{} `json:"response_data,omitempty"`
-	CreatedAt      string      `json:"created_at"`
-	ProcessingTime int64       `json:"processing_time_ms"` // milliseconds
+	Success        bool               `json:"success"`
+	TrackingNumber string             `json:"tracking_number,omitempty"`
+	ManifestID     int                `json:"manifest_id,omitempty"`
+	ShipmentID     int                `json:"shipment_id,omitempty"`
+	ExternalID     string             `json:"external_id,omitempty"`
+	Cost           int                `json:"cost,omitempty"` // RSD
+	Errors         []string           `json:"errors,omitempty"`
+	RequestData    interface{}        `json:"request_data,omitempty"`
+	ResponseData   interface{}        `json:"response_data,omitempty"`
+	CreatedAt      string             `json:"created_at"`
+	ProcessingTime int64              `json:"processing_time_ms"` // milliseconds
+	Deprecated     *DeprecationNotice `json:"deprecated,omitempty"`
 }
 
 // CreateTestShipment создает тестовое отправление через реальный Post Express API
 // @Summary Create test shipment
-// @Description Create a test shipment using real Post Express WSP API (B2B Manifest)
+// @deprecated Use /api/public/delivery/test/shipment instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/shipment instead. Create a test shipment using real Post Express WSP API (B2B Manifest)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -77,6 +87,11 @@ type TestShipmentResponse struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/shipment [post]
 func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/shipment instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/shipment")
+
 	startTime := time.Now()
 
 	var req TestShipmentRequest
@@ -139,12 +154,18 @@ func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
 
 // GetTestConfig возвращает текущую конфигурацию Post Express для тестирования
 // @Summary Get Post Express test config
-// @Description Get current Post Express configuration (without password) for testing page
+// @deprecated Use /api/public/delivery/test/config instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/config instead. Get current Post Express configuration (without password) for testing page
 // @Tags post-express-test
 // @Produce json
 // @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Configuration"
 // @Router /api/v1/postexpress/test/config [get]
 func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/config instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/config")
+
 	config := fiber.Map{
 		"api_available": true,
 		"test_mode":     true,
@@ -200,12 +221,18 @@ func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 
 // GetTestHistory возвращает историю тестовых отправлений (мок)
 // @Summary Get test shipments history
-// @Description Get history of test shipments (mock data for demo)
+// @deprecated Use /api/public/delivery/test/history instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/history instead. Get history of test shipments (mock data for demo)
 // @Tags post-express-test
 // @Produce json
 // @Success 200 {object} utils.SuccessResponseSwag{data=[]TestShipmentResponse} "Test shipments history"
 // @Router /api/v1/postexpress/test/history [get]
 func (h *Handler) GetTestHistory(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/history instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/history")
+
 	// Возвращаем пустую историю пока не будет реального хранилища
 	history := []TestShipmentResponse{}
 
@@ -223,7 +250,8 @@ type TestTrackingRequest struct {
 
 // TestTrackShipment тестирует отслеживание через WSP API (Transaction 15)
 // @Summary Test tracking shipment
-// @Description Track shipment using real Post Express WSP API (Transaction 15)
+// @deprecated Use /api/public/delivery/test/track instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/track instead. Track shipment using real Post Express WSP API (Transaction 15)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -233,6 +261,11 @@ type TestTrackingRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/track [post]
 func (h *Handler) TestTrackShipment(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/track instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/track")
+
 	startTime := time.Now()
 
 	var req TestTrackingRequest
@@ -282,7 +315,8 @@ type TestCancelRequest struct {
 
 // TestCancelShipment тестирует отмену через WSP API (Transaction 25)
 // @Summary Test cancel shipment
-// @Description Cancel shipment using real Post Express WSP API (Transaction 25)
+// @deprecated Use /api/public/delivery/test/cancel instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/cancel instead. Cancel shipment using real Post Express WSP API (Transaction 25)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -292,6 +326,11 @@ type TestCancelRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/cancel [post]
 func (h *Handler) TestCancelShipment(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/cancel instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/cancel")
+
 	startTime := time.Now()
 
 	var req TestCancelRequest
@@ -337,7 +376,8 @@ type TestPrintLabelRequest struct {
 
 // TestPrintLabel тестирует печать этикетки через WSP API (Transaction 20)
 // @Summary Test print label
-// @Description Print shipment label using real Post Express WSP API (Transaction 20)
+// @deprecated Use /api/public/delivery/test/label instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/label instead. Print shipment label using real Post Express WSP API (Transaction 20)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -347,6 +387,11 @@ type TestPrintLabelRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/label [post]
 func (h *Handler) TestPrintLabel(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/label instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/label")
+
 	startTime := time.Now()
 
 	var req TestPrintLabelRequest
@@ -395,7 +440,8 @@ type TestSearchLocationsRequest struct {
 
 // TestSearchLocations тестирует поиск населенных пунктов через WSP API (Transaction 3)
 // @Summary Test search locations
-// @Description Search locations using real Post Express WSP API (Transaction 3)
+// @deprecated Use /api/public/delivery/test/locations instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/locations instead. Search locations using real Post Express WSP API (Transaction 3)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -405,6 +451,11 @@ type TestSearchLocationsRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/locations [post]
 func (h *Handler) TestSearchLocations(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/locations instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/locations")
+
 	startTime := time.Now()
 
 	var req TestSearchLocationsRequest
@@ -451,7 +502,8 @@ type TestGetOfficesRequest struct {
 
 // TestGetOffices тестирует получение отделений через WSP API (Transaction 10)
 // @Summary Test get offices
-// @Description Get offices for location using real Post Express WSP API (Transaction 10)
+// @deprecated Use /api/public/delivery/test/offices instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/offices instead. Get offices for location using real Post Express WSP API (Transaction 10)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -461,6 +513,11 @@ type TestGetOfficesRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/offices [post]
 func (h *Handler) TestGetOffices(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/offices instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/offices")
+
 	startTime := time.Now()
 
 	var req TestGetOfficesRequest
@@ -666,7 +723,8 @@ type TestGetSettlementsRequest struct {
 
 // TestGetSettlements тестирует TX 3 - поиск населённых пунктов
 // @Summary Test TX 3 - GetNaselje (Search Settlements)
-// @Description Search settlements using real Post Express WSP API (Transaction 3)
+// @deprecated Use /api/public/delivery/test/settlements instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/settlements instead. Search settlements using real Post Express WSP API (Transaction 3)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -676,6 +734,11 @@ type TestGetSettlementsRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/tx3-settlements [post]
 func (h *Handler) TestGetSettlements(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/settlements instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/settlements")
+
 	startTime := time.Now()
 
 	var req TestGetSettlementsRequest
@@ -724,7 +787,8 @@ type TestGetStreetsRequest struct {
 
 // TestGetStreets тестирует TX 4 - поиск улиц в населённом пункте
 // @Summary Test TX 4 - GetUlica (Search Streets)
-// @Description Search streets in settlement using real Post Express WSP API (Transaction 4)
+// @deprecated Use /api/public/delivery/test/streets instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/streets instead. Search streets in settlement using real Post Express WSP API (Transaction 4)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -734,6 +798,11 @@ type TestGetStreetsRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/tx4-streets [post]
 func (h *Handler) TestGetStreets(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/streets instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/streets")
+
 	startTime := time.Now()
 
 	var req TestGetStreetsRequest
@@ -789,7 +858,8 @@ type TestValidateAddressRequest struct {
 
 // TestValidateAddress тестирует TX 6 - валидация адреса
 // @Summary Test TX 6 - ProveraAdrese (Validate Address)
-// @Description Validate address using real Post Express WSP API (Transaction 6)
+// @deprecated Use /api/public/delivery/test/validate-address instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/validate-address instead. Validate address using real Post Express WSP API (Transaction 6)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -799,6 +869,11 @@ type TestValidateAddressRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/tx6-validate-address [post]
 func (h *Handler) TestValidateAddress(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/validate-address instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/validate-address")
+
 	startTime := time.Now()
 
 	var req TestValidateAddressRequest
@@ -867,7 +942,8 @@ type TestCheckServiceAvailabilityRequest struct {
 
 // TestCheckServiceAvailability тестирует TX 9 - проверка доступности услуги
 // @Summary Test TX 9 - ProveraDostupnostiUsluge (Check Service Availability)
-// @Description Check service availability using real Post Express WSP API (Transaction 9)
+// @deprecated Use /api/public/delivery/test/service-availability instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/service-availability instead. Check service availability using real Post Express WSP API (Transaction 9)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -877,6 +953,11 @@ type TestCheckServiceAvailabilityRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/tx9-service-availability [post]
 func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/service-availability instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/service-availability")
+
 	startTime := time.Now()
 
 	var req TestCheckServiceAvailabilityRequest
@@ -1040,7 +1121,8 @@ type TestCalculatePostageRequest struct {
 
 // TestCalculatePostage тестирует TX 11 - расчёт стоимости доставки
 // @Summary Test TX 11 - PostarinaPosiljke (Calculate Postage)
-// @Description Calculate postage using real Post Express WSP API (Transaction 11)
+// @deprecated Use /api/public/delivery/test/calculate-postage instead
+// @Description DEPRECATED: This endpoint will be removed. Use /api/public/delivery/test/calculate-postage instead. Calculate postage using real Post Express WSP API (Transaction 11)
 // @Tags post-express-test
 // @Accept json
 // @Produce json
@@ -1050,6 +1132,11 @@ type TestCalculatePostageRequest struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/tx11-calculate-postage [post]
 func (h *Handler) TestCalculatePostage(c *fiber.Ctx) error {
+	// DEPRECATED: This endpoint is deprecated
+	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/calculate-postage instead", c.Path())
+	c.Set("X-Deprecated", "true")
+	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/calculate-postage")
+
 	startTime := time.Now()
 
 	var req TestCalculatePostageRequest
