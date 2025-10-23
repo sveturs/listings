@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"backend/internal/proj/postexpress"
@@ -22,6 +23,13 @@ import (
 // Constants
 const (
 	errMsgUnknown = "unknown error"
+)
+
+// Singleton instance
+var (
+	wspClientInstance WSPClient
+	wspClientOnce     sync.Once
+	wspClientMutex    sync.RWMutex
 )
 
 // WSPClientImpl представляет реализацию клиента WSP API
@@ -51,30 +59,48 @@ type WSPConfig struct {
 	PaymentModel    string // Модель платежа (обычно "97")
 }
 
-// NewWSPClient создает новый экземпляр WSP клиента
+// NewWSPClient создает или возвращает singleton экземпляр WSP клиента
+// Thread-safe singleton с lazy initialization
 func NewWSPClient(config *WSPConfig, logger logger.Logger) WSPClient {
-	// Настройка HTTP клиента с timeout и SSL
-	httpClient := &http.Client{
-		Timeout: config.Timeout,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: config.TestMode, // #nosec G402 - только для тестового режима
+	wspClientOnce.Do(func() {
+		// Настройка HTTP клиента с timeout и SSL
+		httpClient := &http.Client{
+			Timeout: config.Timeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: config.TestMode, // #nosec G402 - только для тестового режима
+				},
+				DialContext: (&net.Dialer{
+					Timeout:   10 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}).DialContext,
+				MaxIdleConns:        100,
+				MaxIdleConnsPerHost: 10,
+				IdleConnTimeout:     90 * time.Second,
 			},
-			DialContext: (&net.Dialer{
-				Timeout:   10 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
-			MaxIdleConns:        100,
-			MaxIdleConnsPerHost: 10,
-			IdleConnTimeout:     90 * time.Second,
-		},
-	}
+		}
 
-	return &WSPClientImpl{
-		httpClient: httpClient,
-		config:     config,
-		logger:     logger,
-	}
+		wspClientInstance = &WSPClientImpl{
+			httpClient: httpClient,
+			config:     config,
+			logger:     logger,
+		}
+
+		logger.Info("WSPClient singleton initialized")
+	})
+
+	// Возвращаем singleton экземпляр
+	wspClientMutex.RLock()
+	defer wspClientMutex.RUnlock()
+	return wspClientInstance
+}
+
+// ResetWSPClientSingleton сбрасывает singleton (только для тестов)
+func ResetWSPClientSingleton() {
+	wspClientMutex.Lock()
+	defer wspClientMutex.Unlock()
+	wspClientInstance = nil
+	wspClientOnce = sync.Once{}
 }
 
 // Transaction выполняет базовую транзакцию к WSP API
