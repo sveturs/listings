@@ -91,6 +91,7 @@ func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/shipment instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/shipment")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -165,6 +166,7 @@ func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/config instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/config")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	config := fiber.Map{
 		"api_available": true,
@@ -232,6 +234,7 @@ func (h *Handler) GetTestHistory(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/history instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/history")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	// Возвращаем пустую историю пока не будет реального хранилища
 	history := []TestShipmentResponse{}
@@ -265,6 +268,7 @@ func (h *Handler) TestTrackShipment(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/track instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/track")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -330,6 +334,7 @@ func (h *Handler) TestCancelShipment(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/cancel instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/cancel")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -391,6 +396,7 @@ func (h *Handler) TestPrintLabel(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/label instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/label")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -455,6 +461,7 @@ func (h *Handler) TestSearchLocations(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/locations instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/locations")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -517,6 +524,7 @@ func (h *Handler) TestGetOffices(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/offices instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/offices")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -738,6 +746,7 @@ func (h *Handler) TestGetSettlements(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/settlements instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/settlements")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -802,6 +811,7 @@ func (h *Handler) TestGetStreets(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/streets instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/streets")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -873,6 +883,7 @@ func (h *Handler) TestValidateAddress(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/validate-address instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/validate-address")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -957,6 +968,7 @@ func (h *Handler) TestCheckServiceAvailability(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/service-availability instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/service-availability")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
@@ -1136,6 +1148,7 @@ func (h *Handler) TestCalculatePostage(c *fiber.Ctx) error {
 	h.logger.Warn("DEPRECATED: PostExpress test endpoint called: %s -> Use /api/public/delivery/test/calculate-postage instead", c.Path())
 	c.Set("X-Deprecated", "true")
 	c.Set("X-Deprecated-Endpoint", "/api/public/delivery/test/calculate-postage")
+	c.Set("Sunset", "Sat, 01 Dec 2025 00:00:00 GMT")
 
 	startTime := time.Now()
 
