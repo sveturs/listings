@@ -35,21 +35,18 @@ type Client struct {
 func NewClient(serverURL string, log *logger.Logger) (*Client, error) {
 	log.Info("Connecting to delivery gRPC service: %s", serverURL)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(
-		ctx,
+	// grpc.NewClient заменяет deprecated grpc.DialContext
+	// Соединение устанавливается лениво при первом вызове
+	conn, err := grpc.NewClient(
 		serverURL,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	if err != nil {
-		log.Error("Failed to connect to delivery gRPC service: %s, error: %v", serverURL, err)
-		return nil, fmt.Errorf("failed to connect to delivery service: %w", err)
+		log.Error("Failed to create delivery gRPC client: %s, error: %v", serverURL, err)
+		return nil, fmt.Errorf("failed to create delivery client: %w", err)
 	}
 
-	log.Info("Successfully connected to delivery gRPC service")
+	log.Info("Successfully created delivery gRPC client")
 
 	return &Client{
 		conn:   conn,
@@ -265,10 +262,18 @@ func (c *Client) shouldRetry(err error) bool {
 
 	code := st.Code()
 	switch code {
-	case codes.InvalidArgument, codes.NotFound, codes.AlreadyExists, codes.PermissionDenied, codes.Unauthenticated:
+	// Non-retryable errors
+	case codes.InvalidArgument, codes.NotFound, codes.AlreadyExists,
+		codes.PermissionDenied, codes.Unauthenticated, codes.FailedPrecondition,
+		codes.OutOfRange, codes.Unimplemented:
 		return false
-	case codes.Unavailable, codes.DeadlineExceeded, codes.ResourceExhausted, codes.Aborted:
+	// Retryable errors
+	case codes.Unavailable, codes.DeadlineExceeded, codes.ResourceExhausted,
+		codes.Aborted, codes.Canceled:
 		return true
+	// Success and other codes - don't retry
+	case codes.OK, codes.Unknown, codes.Internal, codes.DataLoss:
+		return false
 	default:
 		return true
 	}

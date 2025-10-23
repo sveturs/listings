@@ -2,6 +2,7 @@ package grpcclient
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -12,10 +13,15 @@ import (
 	pb "backend/pkg/grpc/delivery/v1"
 )
 
+var (
+	// ErrNilShipment returned when nil shipment is passed to mapper
+	ErrNilShipment = errors.New("nil shipment provided")
+)
+
 // MapShipmentFromProto конвертирует протобуф Shipment в модель БД
 func MapShipmentFromProto(pbShipment *pb.Shipment) (*models.Shipment, error) {
 	if pbShipment == nil {
-		return nil, nil
+		return nil, ErrNilShipment
 	}
 
 	// Парсим sender и recipient info
@@ -162,6 +168,8 @@ func MapProviderCodeToEnum(code string) pb.DeliveryProvider {
 // MapProviderEnumToCode конвертирует enum в строковый код
 func MapProviderEnumToCode(provider pb.DeliveryProvider) string {
 	switch provider {
+	case pb.DeliveryProvider_DELIVERY_PROVIDER_UNSPECIFIED:
+		return ""
 	case pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS:
 		return "post_express"
 	case pb.DeliveryProvider_DELIVERY_PROVIDER_BEX_EXPRESS:
@@ -180,6 +188,8 @@ func MapProviderEnumToCode(provider pb.DeliveryProvider) string {
 // MapStatusFromProto конвертирует протобуф статус в строку
 func MapStatusFromProto(status pb.ShipmentStatus) string {
 	switch status {
+	case pb.ShipmentStatus_SHIPMENT_STATUS_UNSPECIFIED:
+		return models.ShipmentStatusPending
 	case pb.ShipmentStatus_SHIPMENT_STATUS_PENDING:
 		return models.ShipmentStatusPending
 	case pb.ShipmentStatus_SHIPMENT_STATUS_CONFIRMED:
@@ -192,7 +202,7 @@ func MapStatusFromProto(status pb.ShipmentStatus) string {
 		return models.ShipmentStatusDelivered
 	case pb.ShipmentStatus_SHIPMENT_STATUS_FAILED:
 		return models.ShipmentStatusFailed
-	case pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED:
+	case pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED: //nolint:misspell // CANCELLED is correct UK spelling used in protobuf
 		return models.ShipmentStatusCancelled
 	case pb.ShipmentStatus_SHIPMENT_STATUS_RETURNED:
 		return models.ShipmentStatusFailed
@@ -215,7 +225,7 @@ func MapStatusToProto(status string) pb.ShipmentStatus {
 	case models.ShipmentStatusFailed:
 		return pb.ShipmentStatus_SHIPMENT_STATUS_FAILED
 	case models.ShipmentStatusCancelled:
-		return pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED
+		return pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED //nolint:misspell // CANCELLED is correct UK spelling used in protobuf
 	default:
 		return pb.ShipmentStatus_SHIPMENT_STATUS_UNSPECIFIED
 	}
