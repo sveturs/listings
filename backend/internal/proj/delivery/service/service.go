@@ -28,6 +28,13 @@ type Service struct {
 	providerFactory *factory.ProviderFactory
 	notifications   *notifications.DeliveryNotificationIntegration
 	cache           map[string]interfaces.DeliveryProvider // кеш провайдеров
+	grpcClient      grpcClientInterface                    // gRPC клиент для делегирования к микросервису
+}
+
+// grpcClientInterface определяет интерфейс для gRPC клиента
+type grpcClientInterface interface {
+	// Пока что пустой интерфейс, методы будем вызывать по type assertion
+	Close() error
 }
 
 // NewService создает новый экземпляр сервиса доставки
@@ -48,6 +55,12 @@ func (s *Service) SetNotificationService(notifService notifService.NotificationS
 		s.notifications = notifications.NewDeliveryNotificationIntegration(notifService)
 		log.Info().Msg("Notification service integrated with delivery module")
 	}
+}
+
+// SetGRPCClient устанавливает gRPC клиент для делегирования к микросервису
+func (s *Service) SetGRPCClient(client grpcClientInterface) {
+	s.grpcClient = client
+	log.Info().Msg("gRPC client configured for delivery service")
 }
 
 // CalculateDelivery - рассчитывает стоимость доставки для всех доступных провайдеров

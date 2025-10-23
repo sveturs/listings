@@ -10,6 +10,7 @@ import (
 	"backend/internal/middleware"
 	adminLogistics "backend/internal/proj/admin/logistics/service"
 	"backend/internal/proj/delivery/factory"
+	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/proj/delivery/handler"
 	"backend/internal/proj/delivery/service"
 	notifService "backend/internal/proj/notifications/service"
@@ -21,6 +22,7 @@ type Module struct {
 	handler      *handler.Handler
 	adminHandler *handler.AdminHandler
 	service      *service.Service
+	grpcClient   *grpcclient.Client
 	// Сервисы из admin/logistics для консолидации
 	monitoringService *adminLogistics.MonitoringService
 	problemService    *adminLogistics.ProblemService
@@ -36,8 +38,25 @@ func NewModule(db *sqlx.DB, cfg *config.Config, logger *logger.Logger) (*Module,
 		providerFactory = factory.NewProviderFactory(db, nil)
 	}
 
+	// Создаем gRPC клиент для delivery микросервиса
+	var grpcClient *grpcclient.Client
+	if cfg.DeliveryGRPCURL != "" {
+		grpcClient, err = grpcclient.NewClient(cfg.DeliveryGRPCURL, logger)
+		if err != nil {
+			log.Warn().Err(err).Str("url", cfg.DeliveryGRPCURL).Msg("Failed to connect to delivery gRPC service, using local implementation")
+			grpcClient = nil
+		} else {
+			log.Info().Str("url", cfg.DeliveryGRPCURL).Msg("Successfully connected to delivery gRPC service")
+		}
+	}
+
 	// Создаем сервис
 	svc := service.NewService(db, providerFactory)
+
+	// Если gRPC клиент доступен, устанавливаем его в сервис
+	if grpcClient != nil {
+		svc.SetGRPCClient(grpcClient)
+	}
 
 	// Создаем основной обработчик
 	h := handler.NewHandler(db, providerFactory)
@@ -58,6 +77,7 @@ func NewModule(db *sqlx.DB, cfg *config.Config, logger *logger.Logger) (*Module,
 		handler:           h,
 		adminHandler:      adminHandler,
 		service:           svc,
+		grpcClient:        grpcClient,
 		monitoringService: monitoringService,
 		problemService:    problemService,
 		analyticsService:  analyticsService,

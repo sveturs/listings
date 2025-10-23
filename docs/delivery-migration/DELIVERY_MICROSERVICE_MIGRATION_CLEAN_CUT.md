@@ -8,7 +8,7 @@
 > **📚 ВАЖНО**: Этот файл стал очень большим (3337 строк).
 > Для удобства создана **модульная документация** в директории `delivery-migration/`.
 >
-> **Переходите по ссылке**: [delivery-migration/README.md](delivery-migration/README.md)
+> **Переходите по ссылке**: [delivery-migration/README.md](README.md)
 >
 > Модульная структура содержит:
 > - 📋 Навигацию по всем разделам
@@ -2805,7 +2805,7 @@ services:
     ports:
       - "35432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${SVETUDELIVERY_DB_USER:-delivery_user}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${SVETUDELIVERY_DB_USER:-delivery_user}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -2829,7 +2829,7 @@ services:
     ports:
       - "36379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${SVETUDELIVERY_REDIS_PASSWORD}", "ping"]
+      test: [ "CMD", "redis-cli", "--no-auth-warning", "-a", "${SVETUDELIVERY_REDIS_PASSWORD}", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -2839,7 +2839,7 @@ services:
 
   delivery-service:
     build:
-      context: .
+      context: ..
       dockerfile: deployments/docker/Dockerfile
       args:
         GO_VERSION: "1.23"
@@ -2884,7 +2884,7 @@ services:
       delivery-redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8081/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1:8081/health" ]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -1,4 +1,15 @@
-.PHONY: docs docs-fmt docs-clean format format-check lint pre-commit
+.PHONY: docs docs-fmt docs-clean format format-check lint pre-commit generate-grpc
+
+# Generate gRPC code from proto files
+generate-grpc:
+	@echo "Generating gRPC code from proto files..."
+	@mkdir -p pkg/grpc/delivery/v1
+	@PATH=$$PATH:$$HOME/go/bin protoc \
+		--go_out=pkg/grpc --go_opt=paths=source_relative \
+		--go-grpc_out=pkg/grpc --go-grpc_opt=paths=source_relative \
+		--proto_path=proto \
+		proto/delivery/v1/delivery.proto
+	@echo "✅ gRPC code generated in pkg/grpc/delivery/v1/"
 
 build_migrator:
 	go build -ldflags "-X main.gitCommit=$$(git rev-parse --short HEAD) -X main.buildTime=$$(date +%Y%m%d_%H%M%S)" \

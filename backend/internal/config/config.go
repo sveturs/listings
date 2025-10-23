@@ -50,6 +50,7 @@ type Config struct {
 	ReindexOnAPI             string            `yaml:"reindex_on_api"`    // on
 	FeatureFlags             *FeatureFlags     `yaml:"feature_flags"`
 	Currency                 CurrencyConfig    `yaml:"currency"`
+	DeliveryGRPCURL          string            `yaml:"delivery_grpc_url"` // URL для delivery микросервиса через gRPC
 }
 
 type FileStorageConfig struct {
@@ -210,6 +211,13 @@ func NewConfig() (*Config, error) {
 		bexAPIURL = "https://api.bex.rs:62502"
 	}
 	config.BEXAPIURL = bexAPIURL
+
+	// Delivery gRPC service configuration
+	deliveryGRPCURL := os.Getenv("DELIVERY_GRPC_URL")
+	if deliveryGRPCURL == "" {
+		deliveryGRPCURL = "localhost:50052" // Default: внутренний порт микросервиса
+	}
+	config.DeliveryGRPCURL = deliveryGRPCURL
 
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
