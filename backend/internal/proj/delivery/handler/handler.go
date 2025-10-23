@@ -91,6 +91,9 @@ func (h *Handler) RegisterTestRoutes(app fiber.Router) {
 	test.Get("/parcel-lockers", h.GetTestParcelLockers)
 	test.Get("/delivery-services", h.GetTestDeliveryServices)
 	test.Post("/validate-address", h.ValidateTestAddress)
+	test.Get("/providers", h.GetTestProviders)
+	test.Get("/config", h.GetTestConfig)
+	test.Get("/history", h.GetTestHistory)
 }
 
 // CalculateUniversal - DEPRECATED: расчет перенесен в delivery microservice

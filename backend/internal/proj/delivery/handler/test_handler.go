@@ -491,3 +491,107 @@ func (h *Handler) ValidateTestAddress(c *fiber.Ctx) error {
 		"note":    "Mock validation - implement ValidateAddress RPC method in microservice",
 	}, "Address validation completed successfully (mock data)")
 }
+
+// GetTestProviders возвращает список провайдеров доставки
+// @Summary Get delivery providers list (MOCK)
+// @Description Get list of available delivery providers (currently returns mock data, will be implemented in microservice)
+// @Tags delivery-test
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag "Providers list"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/public/delivery/test/providers [get]
+func (h *Handler) GetTestProviders(c *fiber.Ctx) error {
+	// TODO: Добавить RPC метод в микросервис для получения providers
+	h.logger.Warn().Msg("GetTestProviders called - using mock data (implement RPC method in microservice)")
+
+	mockProviders := []fiber.Map{
+		{"code": "post_express", "name": "Post Express", "enabled": true, "supports_cod": true, "supports_tracking": true},
+		{"code": "bex_express", "name": "BEX Express", "enabled": true, "supports_cod": true, "supports_tracking": true},
+		{"code": "dhl", "name": "DHL", "enabled": false, "supports_cod": false, "supports_tracking": true},
+		{"code": "ups", "name": "UPS", "enabled": false, "supports_cod": false, "supports_tracking": true},
+		{"code": "fedex", "name": "FedEx", "enabled": false, "supports_cod": false, "supports_tracking": true},
+	}
+
+	return utils.SendSuccessResponse(c, fiber.Map{
+		"providers": mockProviders,
+		"note":      "Mock data - implement GetProviders RPC method in microservice",
+	}, "Providers list retrieved successfully (mock data)")
+}
+
+// GetTestConfig возвращает конфигурацию доставки
+// @Summary Get delivery config (MOCK)
+// @Description Get delivery configuration (currently returns mock data, will be implemented in microservice)
+// @Tags delivery-test
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag "Delivery config"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/public/delivery/test/config [get]
+func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
+	// TODO: Добавить RPC метод в микросервис для получения config
+	h.logger.Warn().Msg("GetTestConfig called - using mock data (implement RPC method in microservice)")
+
+	mockConfig := fiber.Map{
+		"default_provider":    "post_express",
+		"supported_countries": []string{"RS", "BA", "HR", "ME", "MK"},
+		"currency":            "RSD",
+		"max_weight_kg":       30,
+		"min_weight_kg":       0.1,
+		"max_declared_value":  1000000,
+		"tracking_enabled":    true,
+		"cod_enabled":         true,
+		"insurance_enabled":   true,
+	}
+
+	return utils.SendSuccessResponse(c, fiber.Map{
+		"config": mockConfig,
+		"note":   "Mock data - implement GetConfig RPC method in microservice",
+	}, "Delivery config retrieved successfully (mock data)")
+}
+
+// GetTestHistory возвращает историю отправлений
+// @Summary Get shipments history (MOCK)
+// @Description Get history of shipments (currently returns mock data, will be implemented in microservice)
+// @Tags delivery-test
+// @Produce json
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
+// @Success 200 {object} utils.SuccessResponseSwag "Shipments history"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Router /api/public/delivery/test/history [get]
+func (h *Handler) GetTestHistory(c *fiber.Ctx) error {
+	// TODO: Добавить RPC метод в микросервис для получения history
+	h.logger.Warn().Msg("GetTestHistory called - using mock data (implement RPC method in microservice)")
+
+	limit := c.QueryInt("limit", 10)
+	offset := c.QueryInt("offset", 0)
+
+	mockShipments := []fiber.Map{
+		{
+			"id":              "test-shipment-1",
+			"tracking_number": "PE20250101001",
+			"status":          "delivered",
+			"provider":        "post_express",
+			"created_at":      "2025-01-15T10:30:00Z",
+			"delivered_at":    "2025-01-17T14:20:00Z",
+			"cost":            "450.00",
+			"currency":        "RSD",
+		},
+		{
+			"id":              "test-shipment-2",
+			"tracking_number": "PE20250101002",
+			"status":          "in_transit",
+			"provider":        "post_express",
+			"created_at":      "2025-01-20T09:15:00Z",
+			"cost":            "320.00",
+			"currency":        "RSD",
+		},
+	}
+
+	return utils.SendSuccessResponse(c, fiber.Map{
+		"shipments": mockShipments,
+		"limit":     limit,
+		"offset":    offset,
+		"total":     2,
+		"note":      "Mock data - implement GetHistory RPC method in microservice",
+	}, "Shipments history retrieved successfully (mock data)")
+}
