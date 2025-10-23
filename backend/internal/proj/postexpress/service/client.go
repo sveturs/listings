@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -543,9 +544,13 @@ func (c *WSPClientImpl) PrintLabel(ctx context.Context, shipmentID string) ([]by
 		return nil, fmt.Errorf("failed to parse label response: %w", err)
 	}
 
-	// TODO: Декодировать base64 content в []byte
-	// Пока возвращаем как есть
-	return []byte(result.PDFContent), nil
+	// Декодируем base64 content в []byte
+	decodedPDF, err := base64.StdEncoding.DecodeString(result.PDFContent)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode base64 PDF content: %w", err)
+	}
+
+	return decodedPDF, nil
 }
 
 // CancelShipment отменяет отправление

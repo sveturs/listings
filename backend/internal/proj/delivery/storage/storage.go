@@ -49,6 +49,32 @@ func (s *Storage) GetProviderByCode(ctx context.Context, code string) (*models.P
 	return &provider, nil
 }
 
+// GetOrderUserID - получает user_id из заказа (B2C или C2C)
+func (s *Storage) GetOrderUserID(ctx context.Context, orderID int) (int, error) {
+	var userID sql.NullInt32
+
+	// Сначала проверяем B2C заказы
+	query := `SELECT customer_id FROM b2c_orders WHERE id = $1`
+	err := s.db.GetContext(ctx, &userID, query, orderID)
+	if err == nil && userID.Valid {
+		return int(userID.Int32), nil
+	}
+
+	// Если не найден в B2C, проверяем C2C заказы
+	query = `SELECT buyer_id FROM c2c_orders WHERE id = $1`
+	err = s.db.GetContext(ctx, &userID, query, orderID)
+	if err == nil && userID.Valid {
+		return int(userID.Int32), nil
+	}
+
+	// Если не найден ни в B2C, ни в C2C
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, fmt.Errorf("order %d not found", orderID)
+	}
+
+	return 0, fmt.Errorf("failed to get user_id for order %d: %w", orderID, err)
+}
+
 // GetProviders - получает список провайдеров
 func (s *Storage) GetProviders(ctx context.Context, activeOnly bool) ([]models.Provider, error) {
 	var providers []models.Provider

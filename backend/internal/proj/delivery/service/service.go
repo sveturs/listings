@@ -374,12 +374,16 @@ func (s *Service) sendStatusNotification(ctx context.Context, shipment *models.S
 	// Получаем информацию о пользователе (получателе)
 	var userID int
 	if shipment.OrderID != nil {
-		// TODO: Получить user_id из заказа
-		// order, err := s.storage.GetOrder(ctx, *shipment.OrderID)
-		// if err == nil && order.UserID != nil {
-		//     userID = *order.UserID
-		// }
-		userID = 0 // Временно устанавливаем 0 до реализации
+		// Получаем user_id из заказа (B2C или C2C)
+		var err error
+		userID, err = s.storage.GetOrderUserID(ctx, *shipment.OrderID)
+		if err != nil {
+			log.Warn().
+				Err(err).
+				Int("order_id", *shipment.OrderID).
+				Msg("Failed to get user_id from order")
+			userID = 0
+		}
 	}
 
 	if userID == 0 {
