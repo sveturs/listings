@@ -94,6 +94,10 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 	webhookGroup := app.Group("/api/v1/delivery/webhooks")
 	m.handler.RegisterWebhookRoutes(webhookGroup)
 
+	// Регистрируем публичные тестовые эндпоинты (БЕЗ авторизации для удобства тестирования)
+	// ВАЖНО: создаем группу напрямую от app, чтобы избежать наследования middleware
+	m.handler.RegisterTestRoutes(app)
+
 	// Регистрируем админские роуты (консолидация из admin/logistics)
 	adminGroup := app.Group("/api/v1/admin/delivery")
 	adminGroup.Use(mw.JWTParser(), authMiddleware.RequireAuthString("admin"))

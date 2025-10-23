@@ -59,6 +59,11 @@ func (s *Service) SetNotificationService(notifService notifService.NotificationS
 	}
 }
 
+// GetGRPCClient возвращает gRPC клиент для прямых вызовов (используется в test handlers)
+func (s *Service) GetGRPCClient() grpcClientInterface {
+	return s.grpcClient
+}
+
 // GetProductAttributes - получает атрибуты доставки товара
 func (s *Service) GetProductAttributes(ctx context.Context, productID int, productType string) (*models.DeliveryAttributes, error) {
 	return s.attributes.GetProductAttributes(ctx, productID, productType)
@@ -356,7 +361,6 @@ func (s *Service) ApplyCategoryDefaults(ctx context.Context, categoryID int) (in
 	return s.attributes.ApplyCategoryDefaultsToProducts(ctx, categoryID)
 }
 
-
 // sendStatusNotification отправляет уведомление об изменении статуса
 func (s *Service) sendStatusNotification(ctx context.Context, shipment *models.Shipment, oldStatus, newStatus, location, description string) {
 	if s.notifications == nil {
@@ -471,16 +475,16 @@ type ProofOfDelivery struct {
 
 // TrackingInfo - информация об отслеживании
 type TrackingInfo struct {
-	ShipmentID      int                  `json:"shipment_id"`
-	TrackingNumber  string               `json:"tracking_number"`
-	Status          string               `json:"status"`
-	StatusText      string               `json:"status_text"`
-	CurrentLocation string               `json:"current_location,omitempty"`
-	EstimatedDate   *time.Time           `json:"estimated_date,omitempty"`
-	DeliveredDate   *time.Time           `json:"delivered_date,omitempty"`
-	Events          []TrackingEvent      `json:"events"`
-	ProofOfDelivery *ProofOfDelivery     `json:"proof_of_delivery,omitempty"`
-	LastUpdated     time.Time            `json:"last_updated"`
+	ShipmentID      int              `json:"shipment_id"`
+	TrackingNumber  string           `json:"tracking_number"`
+	Status          string           `json:"status"`
+	StatusText      string           `json:"status_text"`
+	CurrentLocation string           `json:"current_location,omitempty"`
+	EstimatedDate   *time.Time       `json:"estimated_date,omitempty"`
+	DeliveredDate   *time.Time       `json:"delivered_date,omitempty"`
+	Events          []TrackingEvent  `json:"events"`
+	ProofOfDelivery *ProofOfDelivery `json:"proof_of_delivery,omitempty"`
+	LastUpdated     time.Time        `json:"last_updated"`
 }
 
 // WebhookResponse представляет ответ на webhook

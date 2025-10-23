@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"backend/internal/proj/delivery/models"
 	"backend/internal/proj/delivery/service"
@@ -15,6 +17,7 @@ import (
 type Handler struct {
 	service      *service.Service
 	adminHandler *AdminHandler
+	logger       zerolog.Logger
 }
 
 // NewHandler создает новый обработчик
@@ -22,6 +25,7 @@ func NewHandler(svc *service.Service) *Handler {
 	return &Handler{
 		service:      svc,
 		adminHandler: NewAdminHandler(svc),
+		logger:       log.Logger,
 	}
 }
 
@@ -58,6 +62,8 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	shipments.Delete("/:id", h.CancelShipment)
 	shipments.Get("/track/:tracking", h.TrackShipment)
 
+	// Тестовые эндпоинты регистрируются отдельно через RegisterTestRoutes (см. module.go)
+
 	// Административные роуты
 	admin := router.Group("/admin/delivery")
 	admin.Get("/providers", h.GetProvidersAdmin)
@@ -69,6 +75,22 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 // RegisterWebhookRoutes регистрирует webhook маршруты (без авторизации)
 func (h *Handler) RegisterWebhookRoutes(router fiber.Router) {
 	router.Post("/:provider/tracking", h.HandleTrackingWebhook)
+}
+
+// RegisterTestRoutes регистрирует тестовые маршруты (без авторизации для удобства тестирования)
+func (h *Handler) RegisterTestRoutes(app fiber.Router) {
+	// Тестовые эндпоинты (новые, через gRPC микросервис)
+	// Используем /api/public/* чтобы НЕ наследовать RequireAuth middleware от /api/v1/*
+	test := app.Group("/api/public/delivery/test")
+	test.Post("/shipment", h.CreateTestShipment)
+	test.Get("/tracking/:tracking_number", h.TrackTestShipment)
+	test.Post("/cancel/:id", h.CancelTestShipment)
+	test.Post("/calculate", h.CalculateTestRate)
+	test.Get("/settlements", h.GetTestSettlements)
+	test.Get("/streets/:settlement", h.GetTestStreets)
+	test.Get("/parcel-lockers", h.GetTestParcelLockers)
+	test.Get("/delivery-services", h.GetTestDeliveryServices)
+	test.Post("/validate-address", h.ValidateTestAddress)
 }
 
 // CalculateUniversal - DEPRECATED: расчет перенесен в delivery microservice
