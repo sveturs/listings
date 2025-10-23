@@ -2386,6 +2386,491 @@
                 }
             }
         },
+        "/api/public/delivery/test/calculate": {
+            "post": {
+                "description": "Calculate delivery cost using delivery gRPC microservice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Calculate test delivery rate",
+                "parameters": [
+                    {
+                        "description": "Calculate request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CalculateTestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Calculation result",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/cancel/{id}": {
+            "post": {
+                "description": "Cancel a test shipment using delivery gRPC microservice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Cancel test shipment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Shipment ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Shipment canceled",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid shipment ID",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Shipment not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/config": {
+            "get": {
+                "description": "Get delivery configuration (currently returns mock data, will be implemented in microservice)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Get delivery config (MOCK)",
+                "responses": {
+                    "200": {
+                        "description": "Delivery config",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/delivery-services": {
+            "get": {
+                "description": "Get list of delivery services (currently returns mock data, will be implemented in microservice)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Get delivery services list (MOCK)",
+                "responses": {
+                    "200": {
+                        "description": "Delivery services list",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/history": {
+            "get": {
+                "description": "Get history of shipments (currently returns mock data, will be implemented in microservice)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Get shipments history (MOCK)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Shipments history",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/parcel-lockers": {
+            "get": {
+                "description": "Get list of parcel lockers from delivery microservice",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Get parcel lockers list via gRPC",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by city",
+                        "name": "city",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search query for locker name/code",
+                        "name": "search_query",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Parcel lockers list",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/providers": {
+            "get": {
+                "description": "Get list of available delivery providers (currently returns mock data, will be implemented in microservice)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Get delivery providers list (MOCK)",
+                "responses": {
+                    "200": {
+                        "description": "Providers list",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/settlements": {
+            "get": {
+                "description": "Get list of settlements from delivery microservice",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Get settlements list via gRPC",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "RS",
+                        "description": "Country code (e.g., RS)",
+                        "name": "country",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search query for settlement name",
+                        "name": "search_query",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Settlements list",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/shipment": {
+            "post": {
+                "description": "Create a test shipment using delivery gRPC microservice (supports all 5 providers)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Create test shipment via gRPC microservice",
+                "parameters": [
+                    {
+                        "description": "Test shipment request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.TestShipmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test shipment result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.TestShipmentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/streets": {
+            "get": {
+                "description": "Get list of streets for a settlement from delivery microservice",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Get streets by settlement via gRPC",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Settlement name",
+                        "name": "settlement_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search query for street name",
+                        "name": "search_query",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Streets list",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid settlement",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/tracking/{tracking_number}": {
+            "get": {
+                "description": "Track a test shipment using delivery gRPC microservice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Track test shipment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking number",
+                        "name": "tracking_number",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tracking information",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid tracking number",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Shipment not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/delivery/test/validate-address": {
+            "post": {
+                "description": "Validate address (currently returns mock data, will be implemented in microservice)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-test"
+                ],
+                "summary": "Validate address (MOCK)",
+                "responses": {
+                    "200": {
+                        "description": "Address validation result",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin-check/{email}": {
             "get": {
                 "description": "Checks if user with specified email is an administrator (no authorization required)",
@@ -8395,6 +8880,94 @@
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/data/cleanup": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes test data from database (logs, results, behavior events, etc.)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Cleanup test data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comma-separated list of data types to clean (logs,results,behavior,feedback,price_history,ai_decisions)",
+                        "name": "types",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.CleanupResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/tests/data/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns statistics about test data in database (logs, results, behavior events, etc.)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "testing"
+                ],
+                "summary": "Get test data statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.TestDataStats"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
@@ -19634,7 +20207,7 @@
         },
         "/api/v1/delivery/calculate-cart": {
             "post": {
-                "description": "Calculate delivery rates for cart items with optimization",
+                "description": "DEPRECATED: This endpoint has been moved to delivery microservice. Use gRPC CalculateRate instead.",
                 "consumes": [
                     "application/json"
                 ],
@@ -19644,7 +20217,7 @@
                 "tags": [
                     "delivery"
                 ],
-                "summary": "Calculate delivery for cart",
+                "summary": "Calculate delivery for cart (DEPRECATED)",
                 "parameters": [
                     {
                         "description": "Cart calculation request",
@@ -19657,32 +20230,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Calculation results",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/calculator.CalculationResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
+                    "501": {
+                        "description": "Not implemented",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
@@ -19692,7 +20241,7 @@
         },
         "/api/v1/delivery/calculate-universal": {
             "post": {
-                "description": "Calculate delivery rates across all available providers",
+                "description": "DEPRECATED: This endpoint has been moved to delivery microservice. Use gRPC CalculateRate instead.",
                 "consumes": [
                     "application/json"
                 ],
@@ -19702,7 +20251,7 @@
                 "tags": [
                     "delivery"
                 ],
-                "summary": "Calculate universal delivery rates",
+                "summary": "Calculate universal delivery rates (DEPRECATED)",
                 "parameters": [
                     {
                         "description": "Calculation request",
@@ -19710,37 +20259,13 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/calculator.CalculationRequest"
+                            "$ref": "#/definitions/handler.CalculationRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Calculation results",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/calculator.CalculationResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
+                    "501": {
+                        "description": "Not implemented",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
@@ -30101,722 +30626,6 @@
                 }
             }
         },
-        "/api/v1/postexpress/test/cancel": {
-            "post": {
-                "description": "Cancel shipment using real Post Express WSP API (Transaction 25)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test cancel shipment",
-                "parameters": [
-                    {
-                        "description": "Cancel request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestCancelRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Cancel result",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/config": {
-            "get": {
-                "description": "Get current Post Express configuration (without password) for testing page",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Get Post Express test config",
-                "responses": {
-                    "200": {
-                        "description": "Configuration",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/history": {
-            "get": {
-                "description": "Get history of test shipments (mock data for demo)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Get test shipments history",
-                "responses": {
-                    "200": {
-                        "description": "Test shipments history",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/handler.TestShipmentResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/label": {
-            "post": {
-                "description": "Print shipment label using real Post Express WSP API (Transaction 20)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test print label",
-                "parameters": [
-                    {
-                        "description": "Print label request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestPrintLabelRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Label data",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/locations": {
-            "post": {
-                "description": "Search locations using real Post Express WSP API (Transaction 3)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test search locations",
-                "parameters": [
-                    {
-                        "description": "Search request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestSearchLocationsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Locations list",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/offices": {
-            "post": {
-                "description": "Get offices for location using real Post Express WSP API (Transaction 10)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test get offices",
-                "parameters": [
-                    {
-                        "description": "Get offices request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestGetOfficesRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Offices list",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/shipment": {
-            "post": {
-                "description": "Create a test shipment using real Post Express WSP API (B2B Manifest)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Create test shipment",
-                "parameters": [
-                    {
-                        "description": "Test shipment request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestShipmentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Test shipment result",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/handler.TestShipmentResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/track": {
-            "post": {
-                "description": "Track shipment using real Post Express WSP API (Transaction 15)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test tracking shipment",
-                "parameters": [
-                    {
-                        "description": "Tracking request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestTrackingRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Tracking result",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/tx11-calculate-postage": {
-            "post": {
-                "description": "Calculate postage using real Post Express WSP API (Transaction 11)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test TX 11 - PostarinaPosiljke (Calculate Postage)",
-                "parameters": [
-                    {
-                        "description": "Calculate postage request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestCalculatePostageRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Postage calculation result",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/tx3-settlements": {
-            "post": {
-                "description": "Search settlements using real Post Express WSP API (Transaction 3)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test TX 3 - GetNaselje (Search Settlements)",
-                "parameters": [
-                    {
-                        "description": "Search settlements request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestGetSettlementsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Settlements list",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/tx4-streets": {
-            "post": {
-                "description": "Search streets in settlement using real Post Express WSP API (Transaction 4)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test TX 4 - GetUlica (Search Streets)",
-                "parameters": [
-                    {
-                        "description": "Search streets request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestGetStreetsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Streets list",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/tx6-validate-address": {
-            "post": {
-                "description": "Validate address using real Post Express WSP API (Transaction 6)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test TX 6 - ProveraAdrese (Validate Address)",
-                "parameters": [
-                    {
-                        "description": "Validate address request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestValidateAddressRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Address validation result",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/postexpress/test/tx9-service-availability": {
-            "post": {
-                "description": "Check service availability using real Post Express WSP API (Transaction 9)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "post-express-test"
-                ],
-                "summary": "Test TX 9 - ProveraDostupnostiUsluge (Check Service Availability)",
-                "parameters": [
-                    {
-                        "description": "Check service availability request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.TestCheckServiceAvailabilityRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Service availability result",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/postexpress/track/sync": {
             "post": {
                 "description": "Синхронизировать статусы всех активных отправлений с Post Express",
@@ -40180,157 +39989,6 @@
                 }
             }
         },
-        "calculator.CalculationData": {
-            "type": "object",
-            "properties": {
-                "cheapest": {
-                    "$ref": "#/definitions/calculator.ProviderQuote"
-                },
-                "fastest": {
-                    "$ref": "#/definitions/calculator.ProviderQuote"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/calculator.ProviderQuote"
-                    }
-                },
-                "recommended": {
-                    "$ref": "#/definitions/calculator.ProviderQuote"
-                }
-            }
-        },
-        "calculator.CalculationRequest": {
-            "type": "object",
-            "properties": {
-                "cod_amount": {
-                    "type": "number"
-                },
-                "delivery_type": {
-                    "type": "string"
-                },
-                "from_location": {
-                    "$ref": "#/definitions/calculator.Location"
-                },
-                "insurance_value": {
-                    "type": "number"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/calculator.ItemWithAttrs"
-                    }
-                },
-                "provider_id": {
-                    "type": "integer"
-                },
-                "to_location": {
-                    "$ref": "#/definitions/calculator.Location"
-                }
-            }
-        },
-        "calculator.CalculationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/calculator.CalculationData"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "calculator.ItemWithAttrs": {
-            "type": "object",
-            "properties": {
-                "attributes": {
-                    "$ref": "#/definitions/models.DeliveryAttributes"
-                },
-                "product_id": {
-                    "type": "integer"
-                },
-                "product_type": {
-                    "description": "\"listing\" или \"storefront_product\"",
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "integer"
-                }
-            }
-        },
-        "calculator.Location": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "postal_code": {
-                    "type": "string"
-                }
-            }
-        },
-        "calculator.ProviderQuote": {
-            "type": "object",
-            "properties": {
-                "cod_fee": {
-                    "type": "number"
-                },
-                "cost_breakdown": {
-                    "$ref": "#/definitions/models.CostBreakdown"
-                },
-                "delivery_cost": {
-                    "type": "number"
-                },
-                "delivery_type": {
-                    "type": "string"
-                },
-                "estimated_days": {
-                    "type": "integer"
-                },
-                "estimated_delivery_date": {
-                    "type": "string"
-                },
-                "insurance_cost": {
-                    "type": "number"
-                },
-                "is_available": {
-                    "type": "boolean"
-                },
-                "provider_code": {
-                    "type": "string"
-                },
-                "provider_id": {
-                    "type": "integer"
-                },
-                "provider_name": {
-                    "type": "string"
-                },
-                "services": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.DeliveryService"
-                    }
-                },
-                "total_price": {
-                    "type": "number"
-                },
-                "unavailable_reason": {
-                    "type": "string"
-                }
-            }
-        },
         "config.StorageConfig": {
             "type": "object",
             "properties": {
@@ -40467,6 +40125,30 @@
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "domain.CleanupResponse": {
+            "type": "object",
+            "properties": {
+                "cleaned_at": {
+                    "type": "string"
+                },
+                "deleted_count": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "freed_space_mb": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -40638,6 +40320,128 @@
                 "TestCategoryAccessibility",
                 "TestCategoryAll"
             ]
+        },
+        "domain.TestDataStats": {
+            "type": "object",
+            "properties": {
+                "ai_decisions": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "integer"
+                        },
+                        "size_bytes": {
+                            "type": "integer"
+                        },
+                        "size_mb": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "behavior_events": {
+                    "type": "object",
+                    "properties": {
+                        "by_type": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int64"
+                            }
+                        },
+                        "count": {
+                            "type": "integer"
+                        },
+                        "size_bytes": {
+                            "type": "integer"
+                        },
+                        "size_mb": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "category_feedback": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "integer"
+                        },
+                        "size_bytes": {
+                            "type": "integer"
+                        },
+                        "size_mb": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "collected_at": {
+                    "type": "string"
+                },
+                "database_size_mb": {
+                    "type": "string"
+                },
+                "price_history": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "integer"
+                        },
+                        "size_bytes": {
+                            "type": "integer"
+                        },
+                        "size_mb": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "test_logs": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "integer"
+                        },
+                        "size_bytes": {
+                            "type": "integer"
+                        },
+                        "size_mb": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "test_results": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "integer"
+                        },
+                        "size_bytes": {
+                            "type": "integer"
+                        },
+                        "size_mb": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "test_runs": {
+                    "type": "object",
+                    "properties": {
+                        "count": {
+                            "type": "integer"
+                        },
+                        "size_bytes": {
+                            "type": "integer"
+                        },
+                        "size_mb": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "total_size_bytes": {
+                    "type": "integer"
+                },
+                "total_size_mb": {
+                    "type": "string"
+                }
+            }
         },
         "domain.TestLog": {
             "type": "object",
@@ -41456,6 +41260,54 @@
                 }
             }
         },
+        "handler.CalculateTestRequest": {
+            "type": "object",
+            "properties": {
+                "cod_amount": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "from_city": {
+                    "type": "string",
+                    "example": "Beograd"
+                },
+                "to_city": {
+                    "type": "string",
+                    "example": "Novi Sad"
+                },
+                "weight": {
+                    "description": "граммы",
+                    "type": "integer",
+                    "example": 1000
+                }
+            }
+        },
+        "handler.CalculationRequest": {
+            "type": "object",
+            "properties": {
+                "cod_amount": {
+                    "type": "number"
+                },
+                "delivery_type": {
+                    "type": "string"
+                },
+                "from_location": {
+                    "$ref": "#/definitions/handler.Location"
+                },
+                "insurance_value": {
+                    "type": "number"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.ItemWithAttrs"
+                    }
+                },
+                "to_location": {
+                    "$ref": "#/definitions/handler.Location"
+                }
+            }
+        },
         "handler.CancelRequest": {
             "type": "object",
             "properties": {
@@ -41474,7 +41326,7 @@
                     "type": "string"
                 },
                 "from_location": {
-                    "$ref": "#/definitions/calculator.Location"
+                    "$ref": "#/definitions/handler.Location"
                 },
                 "insurance_value": {
                     "type": "number"
@@ -41482,11 +41334,11 @@
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/calculator.ItemWithAttrs"
+                        "$ref": "#/definitions/handler.ItemWithAttrs"
                     }
                 },
                 "to_location": {
-                    "$ref": "#/definitions/calculator.Location"
+                    "$ref": "#/definitions/handler.Location"
                 }
             }
         },
@@ -42311,6 +42163,49 @@
                 }
             }
         },
+        "handler.ItemDimensions": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "number"
+                },
+                "length": {
+                    "type": "number"
+                },
+                "width": {
+                    "type": "number"
+                }
+            }
+        },
+        "handler.ItemWithAttrs": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "dimensions": {
+                    "$ref": "#/definitions/handler.ItemDimensions"
+                },
+                "fragile": {
+                    "type": "boolean"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "refrigerate": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "number"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
         "handler.ListingsResponse": {
             "type": "object",
             "properties": {
@@ -42326,6 +42221,26 @@
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "handler.Location": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "postal_code": {
+                    "type": "string"
                 }
             }
         },
@@ -43101,122 +43016,6 @@
                 }
             }
         },
-        "handler.TestCalculatePostageRequest": {
-            "type": "object",
-            "properties": {
-                "cod_amount": {
-                    "description": "para (1 RSD = 100 para)",
-                    "type": "integer",
-                    "example": 0
-                },
-                "from_postal_code": {
-                    "type": "string",
-                    "example": "11000"
-                },
-                "insured_value": {
-                    "description": "para",
-                    "type": "integer",
-                    "example": 0
-                },
-                "service_id": {
-                    "type": "integer",
-                    "example": 71
-                },
-                "services": {
-                    "description": "дополнительные услуги",
-                    "type": "string",
-                    "example": "PNA"
-                },
-                "to_postal_code": {
-                    "type": "string",
-                    "example": "21000"
-                },
-                "weight": {
-                    "description": "граммы",
-                    "type": "integer",
-                    "example": 500
-                }
-            }
-        },
-        "handler.TestCancelRequest": {
-            "type": "object",
-            "properties": {
-                "reason": {
-                    "type": "string",
-                    "example": "Отмена по требованию клиента"
-                },
-                "shipment_id": {
-                    "type": "string",
-                    "example": "12345"
-                }
-            }
-        },
-        "handler.TestCheckServiceAvailabilityRequest": {
-            "type": "object",
-            "properties": {
-                "from_postal_code": {
-                    "type": "string",
-                    "example": "11000"
-                },
-                "service_id": {
-                    "type": "integer",
-                    "example": 71
-                },
-                "to_postal_code": {
-                    "type": "string",
-                    "example": "21000"
-                }
-            }
-        },
-        "handler.TestGetOfficesRequest": {
-            "type": "object",
-            "properties": {
-                "location_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "handler.TestGetSettlementsRequest": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "example": "Beograd"
-                }
-            }
-        },
-        "handler.TestGetStreetsRequest": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "example": "Takovska"
-                },
-                "settlement_id": {
-                    "type": "integer",
-                    "example": 123
-                }
-            }
-        },
-        "handler.TestPrintLabelRequest": {
-            "type": "object",
-            "properties": {
-                "shipment_id": {
-                    "type": "string",
-                    "example": "12345"
-                }
-            }
-        },
-        "handler.TestSearchLocationsRequest": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "example": "Beograd"
-                }
-            }
-        },
         "handler.TestShipmentRequest": {
             "type": "object",
             "properties": {
@@ -43230,7 +43029,7 @@
                     "example": "Test paket za SVETU"
                 },
                 "delivery_method": {
-                    "description": "K = Kurir, S = Šalter, PAK = Paкетомат",
+                    "description": "K = Kurir, S = Šalter, PAK = Pаккетомат",
                     "type": "string",
                     "example": "K"
                 },
@@ -43250,7 +43049,7 @@
                     "example": 0
                 },
                 "parcel_locker_code": {
-                    "description": "Код паккетомата (для IdRukovanje = 85)",
+                    "description": "Код пакketomата (для IdRukovanje = 85)",
                     "type": "string",
                     "example": ""
                 },
@@ -43310,7 +43109,7 @@
                     "example": "11000"
                 },
                 "services": {
-                    "description": "Дополнительные услуги",
+                    "description": "Дополнительные услуги (для совместимости со старым API)",
                     "type": "string",
                     "example": "PNA"
                 },
@@ -43325,10 +43124,12 @@
             "type": "object",
             "properties": {
                 "cost": {
-                    "description": "RSD",
-                    "type": "integer"
+                    "type": "string"
                 },
                 "created_at": {
+                    "type": "string"
+                },
+                "currency": {
                     "type": "string"
                 },
                 "errors": {
@@ -43337,12 +43138,6 @@
                         "type": "string"
                     }
                 },
-                "external_id": {
-                    "type": "string"
-                },
-                "manifest_id": {
-                    "type": "integer"
-                },
                 "processing_time_ms": {
                     "description": "milliseconds",
                     "type": "integer"
@@ -43350,43 +43145,13 @@
                 "request_data": {},
                 "response_data": {},
                 "shipment_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "success": {
                     "type": "boolean"
                 },
                 "tracking_number": {
                     "type": "string"
-                }
-            }
-        },
-        "handler.TestTrackingRequest": {
-            "type": "object",
-            "properties": {
-                "tracking_number": {
-                    "type": "string",
-                    "example": "SVETU-TEST-123456"
-                }
-            }
-        },
-        "handler.TestValidateAddressRequest": {
-            "type": "object",
-            "properties": {
-                "house_number": {
-                    "type": "string",
-                    "example": "2"
-                },
-                "postal_code": {
-                    "type": "string",
-                    "example": "11000"
-                },
-                "settlement_id": {
-                    "type": "integer",
-                    "example": 123
-                },
-                "street_id": {
-                    "type": "integer",
-                    "example": 456
                 }
             }
         },
@@ -44039,165 +43804,6 @@
                     "additionalProperties": {
                         "type": "string"
                     }
-                },
-                "status": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "string"
-                }
-            }
-        },
-        "interfaces.Address": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string"
-                },
-                "company_name": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "postal_code": {
-                    "type": "string"
-                },
-                "street": {
-                    "type": "string"
-                }
-            }
-        },
-        "interfaces.DeliveryAttrs": {
-            "type": "object",
-            "properties": {
-                "dimensions": {
-                    "$ref": "#/definitions/interfaces.Dimensions"
-                },
-                "hazmat_class": {
-                    "type": "string"
-                },
-                "is_fragile": {
-                    "type": "boolean"
-                },
-                "max_stack_weight_kg": {
-                    "type": "number"
-                },
-                "packaging_type": {
-                    "description": "box, envelope, pallet, custom",
-                    "type": "string"
-                },
-                "requires_special_handling": {
-                    "type": "boolean"
-                },
-                "stackable": {
-                    "type": "boolean"
-                },
-                "volume_m3": {
-                    "type": "number"
-                },
-                "weight_kg": {
-                    "type": "number"
-                }
-            }
-        },
-        "interfaces.Dimensions": {
-            "type": "object",
-            "properties": {
-                "height_cm": {
-                    "description": "Высота в сантиметрах",
-                    "type": "number"
-                },
-                "length_cm": {
-                    "description": "Длина в сантиметрах",
-                    "type": "number"
-                },
-                "width_cm": {
-                    "description": "Ширина в сантиметрах",
-                    "type": "number"
-                }
-            }
-        },
-        "interfaces.Package": {
-            "type": "object",
-            "properties": {
-                "attributes": {
-                    "description": "Дополнительные атрибуты",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/interfaces.DeliveryAttrs"
-                        }
-                    ]
-                },
-                "description": {
-                    "description": "Описание содержимого",
-                    "type": "string"
-                },
-                "dimensions": {
-                    "description": "Габариты",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/interfaces.Dimensions"
-                        }
-                    ]
-                },
-                "is_fragile": {
-                    "description": "Хрупкий товар",
-                    "type": "boolean"
-                },
-                "value": {
-                    "description": "Объявленная ценность",
-                    "type": "number"
-                },
-                "weight_kg": {
-                    "description": "Вес в килограммах",
-                    "type": "number"
-                }
-            }
-        },
-        "interfaces.ProofOfDelivery": {
-            "type": "object",
-            "properties": {
-                "delivered_at": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "photo_url": {
-                    "type": "string"
-                },
-                "recipient_name": {
-                    "type": "string"
-                },
-                "signature_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "interfaces.TrackingEvent": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "details": {
-                    "type": "string"
-                },
-                "location": {
-                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -46618,44 +46224,6 @@
                 }
             }
         },
-        "models.CostBreakdown": {
-            "type": "object",
-            "properties": {
-                "base_price": {
-                    "type": "number"
-                },
-                "cod_fee": {
-                    "type": "number"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "fragile_surcharge": {
-                    "type": "number"
-                },
-                "fuel_surcharge": {
-                    "type": "number"
-                },
-                "insurance_fee": {
-                    "type": "number"
-                },
-                "oversize_surcharge": {
-                    "type": "number"
-                },
-                "remote_area_surcharge": {
-                    "type": "number"
-                },
-                "tax": {
-                    "type": "number"
-                },
-                "total": {
-                    "type": "number"
-                },
-                "weight_surcharge": {
-                    "type": "number"
-                }
-            }
-        },
         "models.CreateCategoryProposalRequest": {
             "type": "object",
             "required": [
@@ -47320,29 +46888,6 @@
                 "DeliveryProviderSelfPickup",
                 "DeliveryProviderOwnDelivery"
             ]
-        },
-        "models.DeliveryService": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "is_available": {
-                    "type": "boolean"
-                },
-                "is_included": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                }
-            }
         },
         "models.DeliveryZone": {
             "type": "object",
@@ -54359,6 +53904,29 @@
                 }
             }
         },
+        "service.Address": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                }
+            }
+        },
         "service.CategoryAnalysisResult": {
             "type": "object",
             "properties": {
@@ -54449,7 +54017,7 @@
                     "type": "string"
                 },
                 "from_address": {
-                    "$ref": "#/definitions/interfaces.Address"
+                    "$ref": "#/definitions/service.Address"
                 },
                 "insurance_value": {
                     "type": "number"
@@ -54463,7 +54031,7 @@
                 "packages": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/interfaces.Package"
+                        "$ref": "#/definitions/service.Package"
                     }
                 },
                 "pickup_date": {
@@ -54485,7 +54053,21 @@
                     }
                 },
                 "to_address": {
-                    "$ref": "#/definitions/interfaces.Address"
+                    "$ref": "#/definitions/service.Address"
+                }
+            }
+        },
+        "service.Dimensions": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "number"
+                },
+                "length": {
+                    "type": "number"
+                },
+                "width": {
+                    "type": "number"
                 }
             }
         },
@@ -54716,6 +54298,23 @@
                 }
             }
         },
+        "service.Package": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "dimensions": {
+                    "$ref": "#/definitions/service.Dimensions"
+                },
+                "value": {
+                    "type": "number"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
         "service.PaymentInitiationResponse": {
             "type": "object",
             "properties": {
@@ -54735,6 +54334,26 @@
                     "type": "boolean"
                 },
                 "redirect_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.ProofOfDelivery": {
+            "type": "object",
+            "properties": {
+                "notes": {
+                    "type": "string"
+                },
+                "photo_url": {
+                    "type": "string"
+                },
+                "received_at": {
+                    "type": "string"
+                },
+                "received_by": {
+                    "type": "string"
+                },
+                "signature_url": {
                     "type": "string"
                 }
             }
@@ -54805,6 +54424,23 @@
                 }
             }
         },
+        "service.TrackingEvent": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
         "service.TrackingInfo": {
             "type": "object",
             "properties": {
@@ -54820,14 +54456,14 @@
                 "events": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/interfaces.TrackingEvent"
+                        "$ref": "#/definitions/service.TrackingEvent"
                     }
                 },
                 "last_updated": {
                     "type": "string"
                 },
                 "proof_of_delivery": {
-                    "$ref": "#/definitions/interfaces.ProofOfDelivery"
+                    "$ref": "#/definitions/service.ProofOfDelivery"
                 },
                 "shipment_id": {
                     "type": "integer"

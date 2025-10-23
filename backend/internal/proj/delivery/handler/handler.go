@@ -87,7 +87,7 @@ func (h *Handler) RegisterTestRoutes(app fiber.Router) {
 	test.Post("/cancel/:id", h.CancelTestShipment)
 	test.Post("/calculate", h.CalculateTestRate)
 	test.Get("/settlements", h.GetTestSettlements)
-	test.Get("/streets/:settlement", h.GetTestStreets)
+	test.Get("/streets", h.GetTestStreets)
 	test.Get("/parcel-lockers", h.GetTestParcelLockers)
 	test.Get("/delivery-services", h.GetTestDeliveryServices)
 	test.Post("/validate-address", h.ValidateTestAddress)

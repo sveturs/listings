@@ -344,10 +344,10 @@ yarn dev -p 3001
 
 ## 📚 Связанная документация
 
-- [Delivery Microservice Complete](DELIVERY_MICROSERVICE_MIGRATION_COMPLETE.md)
-- [Delivery Quick Start](DELIVERY_QUICK_START.md)
-- [Delivery Module README](../backend/internal/proj/delivery/README.md)
-- [Proto Schema](../backend/proto/delivery/v1/delivery.proto)
+- [Delivery Microservice Complete](../DELIVERY_MICROSERVICE_MIGRATION_COMPLETE.md)
+- [Delivery Quick Start](../DELIVERY_QUICK_START.md)
+- [Delivery Module README](../../backend/internal/proj/delivery/README.md)
+- [Proto Schema](../../backend/proto/delivery/v1/delivery.proto)
 
 ---
 
