@@ -35,6 +35,11 @@ func TestStorageTestSuite(t *testing.T) {
 }
 
 func (suite *StorageTestSuite) SetupSuite() {
+	if testing.Short() {
+		suite.T().Skip("Skipping integration test in short mode")
+		return
+	}
+
 	ctx := context.Background()
 	suite.ctx = ctx
 
@@ -409,6 +414,7 @@ func (suite *StorageTestSuite) TestUpdateOrderShipment() {
 		"SELECT delivery_shipment_id FROM c2c_orders WHERE id = 200")
 	require.NoError(suite.T(), err)
 	assert.True(suite.T(), deliveryShipmentID.Valid)
+	// #nosec G115 - shipmentID контролируется тестом и заведомо помещается в int32
 	assert.Equal(suite.T(), int32(shipmentID), deliveryShipmentID.Int32)
 }
 

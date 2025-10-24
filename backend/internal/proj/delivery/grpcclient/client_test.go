@@ -267,8 +267,13 @@ func TestCancelShipment_Success(t *testing.T) {
 	}
 
 	expectedResp := &pb.CancelShipmentResponse{
-		Success: true,
-		Message: "Shipment canceled successfully",
+		Shipment: &pb.Shipment{
+			Id:             "EXT123",
+			Status:         pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED, //nolint:misspell // Generated proto uses British spelling
+			TrackingNumber: "TRK123",
+			CreatedAt:      timestamppb.Now(),
+			UpdatedAt:      timestamppb.Now(),
+		},
 	}
 
 	mockClient.On("CancelShipment", ctx, req).Return(expectedResp, nil)
@@ -276,8 +281,8 @@ func TestCancelShipment_Success(t *testing.T) {
 	resp, err := mockClient.CancelShipment(ctx, req)
 
 	require.NoError(t, err)
-	assert.True(t, resp.Success)
-	assert.Equal(t, "Shipment canceled successfully", resp.Message)
+	assert.NotNil(t, resp.Shipment)
+	assert.Equal(t, pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED, resp.Shipment.Status) //nolint:misspell // Generated proto uses British spelling
 	mockClient.AssertExpectations(t)
 }
 
@@ -323,10 +328,9 @@ func TestCalculateRate_Success(t *testing.T) {
 	}
 
 	expectedResp := &pb.CalculateRateResponse{
-		Cost:           "500.00",
-		Currency:       "RSD",
-		EstimatedDays:  2,
-		ServiceOptions: []string{"standard", "express"},
+		Cost:              "500.00",
+		Currency:          "RSD",
+		EstimatedDelivery: timestamppb.New(time.Now().Add(48 * time.Hour)),
 	}
 
 	mockClient.On("CalculateRate", ctx, req).Return(expectedResp, nil)
@@ -336,7 +340,7 @@ func TestCalculateRate_Success(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Equal(t, "500.00", resp.Cost)
-	assert.Equal(t, int32(2), resp.EstimatedDays)
+	assert.NotNil(t, resp.EstimatedDelivery)
 	mockClient.AssertExpectations(t)
 }
 
@@ -345,20 +349,18 @@ func TestGetSettlements_Success(t *testing.T) {
 	ctx := context.Background()
 
 	req := &pb.GetSettlementsRequest{
-		Provider:   pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
-		Query:      "Bel",
-		CountryIso: "RS",
+		Provider:    pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
+		SearchQuery: "Bel",
+		Country:     "RS",
 	}
 
 	expectedResp := &pb.GetSettlementsResponse{
 		Settlements: []*pb.Settlement{
 			{
-				Id:          "1",
-				Name:        "Belgrade",
-				NameLatin:   "Beograd",
-				Region:      "Belgrade Region",
-				CountryIso:  "RS",
-				PostalCodes: []string{"11000", "11010"},
+				Id:      1,
+				Name:    "Belgrade",
+				ZipCode: "11000",
+				Country: "RS",
 			},
 		},
 	}
@@ -379,18 +381,17 @@ func TestGetStreets_Success(t *testing.T) {
 	ctx := context.Background()
 
 	req := &pb.GetStreetsRequest{
-		Provider:     pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
-		SettlementId: "1",
-		Query:        "Kneza",
+		Provider:       pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
+		SettlementName: "Belgrade",
+		SearchQuery:    "Kneza",
 	}
 
 	expectedResp := &pb.GetStreetsResponse{
 		Streets: []*pb.Street{
 			{
-				Id:         "100",
-				Name:       "Kneza Milosa",
-				NameLatin:  "Kneza Milosa",
-				PostalCode: "11000",
+				Id:             100,
+				Name:           "Kneza Milosa",
+				SettlementName: "Belgrade",
 			},
 		},
 	}
@@ -411,22 +412,22 @@ func TestGetParcelLockers_Success(t *testing.T) {
 	ctx := context.Background()
 
 	req := &pb.GetParcelLockersRequest{
-		Provider:     pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
-		SettlementId: "1",
+		Provider: pb.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS,
+		City:     "Belgrade",
 	}
 
 	expectedResp := &pb.GetParcelLockersResponse{
 		ParcelLockers: []*pb.ParcelLocker{
 			{
-				Id:          "LOC1",
-				Name:        "Locker Belgrade Center",
-				Address:     "Kneza Milosa 10",
-				City:        "Belgrade",
-				PostalCode:  "11000",
-				CountryIso:  "RS",
-				Latitude:    44.8125,
-				Longitude:   20.4612,
-				IsAvailable: true,
+				Id:        1,
+				Code:      "LOC1",
+				Name:      "Locker Belgrade Center",
+				Address:   "Kneza Milosa 10",
+				City:      "Belgrade",
+				ZipCode:   "11000",
+				Latitude:  44.8125,
+				Longitude: 20.4612,
+				Available: true,
 			},
 		},
 	}
@@ -439,7 +440,7 @@ func TestGetParcelLockers_Success(t *testing.T) {
 	assert.NotNil(t, resp)
 	assert.Len(t, resp.ParcelLockers, 1)
 	assert.Equal(t, "Locker Belgrade Center", resp.ParcelLockers[0].Name)
-	assert.True(t, resp.ParcelLockers[0].IsAvailable)
+	assert.True(t, resp.ParcelLockers[0].Available)
 	mockClient.AssertExpectations(t)
 }
 
@@ -489,14 +490,18 @@ func TestShouldRetry(t *testing.T) {
 
 	// Создаем клиент для тестирования логики shouldRetry
 	// Note: т.к. shouldRetry приватный метод, мы тестируем его косвенно через поведение
-	log := logger.NewLogger()
+	log := logger.New()
 	client, err := grpcclient.NewClient("localhost:50051", log)
 	if err != nil {
 		// Если не удалось создать клиент (нет сервера), пропускаем тест
 		t.Skip("Cannot create gRPC client for testing")
 		return
 	}
-	defer client.Close()
+	defer func() {
+		if closeErr := client.Close(); closeErr != nil {
+			t.Logf("Failed to close client: %v", closeErr)
+		}
+	}()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -515,6 +520,15 @@ func TestShouldRetry(t *testing.T) {
 			case codes.InvalidArgument, codes.NotFound, codes.AlreadyExists, codes.PermissionDenied,
 				codes.Unauthenticated, codes.FailedPrecondition, codes.OutOfRange, codes.Unimplemented:
 				assert.False(t, tt.shouldRetry, "Code %s should NOT be retryable", code)
+			case codes.OK:
+				// OK status не должен быть в тестах ошибок
+				assert.False(t, tt.shouldRetry, "OK status should not be retried")
+			case codes.Unknown, codes.Internal, codes.DataLoss:
+				// Эти коды могут быть retryable в зависимости от ситуации
+				// но обычно Internal и DataLoss не retry
+				t.Logf("Code %s - retry behavior may vary", code)
+			default:
+				t.Errorf("Unexpected code: %s", code)
 			}
 		})
 	}
@@ -526,13 +540,17 @@ func TestCircuitBreaker(t *testing.T) {
 	// При 5 последовательных ошибках circuit breaker должен открыться
 	// и отклонять запросы в течение 30 секунд
 
-	log := logger.NewLogger()
+	log := logger.New()
 	client, err := grpcclient.NewClient("localhost:50051", log)
 	if err != nil {
 		t.Skip("Cannot create gRPC client for testing")
 		return
 	}
-	defer client.Close()
+	defer func() {
+		if closeErr := client.Close(); closeErr != nil {
+			t.Logf("Failed to close client: %v", closeErr)
+		}
+	}()
 
 	// Этот тест проверяет только структуру, реальное поведение circuit breaker
 	// требует интеграционного теста с реальным сервером

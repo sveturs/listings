@@ -20224,17 +20224,6 @@ const docTemplate = `{
                     "delivery"
                 ],
                 "summary": "Calculate delivery for cart (DEPRECATED)",
-                "parameters": [
-                    {
-                        "description": "Cart calculation request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.CartCalculationRequest"
-                        }
-                    }
-                ],
                 "responses": {
                     "501": {
                         "description": "Not implemented",
@@ -20258,17 +20247,6 @@ const docTemplate = `{
                     "delivery"
                 ],
                 "summary": "Calculate universal delivery rates (DEPRECATED)",
-                "parameters": [
-                    {
-                        "description": "Calculation request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.CalculationRequest"
-                        }
-                    }
-                ],
                 "responses": {
                     "501": {
                         "description": "Not implemented",
@@ -20330,7 +20308,7 @@ const docTemplate = `{
         },
         "/api/v1/delivery/webhooks/{provider}/tracking": {
             "post": {
-                "description": "Process tracking status updates from delivery providers",
+                "description": "DEPRECATED: Webhook processing moved to delivery microservice. Configure webhooks to point directly to delivery service.",
                 "consumes": [
                     "application/json"
                 ],
@@ -20340,7 +20318,7 @@ const docTemplate = `{
                 "tags": [
                     "delivery"
                 ],
-                "summary": "Handle tracking webhook",
+                "summary": "Handle tracking webhook (DEPRECATED)",
                 "parameters": [
                     {
                         "type": "string",
@@ -20360,38 +20338,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Webhook processed successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "404": {
-                        "description": "Provider not found",
-                        "schema": {
-                            "$ref": "#/definitions/utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
+                    "501": {
+                        "description": "Moved to microservice",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
@@ -41288,63 +41236,11 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.CalculationRequest": {
-            "type": "object",
-            "properties": {
-                "cod_amount": {
-                    "type": "number"
-                },
-                "delivery_type": {
-                    "type": "string"
-                },
-                "from_location": {
-                    "$ref": "#/definitions/handler.Location"
-                },
-                "insurance_value": {
-                    "type": "number"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handler.ItemWithAttrs"
-                    }
-                },
-                "to_location": {
-                    "$ref": "#/definitions/handler.Location"
-                }
-            }
-        },
         "handler.CancelRequest": {
             "type": "object",
             "properties": {
                 "reason": {
                     "type": "string"
-                }
-            }
-        },
-        "handler.CartCalculationRequest": {
-            "type": "object",
-            "properties": {
-                "cod_amount": {
-                    "type": "number"
-                },
-                "delivery_type": {
-                    "type": "string"
-                },
-                "from_location": {
-                    "$ref": "#/definitions/handler.Location"
-                },
-                "insurance_value": {
-                    "type": "number"
-                },
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handler.ItemWithAttrs"
-                    }
-                },
-                "to_location": {
-                    "$ref": "#/definitions/handler.Location"
                 }
             }
         },
@@ -42169,49 +42065,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ItemDimensions": {
-            "type": "object",
-            "properties": {
-                "height": {
-                    "type": "number"
-                },
-                "length": {
-                    "type": "number"
-                },
-                "width": {
-                    "type": "number"
-                }
-            }
-        },
-        "handler.ItemWithAttrs": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "dimensions": {
-                    "$ref": "#/definitions/handler.ItemDimensions"
-                },
-                "fragile": {
-                    "type": "boolean"
-                },
-                "product_id": {
-                    "type": "integer"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "refrigerate": {
-                    "type": "boolean"
-                },
-                "value": {
-                    "type": "number"
-                },
-                "weight": {
-                    "type": "number"
-                }
-            }
-        },
         "handler.ListingsResponse": {
             "type": "object",
             "properties": {
@@ -42227,26 +42080,6 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
-                }
-            }
-        },
-        "handler.Location": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "postal_code": {
-                    "type": "string"
                 }
             }
         },

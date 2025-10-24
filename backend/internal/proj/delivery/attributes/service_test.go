@@ -2,7 +2,6 @@ package attributes_test
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"log"
 	"testing"
@@ -19,6 +18,7 @@ import (
 
 	"backend/internal/proj/delivery/attributes"
 	"backend/internal/proj/delivery/models"
+	"backend/internal/proj/delivery/storage"
 )
 
 type AttributesServiceTestSuite struct {
@@ -34,6 +34,11 @@ func TestAttributesServiceTestSuite(t *testing.T) {
 }
 
 func (suite *AttributesServiceTestSuite) SetupSuite() {
+	if testing.Short() {
+		suite.T().Skip("Skipping integration test in short mode")
+		return
+	}
+
 	ctx := context.Background()
 	suite.ctx = ctx
 
@@ -62,8 +67,9 @@ func (suite *AttributesServiceTestSuite) SetupSuite() {
 	err = suite.createSchema()
 	require.NoError(suite.T(), err)
 
-	// Создаем service
-	suite.service = attributes.NewService(suite.db)
+	// Создаем storage и service
+	deliveryStorage := storage.NewStorage(suite.db)
+	suite.service = attributes.NewService(suite.db, deliveryStorage)
 }
 
 func (suite *AttributesServiceTestSuite) TearDownSuite() {

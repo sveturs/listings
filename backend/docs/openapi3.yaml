@@ -1565,6 +1565,367 @@ paths:
       summary: Translate content to multiple languages
       tags:
         - ai
+  /api/public/delivery/test/calculate:
+    post:
+      description: Calculate delivery cost using delivery gRPC microservice
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/handler.CalculateTestRequest"
+        description: Calculate request
+        required: true
+      responses:
+        "200":
+          description: Calculation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Calculate test delivery rate
+      tags:
+        - delivery-test
+  "/api/public/delivery/test/cancel/{id}":
+    post:
+      description: Cancel a test shipment using delivery gRPC microservice
+      parameters:
+        - description: Shipment ID (UUID)
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Shipment canceled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "400":
+          description: Invalid shipment ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Shipment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Cancel test shipment
+      tags:
+        - delivery-test
+  /api/public/delivery/test/config:
+    get:
+      description: Get delivery configuration (currently returns mock data, will be
+        implemented in microservice)
+      responses:
+        "200":
+          description: Delivery config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get delivery config (MOCK)
+      tags:
+        - delivery-test
+  /api/public/delivery/test/delivery-services:
+    get:
+      description: Get list of delivery services (currently returns mock data, will be
+        implemented in microservice)
+      responses:
+        "200":
+          description: Delivery services list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get delivery services list (MOCK)
+      tags:
+        - delivery-test
+  /api/public/delivery/test/history:
+    get:
+      description: Get history of shipments (currently returns mock data, will be
+        implemented in microservice)
+      parameters:
+        - description: Limit
+          in: query
+          name: limit
+          schema:
+            type: integer
+        - description: Offset
+          in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Shipments history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get shipments history (MOCK)
+      tags:
+        - delivery-test
+  /api/public/delivery/test/parcel-lockers:
+    get:
+      description: Get list of parcel lockers from delivery microservice
+      parameters:
+        - description: Filter by city
+          in: query
+          name: city
+          schema:
+            type: string
+        - description: Search query for locker name/code
+          in: query
+          name: search_query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Parcel lockers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get parcel lockers list via gRPC
+      tags:
+        - delivery-test
+  /api/public/delivery/test/providers:
+    get:
+      description: Get list of available delivery providers (currently returns mock
+        data, will be implemented in microservice)
+      responses:
+        "200":
+          description: Providers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get delivery providers list (MOCK)
+      tags:
+        - delivery-test
+  /api/public/delivery/test/settlements:
+    get:
+      description: Get list of settlements from delivery microservice
+      parameters:
+        - description: Country code (e.g., RS)
+          in: query
+          name: country
+          schema:
+            type: string
+            default: RS
+        - description: Search query for settlement name
+          in: query
+          name: search_query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Settlements list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get settlements list via gRPC
+      tags:
+        - delivery-test
+  /api/public/delivery/test/shipment:
+    post:
+      description: Create a test shipment using delivery gRPC microservice (supports
+        all 5 providers)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/handler.TestShipmentRequest"
+        description: Test shipment request
+        required: true
+      responses:
+        "200":
+          description: Test shipment result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/handler.TestShipmentResponse"
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Create test shipment via gRPC microservice
+      tags:
+        - delivery-test
+  /api/public/delivery/test/streets:
+    get:
+      description: Get list of streets for a settlement from delivery microservice
+      parameters:
+        - description: Settlement name
+          in: query
+          name: settlement_name
+          required: true
+          schema:
+            type: string
+        - description: Search query for street name
+          in: query
+          name: search_query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Streets list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "400":
+          description: Invalid settlement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Get streets by settlement via gRPC
+      tags:
+        - delivery-test
+  "/api/public/delivery/test/tracking/{tracking_number}":
+    get:
+      description: Track a test shipment using delivery gRPC microservice
+      parameters:
+        - description: Tracking number
+          in: path
+          name: tracking_number
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tracking information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "400":
+          description: Invalid tracking number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "404":
+          description: Shipment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Track test shipment
+      tags:
+        - delivery-test
+  /api/public/delivery/test/validate-address:
+    post:
+      description: Validate address (currently returns mock data, will be implemented
+        in microservice)
+      responses:
+        "200":
+          description: Address validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.SuccessResponseSwag"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      summary: Validate address (MOCK)
+      tags:
+        - delivery-test
   "/api/v1/admin-check/{email}":
     get:
       description: Checks if user with specified email is an administrator (no
@@ -5609,6 +5970,74 @@ paths:
       security:
         - BearerAuth: []
       summary: Get all available tests
+      tags:
+        - testing
+  /api/v1/admin/tests/data/cleanup:
+    delete:
+      description: Deletes test data from database (logs, results, behavior events, etc.)
+      parameters:
+        - description: Comma-separated list of data types to clean
+            (logs,results,behavior,feedback,price_history,ai_decisions)
+          in: query
+          name: types
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/domain.CleanupResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Cleanup test data
+      tags:
+        - testing
+  /api/v1/admin/tests/data/stats:
+    get:
+      description: Returns statistics about test data in database (logs, results,
+        behavior events, etc.)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/domain.TestDataStats"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get test data statistics
       tags:
         - testing
   /api/v1/admin/tests/run:
@@ -13585,76 +14014,30 @@ paths:
         - tracking
   /api/v1/delivery/calculate-cart:
     post:
-      description: Calculate delivery rates for cart items with optimization
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.CartCalculationRequest"
-        description: Cart calculation request
-        required: true
+      description: "DEPRECATED: This endpoint has been moved to delivery microservice.
+        Use gRPC CalculateRate instead."
       responses:
-        "200":
-          description: Calculation results
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/calculator.CalculationResponse"
-                    type: object
-        "400":
-          description: Invalid request
+        "501":
+          description: Not implemented
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Calculate delivery for cart
+      summary: Calculate delivery for cart (DEPRECATED)
       tags:
         - delivery
   /api/v1/delivery/calculate-universal:
     post:
-      description: Calculate delivery rates across all available providers
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/calculator.CalculationRequest"
-        description: Calculation request
-        required: true
+      description: "DEPRECATED: This endpoint has been moved to delivery microservice.
+        Use gRPC CalculateRate instead."
       responses:
-        "200":
-          description: Calculation results
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/calculator.CalculationResponse"
-                    type: object
-        "400":
-          description: Invalid request
+        "501":
+          description: Not implemented
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Calculate universal delivery rates
+      summary: Calculate universal delivery rates (DEPRECATED)
       tags:
         - delivery
   /api/v1/delivery/providers:
@@ -13691,7 +14074,8 @@ paths:
         - delivery
   "/api/v1/delivery/webhooks/{provider}/tracking":
     post:
-      description: Process tracking status updates from delivery providers
+      description: "DEPRECATED: Webhook processing moved to delivery microservice.
+        Configure webhooks to point directly to delivery service."
       parameters:
         - description: Provider code (post_express, bex_express, etc.)
           in: path
@@ -13707,36 +14091,13 @@ paths:
         description: Webhook payload from provider
         required: true
       responses:
-        "200":
-          description: Webhook processed successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
+        "501":
+          description: Moved to microservice
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Provider not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Handle tracking webhook
+      summary: Handle tracking webhook (DEPRECATED)
       tags:
         - delivery
   /api/v1/docs/content:
@@ -20724,465 +21085,6 @@ paths:
       summary: Search streets in settlement (TX 4)
       tags:
         - PostExpress
-  /api/v1/postexpress/test/cancel:
-    post:
-      description: Cancel shipment using real Post Express WSP API (Transaction 25)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestCancelRequest"
-        description: Cancel request
-        required: true
-      responses:
-        "200":
-          description: Cancel result
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test cancel shipment
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/config:
-    get:
-      description: Get current Post Express configuration (without password) for
-        testing page
-      responses:
-        "200":
-          description: Configuration
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-      summary: Get Post Express test config
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/history:
-    get:
-      description: Get history of test shipments (mock data for demo)
-      responses:
-        "200":
-          description: Test shipments history
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/handler.TestShipmentResponse"
-                        type: array
-                    type: object
-      summary: Get test shipments history
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/label:
-    post:
-      description: Print shipment label using real Post Express WSP API (Transaction 20)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestPrintLabelRequest"
-        description: Print label request
-        required: true
-      responses:
-        "200":
-          description: Label data
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test print label
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/locations:
-    post:
-      description: Search locations using real Post Express WSP API (Transaction 3)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestSearchLocationsRequest"
-        description: Search request
-        required: true
-      responses:
-        "200":
-          description: Locations list
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test search locations
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/offices:
-    post:
-      description: Get offices for location using real Post Express WSP API (Transaction 10)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestGetOfficesRequest"
-        description: Get offices request
-        required: true
-      responses:
-        "200":
-          description: Offices list
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test get offices
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/shipment:
-    post:
-      description: Create a test shipment using real Post Express WSP API (B2B Manifest)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestShipmentRequest"
-        description: Test shipment request
-        required: true
-      responses:
-        "200":
-          description: Test shipment result
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/handler.TestShipmentResponse"
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Create test shipment
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/track:
-    post:
-      description: Track shipment using real Post Express WSP API (Transaction 15)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestTrackingRequest"
-        description: Tracking request
-        required: true
-      responses:
-        "200":
-          description: Tracking result
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test tracking shipment
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/tx3-settlements:
-    post:
-      description: Search settlements using real Post Express WSP API (Transaction 3)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestGetSettlementsRequest"
-        description: Search settlements request
-        required: true
-      responses:
-        "200":
-          description: Settlements list
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test TX 3 - GetNaselje (Search Settlements)
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/tx4-streets:
-    post:
-      description: Search streets in settlement using real Post Express WSP API
-        (Transaction 4)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestGetStreetsRequest"
-        description: Search streets request
-        required: true
-      responses:
-        "200":
-          description: Streets list
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test TX 4 - GetUlica (Search Streets)
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/tx6-validate-address:
-    post:
-      description: Validate address using real Post Express WSP API (Transaction 6)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestValidateAddressRequest"
-        description: Validate address request
-        required: true
-      responses:
-        "200":
-          description: Address validation result
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test TX 6 - ProveraAdrese (Validate Address)
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/tx9-service-availability:
-    post:
-      description: Check service availability using real Post Express WSP API
-        (Transaction 9)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestCheckServiceAvailabilityRequest"
-        description: Check service availability request
-        required: true
-      responses:
-        "200":
-          description: Service availability result
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test TX 9 - ProveraDostupnostiUsluge (Check Service Availability)
-      tags:
-        - post-express-test
-  /api/v1/postexpress/test/tx11-calculate-postage:
-    post:
-      description: Calculate postage using real Post Express WSP API (Transaction 11)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/handler.TestCalculatePostageRequest"
-        description: Calculate postage request
-        required: true
-      responses:
-        "200":
-          description: Postage calculation result
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-        "400":
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Test TX 11 - PostarinaPosiljke (Calculate Postage)
-      tags:
-        - post-express-test
   "/api/v1/postexpress/track/{tracking}":
     get:
       description: Получить события отслеживания отправления по трекинг-номеру
@@ -27637,105 +27539,6 @@ components:
       required:
         - event_type
       type: object
-    calculator.CalculationData:
-      properties:
-        cheapest:
-          $ref: "#/components/schemas/calculator.ProviderQuote"
-        fastest:
-          $ref: "#/components/schemas/calculator.ProviderQuote"
-        providers:
-          items:
-            $ref: "#/components/schemas/calculator.ProviderQuote"
-          type: array
-        recommended:
-          $ref: "#/components/schemas/calculator.ProviderQuote"
-      type: object
-    calculator.CalculationRequest:
-      properties:
-        cod_amount:
-          type: number
-        delivery_type:
-          type: string
-        from_location:
-          $ref: "#/components/schemas/calculator.Location"
-        insurance_value:
-          type: number
-        items:
-          items:
-            $ref: "#/components/schemas/calculator.ItemWithAttrs"
-          type: array
-        provider_id:
-          type: integer
-        to_location:
-          $ref: "#/components/schemas/calculator.Location"
-      type: object
-    calculator.CalculationResponse:
-      properties:
-        data:
-          $ref: "#/components/schemas/calculator.CalculationData"
-        message:
-          type: string
-        success:
-          type: boolean
-      type: object
-    calculator.ItemWithAttrs:
-      properties:
-        attributes:
-          $ref: "#/components/schemas/models.DeliveryAttributes"
-        product_id:
-          type: integer
-        product_type:
-          description: '"listing" или "storefront_product"'
-          type: string
-        quantity:
-          type: integer
-      type: object
-    calculator.Location:
-      properties:
-        city:
-          type: string
-        country:
-          type: string
-        latitude:
-          type: number
-        longitude:
-          type: number
-        postal_code:
-          type: string
-      type: object
-    calculator.ProviderQuote:
-      properties:
-        cod_fee:
-          type: number
-        cost_breakdown:
-          $ref: "#/components/schemas/models.CostBreakdown"
-        delivery_cost:
-          type: number
-        delivery_type:
-          type: string
-        estimated_days:
-          type: integer
-        estimated_delivery_date:
-          type: string
-        insurance_cost:
-          type: number
-        is_available:
-          type: boolean
-        provider_code:
-          type: string
-        provider_id:
-          type: integer
-        provider_name:
-          type: string
-        services:
-          items:
-            $ref: "#/components/schemas/models.DeliveryService"
-          type: array
-        total_price:
-          type: number
-        unavailable_reason:
-          type: string
-      type: object
     config.StorageConfig:
       properties:
         base_url:
@@ -27828,6 +27631,22 @@ components:
           type: array
         total:
           type: integer
+      type: object
+    domain.CleanupResponse:
+      properties:
+        cleaned_at:
+          type: string
+        deleted_count:
+          additionalProperties:
+            format: int64
+            type: integer
+          type: object
+        freed_space_mb:
+          type: string
+        message:
+          type: string
+        success:
+          type: boolean
       type: object
     domain.RunTestRequest:
       properties:
@@ -27946,6 +27765,85 @@ components:
         - TestCategoryMonitoring
         - TestCategoryAccessibility
         - TestCategoryAll
+    domain.TestDataStats:
+      properties:
+        ai_decisions:
+          properties:
+            count:
+              type: integer
+            size_bytes:
+              type: integer
+            size_mb:
+              type: string
+          type: object
+        behavior_events:
+          properties:
+            by_type:
+              additionalProperties:
+                format: int64
+                type: integer
+              type: object
+            count:
+              type: integer
+            size_bytes:
+              type: integer
+            size_mb:
+              type: string
+          type: object
+        category_feedback:
+          properties:
+            count:
+              type: integer
+            size_bytes:
+              type: integer
+            size_mb:
+              type: string
+          type: object
+        collected_at:
+          type: string
+        database_size_mb:
+          type: string
+        price_history:
+          properties:
+            count:
+              type: integer
+            size_bytes:
+              type: integer
+            size_mb:
+              type: string
+          type: object
+        test_logs:
+          properties:
+            count:
+              type: integer
+            size_bytes:
+              type: integer
+            size_mb:
+              type: string
+          type: object
+        test_results:
+          properties:
+            count:
+              type: integer
+            size_bytes:
+              type: integer
+            size_mb:
+              type: string
+          type: object
+        test_runs:
+          properties:
+            count:
+              type: integer
+            size_bytes:
+              type: integer
+            size_mb:
+              type: string
+          type: object
+        total_size_bytes:
+          type: integer
+        total_size_mb:
+          type: string
+      type: object
     domain.TestLog:
       properties:
         created_at:
@@ -28498,27 +28396,26 @@ components:
           example: 10
           type: integer
       type: object
+    handler.CalculateTestRequest:
+      properties:
+        cod_amount:
+          example: 0
+          type: integer
+        from_city:
+          example: Beograd
+          type: string
+        to_city:
+          example: Novi Sad
+          type: string
+        weight:
+          description: граммы
+          example: 1000
+          type: integer
+      type: object
     handler.CancelRequest:
       properties:
         reason:
           type: string
-      type: object
-    handler.CartCalculationRequest:
-      properties:
-        cod_amount:
-          type: number
-        delivery_type:
-          type: string
-        from_location:
-          $ref: "#/components/schemas/calculator.Location"
-        insurance_value:
-          type: number
-        items:
-          items:
-            $ref: "#/components/schemas/calculator.ItemWithAttrs"
-          type: array
-        to_location:
-          $ref: "#/components/schemas/calculator.Location"
       type: object
     handler.CategoryHints:
       properties:
@@ -29628,88 +29525,6 @@ components:
           example: OK
           type: string
       type: object
-    handler.TestCalculatePostageRequest:
-      properties:
-        cod_amount:
-          description: para (1 RSD = 100 para)
-          example: 0
-          type: integer
-        from_postal_code:
-          example: "11000"
-          type: string
-        insured_value:
-          description: para
-          example: 0
-          type: integer
-        service_id:
-          example: 71
-          type: integer
-        services:
-          description: дополнительные услуги
-          example: PNA
-          type: string
-        to_postal_code:
-          example: "21000"
-          type: string
-        weight:
-          description: граммы
-          example: 500
-          type: integer
-      type: object
-    handler.TestCancelRequest:
-      properties:
-        reason:
-          example: Отмена по требованию клиента
-          type: string
-        shipment_id:
-          example: "12345"
-          type: string
-      type: object
-    handler.TestCheckServiceAvailabilityRequest:
-      properties:
-        from_postal_code:
-          example: "11000"
-          type: string
-        service_id:
-          example: 71
-          type: integer
-        to_postal_code:
-          example: "21000"
-          type: string
-      type: object
-    handler.TestGetOfficesRequest:
-      properties:
-        location_id:
-          example: 1
-          type: integer
-      type: object
-    handler.TestGetSettlementsRequest:
-      properties:
-        query:
-          example: Beograd
-          type: string
-      type: object
-    handler.TestGetStreetsRequest:
-      properties:
-        query:
-          example: Takovska
-          type: string
-        settlement_id:
-          example: 123
-          type: integer
-      type: object
-    handler.TestPrintLabelRequest:
-      properties:
-        shipment_id:
-          example: "12345"
-          type: string
-      type: object
-    handler.TestSearchLocationsRequest:
-      properties:
-        query:
-          example: Beograd
-          type: string
-      type: object
     handler.TestShipmentRequest:
       properties:
         cod_amount:
@@ -29720,7 +29535,7 @@ components:
           example: Test paket za SVETU
           type: string
         delivery_method:
-          description: K = Kurir, S = Šalter, PAK = Paкетомат
+          description: K = Kurir, S = Šalter, PAK = Pаккетомат
           example: K
           type: string
         delivery_type:
@@ -29736,7 +29551,7 @@ components:
           example: 0
           type: integer
         parcel_locker_code:
-          description: Код паккетомата (для IdRukovanje = 85)
+          description: Код пакketomата (для IdRukovanje = 85)
           example: ""
           type: string
         payment_method:
@@ -29782,7 +29597,7 @@ components:
           example: "11000"
           type: string
         services:
-          description: Дополнительные услуги
+          description: Дополнительные услуги (для совместимости со старым API)
           example: PNA
           type: string
         weight:
@@ -29793,50 +29608,26 @@ components:
     handler.TestShipmentResponse:
       properties:
         cost:
-          description: RSD
-          type: integer
+          type: string
         created_at:
+          type: string
+        currency:
           type: string
         errors:
           items:
             type: string
           type: array
-        external_id:
-          type: string
-        manifest_id:
-          type: integer
         processing_time_ms:
           description: milliseconds
           type: integer
         request_data: {}
         response_data: {}
         shipment_id:
-          type: integer
+          type: string
         success:
           type: boolean
         tracking_number:
           type: string
-      type: object
-    handler.TestTrackingRequest:
-      properties:
-        tracking_number:
-          example: SVETU-TEST-123456
-          type: string
-      type: object
-    handler.TestValidateAddressRequest:
-      properties:
-        house_number:
-          example: "2"
-          type: string
-        postal_code:
-          example: "11000"
-          type: string
-        settlement_id:
-          example: 123
-          type: integer
-        street_id:
-          example: 456
-          type: integer
       type: object
     handler.TranslateContentResponse:
       additionalProperties:
@@ -30277,110 +30068,6 @@ components:
           additionalProperties:
             type: string
           type: object
-        status:
-          type: string
-        timestamp:
-          type: string
-      type: object
-    interfaces.Address:
-      properties:
-        city:
-          type: string
-        company_name:
-          type: string
-        country:
-          type: string
-        email:
-          type: string
-        name:
-          type: string
-        note:
-          type: string
-        phone:
-          type: string
-        postal_code:
-          type: string
-        street:
-          type: string
-      type: object
-    interfaces.DeliveryAttrs:
-      properties:
-        dimensions:
-          $ref: "#/components/schemas/interfaces.Dimensions"
-        hazmat_class:
-          type: string
-        is_fragile:
-          type: boolean
-        max_stack_weight_kg:
-          type: number
-        packaging_type:
-          description: box, envelope, pallet, custom
-          type: string
-        requires_special_handling:
-          type: boolean
-        stackable:
-          type: boolean
-        volume_m3:
-          type: number
-        weight_kg:
-          type: number
-      type: object
-    interfaces.Dimensions:
-      properties:
-        height_cm:
-          description: Высота в сантиметрах
-          type: number
-        length_cm:
-          description: Длина в сантиметрах
-          type: number
-        width_cm:
-          description: Ширина в сантиметрах
-          type: number
-      type: object
-    interfaces.Package:
-      properties:
-        attributes:
-          allOf:
-            - $ref: "#/components/schemas/interfaces.DeliveryAttrs"
-          description: Дополнительные атрибуты
-        description:
-          description: Описание содержимого
-          type: string
-        dimensions:
-          allOf:
-            - $ref: "#/components/schemas/interfaces.Dimensions"
-          description: Габариты
-        is_fragile:
-          description: Хрупкий товар
-          type: boolean
-        value:
-          description: Объявленная ценность
-          type: number
-        weight_kg:
-          description: Вес в килограммах
-          type: number
-      type: object
-    interfaces.ProofOfDelivery:
-      properties:
-        delivered_at:
-          type: string
-        notes:
-          type: string
-        photo_url:
-          type: string
-        recipient_name:
-          type: string
-        signature_url:
-          type: string
-      type: object
-    interfaces.TrackingEvent:
-      properties:
-        description:
-          type: string
-        details:
-          type: string
-        location:
-          type: string
         status:
           type: string
         timestamp:
@@ -32001,31 +31688,6 @@ components:
         total:
           type: integer
       type: object
-    models.CostBreakdown:
-      properties:
-        base_price:
-          type: number
-        cod_fee:
-          type: number
-        discount:
-          type: number
-        fragile_surcharge:
-          type: number
-        fuel_surcharge:
-          type: number
-        insurance_fee:
-          type: number
-        oversize_surcharge:
-          type: number
-        remote_area_surcharge:
-          type: number
-        tax:
-          type: number
-        total:
-          type: number
-        weight_surcharge:
-          type: number
-      type: object
     models.CreateCategoryProposalRequest:
       properties:
         description:
@@ -32487,21 +32149,6 @@ components:
         - DeliveryProviderCityExpress
         - DeliveryProviderSelfPickup
         - DeliveryProviderOwnDelivery
-    models.DeliveryService:
-      properties:
-        code:
-          type: string
-        description:
-          type: string
-        is_available:
-          type: boolean
-        is_included:
-          type: boolean
-        name:
-          type: string
-        price:
-          type: number
-      type: object
     models.DeliveryZone:
       properties:
         name:
@@ -37224,6 +36871,21 @@ components:
         transport_mode:
           type: string
       type: object
+    service.Address:
+      properties:
+        city:
+          type: string
+        country:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        postal_code:
+          type: string
+        street:
+          type: string
+      type: object
     service.CategoryAnalysisResult:
       properties:
         insights:
@@ -37284,7 +36946,7 @@ components:
         delivery_type:
           type: string
         from_address:
-          $ref: "#/components/schemas/interfaces.Address"
+          $ref: "#/components/schemas/service.Address"
         insurance_value:
           type: number
         notes:
@@ -37293,7 +36955,7 @@ components:
           type: integer
         packages:
           items:
-            $ref: "#/components/schemas/interfaces.Package"
+            $ref: "#/components/schemas/service.Package"
           type: array
         pickup_date:
           type: string
@@ -37308,7 +36970,16 @@ components:
             type: string
           type: array
         to_address:
-          $ref: "#/components/schemas/interfaces.Address"
+          $ref: "#/components/schemas/service.Address"
+      type: object
+    service.Dimensions:
+      properties:
+        height:
+          type: number
+        length:
+          type: number
+        width:
+          type: number
       type: object
     service.IndexInfo:
       properties:
@@ -37463,6 +37134,17 @@ components:
           description: Минимальное значение веса
           type: number
       type: object
+    service.Package:
+      properties:
+        description:
+          type: string
+        dimensions:
+          $ref: "#/components/schemas/service.Dimensions"
+        value:
+          type: number
+        weight:
+          type: number
+      type: object
     service.PaymentInitiationResponse:
       properties:
         amount:
@@ -37476,6 +37158,19 @@ components:
         payment_required:
           type: boolean
         redirect_url:
+          type: string
+      type: object
+    service.ProofOfDelivery:
+      properties:
+        notes:
+          type: string
+        photo_url:
+          type: string
+        received_at:
+          type: string
+        received_by:
+          type: string
+        signature_url:
           type: string
       type: object
     service.SearchMetrics:
@@ -37521,6 +37216,17 @@ components:
         query:
           type: string
       type: object
+    service.TrackingEvent:
+      properties:
+        description:
+          type: string
+        location:
+          type: string
+        status:
+          type: string
+        timestamp:
+          type: string
+      type: object
     service.TrackingInfo:
       properties:
         current_location:
@@ -37531,12 +37237,12 @@ components:
           type: string
         events:
           items:
-            $ref: "#/components/schemas/interfaces.TrackingEvent"
+            $ref: "#/components/schemas/service.TrackingEvent"
           type: array
         last_updated:
           type: string
         proof_of_delivery:
-          $ref: "#/components/schemas/interfaces.ProofOfDelivery"
+          $ref: "#/components/schemas/service.ProofOfDelivery"
         shipment_id:
           type: integer
         status:

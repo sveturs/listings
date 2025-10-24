@@ -1394,44 +1394,10 @@ definitions:
         example: 1000
         type: integer
     type: object
-  handler.CalculationRequest:
-    properties:
-      cod_amount:
-        type: number
-      delivery_type:
-        type: string
-      from_location:
-        $ref: '#/definitions/handler.Location'
-      insurance_value:
-        type: number
-      items:
-        items:
-          $ref: '#/definitions/handler.ItemWithAttrs'
-        type: array
-      to_location:
-        $ref: '#/definitions/handler.Location'
-    type: object
   handler.CancelRequest:
     properties:
       reason:
         type: string
-    type: object
-  handler.CartCalculationRequest:
-    properties:
-      cod_amount:
-        type: number
-      delivery_type:
-        type: string
-      from_location:
-        $ref: '#/definitions/handler.Location'
-      insurance_value:
-        type: number
-      items:
-        items:
-          $ref: '#/definitions/handler.ItemWithAttrs'
-        type: array
-      to_location:
-        $ref: '#/definitions/handler.Location'
     type: object
   handler.CategoryHints:
     properties:
@@ -1993,34 +1959,6 @@ definitions:
     required:
     - plan_code
     type: object
-  handler.ItemDimensions:
-    properties:
-      height:
-        type: number
-      length:
-        type: number
-      width:
-        type: number
-    type: object
-  handler.ItemWithAttrs:
-    properties:
-      category:
-        type: string
-      dimensions:
-        $ref: '#/definitions/handler.ItemDimensions'
-      fragile:
-        type: boolean
-      product_id:
-        type: integer
-      quantity:
-        type: integer
-      refrigerate:
-        type: boolean
-      value:
-        type: number
-      weight:
-        type: number
-    type: object
   handler.ListingsResponse:
     properties:
       data:
@@ -2032,19 +1970,6 @@ definitions:
       success:
         example: true
         type: boolean
-    type: object
-  handler.Location:
-    properties:
-      city:
-        type: string
-      country:
-        type: string
-      latitude:
-        type: number
-      longitude:
-        type: number
-      postal_code:
-        type: string
     type: object
   handler.MapBounds:
     properties:
@@ -24979,13 +24904,6 @@ paths:
       - application/json
       description: 'DEPRECATED: This endpoint has been moved to delivery microservice.
         Use gRPC CalculateRate instead.'
-      parameters:
-      - description: Cart calculation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.CartCalculationRequest'
       produces:
       - application/json
       responses:
@@ -25002,13 +24920,6 @@ paths:
       - application/json
       description: 'DEPRECATED: This endpoint has been moved to delivery microservice.
         Use gRPC CalculateRate instead.'
-      parameters:
-      - description: Calculation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.CalculationRequest'
       produces:
       - application/json
       responses:
@@ -25052,7 +24963,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Process tracking status updates from delivery providers
+      description: 'DEPRECATED: Webhook processing moved to delivery microservice.
+        Configure webhooks to point directly to delivery service.'
       parameters:
       - description: Provider code (post_express, bex_express, etc.)
         in: path
@@ -25068,28 +24980,11 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: Webhook processed successfully
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  type: object
-              type: object
-        "400":
-          description: Invalid request
+        "501":
+          description: Moved to microservice
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
-        "404":
-          description: Provider not found
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/utils.ErrorResponseSwag'
-      summary: Handle tracking webhook
+      summary: Handle tracking webhook (DEPRECATED)
       tags:
       - delivery
   /api/v1/docs/content:

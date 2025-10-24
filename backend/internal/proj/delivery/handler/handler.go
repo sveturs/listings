@@ -102,7 +102,6 @@ func (h *Handler) RegisterTestRoutes(app fiber.Router) {
 // @Tags delivery
 // @Accept json
 // @Produce json
-// @Param request body CalculationRequest true "Calculation request"
 // @Success 501 {object} utils.ErrorResponseSwag "Not implemented"
 // @Router /api/v1/delivery/calculate-universal [post]
 func (h *Handler) CalculateUniversal(c *fiber.Ctx) error {
@@ -122,7 +121,6 @@ func (h *Handler) CalculateUniversal(c *fiber.Ctx) error {
 // @Tags delivery
 // @Accept json
 // @Produce json
-// @Param request body CartCalculationRequest true "Cart calculation request"
 // @Success 501 {object} utils.ErrorResponseSwag "Not implemented"
 // @Router /api/v1/delivery/calculate-cart [post]
 func (h *Handler) CalculateCart(c *fiber.Ctx) error {
@@ -354,7 +352,7 @@ func (h *Handler) GetShipment(c *fiber.Ctx) error {
 // @Tags delivery
 // @Produce json
 // @Param id path int true "Shipment ID"
-// @Param reason body CancelRequest false "Cancel reason"
+// @Param reason body handler.CancelRequest false "Cancel reason"
 // @Success 200 {object} utils.SuccessResponseSwag "Success"
 // @Failure 400 {object} utils.ErrorResponseSwag "Cannot cancel"
 // @Failure 404 {object} utils.ErrorResponseSwag "Shipment not found"

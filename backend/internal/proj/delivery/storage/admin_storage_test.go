@@ -128,10 +128,9 @@ func (suite *StorageTestSuite) TestUpdatePricingRule() {
 // TestDeletePricingRule tests deleting a pricing rule
 func (suite *StorageTestSuite) TestDeletePricingRule() {
 	// Создаем правило
-	result, err := suite.db.ExecContext(suite.ctx, `
+	_, err := suite.db.ExecContext(suite.ctx, `
 		INSERT INTO delivery_pricing_rules (provider_id, rule_type, priority, is_active, min_price, max_price, fragile_surcharge, oversized_surcharge, special_handling_surcharge)
 		VALUES (1, 'test_rule', 1, true, 100.0, 1000.0, 10.0, 20.0, 30.0)
-		RETURNING id
 	`)
 	require.NoError(suite.T(), err)
 

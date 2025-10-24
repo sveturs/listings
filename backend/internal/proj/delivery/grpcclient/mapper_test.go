@@ -360,7 +360,7 @@ func TestMapStatusFromProto(t *testing.T) {
 		{pb.ShipmentStatus_SHIPMENT_STATUS_OUT_FOR_DELIVERY, models.ShipmentStatusInTransit},
 		{pb.ShipmentStatus_SHIPMENT_STATUS_DELIVERED, models.ShipmentStatusDelivered},
 		{pb.ShipmentStatus_SHIPMENT_STATUS_FAILED, models.ShipmentStatusFailed},
-		{pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED, models.ShipmentStatusCancelled},
+		{pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED, models.ShipmentStatusCancelled}, //nolint:misspell // Generated proto uses British spelling
 		{pb.ShipmentStatus_SHIPMENT_STATUS_RETURNED, models.ShipmentStatusFailed},
 	}
 
@@ -383,7 +383,7 @@ func TestMapStatusToProto(t *testing.T) {
 		{models.ShipmentStatusInTransit, pb.ShipmentStatus_SHIPMENT_STATUS_IN_TRANSIT},
 		{models.ShipmentStatusDelivered, pb.ShipmentStatus_SHIPMENT_STATUS_DELIVERED},
 		{models.ShipmentStatusFailed, pb.ShipmentStatus_SHIPMENT_STATUS_FAILED},
-		{models.ShipmentStatusCancelled, pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED},
+		{models.ShipmentStatusCancelled, pb.ShipmentStatus_SHIPMENT_STATUS_CANCELLED}, //nolint:misspell // Generated proto uses British spelling
 		{"unknown", pb.ShipmentStatus_SHIPMENT_STATUS_UNSPECIFIED},
 	}
 
