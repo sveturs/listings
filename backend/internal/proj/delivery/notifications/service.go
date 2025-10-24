@@ -9,14 +9,15 @@ import (
 	"net/smtp"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+
+	"backend/internal/proj/delivery/storage"
 )
 
 // NotificationService - сервис отправки уведомлений
 type NotificationService struct {
-	db             *sqlx.DB
+	storage        *storage.Storage
 	emailConfig    *EmailConfig
 	smsConfig      *SMSConfig
 	viberConfig    *ViberConfig
@@ -53,19 +54,8 @@ type TelegramConfig struct {
 	BotUsername string
 }
 
-// DeliveryNotification - уведомление о доставке
-type DeliveryNotification struct {
-	ID           int             `db:"id"`
-	ShipmentID   int             `db:"shipment_id"`
-	UserID       int             `db:"user_id"`
-	Channel      string          `db:"channel"` // email, sms, viber, telegram, push
-	Status       string          `db:"status"`  // pending, sent, failed
-	Template     string          `db:"template"`
-	Data         json.RawMessage `db:"data"`
-	SentAt       *time.Time      `db:"sent_at"`
-	ErrorMessage *string         `db:"error_message"`
-	CreatedAt    time.Time       `db:"created_at"`
-}
+// DeliveryNotification - уведомление о доставке (re-exported from storage)
+type DeliveryNotification = storage.DeliveryNotification
 
 // StatusChangeEvent - событие изменения статуса
 type StatusChangeEvent struct {
@@ -82,9 +72,9 @@ type StatusChangeEvent struct {
 }
 
 // NewNotificationService создает новый сервис уведомлений
-func NewNotificationService(db *sqlx.DB, emailConfig *EmailConfig, smsConfig *SMSConfig) *NotificationService {
+func NewNotificationService(storage *storage.Storage, emailConfig *EmailConfig, smsConfig *SMSConfig) *NotificationService {
 	return &NotificationService{
-		db:          db,
+		storage:     storage,
 		emailConfig: emailConfig,
 		smsConfig:   smsConfig,
 	}
@@ -223,12 +213,17 @@ func (s *NotificationService) sendEmailNotification(ctx context.Context, event *
 	}
 
 	// Сохраняем в БД
-	_, err = s.db.ExecContext(ctx, `
-		INSERT INTO delivery_notifications (shipment_id, channel, status, template, data, sent_at)
-		VALUES ($1, 'email', 'sent', $2, $3, NOW())
-	`, event.ShipmentID, s.getTemplateForStatus(event.NewStatus), s.prepareTemplateData(event))
+	now := time.Now()
+	notification := &DeliveryNotification{
+		ShipmentID: event.ShipmentID,
+		Channel:    "email",
+		Status:     "sent",
+		Template:   s.getTemplateForStatus(event.NewStatus),
+		Data:       s.prepareTemplateData(event),
+		SentAt:     &now,
+	}
 
-	return err
+	return s.storage.SaveNotification(ctx, notification)
 }
 
 // getEmailSubject возвращает тему письма
@@ -379,12 +374,17 @@ func (s *NotificationService) sendSMSNotification(ctx context.Context, event *St
 	}
 
 	// Сохраняем в БД
-	_, err = s.db.ExecContext(ctx, `
-		INSERT INTO delivery_notifications (shipment_id, channel, status, template, data, sent_at)
-		VALUES ($1, 'sms', 'sent', $2, $3, NOW())
-	`, event.ShipmentID, s.getTemplateForStatus(event.NewStatus), s.prepareTemplateData(event))
+	now := time.Now()
+	notification := &DeliveryNotification{
+		ShipmentID: event.ShipmentID,
+		Channel:    "sms",
+		Status:     "sent",
+		Template:   s.getTemplateForStatus(event.NewStatus),
+		Data:       s.prepareTemplateData(event),
+		SentAt:     &now,
+	}
 
-	return err
+	return s.storage.SaveNotification(ctx, notification)
 }
 
 // formatSMSMessage форматирует SMS сообщение
@@ -429,7 +429,7 @@ func (s *NotificationService) sendInfobipSMS(to, message string) error {
 // sendPushNotification отправляет push уведомление через WebSocket
 func (s *NotificationService) sendPushNotification(ctx context.Context, event *StatusChangeEvent) error {
 	// Формируем push уведомление
-	notification := map[string]interface{}{
+	pushData := map[string]interface{}{
 		"type":            "delivery_status",
 		"shipment_id":     event.ShipmentID,
 		"tracking_number": event.TrackingNumber,
@@ -442,18 +442,23 @@ func (s *NotificationService) sendPushNotification(ctx context.Context, event *S
 	// Отправляем через WebSocket (если подключен)
 	// TODO: Integrate with WebSocket hub
 
-	jsonData, _ := json.Marshal(notification)
+	jsonData, _ := json.Marshal(pushData)
 	log.Info().
 		RawJSON("notification", jsonData).
 		Msg("Push notification would be sent via WebSocket")
 
 	// Сохраняем в БД
-	_, err := s.db.ExecContext(ctx, `
-		INSERT INTO delivery_notifications (shipment_id, channel, status, template, data, sent_at)
-		VALUES ($1, 'push', 'sent', $2, $3, NOW())
-	`, event.ShipmentID, s.getTemplateForStatus(event.NewStatus), jsonData)
+	now := time.Now()
+	notification := &DeliveryNotification{
+		ShipmentID: event.ShipmentID,
+		Channel:    "push",
+		Status:     "sent",
+		Template:   s.getTemplateForStatus(event.NewStatus),
+		Data:       jsonData,
+		SentAt:     &now,
+	}
 
-	return err
+	return s.storage.SaveNotification(ctx, notification)
 }
 
 // SendViberNotification отправляет уведомление через Viber
@@ -488,29 +493,18 @@ func (s *NotificationService) SendTelegramNotification(ctx context.Context, even
 
 // GetNotificationHistory получает историю уведомлений
 func (s *NotificationService) GetNotificationHistory(ctx context.Context, shipmentID int) ([]*DeliveryNotification, error) {
-	var notifications []*DeliveryNotification
-
-	err := s.db.SelectContext(ctx, &notifications, `
-		SELECT id, shipment_id, channel, status, template, data, sent_at, error_message, created_at
-		FROM delivery_notifications
-		WHERE shipment_id = $1
-		ORDER BY created_at DESC
-	`, shipmentID)
-
-	return notifications, err
+	return s.storage.GetNotificationHistory(ctx, shipmentID)
 }
 
 // ResendNotification повторно отправляет уведомление
 func (s *NotificationService) ResendNotification(ctx context.Context, notificationID int) error {
-	var notif DeliveryNotification
-	err := s.db.GetContext(ctx, &notif, `
-		SELECT * FROM delivery_notifications WHERE id = $1
-	`, notificationID)
+	notif, err := s.storage.GetNotificationByID(ctx, notificationID)
 	if err != nil {
 		return errors.Wrap(err, "failed to get notification")
 	}
 
 	// TODO: Implement resend logic based on channel
+	_ = notif
 
 	return nil
 }

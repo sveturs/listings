@@ -32,12 +32,12 @@ type Module struct {
 
 // NewModule создает новый модуль доставки
 func NewModule(db *sqlx.DB, cfg *config.Config, logger *logger.Logger) (*Module, error) {
-	// Используем дефолтное значение если не задано
+	// DELIVERY_GRPC_URL должен быть установлен в .env
 	grpcURL := cfg.DeliveryGRPCURL
 	if grpcURL == "" {
-		grpcURL = "svetu.rs:30051" // Default: production delivery microservice
-		log.Info().Str("url", grpcURL).Msg("Using default delivery gRPC URL")
+		return nil, fmt.Errorf("DELIVERY_GRPC_URL is required in .env file")
 	}
+	log.Info().Str("url", grpcURL).Msg("Connecting to delivery gRPC service")
 
 	// Создаем gRPC клиент для delivery микросервиса (ОБЯЗАТЕЛЬНО)
 	grpcClient, err := grpcclient.NewClient(grpcURL, logger)

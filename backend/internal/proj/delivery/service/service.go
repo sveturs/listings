@@ -46,10 +46,13 @@ func NewService(db *sqlx.DB, grpcClient grpcClientInterface) *Service {
 		panic("delivery service requires gRPC client, but got nil")
 	}
 
+	// Создаем storage для изоляции data access
+	stor := storage.NewStorage(db)
+
 	return &Service{
 		db:         db,
-		storage:    storage.NewStorage(db),
-		attributes: attributes.NewService(db),
+		storage:    stor,
+		attributes: attributes.NewService(db, stor),
 		grpcClient: grpcClient,
 	}
 }

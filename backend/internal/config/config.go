@@ -212,12 +212,8 @@ func NewConfig() (*Config, error) {
 	}
 	config.BEXAPIURL = bexAPIURL
 
-	// Delivery gRPC service configuration
-	deliveryGRPCURL := os.Getenv("DELIVERY_GRPC_URL")
-	if deliveryGRPCURL == "" {
-		deliveryGRPCURL = "svetu.rs:30051" // Default: production delivery microservice
-	}
-	config.DeliveryGRPCURL = deliveryGRPCURL
+	// Delivery gRPC service configuration (required in .env)
+	config.DeliveryGRPCURL = os.Getenv("DELIVERY_GRPC_URL")
 
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
@@ -498,6 +494,7 @@ func NewConfig() (*Config, error) {
 		AuthServicePublicKeyPath: config.AuthServicePublicKeyPath,
 		BackendURL:               config.BackendURL,
 		MinIOPublicURL:           config.MinIOPublicURL,
+		DeliveryGRPCURL:          config.DeliveryGRPCURL,
 		OpenSearch:               config.OpenSearch,
 		FileStorage:              config.FileStorage,
 		FileUpload:               fileUploadConfig,
