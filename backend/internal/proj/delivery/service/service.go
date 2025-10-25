@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -10,35 +9,51 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"backend/internal/proj/delivery/attributes"
-	"backend/internal/proj/delivery/calculator"
-	"backend/internal/proj/delivery/factory"
-	"backend/internal/proj/delivery/interfaces"
+	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/proj/delivery/models"
 	"backend/internal/proj/delivery/notifications"
 	"backend/internal/proj/delivery/storage"
 	notifService "backend/internal/proj/notifications/service"
+	pb "backend/pkg/grpc/delivery/v1"
 )
 
 // Service - основной сервис управления доставкой
 type Service struct {
-	db              *sqlx.DB
-	storage         *storage.Storage
-	calculator      *calculator.Service
-	attributes      *attributes.Service
-	providerFactory *factory.ProviderFactory
-	notifications   *notifications.DeliveryNotificationIntegration
-	cache           map[string]interfaces.DeliveryProvider // кеш провайдеров
+	db            *sqlx.DB
+	storage       *storage.Storage
+	attributes    *attributes.Service
+	notifications *notifications.DeliveryNotificationIntegration
+	grpcClient    grpcClientInterface // gRPC клиент для делегирования к микросервису (REQUIRED)
+}
+
+// grpcClientInterface определяет интерфейс для gRPC клиента
+type grpcClientInterface interface {
+	CreateShipment(ctx context.Context, req *pb.CreateShipmentRequest) (*pb.CreateShipmentResponse, error)
+	GetShipment(ctx context.Context, req *pb.GetShipmentRequest) (*pb.GetShipmentResponse, error)
+	TrackShipment(ctx context.Context, req *pb.TrackShipmentRequest) (*pb.TrackShipmentResponse, error)
+	CancelShipment(ctx context.Context, req *pb.CancelShipmentRequest) (*pb.CancelShipmentResponse, error)
+	CalculateRate(ctx context.Context, req *pb.CalculateRateRequest) (*pb.CalculateRateResponse, error)
+	GetSettlements(ctx context.Context, req *pb.GetSettlementsRequest) (*pb.GetSettlementsResponse, error)
+	GetStreets(ctx context.Context, req *pb.GetStreetsRequest) (*pb.GetStreetsResponse, error)
+	GetParcelLockers(ctx context.Context, req *pb.GetParcelLockersRequest) (*pb.GetParcelLockersResponse, error)
+	Close() error
 }
 
 // NewService создает новый экземпляр сервиса доставки
-func NewService(db *sqlx.DB, providerFactory *factory.ProviderFactory) *Service {
+// ВАЖНО: grpcClient ОБЯЗАТЕЛЕН, без него сервис не будет работать
+func NewService(db *sqlx.DB, grpcClient grpcClientInterface) *Service {
+	if grpcClient == nil {
+		panic("delivery service requires gRPC client, but got nil")
+	}
+
+	// Создаем storage для изоляции data access
+	stor := storage.NewStorage(db)
+
 	return &Service{
-		db:              db,
-		storage:         storage.NewStorage(db),
-		calculator:      calculator.NewService(db),
-		attributes:      attributes.NewService(db),
-		providerFactory: providerFactory,
-		cache:           make(map[string]interfaces.DeliveryProvider),
+		db:         db,
+		storage:    stor,
+		attributes: attributes.NewService(db, stor),
+		grpcClient: grpcClient,
 	}
 }
 
@@ -50,9 +65,9 @@ func (s *Service) SetNotificationService(notifService notifService.NotificationS
 	}
 }
 
-// CalculateDelivery - рассчитывает стоимость доставки для всех доступных провайдеров
-func (s *Service) CalculateDelivery(ctx context.Context, req *calculator.CalculationRequest) (*calculator.CalculationResponse, error) {
-	return s.calculator.Calculate(ctx, req)
+// GetGRPCClient возвращает gRPC клиент для прямых вызовов (используется в test handlers)
+func (s *Service) GetGRPCClient() grpcClientInterface {
+	return s.grpcClient
 }
 
 // GetProductAttributes - получает атрибуты доставки товара
@@ -75,238 +90,205 @@ func (s *Service) UpdateCategoryDefaults(ctx context.Context, defaults *models.C
 	return s.attributes.UpdateCategoryDefaults(ctx, defaults)
 }
 
-// CreateShipment - создает отправление через выбранного провайдера
+// CreateShipment - создает отправление через gRPC микросервис
 func (s *Service) CreateShipment(ctx context.Context, req *CreateShipmentRequest) (*models.Shipment, error) {
-	// Получаем провайдера
-	provider, err := s.getProvider(ctx, req.ProviderCode)
+	if s.grpcClient == nil {
+		return nil, fmt.Errorf("delivery service not configured: gRPC client is nil")
+	}
+
+	shipment, err := s.createShipmentViaGRPC(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get provider: %w", err)
+		return nil, fmt.Errorf("failed to create shipment via gRPC: %w", err)
 	}
 
-	// Подготавливаем запрос для провайдера
-	providerReq := &interfaces.ShipmentRequest{
-		OrderID:        req.OrderID,
-		FromAddress:    req.FromAddress,
-		ToAddress:      req.ToAddress,
-		Packages:       req.Packages,
-		DeliveryType:   req.DeliveryType,
-		PickupDate:     req.PickupDate,
-		InsuranceValue: req.InsuranceValue,
-		CODAmount:      req.CODAmount,
-		Services:       req.Services,
-		Reference:      req.Reference,
-		Notes:          req.Notes,
+	log.Info().Int("shipment_id", shipment.ID).Msg("Shipment created via gRPC successfully")
+	return shipment, nil
+}
+
+// createShipmentViaGRPC создает отправление через gRPC микросервис
+func (s *Service) createShipmentViaGRPC(ctx context.Context, req *CreateShipmentRequest) (*models.Shipment, error) {
+	// Конвертируем адреса
+	fromAddr := &pb.Address{
+		Street:       req.FromAddress.Street,
+		City:         req.FromAddress.City,
+		State:        "",
+		PostalCode:   req.FromAddress.PostalCode,
+		Country:      req.FromAddress.Country,
+		ContactName:  req.FromAddress.Name,
+		ContactPhone: req.FromAddress.Phone,
 	}
 
-	// Создаем отправление через провайдера
-	providerResp, err := provider.CreateShipment(ctx, providerReq)
+	toAddr := &pb.Address{
+		Street:       req.ToAddress.Street,
+		City:         req.ToAddress.City,
+		State:        "",
+		PostalCode:   req.ToAddress.PostalCode,
+		Country:      req.ToAddress.Country,
+		ContactName:  req.ToAddress.Name,
+		ContactPhone: req.ToAddress.Phone,
+	}
+
+	// Конвертируем первую посылку (новая схема поддерживает только одну)
+	var pbPackage *pb.Package
+	if len(req.Packages) > 0 {
+		pkg := req.Packages[0]
+		pbPackage = &pb.Package{
+			Weight:        fmt.Sprintf("%.2f", pkg.Weight),
+			Length:        fmt.Sprintf("%.2f", pkg.Dimensions.Length),
+			Width:         fmt.Sprintf("%.2f", pkg.Dimensions.Width),
+			Height:        fmt.Sprintf("%.2f", pkg.Dimensions.Height),
+			Description:   pkg.Description,
+			DeclaredValue: fmt.Sprintf("%.2f", pkg.Value),
+		}
+	} else {
+		return nil, fmt.Errorf("at least one package is required")
+	}
+
+	// Создаем gRPC запрос (упрощенная схема)
+	grpcReq := &pb.CreateShipmentRequest{
+		Provider:    grpcclient.MapProviderCodeToEnum(req.ProviderCode),
+		FromAddress: fromAddr,
+		ToAddress:   toAddr,
+		Package:     pbPackage,
+		UserId:      fmt.Sprintf("%d", req.OrderID), // Используем OrderID как временный UserId
+	}
+
+	// Вызываем gRPC
+	grpcResp, err := s.grpcClient.CreateShipment(ctx, grpcReq)
 	if err != nil {
-		return nil, fmt.Errorf("provider failed to create shipment: %w", err)
+		return nil, fmt.Errorf("gRPC call failed: %w", err)
 	}
 
-	// Сохраняем в БД
-	shipment := &models.Shipment{
-		ProviderID:     req.ProviderID,
-		OrderID:        &req.OrderID,
-		ExternalID:     &providerResp.ExternalID,
-		TrackingNumber: &providerResp.TrackingNumber,
-		Status:         providerResp.Status,
-		DeliveryCost:   &providerResp.TotalCost,
+	// Конвертируем response в модель БД
+	shipment, err := grpcclient.MapShipmentFromProto(grpcResp.Shipment)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map shipment from proto: %w", err)
 	}
 
-	// Сохраняем адреса
-	senderInfo, _ := json.Marshal(req.FromAddress)
-	recipientInfo, _ := json.Marshal(req.ToAddress)
-	packageInfo, _ := json.Marshal(req.Packages)
-	costBreakdown, _ := json.Marshal(providerResp.CostBreakdown)
-	labels, _ := json.Marshal(providerResp.Labels)
+	// Устанавливаем поля, которые mapper не заполняет
+	shipment.ProviderID = req.ProviderID
+	shipment.OrderID = &req.OrderID
 
-	shipment.SenderInfo = senderInfo
-	shipment.RecipientInfo = recipientInfo
-	shipment.PackageInfo = packageInfo
-	shipment.CostBreakdown = costBreakdown
-	shipment.Labels = labels
-
-	if req.InsuranceValue > 0 {
-		shipment.InsuranceCost = &req.InsuranceValue
-	}
-	if req.CODAmount > 0 {
-		shipment.CODAmount = &req.CODAmount
-	}
-	if req.PickupDate != nil {
-		shipment.PickupDate = req.PickupDate
-	}
-	if providerResp.EstimatedDate != nil {
-		shipment.EstimatedDelivery = providerResp.EstimatedDate
-	}
-
-	// Сохраняем в БД
+	// Сохраняем в локальную БД для кеширования
 	if err := s.storage.CreateShipment(ctx, shipment); err != nil {
-		return nil, fmt.Errorf("failed to save shipment: %w", err)
+		log.Error().Err(err).Msg("Failed to cache shipment in local DB")
+		// Не возвращаем ошибку, т.к. отправление создано успешно
 	}
 
-	// Обновляем заказ если нужно
+	// Обновляем заказ
 	if req.OrderID > 0 {
 		if err := s.storage.UpdateOrderShipment(ctx, req.OrderID, shipment.ID); err != nil {
-			// Логируем ошибку но не прерываем
-			fmt.Printf("Failed to update order shipment: %v\n", err)
+			log.Error().Err(err).Int("order_id", req.OrderID).Msg("Failed to update order shipment")
 		}
 	}
 
 	return shipment, nil
 }
 
-// TrackShipment - отслеживает отправление
+// TrackShipment - отслеживает отправление через gRPC микросервис
 func (s *Service) TrackShipment(ctx context.Context, trackingNumber string) (*TrackingInfo, error) {
-	// Получаем отправление из БД
+	if s.grpcClient == nil {
+		return nil, fmt.Errorf("delivery service not configured: gRPC client is nil")
+	}
+
+	trackingInfo, err := s.trackShipmentViaGRPC(ctx, trackingNumber)
+	if err != nil {
+		return nil, fmt.Errorf("failed to track shipment via gRPC: %w", err)
+	}
+
+	log.Info().Str("tracking_number", trackingNumber).Msg("Tracking via gRPC successful")
+	return trackingInfo, nil
+}
+
+// trackShipmentViaGRPC отслеживает через gRPC
+func (s *Service) trackShipmentViaGRPC(ctx context.Context, trackingNumber string) (*TrackingInfo, error) {
+	// Получаем отправление из локальной БД для получения shipment_id
 	shipment, err := s.storage.GetShipmentByTracking(ctx, trackingNumber)
 	if err != nil {
-		return nil, fmt.Errorf("shipment not found: %w", err)
+		return nil, fmt.Errorf("shipment not found in local DB: %w", err)
 	}
 
-	// Получаем провайдера
-	providerInfo, err := s.storage.GetProvider(ctx, shipment.ProviderID)
+	// Вызываем gRPC
+	grpcResp, err := s.grpcClient.TrackShipment(ctx, &pb.TrackShipmentRequest{
+		TrackingNumber: trackingNumber,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("provider not found: %w", err)
+		return nil, fmt.Errorf("gRPC tracking call failed: %w", err)
 	}
 
-	provider, err := s.getProvider(ctx, providerInfo.Code)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get provider: %w", err)
-	}
+	// Конвертируем события
+	events := grpcclient.MapTrackingEventsFromProto(grpcResp.Events)
 
-	// Запрашиваем статус у провайдера
-	trackingResp, err := provider.TrackShipment(ctx, trackingNumber)
-	if err != nil {
-		// Если провайдер недоступен, возвращаем последний известный статус
-		events, _ := s.storage.GetTrackingEvents(ctx, shipment.ID)
+	// Обновляем статус в локальной БД (берем из grpcResp.Shipment)
+	if grpcResp.Shipment != nil {
+		newStatus := grpcclient.MapStatusFromProto(grpcResp.Shipment.Status)
+		if shipment.Status != newStatus {
+			oldStatus := shipment.Status
+			shipment.Status = newStatus
 
-		return &TrackingInfo{
-			ShipmentID:      shipment.ID,
-			TrackingNumber:  trackingNumber,
-			Status:          shipment.Status,
-			CurrentLocation: "", // неизвестно
-			Events:          convertEvents(events),
-			LastUpdated:     shipment.UpdatedAt,
-		}, nil
-	}
+			var deliveredAt *time.Time
+			if grpcResp.Shipment.ActualDelivery != nil {
+				t := grpcResp.Shipment.ActualDelivery.AsTime()
+				deliveredAt = &t
+				shipment.ActualDeliveryDate = deliveredAt
+			}
 
-	// Обновляем статус отправления и отправляем уведомление
-	if shipment.Status != trackingResp.Status {
-		oldStatus := shipment.Status
-		shipment.Status = trackingResp.Status
-		if trackingResp.DeliveredDate != nil {
-			shipment.ActualDeliveryDate = trackingResp.DeliveredDate
-		}
-		if err := s.storage.UpdateShipmentStatus(ctx, shipment.ID, shipment.Status, shipment.ActualDeliveryDate); err != nil {
-			log.Error().Err(err).Int("shipment_id", shipment.ID).Msg("Failed to update shipment status")
-		}
+			if err := s.storage.UpdateShipmentStatus(ctx, shipment.ID, newStatus, deliveredAt); err != nil {
+				log.Error().Err(err).Int("shipment_id", shipment.ID).Msg("Failed to update shipment status")
+			}
 
-		// Отправляем уведомление об изменении статуса
-		s.sendStatusNotification(ctx, shipment, oldStatus, trackingResp.Status, trackingResp.CurrentLocation, trackingResp.StatusText)
-	}
-
-	// Сохраняем новые события
-	for _, event := range trackingResp.Events {
-		trackEvent := &models.TrackingEvent{
-			ShipmentID:  shipment.ID,
-			ProviderID:  shipment.ProviderID,
-			EventTime:   event.Timestamp,
-			Status:      event.Status,
-			Location:    &event.Location,
-			Description: &event.Description,
-		}
-		if err := s.storage.CreateTrackingEvent(ctx, trackEvent); err != nil {
-			log.Error().Err(err).Int("shipment_id", shipment.ID).Msg("Failed to create tracking event")
+			// Отправляем уведомление
+			// Извлекаем location и description из последнего события
+			var currentLocation, statusText string
+			if len(grpcResp.Events) > 0 {
+				lastEvent := grpcResp.Events[len(grpcResp.Events)-1]
+				currentLocation = lastEvent.Location
+				statusText = lastEvent.Description
+			}
+			s.sendStatusNotification(ctx, shipment, oldStatus, newStatus, currentLocation, statusText)
 		}
 	}
 
-	return &TrackingInfo{
-		ShipmentID:      shipment.ID,
-		TrackingNumber:  trackingNumber,
-		Status:          trackingResp.Status,
-		StatusText:      trackingResp.StatusText,
-		CurrentLocation: trackingResp.CurrentLocation,
-		EstimatedDate:   trackingResp.EstimatedDate,
-		DeliveredDate:   trackingResp.DeliveredDate,
-		Events:          trackingResp.Events,
-		ProofOfDelivery: trackingResp.ProofOfDelivery,
-		LastUpdated:     shipment.UpdatedAt,
-	}, nil
-}
-
-// CancelShipment - отменяет отправление
-func (s *Service) CancelShipment(ctx context.Context, shipmentID int, reason string) error {
-	// Получаем отправление
-	shipment, err := s.storage.GetShipment(ctx, shipmentID)
-	if err != nil {
-		return fmt.Errorf("shipment not found: %w", err)
-	}
-
-	// Проверяем статус
-	if shipment.Status == models.ShipmentStatusDelivered {
-		return fmt.Errorf("cannot cancel delivered shipment")
-	}
-	if shipment.Status == models.ShipmentStatusCancelled {
-		return fmt.Errorf("shipment already canceled")
-	}
-
-	// Получаем провайдера
-	providerInfo, err := s.storage.GetProvider(ctx, shipment.ProviderID)
-	if err != nil {
-		return fmt.Errorf("provider not found: %w", err)
-	}
-
-	provider, err := s.getProvider(ctx, providerInfo.Code)
-	if err != nil {
-		return fmt.Errorf("failed to get provider: %w", err)
-	}
-
-	// Отменяем у провайдера
-	if shipment.ExternalID != nil {
-		if err := provider.CancelShipment(ctx, *shipment.ExternalID); err != nil {
-			return fmt.Errorf("provider failed to cancel: %w", err)
+	// Сохраняем новые события в локальную БД
+	for i := range events {
+		events[i].ShipmentID = shipment.ID
+		events[i].ProviderID = shipment.ProviderID
+		if err := s.storage.CreateTrackingEvent(ctx, &events[i]); err != nil {
+			log.Error().Err(err).Int("shipment_id", shipment.ID).Msg("Failed to cache tracking event")
 		}
 	}
 
-	// Обновляем статус в БД
-	return s.storage.UpdateShipmentStatus(ctx, shipmentID, models.ShipmentStatusCancelled, nil)
-}
-
-// GetProviders - получает список доступных провайдеров
-func (s *Service) GetProviders(ctx context.Context, activeOnly bool) ([]models.Provider, error) {
-	return s.storage.GetProviders(ctx, activeOnly)
-}
-
-// getProvider - получает экземпляр провайдера
-func (s *Service) getProvider(ctx context.Context, code string) (interfaces.DeliveryProvider, error) {
-	// Проверяем кеш
-	if provider, ok := s.cache[code]; ok {
-		return provider, nil
+	// Формируем ответ
+	trackingInfo := &TrackingInfo{
+		ShipmentID:     shipment.ID,
+		TrackingNumber: trackingNumber,
+		Status:         shipment.Status,
+		LastUpdated:    shipment.UpdatedAt,
 	}
 
-	// Создаем через фабрику
-	provider, err := s.providerFactory.CreateProvider(code)
-	if err != nil {
-		return nil, err
+	// Заполняем данные из grpcResp.Shipment
+	if grpcResp.Shipment != nil {
+		if grpcResp.Shipment.EstimatedDelivery != nil {
+			t := grpcResp.Shipment.EstimatedDelivery.AsTime()
+			trackingInfo.EstimatedDate = &t
+		}
+
+		if grpcResp.Shipment.ActualDelivery != nil {
+			t := grpcResp.Shipment.ActualDelivery.AsTime()
+			trackingInfo.DeliveredDate = &t
+		}
 	}
 
-	// Сохраняем в кеш
-	s.cache[code] = provider
+	// Извлекаем location и description из последнего события
+	if len(grpcResp.Events) > 0 {
+		lastEvent := grpcResp.Events[len(grpcResp.Events)-1]
+		trackingInfo.CurrentLocation = lastEvent.Location
+		trackingInfo.StatusText = lastEvent.Description
+	}
 
-	return provider, nil
-}
-
-// ApplyCategoryDefaults - применяет дефолтные атрибуты к товарам категории
-func (s *Service) ApplyCategoryDefaults(ctx context.Context, categoryID int) (int, error) {
-	return s.attributes.ApplyCategoryDefaultsToProducts(ctx, categoryID)
-}
-
-// convertEvents - конвертирует события из БД в интерфейс
-func convertEvents(dbEvents []models.TrackingEvent) []interfaces.TrackingEvent {
-	events := make([]interfaces.TrackingEvent, len(dbEvents))
-	for i, e := range dbEvents {
-		events[i] = interfaces.TrackingEvent{
+	// Конвертируем события в TrackingEvent
+	for _, e := range events {
+		trackingInfo.Events = append(trackingInfo.Events, TrackingEvent{
 			Timestamp: e.EventTime,
 			Status:    e.Status,
 			Description: func() string {
@@ -321,9 +303,68 @@ func convertEvents(dbEvents []models.TrackingEvent) []interfaces.TrackingEvent {
 				}
 				return ""
 			}(),
-		}
+		})
 	}
-	return events
+
+	return trackingInfo, nil
+}
+
+// CancelShipment - отменяет отправление через gRPC микросервис
+func (s *Service) CancelShipment(ctx context.Context, shipmentID int, reason string) error {
+	if s.grpcClient == nil {
+		return fmt.Errorf("delivery service not configured: gRPC client is nil")
+	}
+
+	err := s.cancelShipmentViaGRPC(ctx, shipmentID, reason)
+	if err != nil {
+		return fmt.Errorf("failed to cancel shipment via gRPC: %w", err)
+	}
+
+	log.Info().Int("shipment_id", shipmentID).Msg("Cancellation via gRPC successful")
+	return nil
+}
+
+// cancelShipmentViaGRPC отменяет через gRPC
+func (s *Service) cancelShipmentViaGRPC(ctx context.Context, shipmentID int, reason string) error {
+	// Получаем отправление
+	shipment, err := s.storage.GetShipment(ctx, shipmentID)
+	if err != nil {
+		return fmt.Errorf("shipment not found: %w", err)
+	}
+
+	// Проверяем статус
+	if shipment.Status == models.ShipmentStatusDelivered {
+		return fmt.Errorf("cannot cancel delivered shipment")
+	}
+	if shipment.Status == models.ShipmentStatusCancelled {
+		return fmt.Errorf("shipment already canceled")
+	}
+
+	// Вызываем gRPC
+	if shipment.ExternalID == nil {
+		return fmt.Errorf("external ID not found")
+	}
+
+	_, err = s.grpcClient.CancelShipment(ctx, &pb.CancelShipmentRequest{
+		Id:     *shipment.ExternalID,
+		Reason: reason,
+	})
+	if err != nil {
+		return fmt.Errorf("gRPC cancellation call failed: %w", err)
+	}
+
+	// Обновляем в локальной БД
+	return s.storage.UpdateShipmentStatus(ctx, shipmentID, models.ShipmentStatusCancelled, nil)
+}
+
+// GetProviders - получает список доступных провайдеров
+func (s *Service) GetProviders(ctx context.Context, activeOnly bool) ([]models.Provider, error) {
+	return s.storage.GetProviders(ctx, activeOnly)
+}
+
+// ApplyCategoryDefaults - применяет дефолтные атрибуты к товарам категории
+func (s *Service) ApplyCategoryDefaults(ctx context.Context, categoryID int) (int, error) {
+	return s.attributes.ApplyCategoryDefaultsToProducts(ctx, categoryID)
 }
 
 // sendStatusNotification отправляет уведомление об изменении статуса
@@ -336,12 +377,16 @@ func (s *Service) sendStatusNotification(ctx context.Context, shipment *models.S
 	// Получаем информацию о пользователе (получателе)
 	var userID int
 	if shipment.OrderID != nil {
-		// TODO: Получить user_id из заказа
-		// order, err := s.storage.GetOrder(ctx, *shipment.OrderID)
-		// if err == nil && order.UserID != nil {
-		//     userID = *order.UserID
-		// }
-		userID = 0 // Временно устанавливаем 0 до реализации
+		// Получаем user_id из заказа (B2C или C2C)
+		var err error
+		userID, err = s.storage.GetOrderUserID(ctx, *shipment.OrderID)
+		if err != nil {
+			log.Warn().
+				Err(err).
+				Int("order_id", *shipment.OrderID).
+				Msg("Failed to get user_id from order")
+			userID = 0
+		}
 	}
 
 	if userID == 0 {
@@ -379,141 +424,135 @@ func (s *Service) sendStatusNotification(ctx context.Context, shipment *models.S
 
 // Структуры запросов и ответов
 
+// Address представляет адрес доставки
+type Address struct {
+	Street     string `json:"street"`
+	City       string `json:"city"`
+	PostalCode string `json:"postal_code"`
+	Country    string `json:"country"`
+	Name       string `json:"name"`
+	Phone      string `json:"phone"`
+}
+
+// Dimensions представляет размеры посылки
+type Dimensions struct {
+	Length float64 `json:"length"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
+}
+
+// Package представляет посылку
+type Package struct {
+	Weight      float64    `json:"weight"`
+	Dimensions  Dimensions `json:"dimensions"`
+	Description string     `json:"description"`
+	Value       float64    `json:"value"`
+}
+
 // CreateShipmentRequest - запрос создания отправления
 type CreateShipmentRequest struct {
-	ProviderID     int                  `json:"provider_id"`
-	ProviderCode   string               `json:"provider_code"`
-	OrderID        int                  `json:"order_id"`
-	FromAddress    *interfaces.Address  `json:"from_address"`
-	ToAddress      *interfaces.Address  `json:"to_address"`
-	Packages       []interfaces.Package `json:"packages"`
-	DeliveryType   string               `json:"delivery_type"`
-	PickupDate     *time.Time           `json:"pickup_date,omitempty"`
-	InsuranceValue float64              `json:"insurance_value,omitempty"`
-	CODAmount      float64              `json:"cod_amount,omitempty"`
-	Services       []string             `json:"services,omitempty"`
-	Reference      string               `json:"reference,omitempty"`
-	Notes          string               `json:"notes,omitempty"`
+	ProviderID     int        `json:"provider_id"`
+	ProviderCode   string     `json:"provider_code"`
+	OrderID        int        `json:"order_id"`
+	FromAddress    *Address   `json:"from_address"`
+	ToAddress      *Address   `json:"to_address"`
+	Packages       []Package  `json:"packages"`
+	DeliveryType   string     `json:"delivery_type"`
+	PickupDate     *time.Time `json:"pickup_date,omitempty"`
+	InsuranceValue float64    `json:"insurance_value,omitempty"`
+	CODAmount      float64    `json:"cod_amount,omitempty"`
+	Services       []string   `json:"services,omitempty"`
+	Reference      string     `json:"reference,omitempty"`
+	Notes          string     `json:"notes,omitempty"`
+}
+
+// TrackingEvent представляет событие отслеживания
+type TrackingEvent struct {
+	Timestamp   time.Time `json:"timestamp"`
+	Status      string    `json:"status"`
+	Description string    `json:"description"`
+	Location    string    `json:"location"`
+}
+
+// ProofOfDelivery представляет подтверждение доставки
+type ProofOfDelivery struct {
+	SignatureURL string     `json:"signature_url,omitempty"`
+	PhotoURL     string     `json:"photo_url,omitempty"`
+	ReceivedBy   string     `json:"received_by,omitempty"`
+	ReceivedAt   *time.Time `json:"received_at,omitempty"`
+	Notes        string     `json:"notes,omitempty"`
 }
 
 // TrackingInfo - информация об отслеживании
 type TrackingInfo struct {
-	ShipmentID      int                         `json:"shipment_id"`
-	TrackingNumber  string                      `json:"tracking_number"`
-	Status          string                      `json:"status"`
-	StatusText      string                      `json:"status_text"`
-	CurrentLocation string                      `json:"current_location,omitempty"`
-	EstimatedDate   *time.Time                  `json:"estimated_date,omitempty"`
-	DeliveredDate   *time.Time                  `json:"delivered_date,omitempty"`
-	Events          []interfaces.TrackingEvent  `json:"events"`
-	ProofOfDelivery *interfaces.ProofOfDelivery `json:"proof_of_delivery,omitempty"`
-	LastUpdated     time.Time                   `json:"last_updated"`
+	ShipmentID      int              `json:"shipment_id"`
+	TrackingNumber  string           `json:"tracking_number"`
+	Status          string           `json:"status"`
+	StatusText      string           `json:"status_text"`
+	CurrentLocation string           `json:"current_location,omitempty"`
+	EstimatedDate   *time.Time       `json:"estimated_date,omitempty"`
+	DeliveredDate   *time.Time       `json:"delivered_date,omitempty"`
+	Events          []TrackingEvent  `json:"events"`
+	ProofOfDelivery *ProofOfDelivery `json:"proof_of_delivery,omitempty"`
+	LastUpdated     time.Time        `json:"last_updated"`
 }
 
-// HandleProviderWebhook - обрабатывает webhook от провайдера доставки
-func (s *Service) HandleProviderWebhook(ctx context.Context, providerCode string, payload []byte, headers map[string]string) (*interfaces.WebhookResponse, error) {
-	// Получаем провайдера
-	provider, err := s.GetProviderByCode(providerCode)
-	if err != nil {
-		return nil, fmt.Errorf("provider not found: %s", providerCode)
-	}
-
-	// Обрабатываем webhook через провайдера
-	webhookResponse, err := provider.HandleWebhook(ctx, payload, headers)
-	if err != nil {
-		return nil, fmt.Errorf("failed to process webhook: %w", err)
-	}
-
-	// Если webhook обработан успешно, сохраняем события отслеживания
-	if webhookResponse.Processed && webhookResponse.TrackingNumber != "" {
-		// Найдем отправление по трек-номеру
-		shipment, err := s.storage.GetShipmentByTracking(ctx, webhookResponse.TrackingNumber)
-		if err != nil {
-			// Если отправление не найдено, просто логируем (возможно, это не наше отправление)
-			return webhookResponse, nil
-		}
-
-		// Обновляем статус отправления
-		var deliveredAt *time.Time
-		if webhookResponse.Status == interfaces.StatusDelivered && webhookResponse.DeliveryDetails != nil {
-			deliveredAt = &webhookResponse.DeliveryDetails.DeliveredAt
-		}
-		if err := s.storage.UpdateShipmentStatus(ctx, shipment.ID, webhookResponse.Status, deliveredAt); err != nil {
-			return nil, fmt.Errorf("failed to update shipment status: %w", err)
-		}
-
-		// Сохраняем события отслеживания
-		for _, event := range webhookResponse.Events {
-			var location *string
-			if event.Location != "" {
-				location = &event.Location
-			}
-			var description *string
-			if event.Description != "" {
-				description = &event.Description
-			}
-
-			trackingEvent := &models.TrackingEvent{
-				ShipmentID:  shipment.ID,
-				ProviderID:  shipment.ProviderID,
-				EventTime:   event.Timestamp,
-				Status:      event.Status,
-				Location:    location,
-				Description: description,
-				RawData:     json.RawMessage(fmt.Sprintf(`{"webhook_payload": %q}`, string(payload))),
-			}
-
-			if err := s.storage.CreateTrackingEvent(ctx, trackingEvent); err != nil {
-				return nil, fmt.Errorf("failed to save tracking event: %w", err)
-			}
-		}
-
-		// TODO: Отправить уведомления пользователям о изменении статуса
-		// s.notificationService.SendStatusUpdate(ctx, shipment, webhookResponse.Status)
-	}
-
-	return webhookResponse, nil
+// WebhookResponse представляет ответ на webhook
+type WebhookResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message,omitempty"`
+	Error   string `json:"error,omitempty"`
 }
 
-// GetProviderByCode - получает провайдера по коду
-func (s *Service) GetProviderByCode(providerCode string) (interfaces.DeliveryProvider, error) {
-	// Проверяем кеш
-	if provider, exists := s.cache[providerCode]; exists {
-		return provider, nil
-	}
-
-	// Получаем провайдера из фабрики
-	provider, err := s.providerFactory.CreateProvider(providerCode)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get provider %s: %w", providerCode, err)
-	}
-
-	// Сохраняем в кеш
-	s.cache[providerCode] = provider
-
-	return provider, nil
-}
-
-// GetShipment - получает отправление по ID
+// GetShipment - получает отправление по ID через gRPC микросервис
 func (s *Service) GetShipment(ctx context.Context, shipmentID int) (*models.Shipment, error) {
+	if s.grpcClient == nil {
+		return nil, fmt.Errorf("delivery service not configured: gRPC client is nil")
+	}
+
+	shipment, err := s.getShipmentViaGRPC(ctx, shipmentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get shipment via gRPC: %w", err)
+	}
+
+	log.Info().Int("shipment_id", shipmentID).Msg("Get shipment via gRPC successful")
+	return shipment, nil
+}
+
+// getShipmentViaGRPC получает отправление через gRPC
+func (s *Service) getShipmentViaGRPC(ctx context.Context, shipmentID int) (*models.Shipment, error) {
+	// Получаем из локальной БД для получения external_id
 	shipment, err := s.storage.GetShipment(ctx, shipmentID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get shipment: %w", err)
+		return nil, fmt.Errorf("failed to get shipment from local DB: %w", err)
 	}
 
-	// Загружаем связанные данные
-	provider, err := s.storage.GetProvider(ctx, shipment.ProviderID)
-	if err == nil {
-		shipment.Provider = provider
+	if shipment.ExternalID == nil {
+		return nil, fmt.Errorf("external ID not found")
 	}
 
-	// Загружаем события отслеживания
-	events, err := s.storage.GetTrackingEvents(ctx, shipmentID)
-	if err == nil {
-		shipment.Events = events
+	// Вызываем gRPC
+	grpcResp, err := s.grpcClient.GetShipment(ctx, &pb.GetShipmentRequest{
+		Id: *shipment.ExternalID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gRPC get shipment call failed: %w", err)
 	}
 
-	return shipment, nil
+	// Конвертируем response
+	grpcShipment, err := grpcclient.MapShipmentFromProto(grpcResp.Shipment)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map shipment from proto: %w", err)
+	}
+
+	// Обновляем локальную БД
+	grpcShipment.ID = shipment.ID
+	grpcShipment.ProviderID = shipment.ProviderID
+	if err := s.storage.UpdateShipmentStatus(ctx, shipment.ID, grpcShipment.Status, grpcShipment.ActualDeliveryDate); err != nil {
+		log.Error().Err(err).Int("shipment_id", shipment.ID).Msg("Failed to update local cache")
+	}
+
+	return grpcShipment, nil
 }
 
 // UpdateProvider - обновляет информацию о провайдере
@@ -544,9 +583,6 @@ func (s *Service) UpdateProvider(ctx context.Context, providerID int, update *mo
 	if err := s.storage.UpdateProvider(ctx, existing); err != nil {
 		return fmt.Errorf("failed to update provider: %w", err)
 	}
-
-	// Очищаем кеш провайдера
-	delete(s.cache, existing.Code)
 
 	return nil
 }

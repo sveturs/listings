@@ -262,8 +262,8 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
 
       {/* Контент */}
       <div className="relative z-10 flex flex-col h-full">
-        {/* Заголовок и поиск */}
-        <div className="p-4 bg-base-100 border-b border-base-300">
+        {/* Заголовок и поиск - липкий хедер */}
+        <div className="sticky top-0 z-20 p-4 bg-base-100 border-b border-base-300">
           {/* Поиск с иконкой */}
           <div className="form-control mb-4">
             <div className="relative">

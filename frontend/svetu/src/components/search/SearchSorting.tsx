@@ -160,6 +160,7 @@ export default function SearchSorting({
         className="select select-bordered w-full bg-base-100"
         value={currentSort}
         onChange={(e) => handleSortChange(e.target.value)}
+        aria-label={t('sortBy')}
       >
         {sortOptions.map((option) => (
           <option key={option.value} value={option.value}>

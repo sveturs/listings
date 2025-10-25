@@ -3493,19 +3493,12 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /**
-     * Get delivery analytics
-     * @description Get analytics and statistics for deliveries
-     */
+    /** Get delivery analytics */
     get: {
       parameters: {
         query?: {
-          /** @description From date (YYYY-MM-DD) */
-          from?: string;
-          /** @description To date (YYYY-MM-DD) */
-          to?: string;
-          /** @description Provider ID */
-          provider_id?: number;
+          /** @description Time period (7d, 30d, 90d, 365d) */
+          period?: string;
         };
         header?: never;
         path?: never;
@@ -3520,12 +3513,12 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['service.DeliveryAnalytics'];
+              data?: components['schemas']['models.AnalyticsData'];
             };
           };
         };
-        /** @description Server error */
-        500: {
+        /** @description Unauthorized */
+        401: {
           headers: {
             [name: string]: unknown;
           };
@@ -3630,10 +3623,7 @@ export interface paths {
       };
     };
     put?: never;
-    /**
-     * Create pricing rule
-     * @description Create new pricing rule for provider
-     */
+    /** Create pricing rule */
     post: {
       parameters: {
         query?: never;
@@ -3654,17 +3644,8 @@ export interface paths {
             };
           };
         };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
+        /** @description Unauthorized */
+        401: {
           headers: {
             [name: string]: unknown;
           };
@@ -3933,10 +3914,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /**
-     * Get providers for admin
-     * @description Get detailed list of all providers for admin panel
-     */
+    /** Get delivery providers for admin */
     get: {
       parameters: {
         query?: never;
@@ -3952,88 +3930,25 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.Provider'][];
+            'application/json': {
+              [key: string]: unknown;
             };
           };
         };
-        /** @description Server error */
-        500: {
+        /** @description Unauthorized */
+        401: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+            'application/json': {
+              [key: string]: string;
+            };
           };
         };
       };
     };
     put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/delivery/providers/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update provider
-     * @description Update provider settings
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Provider ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Provider data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.Provider'];
-        };
-      };
-      responses: {
-        /** @description Success */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
     post?: never;
     delete?: never;
     options?: never;
@@ -8123,6 +8038,528 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/available': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all available tests
+     * @description Returns list of all available tests across all suites
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.AvailableTestsResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/run': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run test suite
+     * @description Initiates execution of specified test suite
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Test run request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['domain.RunTestRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.RunTestResponse'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/runs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List test runs
+     * @description Returns paginated list of test runs
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit */
+          limit?: number;
+          /** @description Offset */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.TestRun'][];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/runs/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get test run details
+     * @description Returns detailed information about test run including results and logs
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Test Run ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.TestRunDetail'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    /**
+     * Cancel test run
+     * @description Cancels running test execution
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Test Run ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/runs/{id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get test run status
+     * @description Returns current status of test run (for polling)
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Test Run ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.TestRun'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/runs/latest': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get latest test run
+     * @description Returns the most recent test run with details
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.TestRunDetail'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/suites': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get available test suites
+     * @description Returns list of all available test suites
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.TestSuite'][];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -14297,14 +14734,14 @@ export interface paths {
     };
     post?: never;
     /**
-     * Hard delete a storefront product
-     * @description Permanently deletes a product and all related data (reviews, favorites, images, etc.)
+     * Delete a storefront product
+     * @description Deletes a product. Use query param hard=true for permanent deletion of all related data
      */
     delete: {
       parameters: {
-        query: {
-          /** @description Must be true for hard delete */
-          hard: boolean;
+        query?: {
+          /** @description Set to true for permanent hard delete (default: false) */
+          hard?: boolean;
         };
         header?: never;
         path: {
@@ -14317,7 +14754,7 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Product permanently deleted */
+        /** @description Product deleted successfully */
         200: {
           headers: {
             [name: string]: unknown;
@@ -40762,6 +41199,29 @@ export interface components {
       principal?: number;
       remaining_balance?: number;
     };
+    'domain.AvailableTest': {
+      category?: components['schemas']['domain.TestCategory'];
+      description?: string;
+      id?: string;
+      name?: string;
+      suite?: string;
+    };
+    'domain.AvailableTestsResponse': {
+      tests?: components['schemas']['domain.AvailableTest'][];
+      total?: number;
+    };
+    'domain.RunTestRequest': {
+      parallel?: boolean;
+      /** @description Optional: run only specific test */
+      test_name?: string;
+      test_suite: string;
+    };
+    'domain.RunTestResponse': {
+      message?: string;
+      run_uuid?: string;
+      status?: string;
+      test_run_id?: number;
+    };
     'domain.SearchConfig': {
       created_at?: string;
       fuzzy_enabled?: boolean;
@@ -40797,6 +41257,94 @@ export interface components {
       id?: number;
       updated_at?: string;
       weight?: number;
+    };
+    /** @enum {string} */
+    'domain.TestCategory':
+      | 'api'
+      | 'database'
+      | 'performance'
+      | 'integration'
+      | 'e2e'
+      | 'security'
+      | 'data-integrity'
+      | 'monitoring'
+      | 'accessibility'
+      | 'all';
+    'domain.TestLog': {
+      created_at?: string;
+      id?: number;
+      /** @description info, warn, error, debug */
+      level?: string;
+      message?: string;
+      test_run_id?: number;
+      timestamp?: string;
+    };
+    'domain.TestResult': {
+      completed_at?: string;
+      created_at?: string;
+      duration_ms?: number;
+      error_msg?: string;
+      id?: number;
+      stack_trace?: string;
+      started_at?: string;
+      status?: components['schemas']['domain.TestResultStatus'];
+      test_name?: string;
+      test_run_id?: number;
+      test_suite?: string;
+    };
+    /** @enum {string} */
+    'domain.TestResultStatus': 'passed' | 'failed' | 'skipped';
+    'domain.TestRun': {
+      completed_at?: string;
+      created_at?: string;
+      duration_ms?: number;
+      failed_tests?: number;
+      id?: number;
+      metadata?: {
+        [key: string]: unknown;
+      };
+      passed_tests?: number;
+      run_uuid?: string;
+      skipped_tests?: number;
+      started_at?: string;
+      started_by_user_id?: number;
+      status?: components['schemas']['domain.TestRunStatus'];
+      test_suite?: string;
+      total_tests?: number;
+    };
+    'domain.TestRunDetail': {
+      completed_at?: string;
+      created_at?: string;
+      duration_ms?: number;
+      failed_tests?: number;
+      id?: number;
+      logs?: components['schemas']['domain.TestLog'][];
+      metadata?: {
+        [key: string]: unknown;
+      };
+      passed_tests?: number;
+      results?: components['schemas']['domain.TestResult'][];
+      run_uuid?: string;
+      skipped_tests?: number;
+      started_at?: string;
+      started_by_user_id?: number;
+      status?: components['schemas']['domain.TestRunStatus'];
+      test_suite?: string;
+      total_tests?: number;
+    };
+    /** @enum {string} */
+    'domain.TestRunStatus':
+      | 'pending'
+      | 'running'
+      | 'completed'
+      | 'failed'
+      | 'canceled';
+    'domain.TestSuite': {
+      category?: components['schemas']['domain.TestCategory'];
+      description?: string;
+      enabled?: boolean;
+      name?: string;
+      test_count?: number;
     };
     'domain.TransliterationRule': {
       created_at?: string;
@@ -45666,10 +46214,6 @@ export interface components {
       max_minutes?: number;
       transport_mode?: string;
     };
-    'service.AnalyticsPeriod': {
-      from?: string;
-      to?: string;
-    };
     'service.CategoryAnalysisResult': {
       insights?: components['schemas']['service.CategoryInsight'][];
       new_category_proposals?: components['schemas']['service.NewCategoryProposal'][];
@@ -45711,20 +46255,6 @@ export interface components {
       reference?: string;
       services?: string[];
       to_address?: components['schemas']['interfaces.Address'];
-    };
-    'service.DeliveryAnalytics': {
-      average_cost?: number;
-      average_delivery_days?: {
-        [key: string]: number;
-      };
-      period?: components['schemas']['service.AnalyticsPeriod'];
-      provider_breakdown?: components['schemas']['service.ProviderStatistics'][];
-      status_breakdown?: {
-        [key: string]: number;
-      };
-      top_routes?: components['schemas']['service.RouteStatistics'][];
-      total_cost?: number;
-      total_shipments?: number;
     };
     'service.IndexInfo': {
       aliases?: string[];
@@ -45818,21 +46348,6 @@ export interface components {
       payment_intent_id?: string;
       payment_required?: boolean;
       redirect_url?: string;
-    };
-    'service.ProviderStatistics': {
-      average_cost?: number;
-      provider_id?: number;
-      provider_name?: string;
-      shipment_count?: number;
-      success_rate?: number;
-      total_cost?: number;
-    };
-    'service.RouteStatistics': {
-      average_cost?: number;
-      average_days?: number;
-      from_city?: string;
-      shipment_count?: number;
-      to_city?: string;
     };
     'service.SearchMetrics': {
       avg_click_position?: number;

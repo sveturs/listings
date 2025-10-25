@@ -2,15 +2,14 @@ package attributes
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 
 	"backend/internal/proj/delivery/models"
+	"backend/internal/proj/delivery/storage"
 )
 
 const (
@@ -19,74 +18,25 @@ const (
 
 // Service - сервис управления атрибутами доставки
 type Service struct {
-	db *sqlx.DB
+	db      *sqlx.DB
+	storage *storage.Storage
 }
 
 // NewService создает новый экземпляр сервиса атрибутов
-func NewService(db *sqlx.DB) *Service {
+func NewService(db *sqlx.DB, storage *storage.Storage) *Service {
 	return &Service{
-		db: db,
+		db:      db,
+		storage: storage,
 	}
 }
 
 // GetProductAttributes - получает атрибуты доставки товара
 func (s *Service) GetProductAttributes(ctx context.Context, productID int, productType string) (*models.DeliveryAttributes, error) {
 	var attrs models.DeliveryAttributes
-	var query string
-	var jsonData json.RawMessage
 
-	if productType == ProductTypeListing {
-		query = `
-			SELECT
-				COALESCE(
-					ml.metadata->'delivery_attributes',
-					(SELECT jsonb_build_object(
-						'weight_kg', dcd.default_weight_kg,
-						'dimensions', jsonb_build_object(
-							'length_cm', dcd.default_length_cm,
-							'width_cm', dcd.default_width_cm,
-							'height_cm', dcd.default_height_cm
-						),
-						'packaging_type', dcd.default_packaging_type,
-						'is_fragile', dcd.is_typically_fragile,
-						'stackable', true,
-						'requires_special_handling', false
-					)
-					FROM delivery_category_defaults dcd
-					WHERE dcd.category_id = ml.category_id),
-					'{}'::jsonb
-				) as attributes
-			FROM c2c_listings ml
-			WHERE ml.id = $1`
-	} else {
-		query = `
-			SELECT
-				COALESCE(
-					sp.attributes->'delivery_attributes',
-					(SELECT jsonb_build_object(
-						'weight_kg', dcd.default_weight_kg,
-						'dimensions', jsonb_build_object(
-							'length_cm', dcd.default_length_cm,
-							'width_cm', dcd.default_width_cm,
-							'height_cm', dcd.default_height_cm
-						),
-						'packaging_type', dcd.default_packaging_type,
-						'is_fragile', dcd.is_typically_fragile,
-						'stackable', true,
-						'requires_special_handling', false
-					)
-					FROM delivery_category_defaults dcd
-					WHERE dcd.category_id = sp.category_id),
-					'{}'::jsonb
-				) as attributes
-			FROM b2c_products sp
-			WHERE sp.id = $1`
-	}
-
-	if err := s.db.GetContext(ctx, &jsonData, query, productID); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("product not found")
-		}
+	// Получаем JSON данные через storage
+	jsonData, err := s.storage.GetProductAttributes(ctx, productID, productType)
+	if err != nil {
 		return nil, err
 	}
 
@@ -124,42 +74,7 @@ func (s *Service) UpdateProductAttributes(ctx context.Context, productID int, pr
 		return fmt.Errorf("failed to marshal attributes: %w", err)
 	}
 
-	var query string
-	if productType == ProductTypeListing {
-		query = `
-			UPDATE c2c_listings
-			SET metadata = jsonb_set(
-				COALESCE(metadata, '{}'),
-				'{delivery_attributes}',
-				$1::jsonb
-			)
-			WHERE id = $2`
-	} else {
-		query = `
-			UPDATE b2c_products
-			SET attributes = jsonb_set(
-				COALESCE(attributes, '{}'),
-				'{delivery_attributes}',
-				$1::jsonb
-			)
-			WHERE id = $2`
-	}
-
-	result, err := s.db.ExecContext(ctx, query, jsonData, productID)
-	if err != nil {
-		return fmt.Errorf("failed to update attributes: %w", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return fmt.Errorf("product not found")
-	}
-
-	return nil
+	return s.storage.UpdateProductAttributes(ctx, productID, productType, jsonData)
 }
 
 // validateAttributes - валидирует атрибуты доставки
@@ -202,22 +117,7 @@ func (s *Service) validateAttributes(attrs *models.DeliveryAttributes) error {
 
 // GetCategoryDefaults - получает дефолтные атрибуты для категории
 func (s *Service) GetCategoryDefaults(ctx context.Context, categoryID int) (*models.CategoryDefaults, error) {
-	var defaults models.CategoryDefaults
-	query := `
-		SELECT * FROM delivery_category_defaults
-		WHERE category_id = $1`
-
-	if err := s.db.GetContext(ctx, &defaults, query, categoryID); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// Возвращаем пустые дефолты если не найдены
-			return &models.CategoryDefaults{
-				CategoryID: categoryID,
-			}, nil
-		}
-		return nil, err
-	}
-
-	return &defaults, nil
+	return s.storage.GetCategoryDefaults(ctx, categoryID)
 }
 
 // UpdateCategoryDefaults - обновляет дефолтные атрибуты для категории
@@ -239,31 +139,7 @@ func (s *Service) UpdateCategoryDefaults(ctx context.Context, defaults *models.C
 		return fmt.Errorf("invalid default height")
 	}
 
-	query := `
-		INSERT INTO delivery_category_defaults (
-			category_id, default_weight_kg, default_length_cm,
-			default_width_cm, default_height_cm, default_packaging_type,
-			is_typically_fragile
-		) VALUES ($1, $2, $3, $4, $5, $6, $7)
-		ON CONFLICT (category_id) DO UPDATE SET
-			default_weight_kg = EXCLUDED.default_weight_kg,
-			default_length_cm = EXCLUDED.default_length_cm,
-			default_width_cm = EXCLUDED.default_width_cm,
-			default_height_cm = EXCLUDED.default_height_cm,
-			default_packaging_type = EXCLUDED.default_packaging_type,
-			is_typically_fragile = EXCLUDED.is_typically_fragile,
-			updated_at = NOW()
-		RETURNING id`
-
-	return s.db.GetContext(ctx, &defaults.ID, query,
-		defaults.CategoryID,
-		defaults.DefaultWeightKg,
-		defaults.DefaultLengthCm,
-		defaults.DefaultWidthCm,
-		defaults.DefaultHeightCm,
-		defaults.DefaultPackagingType,
-		defaults.IsTypicallyFragile,
-	)
+	return s.storage.UpdateCategoryDefaults(ctx, defaults)
 }
 
 // BatchUpdateProductAttributes - массовое обновление атрибутов товаров
@@ -313,29 +189,7 @@ func (s *Service) updateProductAttributesTx(ctx context.Context, tx *sqlx.Tx, pr
 		return err
 	}
 
-	var query string
-	if productType == ProductTypeListing {
-		query = `
-			UPDATE c2c_listings
-			SET metadata = jsonb_set(
-				COALESCE(metadata, '{}'),
-				'{delivery_attributes}',
-				$1::jsonb
-			)
-			WHERE id = $2`
-	} else {
-		query = `
-			UPDATE b2c_products
-			SET attributes = jsonb_set(
-				COALESCE(attributes, '{}'),
-				'{delivery_attributes}',
-				$1::jsonb
-			)
-			WHERE id = $2`
-	}
-
-	_, err = tx.ExecContext(ctx, query, jsonData, productID)
-	return err
+	return s.storage.UpdateProductAttributesTx(ctx, tx, productID, productType, jsonData)
 }
 
 // ApplyCategoryDefaultsToProducts - применяет дефолтные атрибуты категории к товарам без атрибутов
@@ -369,40 +223,16 @@ func (s *Service) ApplyCategoryDefaultsToProducts(ctx context.Context, categoryI
 	}
 
 	// Обновляем товары из c2c_listings
-	query1 := `
-		UPDATE c2c_listings
-		SET metadata = jsonb_set(
-			COALESCE(metadata, '{}'),
-			'{delivery_attributes}',
-			$1::jsonb
-		)
-		WHERE category_id = $2
-		AND (metadata->'delivery_attributes' IS NULL OR metadata->'delivery_attributes' = '{}'::jsonb)`
-
-	result1, err := s.db.ExecContext(ctx, query1, jsonData, categoryID)
+	count1, err := s.storage.ApplyCategoryDefaultsToListings(ctx, categoryID, jsonData)
 	if err != nil {
 		return 0, err
 	}
-
-	count1, _ := result1.RowsAffected()
 
 	// Обновляем товары из b2c_products
-	query2 := `
-		UPDATE b2c_products
-		SET attributes = jsonb_set(
-			COALESCE(attributes, '{}'),
-			'{delivery_attributes}',
-			$1::jsonb
-		)
-		WHERE category_id = $2
-		AND (attributes->'delivery_attributes' IS NULL OR attributes->'delivery_attributes' = '{}'::jsonb)`
-
-	result2, err := s.db.ExecContext(ctx, query2, jsonData, categoryID)
+	count2, err := s.storage.ApplyCategoryDefaultsToProducts(ctx, categoryID, jsonData)
 	if err != nil {
 		return 0, err
 	}
-
-	count2, _ := result2.RowsAffected()
 
 	return int(count1 + count2), nil
 }

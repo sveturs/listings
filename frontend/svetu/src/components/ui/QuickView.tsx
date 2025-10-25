@@ -19,6 +19,7 @@ import { addItem } from '@/store/slices/localCartSlice';
 import type { AppDispatch } from '@/store';
 import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
 type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
@@ -67,8 +68,10 @@ export const QuickView: React.FC<QuickViewProps> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [showVariantModal, setShowVariantModal] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated } = useAuth();
+  const t = useTranslations('common');
 
   useEffect(() => {
     if (isOpen) {
@@ -157,8 +160,9 @@ export const QuickView: React.FC<QuickViewProps> = ({
             <button
               onClick={onClose}
               className="btn btn-ghost btn-sm btn-circle"
+              aria-label={t('close')}
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
 
@@ -189,14 +193,16 @@ export const QuickView: React.FC<QuickViewProps> = ({
                     <button
                       onClick={handlePrevImage}
                       className="absolute left-2 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-base-100/80 hover:bg-base-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={t('product.previousImage')}
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                     </button>
                     <button
                       onClick={handleNextImage}
                       className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-circle btn-sm bg-base-100/80 hover:bg-base-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={t('product.nextImage')}
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4" aria-hidden="true" />
                     </button>
                   </>
                 )}
@@ -226,6 +232,13 @@ export const QuickView: React.FC<QuickViewProps> = ({
                           ? 'border-primary ring-2 ring-primary/30'
                           : 'border-transparent hover:border-base-300'
                       }`}
+                      aria-label={t('product.imageXofY', {
+                        current: index + 1,
+                        total: product.images.length,
+                      })}
+                      aria-current={
+                        index === currentImageIndex ? 'true' : 'false'
+                      }
                     >
                       <div className="relative w-full h-full">
                         <Image
@@ -342,22 +355,38 @@ export const QuickView: React.FC<QuickViewProps> = ({
                       onClick={handleAddToCartClick}
                       className="btn btn-primary flex-1"
                     >
-                      <ShoppingCart className="w-5 h-5" />В корзину
+                      <ShoppingCart className="w-5 h-5" aria-hidden="true" />В
+                      корзину
                     </button>
                   ) : (
                     <button
                       onClick={onContact}
                       className="btn btn-primary flex-1"
                     >
-                      <ShoppingCart className="w-5 h-5" />
+                      <ShoppingCart className="w-5 h-5" aria-hidden="true" />
                       Связаться
                     </button>
                   )}
-                  <button className="btn btn-ghost btn-square">
-                    <Heart className="w-5 h-5" />
+                  <button
+                    className="btn btn-ghost btn-square"
+                    onClick={() => setIsFavorite(!isFavorite)}
+                    aria-label={
+                      isFavorite
+                        ? t('product.removeFromFavorites')
+                        : t('product.addToFavorites')
+                    }
+                    aria-pressed={isFavorite}
+                  >
+                    <Heart
+                      className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`}
+                      aria-hidden="true"
+                    />
                   </button>
-                  <button className="btn btn-ghost btn-square">
-                    <Share2 className="w-5 h-5" />
+                  <button
+                    className="btn btn-ghost btn-square"
+                    aria-label={t('product.shareProduct')}
+                  >
+                    <Share2 className="w-5 h-5" aria-hidden="true" />
                   </button>
                 </div>
 

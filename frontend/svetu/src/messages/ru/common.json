@@ -18,37 +18,8 @@
     "chats": "Чаты",
     "profile": "Профиль",
     "close": "Закрыть",
-    "marketplace": "Маркетплейс",
-    "createListing": "Создать объявление",
-    "myListings": "Мои объявления",
-    "blog": "Блог",
-    "news": "Новости",
-    "contacts": "Контакты",
-    "userContacts": "Контакты пользователя",
-    "logout": "Выйти",
-    "adminPanel": "Панель администратора",
-    "messages": "Сообщения",
-    "notifications": "Уведомления",
-    "settings": "Настройки",
-    "help": "Помощь",
-    "searchPlaceholder": "Поиск...",
-    "viewAll": "Посмотреть все",
-    "moreOptions": "Больше опций",
-    "backToTop": "Наверх",
-    "distance": {
-      "fromYou": "от вас",
-      "meters": "{count} метров",
-      "kilometers": "{count} километров",
-      "walking": "пешком {time}",
-      "minutes": "{count} минут",
-      "hours": "{count} часов",
-      "walkingDistance": "Пешеходная доступность"
-    },
-    "location": {
-      "latitude": "Широта",
-      "longitude": "Долгота",
-      "specifyLocation": "Укажите местоположение"
-    }
+    "closeMenu": "Закрыть меню",
+    "toggleMenu": "Переключить меню навигации"
   },
   "search": {
     "notFound": "Не найдено",
@@ -267,7 +238,10 @@
   "hoursAgo": "ч. назад",
   "buy": "Купить",
   "sendMessage": "Написать сообщение",
-  "chat": "Чат",
+  "chat": {
+    "openChat": "Открыть чат",
+    "startChat": "Начать переписку"
+  },
   "eco": {
     "secondHand": "Б/У",
     "refurbished": "Восстановлен",
@@ -405,6 +379,10 @@
   "contactSeller": "Связаться с продавцом",
   "addToFavorites": "Добавить в избранное",
   "share": "Поделиться",
+  "product": {
+    "addToFavorites": "Добавить в избранное",
+    "removeFromFavorites": "Удалить из избранного"
+  },
   "q": "Поиск",
   "fuzzy": "Нечёткий поиск",
   "lat": "Широта",
@@ -572,7 +550,14 @@
   "expand": "Развернуть",
   "collapse": "Свернуть",
   "home": "Главная",
-  "view": "Просмотр",
+  "view": {
+    "gridView": "Вид сеткой",
+    "listView": "Вид списком",
+    "oneColumn": "Один столбец",
+    "twoColumns": "Два столбца",
+    "threeColumns": "Три столбца",
+    "fourColumns": "Четыре столбца"
+  },
   "new": "Новый",
   "minutesAgo": "{minutes} минут назад",
   "hourAgo": "{hours} час назад",
@@ -655,14 +640,6 @@
   "sortOrder": "Порядок сортировки",
   "isActive": "Активно",
   "translating": "Переводим...",
-  "navigation": {
-    "home": "Главная",
-    "search": "Поиск",
-    "create": "Создать",
-    "chats": "Чаты",
-    "profile": "Профиль",
-    "close": "Закрыть"
-  },
   "common": {
     "minutes": "Минуты",
     "km": "км",
@@ -740,5 +717,16 @@
     "coordinates": "Координаты",
     "click_on_map": "Кликните на карте, чтобы выбрать местоположение",
     "min_chars_hint": "Введите минимум 2 символа для поиска адресов"
+  },
+  "carousel": {
+    "goToSlide": "Перейти к слайду {index}"
+  },
+  "theme": {
+    "loadingToggle": "Загрузка переключателя темы"
+  },
+  "language": {
+    "switchLanguage": "Сменить язык",
+    "selectLanguage": "Выбрать язык",
+    "currentLanguage": "Текущий язык: {lang}"
   }
 }

@@ -428,9 +428,9 @@ export default function ChatWindow({
   };
 
   return (
-    <div className="flex flex-col h-full w-full max-w-full overflow-hidden relative">
-      {/* Заголовок чата */}
-      <div className="navbar bg-base-100 border-b border-base-300 min-h-0 p-2 sm:p-3 relative z-30">
+    <div className="flex flex-col h-full w-full max-w-full relative">
+      {/* Заголовок чата - липкий хедер */}
+      <div className="navbar bg-base-100 border-b border-base-300 min-h-0 p-2 sm:p-3 sticky top-0 z-30 shrink-0">
         <div className="navbar-start flex-1 gap-2">
           {showBackButton && (
             <button
@@ -768,7 +768,7 @@ export default function ChatWindow({
 
       {/* Контейнер с фоном на всю высоту */}
       <div
-        className="flex-1 relative"
+        className="flex-1 relative overflow-hidden"
         style={{
           backgroundColor: 'oklch(var(--b2))',
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%239C92AC' fill-opacity='0.1' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,

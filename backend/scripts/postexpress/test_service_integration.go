@@ -23,7 +23,7 @@ func main() {
 		Endpoint:        "http://212.62.32.201/WspWebApi/transakcija",
 		Username:        "b2b@svetu.rs",
 		Password:        "Sv5et@U!",
-		Language:        "sr-Latn-RS",
+		Language:        "",  // ВАЖНО: пустая строка - обходим баг Post Express с отсутствующими колонками PREVOD_*
 		DeviceType:      "2", // ВАЖНО: строка "2" для веб-приложения
 		Timeout:         30 * time.Second,
 		MaxRetries:      2,

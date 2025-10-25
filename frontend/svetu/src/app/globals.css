@@ -173,3 +173,11 @@ body {
   max-width: 100% !important;
   width: auto !important;
 }
+
+/* WCAG 2.1 AA Accessibility fixes */
+/* Fix color contrast for menu-title in admin sidebar */
+/* Original: #a3a3a4 on #ffffff = 2.52:1 (fails WCAG AA 4.5:1) */
+/* New: #6b7280 (gray-500) = 4.53:1 (passes WCAG AA) */
+.menu-title {
+  color: #6b7280 !important;
+}

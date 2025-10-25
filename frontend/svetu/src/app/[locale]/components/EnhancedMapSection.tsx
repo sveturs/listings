@@ -61,7 +61,7 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
   enableClustering = true,
   className = '',
 }) => {
-  const _t = useTranslations('map');
+  const t = useTranslations('map');
   const mapRef = React.useRef<MapRef>(null);
   const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = React.useState(false);
@@ -730,16 +730,23 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
         <button
           onClick={() => setIsFullscreen(!isFullscreen)}
           className="btn btn-sm btn-circle bg-white shadow-lg hover:shadow-xl"
+          aria-label={isFullscreen ? t('exitFullscreen') : t('enterFullscreen')}
         >
-          {isFullscreen ? <FiMinimize2 /> : <FiMaximize2 />}
+          {isFullscreen ? (
+            <FiMinimize2 aria-hidden="true" />
+          ) : (
+            <FiMaximize2 aria-hidden="true" />
+          )}
         </button>
 
         {/* Кнопка фильтров */}
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="btn btn-sm btn-circle bg-white shadow-lg hover:shadow-xl relative"
+          aria-label={t('toggleFilters')}
+          aria-pressed={showFilters}
         >
-          <FiFilter />
+          <FiFilter aria-hidden="true" />
           {selectedCategories.length > 0 && (
             <span className="absolute -top-1 -right-1 badge badge-primary badge-xs">
               {selectedCategories.length}
@@ -752,6 +759,7 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
           <button
             className="btn btn-sm btn-circle bg-white shadow-lg hover:shadow-xl"
             onClick={() => setIsCompactControlExpanded(true)}
+            aria-label={t('expandControls')}
           >
             <span className="text-lg">
               {walkingMode === 'walking' ? '🚶' : '📏'}
@@ -911,15 +919,15 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            <span className="text-xs">{_t('listings')}</span>
+            <span className="text-xs">{t('listings')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-            <span className="text-xs">{_t('storefronts')}</span>
+            <span className="text-xs">{t('storefronts')}</span>
           </div>
           <div className="pt-1 mt-1 border-t">
             <p className="text-xs font-medium">
-              {_t('showing', {
+              {t('showing', {
                 shown: filteredListings.length,
                 total: listings.length,
               })}
@@ -952,7 +960,7 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
                   )}
                   <div className="flex-1">
                     <h3 className="font-semibold">
-                      {listing.title || _t('listing')}
+                      {listing.title || t('listing')}
                     </h3>
                     {listing.category && (
                       <p className="text-xs text-gray-500">

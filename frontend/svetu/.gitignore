@@ -49,3 +49,6 @@ dev.log
 next-env.d.ts
 .claude/currentTask.md
 .idea
+
+# Playwright authentication state
+.auth/

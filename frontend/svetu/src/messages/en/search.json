@@ -11,6 +11,7 @@
   "noResultsDescription": "Try changing the query or using different filters",
   "clear": "Clear",
   "searchButton": "Search",
+  "searching": "Searching...",
   "categories": "Categories",
   "filters": "Filters",
   "found": "Found",

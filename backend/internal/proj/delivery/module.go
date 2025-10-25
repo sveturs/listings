@@ -1,6 +1,8 @@
 package delivery
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -9,7 +11,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/middleware"
 	adminLogistics "backend/internal/proj/admin/logistics/service"
-	"backend/internal/proj/delivery/factory"
+	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/proj/delivery/handler"
 	"backend/internal/proj/delivery/service"
 	notifService "backend/internal/proj/notifications/service"
@@ -21,6 +23,7 @@ type Module struct {
 	handler      *handler.Handler
 	adminHandler *handler.AdminHandler
 	service      *service.Service
+	grpcClient   *grpcclient.Client
 	// Сервисы из admin/logistics для консолидации
 	monitoringService *adminLogistics.MonitoringService
 	problemService    *adminLogistics.ProblemService
@@ -29,18 +32,25 @@ type Module struct {
 
 // NewModule создает новый модуль доставки
 func NewModule(db *sqlx.DB, cfg *config.Config, logger *logger.Logger) (*Module, error) {
-	// Инициализируем фабрику провайдеров с автоинициализацией Post Express
-	providerFactory, err := factory.NewProviderFactoryWithDefaults(db)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to initialize provider factory with defaults, using basic factory")
-		providerFactory = factory.NewProviderFactory(db, nil)
+	// DELIVERY_GRPC_URL должен быть установлен в .env
+	grpcURL := cfg.DeliveryGRPCURL
+	if grpcURL == "" {
+		return nil, fmt.Errorf("DELIVERY_GRPC_URL is required in .env file")
 	}
+	log.Info().Str("url", grpcURL).Msg("Connecting to delivery gRPC service")
 
-	// Создаем сервис
-	svc := service.NewService(db, providerFactory)
+	// Создаем gRPC клиент для delivery микросервиса (ОБЯЗАТЕЛЬНО)
+	grpcClient, err := grpcclient.NewClient(grpcURL, logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to delivery gRPC service at %s: %w", grpcURL, err)
+	}
+	log.Info().Str("url", grpcURL).Msg("Successfully connected to delivery gRPC service")
 
-	// Создаем основной обработчик
-	h := handler.NewHandler(db, providerFactory)
+	// Создаем сервис с обязательным gRPC клиентом
+	svc := service.NewService(db, grpcClient)
+
+	// Создаем основной обработчик (он больше не нуждается в providerFactory)
+	h := handler.NewHandler(svc)
 
 	// Получаем admin обработчик из основного handler
 	adminHandler := h.GetAdminHandler()
@@ -58,6 +68,7 @@ func NewModule(db *sqlx.DB, cfg *config.Config, logger *logger.Logger) (*Module,
 		handler:           h,
 		adminHandler:      adminHandler,
 		service:           svc,
+		grpcClient:        grpcClient,
 		monitoringService: monitoringService,
 		problemService:    problemService,
 		analyticsService:  analyticsService,
@@ -82,6 +93,10 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 	// Регистрируем публичные webhook роуты (без авторизации)
 	webhookGroup := app.Group("/api/v1/delivery/webhooks")
 	m.handler.RegisterWebhookRoutes(webhookGroup)
+
+	// Регистрируем публичные тестовые эндпоинты (БЕЗ авторизации для удобства тестирования)
+	// ВАЖНО: создаем группу напрямую от app, чтобы избежать наследования middleware
+	m.handler.RegisterTestRoutes(app)
 
 	// Регистрируем админские роуты (консолидация из admin/logistics)
 	adminGroup := app.Group("/api/v1/admin/delivery")

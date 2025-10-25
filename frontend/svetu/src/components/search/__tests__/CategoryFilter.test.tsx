@@ -68,7 +68,8 @@ describe('CategoryFilter', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useTranslations as jest.Mock).mockReturnValue(
-      (key: string) => mockTranslations[key] || key
+      (key: string) =>
+        mockTranslations[key as keyof typeof mockTranslations] || key
     );
     (useLocale as jest.Mock).mockReturnValue('en');
     (CategoryService.getCategories as jest.Mock).mockResolvedValue(

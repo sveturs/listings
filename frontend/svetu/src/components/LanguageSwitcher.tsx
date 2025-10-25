@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/routing';
 import { useTransition } from 'react';
 import { i18n } from '@/i18n/config';
@@ -10,6 +10,7 @@ export default function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations('common');
 
   const handleLocaleChange = (nextLocale: string) => {
     // Сохраняем выбор пользователя в cookie
@@ -20,15 +21,30 @@ export default function LanguageSwitcher() {
     });
   };
 
+  const languages = [
+    { code: 'ru', label: 'РУС' },
+    { code: 'en', label: 'ENG' },
+    { code: 'sr', label: 'SRP' },
+  ];
+
   return (
     <div className="dropdown dropdown-end">
-      <button tabIndex={0} className="btn btn-ghost" disabled={isPending}>
+      <button
+        tabIndex={0}
+        className="btn btn-ghost"
+        disabled={isPending}
+        aria-label={t('language.switchLanguage')}
+        aria-expanded="false"
+        aria-haspopup="listbox"
+        aria-controls="language-menu"
+      >
         {locale.toUpperCase()}
         <svg
           className="ml-1 h-4 w-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -39,33 +55,24 @@ export default function LanguageSwitcher() {
         </svg>
       </button>
       <ul
+        id="language-menu"
         tabIndex={0}
         className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-24"
+        role="listbox"
+        aria-label={t('language.selectLanguage')}
       >
-        <li>
-          <button
-            onClick={() => handleLocaleChange('ru')}
-            className={locale === 'ru' ? 'active' : ''}
-          >
-            РУС
-          </button>
-        </li>
-        <li>
-          <button
-            onClick={() => handleLocaleChange('en')}
-            className={locale === 'en' ? 'active' : ''}
-          >
-            ENG
-          </button>
-        </li>
-        <li>
-          <button
-            onClick={() => handleLocaleChange('sr')}
-            className={locale === 'sr' ? 'active' : ''}
-          >
-            SRP
-          </button>
-        </li>
+        {languages.map((lang) => (
+          <li key={lang.code} role="none">
+            <button
+              onClick={() => handleLocaleChange(lang.code)}
+              className={locale === lang.code ? 'active' : ''}
+              role="option"
+              aria-selected={locale === lang.code}
+            >
+              {lang.label}
+            </button>
+          </li>
+        ))}
       </ul>
     </div>
   );

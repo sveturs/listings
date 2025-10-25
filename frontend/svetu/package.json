@@ -1,6 +1,6 @@
 {
   "name": "svetu-new",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 3001",
@@ -82,6 +82,7 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.54.1",
     "@tailwindcss/postcss": "^4",

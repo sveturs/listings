@@ -11,6 +11,11 @@
   "loadingIsochrone": "Loading accessibility zone...",
   "clickToChangeMode": "Click icon to change mode",
   "holdForSettings": "Hold for settings",
+  "toggleFullscreen": "Toggle fullscreen",
+  "exitFullscreen": "Exit fullscreen",
+  "enterFullscreen": "Enter fullscreen",
+  "toggleFilters": "Toggle filters",
+  "expandControls": "Expand controls",
   "gis": {
     "accessibilitySettings": "Accessibility settings",
     "meters": "m",

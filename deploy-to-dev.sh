@@ -221,6 +221,35 @@ if [ -n "$MAPBOX_TOKEN" ]; then
     fi
 fi
 
+# Ensure critical backend environment variables are set
+log "🔍 Checking critical backend environment variables..."
+BACKEND_ENV="$DEPLOY_DIR/backend/.env"
+
+# Check TEST_ADMIN credentials
+if ! grep -q "^TEST_ADMIN_EMAIL=" "\$BACKEND_ENV" 2>/dev/null; then
+    warn "TEST_ADMIN_EMAIL not found in backend .env, adding default..."
+    echo "TEST_ADMIN_EMAIL=admin@admin.rs" >> "\$BACKEND_ENV"
+fi
+
+if ! grep -q "^TEST_ADMIN_PASSWORD=" "\$BACKEND_ENV" 2>/dev/null; then
+    warn "TEST_ADMIN_PASSWORD not found in backend .env, adding default..."
+    echo 'TEST_ADMIN_PASSWORD="P@\\\$S4@dmi№"' >> "\$BACKEND_ENV"
+fi
+
+# Check AUTH_SERVICE_URL
+if ! grep -q "^AUTH_SERVICE_URL=" "\$BACKEND_ENV" 2>/dev/null; then
+    warn "AUTH_SERVICE_URL not found in backend .env, adding default..."
+    echo "AUTH_SERVICE_URL=https://auth.svetu.rs" >> "\$BACKEND_ENV"
+else
+    # Update if pointing to authpreprod
+    if grep -q "^AUTH_SERVICE_URL=.*authpreprod" "\$BACKEND_ENV"; then
+        warn "Fixing AUTH_SERVICE_URL to use production auth service..."
+        sed -i "s|^AUTH_SERVICE_URL=.*|AUTH_SERVICE_URL=https://auth.svetu.rs|" "\$BACKEND_ENV"
+    fi
+fi
+
+log "✅ Backend environment variables checked"
+
 # Kill old backend processes before restart
 cd "$DEPLOY_DIR/backend" || { error "Failed to cd to backend dir"; exit 1; }
 log "🔪 Killing old backend processes..."
@@ -262,8 +291,8 @@ pkill -9 -f "next dev.*3003" 2>/dev/null || true
 pkill -9 -f "next start.*3003" 2>/dev/null || true
 pkill -9 -f "next-server.*3003" 2>/dev/null || true
 pkill -9 -f "node.*next.*3003" 2>/dev/null || true
-# Убиваем также по версии Next.js (более надёжно)
-pkill -9 -f "next-server.*v15" 2>/dev/null || true
+# Убиваем по процессу и порту (более надёжно для dev режима)
+pkill -9 -f "\[turbopack\].*3003" 2>/dev/null || true
 # Убиваем shell wrappers
 pkill -9 -f "/bin/sh -c.*next.*3003" 2>/dev/null || true
 sleep 3
@@ -307,41 +336,27 @@ fi
 
 log "✅ Port 3003 is free"
 
-# Restart frontend with production build
-log "🔄 Restarting frontend (production build)..."
+# Restart frontend with dev mode (NOT production)
+log "🔄 Restarting frontend (dev mode)..."
 cd "$DEPLOY_DIR/frontend/svetu" || { error "Failed to cd to frontend dir"; exit 1; }
 
-# КРИТИЧНО: Удаляем старый .next чтобы не использовать недельный билд!
-log "🧹 Removing old .next build directory..."
+# ВАЖНО: dev.svetu.rs - это НЕ production, а development сервер с доменным именем
+# Используем dev режим для быстрой пересборки и hot reload
+log "ℹ️  Using dev mode (dev.svetu.rs is development environment)"
+
+# Очищаем .next для чистой пересборки
+log "🧹 Removing old .next directory..."
 rm -rf .next
-log "✅ Old build removed"
-
-# Билд с увеличенным таймаутом (10 минут вместо 5)
-log "🏗️  Building fresh production version (timeout: 10 min)..."
-if ! timeout 600 yarn build &>/tmp/frontend_build.log; then
-    error "Failed to build frontend (timeout or error)"
-    tail -100 /tmp/frontend_build.log
-    error "BUILD IS MANDATORY - deployment aborted!"
-    error "Old .next was deleted, cannot fallback to old build"
-    exit 1
-fi
-log "✅ Frontend built successfully"
-
-# Проверяем свежесть .next (должна быть не старше 2 минут)
-NEXT_AGE=\$(find .next -maxdepth 0 -mmin -2 2>/dev/null | wc -l)
-if [ "\$NEXT_AGE" -eq 0 ]; then
-    error ".next directory is too old or missing!"
-    error "Build might have failed silently"
-    exit 1
-fi
-log "✅ .next is fresh (created within last 2 minutes)"
+log "✅ Old .next removed"
 
 # Останавливаем старый процесс (критично для очистки кэша переводов!)
 log "🔪 Stopping ALL old Next.js processes..."
 
 # Шаг 1: Убиваем по имени процесса (самый надёжный способ)
-pkill -9 -f "next-server.*v15" 2>/dev/null || true
-pkill -9 -f "yarn start.*3003" 2>/dev/null || true
+pkill -9 -f "next dev.*3003" 2>/dev/null || true
+pkill -9 -f "next-server.*3003" 2>/dev/null || true
+pkill -9 -f "yarn dev.*3003" 2>/dev/null || true
+pkill -9 -f "yarn start.*3003" 2>/dev/null || true  # На случай если был production
 pkill -9 -f "next start.*3003" 2>/dev/null || true
 sleep 2
 
@@ -384,30 +399,37 @@ if command -v lsof >/dev/null 2>&1 && lsof -i:3003 2>/dev/null; then
 fi
 log "✅ All Next.js processes stopped, port 3003 is free"
 
-# Запускаем production сервер (новый кэш переводов!)
-log "🚀 Starting production server on port 3003..."
-nohup yarn start -p 3003 > frontend-dev.log 2>&1 &
+# Запускаем dev сервер (быстрая пересборка + hot reload)
+log "🚀 Starting dev server on port 3003..."
+nohup yarn dev -p 3003 > frontend-dev.log 2>&1 &
 FRONTEND_START_PID=\$!
 log "📌 Started frontend with wrapper PID: \$FRONTEND_START_PID"
-sleep 3
+sleep 5
 
 # Проверяем что frontend действительно запустился
 log "🔍 Verifying frontend startup..."
 FRONTEND_CHECK_ATTEMPTS=0
-MAX_FRONTEND_ATTEMPTS=10
+MAX_FRONTEND_ATTEMPTS=15  # Dev mode может стартовать дольше
 
 while [ \$FRONTEND_CHECK_ATTEMPTS -lt \$MAX_FRONTEND_ATTEMPTS ]; do
-    # Ищем процесс next-server (настоящий процесс, не shell wrapper)
-    if pgrep -f "next-server.*v15" > /dev/null; then
-        NEXT_PID=\$(pgrep -f "next-server.*v15" | head -1)
+    # Ищем процесс next dev
+    if pgrep -f "next dev.*3003" > /dev/null || pgrep -f "next-server.*3003" > /dev/null; then
+        NEXT_PID=\$(pgrep -f "next.*3003" | head -1)
         log "✅ Frontend started successfully! Next.js PID: \$NEXT_PID"
         break
     fi
 
-    # Проверяем логи на наличие ошибок
-    if [ -f frontend-dev.log ] && grep -qi "error" frontend-dev.log; then
-        warn "Errors found in frontend log (attempt \$((FRONTEND_CHECK_ATTEMPTS + 1))/\$MAX_FRONTEND_ATTEMPTS)"
-        tail -10 frontend-dev.log | sed 's/^/  LOG: /'
+    # Проверяем логи на наличие критичных ошибок
+    if [ -f frontend-dev.log ]; then
+        if grep -qi "ready in" frontend-dev.log; then
+            log "✅ Frontend ready (detected from logs)"
+            break
+        fi
+        if grep -qi "failed to start" frontend-dev.log || grep -qi "EADDRINUSE" frontend-dev.log; then
+            error "Critical error found in frontend log!"
+            tail -20 frontend-dev.log | sed 's/^/  LOG: /'
+            exit 1
+        fi
     fi
 
     sleep 2
@@ -415,7 +437,7 @@ while [ \$FRONTEND_CHECK_ATTEMPTS -lt \$MAX_FRONTEND_ATTEMPTS ]; do
 done
 
 # Финальная проверка
-if ! pgrep -f "next-server.*v15" > /dev/null; then
+if ! pgrep -f "next.*3003" > /dev/null; then
     error "Frontend process not found after \$MAX_FRONTEND_ATTEMPTS attempts!"
     warn "Frontend startup log:"
     tail -50 frontend-dev.log | sed 's/^/  /'
@@ -424,7 +446,7 @@ if ! pgrep -f "next-server.*v15" > /dev/null; then
     exit 1
 fi
 
-log "✅ Frontend restarted (production mode with FRESH build)"
+log "✅ Frontend restarted (dev mode with fresh build)"
 
 # Clean up old dumps (keep last 3)
 log "🧹 Cleaning old dumps..."

@@ -394,25 +394,13 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			"lat": *product.IndividualLatitude,
 			"lon": *product.IndividualLongitude,
 		}
-		logger.Debug().
-			Int("product_id", product.ID).
-			Float64("lat", *product.IndividualLatitude).
-			Float64("lon", *product.IndividualLongitude).
-			Msg("Added location coordinates to OpenSearch document")
 	} else {
 		doc["location"] = nil
-		logger.Debug().
-			Int("product_id", product.ID).
-			Msg("No individual location coordinates for product")
 	}
 
 	// Добавляем основной адрес
 	if product.IndividualAddress != nil && *product.IndividualAddress != "" {
 		doc["address"] = *product.IndividualAddress
-		logger.Debug().
-			Int("product_id", product.ID).
-			Str("address", *product.IndividualAddress).
-			Msg("Added address to OpenSearch document")
 	} else {
 		doc["address"] = ""
 	}
@@ -431,11 +419,6 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		for lang, address := range product.AddressTranslations {
 			doc[fmt.Sprintf("address_%s", lang)] = address
 		}
-		logger.Debug().
-			Int("product_id", product.ID).
-			Int("translations_count", len(product.AddressTranslations)).
-			Interface("translations", product.AddressTranslations).
-			Msg("Added address translations to OpenSearch document")
 	}
 
 	return doc
@@ -1139,10 +1122,6 @@ func (r *ProductRepository) parseSearchHit(hit map[string]interface{}) *ProductS
 
 	// Парсим _source
 	if source, ok := hit["_source"].(map[string]interface{}); ok {
-		logger.Debug().
-			Str("id", item.ID).
-			Interface("full_source", source).
-			Msg("Full OpenSearch document source")
 		r.parseProductSource(source, item)
 	}
 
@@ -1217,30 +1196,12 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 
 	// Инвентарь
 	if inventory, ok := source["inventory"].(map[string]interface{}); ok {
-		logger.Debug().
-			Int("product_id", item.ProductID).
-			Interface("inventory", inventory).
-			Msg("Parsing inventory from OpenSearch")
-
 		if v, ok := inventory["in_stock"].(bool); ok {
 			item.InStock = v
 		}
 		if v, ok := inventory["available"].(float64); ok {
 			item.AvailableQuantity = int(v)
-			logger.Debug().
-				Int("product_id", item.ProductID).
-				Int("available_quantity", item.AvailableQuantity).
-				Msg("Set available quantity from inventory")
-		} else {
-			logger.Debug().
-				Int("product_id", item.ProductID).
-				Interface("available_value", inventory["available"]).
-				Msg("Failed to parse available quantity")
 		}
-	} else {
-		logger.Debug().
-			Int("product_id", item.ProductID).
-			Msg("No inventory data found in OpenSearch response")
 	}
 
 	// Изображения - сначала пробуем новый формат (image_urls), потом старый (images)
@@ -1250,12 +1211,6 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 		if primaryURL, ok := source["primary_image_url"].(string); ok {
 			primaryImageURL = primaryURL
 		}
-
-		logger.Debug().
-			Int("product_id", item.ProductID).
-			Int("images_count", len(imageURLsArray)).
-			Interface("image_urls", imageURLsArray).
-			Msg("✅ Found image_urls array in storefront product")
 
 		for idx, urlI := range imageURLsArray {
 			if url, ok := urlI.(string); ok {
@@ -1269,10 +1224,6 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			}
 		}
 	} else if images, ok := source["images"].([]interface{}); ok {
-		logger.Debug().
-			Int("product_id", item.ProductID).
-			Msg("Found images array (old format) in storefront product")
-
 		for _, img := range images {
 			if imgMap, ok := img.(map[string]interface{}); ok {
 				image := ProductImage{}

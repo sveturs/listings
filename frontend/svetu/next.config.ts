@@ -136,18 +136,6 @@ const nextConfig: NextConfig = {
           source: '/api/:path((?!v2).*)*',
           destination: `${apiUrl}/api/:path*`,
         },
-        // Проксируем auth запросы (не API) с учетом локали
-        // Исключаем callback страницы которые обрабатываются на frontend
-        {
-          source: '/:locale/auth/:path((?!callback|oauth/google/callback).*)',
-          destination: `${apiUrl}/auth/:path*`,
-        },
-        // Проксируем auth запросы (не API) без локали
-        // Исключаем callback страницы
-        {
-          source: '/auth/:path((?!callback).*)',
-          destination: `${apiUrl}/auth/:path*`,
-        },
         // Проксируем WebSocket для чата
         {
           source: '/ws/:path*',

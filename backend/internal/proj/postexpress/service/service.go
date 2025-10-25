@@ -49,14 +49,14 @@ func (s *ServiceImpl) GetSettings(ctx context.Context) (*models.PostExpressSetti
 	}
 
 	if settings == nil {
-		// Возвращаем настройки по умолчанию
+		// Возвращаем настройки по умолчанию (должны быть настроены через админ-панель)
 		return &models.PostExpressSettings{
 			APIEndpoint:            "https://wsp.postexpress.rs/api/Transakcija",
 			SenderName:             "Sve Tu Platform",
 			SenderAddress:          "Улица Микија Манојловића 53",
 			SenderCity:             "Нови Сад",
 			SenderPostalCode:       "21000",
-			SenderPhone:            "+381 21 XXX-XXXX",
+			SenderPhone:            "+381 21 XXX-XXXX", // Placeholder - настроить через админ-панель
 			SenderEmail:            "shipping@svetu.rs",
 			Enabled:                false,
 			TestMode:               true,

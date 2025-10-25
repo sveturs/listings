@@ -428,7 +428,24 @@
   "qualityTests": {
     "title": "Code Quality Tests",
     "description": "Comprehensive testing suite for backend and frontend",
+    "cleanup_test_data": "Cleanup Test Data",
     "runAll": "Run All Tests",
+    "runAllQuality": "Run All Quality",
+    "runAllUnit": "Run All Unit Tests",
+    "runAllBuilds": "Run All Builds",
+    "clearResults": "Clear Results",
+    "categoryQuality": "Code Quality",
+    "categoryUnit": "Unit Tests",
+    "categoryIntegration": "Integration Tests",
+    "categoryBuild": "Build & Type Check",
+    "categoryCoverage": "Test Coverage",
+    "categoryFunctional": "Functional API Tests",
+    "categorySecurity": "Security Tests",
+    "categoryPerformance": "Performance Tests",
+    "categoryDataIntegrity": "Data Integrity Tests",
+    "categoryE2E": "End-to-End Tests",
+    "categoryMonitoring": "Monitoring & Observability",
+    "categoryAccessibility": "Accessibility Tests",
     "backend": "Backend Tests",
     "frontend": "Frontend Tests",
     "running": "Running...",
@@ -442,13 +459,262 @@
     "details": "Details",
     "runTest": "Run Test",
     "totalTests": "Total Tests",
+    "totalTestSuites": "Test Suites",
+    "testSuitesDesc": "Groups of related tests",
+    "testSuitesInfo": "💡 These 56 test suites contain 727+ individual tests: 591 Jest tests in frontend and 136 Go tests in backend, plus integration tests (cache, OpenSearch, PostgreSQL), linting, formatting, and build checks.",
+    "localOnlyTestsTitle": "🏠 Local Development Tests",
+    "localOnlyTestsDescription": "Tests marked with 🏠 icon only work on localhost development environment. They use Next.js API routes to execute shell commands and are not available on production servers.",
+    "localOnlyTooltip": "This test only works on localhost (uses shell commands)",
+    "suitesCompleted": "{count} of {total} suites completed",
     "passed": "Passed",
     "progress": "Progress",
     "testsCompleted": "Tests completed",
     "noTestsRun": "No tests run yet",
     "allGood": "All good!",
     "needAttention": "Need attention",
-    "successRate": "success rate"
+    "successRate": "success rate",
+    "tests": {
+      "backend-format": {
+        "name": "Backend Format",
+        "description": "Check Go code formatting (gofumpt, goimports)"
+      },
+      "backend-lint": {
+        "name": "Backend Lint",
+        "description": "Run golangci-lint for code quality"
+      },
+      "frontend-format": {
+        "name": "Frontend Format",
+        "description": "Check Prettier formatting"
+      },
+      "frontend-lint": {
+        "name": "Frontend Lint",
+        "description": "Run ESLint for code quality"
+      },
+      "backend-tests-unit": {
+        "name": "Backend Unit Tests",
+        "description": "Run Go unit tests only"
+      },
+      "frontend-tests": {
+        "name": "Frontend Unit Tests",
+        "description": "Run Jest unit tests"
+      },
+      "frontend-unit-autocomplete-field": {
+        "name": "AutocompleteAttributeField Tests",
+        "description": "Unit tests for autocomplete component (40 tests, ~85% coverage)"
+      },
+      "frontend-unit-autocomplete-hook": {
+        "name": "useAttributeAutocomplete Hook Tests",
+        "description": "Unit tests for autocomplete hook (35 tests, ~90% coverage)"
+      },
+      "frontend-unit-cars-service": {
+        "name": "Cars Service Tests",
+        "description": "Unit tests for cars API service (45 tests, ~95% coverage)"
+      },
+      "frontend-unit-icon-mapper": {
+        "name": "Icon Mapper Tests",
+        "description": "Unit tests for icon mapping utility (80 tests, ~90% coverage)"
+      },
+      "frontend-unit-env-utils": {
+        "name": "Environment Utils Tests",
+        "description": "Unit tests for environment utilities (60 tests, ~85% coverage)"
+      },
+      "backend-tests-short": {
+        "name": "Backend Short Tests",
+        "description": "Quick tests (skip Integration/OpenSearch)"
+      },
+      "backend-tests-full": {
+        "name": "Backend Full Tests",
+        "description": "All tests including integration"
+      },
+      "backend-tests-postexpress": {
+        "name": "Post Express Integration",
+        "description": "Test Post Express API integration"
+      },
+      "backend-build": {
+        "name": "Backend Build",
+        "description": "Compile Go code"
+      },
+      "frontend-build": {
+        "name": "Frontend Build",
+        "description": "Next.js production build"
+      },
+      "typescript-check": {
+        "name": "TypeScript Check",
+        "description": "Type checking (tsc --noEmit)"
+      },
+      "backend-tests-coverage": {
+        "name": "Backend Test Coverage",
+        "description": "Run tests with coverage report"
+      },
+      "frontend-tests-coverage": {
+        "name": "Frontend Test Coverage",
+        "description": "Jest tests with coverage"
+      },
+      "api-auth-flow": {
+        "name": "Auth Flow Test",
+        "description": "Test authentication endpoints (login, me, logout)"
+      },
+      "api-marketplace-crud": {
+        "name": "Marketplace CRUD",
+        "description": "Test marketplace listing operations"
+      },
+      "api-categories-fetch": {
+        "name": "Categories API",
+        "description": "Test admin categories endpoints"
+      },
+      "api-search-functionality": {
+        "name": "Search API",
+        "description": "Test unified search functionality"
+      },
+      "api-admin-operations": {
+        "name": "Admin Operations",
+        "description": "Test admin panel endpoints"
+      },
+      "api-review-creation": {
+        "name": "Review Creation",
+        "description": "Test review creation with rating (draft + publish)"
+      },
+      "api-auth-invalid-token": {
+        "name": "Invalid Token Test",
+        "description": "Test API rejection with invalid authentication token"
+      },
+      "api-auth-missing-token": {
+        "name": "Missing Token Test",
+        "description": "Test API rejection when authentication token is missing"
+      },
+      "api-admin-unauthorized": {
+        "name": "Admin Unauthorized",
+        "description": "Test admin endpoint rejection for non-admin users"
+      },
+      "api-search-invalid-params": {
+        "name": "Invalid Search Params",
+        "description": "Test handling of invalid search parameters"
+      },
+      "api-search-empty-query": {
+        "name": "Empty Search Query",
+        "description": "Test search with empty query string"
+      },
+      "api-search-unicode": {
+        "name": "Unicode Search",
+        "description": "Test search with Unicode characters (Cyrillic, Emoji)"
+      },
+      "api-listings-extreme-limit": {
+        "name": "Extreme Limit Values",
+        "description": "Test listings with extreme limit values (0, 10000)"
+      },
+      "integration-redis-cache": {
+        "name": "Redis Cache Test",
+        "description": "Test Redis cache operations (SET, GET, TTL)"
+      },
+      "integration-opensearch-index": {
+        "name": "OpenSearch Test",
+        "description": "Test OpenSearch indexing and search functionality"
+      },
+      "integration-postgres-connection": {
+        "name": "PostgreSQL Test",
+        "description": "Test PostgreSQL connection and queries"
+      },
+      "api-pagination-invalid": {
+        "name": "Invalid Pagination",
+        "description": "Test invalid pagination parameters handling (negative values)"
+      },
+      "api-listing-invalid-id": {
+        "name": "Invalid Listing ID",
+        "description": "Test handling of non-existent listing IDs"
+      },
+      "api-input-special-chars": {
+        "name": "Special Characters",
+        "description": "Test special characters and unicode in input data"
+      },
+      "api-rate-limit": {
+        "name": "Rate Limiting",
+        "description": "Test rate limiting protection against excessive requests"
+      },
+      "monitoring-health-endpoints": {
+        "name": "Health Check Endpoints",
+        "description": "Test /health/live and /health/ready endpoints"
+      },
+      "monitoring-metrics-collection": {
+        "name": "Metrics Collection",
+        "description": "Verify Prometheus metrics are being collected"
+      },
+      "monitoring-error-logging": {
+        "name": "Error Logging Test",
+        "description": "Verify errors are properly logged with context"
+      },
+      "security-sql-injection": {
+        "name": "SQL Injection Test",
+        "description": "Test protection against SQL injection in search and filters"
+      },
+      "security-xss-protection": {
+        "name": "XSS Protection",
+        "description": "Test protection against XSS attacks in user inputs"
+      },
+      "security-file-upload-validation": {
+        "name": "File Upload Validation",
+        "description": "Test authentication on protected endpoints"
+      },
+      "security-auth-session-expiry": {
+        "name": "Session Expiry",
+        "description": "Test JWT token expiration and refresh logic"
+      },
+      "security-api-rate-limiting": {
+        "name": "API Rate Limiting",
+        "description": "Test rate limiting enforcement"
+      },
+      "security-csrf-protection": {
+        "name": "CSRF Protection",
+        "description": "Test CSRF token validation"
+      },
+      "performance-api-response-time": {
+        "name": "API Response Time",
+        "description": "Measure response time of critical API endpoints (<200ms)"
+      },
+      "performance-concurrent-users": {
+        "name": "Concurrent Users",
+        "description": "Test with 10/50/100 concurrent users"
+      },
+      "performance-database-queries": {
+        "name": "Slow Database Queries",
+        "description": "Check for slow database queries (>500ms)"
+      },
+      "performance-memory-usage": {
+        "name": "Memory Usage",
+        "description": "Monitor memory usage during test execution"
+      },
+      "data-integrity-marketplace-listing": {
+        "name": "Listing Data Consistency",
+        "description": "Verify listing data matches across DB, cache, and search index"
+      },
+      "data-integrity-transaction-rollback": {
+        "name": "Transaction Rollback",
+        "description": "Test database transaction rollback on errors"
+      },
+      "data-integrity-image-orphan-cleanup": {
+        "name": "Orphan Image Cleanup",
+        "description": "Test cleanup of orphaned images from MinIO"
+      },
+      "e2e-user-journey-create-listing": {
+        "name": "Create Listing (E2E)",
+        "description": "Full flow: login → create listing → upload images → publish"
+      },
+      "e2e-user-journey-search-contact": {
+        "name": "Search & Contact (E2E)",
+        "description": "Flow: search → view listing → contact seller"
+      },
+      "e2e-admin-moderation": {
+        "name": "Admin Moderation (E2E)",
+        "description": "Admin reviews and approves/rejects listing"
+      },
+      "a11y-wcag-compliance": {
+        "name": "WCAG 2.1 Compliance",
+        "description": "Test WCAG 2.1 AA accessibility standards (axe-core)"
+      },
+      "a11y-keyboard-navigation": {
+        "name": "Keyboard Navigation",
+        "description": "Test all interactive elements are keyboard accessible"
+      }
+    }
   },
   "categories": {
     "title": "Title",
@@ -1931,5 +2197,62 @@
     "requestData": "Request Data",
     "responseData": "API Response",
     "required": "*"
+  },
+  "test_data_cleanup": {
+    "title": "Test Data Cleanup",
+    "description": "Manage and cleanup test data accumulated during development and testing",
+    "refresh": "Refresh",
+    "stats": {
+      "total_size": "Test Data Size",
+      "database_size": "Database Size",
+      "total_records": "Total Records"
+    },
+    "data_types": {
+      "test_runs": {
+        "label": "Test Runs",
+        "description": "Test suite execution records and metadata"
+      },
+      "logs": {
+        "label": "Test Logs",
+        "description": "Execution logs from test runs"
+      },
+      "results": {
+        "label": "Test Results",
+        "description": "Individual test execution results"
+      },
+      "behavior": {
+        "label": "Behavior Events",
+        "description": "User behavior tracking data (searches, clicks)"
+      },
+      "feedback": {
+        "label": "Category Feedback",
+        "description": "AI category detection feedback"
+      },
+      "price_history": {
+        "label": "Price History",
+        "description": "Historical price change records"
+      },
+      "ai_decisions": {
+        "label": "AI Decisions",
+        "description": "AI-generated category decisions"
+      }
+    },
+    "records": "Records",
+    "size": "Size",
+    "event_types": "Event Types",
+    "select_data_types": "Select Data Types to Clean",
+    "select_all": "Select All",
+    "deselect_all": "Deselect All",
+    "selected_count": "{count} types selected",
+    "no_selection": "No types selected",
+    "cleanup_button": "Cleanup Selected Data",
+    "cleaning": "Cleaning...",
+    "cleanup_success": "Cleanup completed successfully!",
+    "freed_space": "Freed space",
+    "confirm_title": "Confirm Cleanup",
+    "confirm_message": "Are you sure you want to permanently delete the following data types? This action cannot be undone:",
+    "cancel": "Cancel",
+    "confirm_cleanup": "Yes, Delete",
+    "info_message": "💡 Tip: Cleaning test data regularly helps maintain optimal database performance. After cleanup, VACUUM FULL will be recommended for tables."
   }
 }

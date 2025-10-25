@@ -17,6 +17,11 @@ export default function AdminGuard({ children, loading }: AdminGuardProps) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    // Set document title for accessibility (WCAG 2.1 AA requirement)
+    if (typeof document !== 'undefined' && !document.title) {
+      document.title = 'Admin Dashboard - SveTu';
+    }
+
     if (!isLoading) {
       if (!user) {
         setShowAuthModal(true);

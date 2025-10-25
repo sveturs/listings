@@ -4,7 +4,7 @@ import { promisify } from 'util';
 
 const execPromise = promisify(exec);
 
-export const maxDuration = 300; // 5 minutes timeout
+export const maxDuration = 600; // 10 minutes timeout for comprehensive tests
 
 interface TestResult {
   name: string;
@@ -12,15 +12,24 @@ interface TestResult {
   duration: number;
   output: string;
   error?: string;
+  stats?: {
+    passed: number;
+    failed: number;
+    skipped: number;
+    total: number;
+  };
 }
 
 // Backend tests
 async function runBackendFormat(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise('cd /data/hostel-booking-system/backend && make format', {
-      timeout: 60000,
-    });
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make format',
+      {
+        timeout: 60000,
+      }
+    );
     return {
       name: 'Backend Format (make format)',
       status: 'success',
@@ -42,9 +51,12 @@ async function runBackendFormat(): Promise<TestResult> {
 async function runBackendLint(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise('cd /data/hostel-booking-system/backend && make lint', {
-      timeout: 120000,
-    });
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make lint',
+      {
+        timeout: 120000,
+      }
+    );
     const hasIssues = stdout.includes('issues') && !stdout.includes('0 issues');
     return {
       name: 'Backend Lint (make lint)',
@@ -67,14 +79,19 @@ async function runBackendLint(): Promise<TestResult> {
 async function runBackendBuild(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise('cd /data/hostel-booking-system/backend && go build ./...', {
-      timeout: 120000,
-    });
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && go build ./...',
+      {
+        timeout: 120000,
+      }
+    );
     return {
       name: 'Backend Build (go build)',
       status: 'success',
       duration: Date.now() - start,
-      output: stdout + (stderr ? `\n${stderr}` : '') || 'Build successful (no output)',
+      output:
+        stdout + (stderr ? `\n${stderr}` : '') ||
+        'Build successful (no output)',
     };
   } catch (error: unknown) {
     const err = error as { message: string; stdout?: string; stderr?: string };
@@ -88,14 +105,17 @@ async function runBackendBuild(): Promise<TestResult> {
   }
 }
 
-async function runBackendTests(): Promise<TestResult> {
+async function runBackendTestsShort(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise('cd /data/hostel-booking-system/backend && make test-short', {
-      timeout: 180000,
-    });
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-short',
+      {
+        timeout: 180000,
+      }
+    );
     return {
-      name: 'Backend Tests (make test-short)',
+      name: 'Backend Short Tests (make test-short)',
       status: 'success',
       duration: Date.now() - start,
       output: stdout + (stderr ? `\n${stderr}` : ''),
@@ -103,11 +123,377 @@ async function runBackendTests(): Promise<TestResult> {
   } catch (error: unknown) {
     const err = error as { message: string; stdout?: string; stderr?: string };
     return {
-      name: 'Backend Tests (make test-short)',
+      name: 'Backend Short Tests (make test-short)',
       status: 'error',
       duration: Date.now() - start,
       output: err.stdout || '',
       error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+async function runBackendTestsUnit(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-unit',
+      {
+        timeout: 180000,
+      }
+    );
+    return {
+      name: 'Backend Unit Tests (make test-unit)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'Backend Unit Tests (make test-unit)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+async function runBackendTestsFull(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test',
+      {
+        timeout: 300000,
+      }
+    );
+    return {
+      name: 'Backend Full Tests (make test)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'Backend Full Tests (make test)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+async function runBackendTestsCoverage(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-coverage',
+      {
+        timeout: 300000,
+      }
+    );
+    return {
+      name: 'Backend Test Coverage (make test-coverage)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'Backend Test Coverage (make test-coverage)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+async function runBackendTestsPostExpress(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-postexpress',
+      {
+        timeout: 60000,
+      }
+    );
+    return {
+      name: 'Backend Post Express Test (make test-postexpress)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'Backend Post Express Test (make test-postexpress)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+async function runBackendTestsCache(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && go test ./internal/cache -v',
+      {
+        timeout: 120000,
+      }
+    );
+    const stats = parseGoTestOutput(stdout);
+    return {
+      name: 'Redis Cache Integration (go test ./internal/cache)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parseGoTestOutput(err.stdout || '');
+    return {
+      name: 'Redis Cache Integration (go test ./internal/cache)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
+    };
+  }
+}
+
+async function runBackendTestsRedis(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-redis',
+      {
+        timeout: 60000,
+      }
+    );
+    return {
+      name: 'Redis Cache Test (make test-redis)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'Redis Cache Test (make test-redis)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+async function runBackendTestsOpenSearch(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && go test ./pkg/transliteration -v -run Integration',
+      {
+        timeout: 120000,
+      }
+    );
+    const stats = parseGoTestOutput(stdout);
+    return {
+      name: 'OpenSearch Integration (transliteration tests)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parseGoTestOutput(err.stdout || '');
+    return {
+      name: 'OpenSearch Integration (transliteration tests)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
+    };
+  }
+}
+
+async function runOpenSearchTest(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-opensearch',
+      {
+        timeout: 60000,
+      }
+    );
+    return {
+      name: 'OpenSearch Test (make test-opensearch)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'OpenSearch Test (make test-opensearch)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+async function runPostgresTest(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'cd ../../backend && make test-postgres',
+      {
+        timeout: 60000,
+      }
+    );
+    return {
+      name: 'PostgreSQL Test (make test-postgres)',
+      status: 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'PostgreSQL Test (make test-postgres)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
+// Helper function to parse Go test output
+function parseGoTestOutput(output: string): {
+  passed: number;
+  failed: number;
+  skipped: number;
+  total: number;
+} {
+  const passMatches = output.match(/--- PASS:/g);
+  const failMatches = output.match(/--- FAIL:/g);
+  const skipMatches = output.match(/--- SKIP:/g);
+
+  const passed = passMatches ? passMatches.length : 0;
+  const failed = failMatches ? failMatches.length : 0;
+  const skipped = skipMatches ? skipMatches.length : 0;
+
+  return {
+    passed,
+    failed,
+    skipped,
+    total: passed + failed + skipped,
+  };
+}
+
+// Helper function to parse Playwright test output
+function parsePlaywrightOutput(output: string): {
+  passed: number;
+  failed: number;
+  skipped: number;
+  total: number;
+} {
+  // Parse output like "7 failed", "11 passed (1.2m)"
+  const failedMatch = output.match(/(\d+)\s+failed/);
+  const passedMatch = output.match(/(\d+)\s+passed/);
+  const skippedMatch = output.match(/(\d+)\s+skipped/);
+
+  const failed = failedMatch ? parseInt(failedMatch[1]) : 0;
+  const passed = passedMatch ? parseInt(passedMatch[1]) : 0;
+  const skipped = skippedMatch ? parseInt(skippedMatch[1]) : 0;
+
+  return {
+    passed,
+    failed,
+    skipped,
+    total: passed + failed + skipped,
+  };
+}
+
+// E2E Tests
+async function runE2ETests(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'yarn playwright test e2e/user-journey-search-contact.spec.ts e2e/admin-moderation-flow.spec.ts --project=chromium',
+      {
+        timeout: 180000,
+        cwd: process.cwd(),
+      }
+    );
+    const stats = parsePlaywrightOutput(stdout);
+    const hasFailed = stats.failed > 0;
+    return {
+      name: 'E2E Tests (user journey + admin)',
+      status: hasFailed ? 'error' : 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parsePlaywrightOutput(err.stdout || '');
+    return {
+      name: 'E2E Tests (user journey + admin)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
+    };
+  }
+}
+
+// Accessibility Tests
+async function runAccessibilityTests(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'yarn playwright test e2e/axe/ --project=chromium',
+      {
+        timeout: 180000,
+        cwd: process.cwd(),
+      }
+    );
+    const stats = parsePlaywrightOutput(stdout);
+    const hasFailed = stats.failed > 0;
+    return {
+      name: 'Accessibility Tests (WCAG + Keyboard)',
+      status: hasFailed ? 'warning' : 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parsePlaywrightOutput(err.stdout || '');
+    return {
+      name: 'Accessibility Tests (WCAG + Keyboard)',
+      status: 'warning',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
     };
   }
 }
@@ -116,8 +502,9 @@ async function runBackendTests(): Promise<TestResult> {
 async function runFrontendFormat(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise('cd /data/hostel-booking-system/frontend/svetu && yarn format', {
+    const { stdout, stderr } = await execPromise('yarn format', {
       timeout: 60000,
+      cwd: process.cwd(),
     });
     return {
       name: 'Frontend Format (yarn format)',
@@ -140,13 +527,15 @@ async function runFrontendFormat(): Promise<TestResult> {
 async function runFrontendLint(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise('cd /data/hostel-booking-system/frontend/svetu && yarn lint', {
+    const { stdout, stderr } = await execPromise('yarn lint', {
       timeout: 120000,
+      cwd: process.cwd(),
     });
-    const hasErrors = stdout.includes('error') || stderr.includes('error');
+    // ESLint успешен если есть сообщение "No ESLint warnings or errors"
+    const isSuccess = stdout.includes('No ESLint warnings or errors');
     return {
       name: 'Frontend Lint (yarn lint)',
-      status: hasErrors ? 'error' : 'success',
+      status: isSuccess ? 'success' : 'error',
       duration: Date.now() - start,
       output: stdout + (stderr ? `\n${stderr}` : ''),
     };
@@ -165,36 +554,144 @@ async function runFrontendLint(): Promise<TestResult> {
 async function runFrontendTests(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise(
-      'cd /data/hostel-booking-system/frontend/svetu && yarn test --watchAll=false',
-      {
-        timeout: 180000,
-      }
-    );
-    const hasFailed = stdout.includes('failed') || stderr.includes('failed');
+    const { stdout, stderr } = await execPromise('yarn test --watchAll=false', {
+      timeout: 180000,
+      cwd: process.cwd(),
+    });
+    const stats = parseJestOutput(stdout);
+    const hasFailed = stats.failed > 0;
     return {
       name: 'Frontend Tests (yarn test)',
       status: hasFailed ? 'error' : 'success',
       duration: Date.now() - start,
       output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
     };
   } catch (error: unknown) {
     const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parseJestOutput(err.stdout || '');
     return {
       name: 'Frontend Tests (yarn test)',
       status: 'error',
       duration: Date.now() - start,
       output: err.stdout || '',
       error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
     };
   }
+}
+
+// Helper function to parse Jest JSON output
+function parseJestOutput(output: string): {
+  passed: number;
+  failed: number;
+  skipped: number;
+  total: number;
+} {
+  try {
+    // Jest output может быть в виде: "Tests: X failed, Y passed, Z total"
+    const failedMatch = output.match(/(\d+)\s+failed/);
+    const passedMatch = output.match(/(\d+)\s+passed/);
+    const skippedMatch = output.match(/(\d+)\s+skipped/);
+    const totalMatch = output.match(/(\d+)\s+total/);
+
+    const failed = failedMatch ? parseInt(failedMatch[1]) : 0;
+    const passed = passedMatch ? parseInt(passedMatch[1]) : 0;
+    const skipped = skippedMatch ? parseInt(skippedMatch[1]) : 0;
+    const total = totalMatch
+      ? parseInt(totalMatch[1])
+      : passed + failed + skipped;
+
+    return { passed, failed, skipped, total };
+  } catch {
+    return { passed: 0, failed: 0, skipped: 0, total: 0 };
+  }
+}
+
+// Specific Frontend Unit Tests (from test coverage improvement plan)
+async function runFrontendUnitTest(
+  testFile: string,
+  testName: string
+): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      `yarn test ${testFile} --watchAll=false`,
+      {
+        timeout: 120000,
+        cwd: process.cwd(),
+      }
+    );
+    const stats = parseJestOutput(stdout);
+    const hasFailed = stats.failed > 0 || stdout.includes('FAIL');
+
+    return {
+      name: testName,
+      status: hasFailed ? 'error' : 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parseJestOutput(err.stdout || '');
+    return {
+      name: testName,
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
+    };
+  }
+}
+
+async function runAutocompleteFieldTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/components/shared/__tests__/AutocompleteAttributeField.test.tsx',
+    'AutocompleteAttributeField Tests'
+  );
+}
+
+async function runAutocompleteHookTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/hooks/__tests__/useAttributeAutocomplete.test.ts',
+    'useAttributeAutocomplete Hook Tests'
+  );
+}
+
+async function runCarsServiceTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/services/__tests__/cars.test.ts',
+    'Cars Service Tests'
+  );
+}
+
+async function runIconMapperTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/utils/__tests__/iconMapper.test.tsx',
+    'Icon Mapper Tests'
+  );
+}
+
+async function runEnvUtilsTests(): Promise<TestResult> {
+  return runFrontendUnitTest(
+    'src/utils/__tests__/env.test.ts',
+    'Environment Utils Tests'
+  );
 }
 
 async function runFrontendBuild(): Promise<TestResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execPromise('cd /data/hostel-booking-system/frontend/svetu && yarn build', {
+    // Clear NODE_ENV before build - Next.js will set it to 'production' automatically
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { NODE_ENV, ...buildEnv } = process.env;
+
+    const { stdout, stderr } = await execPromise('yarn build', {
       timeout: 180000,
+      cwd: process.cwd(),
+      env: buildEnv as NodeJS.ProcessEnv,
     });
     return {
       name: 'Frontend Build (yarn build)',
@@ -214,29 +711,86 @@ async function runFrontendBuild(): Promise<TestResult> {
   }
 }
 
+async function runFrontendTestsCoverage(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise(
+      'yarn test:coverage --watchAll=false',
+      {
+        timeout: 240000,
+        cwd: process.cwd(),
+      }
+    );
+    const stats = parseJestOutput(stdout);
+    const hasFailed = stats.failed > 0;
+    return {
+      name: 'Frontend Test Coverage (yarn test:coverage)',
+      status: hasFailed ? 'error' : 'success',
+      duration: Date.now() - start,
+      output: stdout + (stderr ? `\n${stderr}` : ''),
+      stats,
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    const stats = parseJestOutput(err.stdout || '');
+    return {
+      name: 'Frontend Test Coverage (yarn test:coverage)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+      stats,
+    };
+  }
+}
+
+async function runTypeScriptCheck(): Promise<TestResult> {
+  const start = Date.now();
+  try {
+    const { stdout, stderr } = await execPromise('yarn tsc --noEmit', {
+      timeout: 120000,
+      cwd: process.cwd(),
+    });
+    return {
+      name: 'TypeScript Check (tsc --noEmit)',
+      status: 'success',
+      duration: Date.now() - start,
+      output:
+        stdout + (stderr ? `\n${stderr}` : '') || 'No TypeScript errors found',
+    };
+  } catch (error: unknown) {
+    const err = error as { message: string; stdout?: string; stderr?: string };
+    return {
+      name: 'TypeScript Check (tsc --noEmit)',
+      status: 'error',
+      duration: Date.now() - start,
+      output: err.stdout || '',
+      error: err.message + (err.stderr ? `\n${err.stderr}` : ''),
+    };
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { test } = body;
 
     if (!test) {
-      return NextResponse.json({ error: 'Test name required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Test name required' },
+        { status: 400 }
+      );
     }
 
     let result: TestResult;
 
     switch (test) {
+      // Code Quality
       case 'backend-format':
         result = await runBackendFormat();
         break;
       case 'backend-lint':
         result = await runBackendLint();
-        break;
-      case 'backend-build':
-        result = await runBackendBuild();
-        break;
-      case 'backend-tests':
-        result = await runBackendTests();
         break;
       case 'frontend-format':
         result = await runFrontendFormat();
@@ -244,33 +798,148 @@ export async function POST(request: NextRequest) {
       case 'frontend-lint':
         result = await runFrontendLint();
         break;
+
+      // Unit Tests
+      case 'backend-tests-unit':
+        result = await runBackendTestsUnit();
+        break;
       case 'frontend-tests':
         result = await runFrontendTests();
+        break;
+
+      // New Frontend Unit Tests (specific test suites)
+      case 'frontend-unit-autocomplete-field':
+        result = await runAutocompleteFieldTests();
+        break;
+      case 'frontend-unit-autocomplete-hook':
+        result = await runAutocompleteHookTests();
+        break;
+      case 'frontend-unit-cars-service':
+        result = await runCarsServiceTests();
+        break;
+      case 'frontend-unit-icon-mapper':
+        result = await runIconMapperTests();
+        break;
+      case 'frontend-unit-env-utils':
+        result = await runEnvUtilsTests();
+        break;
+
+      // Integration Tests
+      case 'backend-tests-short':
+        result = await runBackendTestsShort();
+        break;
+      case 'backend-tests-full':
+        result = await runBackendTestsFull();
+        break;
+      case 'backend-tests-postexpress':
+        result = await runBackendTestsPostExpress();
+        break;
+      case 'backend-tests-cache':
+        result = await runBackendTestsCache();
+        break;
+      case 'integration-redis-cache':
+        result = await runBackendTestsRedis();
+        break;
+      case 'backend-tests-opensearch':
+        result = await runBackendTestsOpenSearch();
+        break;
+      case 'integration-opensearch-index':
+        result = await runOpenSearchTest();
+        break;
+      case 'integration-postgres-connection':
+        result = await runPostgresTest();
+        break;
+
+      // Build & Type Checking
+      case 'backend-build':
+        result = await runBackendBuild();
         break;
       case 'frontend-build':
         result = await runFrontendBuild();
         break;
+      case 'typescript-check':
+        result = await runTypeScriptCheck();
+        break;
+
+      // Coverage
+      case 'backend-tests-coverage':
+        result = await runBackendTestsCoverage();
+        break;
+      case 'frontend-tests-coverage':
+        result = await runFrontendTestsCoverage();
+        break;
+
+      // Run all quality tests (fast)
+      case 'all-quality':
+        const qualityResults = await Promise.all([
+          runBackendFormat(),
+          runBackendLint(),
+          runFrontendFormat(),
+          runFrontendLint(),
+        ]);
+        return NextResponse.json({ results: qualityResults });
+
+      // Run all unit tests
+      case 'all-unit':
+        const unitResults = await Promise.all([
+          runBackendTestsUnit(),
+          runFrontendTests(),
+        ]);
+        return NextResponse.json({ results: unitResults });
+
+      // Run all builds
+      case 'all-builds':
+        const buildResults = await Promise.all([
+          runBackendBuild(),
+          runFrontendBuild(),
+          runTypeScriptCheck(),
+        ]);
+        return NextResponse.json({ results: buildResults });
+
+      // Run everything (comprehensive)
       case 'all':
-        // Run all tests
         const results = await Promise.all([
           runBackendFormat(),
           runBackendLint(),
           runBackendBuild(),
-          runBackendTests(),
+          runBackendTestsUnit(),
           runFrontendFormat(),
           runFrontendLint(),
           runFrontendTests(),
           runFrontendBuild(),
+          runTypeScriptCheck(),
         ]);
         return NextResponse.json({ results });
+
+      // E2E Tests
+      case 'e2e-tests':
+      case 'e2e-user-journey-create-listing':
+      case 'e2e-user-journey-search-contact':
+      case 'e2e-admin-moderation':
+        result = await runE2ETests();
+        break;
+
+      // Accessibility Tests
+      case 'accessibility-tests':
+      case 'a11y-wcag-compliance':
+      case 'a11y-keyboard-navigation':
+        result = await runAccessibilityTests();
+        break;
+
       default:
-        return NextResponse.json({ error: 'Invalid test name' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Invalid test name' },
+          { status: 400 }
+        );
     }
 
     return NextResponse.json({ result });
   } catch (error: unknown) {
     const err = error as Error;
     console.error('Test execution error:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

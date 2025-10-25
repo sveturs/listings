@@ -64,7 +64,7 @@ export default function AIPoweredListingCreationPage() {
   const router = useRouter();
   const t = useTranslations('create_listing');
   const locale = useLocale();
-  const { user } = useAuthContext();
+  const { user, isLoading: authLoading } = useAuthContext();
   const [currentView, setCurrentView] = useState<
     'upload' | 'process' | 'enhance' | 'publish'
   >('upload');
@@ -158,6 +158,12 @@ export default function AIPoweredListingCreationPage() {
   const profileLoadedRef = useRef(false);
 
   useEffect(() => {
+    // Ждем завершения загрузки аутентификации
+    if (authLoading) {
+      return;
+    }
+
+    // Если пользователь не авторизован - редирект
     if (!user) {
       toast.error(t('auth_required'));
       router.push('/');
@@ -204,7 +210,7 @@ export default function AIPoweredListingCreationPage() {
     };
 
     loadUserProfile();
-  }, [user, router, t]); // Убираем validateAddress из зависимостей
+  }, [user, router, t, authLoading]); // Добавляем authLoading в зависимости
 
   // Загружаем категории при монтировании компонента
   useEffect(() => {
@@ -1213,180 +1219,174 @@ export default function AIPoweredListingCreationPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-gradient-to-br from-base-100 to-base-200"
+      className="bg-gradient-to-br from-base-100 to-base-200 rounded-lg p-6"
     >
-      <div className="container mx-auto px-4 py-16">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="text-center mb-12"
+      >
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full mb-6">
+          <Brain className="w-10 h-10 text-primary-content" />
+        </div>
+        <h1 className="text-4xl lg:text-5xl font-bold mb-4">{t('ai.title')}</h1>
+        <p className="text-xl text-base-content/70 mb-8">{t('ai.subtitle')}</p>
+
+        <div className="flex justify-center gap-6 mb-8">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-primary">
+              {t('ai.stats.creation_time')}
+            </div>
+            <div className="text-sm text-base-content/60">
+              {t('ai.stats.creation_label')}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-success">
+              {t('ai.stats.accuracy')}
+            </div>
+            <div className="text-sm text-base-content/60">
+              {t('ai.stats.accuracy_label')}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-secondary">
+              {t('ai.stats.languages')}
+            </div>
+            <div className="text-sm text-base-content/60">
+              {t('ai.stats.languages_label')}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {images.length === 0 ? (
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="text-center mb-12"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="max-w-2xl mx-auto"
         >
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full mb-6">
-            <Brain className="w-10 h-10 text-primary-content" />
-          </div>
-          <h1 className="text-4xl lg:text-5xl font-bold mb-4">
-            {t('ai.title')}
-          </h1>
-          <p className="text-xl text-base-content/70 mb-8">
-            {t('ai.subtitle')}
-          </p>
-
-          <div className="flex justify-center gap-6 mb-8">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary">
-                {t('ai.stats.creation_time')}
-              </div>
-              <div className="text-sm text-base-content/60">
-                {t('ai.stats.creation_label')}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-success">
-                {t('ai.stats.accuracy')}
-              </div>
-              <div className="text-sm text-base-content/60">
-                {t('ai.stats.accuracy_label')}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-secondary">
-                {t('ai.stats.languages')}
-              </div>
-              <div className="text-sm text-base-content/60">
-                {t('ai.stats.languages_label')}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {images.length === 0 ? (
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="max-w-2xl mx-auto"
+          <label
+            htmlFor="ai-upload"
+            className="card bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-dashed border-primary cursor-pointer hover:shadow-2xl transition-all"
           >
-            <label
-              htmlFor="ai-upload"
-              className="card bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-dashed border-primary cursor-pointer hover:shadow-2xl transition-all"
-            >
-              <div className="card-body text-center py-16">
-                <Camera className="w-20 h-20 mx-auto mb-4 text-primary" />
-                <h2 className="text-2xl font-bold mb-2">
-                  {t('ai.upload.title')}
-                </h2>
-                <p className="text-base-content/70 mb-6">
-                  {t('ai.upload.subtitle')}
-                </p>
-                <div className="flex gap-4 justify-center">
-                  <div className="badge badge-lg badge-primary gap-2">
-                    <Brain className="w-4 h-4" />
-                    {t('ai.upload.ai_recognition')}
-                  </div>
-                  <div className="badge badge-lg badge-secondary gap-2">
-                    <Zap className="w-4 h-4" />
-                    {t('ai.upload.time')}
-                  </div>
+            <div className="card-body text-center py-16">
+              <Camera className="w-20 h-20 mx-auto mb-4 text-primary" />
+              <h2 className="text-2xl font-bold mb-2">
+                {t('ai.upload.title')}
+              </h2>
+              <p className="text-base-content/70 mb-6">
+                {t('ai.upload.subtitle')}
+              </p>
+              <div className="flex gap-4 justify-center">
+                <div className="badge badge-lg badge-primary gap-2">
+                  <Brain className="w-4 h-4" />
+                  {t('ai.upload.ai_recognition')}
+                </div>
+                <div className="badge badge-lg badge-secondary gap-2">
+                  <Zap className="w-4 h-4" />
+                  {t('ai.upload.time')}
                 </div>
               </div>
-            </label>
-            <input
-              id="ai-upload"
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
-
-            {/* Alternative input methods */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-              <button
-                onClick={() => handleSocialImport('Instagram')}
-                className="btn btn-outline gap-2"
-              >
-                <Instagram className="w-4 h-4" />
-                {t('ai.upload.import_instagram')}
-              </button>
-              <button
-                onClick={() => handleSocialImport('Facebook')}
-                className="btn btn-outline gap-2"
-              >
-                <Facebook className="w-4 h-4" />
-                {t('ai.upload.import_facebook')}
-              </button>
-              <button
-                onClick={handleVoiceInput}
-                className={`btn ${voiceRecording ? 'btn-error' : 'btn-outline'} gap-2`}
-              >
-                <Mic className="w-4 h-4" />
-                {voiceRecording
-                  ? t('ai.upload.stop_recording')
-                  : t('ai.upload.voice_input')}
-              </button>
             </div>
-          </motion.div>
-        ) : (
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {images.map((img, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="relative aspect-square"
-                >
-                  <Image
-                    src={img}
-                    alt={`Photo ${index + 1}`}
-                    fill
-                    className="object-cover rounded-lg"
-                  />
-                  <button
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 btn btn-circle btn-sm btn-error"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </motion.div>
-              ))}
-              {images.length < 8 && (
-                <label className="aspect-square border-2 border-dashed border-base-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
-                  <Plus className="w-8 h-8 text-base-content/50" />
-                  <span className="text-sm text-base-content/50 mt-2">
-                    {t('ai.upload.add_more')}
-                  </span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                </label>
-              )}
-            </div>
+          </label>
+          <input
+            id="ai-upload"
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageUpload}
+          />
 
-            {error && (
-              <div className="alert alert-error mb-4">
-                <AlertCircle className="w-4 h-4" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <motion.button
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              onClick={processImages}
-              className="btn btn-primary btn-lg btn-block"
+          {/* Alternative input methods */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+            <button
+              onClick={() => handleSocialImport('Instagram')}
+              className="btn btn-outline gap-2"
             >
-              <Brain className="w-5 h-5 mr-2" />
-              {t('ai.upload.create_with_ai')}
-            </motion.button>
+              <Instagram className="w-4 h-4" />
+              {t('ai.upload.import_instagram')}
+            </button>
+            <button
+              onClick={() => handleSocialImport('Facebook')}
+              className="btn btn-outline gap-2"
+            >
+              <Facebook className="w-4 h-4" />
+              {t('ai.upload.import_facebook')}
+            </button>
+            <button
+              onClick={handleVoiceInput}
+              className={`btn ${voiceRecording ? 'btn-error' : 'btn-outline'} gap-2`}
+            >
+              <Mic className="w-4 h-4" />
+              {voiceRecording
+                ? t('ai.upload.stop_recording')
+                : t('ai.upload.voice_input')}
+            </button>
           </div>
-        )}
-      </div>
+        </motion.div>
+      ) : (
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {images.map((img, index) => (
+              <motion.div
+                key={index}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="relative aspect-square"
+              >
+                <Image
+                  src={img}
+                  alt={`Photo ${index + 1}`}
+                  fill
+                  className="object-cover rounded-lg"
+                />
+                <button
+                  onClick={() => removeImage(index)}
+                  className="absolute top-2 right-2 btn btn-circle btn-sm btn-error"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+            {images.length < 8 && (
+              <label className="aspect-square border-2 border-dashed border-base-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                <Plus className="w-8 h-8 text-base-content/50" />
+                <span className="text-sm text-base-content/50 mt-2">
+                  {t('ai.upload.add_more')}
+                </span>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </label>
+            )}
+          </div>
+
+          {error && (
+            <div className="alert alert-error mb-4">
+              <AlertCircle className="w-4 h-4" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <motion.button
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            onClick={processImages}
+            className="btn btn-primary btn-lg btn-block"
+          >
+            <Brain className="w-5 h-5 mr-2" />
+            {t('ai.upload.create_with_ai')}
+          </motion.button>
+        </div>
+      )}
     </motion.div>
   );
 
@@ -1395,7 +1395,7 @@ export default function AIPoweredListingCreationPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-gradient-to-br from-base-100 to-base-200 flex items-center justify-center"
+      className="bg-gradient-to-br from-base-100 to-base-200 rounded-lg p-6 flex items-center justify-center min-h-96"
     >
       <div className="text-center">
         <motion.div
@@ -1470,977 +1470,971 @@ export default function AIPoweredListingCreationPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-base-100"
+      className="bg-base-100 rounded-lg p-6"
     >
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Success banner */}
-          <motion.div
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="alert alert-success shadow-lg mb-8"
-          >
-            <Check className="w-6 h-6" />
-            <div>
-              <h3 className="font-bold">{t('ai.enhance.success_title')}</h3>
-              <p>{t('ai.enhance.success_subtitle')}</p>
-            </div>
-          </motion.div>
+      <div className="max-w-4xl mx-auto">
+        {/* Success banner */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="alert alert-success shadow-lg mb-8"
+        >
+          <Check className="w-6 h-6" />
+          <div>
+            <h3 className="font-bold">{t('ai.enhance.success_title')}</h3>
+            <p>{t('ai.enhance.success_subtitle')}</p>
+          </div>
+        </motion.div>
 
-          {/* Photos section */}
-          <div className="card bg-base-200 mb-6">
-            <div className="card-body">
+        {/* Photos section */}
+        <div className="card bg-base-200 mb-6">
+          <div className="card-body">
+            <h3 className="card-title">
+              <Camera className="w-5 h-5" />
+              {t('ai.enhance.photos_title')}
+              <span className="badge badge-primary">{images.length}/8</span>
+            </h3>
+            <div className="grid grid-cols-4 gap-3">
+              {images.map((img, index) => (
+                <div key={index} className="relative aspect-square">
+                  <Image
+                    src={img}
+                    alt={`Photo ${index + 1}`}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                  {index === 0 && (
+                    <div className="absolute top-1 left-1 badge badge-primary badge-sm">
+                      {t('ai.enhance.main_photo')}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Suggested missing photos */}
+            {aiData.suggestedPhotos.length > 0 && (
+              <div className="alert alert-info mt-4">
+                <Lightbulb className="w-4 h-4" />
+                <div>
+                  <p className="font-semibold text-sm">
+                    {t('ai.enhance.ai_recommends')}
+                  </p>
+                  <ul className="text-xs mt-1">
+                    {aiData.suggestedPhotos.map((photo, index) => (
+                      <li key={index}>• {photo}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Category with probabilities */}
+        <div className="card bg-base-200 mb-6">
+          <div className="card-body">
+            <h3 className="card-title">
+              <Package className="w-5 h-5" />
+              {t('ai.enhance.category_title')}
+            </h3>
+
+            {/* Отображаем выбранную категорию, если она есть */}
+            {aiData.category && (
+              <div className="mb-4">
+                <div className="alert alert-success">
+                  <Check className="w-4 h-4" />
+                  <span>
+                    {t('ai.enhance.category_detected')}:{' '}
+                    <strong>
+                      {getCategoryData(aiData.category)?.name ||
+                        aiData.category}
+                    </strong>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {(aiData.categoryProbabilities || []).map((cat, index) => {
+                if (!cat || !cat.name) {
+                  return null;
+                }
+                const categoryData = getCategoryData(cat.name);
+                const categoryName = categoryData?.name || cat.name;
+                const isSelected = index === 0; // Первая категория имеет наибольшую вероятность
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between p-2 rounded-lg ${
+                      isSelected ? 'bg-primary/10 ring-2 ring-primary' : ''
+                    }`}
+                  >
+                    <span className={isSelected ? 'font-semibold' : ''}>
+                      {categoryName}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <progress
+                        className={`progress ${isSelected ? 'progress-primary' : 'progress-base-300'} w-32`}
+                        value={cat.probability}
+                        max="100"
+                      ></progress>
+                      <span className="text-sm font-medium">
+                        {cat.probability}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Селектор категорий - всегда показываем для возможности изменения */}
+            <div className="mt-4">
+              {aiData.categoryProbabilities &&
+                aiData.categoryProbabilities.length > 0 && (
+                  <div className="alert alert-info mb-2">
+                    <Check className="w-4 h-4" />
+                    <span className="text-sm">
+                      {t('ai.enhance.category_auto_selected', {
+                        category:
+                          getCategoryData(aiData.category)?.name ||
+                          aiData.category,
+                      })}
+                    </span>
+                  </div>
+                )}
+              <div className="mt-2">
+                <label className="label">
+                  <span className="label-text">
+                    {t('ai.enhance.manual_category_selection')}
+                  </span>
+                </label>
+                <select
+                  className="select select-bordered w-full"
+                  value={getCategoryData(aiData.category)?.id || ''}
+                  onChange={(e) => {
+                    const selectedCat = categories.find(
+                      (cat) => cat.id === Number(e.target.value)
+                    );
+                    if (selectedCat) {
+                      setAiData({
+                        ...aiData,
+                        category: selectedCat.slug,
+                      });
+                      loadCategoryAttributes(selectedCat.id);
+                      // Сбрасываем выбор автомобиля при смене категории
+                      setCarSelection({});
+                    }
+                  }}
+                >
+                  <option value="">{t('ai.enhance.select_category')}</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Title with A/B testing */}
+        <div className="card bg-base-200 mb-6">
+          <div className="card-body">
+            <div className="flex items-center justify-between mb-2">
               <h3 className="card-title">
-                <Camera className="w-5 h-5" />
-                {t('ai.enhance.photos_title')}
-                <span className="badge badge-primary">{images.length}/8</span>
+                <TestTube2 className="w-5 h-5" />
+                {t('ai.enhance.title_ab_testing')}
               </h3>
-              <div className="grid grid-cols-4 gap-3">
-                {images.map((img, index) => (
-                  <div key={index} className="relative aspect-square">
-                    <Image
-                      src={img}
-                      alt={`Photo ${index + 1}`}
-                      fill
-                      className="object-cover rounded-lg"
-                    />
-                    {index === 0 && (
-                      <div className="absolute top-1 left-1 badge badge-primary badge-sm">
-                        {t('ai.enhance.main_photo')}
+              <button
+                onClick={regenerateTitle}
+                className="btn btn-ghost btn-sm gap-1"
+                disabled={isProcessing}
+              >
+                <RefreshCw className="w-4 h-4" />
+                {t('ai.enhance.change')}
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {aiData.titleVariants.map((variant, index) => (
+                <div
+                  key={index}
+                  onClick={() =>
+                    setAiData({ ...aiData, selectedTitleIndex: index })
+                  }
+                  className={`p-3 rounded-lg cursor-pointer transition-all ${
+                    aiData.selectedTitleIndex === index
+                      ? 'bg-primary/20 ring-2 ring-primary'
+                      : 'bg-base-100 hover:bg-base-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex-1">{variant}</span>
+                    {index === selectedVariant && (
+                      <div className="badge badge-secondary badge-sm">
+                        {t('ai.enhance.ai_choice')}
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
 
-              {/* Suggested missing photos */}
-              {aiData.suggestedPhotos.length > 0 && (
-                <div className="alert alert-info mt-4">
-                  <Lightbulb className="w-4 h-4" />
+            <div className="alert alert-info mt-4">
+              <TestTube2 className="w-4 h-4" />
+              <span className="text-sm">{t('ai.enhance.ai_will_test')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="card bg-base-200 mb-6">
+          <div className="card-body">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="card-title">
+                <Brain className="w-5 h-5" />
+                {t('ai.enhance.description_title')}
+              </h3>
+              <button
+                onClick={regenerateDescription}
+                className="btn btn-ghost btn-sm gap-1"
+                disabled={isProcessing}
+              >
+                <RefreshCw className="w-4 h-4" />
+                {t('ai.description_section.update')}
+              </button>
+            </div>
+            <textarea
+              className="textarea textarea-bordered h-40"
+              value={aiData.description}
+              onChange={(e) =>
+                setAiData({ ...aiData, description: e.target.value })
+              }
+            />
+            <div className="flex gap-2 mt-2">
+              <div className="badge badge-success gap-1">
+                <Check className="w-3 h-3" />
+                {t('ai.enhance.seo_optimized')}
+              </div>
+              <div className="badge badge-info gap-1">
+                <Sparkles className="w-3 h-3" />
+                {t('ai.enhance.keywords')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Location and condition */}
+        <div className="card bg-base-200 mb-6">
+          <div className="card-body">
+            <h3 className="card-title">
+              <Globe className="w-5 h-5" />
+              {t('ai.enhance.location_condition_title')}
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="label">
+                  <span className="label-text">{t('ai.enhance.city')}</span>
+                </label>
+                <input
+                  type="text"
+                  className="input input-bordered"
+                  value={aiData.location.city}
+                  onChange={(e) =>
+                    setAiData({
+                      ...aiData,
+                      location: { ...aiData.location, city: e.target.value },
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="label">
+                  <span className="label-text">
+                    {t('ai.enhance.condition')}
+                  </span>
+                </label>
+                <select
+                  className="select select-bordered"
+                  value={aiData.condition}
+                  onChange={(e) =>
+                    setAiData({
+                      ...aiData,
+                      condition: e.target.value as
+                        | 'new'
+                        | 'used'
+                        | 'refurbished',
+                    })
+                  }
+                >
+                  <option value="new">{t('ai.enhance.condition_new')}</option>
+                  <option value="used">{t('ai.enhance.condition_used')}</option>
+                  <option value="refurbished">
+                    {t('ai.enhance.condition_refurbished')}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            {/* Location source info and manual picker */}
+            <div className="mt-4 space-y-3">
+              {detectedLocation && (
+                <div className="alert alert-info">
+                  <Globe className="w-4 h-4" />
                   <div>
                     <p className="font-semibold text-sm">
-                      {t('ai.enhance.ai_recommends')}
+                      {t('ai.location.detected_from')}{' '}
+                      {detectedLocation.source === 'exif'
+                        ? t('ai.location.from_photo')
+                        : detectedLocation.source === 'profile'
+                          ? t('ai.location.from_profile')
+                          : t('ai.location.manually')}
                     </p>
-                    <ul className="text-xs mt-1">
-                      {aiData.suggestedPhotos.map((photo, index) => (
-                        <li key={index}>• {photo}</li>
-                      ))}
-                    </ul>
+                    <p className="text-xs">
+                      {t('ai.location.coordinates')}{' '}
+                      {detectedLocation.latitude.toFixed(4)},{' '}
+                      {detectedLocation.longitude.toFixed(4)}
+                    </p>
                   </div>
                 </div>
               )}
+
+              {!detectedLocation && (
+                <div className="alert alert-warning">
+                  <AlertCircle className="w-4 h-4" />
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {t('ai.location.not_detected')}
+                    </p>
+                    <p className="text-xs">
+                      {t('ai.location.not_detected_hint')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowLocationPicker(true)}
+                className="btn btn-outline btn-sm gap-2"
+              >
+                <MapPinIcon className="w-4 h-4" />
+                {detectedLocation
+                  ? t('ai.location.refine_on_map')
+                  : t('ai.location.select_on_map')}
+              </button>
             </div>
-          </div>
-
-          {/* Category with probabilities */}
-          <div className="card bg-base-200 mb-6">
-            <div className="card-body">
-              <h3 className="card-title">
-                <Package className="w-5 h-5" />
-                {t('ai.enhance.category_title')}
-              </h3>
-
-              {/* Отображаем выбранную категорию, если она есть */}
-              {aiData.category && (
-                <div className="mb-4">
-                  <div className="alert alert-success">
-                    <Check className="w-4 h-4" />
-                    <span>
-                      {t('ai.enhance.category_detected')}:{' '}
-                      <strong>
-                        {getCategoryData(aiData.category)?.name ||
-                          aiData.category}
-                      </strong>
-                    </span>
-                  </div>
+            {aiData.location.suggestedLocation && (
+              <>
+                <div className="alert alert-info mt-4">
+                  <Lightbulb className="w-4 h-4" />
+                  <span className="text-sm">
+                    {fullAddress
+                      ? `${t('location_detected_from_photo')}: ${aiData.location.suggestedLocation}`
+                      : `${t('ai.location.ai_suggests')} ${aiData.location.suggestedLocation}`}
+                  </span>
                 </div>
-              )}
 
-              <div className="space-y-2">
-                {(aiData.categoryProbabilities || []).map((cat, index) => {
-                  if (!cat || !cat.name) {
-                    return null;
-                  }
-                  const categoryData = getCategoryData(cat.name);
-                  const categoryName = categoryData?.name || cat.name;
-                  const isSelected = index === 0; // Первая категория имеет наибольшую вероятность
-
-                  return (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-2 rounded-lg ${
-                        isSelected ? 'bg-primary/10 ring-2 ring-primary' : ''
-                      }`}
-                    >
-                      <span className={isSelected ? 'font-semibold' : ''}>
-                        {categoryName}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <progress
-                          className={`progress ${isSelected ? 'progress-primary' : 'progress-base-300'} w-32`}
-                          value={cat.probability}
-                          max="100"
-                        ></progress>
-                        <span className="text-sm font-medium">
-                          {cat.probability}%
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Селектор категорий - всегда показываем для возможности изменения */}
-              <div className="mt-4">
-                {aiData.categoryProbabilities &&
-                  aiData.categoryProbabilities.length > 0 && (
-                    <div className="alert alert-info mb-2">
-                      <Check className="w-4 h-4" />
-                      <span className="text-sm">
-                        {t('ai.enhance.category_auto_selected', {
-                          category:
-                            getCategoryData(aiData.category)?.name ||
-                            aiData.category,
-                        })}
-                      </span>
-                    </div>
-                  )}
-                <div className="mt-2">
-                  <label className="label">
-                    <span className="label-text">
-                      {t('ai.enhance.manual_category_selection')}
-                    </span>
-                  </label>
-                  <select
-                    className="select select-bordered w-full"
-                    value={getCategoryData(aiData.category)?.id || ''}
-                    onChange={(e) => {
-                      const selectedCat = categories.find(
-                        (cat) => cat.id === Number(e.target.value)
-                      );
-                      if (selectedCat) {
-                        setAiData({
-                          ...aiData,
-                          category: selectedCat.slug,
-                        });
-                        loadCategoryAttributes(selectedCat.id);
-                        // Сбрасываем выбор автомобиля при смене категории
-                        setCarSelection({});
+                {/* Настройки приватности */}
+                {(detectedLocation || fullAddress) && (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPrivacySettings(!showPrivacySettings)
                       }
-                    }}
-                  >
-                    <option value="">{t('ai.enhance.select_category')}</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Title with A/B testing */}
-          <div className="card bg-base-200 mb-6">
-            <div className="card-body">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="card-title">
-                  <TestTube2 className="w-5 h-5" />
-                  {t('ai.enhance.title_ab_testing')}
-                </h3>
-                <button
-                  onClick={regenerateTitle}
-                  className="btn btn-ghost btn-sm gap-1"
-                  disabled={isProcessing}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t('ai.enhance.change')}
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {aiData.titleVariants.map((variant, index) => (
-                  <div
-                    key={index}
-                    onClick={() =>
-                      setAiData({ ...aiData, selectedTitleIndex: index })
-                    }
-                    className={`p-3 rounded-lg cursor-pointer transition-all ${
-                      aiData.selectedTitleIndex === index
-                        ? 'bg-primary/20 ring-2 ring-primary'
-                        : 'bg-base-100 hover:bg-base-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="flex-1">{variant}</span>
-                      {index === selectedVariant && (
-                        <div className="badge badge-secondary badge-sm">
-                          {t('ai.enhance.ai_choice')}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="alert alert-info mt-4">
-                <TestTube2 className="w-4 h-4" />
-                <span className="text-sm">{t('ai.enhance.ai_will_test')}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="card bg-base-200 mb-6">
-            <div className="card-body">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="card-title">
-                  <Brain className="w-5 h-5" />
-                  {t('ai.enhance.description_title')}
-                </h3>
-                <button
-                  onClick={regenerateDescription}
-                  className="btn btn-ghost btn-sm gap-1"
-                  disabled={isProcessing}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t('ai.description_section.update')}
-                </button>
-              </div>
-              <textarea
-                className="textarea textarea-bordered h-40"
-                value={aiData.description}
-                onChange={(e) =>
-                  setAiData({ ...aiData, description: e.target.value })
-                }
-              />
-              <div className="flex gap-2 mt-2">
-                <div className="badge badge-success gap-1">
-                  <Check className="w-3 h-3" />
-                  {t('ai.enhance.seo_optimized')}
-                </div>
-                <div className="badge badge-info gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  {t('ai.enhance.keywords')}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Location and condition */}
-          <div className="card bg-base-200 mb-6">
-            <div className="card-body">
-              <h3 className="card-title">
-                <Globe className="w-5 h-5" />
-                {t('ai.enhance.location_condition_title')}
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">
-                    <span className="label-text">{t('ai.enhance.city')}</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="input input-bordered"
-                    value={aiData.location.city}
-                    onChange={(e) =>
-                      setAiData({
-                        ...aiData,
-                        location: { ...aiData.location, city: e.target.value },
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="label">
-                    <span className="label-text">
-                      {t('ai.enhance.condition')}
-                    </span>
-                  </label>
-                  <select
-                    className="select select-bordered"
-                    value={aiData.condition}
-                    onChange={(e) =>
-                      setAiData({
-                        ...aiData,
-                        condition: e.target.value as
-                          | 'new'
-                          | 'used'
-                          | 'refurbished',
-                      })
-                    }
-                  >
-                    <option value="new">{t('ai.enhance.condition_new')}</option>
-                    <option value="used">
-                      {t('ai.enhance.condition_used')}
-                    </option>
-                    <option value="refurbished">
-                      {t('ai.enhance.condition_refurbished')}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Location source info and manual picker */}
-              <div className="mt-4 space-y-3">
-                {detectedLocation && (
-                  <div className="alert alert-info">
-                    <Globe className="w-4 h-4" />
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {t('ai.location.detected_from')}{' '}
-                        {detectedLocation.source === 'exif'
-                          ? t('ai.location.from_photo')
-                          : detectedLocation.source === 'profile'
-                            ? t('ai.location.from_profile')
-                            : t('ai.location.manually')}
-                      </p>
-                      <p className="text-xs">
-                        {t('ai.location.coordinates')}{' '}
-                        {detectedLocation.latitude.toFixed(4)},{' '}
-                        {detectedLocation.longitude.toFixed(4)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {!detectedLocation && (
-                  <div className="alert alert-warning">
-                    <AlertCircle className="w-4 h-4" />
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {t('ai.location.not_detected')}
-                      </p>
-                      <p className="text-xs">
-                        {t('ai.location.not_detected_hint')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => setShowLocationPicker(true)}
-                  className="btn btn-outline btn-sm gap-2"
-                >
-                  <MapPinIcon className="w-4 h-4" />
-                  {detectedLocation
-                    ? t('ai.location.refine_on_map')
-                    : t('ai.location.select_on_map')}
-                </button>
-              </div>
-              {aiData.location.suggestedLocation && (
-                <>
-                  <div className="alert alert-info mt-4">
-                    <Lightbulb className="w-4 h-4" />
-                    <span className="text-sm">
-                      {fullAddress
-                        ? `${t('location_detected_from_photo')}: ${aiData.location.suggestedLocation}`
-                        : `${t('ai.location.ai_suggests')} ${aiData.location.suggestedLocation}`}
-                    </span>
-                  </div>
-
-                  {/* Настройки приватности */}
-                  {(detectedLocation || fullAddress) && (
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPrivacySettings(!showPrivacySettings)
-                        }
-                        className="btn btn-outline btn-sm gap-2"
+                      className="btn btn-outline btn-sm gap-2"
+                    >
+                      <Shield className="w-4 h-4" />
+                      {t('privacy_settings')}
+                      <svg
+                        className={`w-4 h-4 transition-transform ${showPrivacySettings ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <Shield className="w-4 h-4" />
-                        {t('privacy_settings')}
-                        <svg
-                          className={`w-4 h-4 transition-transform ${showPrivacySettings ? 'rotate-180' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </button>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
 
-                      {showPrivacySettings && (
-                        <div className="mt-4 p-4 bg-base-100 rounded-lg">
-                          <LocationPrivacySettingsWithAddress
-                            selectedLevel={locationPrivacyLevel}
-                            onLevelChange={(level) => {
-                              setLocationPrivacyLevel(level);
-                              // Обновляем отображаемый адрес
-                              if (fullAddress) {
-                                const options = {
-                                  showHouseNumber: level === 'exact',
-                                  showStreet:
-                                    level === 'exact' || level === 'street',
-                                  showCity: true,
-                                  showRegion: level !== 'city',
-                                  showCountry: level === 'city',
-                                };
-                                const updatedAddress = formatAddressWithPrivacy(
-                                  fullAddress,
-                                  options
-                                );
-                                setAiData((prev) => ({
-                                  ...prev,
-                                  location: {
-                                    ...prev.location,
-                                    suggestedLocation: updatedAddress,
-                                  },
-                                }));
-                              }
-                            }}
-                            location={
-                              detectedLocation
-                                ? {
-                                    lat: detectedLocation.latitude,
-                                    lng: detectedLocation.longitude,
-                                  }
-                                : undefined
+                    {showPrivacySettings && (
+                      <div className="mt-4 p-4 bg-base-100 rounded-lg">
+                        <LocationPrivacySettingsWithAddress
+                          selectedLevel={locationPrivacyLevel}
+                          onLevelChange={(level) => {
+                            setLocationPrivacyLevel(level);
+                            // Обновляем отображаемый адрес
+                            if (fullAddress) {
+                              const options = {
+                                showHouseNumber: level === 'exact',
+                                showStreet:
+                                  level === 'exact' || level === 'street',
+                                showCity: true,
+                                showRegion: level !== 'city',
+                                showCountry: level === 'city',
+                              };
+                              const updatedAddress = formatAddressWithPrivacy(
+                                fullAddress,
+                                options
+                              );
+                              setAiData((prev) => ({
+                                ...prev,
+                                location: {
+                                  ...prev.location,
+                                  suggestedLocation: updatedAddress,
+                                },
+                              }));
                             }
-                            fullAddress={fullAddress}
-                            showPreview={true}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+                          }}
+                          location={
+                            detectedLocation
+                              ? {
+                                  lat: detectedLocation.latitude,
+                                  lng: detectedLocation.longitude,
+                                }
+                              : undefined
+                          }
+                          fullAddress={fullAddress}
+                          showPreview={true}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </div>
+        </div>
 
-          {/* Price with AI analysis */}
-          <div className="card bg-base-200 mb-6">
-            <div className="card-body">
-              <h3 className="card-title">
-                <BarChart3 className="w-5 h-5" />
-                {t('ai.price.title')}
-              </h3>
-              <div className="form-control">
-                <label className="input-group">
-                  <input
-                    type="number"
-                    className="input input-bordered flex-1"
-                    value={aiData.price}
-                    onChange={(e) =>
-                      setAiData({ ...aiData, price: e.target.value })
-                    }
-                  />
-                  <span>{t('ai.price.currency')}</span>
-                </label>
-              </div>
-
-              {/* Price range visualization */}
-              {/* TODO: Fetch real market prices from similar listings
-                  - Query database for listings in same category
-                  - Filter by condition (new/used)
-                  - Calculate percentiles for min/max range */}
-              <div className="mt-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span>
-                    {t('ai.price.min')} {aiData.priceRange.min.toLocaleString()}{' '}
-                    {t('ai.price.currency')}
-                  </span>
-                  <span>
-                    {t('ai.price.max')} {aiData.priceRange.max.toLocaleString()}{' '}
-                    {t('ai.price.currency')}
-                  </span>
-                </div>
+        {/* Price with AI analysis */}
+        <div className="card bg-base-200 mb-6">
+          <div className="card-body">
+            <h3 className="card-title">
+              <BarChart3 className="w-5 h-5" />
+              {t('ai.price.title')}
+            </h3>
+            <div className="form-control">
+              <label className="input-group">
                 <input
-                  type="range"
-                  min={aiData.priceRange.min}
-                  max={aiData.priceRange.max}
+                  type="number"
+                  className="input input-bordered flex-1"
                   value={aiData.price}
                   onChange={(e) =>
                     setAiData({ ...aiData, price: e.target.value })
                   }
-                  className="range range-primary"
                 />
-              </div>
+                <span>{t('ai.price.currency')}</span>
+              </label>
+            </div>
 
-              <div className="alert alert-success mt-4">
-                <TrendingUp className="w-4 h-4" />
-                <span className="text-sm">{t('ai.price.ai_analyzed')}</span>
+            {/* Price range visualization */}
+            {/* TODO: Fetch real market prices from similar listings
+                  - Query database for listings in same category
+                  - Filter by condition (new/used)
+                  - Calculate percentiles for min/max range */}
+            <div className="mt-4">
+              <div className="flex justify-between text-sm mb-2">
+                <span>
+                  {t('ai.price.min')} {aiData.priceRange.min.toLocaleString()}{' '}
+                  {t('ai.price.currency')}
+                </span>
+                <span>
+                  {t('ai.price.max')} {aiData.priceRange.max.toLocaleString()}{' '}
+                  {t('ai.price.currency')}
+                </span>
               </div>
+              <input
+                type="range"
+                min={aiData.priceRange.min}
+                max={aiData.priceRange.max}
+                value={aiData.price}
+                onChange={(e) =>
+                  setAiData({ ...aiData, price: e.target.value })
+                }
+                className="range range-primary"
+              />
+            </div>
+
+            <div className="alert alert-success mt-4">
+              <TrendingUp className="w-4 h-4" />
+              <span className="text-sm">{t('ai.price.ai_analyzed')}</span>
             </div>
           </div>
+        </div>
 
-          {/* Car Selector for automotive categories */}
-          {aiData.category && isCarCategory(aiData.category) && (
-            <div className="card bg-base-200 mb-6">
-              <div className="card-body">
-                <h3 className="card-title text-base mb-4">
-                  <Car className="w-5 h-5" />
-                  {t('cars.selectCar')}
-                </h3>
-                {/* Показываем сообщение если AI определил марку и модель */}
-                {aiData.attributes.brand && !carSelection.make && (
-                  <div className="alert alert-info mb-4">
-                    <Info className="w-4 h-4" />
-                    <div>
-                      <p className="text-sm">
-                        AI определил: {aiData.attributes.brand}{' '}
-                        {aiData.attributes.model}
-                      </p>
-                      <p className="text-xs mt-1">
-                        Выберите из списка ниже для подтверждения или измените
-                        вручную
-                      </p>
-                    </div>
-                  </div>
-                )}
-                <CarSelectorCompact
-                  value={carSelection}
-                  onChange={(selection) => {
-                    setCarSelection(selection);
-                    // Обновляем атрибуты при выборе машины
-                    if (selection.make && selection.model) {
-                      setAiData((prev) => ({
-                        ...prev,
-                        attributes: {
-                          ...prev.attributes,
-                          // Марка
-                          make: selection.make?.name || '',
-                          // Модель
-                          model: selection.model?.name || '',
-                        },
-                      }));
-
-                      // Если заголовок пуст или это стандартный заголовок, обновляем его
-                      const currentTitle =
-                        aiData.titleVariants[aiData.selectedTitleIndex] ||
-                        aiData.title;
-                      if (
-                        !currentTitle ||
-                        currentTitle.toLowerCase().includes('автомобиль')
-                      ) {
-                        const newTitle =
-                          `${selection.make?.name || ''} ${selection.model?.name || ''}`.trim();
-                        setAiData((prev) => ({
-                          ...prev,
-                          title: newTitle,
-                          titleVariants: [
-                            newTitle,
-                            ...prev.titleVariants.slice(1),
-                          ],
-                        }));
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Attributes - используем новый компонент для автомобилей */}
-          {isCarCategory(aiData.category) ? (
-            <div className="card bg-base-200 mb-6">
-              <div className="card-body">
-                <h3 className="card-title mb-4">
-                  <Package className="w-5 h-5" />
-                  {t('ai.attributes.title')}
-                </h3>
-                <CarAttributesForm
-                  attributes={aiData.attributes}
-                  onChange={(attrs) =>
-                    setAiData({
-                      ...aiData,
-                      attributes: attrs,
-                    })
-                  }
-                  aiSuggestions={aiData.attributes} // Передаем все AI атрибуты как предложения
-                  categoryAttributes={categoryAttributes}
-                />
-              </div>
-            </div>
-          ) : (
-            /* Старый блок атрибутов для других категорий */
-            (Object.keys(aiData.attributes).length > 0 ||
-              categoryAttributes.length > 0) && (
-              <div className="card bg-base-200 mb-6">
-                <div className="card-body">
-                  <h3 className="card-title">
-                    <Package className="w-5 h-5" />
-                    {t('ai.attributes.title')}{' '}
-                    {Object.keys(aiData.attributes).length > 0
-                      ? t('ai.attributes.ai_detected')
-                      : t('ai.attributes.category_based')}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Отображаем атрибуты от AI */}
-                    {Object.entries(aiData.attributes).map(([key, value]) => (
-                      <div key={key} className="form-control">
-                        <label className="label">
-                          <span className="label-text capitalize">{key}</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="input input-bordered input-sm"
-                          value={value || ''}
-                          onChange={(e) =>
-                            setAiData({
-                              ...aiData,
-                              attributes: {
-                                ...aiData.attributes,
-                                [key]: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                    ))}
-
-                    {/* Отображаем атрибуты категории, которых нет в AI данных */}
-                    {categoryAttributes
-                      .filter((attr) => !aiData.attributes[attr.name])
-                      .map((attr) => (
-                        <div key={attr.id} className="form-control">
-                          <label className="label">
-                            <span className="label-text">
-                              {attr.display_name || attr.name}
-                              {attr.is_required && (
-                                <span className="text-error">*</span>
-                              )}
-                            </span>
-                          </label>
-                          {attr.attribute_type === 'select' &&
-                          attr.options &&
-                          Array.isArray(attr.options) ? (
-                            <select
-                              className="select select-bordered select-sm"
-                              onChange={(e) =>
-                                setAiData({
-                                  ...aiData,
-                                  attributes: {
-                                    ...aiData.attributes,
-                                    [attr.name]: e.target.value,
-                                  },
-                                })
-                              }
-                            >
-                              <option value="">
-                                {t('ai.attributes.choose')}
-                              </option>
-                              {attr.options.map((opt: any) => (
-                                <option
-                                  key={opt.id || opt.value}
-                                  value={opt.value}
-                                >
-                                  {opt.display_value || opt.value}
-                                </option>
-                              ))}
-                            </select>
-                          ) : attr.attribute_type === 'boolean' ? (
-                            <input
-                              type="checkbox"
-                              className="checkbox"
-                              onChange={(e) =>
-                                setAiData({
-                                  ...aiData,
-                                  attributes: {
-                                    ...aiData.attributes,
-                                    [attr.name]: e.target.checked.toString(),
-                                  },
-                                })
-                              }
-                            />
-                          ) : attr.attribute_type === 'number' ? (
-                            <input
-                              type="number"
-                              className="input input-bordered input-sm"
-                              placeholder={attr.placeholder}
-                              onChange={(e) =>
-                                setAiData({
-                                  ...aiData,
-                                  attributes: {
-                                    ...aiData.attributes,
-                                    [attr.name]: e.target.value,
-                                  },
-                                })
-                              }
-                            />
-                          ) : (
-                            <input
-                              type="text"
-                              className="input input-bordered input-sm"
-                              placeholder={attr.placeholder}
-                              onChange={(e) =>
-                                setAiData({
-                                  ...aiData,
-                                  attributes: {
-                                    ...aiData.attributes,
-                                    [attr.name]: e.target.value,
-                                  },
-                                })
-                              }
-                            />
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            )
-          )}
-
-          {/* Translations */}
+        {/* Car Selector for automotive categories */}
+        {aiData.category && isCarCategory(aiData.category) && (
           <div className="card bg-base-200 mb-6">
             <div className="card-body">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="card-title">
-                  <Languages className="w-5 h-5" />
-                  {t('ai.translations.title')}
-                </h3>
-                <button
-                  onClick={async () => {
-                    setIsProcessing(true);
-                    try {
-                      const translations = await claudeAI.translateContent(
-                        {
-                          title:
-                            aiData.titleVariants[aiData.selectedTitleIndex] ||
-                            aiData.title,
-                          description: aiData.description,
-                        },
-                        ['en', 'sr', 'ru']
-                      );
-                      setAiData({ ...aiData, translations });
-                      toast.success(
-                        t('ai.success_messages.translations_updated')
-                      );
-                    } catch (error) {
-                      console.error('Translation error:', error);
-                      toast.error(t('ai.errors.translation_update'));
-                    } finally {
-                      setIsProcessing(false);
-                    }
-                  }}
-                  className="btn btn-ghost btn-sm gap-1"
-                  disabled={isProcessing}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t('ai.translations.update')}
-                </button>
-              </div>
-              <div className="space-y-4">
-                {Object.entries(aiData.translations).map(([lang, trans]) => (
-                  <div key={lang} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Globe className="w-4 h-4" />
-                      <span className="font-semibold">
-                        {lang === 'en'
-                          ? 'English'
-                          : lang === 'sr'
-                            ? 'Српски'
-                            : lang === 'ru'
-                              ? 'Русский'
-                              : lang}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <label className="label">
-                          <span className="label-text text-sm">
-                            {t('ai.translations.language_title')}
-                          </span>
-                        </label>
-                        <input
-                          type="text"
-                          className="input input-bordered w-full"
-                          value={trans.title}
-                          onChange={(e) => {
-                            setAiData({
-                              ...aiData,
-                              translations: {
-                                ...aiData.translations,
-                                [lang]: {
-                                  ...trans,
-                                  title: e.target.value,
-                                },
-                              },
-                            });
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="label">
-                          <span className="label-text text-sm">
-                            {t('ai.translations.language_description')}
-                          </span>
-                        </label>
-                        <textarea
-                          className="textarea textarea-bordered w-full h-24"
-                          value={trans.description}
-                          onChange={(e) => {
-                            setAiData({
-                              ...aiData,
-                              translations: {
-                                ...aiData.translations,
-                                [lang]: {
-                                  ...trans,
-                                  description: e.target.value,
-                                },
-                              },
-                            });
-                          }}
-                        />
-                      </div>
-                    </div>
+              <h3 className="card-title text-base mb-4">
+                <Car className="w-5 h-5" />
+                {t('cars.selectCar')}
+              </h3>
+              {/* Показываем сообщение если AI определил марку и модель */}
+              {aiData.attributes.brand && !carSelection.make && (
+                <div className="alert alert-info mb-4">
+                  <Info className="w-4 h-4" />
+                  <div>
+                    <p className="text-sm">
+                      AI определил: {aiData.attributes.brand}{' '}
+                      {aiData.attributes.model}
+                    </p>
+                    <p className="text-xs mt-1">
+                      Выберите из списка ниже для подтверждения или измените
+                      вручную
+                    </p>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+              <CarSelectorCompact
+                value={carSelection}
+                onChange={(selection) => {
+                  setCarSelection(selection);
+                  // Обновляем атрибуты при выборе машины
+                  if (selection.make && selection.model) {
+                    setAiData((prev) => ({
+                      ...prev,
+                      attributes: {
+                        ...prev.attributes,
+                        // Марка
+                        make: selection.make?.name || '',
+                        // Модель
+                        model: selection.model?.name || '',
+                      },
+                    }));
 
-              <div className="alert alert-info mt-4">
-                <Brain className="w-4 h-4" />
-                <span className="text-sm">{t('ai.translations.info')}</span>
-              </div>
+                    // Если заголовок пуст или это стандартный заголовок, обновляем его
+                    const currentTitle =
+                      aiData.titleVariants[aiData.selectedTitleIndex] ||
+                      aiData.title;
+                    if (
+                      !currentTitle ||
+                      currentTitle.toLowerCase().includes('автомобиль')
+                    ) {
+                      const newTitle =
+                        `${selection.make?.name || ''} ${selection.model?.name || ''}`.trim();
+                      setAiData((prev) => ({
+                        ...prev,
+                        title: newTitle,
+                        titleVariants: [
+                          newTitle,
+                          ...prev.titleVariants.slice(1),
+                        ],
+                      }));
+                    }
+                  }
+                }}
+              />
             </div>
           </div>
+        )}
 
-          {/* Social posts */}
-          {aiData.socialPosts && Object.keys(aiData.socialPosts).length > 0 && (
+        {/* Attributes - используем новый компонент для автомобилей */}
+        {isCarCategory(aiData.category) ? (
+          <div className="card bg-base-200 mb-6">
+            <div className="card-body">
+              <h3 className="card-title mb-4">
+                <Package className="w-5 h-5" />
+                {t('ai.attributes.title')}
+              </h3>
+              <CarAttributesForm
+                attributes={aiData.attributes}
+                onChange={(attrs) =>
+                  setAiData({
+                    ...aiData,
+                    attributes: attrs,
+                  })
+                }
+                aiSuggestions={aiData.attributes} // Передаем все AI атрибуты как предложения
+                categoryAttributes={categoryAttributes}
+              />
+            </div>
+          </div>
+        ) : (
+          /* Старый блок атрибутов для других категорий */
+          (Object.keys(aiData.attributes).length > 0 ||
+            categoryAttributes.length > 0) && (
             <div className="card bg-base-200 mb-6">
               <div className="card-body">
                 <h3 className="card-title">
-                  <Share2 className="w-5 h-5" />
-                  {t('ai.social.title')}
+                  <Package className="w-5 h-5" />
+                  {t('ai.attributes.title')}{' '}
+                  {Object.keys(aiData.attributes).length > 0
+                    ? t('ai.attributes.ai_detected')
+                    : t('ai.attributes.category_based')}
                 </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {Object.entries(aiData.socialPosts).map(
-                    ([platform, post]) => {
-                      const shareLink = generateSocialShareLink(platform, post);
-                      return (
-                        <div key={platform} className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              {platform === 'whatsapp' && (
-                                <MessageCircle className="w-4 h-4 text-green-500" />
-                              )}
-                              {platform === 'telegram' && (
-                                <Send className="w-4 h-4 text-blue-500" />
-                              )}
-                              {platform === 'instagram' && (
-                                <Instagram className="w-4 h-4 text-pink-500" />
-                              )}
-                              {platform === 'facebook' && (
-                                <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
-                                  <span className="text-white text-xs font-bold">
-                                    f
-                                  </span>
-                                </div>
-                              )}
-                              {platform === 'twitter' && (
-                                <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
-                                  <span className="text-white text-xs font-bold">
-                                    X
-                                  </span>
-                                </div>
-                              )}
-                              {platform === 'viber' && (
-                                <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
-                                  <span className="text-white text-xs font-bold">
-                                    V
-                                  </span>
-                                </div>
-                              )}
-                              <span className="font-semibold capitalize">
-                                {platform}
-                              </span>
-                            </div>
-                            <div className="flex gap-1">
-                              {shareLink ? (
-                                <a
-                                  href={shareLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="btn btn-xs btn-primary"
-                                  title={t('ai.social.share')}
-                                >
-                                  <Share2 className="w-3 h-3" />
-                                </a>
-                              ) : null}
-                              <button
-                                onClick={() => copyToClipboard(post, platform)}
-                                className="btn btn-xs btn-ghost"
-                                title={t('ai.social.copy')}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Отображаем атрибуты от AI */}
+                  {Object.entries(aiData.attributes).map(([key, value]) => (
+                    <div key={key} className="form-control">
+                      <label className="label">
+                        <span className="label-text capitalize">{key}</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="input input-bordered input-sm"
+                        value={value || ''}
+                        onChange={(e) =>
+                          setAiData({
+                            ...aiData,
+                            attributes: {
+                              ...aiData.attributes,
+                              [key]: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                  ))}
+
+                  {/* Отображаем атрибуты категории, которых нет в AI данных */}
+                  {categoryAttributes
+                    .filter((attr) => !aiData.attributes[attr.name])
+                    .map((attr) => (
+                      <div key={attr.id} className="form-control">
+                        <label className="label">
+                          <span className="label-text">
+                            {attr.display_name || attr.name}
+                            {attr.is_required && (
+                              <span className="text-error">*</span>
+                            )}
+                          </span>
+                        </label>
+                        {attr.attribute_type === 'select' &&
+                        attr.options &&
+                        Array.isArray(attr.options) ? (
+                          <select
+                            className="select select-bordered select-sm"
+                            onChange={(e) =>
+                              setAiData({
+                                ...aiData,
+                                attributes: {
+                                  ...aiData.attributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          >
+                            <option value="">
+                              {t('ai.attributes.choose')}
+                            </option>
+                            {attr.options.map((opt: any) => (
+                              <option
+                                key={opt.id || opt.value}
+                                value={opt.value}
                               >
-                                <Copy className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-                          <p className="text-sm whitespace-pre-wrap">{post}</p>
-                        </div>
-                      );
-                    }
-                  )}
+                                {opt.display_value || opt.value}
+                              </option>
+                            ))}
+                          </select>
+                        ) : attr.attribute_type === 'boolean' ? (
+                          <input
+                            type="checkbox"
+                            className="checkbox"
+                            onChange={(e) =>
+                              setAiData({
+                                ...aiData,
+                                attributes: {
+                                  ...aiData.attributes,
+                                  [attr.name]: e.target.checked.toString(),
+                                },
+                              })
+                            }
+                          />
+                        ) : attr.attribute_type === 'number' ? (
+                          <input
+                            type="number"
+                            className="input input-bordered input-sm"
+                            placeholder={attr.placeholder}
+                            onChange={(e) =>
+                              setAiData({
+                                ...aiData,
+                                attributes: {
+                                  ...aiData.attributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            className="input input-bordered input-sm"
+                            placeholder={attr.placeholder}
+                            onChange={(e) =>
+                              setAiData({
+                                ...aiData,
+                                attributes: {
+                                  ...aiData.attributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        )}
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>
-          )}
+          )
+        )}
 
-          {/* Effectiveness prediction */}
-          {/* TODO: Implement real market analysis for effectiveness prediction
+        {/* Translations */}
+        <div className="card bg-base-200 mb-6">
+          <div className="card-body">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="card-title">
+                <Languages className="w-5 h-5" />
+                {t('ai.translations.title')}
+              </h3>
+              <button
+                onClick={async () => {
+                  setIsProcessing(true);
+                  try {
+                    const translations = await claudeAI.translateContent(
+                      {
+                        title:
+                          aiData.titleVariants[aiData.selectedTitleIndex] ||
+                          aiData.title,
+                        description: aiData.description,
+                      },
+                      ['en', 'sr', 'ru']
+                    );
+                    setAiData({ ...aiData, translations });
+                    toast.success(
+                      t('ai.success_messages.translations_updated')
+                    );
+                  } catch (error) {
+                    console.error('Translation error:', error);
+                    toast.error(t('ai.errors.translation_update'));
+                  } finally {
+                    setIsProcessing(false);
+                  }
+                }}
+                className="btn btn-ghost btn-sm gap-1"
+                disabled={isProcessing}
+              >
+                <RefreshCw className="w-4 h-4" />
+                {t('ai.translations.update')}
+              </button>
+            </div>
+            <div className="space-y-4">
+              {Object.entries(aiData.translations).map(([lang, trans]) => (
+                <div key={lang} className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Globe className="w-4 h-4" />
+                    <span className="font-semibold">
+                      {lang === 'en'
+                        ? 'English'
+                        : lang === 'sr'
+                          ? 'Српски'
+                          : lang === 'ru'
+                            ? 'Русский'
+                            : lang}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="label">
+                        <span className="label-text text-sm">
+                          {t('ai.translations.language_title')}
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        className="input input-bordered w-full"
+                        value={trans.title}
+                        onChange={(e) => {
+                          setAiData({
+                            ...aiData,
+                            translations: {
+                              ...aiData.translations,
+                              [lang]: {
+                                ...trans,
+                                title: e.target.value,
+                              },
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label">
+                        <span className="label-text text-sm">
+                          {t('ai.translations.language_description')}
+                        </span>
+                      </label>
+                      <textarea
+                        className="textarea textarea-bordered w-full h-24"
+                        value={trans.description}
+                        onChange={(e) => {
+                          setAiData({
+                            ...aiData,
+                            translations: {
+                              ...aiData.translations,
+                              [lang]: {
+                                ...trans,
+                                description: e.target.value,
+                              },
+                            },
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="alert alert-info mt-4">
+              <Brain className="w-4 h-4" />
+              <span className="text-sm">{t('ai.translations.info')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Social posts */}
+        {aiData.socialPosts && Object.keys(aiData.socialPosts).length > 0 && (
+          <div className="card bg-base-200 mb-6">
+            <div className="card-body">
+              <h3 className="card-title">
+                <Share2 className="w-5 h-5" />
+                {t('ai.social.title')}
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {Object.entries(aiData.socialPosts).map(([platform, post]) => {
+                  const shareLink = generateSocialShareLink(platform, post);
+                  return (
+                    <div key={platform} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {platform === 'whatsapp' && (
+                            <MessageCircle className="w-4 h-4 text-green-500" />
+                          )}
+                          {platform === 'telegram' && (
+                            <Send className="w-4 h-4 text-blue-500" />
+                          )}
+                          {platform === 'instagram' && (
+                            <Instagram className="w-4 h-4 text-pink-500" />
+                          )}
+                          {platform === 'facebook' && (
+                            <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">
+                                f
+                              </span>
+                            </div>
+                          )}
+                          {platform === 'twitter' && (
+                            <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">
+                                X
+                              </span>
+                            </div>
+                          )}
+                          {platform === 'viber' && (
+                            <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">
+                                V
+                              </span>
+                            </div>
+                          )}
+                          <span className="font-semibold capitalize">
+                            {platform}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          {shareLink ? (
+                            <a
+                              href={shareLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-xs btn-primary"
+                              title={t('ai.social.share')}
+                            >
+                              <Share2 className="w-3 h-3" />
+                            </a>
+                          ) : null}
+                          <button
+                            onClick={() => copyToClipboard(post, platform)}
+                            className="btn btn-xs btn-ghost"
+                            title={t('ai.social.copy')}
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{post}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Effectiveness prediction */}
+        {/* TODO: Implement real market analysis for effectiveness prediction
               - Analyze similar listings in the same category
               - Calculate average views based on category and price
               - Predict time to sell based on historical data
               - Calculate real sell probability based on market demand */}
-          <div className="card bg-gradient-to-r from-success/10 to-success/5 border-2 border-success/20 mb-6">
-            <div className="card-body">
-              <h3 className="card-title">
-                <TrendingUp className="w-5 h-5" />
-                {t('ai.prediction.title')}
-              </h3>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-success">250+</div>
-                  <div className="text-sm text-base-content/60">
-                    {t('ai.prediction.views')}
-                  </div>
+        <div className="card bg-gradient-to-r from-success/10 to-success/5 border-2 border-success/20 mb-6">
+          <div className="card-body">
+            <h3 className="card-title">
+              <TrendingUp className="w-5 h-5" />
+              {t('ai.prediction.title')}
+            </h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success">250+</div>
+                <div className="text-sm text-base-content/60">
+                  {t('ai.prediction.views')}
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-success">15-20</div>
-                  <div className="text-sm text-base-content/60">
-                    {t('ai.prediction.messages')}
-                  </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success">15-20</div>
+                <div className="text-sm text-base-content/60">
+                  {t('ai.prediction.messages')}
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-success">3-5</div>
-                  <div className="text-sm text-base-content/60">
-                    {t('ai.prediction.days_to_sell')}
-                  </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success">3-5</div>
+                <div className="text-sm text-base-content/60">
+                  {t('ai.prediction.days_to_sell')}
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-success">95%</div>
-                  <div className="text-sm text-base-content/60">
-                    {t('ai.prediction.sell_probability')}
-                  </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success">95%</div>
+                <div className="text-sm text-base-content/60">
+                  {t('ai.prediction.sell_probability')}
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => setCurrentView('publish')}
-              className="btn btn-primary flex-1"
-            >
-              {t('ai.actions.continue_to_publish')}
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </button>
-            <button className="btn btn-ghost">
-              {t('ai.actions.save_draft')}
-            </button>
-          </div>
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setCurrentView('publish')}
+            className="btn btn-primary flex-1"
+          >
+            {t('ai.actions.continue_to_publish')}
+            <ArrowRight className="w-4 h-4 ml-1" />
+          </button>
+          <button className="btn btn-ghost">
+            {t('ai.actions.save_draft')}
+          </button>
         </div>
       </div>
     </motion.div>
@@ -2731,343 +2725,349 @@ export default function AIPoweredListingCreationPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-base-200"
+      className="bg-base-200 rounded-lg p-6"
     >
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Success Animation */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200 }}
-            className="text-center mb-8"
-          >
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-success/20 rounded-full mb-4">
-              <Check className="w-10 h-10 text-success" />
-            </div>
-            <h1 className="text-2xl font-bold mb-2">{t('ai.publish.title')}</h1>
-            <p className="text-base-content/70">{t('ai.publish.subtitle')}</p>
-          </motion.div>
-
-          {/* Language Switcher */}
-          <div className="flex justify-center gap-2 mb-6">
-            <button
-              onClick={() => setPreviewLanguage('ru')}
-              className={`btn btn-sm ${previewLanguage === 'ru' ? 'btn-primary' : 'btn-outline'}`}
-            >
-              🇷🇺 Русский
-            </button>
-            <button
-              onClick={() => setPreviewLanguage('en')}
-              className={`btn btn-sm ${previewLanguage === 'en' ? 'btn-primary' : 'btn-outline'}`}
-            >
-              🇬🇧 English
-            </button>
-            <button
-              onClick={() => setPreviewLanguage('sr')}
-              className={`btn btn-sm ${previewLanguage === 'sr' ? 'btn-primary' : 'btn-outline'}`}
-            >
-              🇷🇸 Српски
-            </button>
+      <div className="max-w-4xl mx-auto">
+        {/* Success Animation */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 200 }}
+          className="text-center mb-8"
+        >
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-success/20 rounded-full mb-4">
+            <Check className="w-10 h-10 text-success" />
           </div>
+          <h1 className="text-2xl font-bold mb-2">{t('ai.publish.title')}</h1>
+          <p className="text-base-content/70">{t('ai.publish.subtitle')}</p>
+        </motion.div>
 
-          {/* Preview Card */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="card bg-base-100 shadow-xl mb-6"
+        {/* Language Switcher */}
+        <div className="flex justify-center gap-2 mb-6">
+          <button
+            onClick={() => setPreviewLanguage('ru')}
+            className={`btn btn-sm ${previewLanguage === 'ru' ? 'btn-primary' : 'btn-outline'}`}
           >
-            {images.length > 0 && (
-              <figure className="relative">
-                <div className="relative w-full h-96">
-                  <Image
-                    src={images[0]}
-                    alt={aiData.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                {images.length > 1 && (
-                  <div className="absolute bottom-4 right-4 badge badge-neutral gap-1">
-                    <ImageIcon className="w-3 h-3" />+{images.length - 1}
-                  </div>
-                )}
-              </figure>
-            )}
+            🇷🇺 Русский
+          </button>
+          <button
+            onClick={() => setPreviewLanguage('en')}
+            className={`btn btn-sm ${previewLanguage === 'en' ? 'btn-primary' : 'btn-outline'}`}
+          >
+            🇬🇧 English
+          </button>
+          <button
+            onClick={() => setPreviewLanguage('sr')}
+            className={`btn btn-sm ${previewLanguage === 'sr' ? 'btn-primary' : 'btn-outline'}`}
+          >
+            🇷🇸 Српски
+          </button>
+        </div>
 
-            <div className="card-body">
-              <h2 className="card-title text-2xl">
-                {previewLanguage === locale
-                  ? aiData.titleVariants[aiData.selectedTitleIndex] ||
-                    aiData.title
-                  : aiData.translations[previewLanguage]?.title ||
-                    aiData.titleVariants[aiData.selectedTitleIndex] ||
-                    aiData.title}
-              </h2>
-
-              <div className="text-3xl font-bold text-primary mb-4">
-                {aiData.price} РСД
+        {/* Preview Card */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="card bg-base-100 shadow-xl mb-6"
+        >
+          {images.length > 0 && (
+            <figure className="relative">
+              <div className="relative w-full h-96">
+                <Image
+                  src={images[0]}
+                  alt={aiData.title}
+                  fill
+                  className="object-cover"
+                />
               </div>
-
-              <p className="text-base-content/80 mb-4 whitespace-pre-wrap">
-                {previewLanguage === locale
-                  ? aiData.description
-                  : aiData.translations[previewLanguage]?.description ||
-                    aiData.description}
-              </p>
-
-              {/* Атрибуты */}
-              {Object.keys(aiData.attributes).length > 0 && (
-                <div className="mb-4">
-                  <h3 className="font-semibold mb-2">
-                    {t('ai.publish.specifications')}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(aiData.attributes).map(([key, value]) => {
-                      const categoryAttr = categoryAttributes.find(
-                        (attr) => attr.name === key
-                      );
-
-                      // Получаем переведенное имя атрибута
-                      let displayName = categoryAttr?.display_name || key;
-                      if (
-                        categoryAttr?.translations &&
-                        categoryAttr.translations[previewLanguage]
-                      ) {
-                        displayName =
-                          categoryAttr.translations[previewLanguage];
-                      }
-
-                      // Получаем переведенное значение для select атрибутов
-                      let displayValue = String(value);
-                      if (
-                        categoryAttr?.attribute_type === 'select' &&
-                        categoryAttr?.option_translations?.[previewLanguage]?.[
-                          value
-                        ]
-                      ) {
-                        displayValue =
-                          categoryAttr.option_translations[previewLanguage][
-                            value
-                          ];
-                      }
-
-                      return (
-                        <div
-                          key={key}
-                          className="flex justify-between py-1 border-b border-base-200"
-                        >
-                          <span className="text-base-content/70">
-                            {displayName}:
-                          </span>
-                          <span className="font-medium">{displayValue}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+              {images.length > 1 && (
+                <div className="absolute bottom-4 right-4 badge badge-neutral gap-1">
+                  <ImageIcon className="w-3 h-3" />+{images.length - 1}
                 </div>
               )}
-
-              <div className="flex items-center gap-4 text-sm text-base-content/60 mb-4">
-                <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  250+ {t('ai.publish.views_per_day')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  {t('ai.publish.high_interest')}
-                </span>
-              </div>
-
-              {/* Tags */}
-              {aiData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {aiData.tags.map((tag, index) => (
-                    <div key={index} className="badge badge-secondary">
-                      {tag}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Publishing options */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="card bg-base-100"
-            >
-              <div className="card-body">
-                <h3 className="font-bold flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  {t('ai.publish.optimal_time')}
-                </h3>
-                <p className="text-sm text-base-content/70">
-                  {t('ai.publish.optimal_time_desc', {
-                    time: aiData.publishTime,
-                  })}
-                </p>
-                <button className="btn btn-primary btn-sm mt-2">
-                  <Calendar className="w-4 h-4 mr-1" />
-                  {t('ai.publish.schedule')}
-                </button>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="card bg-base-100"
-            >
-              <div className="card-body">
-                <h3 className="font-bold flex items-center gap-2">
-                  <Share2 className="w-5 h-5" />
-                  {t('ai.publish.social_auto')}
-                </h3>
-                <p className="text-sm text-base-content/70">
-                  {t('ai.publish.social_auto_desc')}
-                </p>
-                <button className="btn btn-secondary btn-sm mt-2">
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  {t('ai.publish.enable')}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* AI insights */}
-          {aiData.insights && Object.keys(aiData.insights).length > 0 && (
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="card bg-gradient-to-r from-primary/10 to-secondary/10 mb-8"
-            >
-              <div className="card-body">
-                <h3 className="font-bold mb-4 flex items-center gap-2">
-                  <Brain className="w-5 h-5" />
-                  {t('ai.publish.ai_insights_title')}
-                </h3>
-                <div className="space-y-3">
-                  {aiData.insights[previewLanguage] && (
-                    <>
-                      <div className="flex items-start gap-3">
-                        <TrendingUp className="w-5 h-5 text-success mt-0.5" />
-                        <div>
-                          <p className="font-semibold">
-                            {t('ai.publish.demand')}
-                          </p>
-                          <p className="text-sm text-base-content/70">
-                            {aiData.insights[previewLanguage].demand}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Users className="w-5 h-5 text-info mt-0.5" />
-                        <div>
-                          <p className="font-semibold">
-                            {t('ai.publish.target_audience')}
-                          </p>
-                          <p className="text-sm text-base-content/70">
-                            {aiData.insights[previewLanguage].audience}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <ThumbsUp className="w-5 h-5 text-warning mt-0.5" />
-                        <div>
-                          <p className="font-semibold">
-                            {t('ai.publish.recommendations')}
-                          </p>
-                          <p className="text-sm text-base-content/70">
-                            {aiData.insights[previewLanguage].recommendations}
-                          </p>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+            </figure>
           )}
 
-          {/* Publish Actions */}
+          <div className="card-body">
+            <h2 className="card-title text-2xl">
+              {previewLanguage === locale
+                ? aiData.titleVariants[aiData.selectedTitleIndex] ||
+                  aiData.title
+                : aiData.translations[previewLanguage]?.title ||
+                  aiData.titleVariants[aiData.selectedTitleIndex] ||
+                  aiData.title}
+            </h2>
+
+            <div className="text-3xl font-bold text-primary mb-4">
+              {aiData.price} РСД
+            </div>
+
+            <p className="text-base-content/80 mb-4 whitespace-pre-wrap">
+              {previewLanguage === locale
+                ? aiData.description
+                : aiData.translations[previewLanguage]?.description ||
+                  aiData.description}
+            </p>
+
+            {/* Атрибуты */}
+            {Object.keys(aiData.attributes).length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold mb-2">
+                  {t('ai.publish.specifications')}
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(aiData.attributes).map(([key, value]) => {
+                    const categoryAttr = categoryAttributes.find(
+                      (attr) => attr.name === key
+                    );
+
+                    // Получаем переведенное имя атрибута
+                    let displayName = categoryAttr?.display_name || key;
+                    if (
+                      categoryAttr?.translations &&
+                      categoryAttr.translations[previewLanguage]
+                    ) {
+                      displayName = categoryAttr.translations[previewLanguage];
+                    }
+
+                    // Получаем переведенное значение для select атрибутов
+                    let displayValue = String(value);
+                    if (
+                      categoryAttr?.attribute_type === 'select' &&
+                      categoryAttr?.option_translations?.[previewLanguage]?.[
+                        value
+                      ]
+                    ) {
+                      displayValue =
+                        categoryAttr.option_translations[previewLanguage][
+                          value
+                        ];
+                    }
+
+                    return (
+                      <div
+                        key={key}
+                        className="flex justify-between py-1 border-b border-base-200"
+                      >
+                        <span className="text-base-content/70">
+                          {displayName}:
+                        </span>
+                        <span className="font-medium">{displayValue}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-4 text-sm text-base-content/60 mb-4">
+              <span className="flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                250+ {t('ai.publish.views_per_day')}
+              </span>
+              <span className="flex items-center gap-1">
+                <Heart className="w-4 h-4" />
+                {t('ai.publish.high_interest')}
+              </span>
+            </div>
+
+            {/* Tags */}
+            {aiData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {aiData.tags.map((tag, index) => (
+                  <div key={index} className="badge badge-secondary">
+                    {tag}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Publishing options */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex gap-3"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="card bg-base-100"
           >
-            <button
-              onClick={publishListing}
-              className="btn btn-primary btn-lg flex-1"
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  {t('ai.actions.publishing')}
-                </>
-              ) : (
-                <>
-                  {t('ai.actions.publish_now')}
-                  <Brain className="w-5 h-5 ml-1" />
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => setCurrentView('enhance')}
-              className="btn btn-outline btn-lg"
-            >
-              {t('ai.actions.back_to_edit')}
-            </button>
+            <div className="card-body">
+              <h3 className="font-bold flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                {t('ai.publish.optimal_time')}
+              </h3>
+              <p className="text-sm text-base-content/70">
+                {t('ai.publish.optimal_time_desc', {
+                  time: aiData.publishTime,
+                })}
+              </p>
+              <button className="btn btn-primary btn-sm mt-2">
+                <Calendar className="w-4 h-4 mr-1" />
+                {t('ai.publish.schedule')}
+              </button>
+            </div>
           </motion.div>
 
-          {/* Social proof */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-center mt-8"
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="card bg-base-100"
           >
-            <div className="flex items-center justify-center gap-2 text-sm text-base-content/60">
-              <Users className="w-4 h-4" />
-              <span>{t('ai.publish.social_proof', { count: 834 })}</span>
+            <div className="card-body">
+              <h3 className="font-bold flex items-center gap-2">
+                <Share2 className="w-5 h-5" />
+                {t('ai.publish.social_auto')}
+              </h3>
+              <p className="text-sm text-base-content/70">
+                {t('ai.publish.social_auto_desc')}
+              </p>
+              <button className="btn btn-secondary btn-sm mt-2">
+                <Sparkles className="w-4 h-4 mr-1" />
+                {t('ai.publish.enable')}
+              </button>
             </div>
           </motion.div>
         </div>
+
+        {/* AI insights */}
+        {aiData.insights && Object.keys(aiData.insights).length > 0 && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="card bg-gradient-to-r from-primary/10 to-secondary/10 mb-8"
+          >
+            <div className="card-body">
+              <h3 className="font-bold mb-4 flex items-center gap-2">
+                <Brain className="w-5 h-5" />
+                {t('ai.publish.ai_insights_title')}
+              </h3>
+              <div className="space-y-3">
+                {aiData.insights[previewLanguage] && (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="w-5 h-5 text-success mt-0.5" />
+                      <div>
+                        <p className="font-semibold">
+                          {t('ai.publish.demand')}
+                        </p>
+                        <p className="text-sm text-base-content/70">
+                          {aiData.insights[previewLanguage].demand}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Users className="w-5 h-5 text-info mt-0.5" />
+                      <div>
+                        <p className="font-semibold">
+                          {t('ai.publish.target_audience')}
+                        </p>
+                        <p className="text-sm text-base-content/70">
+                          {aiData.insights[previewLanguage].audience}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <ThumbsUp className="w-5 h-5 text-warning mt-0.5" />
+                      <div>
+                        <p className="font-semibold">
+                          {t('ai.publish.recommendations')}
+                        </p>
+                        <p className="text-sm text-base-content/70">
+                          {aiData.insights[previewLanguage].recommendations}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Publish Actions */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex gap-3"
+        >
+          <button
+            onClick={publishListing}
+            className="btn btn-primary btn-lg flex-1"
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                {t('ai.actions.publishing')}
+              </>
+            ) : (
+              <>
+                {t('ai.actions.publish_now')}
+                <Brain className="w-5 h-5 ml-1" />
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setCurrentView('enhance')}
+            className="btn btn-outline btn-lg"
+          >
+            {t('ai.actions.back_to_edit')}
+          </button>
+        </motion.div>
+
+        {/* Social proof */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-center mt-8"
+        >
+          <div className="flex items-center justify-center gap-2 text-sm text-base-content/60">
+            <Users className="w-4 h-4" />
+            <span>{t('ai.publish.social_proof', { count: 834 })}</span>
+          </div>
+        </motion.div>
       </div>
     </motion.div>
   );
 
+  // Показываем индикатор загрузки, пока проверяется аутентификация
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-base-content/70">{t('loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      {/* Navigation Bar */}
-      <div className="navbar bg-base-100 border-b border-base-200 fixed top-0 z-50">
-        <div className="flex-1">
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-2">
+        {/* Header с кнопкой назад и badge */}
+        <div className="flex items-center justify-between mb-4">
           <Link
             href={`/${locale}/create-listing-choice`}
-            className="btn btn-ghost"
+            className="btn btn-ghost gap-2"
           >
             <ChevronLeft className="w-5 h-5" />
             {t('ai.back_to_choice')}
           </Link>
-        </div>
-        <div className="flex-none">
           <div className="badge badge-secondary badge-lg gap-1">
             <Brain className="w-3 h-3" />
             AI-Powered
           </div>
         </div>
-      </div>
 
-      {/* Main Content with Padding for Fixed Navbar */}
-      <div className="pt-16">
+        {/* Views */}
         <AnimatePresence mode="wait">
           {currentView === 'upload' && renderUploadView()}
           {currentView === 'process' && renderProcessView()}

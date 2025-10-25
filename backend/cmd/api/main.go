@@ -52,6 +52,7 @@ func main() {
 	if err := godotenv.Load(envFile); err != nil {
 		logger.Info().Str("envFile", envFile).Msgf("Warning: Could not load .env file: %s", envFile)
 	}
+
 	// Инициализация конфигурации
 	cfg, err := config.NewConfig()
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 type Logger struct {
 	debug *log.Logger
 	info  *log.Logger
+	warn  *log.Logger
 	error *log.Logger
 }
 
@@ -18,6 +19,7 @@ func New() *Logger {
 	return &Logger{
 		debug: log.New(os.Stdout, "DEBUG: ", flags),
 		info:  log.New(os.Stdout, "INFO: ", flags),
+		warn:  log.New(os.Stdout, "WARN: ", flags),
 		error: log.New(os.Stderr, "ERROR: ", flags),
 	}
 }
@@ -28,6 +30,10 @@ func (l *Logger) Debug(format string, v ...interface{}) {
 
 func (l *Logger) Info(format string, v ...interface{}) {
 	_ = l.info.Output(2, fmt.Sprintf(format, v...))
+}
+
+func (l *Logger) Warn(format string, v ...interface{}) {
+	_ = l.warn.Output(2, fmt.Sprintf(format, v...))
 }
 
 func (l *Logger) Error(format string, v ...interface{}) {

@@ -4,6 +4,8 @@ import { env as runtimeEnv } from 'next-runtime-env';
  * Безопасный доступ к runtime переменным окружения
  * На сервере использует process.env, на клиенте - runtime env
  */
+export function getEnv(key: string): string | undefined;
+export function getEnv(key: string, defaultValue: string): string;
 export function getEnv(key: string, defaultValue?: string): string | undefined {
   if (typeof window === 'undefined') {
     // Server-side: используем process.env

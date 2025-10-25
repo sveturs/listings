@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Search Page E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3001/en/search');
+    await page.goto('/en/search');
   });
 
   test('should load search page with all components', async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe('Search Page E2E Tests', () => {
     const electronicsExpander = page
       .locator('button')
       .filter({ hasText: /^$/ })
-      .near(page.getByText('Electronics'))
+      .locator('.. >> text=Electronics')
       .first();
     await electronicsExpander.click();
 
@@ -63,8 +63,9 @@ test.describe('Search Page E2E Tests', () => {
 
     // Select Smartphones category
     const smartphonesCheckbox = page
-      .locator('input[type="checkbox"]')
-      .near(page.getByText('Smartphones'));
+      .locator('text=Smartphones')
+      .locator('..')
+      .locator('input[type="checkbox"]');
     await smartphonesCheckbox.check();
 
     // Verify filter is applied
@@ -201,8 +202,9 @@ test.describe('Search Page E2E Tests', () => {
     // Select a category first
     await page.waitForSelector('text=Electronics', { timeout: 10000 });
     const electronicsCheckbox = page
-      .locator('input[type="checkbox"]')
-      .near(page.getByText('Electronics'));
+      .locator('text=Electronics')
+      .locator('..')
+      .locator('input[type="checkbox"]');
     await electronicsCheckbox.check();
 
     // Perform search
@@ -284,7 +286,7 @@ test.describe('Search Page Mobile Tests', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
   test('should be responsive on mobile', async ({ page }) => {
-    await page.goto('http://localhost:3001/en/search');
+    await page.goto('/en/search');
 
     // Check search input is visible
     await expect(page.locator('input[placeholder*="Search"]')).toBeVisible();
@@ -298,7 +300,7 @@ test.describe('Search Page Mobile Tests', () => {
   });
 
   test('should handle touch interactions', async ({ page }) => {
-    await page.goto('http://localhost:3001/en/search');
+    await page.goto('/en/search');
 
     // Tap on search input
     const searchInput = page.locator('input[placeholder*="Search"]');

@@ -64,7 +64,7 @@ export default function CreateListingSmartPage() {
   const params = useParams();
   const locale = params.locale as string;
   const t = useTranslations('create_listing');
-  const { user } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
   const [currentView, setCurrentView] = useState<
     'start' | 'create' | 'preview'
   >('start');
@@ -121,12 +121,13 @@ export default function CreateListingSmartPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Auth check - wait for loading to complete before redirecting
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       toast.error(t('auth_required'));
       router.push('/');
     }
-  }, [user, router, t]);
+  }, [user, isLoading, router, t]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -920,9 +921,9 @@ export default function CreateListingSmartPage() {
                 <div className="card-body flex-row items-center">
                   <Zap className="w-12 h-12 text-secondary mr-4" />
                   <div className="text-left">
-                    <h3 className="font-bold">Супер-быстро</h3>
+                    <h3 className="font-bold">{t('modes.super_quick')}</h3>
                     <p className="text-sm text-base-content/60">
-                      Только самое необходимое
+                      {t('modes.super_quick_description')}
                     </p>
                   </div>
                 </div>
@@ -1803,6 +1804,15 @@ export default function CreateListingSmartPage() {
       </div>
     </motion.div>
   );
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <>

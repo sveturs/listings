@@ -2,42 +2,13 @@
   "admin": "Administracija",
   "navigation": {
     "home": "Početna",
-    "marketplace": "Tržište",
-    "createListing": "Kreiraj oglas",
-    "myListings": "Moji oglasi",
-    "blog": "Blog",
-    "news": "Vesti",
-    "contacts": "Kontakti",
-    "userContacts": "Moji kontakti",
-    "profile": "Profil",
-    "logout": "Odjavi se",
-    "close": "Zatvori",
     "search": "Pretraga",
     "create": "Dodaj",
     "chats": "Poruke",
-    "adminPanel": "Admin panel",
-    "messages": "Poruke",
-    "notifications": "Obaveštenja",
-    "settings": "Podešavanja",
-    "help": "Pomoć",
-    "searchPlaceholder": "Pretražite proizvode i usluge...",
-    "viewAll": "Prikaži sve",
-    "moreOptions": "Više opcija",
-    "backToTop": "Vrati se na vrh",
-    "distance": {
-      "fromYou": "Удаљеност од вас",
-      "meters": "{count} метара",
-      "kilometers": "{count} километара",
-      "walking": "Пешке: ~{time}",
-      "minutes": "{count} мин",
-      "hours": "{count} ч",
-      "walkingDistance": "На пешачкој удаљености!"
-    },
-    "location": {
-      "latitude": "Ширина:",
-      "longitude": "Дужина:",
-      "specifyLocation": "Одредите локацију"
-    }
+    "profile": "Profil",
+    "close": "Zatvori",
+    "closeMenu": "Затвори мени",
+    "toggleMenu": "Пребаци мени за навигацију"
   },
   "search": {
     "notFound": "Nije pronađeno",
@@ -268,7 +239,10 @@
   "hoursAgo": "h pre",
   "buy": "Kupi",
   "sendMessage": "Pošalji poruku",
-  "chat": "Ćaskanje",
+  "chat": {
+    "openChat": "Отвори ћаскање",
+    "startChat": "Започни разговор"
+  },
   "eco": {
     "secondHand": "Polovno",
     "refurbished": "Obnovljeno",
@@ -406,6 +380,10 @@
   "contactSeller": "Kontaktiraj prodavca",
   "addToFavorites": "Dodaj u omiljene",
   "share": "Podeli",
+  "product": {
+    "addToFavorites": "Dodaj u omiljene",
+    "removeFromFavorites": "Ukloni iz omiljenih"
+  },
   "q": "Pretraga",
   "fuzzy": "Neodređena pretraga",
   "lat": "Geog. širina",
@@ -566,7 +544,14 @@
   "success": "Uspešno",
   "saved": "Sačuvano",
   "updated": "Ažurirano",
-  "view": "Pregled",
+  "view": {
+    "gridView": "Приказ мреже",
+    "listView": "Приказ листе",
+    "oneColumn": "Једна колона",
+    "twoColumns": "Две колоне",
+    "threeColumns": "Три колоне",
+    "fourColumns": "Четири колоне"
+  },
   "new": "Novo",
   "minutesAgo": "Pre {minutes} minuta",
   "hourAgo": "Pre {hours} sat",
@@ -650,14 +635,6 @@
   "expand": "Proširi",
   "collapse": "Smanji",
   "required": "Obavezno",
-  "navigation": {
-    "home": "Početna",
-    "search": "Pretraga",
-    "create": "Dodaj",
-    "chats": "Poruke",
-    "profile": "Profil",
-    "close": "Zatvori"
-  },
   "common": {
     "minutes": "Minuti",
     "km": "km",
@@ -740,5 +717,16 @@
   "copyright": "© 2024 SveTu. Sva prava zadržana.",
   "termsOfUse": "Uslovi korišćenja",
   "confidentiality": "Privatnost",
-  "cookie": "Cookie"
+  "cookie": "Cookie",
+  "carousel": {
+    "goToSlide": "Иди на слајд {index}"
+  },
+  "theme": {
+    "loadingToggle": "Учитавање прекидача теме"
+  },
+  "language": {
+    "switchLanguage": "Промени језик",
+    "selectLanguage": "Изабери језик",
+    "currentLanguage": "Тренутни језик: {lang}"
+  }
 }

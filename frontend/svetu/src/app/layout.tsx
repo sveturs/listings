@@ -1,7 +1,8 @@
-import './globals.css';
+// IMPORTANT: This root layout is intentionally minimal.
+// The actual <html> and <body> tags are in app/[locale]/layout.tsx
+// because all routes go through the locale segment.
+// Having <html>/<body> in both layouts causes hydration errors.
 
-// Корневой layout просто передает children
-// Все HTML теги и компоненты определены в /app/[locale]/layout.tsx
 export default function RootLayout({
   children,
 }: {

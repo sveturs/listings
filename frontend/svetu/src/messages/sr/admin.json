@@ -1892,7 +1892,24 @@
   "qualityTests": {
     "title": "Testovi kvaliteta koda",
     "description": "Sveobuhvatan skup testova za backend i frontend",
+    "cleanup_test_data": "Čišćenje test podataka",
     "runAll": "Pokreni sve testove",
+    "runAllQuality": "Pokreni sve testove kvaliteta",
+    "runAllUnit": "Pokreni sve unit testove",
+    "runAllBuilds": "Pokreni sve build testove",
+    "clearResults": "Obriši rezultate",
+    "categoryQuality": "Kvalitet koda",
+    "categoryUnit": "Unit testovi",
+    "categoryIntegration": "Integracioni testovi",
+    "categoryBuild": "Build i provera tipova",
+    "categoryCoverage": "Pokrivenost testovima",
+    "categoryFunctional": "Funkcionalni API testovi",
+    "categorySecurity": "Sigurnosni testovi",
+    "categoryPerformance": "Testovi performansi",
+    "categoryDataIntegrity": "Testovi integriteta podataka",
+    "categoryE2E": "End-to-End testovi",
+    "categoryMonitoring": "Мониторинг и посматрање",
+    "categoryAccessibility": "Testovi pristupačnosti",
     "backend": "Backend testovi",
     "frontend": "Frontend testovi",
     "running": "Pokretanje...",
@@ -1906,12 +1923,318 @@
     "details": "Detalji",
     "runTest": "Pokreni test",
     "totalTests": "Ukupno testova",
+    "totalTestSuites": "Testnih svita",
+    "testSuitesDesc": "Grupe povezanih testova",
+    "testSuitesInfo": "💡 Ovih 56 test svita sadrži 727+ pojedinačnih testova: 591 Jest test u frontend-u i 136 Go testova u backend-u, plus integracioni testovi (cache, OpenSearch, PostgreSQL), provere linting-a, formatiranja i build-a.",
+    "localOnlyTestsTitle": "🏠 Testovi za lokalni razvoj",
+    "localOnlyTestsDescription": "Testovi sa 🏠 ikonom rade samo u localhost razvojnom okruženju. Oni koriste Next.js API rute za izvršavanje shell komandi i nisu dostupni na production serverima.",
+    "localOnlyTooltip": "Ovaj test radi samo na localhost-u (koristi shell komande)",
+    "suitesCompleted": "Završeno {count} od {total} svita",
     "passed": "Prošlo",
     "progress": "Napredak",
     "testsCompleted": "Testova završeno",
     "noTestsRun": "Testovi još nisu pokrenuti",
     "allGood": "Sve je u redu!",
     "needAttention": "Potrebna pažnja",
-    "successRate": "stopa uspešnosti"
+    "successRate": "stopa uspešnosti",
+    "tests": {
+      "backend-format": {
+        "name": "Formatiranje Backend-a",
+        "description": "Provera formatiranja Go koda (gofumpt, goimports)"
+      },
+      "backend-lint": {
+        "name": "Linting Backend-a",
+        "description": "Pokretanje golangci-lint za proveru kvaliteta koda"
+      },
+      "frontend-format": {
+        "name": "Formatiranje Frontend-a",
+        "description": "Provera Prettier formatiranja"
+      },
+      "frontend-lint": {
+        "name": "Linting Frontend-a",
+        "description": "Pokretanje ESLint za proveru kvaliteta koda"
+      },
+      "backend-tests-unit": {
+        "name": "Unit testovi Backend-a",
+        "description": "Pokretanje samo Go unit testova"
+      },
+      "frontend-tests": {
+        "name": "Unit testovi Frontend-a",
+        "description": "Pokretanje Jest unit testova"
+      },
+      "frontend-unit-autocomplete-field": {
+        "name": "AutocompleteAttributeField testovi",
+        "description": "Unit testovi za komponentu autokompletiranja (40 testova, ~85% pokrivenost)"
+      },
+      "frontend-unit-autocomplete-hook": {
+        "name": "useAttributeAutocomplete Hook testovi",
+        "description": "Unit testovi za hook autokompletiranja (35 testova, ~90% pokrivenost)"
+      },
+      "frontend-unit-cars-service": {
+        "name": "Cars Service testovi",
+        "description": "Unit testovi za servis automobila (45 testova, ~95% pokrivenost)"
+      },
+      "frontend-unit-icon-mapper": {
+        "name": "Icon Mapper testovi",
+        "description": "Unit testovi za mapiranje ikona (80 testova, ~90% pokrivenost)"
+      },
+      "frontend-unit-env-utils": {
+        "name": "Environment Utils testovi",
+        "description": "Unit testovi za alate okruženja (60 testova, ~85% pokrivenost)"
+      },
+      "backend-tests-short": {
+        "name": "Brzi testovi Backend-a",
+        "description": "Brzi testovi (bez integracionih/OpenSearch)"
+      },
+      "backend-tests-full": {
+        "name": "Potpuni testovi Backend-a",
+        "description": "Svi testovi uključujući integracione"
+      },
+      "backend-tests-postexpress": {
+        "name": "Post Express integracija",
+        "description": "Test integracije sa Post Express API-jem"
+      },
+      "backend-build": {
+        "name": "Izgradnja Backend-a",
+        "description": "Kompilacija Go koda"
+      },
+      "frontend-build": {
+        "name": "Izgradnja Frontend-a",
+        "description": "Next.js production build"
+      },
+      "typescript-check": {
+        "name": "TypeScript provera",
+        "description": "Provera tipova (tsc --noEmit)"
+      },
+      "backend-tests-coverage": {
+        "name": "Pokrivenost testovima Backend-a",
+        "description": "Pokretanje testova sa izveštajem o pokrivenosti"
+      },
+      "frontend-tests-coverage": {
+        "name": "Pokrivenost testovima Frontend-a",
+        "description": "Jest testovi sa izveštajem o pokrivenosti"
+      },
+      "api-auth-flow": {
+        "name": "Test toka autentifikacije",
+        "description": "Provera endpointa autentifikacije (login, me, logout)"
+      },
+      "api-marketplace-crud": {
+        "name": "CRUD marketplace-a",
+        "description": "Provera operacija sa oglasima marketplace-a"
+      },
+      "api-categories-fetch": {
+        "name": "API kategorija",
+        "description": "Provera admin kategorija endpointa"
+      },
+      "api-search-functionality": {
+        "name": "API pretrage",
+        "description": "Provera funkcionalnosti unificirane pretrage"
+      },
+      "api-admin-operations": {
+        "name": "Admin operacije",
+        "description": "Provera admin panela endpointa"
+      },
+      "api-review-creation": {
+        "name": "Kreiranje recenzija",
+        "description": "Provera kreiranja recenzija sa ocenom (nacrt + objava)"
+      },
+      "api-auth-invalid-token": {
+        "name": "Test nevažećeg tokena",
+        "description": "Provera odbijanja API zahteva sa nevažećim autentifikacionim tokenom"
+      },
+      "api-auth-missing-token": {
+        "name": "Test nedostajućeg tokena",
+        "description": "Provera odbijanja API zahteva bez autentifikacionog tokena"
+      },
+      "api-admin-unauthorized": {
+        "name": "Neautorizovani admin",
+        "description": "Provera odbijanja admin endpointa za ne-admin korisnike"
+      },
+      "api-search-invalid-params": {
+        "name": "Nevažeći parametri pretrage",
+        "description": "Provera obrade nevažećih parametara pretrage"
+      },
+      "api-search-empty-query": {
+        "name": "Prazan upit pretrage",
+        "description": "Provera pretrage sa praznim stringom upita"
+      },
+      "api-search-unicode": {
+        "name": "Unicode pretraga",
+        "description": "Provera pretrage sa Unicode karakterima (Ćirilica, Emoji)"
+      },
+      "api-listings-extreme-limit": {
+        "name": "Ekstremne vrednosti limita",
+        "description": "Provera oglasa sa ekstremnim vrednostima limita (0, 10000)"
+      },
+      "integration-redis-cache": {
+        "name": "Test Redis keša",
+        "description": "Provera operacija Redis keša (SET, GET, TTL)"
+      },
+      "integration-opensearch-index": {
+        "name": "Test OpenSearch-a",
+        "description": "Provera indeksiranja i pretrage u OpenSearch-u"
+      },
+      "integration-postgres-connection": {
+        "name": "Test PostgreSQL-a",
+        "description": "Provera povezivanja sa PostgreSQL i upita"
+      },
+      "api-pagination-invalid": {
+        "name": "Nevažeća paginacija",
+        "description": "Provera obrade nevažećih parametara paginacije (negativne vrednosti)"
+      },
+      "api-listing-invalid-id": {
+        "name": "Nevažeći ID oglasa",
+        "description": "Provera obrade nepostojećih ID-ova oglasa"
+      },
+      "api-input-special-chars": {
+        "name": "Specijalni karakteri",
+        "description": "Provera specijalnih karaktera i unicode-a u ulaznim podacima"
+      },
+      "api-rate-limit": {
+        "name": "Ograničenje stope zahteva",
+        "description": "Provera zaštite od prekoračenja limita zahteva"
+      },
+      "monitoring-health-endpoints": {
+        "name": "Provera zdravlja",
+        "description": "Testiranje /health/live i /health/ready endpointa"
+      },
+      "monitoring-metrics-collection": {
+        "name": "Prikupljanje metrika",
+        "description": "Provera prikupljanja Prometheus metrika"
+      },
+      "monitoring-error-logging": {
+        "name": "Test logovanja grešaka",
+        "description": "Provera ispravnog logovanja grešaka sa kontekstom"
+      },
+      "security-sql-injection": {
+        "name": "Test SQL injekcije",
+        "description": "Testiranje zaštite od SQL injekcije u pretrazi i filterima"
+      },
+      "security-xss-protection": {
+        "name": "XSS zaštita",
+        "description": "Testiranje zaštite od XSS napada u korisničkim unosima"
+      },
+      "security-file-upload-validation": {
+        "name": "Validacija otpremanja fajlova",
+        "description": "Testiranje autentifikacije na zaštićenim endpoints"
+      },
+      "security-auth-session-expiry": {
+        "name": "Istek sesije",
+        "description": "Testiranje isteka JWT tokena i refresh logike"
+      },
+      "security-api-rate-limiting": {
+        "name": "Ograničenje frekvencije API zahteva",
+        "description": "Testiranje primene rate limiting-a"
+      },
+      "security-csrf-protection": {
+        "name": "CSRF zaštita",
+        "description": "Testiranje validacije CSRF tokena"
+      },
+      "performance-api-response-time": {
+        "name": "Vreme odziva API-ja",
+        "description": "Merenje vremena odziva kritičnih API endpoints (<200ms)"
+      },
+      "performance-concurrent-users": {
+        "name": "Konkurentni korisnici",
+        "description": "Testiranje sa 10/50/100 konkurentnih korisnika"
+      },
+      "performance-database-queries": {
+        "name": "Spori upiti ka bazi",
+        "description": "Provera sporih upita ka bazi podataka (>500ms)"
+      },
+      "performance-memory-usage": {
+        "name": "Korišćenje memorije",
+        "description": "Praćenje korišćenja memorije tokom izvršavanja testova"
+      },
+      "data-integrity-marketplace-listing": {
+        "name": "Konzistentnost podataka listinga",
+        "description": "Provera podudaranja podataka listinga između baze, keša i indeksa pretrage"
+      },
+      "data-integrity-transaction-rollback": {
+        "name": "Rollback transakcija",
+        "description": "Testiranje ispravnog rollback-a transakcija baze pri greškama"
+      },
+      "data-integrity-image-orphan-cleanup": {
+        "name": "Čišćenje napuštenih slika",
+        "description": "Testiranje čišćenja napuštenih slika iz MinIO"
+      },
+      "e2e-user-journey-create-listing": {
+        "name": "Kreiranje listinga (E2E)",
+        "description": "Ceo tok: prijava → kreiranje → otpremanje slika → objavljivanje"
+      },
+      "e2e-user-journey-search-contact": {
+        "name": "Pretraga i kontakt (E2E)",
+        "description": "Tok: pretraga → pregled listinga → kontaktiranje prodavca"
+      },
+      "e2e-admin-moderation": {
+        "name": "Admin moderacija (E2E)",
+        "description": "Admin pregleda i odobrava/odbija listing"
+      },
+      "a11y-wcag-compliance": {
+        "name": "WCAG 2.1 usklađenost",
+        "description": "Testiranje WCAG 2.1 AA standarda pristupačnosti (axe-core)"
+      },
+      "a11y-keyboard-navigation": {
+        "name": "Navigacija tastaturom",
+        "description": "Testiranje da su svi interaktivni elementi dostupni tastaturom"
+      }
+    }
+  },
+  "test_data_cleanup": {
+    "title": "Čišćenje test podataka",
+    "description": "Upravljanje i čišćenje test podataka akumuliranih tokom razvoja i testiranja",
+    "refresh": "Osveži",
+    "stats": {
+      "total_size": "Veličina test podataka",
+      "database_size": "Veličina baze",
+      "total_records": "Ukupno zapisa"
+    },
+    "data_types": {
+      "test_runs": {
+        "label": "Pokretanja testova",
+        "description": "Zapisi o izvršavanju test paketa i metapodaci"
+      },
+      "logs": {
+        "label": "Test logovi",
+        "description": "Logovi izvršavanja testova"
+      },
+      "results": {
+        "label": "Rezultati testova",
+        "description": "Pojedinačni rezultati izvršavanja testova"
+      },
+      "behavior": {
+        "label": "Događaji ponašanja",
+        "description": "Podaci praćenja ponašanja korisnika (pretrage, klikovi)"
+      },
+      "feedback": {
+        "label": "Povratne informacije o kategorijama",
+        "description": "Povratne informacije o detekciji kategorija od strane AI"
+      },
+      "price_history": {
+        "label": "Istorija cena",
+        "description": "Istorijski zapisi promena cena"
+      },
+      "ai_decisions": {
+        "label": "AI odluke",
+        "description": "Odluke o kategorijama generisane od strane AI"
+      }
+    },
+    "records": "Zapisi",
+    "size": "Veličina",
+    "event_types": "Tipovi događaja",
+    "select_data_types": "Izaberite tipove podataka za čišćenje",
+    "select_all": "Izaberi sve",
+    "deselect_all": "Poništi izbor",
+    "selected_count": "Izabrano tipova: {count}",
+    "no_selection": "Ništa nije izabrano",
+    "cleanup_button": "Očisti izabrane podatke",
+    "cleaning": "Čišćenje...",
+    "cleanup_success": "Čišćenje uspešno završeno!",
+    "freed_space": "Oslobođeno prostora",
+    "confirm_title": "Potvrda čišćenja",
+    "confirm_message": "Da li ste sigurni da želite trajno obrisati sledeće tipove podataka? Ova akcija se ne može opozvati:",
+    "cancel": "Otkaži",
+    "confirm_cleanup": "Da, obriši",
+    "info_message": "💡 Savet: Redovno čišćenje test podataka pomaže u održavanju optimalne performanse baze podataka. Posle čišćenja, preporučiće se izvršavanje VACUUM FULL za tabele."
   }
 }

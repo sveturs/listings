@@ -18,37 +18,8 @@
     "chats": "Chats",
     "profile": "Profile",
     "close": "Close",
-    "marketplace": "Marketplace",
-    "createListing": "Create Listing",
-    "myListings": "My Listings",
-    "blog": "Blog",
-    "news": "News",
-    "contacts": "Contacts",
-    "userContacts": "User Contacts",
-    "logout": "Logout",
-    "adminPanel": "Admin Panel",
-    "messages": "Messages",
-    "notifications": "Notifications",
-    "settings": "Settings",
-    "help": "Help",
-    "searchPlaceholder": "Search placeholder",
-    "viewAll": "View All",
-    "moreOptions": "More Options",
-    "backToTop": "Back to Top",
-    "distance": {
-      "fromYou": "from you",
-      "meters": "{count} meters",
-      "kilometers": "{count} kilometers",
-      "walking": "walking {time}",
-      "minutes": "{count} minutes",
-      "hours": "{count} hours",
-      "walkingDistance": "Walking Distance"
-    },
-    "location": {
-      "latitude": "Latitude",
-      "longitude": "Longitude",
-      "specifyLocation": "Specify Location"
-    }
+    "closeMenu": "Close menu",
+    "toggleMenu": "Toggle navigation menu"
   },
   "search": {
     "notFound": "Not Found",
@@ -267,7 +238,10 @@
   "hoursAgo": "h ago",
   "buy": "Buy",
   "sendMessage": "Send message",
-  "chat": "Chat",
+  "chat": {
+    "openChat": "Open chat",
+    "startChat": "Start conversation"
+  },
   "eco": {
     "secondHand": "Second-hand",
     "refurbished": "Refurbished",
@@ -405,6 +379,10 @@
   "contactSeller": "Contact seller",
   "addToFavorites": "Add to favorites",
   "share": "Share",
+  "product": {
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
+  },
   "q": "Search",
   "fuzzy": "Fuzzy search",
   "lat": "Latitude",
@@ -572,7 +550,14 @@
   "expand": "Expand",
   "collapse": "Collapse",
   "home": "Home",
-  "view": "View",
+  "view": {
+    "gridView": "Grid view",
+    "listView": "List view",
+    "oneColumn": "One column",
+    "twoColumns": "Two columns",
+    "threeColumns": "Three columns",
+    "fourColumns": "Four columns"
+  },
   "new": "New",
   "minutesAgo": "{minutes} minutes ago",
   "hourAgo": "{hours} hour ago",
@@ -675,14 +660,6 @@
   "sortOrder": "Sort order",
   "isActive": "Active",
   "translating": "Translating...",
-  "navigation": {
-    "home": "Home",
-    "search": "Search",
-    "create": "Create",
-    "chats": "Chats",
-    "profile": "Profile",
-    "close": "Close"
-  },
   "common": {
     "minutes": "Minutes",
     "km": "Km",
@@ -740,5 +717,16 @@
   "copyright": "© 2024 SveTu. All rights reserved.",
   "termsOfUse": "Terms of Use",
   "confidentiality": "Privacy",
-  "cookie": "Cookie"
+  "cookie": "Cookie",
+  "carousel": {
+    "goToSlide": "Go to slide {index}"
+  },
+  "theme": {
+    "loadingToggle": "Loading theme toggle"
+  },
+  "language": {
+    "switchLanguage": "Switch language",
+    "selectLanguage": "Select language",
+    "currentLanguage": "Current language: {lang}"
+  }
 }
