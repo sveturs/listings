@@ -4,6 +4,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 
@@ -54,7 +55,19 @@ func (h *FavoritesHandler) loadUserInfoForListings(ctx context.Context, listings
 			defer wg.Done()
 			user, err := h.services.User().GetUserByID(ctx, id)
 			if err != nil {
-				logger.Warn().Err(err).Int("userId", id).Msg("Failed to load user from auth-service")
+				// Если пользователь не найден (404) - создаем placeholder
+				// Это нормально для legacy данных до миграции на auth-service
+				logger.Debug().Err(err).Int("userId", id).Msg("User not found in auth-service, using placeholder")
+
+				mu.Lock()
+				userCache[id] = &models.User{
+					ID:          id,
+					Email:       fmt.Sprintf("deleted-user-%d@placeholder.local", id),
+					Name:        "Deleted User",
+					PhoneNumber: "",
+					IsDeleted:   true, // Помечаем как удаленный
+				}
+				mu.Unlock()
 				return
 			}
 			mu.Lock()
