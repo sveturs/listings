@@ -95,6 +95,8 @@ type MarketplaceOrder struct {
 	ProtectionExpiresAt  *time.Time             `db:"protection_expires_at" json:"protection_expires_at,omitempty"`
 	ShippingMethod       *string                `db:"shipping_method" json:"shipping_method,omitempty"`
 	TrackingNumber       *string                `db:"tracking_number" json:"tracking_number,omitempty"`
+	ShippingProvider     *string                `db:"shipping_provider" json:"shipping_provider,omitempty"`
+	ShipmentID           *int64                 `db:"shipment_id" json:"shipment_id,omitempty"`
 	ShippedAt            *time.Time             `db:"shipped_at" json:"shipped_at,omitempty"`
 	DeliveredAt          *time.Time             `db:"delivered_at" json:"delivered_at,omitempty"`
 	CreatedAt            time.Time              `db:"created_at" json:"created_at"`
