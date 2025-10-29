@@ -2146,6 +2146,692 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/public/delivery/test/calculate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculate test delivery rate
+     * @description Calculate delivery cost using delivery gRPC microservice
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Calculate request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.CalculateTestRequest'];
+        };
+      };
+      responses: {
+        /** @description Calculation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/cancel/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel test shipment
+     * @description Cancel a test shipment using delivery gRPC microservice
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Shipment ID (UUID) */
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Shipment canceled */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid shipment ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Shipment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get delivery config (MOCK)
+     * @description Get delivery configuration (currently returns mock data, will be implemented in microservice)
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Delivery config */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/delivery-services': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get delivery services list (MOCK)
+     * @description Get list of delivery services (currently returns mock data, will be implemented in microservice)
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Delivery services list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipments history (MOCK)
+     * @description Get history of shipments (currently returns mock data, will be implemented in microservice)
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit */
+          limit?: number;
+          /** @description Offset */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Shipments history */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/parcel-lockers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get parcel lockers list via gRPC
+     * @description Get list of parcel lockers from delivery microservice
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Filter by city */
+          city?: string;
+          /** @description Search query for locker name/code */
+          search_query?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Parcel lockers list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/providers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get delivery providers list (MOCK)
+     * @description Get list of available delivery providers (currently returns mock data, will be implemented in microservice)
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Providers list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/settlements': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get settlements list via gRPC
+     * @description Get list of settlements from delivery microservice
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Country code (e.g., RS) */
+          country?: string;
+          /** @description Search query for settlement name */
+          search_query?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Settlements list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/shipment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create test shipment via gRPC microservice
+     * @description Create a test shipment using delivery gRPC microservice (supports all 5 providers)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Test shipment request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.TestShipmentRequest'];
+        };
+      };
+      responses: {
+        /** @description Test shipment result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.TestShipmentResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/streets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get streets by settlement via gRPC
+     * @description Get list of streets for a settlement from delivery microservice
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Settlement name */
+          settlement_name: string;
+          /** @description Search query for street name */
+          search_query?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Streets list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid settlement */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/tracking/{tracking_number}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Track test shipment
+     * @description Track a test shipment using delivery gRPC microservice
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Tracking number */
+          tracking_number: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Tracking information */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid tracking number */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Shipment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/public/delivery/test/validate-address': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Validate address (MOCK)
+     * @description Validate address (currently returns mock data, will be implemented in microservice)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Address validation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin-check/{email}': {
     parameters: {
       query?: never;
@@ -8075,6 +8761,132 @@ export interface paths {
         };
         /** @description Unauthorized */
         401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/data/cleanup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Cleanup test data
+     * @description Deletes test data from database (logs, results, behavior events, etc.)
+     */
+    delete: {
+      parameters: {
+        query?: {
+          /** @description Comma-separated list of data types to clean (logs,results,behavior,feedback,price_history,ai_decisions) */
+          types?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.CleanupResponse'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/tests/data/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get test data statistics
+     * @description Returns statistics about test data in database (logs, results, behavior events, etc.)
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['domain.TestDataStats'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
           headers: {
             [name: string]: unknown;
           };
@@ -18125,582 +18937,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/bex/calculate-rate': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Calculate shipping rate
-     * @description Calculate shipping cost for given parameters
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Rate calculation parameters */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_proj_bexexpress_models.CalculateRateRequest'];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_bexexpress_models.CalculateRateResponse'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/parcel-shops': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get parcel shops
-     * @description Get list of BEX parcel shops
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Filter by city */
-          city?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.BEXParcelShop'][];
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/search-address': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search addresses
-     * @description Search for addresses in BEX database
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Search parameters */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.SearchAddressRequest'];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.AddressSuggestion'][];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/shipments': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create BEX shipment
-     * @description Create a new shipment through BEX Express
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Shipment details */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_proj_bexexpress_models.CreateShipmentRequest'];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.BEXShipment'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/shipments/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get shipment details
-     * @description Get shipment information by ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Shipment ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.BEXShipment'];
-            };
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    /**
-     * Cancel shipment
-     * @description Cancel a shipment
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Shipment ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            '*/*': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            '*/*': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/shipments/{id}/label': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get shipment label
-     * @description Get printable label for shipment
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Page size (4 for A4, 6 for A6) */
-          size?: number;
-        };
-        header?: never;
-        path: {
-          /** @description Shipment ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': string;
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/shipments/{id}/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get shipment status
-     * @description Get current status of shipment
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Shipment ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.BEXShipment'];
-            };
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/shipments/bulk': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create bulk shipments
-     * @description Create multiple shipments at once
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Array of shipment details */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_proj_bexexpress_models.CreateShipmentRequest'][];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.BEXShipment'][];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/track/{tracking}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Track shipment
-     * @description Track shipment by tracking number
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Tracking number */
-          tracking: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.BEXShipment'];
-            };
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/bex/webhook/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Handle BEX status webhook
-     * @description Receive status updates from BEX
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Webhook data */
-      requestBody: {
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/cars/makes': {
     parameters: {
       query?: never;
@@ -20168,8 +20404,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Calculate delivery for cart
-     * @description Calculate delivery rates for cart items with optimization
+     * Calculate delivery for cart (DEPRECATED)
+     * @description DEPRECATED: This endpoint has been moved to delivery microservice. Use gRPC CalculateRate instead.
      */
     post: {
       parameters: {
@@ -20178,35 +20414,10 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      /** @description Cart calculation request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.CartCalculationRequest'];
-        };
-      };
+      requestBody?: never;
       responses: {
-        /** @description Calculation results */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['calculator.CalculationResponse'];
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
+        /** @description Not implemented */
+        501: {
           headers: {
             [name: string]: unknown;
           };
@@ -20232,8 +20443,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Calculate universal delivery rates
-     * @description Calculate delivery rates across all available providers
+     * Calculate universal delivery rates (DEPRECATED)
+     * @description DEPRECATED: This endpoint has been moved to delivery microservice. Use gRPC CalculateRate instead.
      */
     post: {
       parameters: {
@@ -20242,35 +20453,10 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      /** @description Calculation request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['calculator.CalculationRequest'];
-        };
-      };
+      requestBody?: never;
       responses: {
-        /** @description Calculation results */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['calculator.CalculationResponse'];
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
+        /** @description Not implemented */
+        501: {
           headers: {
             [name: string]: unknown;
           };
@@ -20349,8 +20535,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Handle tracking webhook
-     * @description Process tracking status updates from delivery providers
+     * Handle tracking webhook (DEPRECATED)
+     * @description DEPRECATED: Webhook processing moved to delivery microservice. Configure webhooks to point directly to delivery service.
      */
     post: {
       parameters: {
@@ -20369,37 +20555,8 @@ export interface paths {
         };
       };
       responses: {
-        /** @description Webhook processed successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: Record<string, never>;
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Provider not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
+        /** @description Moved to microservice */
+        501: {
           headers: {
             [name: string]: unknown;
           };
@@ -29284,2907 +29441,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/postexpress/calculate-postage': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Calculate postage (TX 11)
-     * @description Рассчитать точную стоимость доставки для конкретной посылки
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Данные для расчёта стоимости */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['postexpress.PostageCalculationRequest'];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['postexpress.PostageCalculationResponse'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/calculate-rate': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Calculate delivery rate
-     * @description Рассчитать стоимость доставки Post Express
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Параметры для расчета стоимости */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_proj_postexpress_models.CalculateRateRequest'];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_postexpress_models.CalculateRateResponse'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/check-service-availability': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Check service availability (TX 9)
-     * @description Проверить доступность услуги доставки между двумя точками
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Данные для проверки доступности */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['postexpress.ServiceAvailabilityRequest'];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['postexpress.ServiceAvailabilityResponse'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/health': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Health check для Post Express
-     * @description Проверяет доступность и состояние сервиса Post Express
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/locations/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get location
-     * @description Получить информацию о населенном пункте по ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID населенного пункта */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressLocation'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/locations/search': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Search locations
-     * @description Поиск населенных пунктов Post Express
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description Поисковый запрос */
-          q: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressLocation'][];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/locations/sync': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Sync locations
-     * @description Синхронизировать населенные пункты с API Post Express
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: string;
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/offices': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get offices
-     * @description Получить список почтовых отделений для населенного пункта
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description ID населенного пункта */
-          location_id: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressOffice'][];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/offices/{code}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get office
-     * @description Получить информацию о почтовом отделении по коду
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Код отделения */
-          code: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressOffice'];
-            };
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/offices/sync': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Sync offices
-     * @description Синхронизировать почтовые отделения с API Post Express
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: string;
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/rates': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get delivery rates
-     * @description Получить список тарифов доставки Post Express
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressRate'][];
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/settings': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Post Express settings
-     * @description Получить текущие настройки интеграции с Post Express
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressSettings'];
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    /**
-     * Update Post Express settings
-     * @description Обновить настройки интеграции с Post Express
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Настройки Post Express */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.PostExpressSettings'];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressSettings'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/settlements': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Search settlements by name (TX 3)
-     * @description Поиск населённых пунктов по названию через Post Express WSP API
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description Поисковый запрос (название или часть названия) */
-          query: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['postexpress.GetSettlementsResponse'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/shipments': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List shipments
-     * @description Получить список отправлений с фильтрацией и пагинацией
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Статус отправления */
-          status?: string;
-          /** @description Дата от (YYYY-MM-DD) */
-          date_from?: string;
-          /** @description Дата до (YYYY-MM-DD) */
-          date_to?: string;
-          /** @description Город получателя */
-          city?: string;
-          /** @description Номер страницы */
-          page?: number;
-          /** @description Размер страницы */
-          page_size?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: Record<string, never>;
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create shipment
-     * @description Создать новое отправление Post Express
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Данные для создания отправления */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_proj_postexpress_models.CreateShipmentRequest'];
-        };
-      };
-      responses: {
-        /** @description Created */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressShipment'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/shipments/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get shipment
-     * @description Получить информацию об отправлении по ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID отправления */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.PostExpressShipment'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/shipments/{id}/cancel': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Cancel shipment
-     * @description Отменить отправление
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID отправления */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: components['requestBodies']['Request'];
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: string;
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/shipments/{id}/invoice': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get shipment invoice
-     * @description Получить накладную отправления в формате PDF
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID отправления */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description PDF накладная */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': string;
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/shipments/{id}/label': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get shipment label
-     * @description Получить этикетку отправления в формате PDF
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID отправления */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description PDF этикетка */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': string;
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/pdf': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/shipments/{id}/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update shipment status
-     * @description Обновить статус отправления
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID отправления */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Новый статус */
-      requestBody: {
-        content: {
-          'application/json': Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: string;
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/statistics/shipments': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get shipment statistics
-     * @description Получить статистику отправлений с фильтрами
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Дата от (YYYY-MM-DD) */
-          date_from?: string;
-          /** @description Дата до (YYYY-MM-DD) */
-          date_to?: string;
-          /** @description Группировка (day, week, month) */
-          group_by?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_postexpress_storage.ShipmentStatistics'];
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/statistics/warehouse/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get warehouse statistics
-     * @description Получить статистику склада
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID склада */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['storage.WarehouseStatistics'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/streets': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Search streets in settlement (TX 4)
-     * @description Поиск улиц по названию в конкретном населённом пункте
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description ID населённого пункта (из TX 3) */
-          settlement_id: number;
-          /** @description Поисковый запрос (название или часть названия улицы) */
-          query: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['postexpress.GetStreetsResponse'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/cancel': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test cancel shipment
-     * @description Cancel shipment using real Post Express WSP API (Transaction 25)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Cancel request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestCancelRequest'];
-        };
-      };
-      responses: {
-        /** @description Cancel result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/config': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Post Express test config
-     * @description Get current Post Express configuration (without password) for testing page
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Configuration */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/history': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get test shipments history
-     * @description Get history of test shipments (mock data for demo)
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Test shipments history */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['handler.TestShipmentResponse'][];
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/label': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test print label
-     * @description Print shipment label using real Post Express WSP API (Transaction 20)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Print label request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestPrintLabelRequest'];
-        };
-      };
-      responses: {
-        /** @description Label data */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/locations': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test search locations
-     * @description Search locations using real Post Express WSP API (Transaction 3)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Search request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestSearchLocationsRequest'];
-        };
-      };
-      responses: {
-        /** @description Locations list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/offices': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test get offices
-     * @description Get offices for location using real Post Express WSP API (Transaction 10)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Get offices request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestGetOfficesRequest'];
-        };
-      };
-      responses: {
-        /** @description Offices list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/shipment': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create test shipment
-     * @description Create a test shipment using real Post Express WSP API (B2B Manifest)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Test shipment request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestShipmentRequest'];
-        };
-      };
-      responses: {
-        /** @description Test shipment result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['handler.TestShipmentResponse'];
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/track': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test tracking shipment
-     * @description Track shipment using real Post Express WSP API (Transaction 15)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Tracking request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestTrackingRequest'];
-        };
-      };
-      responses: {
-        /** @description Tracking result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/tx3-settlements': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test TX 3 - GetNaselje (Search Settlements)
-     * @description Search settlements using real Post Express WSP API (Transaction 3)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Search settlements request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestGetSettlementsRequest'];
-        };
-      };
-      responses: {
-        /** @description Settlements list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/tx4-streets': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test TX 4 - GetUlica (Search Streets)
-     * @description Search streets in settlement using real Post Express WSP API (Transaction 4)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Search streets request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestGetStreetsRequest'];
-        };
-      };
-      responses: {
-        /** @description Streets list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/tx6-validate-address': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test TX 6 - ProveraAdrese (Validate Address)
-     * @description Validate address using real Post Express WSP API (Transaction 6)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Validate address request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestValidateAddressRequest'];
-        };
-      };
-      responses: {
-        /** @description Address validation result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/tx9-service-availability': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test TX 9 - ProveraDostupnostiUsluge (Check Service Availability)
-     * @description Check service availability using real Post Express WSP API (Transaction 9)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Check service availability request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestCheckServiceAvailabilityRequest'];
-        };
-      };
-      responses: {
-        /** @description Service availability result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/test/tx11-calculate-postage': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Test TX 11 - PostarinaPosiljke (Calculate Postage)
-     * @description Calculate postage using real Post Express WSP API (Transaction 11)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Calculate postage request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.TestCalculatePostageRequest'];
-        };
-      };
-      responses: {
-        /** @description Postage calculation result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/track/{tracking}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Track shipment
-     * @description Получить события отслеживания отправления по трекинг-номеру
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Трекинг-номер */
-          tracking: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_postexpress_models.TrackingEvent'][];
-            };
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/track/sync': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Sync all active shipments
-     * @description Синхронизировать статусы всех активных отправлений с Post Express
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: string;
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/validate-address': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Validate address (TX 6)
-     * @description Проверка существования адреса в базе Post Express
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Данные для валидации адреса */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['postexpress.AddressValidationRequest'];
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['postexpress.AddressValidationResponse'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/warehouse': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get warehouses
-     * @description Получить список всех активных складов
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.Warehouse'][];
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/warehouse/{code}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get warehouse
-     * @description Получить информацию о складе по коду
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Код склада */
-          code: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.Warehouse'];
-            };
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/warehouse/pickup-orders': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create pickup order
-     * @description Создать заказ на самовывоз со склада
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Данные для создания заказа на самовывоз */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.CreatePickupOrderRequest'];
-        };
-      };
-      responses: {
-        /** @description Created */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.WarehousePickupOrder'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/warehouse/pickup-orders/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get pickup order
-     * @description Получить информацию о заказе на самовывоз по ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID заказа на самовывоз */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.WarehousePickupOrder'];
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/warehouse/pickup-orders/{id}/cancel': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Cancel pickup order
-     * @description Отменить заказ на самовывоз
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID заказа на самовывоз */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: components['requestBodies']['Request'];
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: string;
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/warehouse/pickup-orders/{id}/confirm': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Confirm pickup
-     * @description Подтвердить выдачу заказа со склада
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description ID заказа на самовывоз */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Данные подтверждения */
-      requestBody: {
-        content: {
-          'application/json': Record<string, never>;
-        };
-      };
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: string;
-            };
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/postexpress/warehouse/pickup-orders/code/{code}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get pickup order by code
-     * @description Получить информацию о заказе на самовывоз по коду
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Код самовывоза */
-          code: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.WarehousePickupOrder'];
-            };
-          };
-        };
-        /** @description Not Found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/product-variant-attributes': {
     parameters: {
       query?: never;
@@ -35385,7 +32641,7 @@ export interface paths {
       /** @description Shipment request */
       requestBody: {
         content: {
-          'application/json': components['schemas']['service.CreateShipmentRequest'];
+          'application/json': components['schemas']['handler.CreateShipmentHTTPRequest'];
         };
       };
       responses: {
@@ -40893,54 +38149,6 @@ export interface components {
       sourceLanguage?: string;
       targetLanguages?: string[];
     };
-    'backend_internal_proj_bexexpress_models.CalculateRateRequest': {
-      cod_amount?: number;
-      insurance_amount?: number;
-      recipient_postal_code: string;
-      shipment_category: number;
-      weight_kg: number;
-    };
-    'backend_internal_proj_bexexpress_models.CalculateRateResponse': {
-      base_price?: number;
-      cod_fee?: number;
-      delivery_days_max?: number;
-      delivery_days_min?: number;
-      insurance_fee?: number;
-      service_available?: boolean;
-      total_price?: number;
-    };
-    'backend_internal_proj_bexexpress_models.CreateShipmentRequest': {
-      cod_amount?: number;
-      delivery_instructions?: string;
-      insurance_amount?: number;
-      notes?: string;
-      order_id?: number;
-      personal_delivery?: boolean;
-      /** @description Уведомления */
-      pre_notification_minutes?: number;
-      recipient_address: string;
-      recipient_city: string;
-      recipient_email?: string;
-      recipient_name: string;
-      recipient_phone: string;
-      recipient_postal_code: string;
-      shipment_category: number;
-      shipment_contents: number;
-      storefront_order_id?: number;
-      total_packages: number;
-      weight_kg: number;
-    };
-    /** @enum {integer} */
-    'backend_internal_proj_bexexpress_models.ShipmentStatus':
-      | 1
-      | 2
-      | 3
-      | 4
-      | 5
-      | 6
-      | 7
-      | 8
-      | 9;
     'backend_internal_proj_c2c_handler.DetectCategoryRequest': {
       attributes?: {
         [key: string]: unknown;
@@ -40966,99 +38174,6 @@ export interface components {
       message?: string;
       /** @example true */
       success?: boolean;
-    };
-    'backend_internal_proj_delivery_models.TrackingEvent': {
-      created_at?: string;
-      description?: string;
-      event_time?: string;
-      id?: number;
-      location?: string;
-      provider_id?: number;
-      raw_data?: number[];
-      shipment_id?: number;
-      status?: string;
-    };
-    'backend_internal_proj_postexpress_models.CalculateRateRequest': {
-      cod_amount?: number;
-      declared_value?: number;
-      height_cm?: number;
-      length_cm?: number;
-      recipient_postal_code: string;
-      sender_postal_code: string;
-      service_type?: string;
-      weight_kg: number;
-      width_cm?: number;
-    };
-    'backend_internal_proj_postexpress_models.CalculateRateResponse': {
-      base_price?: number;
-      cod_fee?: number;
-      delivery_days_max?: number;
-      delivery_days_min?: number;
-      insurance_fee?: number;
-      service_available?: boolean;
-      total_price?: number;
-    };
-    'backend_internal_proj_postexpress_models.CreateShipmentRequest': {
-      cod_amount?: number;
-      declared_value?: number;
-      delivery_instructions?: string;
-      height_cm?: number;
-      insurance_amount?: number;
-      length_cm?: number;
-      notes?: string;
-      order_id?: number;
-      recipient_address: string;
-      recipient_city: string;
-      recipient_email?: string;
-      recipient_name: string;
-      recipient_phone: string;
-      recipient_postal_code: string;
-      service_type?: string;
-      storefront_order_id?: number;
-      weight_kg: number;
-      width_cm?: number;
-    };
-    /** @enum {string} */
-    'backend_internal_proj_postexpress_models.ShipmentStatus':
-      | 'created'
-      | 'registered'
-      | 'picked_up'
-      | 'in_transit'
-      | 'delivered'
-      | 'failed'
-      | 'returned';
-    'backend_internal_proj_postexpress_models.TrackingEvent': {
-      additional_info?: number[];
-      created_at?: string;
-      event_code?: string;
-      event_description?: string;
-      event_location?: string;
-      event_timestamp?: string;
-      id?: number;
-      shipment_id?: number;
-    };
-    'backend_internal_proj_postexpress_storage.ShipmentStatistics': {
-      average_delivery_time?: number;
-      by_city?: {
-        [key: string]: number;
-      };
-      by_status?: {
-        [key: string]: number;
-      };
-      canceled?: number;
-      delivered?: number;
-      delivered_shipments?: number;
-      delivery_success_rate?: number;
-      failed_shipments?: number;
-      in_transit?: number;
-      in_transit_shipments?: number;
-      pending?: number;
-      total?: number;
-      total_cod?: number;
-      total_revenue?: number;
-      /** @description Дополнительные поля для совместимости с repository */
-      total_shipments?: number;
-      total_value?: number;
     };
     'backend_internal_proj_users_handler.MessageResponse': {
       /** @example Операция выполнена успешно */
@@ -41115,56 +38230,6 @@ export interface components {
       /** @description Если не передан, будет сгенерирован */
       session_id?: string;
     };
-    'calculator.CalculationData': {
-      cheapest?: components['schemas']['calculator.ProviderQuote'];
-      fastest?: components['schemas']['calculator.ProviderQuote'];
-      providers?: components['schemas']['calculator.ProviderQuote'][];
-      recommended?: components['schemas']['calculator.ProviderQuote'];
-    };
-    'calculator.CalculationRequest': {
-      cod_amount?: number;
-      delivery_type?: string;
-      from_location?: components['schemas']['calculator.Location'];
-      insurance_value?: number;
-      items?: components['schemas']['calculator.ItemWithAttrs'][];
-      provider_id?: number;
-      to_location?: components['schemas']['calculator.Location'];
-    };
-    'calculator.CalculationResponse': {
-      data?: components['schemas']['calculator.CalculationData'];
-      message?: string;
-      success?: boolean;
-    };
-    'calculator.ItemWithAttrs': {
-      attributes?: components['schemas']['models.DeliveryAttributes'];
-      product_id?: number;
-      /** @description "listing" или "storefront_product" */
-      product_type?: string;
-      quantity?: number;
-    };
-    'calculator.Location': {
-      city?: string;
-      country?: string;
-      latitude?: number;
-      longitude?: number;
-      postal_code?: string;
-    };
-    'calculator.ProviderQuote': {
-      cod_fee?: number;
-      cost_breakdown?: components['schemas']['models.CostBreakdown'];
-      delivery_cost?: number;
-      delivery_type?: string;
-      estimated_days?: number;
-      estimated_delivery_date?: string;
-      insurance_cost?: number;
-      is_available?: boolean;
-      provider_code?: string;
-      provider_id?: number;
-      provider_name?: string;
-      services?: components['schemas']['models.DeliveryService'][];
-      total_price?: number;
-      unavailable_reason?: string;
-    };
     'config.StorageConfig': {
       base_url?: string;
       chat_files_bucket?: string;
@@ -41209,6 +38274,15 @@ export interface components {
     'domain.AvailableTestsResponse': {
       tests?: components['schemas']['domain.AvailableTest'][];
       total?: number;
+    };
+    'domain.CleanupResponse': {
+      cleaned_at?: string;
+      deleted_count?: {
+        [key: string]: number;
+      };
+      freed_space_mb?: string;
+      message?: string;
+      success?: boolean;
     };
     'domain.RunTestRequest': {
       parallel?: boolean;
@@ -41270,6 +38344,50 @@ export interface components {
       | 'monitoring'
       | 'accessibility'
       | 'all';
+    'domain.TestDataStats': {
+      ai_decisions?: {
+        count?: number;
+        size_bytes?: number;
+        size_mb?: string;
+      };
+      behavior_events?: {
+        by_type?: {
+          [key: string]: number;
+        };
+        count?: number;
+        size_bytes?: number;
+        size_mb?: string;
+      };
+      category_feedback?: {
+        count?: number;
+        size_bytes?: number;
+        size_mb?: string;
+      };
+      collected_at?: string;
+      database_size_mb?: string;
+      price_history?: {
+        count?: number;
+        size_bytes?: number;
+        size_mb?: string;
+      };
+      test_logs?: {
+        count?: number;
+        size_bytes?: number;
+        size_mb?: string;
+      };
+      test_results?: {
+        count?: number;
+        size_bytes?: number;
+        size_mb?: string;
+      };
+      test_runs?: {
+        count?: number;
+        size_bytes?: number;
+        size_mb?: string;
+      };
+      total_size_bytes?: number;
+      total_size_mb?: string;
+    };
     'domain.TestLog': {
       created_at?: string;
       id?: number;
@@ -41559,16 +38677,21 @@ export interface components {
       /** @example 10 */
       total_count?: number;
     };
+    'handler.CalculateTestRequest': {
+      /** @example 0 */
+      cod_amount?: number;
+      /** @example Beograd */
+      from_city?: string;
+      /** @example Novi Sad */
+      to_city?: string;
+      /**
+       * @description граммы
+       * @example 1000
+       */
+      weight?: number;
+    };
     'handler.CancelRequest': {
       reason?: string;
-    };
-    'handler.CartCalculationRequest': {
-      cod_amount?: number;
-      delivery_type?: string;
-      from_location?: components['schemas']['calculator.Location'];
-      insurance_value?: number;
-      items?: components['schemas']['calculator.ItemWithAttrs'][];
-      to_location?: components['schemas']['calculator.Location'];
     };
     'handler.CategoryHints': {
       domain?: string;
@@ -41714,6 +38837,29 @@ export interface components {
       notify_enabled?: boolean;
       notify_frequency?: string;
       search_type?: string;
+    };
+    'handler.CreateShipmentHTTPRequest': {
+      cod_amount?: number;
+      /** @description Common fields */
+      delivery_type?: string;
+      from_address?: components['schemas']['service.Address'];
+      insurance_value?: number;
+      notes?: string;
+      order_id?: number;
+      package?: components['schemas']['service.Package'];
+      packages?: components['schemas']['service.Package'][];
+      pickup_date?: string;
+      /** @description Alias for provider_code */
+      provider?: string;
+      provider_code?: string;
+      /** @description New format (preferred) */
+      provider_id?: number;
+      recipient?: components['schemas']['handler.LegacySenderRecipient'];
+      reference?: string;
+      /** @description Legacy format (backward compatibility) */
+      sender?: components['schemas']['handler.LegacySenderRecipient'];
+      services?: string[];
+      to_address?: components['schemas']['service.Address'];
     };
     'handler.DashboardNotification': {
       created_at?: string;
@@ -41889,6 +39035,11 @@ export interface components {
       plan_code: string;
       return_url?: string;
     };
+    'handler.LegacySenderRecipient': {
+      address?: components['schemas']['service.Address'];
+      name?: string;
+      phone?: string;
+    };
     'handler.ListingsResponse': {
       data?: components['schemas']['models.MarketplaceListing'][];
       meta?: components['schemas']['handler.PaginationMeta'];
@@ -41928,7 +39079,6 @@ export interface components {
     };
     'handler.MarkAsShippedRequest': {
       shipping_method: string;
-      tracking_number: string;
     };
     'handler.ModerationData': {
       /** @example false */
@@ -42220,70 +39370,6 @@ export interface components {
        */
       status?: string;
     };
-    'handler.TestCalculatePostageRequest': {
-      /**
-       * @description para (1 RSD = 100 para)
-       * @example 0
-       */
-      cod_amount?: number;
-      /** @example 11000 */
-      from_postal_code?: string;
-      /**
-       * @description para
-       * @example 0
-       */
-      insured_value?: number;
-      /** @example 71 */
-      service_id?: number;
-      /**
-       * @description дополнительные услуги
-       * @example PNA
-       */
-      services?: string;
-      /** @example 21000 */
-      to_postal_code?: string;
-      /**
-       * @description граммы
-       * @example 500
-       */
-      weight?: number;
-    };
-    'handler.TestCancelRequest': {
-      /** @example Отмена по требованию клиента */
-      reason?: string;
-      /** @example 12345 */
-      shipment_id?: string;
-    };
-    'handler.TestCheckServiceAvailabilityRequest': {
-      /** @example 11000 */
-      from_postal_code?: string;
-      /** @example 71 */
-      service_id?: number;
-      /** @example 21000 */
-      to_postal_code?: string;
-    };
-    'handler.TestGetOfficesRequest': {
-      /** @example 1 */
-      location_id?: number;
-    };
-    'handler.TestGetSettlementsRequest': {
-      /** @example Beograd */
-      query?: string;
-    };
-    'handler.TestGetStreetsRequest': {
-      /** @example Takovska */
-      query?: string;
-      /** @example 123 */
-      settlement_id?: number;
-    };
-    'handler.TestPrintLabelRequest': {
-      /** @example 12345 */
-      shipment_id?: string;
-    };
-    'handler.TestSearchLocationsRequest': {
-      /** @example Beograd */
-      query?: string;
-    };
     'handler.TestShipmentRequest': {
       /**
        * @description наложенный платеж (RSD)
@@ -42293,7 +39379,7 @@ export interface components {
       /** @example Test paket za SVETU */
       content?: string;
       /**
-       * @description K = Kurir, S = Šalter, PAK = Paкетомат
+       * @description K = Kurir, S = Šalter, PAK = Pаккетомат
        * @example K
        */
       delivery_method?: string;
@@ -42313,7 +39399,7 @@ export interface components {
        */
       insured_value?: number;
       /**
-       * @description Код паккетомата (для IdRukovanje = 85)
+       * @description Код пакketomата (для IdRukovanje = 85)
        * @example
        */
       parcel_locker_code?: string;
@@ -42353,7 +39439,7 @@ export interface components {
       /** @example 11000 */
       sender_zip?: string;
       /**
-       * @description Дополнительные услуги
+       * @description Дополнительные услуги (для совместимости со старым API)
        * @example PNA
        */
       services?: string;
@@ -42364,33 +39450,17 @@ export interface components {
       weight?: number;
     };
     'handler.TestShipmentResponse': {
-      /** @description RSD */
-      cost?: number;
+      cost?: string;
       created_at?: string;
+      currency?: string;
       errors?: string[];
-      external_id?: string;
-      manifest_id?: number;
       /** @description milliseconds */
       processing_time_ms?: number;
       request_data?: unknown;
       response_data?: unknown;
-      shipment_id?: number;
+      shipment_id?: string;
       success?: boolean;
       tracking_number?: string;
-    };
-    'handler.TestTrackingRequest': {
-      /** @example SVETU-TEST-123456 */
-      tracking_number?: string;
-    };
-    'handler.TestValidateAddressRequest': {
-      /** @example 2 */
-      house_number?: string;
-      /** @example 11000 */
-      postal_code?: string;
-      /** @example 123 */
-      settlement_id?: number;
-      /** @example 456 */
-      street_id?: number;
     };
     'handler.TranslateContentResponse': {
       [key: string]: {
@@ -42655,65 +39725,6 @@ export interface components {
       status?: string;
       timestamp?: string;
     };
-    'interfaces.Address': {
-      city?: string;
-      company_name?: string;
-      country?: string;
-      email?: string;
-      name?: string;
-      note?: string;
-      phone?: string;
-      postal_code?: string;
-      street?: string;
-    };
-    'interfaces.DeliveryAttrs': {
-      dimensions?: components['schemas']['interfaces.Dimensions'];
-      hazmat_class?: string;
-      is_fragile?: boolean;
-      max_stack_weight_kg?: number;
-      /** @description box, envelope, pallet, custom */
-      packaging_type?: string;
-      requires_special_handling?: boolean;
-      stackable?: boolean;
-      volume_m3?: number;
-      weight_kg?: number;
-    };
-    'interfaces.Dimensions': {
-      /** @description Высота в сантиметрах */
-      height_cm?: number;
-      /** @description Длина в сантиметрах */
-      length_cm?: number;
-      /** @description Ширина в сантиметрах */
-      width_cm?: number;
-    };
-    'interfaces.Package': {
-      /** @description Дополнительные атрибуты */
-      attributes?: components['schemas']['interfaces.DeliveryAttrs'];
-      /** @description Описание содержимого */
-      description?: string;
-      /** @description Габариты */
-      dimensions?: components['schemas']['interfaces.Dimensions'];
-      /** @description Хрупкий товар */
-      is_fragile?: boolean;
-      /** @description Объявленная ценность */
-      value?: number;
-      /** @description Вес в килограммах */
-      weight_kg?: number;
-    };
-    'interfaces.ProofOfDelivery': {
-      delivered_at?: string;
-      notes?: string;
-      photo_url?: string;
-      recipient_name?: string;
-      signature_url?: string;
-    };
-    'interfaces.TrackingEvent': {
-      description?: string;
-      details?: string;
-      location?: string;
-      status?: string;
-      timestamp?: string;
-    };
     'logistics.Address': {
       city?: string;
       country?: string;
@@ -42916,18 +39927,6 @@ export interface components {
       quantity: number;
       variant_id?: number;
     };
-    'models.AddressSuggestion': {
-      full_address?: string;
-      latitude?: number;
-      longitude?: number;
-      municipality?: string;
-      municipality_id?: number;
-      place_id?: string;
-      place_name?: string;
-      postal_code?: string;
-      street_id?: string;
-      street_name?: string;
-    };
     'models.AdminUser': {
       created_at?: string;
       created_by?: number;
@@ -43014,79 +40013,6 @@ export interface components {
       };
       recent_actions?: components['schemas']['models.TranslationAuditLog'][];
       total_actions?: number;
-    };
-    'models.BEXParcelShop': {
-      address?: string;
-      bex_id?: number;
-      city?: string;
-      code?: string;
-      created_at?: string;
-      id?: number;
-      is_active?: boolean;
-      latitude?: number;
-      longitude?: number;
-      name?: string;
-      phone?: string;
-      postal_code?: string;
-      updated_at?: string;
-      working_hours?: number[];
-    };
-    'models.BEXShipment': {
-      /** @description BEX идентификаторы */
-      bex_shipment_id?: number;
-      cod_amount?: number;
-      comment_private?: string;
-      /** @description Комментарии */
-      comment_public?: string;
-      created_at?: string;
-      delivered_at?: string;
-      delivery_instructions?: string;
-      failed_at?: string;
-      failed_reason?: string;
-      id?: number;
-      insurance_amount?: number;
-      /** @description Документы */
-      label_base64?: string;
-      label_url?: string;
-      marketplace_order_id?: number;
-      /** @description Услуги */
-      pay_type?: number;
-      personal_delivery?: boolean;
-      picked_up_at?: string;
-      recipient_address?: string;
-      recipient_city?: string;
-      recipient_email?: string;
-      /** @description Получатель */
-      recipient_name?: string;
-      recipient_phone?: string;
-      recipient_postal_code?: string;
-      /** @description Временные метки */
-      registered_at?: string;
-      return_package?: boolean;
-      return_signed_confirmation?: boolean;
-      return_signed_invoices?: boolean;
-      returned_at?: string;
-      sender_address?: string;
-      sender_city?: string;
-      sender_email?: string;
-      /** @description Отправитель */
-      sender_name?: string;
-      sender_phone?: string;
-      sender_postal_code?: string;
-      shipment_category?: number;
-      shipment_contents?: number;
-      /** @description Параметры посылки */
-      shipment_type?: number;
-      /** @description Статус */
-      status?: components['schemas']['backend_internal_proj_bexexpress_models.ShipmentStatus'];
-      /** @description История статусов */
-      status_history?: number[];
-      status_text?: string;
-      storefront_order_id?: number;
-      total_packages?: number;
-      tracking_number?: string;
-      updated_at?: string;
-      weight_kg?: number;
     };
     'models.BalanceTransaction': {
       amount?: number;
@@ -43490,19 +40416,6 @@ export interface components {
       page?: number;
       total?: number;
     };
-    'models.CostBreakdown': {
-      base_price?: number;
-      cod_fee?: number;
-      discount?: number;
-      fragile_surcharge?: number;
-      fuel_surcharge?: number;
-      insurance_fee?: number;
-      oversize_surcharge?: number;
-      remote_area_surcharge?: number;
-      tax?: number;
-      total?: number;
-      weight_surcharge?: number;
-    };
     'models.CreateCategoryProposalRequest': {
       description?: string;
       expected_products?: number;
@@ -43553,14 +40466,6 @@ export interface components {
       shipping_address: components['schemas']['models.ShippingAddress'];
       shipping_method: string;
       storefront_id: number;
-    };
-    'models.CreatePickupOrderRequest': {
-      customer_email?: string;
-      customer_name: string;
-      customer_phone: string;
-      notes?: string;
-      order_id?: number;
-      storefront_order_id?: number;
     };
     'models.CreateProductRequest': {
       attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
@@ -43705,14 +40610,6 @@ export interface components {
       | 'city_express'
       | 'self_pickup'
       | 'own_delivery';
-    'models.DeliveryService': {
-      code?: string;
-      description?: string;
-      is_available?: boolean;
-      is_included?: boolean;
-      name?: string;
-      price?: number;
-    };
     'models.DeliveryZone': {
       name?: string;
       postal_codes?: string[];
@@ -44127,8 +41024,10 @@ export interface components {
       seller?: components['schemas']['models.User'];
       seller_id?: number;
       seller_payout_amount?: number;
+      shipment_id?: number;
       shipped_at?: string;
       shipping_method?: string;
+      shipping_provider?: string;
       status?: components['schemas']['models.MarketplaceOrderStatus'];
       status_history?: components['schemas']['models.OrderStatusHistory'][];
       tracking_number?: string;
@@ -44329,157 +41228,6 @@ export interface components {
       name?: string;
       resource?: string;
     };
-    /** @enum {string} */
-    'models.PickupOrderStatus':
-      | 'pending'
-      | 'ready'
-      | 'picked_up'
-      | 'expired'
-      | 'canceled';
-    'models.PostExpressLocation': {
-      created_at?: string;
-      delivery_zone?: string;
-      district?: string;
-      id?: number;
-      is_active?: boolean;
-      latitude?: number;
-      longitude?: number;
-      municipality?: string;
-      name?: string;
-      name_cyrillic?: string;
-      post_express_id?: number;
-      postal_code?: string;
-      region?: string;
-      supports_cod?: boolean;
-      supports_express?: boolean;
-      updated_at?: string;
-    };
-    'models.PostExpressOffice': {
-      accepts_packages?: boolean;
-      address?: string;
-      closed_until?: string;
-      created_at?: string;
-      email?: string;
-      has_atm?: boolean;
-      has_parking?: boolean;
-      id?: number;
-      is_active?: boolean;
-      issues_packages?: boolean;
-      latitude?: number;
-      location_id?: number;
-      longitude?: number;
-      name?: string;
-      office_code?: string;
-      phone?: string;
-      temporary_closed?: boolean;
-      updated_at?: string;
-      wheelchair_accessible?: boolean;
-      working_hours?: number[];
-    };
-    'models.PostExpressRate': {
-      base_price?: number;
-      cod_fee?: number;
-      created_at?: string;
-      delivery_days_max?: number;
-      delivery_days_min?: number;
-      id?: number;
-      insurance_included_up_to?: number;
-      insurance_rate_percent?: number;
-      is_active?: boolean;
-      is_special_offer?: boolean;
-      max_dimensions_sum_cm?: number;
-      max_height_cm?: number;
-      max_length_cm?: number;
-      max_width_cm?: number;
-      updated_at?: string;
-      weight_from?: number;
-      weight_to?: number;
-    };
-    'models.PostExpressSettings': {
-      api_endpoint?: string;
-      api_username?: string;
-      auto_print_labels?: boolean;
-      auto_track_shipments?: boolean;
-      created_at?: string;
-      enabled?: boolean;
-      failed_deliveries?: number;
-      id?: number;
-      notify_on_delivery?: boolean;
-      notify_on_failed_delivery?: boolean;
-      notify_on_pickup?: boolean;
-      sender_address?: string;
-      sender_city?: string;
-      sender_email?: string;
-      sender_name?: string;
-      sender_phone?: string;
-      sender_postal_code?: string;
-      successful_deliveries?: number;
-      test_mode?: boolean;
-      total_shipments?: number;
-      updated_at?: string;
-    };
-    'models.PostExpressShipment': {
-      barcode?: string;
-      /** @description Расчет стоимости */
-      base_price?: number;
-      cod_amount?: number;
-      cod_fee?: number;
-      cod_reference?: string;
-      created_at?: string;
-      declared_value?: number;
-      delivered_at?: string;
-      delivery_instructions?: string;
-      delivery_status?: string;
-      failed_at?: string;
-      failed_reason?: string;
-      height_cm?: number;
-      id?: number;
-      insurance_amount?: number;
-      insurance_fee?: number;
-      internal_notes?: string;
-      invoice_url?: string;
-      /** @description Документы */
-      label_url?: string;
-      length_cm?: number;
-      marketplace_order_id?: number;
-      /** @description Дополнительная информация */
-      notes?: string;
-      picked_up_at?: string;
-      pod_url?: string;
-      post_express_id?: string;
-      recipient_address?: string;
-      recipient_city?: string;
-      recipient_email?: string;
-      recipient_location_id?: number;
-      /** @description Получатель */
-      recipient_name?: string;
-      recipient_phone?: string;
-      recipient_postal_code?: string;
-      /** @description Временные метки */
-      registered_at?: string;
-      returned_at?: string;
-      sender_address?: string;
-      sender_city?: string;
-      sender_email?: string;
-      sender_location_id?: number;
-      /** @description Отправитель */
-      sender_name?: string;
-      sender_phone?: string;
-      sender_postal_code?: string;
-      /** @description Услуги */
-      service_type?: string;
-      /** @description Статусы */
-      status?: components['schemas']['backend_internal_proj_postexpress_models.ShipmentStatus'];
-      /** @description История статусов */
-      status_history?: number[];
-      storefront_order_id?: number;
-      total_price?: number;
-      tracking_number?: string;
-      updated_at?: string;
-      /** @description Параметры посылки */
-      weight_kg?: number;
-      width_cm?: number;
-    };
     'models.PriceHistoryEntry': {
       change_percentage?: number;
       /** @description manual, import, system, etc. */
@@ -44648,13 +41396,6 @@ export interface components {
       translation_id?: number;
       version_id?: number;
     };
-    'models.SearchAddressRequest': {
-      city?: string;
-      limit?: number;
-      municipality_id?: number;
-      place_id?: number;
-      query: string;
-    };
     'models.Shipment': {
       actual_delivery_date?: string;
       cod_amount?: number;
@@ -44662,7 +41403,7 @@ export interface components {
       created_at?: string;
       delivery_cost?: number;
       estimated_delivery?: string;
-      events?: components['schemas']['backend_internal_proj_delivery_models.TrackingEvent'][];
+      events?: components['schemas']['models.TrackingEvent'][];
       external_id?: string;
       id?: number;
       insurance_cost?: number;
@@ -44738,12 +41479,14 @@ export interface components {
       default_privacy_level?: components['schemas']['models.LocationPrivacyLevel'];
       description?: string;
       email?: string;
+      followers_count?: number;
       formatted_address?: string;
       geo_strategy?: components['schemas']['models.StorefrontGeoStrategy'];
       group_buying_enabled?: boolean;
       id?: number;
       /** @description Статус и статистика */
       is_active?: boolean;
+      is_subscription_active?: boolean;
       is_verified?: boolean;
       latitude?: number;
       live_shopping_enabled?: boolean;
@@ -44763,6 +41506,7 @@ export interface components {
       settings?: components['schemas']['backend_internal_domain_models.JSONB'];
       slug?: string;
       subscription_expires_at?: string;
+      subscription_id?: number;
       /** @description Подписка (монетизация) */
       subscription_plan?: components['schemas']['models.SubscriptionPlanType'];
       theme?: components['schemas']['backend_internal_domain_models.JSONB'];
@@ -44891,6 +41635,7 @@ export interface components {
       working_now?: boolean;
     };
     'models.StorefrontOrder': {
+      actual_delivery?: string;
       billing_address?: components['schemas']['backend_internal_domain_models.JSONB'];
       canceled_at?: string;
       commission_amount?: number;
@@ -44903,9 +41648,14 @@ export interface components {
       customer_id?: number;
       customer_notes?: string;
       delivered_at?: string;
+      /** @description Provider code для delivery microservice (только для UI) */
+      delivery_provider?: string;
+      /** @description Tracking info from delivery service (NOT stored in DB, enriched from microservice) */
+      delivery_status?: string;
       discount?: number;
       escrow_days?: number;
       escrow_release_date?: string;
+      estimated_delivery?: string;
       id?: number;
       /** @description Связанные данные */
       items?: components['schemas']['models.StorefrontOrderItem'][];
@@ -44925,6 +41675,7 @@ export interface components {
       seller?: components['schemas']['models.User'];
       seller_amount?: number;
       seller_notes?: string;
+      shipment_id?: number;
       shipped_at?: string;
       /** @description Алиас для ShippingAmount */
       shipping?: number;
@@ -45156,6 +41907,17 @@ export interface components {
       position?: number;
       /** @description "addition", "deletion", "modification" */
       type?: string;
+    };
+    'models.TrackingEvent': {
+      created_at?: string;
+      description?: string;
+      event_time?: string;
+      id?: number;
+      location?: string;
+      provider_id?: number;
+      raw_data?: number[];
+      shipment_id?: number;
+      status?: string;
     };
     'models.TranslateModuleRequest': {
       module: string;
@@ -45512,7 +42274,6 @@ export interface components {
     'models.UpdateOrderStatusRequest': {
       seller_notes?: string;
       status: components['schemas']['models.OrderStatus'];
-      tracking_number?: string;
     };
     'models.UpdatePrivacySettingsRequest': {
       allow_contact_requests?: boolean;
@@ -45547,8 +42308,12 @@ export interface components {
       email?: string;
       google_id?: string;
       id?: number;
+      /** @description Флаг для placeholder пользователей (не сохраняется в БД) */
+      is_deleted?: boolean;
       name?: string;
       phone?: string;
+      /** @description Alias для совместимости */
+      phone_number?: string;
       picture_url?: string;
       provider?: string;
     };
@@ -45597,10 +42362,14 @@ export interface components {
       id?: number;
       /** @description Флаг администратора */
       is_admin?: boolean;
+      /** @description Флаг для placeholder пользователей (не сохраняется в БД) */
+      is_deleted?: boolean;
       last_seen?: string;
       name?: string;
       notification_email?: boolean;
       phone?: string;
+      /** @description Alias для совместимости */
+      phone_number?: string;
       picture_url?: string;
       provider?: string;
       role?: components['schemas']['models.Role'];
@@ -45783,59 +42552,6 @@ export interface components {
       translation_id?: number;
       versions?: components['schemas']['models.TranslationVersion'][];
     };
-    'models.Warehouse': {
-      address?: string;
-      city?: string;
-      code?: string;
-      country?: string;
-      created_at?: string;
-      current_occupancy_m3?: number;
-      email?: string;
-      has_loading_dock?: boolean;
-      has_refrigeration?: boolean;
-      id?: number;
-      is_active?: boolean;
-      latitude?: number;
-      longitude?: number;
-      manager_name?: string;
-      manager_phone?: string;
-      max_capacity_m3?: number;
-      name?: string;
-      phone?: string;
-      postal_code?: string;
-      storage_area_m2?: number;
-      supports_fbs?: boolean;
-      supports_pickup?: boolean;
-      total_area_m2?: number;
-      type?: string;
-      updated_at?: string;
-      working_hours?: number[];
-    };
-    'models.WarehousePickupOrder': {
-      created_at?: string;
-      customer_email?: string;
-      customer_name?: string;
-      customer_phone?: string;
-      expires_at?: string;
-      id?: number;
-      id_document_number?: string;
-      id_document_type?: string;
-      marketplace_order_id?: number;
-      notes?: string;
-      notification_sent_at?: string;
-      picked_up_at?: string;
-      pickup_code?: string;
-      pickup_confirmed_by?: string;
-      pickup_photo_url?: string;
-      qr_code_url?: string;
-      ready_at?: string;
-      reminder_sent_at?: string;
-      signature_url?: string;
-      status?: components['schemas']['models.PickupOrderStatus'];
-      storefront_order_id?: number;
-      updated_at?: string;
-      warehouse_id?: number;
-    };
     'opensearch.StorefrontSearchItem': {
       address?: string;
       city?: string;
@@ -45878,190 +42594,6 @@ export interface components {
     'opensearch.StorefrontSearchResult': {
       storefronts?: components['schemas']['opensearch.StorefrontSearchItem'][];
       total?: number;
-    };
-    'postexpress.AddressValidationRequest': {
-      /** @description Номер дома (например, "2" или "2a") */
-      BrojPodbroj?: string;
-      /** @description Дата (опционально, формат: YYYY-MM-DD) */
-      Datum?: string;
-      /** @description ID населённого пункта */
-      IdNaselje?: number;
-      /** @description ID услуги доставки */
-      IdRukovanje?: number;
-      /** @description ID улицы (опционально) */
-      IdUlica?: number;
-      /** @description Почтовый индекс */
-      PostanskiBroj?: string;
-      /** @description Тип адреса (0, 1, 2) */
-      TipAdrese?: number;
-    };
-    'postexpress.AddressValidationResponse': {
-      /** @description Номер дома */
-      Broj?: string;
-      /** @description ID населённого пункта */
-      IdNaselje?: number;
-      /** @description ID почтового отделения */
-      IdPoste?: number;
-      /** @description ID улицы */
-      IdUlica?: number;
-      /** @description Название населённого пункта */
-      NazivNaselja?: string;
-      /** @description Название почтового отделения */
-      NazivPoste?: string;
-      /** @description Название улицы */
-      NazivUlice?: string;
-      /** @description Postal Address Code */
-      PAK?: string;
-      /** @description Сообщение об ошибке */
-      Poruka?: string;
-      /** @description Почтовый индекс */
-      PostanskiBroj?: string;
-      /** @description Существует ли адрес */
-      PostojiAdresa?: boolean;
-      /** @description 0 - успех, 1 - ошибка */
-      Rezultat?: number;
-    };
-    'postexpress.AdresaUPS': {
-      /** @description Номер дома ("-1" для BB, "-2" если только подbroj) */
-      Broj?: string;
-      /** @description Номер poštanski pregatak (для Vrsta="F") */
-      BrojFaha?: string;
-      /** @description ID населённого пункта (из TX 3) */
-      IdNaselje?: number;
-      /** @description ID улицы (из TX 4) */
-      IdUlica?: number;
-      /** @description Примечание */
-      Napomena?: string;
-      /** @description Название населённого пункта */
-      Naselje?: string;
-      /** @description Муниципалитет */
-      Opstina?: string;
-      /** @description Postal Address Code (PAK) */
-      Pak?: string;
-      /** @description Подномер (буква или дополнительный номер) */
-      Podbroj?: string;
-      /** @description Почтовый индекс (5 цифр) */
-      Posta?: string;
-      /** @description Район */
-      Reon?: string;
-      /** @description Этаж */
-      Sprat?: string;
-      /** @description Квартира */
-      Stan?: string;
-      /** @description Название улицы */
-      Ulica?: string;
-      /** @description Тип адреса: S-стандартный, F-fah, P-post restant */
-      Vrsta?: string;
-    };
-    'postexpress.GetSettlementsResponse': {
-      /** @description Массив найденных населённых пунктов */
-      Naselja?: components['schemas']['postexpress.Settlement'][];
-      /** @description Сообщение об ошибке */
-      Poruka?: string;
-      /** @description 0 - успех, 1 - ошибка */
-      Rezultat?: number;
-    };
-    'postexpress.GetStreetsResponse': {
-      /** @description Сообщение об ошибке */
-      Poruka?: string;
-      /** @description 0 - успех, 1 - ошибка */
-      Rezultat?: number;
-      /** @description Массив найденных улиц */
-      Ulice?: components['schemas']['postexpress.Street'][];
-    };
-    'postexpress.PostageCalculationRequest': {
-      /** @description ID услуги доставки */
-      IdRukovanje?: number;
-      /** @description ID страны (0 = внутренние отправления) */
-      IdZemlja?: number;
-      /** @description Вес в граммах */
-      Masa?: number;
-      /** @description COD в para (1 RSD = 100 para) */
-      Otkupnina?: number;
-      /** @description Дополнительные услуги через запятую */
-      PosebneUsluge?: string;
-      /** @description Почтовый индекс прибытия */
-      PostanskiBrojDolaska?: string;
-      /** @description Почтовый индекс отправления */
-      PostanskiBrojOdlaska?: string;
-      /** @description Объявленная ценность в para */
-      Vrednost?: number;
-    };
-    'postexpress.PostageCalculationResponse': {
-      /** @description ID услуги */
-      IdRukovanje?: number;
-      /** @description Вес в граммах */
-      Masa?: number;
-      /** @description Примечание */
-      Napomena?: string;
-      /** @description Название услуги */
-      NazivUsluge?: string;
-      /** @description COD в para */
-      Otkupnina?: number;
-      /** @description Сообщение об ошибке */
-      Poruka?: string;
-      /** @description Дополнительные услуги */
-      PosebneUsluge?: string;
-      /** @description Почтовый индекс прибытия */
-      PostanskiBrojDolaska?: string;
-      /** @description Почтовый индекс отправления */
-      PostanskiBrojOdlaska?: string;
-      /** @description Стоимость в para (295 RSD = 29500 para) */
-      Postarina?: number;
-      /** @description 0 - успех, 1 - ошибка */
-      Rezultat?: number;
-      /** @description Объявленная ценность в para */
-      Vrednost?: number;
-    };
-    'postexpress.ServiceAvailabilityRequest': {
-      /** @description ОБЯЗАТЕЛЬНО: Полная структура адреса */
-      Adresa?: components['schemas']['postexpress.AdresaUPS'];
-      /** @description Дата доставки (опционально, формат: DD.MM.YYYY) */
-      Datum?: string;
-      /** @description ID услуги (29, 30, 55, 58, 59, 71, 85) */
-      IdRukovanje?: number;
-      /** @description Тип адреса: 0-адрес забора, 1-адрес отправителя, 2-адрес получателя */
-      TipAdrese?: number;
-    };
-    'postexpress.ServiceAvailabilityResponse': {
-      /** @description Доступна ли услуга */
-      Dostupna?: boolean;
-      /** @description ID услуги */
-      IdRukovanje?: number;
-      /** @description Примечание */
-      Napomena?: string;
-      /** @description Название услуги */
-      NazivUsluge?: string;
-      /** @description Ожидаемое время доставки (дни) */
-      OcekivanoDana?: number;
-      /** @description Сообщение об ошибке */
-      Poruka?: string;
-      /** @description 0 - успех, 1 - ошибка */
-      Rezultat?: number;
-    };
-    'postexpress.Settlement': {
-      /** @description ID населённого пункта (ВАЖНО: API возвращает "Id", не "IdNaselje"!) */
-      Id?: number;
-      /** @description Алиас для совместимости */
-      IdNaselje?: number;
-      /** @description ID округа */
-      IdOkrug?: number;
-      /** @description Название */
-      Naziv?: string;
-      /** @description Название округа */
-      NazivOkruga?: string;
-      /** @description Почтовый индекс */
-      PostanskiBroj?: string;
-    };
-    'postexpress.Street': {
-      /** @description ID улицы (ВАЖНО: API возвращает "Id", не "IdUlica"!) */
-      Id?: number;
-      /** @description ID населённого пункта */
-      IdNaselje?: number;
-      /** @description Алиас для совместимости */
-      IdUlica?: number;
-      /** @description Название улицы */
-      Naziv?: string;
     };
     'postgres.DashboardOrder': {
       created_at?: string;
@@ -46214,6 +42746,14 @@ export interface components {
       max_minutes?: number;
       transport_mode?: string;
     };
+    'service.Address': {
+      city?: string;
+      country?: string;
+      name?: string;
+      phone?: string;
+      postal_code?: string;
+      street?: string;
+    };
     'service.CategoryAnalysisResult': {
       insights?: components['schemas']['service.CategoryInsight'][];
       new_category_proposals?: components['schemas']['service.NewCategoryProposal'][];
@@ -46241,20 +42781,10 @@ export interface components {
       /** @description Примеры названий товаров */
       sampleProducts?: string[];
     };
-    'service.CreateShipmentRequest': {
-      cod_amount?: number;
-      delivery_type?: string;
-      from_address?: components['schemas']['interfaces.Address'];
-      insurance_value?: number;
-      notes?: string;
-      order_id?: number;
-      packages?: components['schemas']['interfaces.Package'][];
-      pickup_date?: string;
-      provider_code?: string;
-      provider_id?: number;
-      reference?: string;
-      services?: string[];
-      to_address?: components['schemas']['interfaces.Address'];
+    'service.Dimensions': {
+      height?: number;
+      length?: number;
+      width?: number;
     };
     'service.IndexInfo': {
       aliases?: string[];
@@ -46341,6 +42871,12 @@ export interface components {
       /** @description Минимальное значение веса */
       min_weight?: number;
     };
+    'service.Package': {
+      description?: string;
+      dimensions?: components['schemas']['service.Dimensions'];
+      value?: number;
+      weight?: number;
+    };
     'service.PaymentInitiationResponse': {
       amount?: number;
       currency?: string;
@@ -46348,6 +42884,13 @@ export interface components {
       payment_intent_id?: string;
       payment_required?: boolean;
       redirect_url?: string;
+    };
+    'service.ProofOfDelivery': {
+      notes?: string;
+      photo_url?: string;
+      received_at?: string;
+      received_by?: string;
+      signature_url?: string;
     };
     'service.SearchMetrics': {
       avg_click_position?: number;
@@ -46370,13 +42913,19 @@ export interface components {
       ctr?: number;
       query?: string;
     };
+    'service.TrackingEvent': {
+      description?: string;
+      location?: string;
+      status?: string;
+      timestamp?: string;
+    };
     'service.TrackingInfo': {
       current_location?: string;
       delivered_date?: string;
       estimated_date?: string;
-      events?: components['schemas']['interfaces.TrackingEvent'][];
+      events?: components['schemas']['service.TrackingEvent'][];
       last_updated?: string;
-      proof_of_delivery?: components['schemas']['interfaces.ProofOfDelivery'];
+      proof_of_delivery?: components['schemas']['service.ProofOfDelivery'];
       shipment_id?: number;
       status?: string;
       status_text?: string;
@@ -46467,24 +43016,6 @@ export interface components {
       processingTimeMs?: number;
       reasoning?: string;
       suggestedCategory?: string;
-    };
-    'storage.WarehouseStatistics': {
-      average_pickup_time?: number;
-      canceled_orders?: number;
-      completed_orders?: number;
-      completed_pickup_orders?: number;
-      occupancy_percent?: number;
-      pending_orders?: number;
-      pending_pickup_orders?: number;
-      ready_orders?: number;
-      total_inventory_items?: number;
-      total_orders?: number;
-      /** @description Дополнительные поля для совместимости с repository */
-      total_pickup_orders?: number;
-      total_value?: number;
-      total_volume_m3?: number;
-      warehouse_id?: number;
-      warehouse_name?: string;
     };
     'tgbotapi.Animation': {
       file_id?: string;
@@ -47458,12 +43989,6 @@ export interface components {
     'search.ServiceParams': {
       content: {
         'application/json': components['schemas']['search.ServiceParams'];
-      };
-    };
-    /** @description Причина отмены */
-    Request: {
-      content: {
-        'application/json': Record<string, never>;
       };
     };
     postApiV1Reviews_id_photos: {

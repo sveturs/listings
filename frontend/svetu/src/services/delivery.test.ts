@@ -71,7 +71,10 @@ describe('deliveryService', () => {
       const result = await deliveryService.calculateRate(request);
 
       // Assert
-      expect(apiClient.post).toHaveBeenCalledWith('/delivery/calculate-rate', request);
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/delivery/calculate-rate',
+        request
+      );
       expect(result.data).toEqual(mockResponse);
       expect(result.data?.total_cost).toBe(250);
       expect(result.error).toBeNull();
@@ -164,7 +167,9 @@ describe('deliveryService', () => {
       const result = await deliveryService.calculateCart(storefrontId);
 
       // Assert
-      expect(apiClient.post).toHaveBeenCalledWith(`/delivery/calculate-cart/${storefrontId}`);
+      expect(apiClient.post).toHaveBeenCalledWith(
+        `/delivery/calculate-cart/${storefrontId}`
+      );
       expect(result.data?.total_cost).toBe(200);
     });
   });
@@ -274,7 +279,10 @@ describe('deliveryService', () => {
       const result = await deliveryService.createShipment(request);
 
       // Assert
-      expect(apiClient.post).toHaveBeenCalledWith('/delivery/shipments', request);
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/delivery/shipments',
+        request
+      );
       expect(result.data?.tracking_number).toBe('PE123456789');
       expect(result.data?.provider_code).toBe('post_express');
       expect(result.data?.label_url).toBeDefined();
@@ -363,7 +371,9 @@ describe('deliveryService', () => {
       const result = await deliveryService.trackShipment(trackingToken);
 
       // Assert
-      expect(apiClient.get).toHaveBeenCalledWith(`/delivery/track/${trackingToken}`);
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `/delivery/track/${trackingToken}`
+      );
       expect(result.data?.status).toBe('in_transit');
       expect(result.data?.events).toHaveLength(2);
       expect(result.data?.current_location).toBe('Belgrade Sorting Center');
@@ -436,7 +446,9 @@ describe('deliveryService', () => {
       const result = await deliveryService.cancelShipment(shipmentId);
 
       // Assert
-      expect(apiClient.delete).toHaveBeenCalledWith(`/delivery/shipments/${shipmentId}`);
+      expect(apiClient.delete).toHaveBeenCalledWith(
+        `/delivery/shipments/${shipmentId}`
+      );
       expect(result.error).toBeNull();
     });
 
@@ -511,7 +523,9 @@ describe('deliveryService', () => {
       const result = await deliveryService.getSettlements(searchTerm);
 
       // Assert
-      expect(apiClient.get).toHaveBeenCalledWith('/delivery/settlements?search=Beograd');
+      expect(apiClient.get).toHaveBeenCalledWith(
+        '/delivery/settlements?search=Beograd'
+      );
       expect(result.data).toHaveLength(1);
       expect(result.data?.[0].name).toBe('Beograd');
     });
@@ -542,7 +556,9 @@ describe('deliveryService', () => {
       const result = await deliveryService.getStreets(settlementId);
 
       // Assert
-      expect(apiClient.get).toHaveBeenCalledWith(`/delivery/settlements/${settlementId}/streets`);
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `/delivery/settlements/${settlementId}/streets`
+      );
       expect(result.data).toHaveLength(2);
     });
 
@@ -630,7 +646,9 @@ describe('deliveryService', () => {
       const result = await deliveryService.getParcelLockers(cityId);
 
       // Assert
-      expect(apiClient.get).toHaveBeenCalledWith(`/delivery/parcel-lockers?city_id=${cityId}`);
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `/delivery/parcel-lockers?city_id=${cityId}`
+      );
       expect(result.data).toHaveLength(1);
     });
   });
@@ -655,7 +673,10 @@ describe('deliveryService', () => {
       });
 
       // Act
-      const result = await deliveryService.getProductAttributes(productId, type);
+      const result = await deliveryService.getProductAttributes(
+        productId,
+        type
+      );
 
       // Assert
       expect(apiClient.get).toHaveBeenCalledWith(
@@ -682,7 +703,9 @@ describe('deliveryService', () => {
       const result = await deliveryService.getCategoryDefaults(categoryId);
 
       // Assert
-      expect(apiClient.get).toHaveBeenCalledWith(`/categories/${categoryId}/delivery-defaults`);
+      expect(apiClient.get).toHaveBeenCalledWith(
+        `/categories/${categoryId}/delivery-defaults`
+      );
       expect(result.data?.default_weight).toBe(1.0);
     });
   });

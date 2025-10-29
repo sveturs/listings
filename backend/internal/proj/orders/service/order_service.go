@@ -659,7 +659,7 @@ func (s *OrderService) calculateShippingCost(ctx context.Context, order *models.
 	}
 
 	// 3. Извлекаем адресные данные из JSONB
-	if order.ShippingAddress == nil || len(order.ShippingAddress) == 0 {
+	if len(order.ShippingAddress) == 0 {
 		s.logger.Warn("Order shipping address not provided, using fallback rate (order_id: %d)", order.ID)
 		return decimal.NewFromFloat(100.0)
 	}
@@ -823,7 +823,7 @@ func (s *OrderService) createShipmentForOrder(ctx context.Context, order *models
 	}
 
 	// Валидация адресов
-	if order.ShippingAddress == nil || len(order.ShippingAddress) == 0 {
+	if len(order.ShippingAddress) == 0 {
 		return fmt.Errorf("missing shipping address")
 	}
 

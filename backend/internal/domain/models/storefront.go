@@ -153,12 +153,12 @@ type Storefront struct {
 	ViewsCount       int        `json:"views_count" db:"views_count"`
 
 	// Подписка (монетизация)
-	SubscriptionPlan        SubscriptionPlanType `json:"subscription_plan" db:"subscription_plan"`
-	SubscriptionExpiresAt   *time.Time           `json:"subscription_expires_at,omitempty" db:"subscription_expires_at"`
-	CommissionRate          float64              `json:"commission_rate" db:"commission_rate"`
-	SubscriptionID          *int                 `json:"subscription_id,omitempty" db:"subscription_id"`
-	IsSubscriptionActive    bool                 `json:"is_subscription_active" db:"is_subscription_active"`
-	FollowersCount          int                  `json:"followers_count" db:"followers_count"`
+	SubscriptionPlan      SubscriptionPlanType `json:"subscription_plan" db:"subscription_plan"`
+	SubscriptionExpiresAt *time.Time           `json:"subscription_expires_at,omitempty" db:"subscription_expires_at"`
+	CommissionRate        float64              `json:"commission_rate" db:"commission_rate"`
+	SubscriptionID        *int                 `json:"subscription_id,omitempty" db:"subscription_id"`
+	IsSubscriptionActive  bool                 `json:"is_subscription_active" db:"is_subscription_active"`
+	FollowersCount        int                  `json:"followers_count" db:"followers_count"`
 
 	// AI и killer features
 	AIAgentEnabled      bool  `json:"ai_agent_enabled" db:"ai_agent_enabled"`

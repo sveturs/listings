@@ -189,7 +189,7 @@ func TestIsValidStatusTransition_PendingToCancelled(t *testing.T) {
 	valid := isValidStatusTransition(models.OrderStatusPending, models.OrderStatusCancelled)
 
 	// Assert
-	assert.True(t, valid, "Pending -> Cancelled should be valid")
+	assert.True(t, valid, "Pending -> Canceled should be valid")
 }
 
 func TestIsValidStatusTransition_ConfirmedToProcessing(t *testing.T) {
@@ -229,7 +229,7 @@ func TestIsValidStatusTransition_CancelledIsFinal(t *testing.T) {
 	valid := isValidStatusTransition(models.OrderStatusCancelled, models.OrderStatusPending)
 
 	// Assert
-	assert.False(t, valid, "Cancelled is final status, no transitions allowed")
+	assert.False(t, valid, "Canceled is final status, no transitions allowed")
 }
 
 // ========================================
@@ -346,7 +346,6 @@ func createTestOrder(storefrontID int, withShippingProvider bool) *models.Storef
 
 	return order
 }
-
 
 // ========================================
 // INTEGRATION NOTES

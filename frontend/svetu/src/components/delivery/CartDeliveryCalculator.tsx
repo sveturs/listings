@@ -94,7 +94,8 @@ export default function CartDeliveryCalculator({
 
             return {
               ...item,
-              attributes: response.data || await getDefaultAttributes(item.category_id),
+              attributes:
+                response.data || (await getDefaultAttributes(item.category_id)),
             };
           } catch (error) {
             console.error(
@@ -146,7 +147,9 @@ export default function CartDeliveryCalculator({
     }
 
     try {
-      const response = await deliveryService.getCategoryDefaults(categoryId.toString());
+      const response = await deliveryService.getCategoryDefaults(
+        categoryId.toString()
+      );
 
       if (response.data) {
         const defaults = response.data;

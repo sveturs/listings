@@ -82,7 +82,9 @@ export default function UniversalDeliverySelector({
           onQuoteSelected?.(response.data.recommended);
         }
       } else {
-        setError(response.error?.message || 'Не удалось рассчитать стоимость доставки');
+        setError(
+          response.error?.message || 'Не удалось рассчитать стоимость доставки'
+        );
       }
     } catch (err) {
       setError('Ошибка при расчете стоимости доставки');

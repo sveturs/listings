@@ -138,7 +138,10 @@ export const fetchProviders = createAsyncThunk(
 export const calculateRate = createAsyncThunk(
   'delivery/calculateRate',
   async (
-    { request, bypassCache = false }: { request: CalculationRequest; bypassCache?: boolean },
+    {
+      request,
+      bypassCache = false,
+    }: { request: CalculationRequest; bypassCache?: boolean },
     { getState, rejectWithValue }
   ) => {
     try {
@@ -163,7 +166,9 @@ export const calculateRate = createAsyncThunk(
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        return rejectWithValue(errorData.error?.message || 'Failed to calculate rate');
+        return rejectWithValue(
+          errorData.error?.message || 'Failed to calculate rate'
+        );
       }
 
       const data = await response.json();
@@ -213,7 +218,10 @@ export const deliverySlice = createSlice({
     /**
      * Выбрать quote для конкретного storefront
      */
-    selectQuote: (state, action: PayloadAction<{ storefrontId: string; quote: DeliveryQuote }>) => {
+    selectQuote: (
+      state,
+      action: PayloadAction<{ storefrontId: string; quote: DeliveryQuote }>
+    ) => {
       state.selectedQuotes[action.payload.storefrontId] = action.payload.quote;
     },
 
@@ -265,7 +273,8 @@ export const deliverySlice = createSlice({
 
     builder.addCase(fetchProviders.rejected, (state, action) => {
       state.providersLoading = false;
-      state.providersError = action.payload as string || 'Failed to fetch providers';
+      state.providersError =
+        (action.payload as string) || 'Failed to fetch providers';
     });
 
     // ========================================
@@ -294,7 +303,8 @@ export const deliverySlice = createSlice({
     builder.addCase(calculateRate.rejected, (state, action) => {
       const cacheKey = getCacheKey(action.meta.arg.request);
       state.calculationsLoading[cacheKey] = false;
-      state.calculationsError[cacheKey] = action.payload as string || 'Failed to calculate rate';
+      state.calculationsError[cacheKey] =
+        (action.payload as string) || 'Failed to calculate rate';
     });
 
     // ========================================
@@ -315,7 +325,8 @@ export const deliverySlice = createSlice({
     builder.addCase(trackShipment.rejected, (state, action) => {
       const trackingToken = action.meta.arg;
       state.trackingLoading[trackingToken] = false;
-      state.trackingError[trackingToken] = action.payload as string || 'Failed to track shipment';
+      state.trackingError[trackingToken] =
+        (action.payload as string) || 'Failed to track shipment';
     });
   },
 });
@@ -344,51 +355,57 @@ export const selectProviders = (state: RootState) => state.delivery.providers;
 /**
  * Получить loading state провайдеров
  */
-export const selectProvidersLoading = (state: RootState) => state.delivery.providersLoading;
+export const selectProvidersLoading = (state: RootState) =>
+  state.delivery.providersLoading;
 
 /**
  * Получить выбранный quote для storefront
  */
-export const selectSelectedQuote = (storefrontId: string) => (state: RootState) =>
-  state.delivery.selectedQuotes[storefrontId];
+export const selectSelectedQuote =
+  (storefrontId: string) => (state: RootState) =>
+    state.delivery.selectedQuotes[storefrontId];
 
 /**
  * Получить все выбранные quotes
  */
-export const selectAllSelectedQuotes = (state: RootState) => state.delivery.selectedQuotes;
+export const selectAllSelectedQuotes = (state: RootState) =>
+  state.delivery.selectedQuotes;
 
 /**
  * Получить calculation для request (с проверкой кэша)
  */
-export const selectCalculation = (request: CalculationRequest) => (state: RootState) => {
-  const cacheKey = getCacheKey(request);
-  const cached = state.delivery.calculations[cacheKey];
+export const selectCalculation =
+  (request: CalculationRequest) => (state: RootState) => {
+    const cacheKey = getCacheKey(request);
+    const cached = state.delivery.calculations[cacheKey];
 
-  if (!cached) return null;
+    if (!cached) return null;
 
-  // Check if cache is still valid
-  if (!isCacheValid(cached, request)) {
-    return null;
-  }
+    // Check if cache is still valid
+    if (!isCacheValid(cached, request)) {
+      return null;
+    }
 
-  return cached.data;
-};
+    return cached.data;
+  };
 
 /**
  * Получить loading state для calculation
  */
-export const selectCalculationLoading = (request: CalculationRequest) => (state: RootState) => {
-  const cacheKey = getCacheKey(request);
-  return state.delivery.calculationsLoading[cacheKey] || false;
-};
+export const selectCalculationLoading =
+  (request: CalculationRequest) => (state: RootState) => {
+    const cacheKey = getCacheKey(request);
+    return state.delivery.calculationsLoading[cacheKey] || false;
+  };
 
 /**
  * Получить error для calculation
  */
-export const selectCalculationError = (request: CalculationRequest) => (state: RootState) => {
-  const cacheKey = getCacheKey(request);
-  return state.delivery.calculationsError[cacheKey];
-};
+export const selectCalculationError =
+  (request: CalculationRequest) => (state: RootState) => {
+    const cacheKey = getCacheKey(request);
+    return state.delivery.calculationsError[cacheKey];
+  };
 
 /**
  * Получить tracking info
@@ -399,14 +416,16 @@ export const selectTracking = (trackingToken: string) => (state: RootState) =>
 /**
  * Получить loading state для tracking
  */
-export const selectTrackingLoading = (trackingToken: string) => (state: RootState) =>
-  state.delivery.trackingLoading[trackingToken] || false;
+export const selectTrackingLoading =
+  (trackingToken: string) => (state: RootState) =>
+    state.delivery.trackingLoading[trackingToken] || false;
 
 /**
  * Получить error для tracking
  */
-export const selectTrackingError = (trackingToken: string) => (state: RootState) =>
-  state.delivery.trackingError[trackingToken];
+export const selectTrackingError =
+  (trackingToken: string) => (state: RootState) =>
+    state.delivery.trackingError[trackingToken];
 
 // ========================================
 // EXPORT REDUCER

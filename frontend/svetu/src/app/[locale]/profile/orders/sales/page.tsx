@@ -55,10 +55,7 @@ export default function MySalesPage() {
   };
 
   const handleMarkAsShipped = async () => {
-    if (
-      !shippingModal.orderId ||
-      !shippingModal.shippingMethod
-    ) {
+    if (!shippingModal.orderId || !shippingModal.shippingMethod) {
       toast.error(t('fillAllShippingFields'));
       return;
     }

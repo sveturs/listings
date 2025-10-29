@@ -122,10 +122,7 @@ export const marketplaceOrdersService = {
   },
 
   // Отметить как отправленный
-  async markAsShipped(
-    orderId: number,
-    shippingMethod: string
-  ): Promise<void> {
+  async markAsShipped(orderId: number, shippingMethod: string): Promise<void> {
     await apiClient.post(`/api/v1/c2c/orders/${orderId}/ship`, {
       shipping_method: shippingMethod,
     });

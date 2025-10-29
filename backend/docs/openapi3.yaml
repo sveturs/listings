@@ -12711,362 +12711,6 @@ paths:
       summary: Get transaction history
       tags:
         - balance
-  /api/v1/bex/calculate-rate:
-    post:
-      description: Calculate shipping cost for given parameters
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/backend_internal_proj_bexexpress_models.CalculateRa\
-                teRequest"
-        description: Rate calculation parameters
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/backend_internal_proj_bexexpress_models.CalculateRa\
-                          teResponse"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Calculate shipping rate
-      tags:
-        - BEX Express
-  /api/v1/bex/parcel-shops:
-    get:
-      description: Get list of BEX parcel shops
-      parameters:
-        - description: Filter by city
-          in: query
-          name: city
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/models.BEXParcelShop"
-                        type: array
-                    type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get parcel shops
-      tags:
-        - BEX Express
-  /api/v1/bex/search-address:
-    post:
-      description: Search for addresses in BEX database
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/models.SearchAddressRequest"
-        description: Search parameters
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/models.AddressSuggestion"
-                        type: array
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Search addresses
-      tags:
-        - BEX Express
-  /api/v1/bex/shipments:
-    post:
-      description: Create a new shipment through BEX Express
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/backend_internal_proj_bexexpress_models.CreateShipm\
-                entRequest"
-        description: Shipment details
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.BEXShipment"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - ApiKeyAuth: []
-      summary: Create BEX shipment
-      tags:
-        - BEX Express
-  "/api/v1/bex/shipments/{id}":
-    delete:
-      description: Cancel a shipment
-      parameters:
-        - description: Shipment ID
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            "*/*":
-              schema:
-                $ref: "#/components/schemas/utils.SuccessResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            "*/*":
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - ApiKeyAuth: []
-      summary: Cancel shipment
-      tags:
-        - BEX Express
-    get:
-      description: Get shipment information by ID
-      parameters:
-        - description: Shipment ID
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.BEXShipment"
-                    type: object
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - ApiKeyAuth: []
-      summary: Get shipment details
-      tags:
-        - BEX Express
-  "/api/v1/bex/shipments/{id}/label":
-    get:
-      description: Get printable label for shipment
-      parameters:
-        - description: Shipment ID
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-        - description: Page size (4 for A4, 6 for A6)
-          in: query
-          name: size
-          schema:
-            type: integer
-            default: 4
-      responses:
-        "200":
-          description: OK
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        "404":
-          description: Not Found
-          content:
-            application/pdf:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - ApiKeyAuth: []
-      summary: Get shipment label
-      tags:
-        - BEX Express
-  "/api/v1/bex/shipments/{id}/status":
-    get:
-      description: Get current status of shipment
-      parameters:
-        - description: Shipment ID
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.BEXShipment"
-                    type: object
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - ApiKeyAuth: []
-      summary: Get shipment status
-      tags:
-        - BEX Express
-  /api/v1/bex/shipments/bulk:
-    post:
-      description: Create multiple shipments at once
-      requestBody:
-        content:
-          application/json:
-            schema:
-              items:
-                $ref: "#/components/schemas/backend_internal_proj_bexexpress_models.CreateShipm\
-                  entRequest"
-              type: array
-        description: Array of shipment details
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/models.BEXShipment"
-                        type: array
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      security:
-        - ApiKeyAuth: []
-      summary: Create bulk shipments
-      tags:
-        - BEX Express
-  "/api/v1/bex/track/{tracking}":
-    get:
-      description: Track shipment by tracking number
-      parameters:
-        - description: Tracking number
-          in: path
-          name: tracking
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.BEXShipment"
-                    type: object
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Track shipment
-      tags:
-        - BEX Express
-  /api/v1/bex/webhook/status:
-    post:
-      description: Receive status updates from BEX
-      requestBody:
-        content:
-          application/json:
-            schema:
-              additionalProperties: true
-              type: object
-        description: Webhook data
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.SuccessResponseSwag"
-      summary: Handle BEX status webhook
-      tags:
-        - BEX Express
   /api/v1/cars/makes:
     get:
       description: Get all available car makes from the database
@@ -20187,1280 +19831,6 @@ paths:
       summary: Process payment webhook
       tags:
         - payments
-  /api/v1/postexpress/calculate-postage:
-    post:
-      description: Рассчитать точную стоимость доставки для конкретной посылки
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/postexpress.PostageCalculationRequest"
-        description: Данные для расчёта стоимости
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/postexpress.PostageCalculationResponse"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Calculate postage (TX 11)
-      tags:
-        - PostExpress
-  /api/v1/postexpress/calculate-rate:
-    post:
-      description: Рассчитать стоимость доставки Post Express
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/backend_internal_proj_postexpress_models.CalculateR\
-                ateRequest"
-        description: Параметры для расчета стоимости
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/backend_internal_proj_postexpress_models.CalculateR\
-                          ateResponse"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Calculate delivery rate
-      tags:
-        - PostExpress
-  /api/v1/postexpress/check-service-availability:
-    post:
-      description: Проверить доступность услуги доставки между двумя точками
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/postexpress.ServiceAvailabilityRequest"
-        description: Данные для проверки доступности
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/postexpress.ServiceAvailabilityResponse"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Check service availability (TX 9)
-      tags:
-        - PostExpress
-  /api/v1/postexpress/health:
-    get:
-      description: Проверяет доступность и состояние сервиса Post Express
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        additionalProperties: true
-                        type: object
-                    type: object
-      summary: Health check для Post Express
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/locations/{id}":
-    get:
-      description: Получить информацию о населенном пункте по ID
-      parameters:
-        - description: ID населенного пункта
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.PostExpressLocation"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get location
-      tags:
-        - PostExpress
-  /api/v1/postexpress/locations/search:
-    get:
-      description: Поиск населенных пунктов Post Express
-      parameters:
-        - description: Поисковый запрос
-          in: query
-          name: q
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/models.PostExpressLocation"
-                        type: array
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Search locations
-      tags:
-        - PostExpress
-  /api/v1/postexpress/locations/sync:
-    post:
-      description: Синхронизировать населенные пункты с API Post Express
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: string
-                    type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Sync locations
-      tags:
-        - PostExpress
-  /api/v1/postexpress/offices:
-    get:
-      description: Получить список почтовых отделений для населенного пункта
-      parameters:
-        - description: ID населенного пункта
-          in: query
-          name: location_id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/models.PostExpressOffice"
-                        type: array
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get offices
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/offices/{code}":
-    get:
-      description: Получить информацию о почтовом отделении по коду
-      parameters:
-        - description: Код отделения
-          in: path
-          name: code
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.PostExpressOffice"
-                    type: object
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get office
-      tags:
-        - PostExpress
-  /api/v1/postexpress/offices/sync:
-    post:
-      description: Синхронизировать почтовые отделения с API Post Express
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: string
-                    type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Sync offices
-      tags:
-        - PostExpress
-  /api/v1/postexpress/rates:
-    get:
-      description: Получить список тарифов доставки Post Express
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/models.PostExpressRate"
-                        type: array
-                    type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get delivery rates
-      tags:
-        - PostExpress
-  /api/v1/postexpress/settings:
-    get:
-      description: Получить текущие настройки интеграции с Post Express
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.PostExpressSettings"
-                    type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get Post Express settings
-      tags:
-        - PostExpress
-    put:
-      description: Обновить настройки интеграции с Post Express
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/models.PostExpressSettings"
-        description: Настройки Post Express
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.PostExpressSettings"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Update Post Express settings
-      tags:
-        - PostExpress
-  /api/v1/postexpress/settlements:
-    get:
-      description: Поиск населённых пунктов по названию через Post Express WSP API
-      parameters:
-        - description: Поисковый запрос (название или часть названия)
-          in: query
-          name: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/postexpress.GetSettlementsResponse"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Search settlements by name (TX 3)
-      tags:
-        - PostExpress
-  /api/v1/postexpress/shipments:
-    get:
-      description: Получить список отправлений с фильтрацией и пагинацией
-      parameters:
-        - description: Статус отправления
-          in: query
-          name: status
-          schema:
-            type: string
-        - description: Дата от (YYYY-MM-DD)
-          in: query
-          name: date_from
-          schema:
-            type: string
-        - description: Дата до (YYYY-MM-DD)
-          in: query
-          name: date_to
-          schema:
-            type: string
-        - description: Город получателя
-          in: query
-          name: city
-          schema:
-            type: string
-        - description: Номер страницы
-          in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-        - description: Размер страницы
-          in: query
-          name: page_size
-          schema:
-            type: integer
-            default: 20
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: object
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: List shipments
-      tags:
-        - PostExpress
-    post:
-      description: Создать новое отправление Post Express
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/backend_internal_proj_postexpress_models.CreateShip\
-                mentRequest"
-        description: Данные для создания отправления
-        required: true
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.PostExpressShipment"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Create shipment
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/shipments/{id}":
-    get:
-      description: Получить информацию об отправлении по ID
-      parameters:
-        - description: ID отправления
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.PostExpressShipment"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get shipment
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/shipments/{id}/cancel":
-    post:
-      description: Отменить отправление
-      parameters:
-        - description: ID отправления
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        $ref: "#/components/requestBodies/Request"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: string
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Cancel shipment
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/shipments/{id}/invoice":
-    get:
-      description: Получить накладную отправления в формате PDF
-      parameters:
-        - description: ID отправления
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: PDF накладная
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Bad Request
-          content:
-            application/pdf:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/pdf:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/pdf:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get shipment invoice
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/shipments/{id}/label":
-    get:
-      description: Получить этикетку отправления в формате PDF
-      parameters:
-        - description: ID отправления
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: PDF этикетка
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Bad Request
-          content:
-            application/pdf:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/pdf:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/pdf:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get shipment label
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/shipments/{id}/status":
-    put:
-      description: Обновить статус отправления
-      parameters:
-        - description: ID отправления
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-        description: Новый статус
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: string
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Update shipment status
-      tags:
-        - PostExpress
-  /api/v1/postexpress/statistics/shipments:
-    get:
-      description: Получить статистику отправлений с фильтрами
-      parameters:
-        - description: Дата от (YYYY-MM-DD)
-          in: query
-          name: date_from
-          schema:
-            type: string
-        - description: Дата до (YYYY-MM-DD)
-          in: query
-          name: date_to
-          schema:
-            type: string
-        - description: Группировка (day, week, month)
-          in: query
-          name: group_by
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/backend_internal_proj_postexpress_storage.ShipmentS\
-                          tatistics"
-                    type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get shipment statistics
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/statistics/warehouse/{id}":
-    get:
-      description: Получить статистику склада
-      parameters:
-        - description: ID склада
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/storage.WarehouseStatistics"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get warehouse statistics
-      tags:
-        - PostExpress
-  /api/v1/postexpress/streets:
-    get:
-      description: Поиск улиц по названию в конкретном населённом пункте
-      parameters:
-        - description: ID населённого пункта (из TX 3)
-          in: query
-          name: settlement_id
-          required: true
-          schema:
-            type: integer
-        - description: Поисковый запрос (название или часть названия улицы)
-          in: query
-          name: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/postexpress.GetStreetsResponse"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Search streets in settlement (TX 4)
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/track/{tracking}":
-    get:
-      description: Получить события отслеживания отправления по трекинг-номеру
-      parameters:
-        - description: Трекинг-номер
-          in: path
-          name: tracking
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/backend_internal_proj_postexpress_models.TrackingEv\
-                            ent"
-                        type: array
-                    type: object
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Track shipment
-      tags:
-        - PostExpress
-  /api/v1/postexpress/track/sync:
-    post:
-      description: Синхронизировать статусы всех активных отправлений с Post Express
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: string
-                    type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Sync all active shipments
-      tags:
-        - PostExpress
-  /api/v1/postexpress/validate-address:
-    post:
-      description: Проверка существования адреса в базе Post Express
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/postexpress.AddressValidationRequest"
-        description: Данные для валидации адреса
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/postexpress.AddressValidationResponse"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Validate address (TX 6)
-      tags:
-        - PostExpress
-  /api/v1/postexpress/warehouse:
-    get:
-      description: Получить список всех активных складов
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        items:
-                          $ref: "#/components/schemas/models.Warehouse"
-                        type: array
-                    type: object
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get warehouses
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/warehouse/{code}":
-    get:
-      description: Получить информацию о складе по коду
-      parameters:
-        - description: Код склада
-          in: path
-          name: code
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.Warehouse"
-                    type: object
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get warehouse
-      tags:
-        - PostExpress
-  /api/v1/postexpress/warehouse/pickup-orders:
-    post:
-      description: Создать заказ на самовывоз со склада
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/models.CreatePickupOrderRequest"
-        description: Данные для создания заказа на самовывоз
-        required: true
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.WarehousePickupOrder"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Create pickup order
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/warehouse/pickup-orders/{id}":
-    get:
-      description: Получить информацию о заказе на самовывоз по ID
-      parameters:
-        - description: ID заказа на самовывоз
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.WarehousePickupOrder"
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get pickup order
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/warehouse/pickup-orders/{id}/cancel":
-    post:
-      description: Отменить заказ на самовывоз
-      parameters:
-        - description: ID заказа на самовывоз
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        $ref: "#/components/requestBodies/Request"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: string
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Cancel pickup order
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/warehouse/pickup-orders/{id}/confirm":
-    post:
-      description: Подтвердить выдачу заказа со склада
-      parameters:
-        - description: ID заказа на самовывоз
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-        description: Данные подтверждения
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        type: string
-                    type: object
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Confirm pickup
-      tags:
-        - PostExpress
-  "/api/v1/postexpress/warehouse/pickup-orders/code/{code}":
-    get:
-      description: Получить информацию о заказе на самовывоз по коду
-      parameters:
-        - description: Код самовывоза
-          in: path
-          name: code
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/models.WarehousePickupOrder"
-                    type: object
-        "404":
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/utils.ErrorResponseSwag"
-      summary: Get pickup order by code
-      tags:
-        - PostExpress
   /api/v1/product-variant-attributes:
     get:
       description: Returns list of all product variant attributes
@@ -23630,7 +22000,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/service.CreateShipmentRequest"
+              $ref: "#/components/schemas/handler.CreateShipmentHTTPRequest"
         description: Shipment request
         required: true
       responses:
@@ -26977,13 +25347,6 @@ components:
             $ref: "#/components/schemas/search.ServiceParams"
       description: Search parameters
       required: true
-    Request:
-      content:
-        application/json:
-          schema:
-            type: object
-      description: Причина отмены
-      required: true
     postApiV1Reviews_id_photos:
       content:
         multipart/form-data:
@@ -27087,118 +25450,6 @@ components:
             type: string
           type: array
       type: object
-    backend_internal_proj_bexexpress_models.CalculateRateRequest:
-      properties:
-        cod_amount:
-          type: number
-        insurance_amount:
-          type: number
-        recipient_postal_code:
-          type: string
-        shipment_category:
-          type: integer
-        weight_kg:
-          maximum: 50
-          minimum: 0.1
-          type: number
-      required:
-        - recipient_postal_code
-        - shipment_category
-        - weight_kg
-      type: object
-    backend_internal_proj_bexexpress_models.CalculateRateResponse:
-      properties:
-        base_price:
-          type: number
-        cod_fee:
-          type: number
-        delivery_days_max:
-          type: integer
-        delivery_days_min:
-          type: integer
-        insurance_fee:
-          type: number
-        service_available:
-          type: boolean
-        total_price:
-          type: number
-      type: object
-    backend_internal_proj_bexexpress_models.CreateShipmentRequest:
-      properties:
-        cod_amount:
-          type: number
-        delivery_instructions:
-          type: string
-        insurance_amount:
-          type: number
-        notes:
-          type: string
-        order_id:
-          type: integer
-        personal_delivery:
-          type: boolean
-        pre_notification_minutes:
-          description: Уведомления
-          type: integer
-        recipient_address:
-          type: string
-        recipient_city:
-          type: string
-        recipient_email:
-          type: string
-        recipient_name:
-          type: string
-        recipient_phone:
-          type: string
-        recipient_postal_code:
-          type: string
-        shipment_category:
-          type: integer
-        shipment_contents:
-          type: integer
-        storefront_order_id:
-          type: integer
-        total_packages:
-          maximum: 99
-          minimum: 1
-          type: integer
-        weight_kg:
-          maximum: 50
-          minimum: 0.1
-          type: number
-      required:
-        - recipient_address
-        - recipient_city
-        - recipient_name
-        - recipient_phone
-        - recipient_postal_code
-        - shipment_category
-        - shipment_contents
-        - total_packages
-        - weight_kg
-      type: object
-    backend_internal_proj_bexexpress_models.ShipmentStatus:
-      enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        - 6
-        - 7
-        - 8
-        - 9
-      type: integer
-      x-enum-varnames:
-        - ShipmentStatusNotFound
-        - ShipmentStatusDeleted
-        - ShipmentStatusNotSentYet
-        - ShipmentStatusPickedUp
-        - ShipmentStatusDelivered
-        - ShipmentStatusAddressVerify
-        - ShipmentStatusReturnToSender
-        - ShipmentStatusReturnedToSender
-        - ShipmentStatusCODPaid
     backend_internal_proj_c2c_handler.DetectCategoryRequest:
       properties:
         attributes:
@@ -27236,200 +25487,6 @@ components:
         success:
           example: true
           type: boolean
-      type: object
-    backend_internal_proj_delivery_models.TrackingEvent:
-      properties:
-        created_at:
-          type: string
-        description:
-          type: string
-        event_time:
-          type: string
-        id:
-          type: integer
-        location:
-          type: string
-        provider_id:
-          type: integer
-        raw_data:
-          items:
-            type: integer
-          type: array
-        shipment_id:
-          type: integer
-        status:
-          type: string
-      type: object
-    backend_internal_proj_postexpress_models.CalculateRateRequest:
-      properties:
-        cod_amount:
-          type: number
-        declared_value:
-          type: number
-        height_cm:
-          type: integer
-        length_cm:
-          type: integer
-        recipient_postal_code:
-          type: string
-        sender_postal_code:
-          type: string
-        service_type:
-          type: string
-        weight_kg:
-          maximum: 20
-          minimum: 0.1
-          type: number
-        width_cm:
-          type: integer
-      required:
-        - recipient_postal_code
-        - sender_postal_code
-        - weight_kg
-      type: object
-    backend_internal_proj_postexpress_models.CalculateRateResponse:
-      properties:
-        base_price:
-          type: number
-        cod_fee:
-          type: number
-        delivery_days_max:
-          type: integer
-        delivery_days_min:
-          type: integer
-        insurance_fee:
-          type: number
-        service_available:
-          type: boolean
-        total_price:
-          type: number
-      type: object
-    backend_internal_proj_postexpress_models.CreateShipmentRequest:
-      properties:
-        cod_amount:
-          type: number
-        declared_value:
-          type: number
-        delivery_instructions:
-          type: string
-        height_cm:
-          type: integer
-        insurance_amount:
-          type: number
-        length_cm:
-          type: integer
-        notes:
-          type: string
-        order_id:
-          type: integer
-        recipient_address:
-          type: string
-        recipient_city:
-          type: string
-        recipient_email:
-          type: string
-        recipient_name:
-          type: string
-        recipient_phone:
-          type: string
-        recipient_postal_code:
-          type: string
-        service_type:
-          type: string
-        storefront_order_id:
-          type: integer
-        weight_kg:
-          maximum: 20
-          minimum: 0.1
-          type: number
-        width_cm:
-          type: integer
-      required:
-        - recipient_address
-        - recipient_city
-        - recipient_name
-        - recipient_phone
-        - recipient_postal_code
-        - weight_kg
-      type: object
-    backend_internal_proj_postexpress_models.ShipmentStatus:
-      enum:
-        - created
-        - registered
-        - picked_up
-        - in_transit
-        - delivered
-        - failed
-        - returned
-      type: string
-      x-enum-varnames:
-        - ShipmentStatusCreated
-        - ShipmentStatusRegistered
-        - ShipmentStatusPickedUp
-        - ShipmentStatusInTransit
-        - ShipmentStatusDelivered
-        - ShipmentStatusFailed
-        - ShipmentStatusReturned
-    backend_internal_proj_postexpress_models.TrackingEvent:
-      properties:
-        additional_info:
-          items:
-            type: integer
-          type: array
-        created_at:
-          type: string
-        event_code:
-          type: string
-        event_description:
-          type: string
-        event_location:
-          type: string
-        event_timestamp:
-          type: string
-        id:
-          type: integer
-        shipment_id:
-          type: integer
-      type: object
-    backend_internal_proj_postexpress_storage.ShipmentStatistics:
-      properties:
-        average_delivery_time:
-          type: number
-        by_city:
-          additionalProperties:
-            type: integer
-          type: object
-        by_status:
-          additionalProperties:
-            type: integer
-          type: object
-        canceled:
-          type: integer
-        delivered:
-          type: integer
-        delivered_shipments:
-          type: integer
-        delivery_success_rate:
-          type: number
-        failed_shipments:
-          type: integer
-        in_transit:
-          type: integer
-        in_transit_shipments:
-          type: integer
-        pending:
-          type: integer
-        total:
-          type: integer
-        total_cod:
-          type: number
-        total_revenue:
-          type: number
-        total_shipments:
-          description: Дополнительные поля для совместимости с repository
-          type: integer
-        total_value:
-          type: number
       type: object
     backend_internal_proj_users_handler.MessageResponse:
       properties:
@@ -28410,7 +26467,7 @@ components:
         weight:
           description: граммы
           example: 1000
-          type: integer
+          type: number
       type: object
     handler.CancelRequest:
       properties:
@@ -28671,6 +26728,52 @@ components:
       required:
         - filters
         - name
+      type: object
+    handler.CreateShipmentHTTPRequest:
+      properties:
+        cod_amount:
+          type: number
+        delivery_type:
+          description: Common fields
+          type: string
+        from_address:
+          $ref: "#/components/schemas/service.Address"
+        insurance_value:
+          type: number
+        notes:
+          type: string
+        order_id:
+          type: integer
+        package:
+          $ref: "#/components/schemas/service.Package"
+        packages:
+          items:
+            $ref: "#/components/schemas/service.Package"
+          type: array
+        pickup_date:
+          type: string
+        provider:
+          description: Alias for provider_code
+          type: string
+        provider_code:
+          type: string
+        provider_id:
+          description: New format (preferred)
+          type: integer
+        recipient:
+          $ref: "#/components/schemas/handler.LegacySenderRecipient"
+        reference:
+          type: string
+        sender:
+          allOf:
+            - $ref: "#/components/schemas/handler.LegacySenderRecipient"
+          description: Legacy format (backward compatibility)
+        services:
+          items:
+            type: string
+          type: array
+        to_address:
+          $ref: "#/components/schemas/service.Address"
       type: object
     handler.DashboardNotification:
       properties:
@@ -28977,6 +27080,15 @@ components:
       required:
         - plan_code
       type: object
+    handler.LegacySenderRecipient:
+      properties:
+        address:
+          $ref: "#/components/schemas/service.Address"
+        name:
+          type: string
+        phone:
+          type: string
+      type: object
     handler.ListingsResponse:
       properties:
         data:
@@ -29044,11 +27156,8 @@ components:
       properties:
         shipping_method:
           type: string
-        tracking_number:
-          type: string
       required:
         - shipping_method
-        - tracking_number
       type: object
     handler.ModerationData:
       properties:
@@ -29603,7 +27712,7 @@ components:
         weight:
           description: Параметры отправления
           example: 500
-          type: integer
+          type: number
       type: object
     handler.TestShipmentResponse:
       properties:
@@ -30491,29 +28600,6 @@ components:
         - product_id
         - quantity
       type: object
-    models.AddressSuggestion:
-      properties:
-        full_address:
-          type: string
-        latitude:
-          type: number
-        longitude:
-          type: number
-        municipality:
-          type: string
-        municipality_id:
-          type: integer
-        place_id:
-          type: string
-        place_name:
-          type: string
-        postal_code:
-          type: string
-        street_id:
-          type: string
-        street_name:
-          type: string
-      type: object
     models.AdminUser:
       properties:
         created_at:
@@ -30715,146 +28801,6 @@ components:
           type: array
         total_actions:
           type: integer
-      type: object
-    models.BEXParcelShop:
-      properties:
-        address:
-          type: string
-        bex_id:
-          type: integer
-        city:
-          type: string
-        code:
-          type: string
-        created_at:
-          type: string
-        id:
-          type: integer
-        is_active:
-          type: boolean
-        latitude:
-          type: number
-        longitude:
-          type: number
-        name:
-          type: string
-        phone:
-          type: string
-        postal_code:
-          type: string
-        updated_at:
-          type: string
-        working_hours:
-          items:
-            type: integer
-          type: array
-      type: object
-    models.BEXShipment:
-      properties:
-        bex_shipment_id:
-          description: BEX идентификаторы
-          type: integer
-        cod_amount:
-          type: number
-        comment_private:
-          type: string
-        comment_public:
-          description: Комментарии
-          type: string
-        created_at:
-          type: string
-        delivered_at:
-          type: string
-        delivery_instructions:
-          type: string
-        failed_at:
-          type: string
-        failed_reason:
-          type: string
-        id:
-          type: integer
-        insurance_amount:
-          type: number
-        label_base64:
-          description: Документы
-          type: string
-        label_url:
-          type: string
-        marketplace_order_id:
-          type: integer
-        pay_type:
-          description: Услуги
-          type: integer
-        personal_delivery:
-          type: boolean
-        picked_up_at:
-          type: string
-        recipient_address:
-          type: string
-        recipient_city:
-          type: string
-        recipient_email:
-          type: string
-        recipient_name:
-          description: Получатель
-          type: string
-        recipient_phone:
-          type: string
-        recipient_postal_code:
-          type: string
-        registered_at:
-          description: Временные метки
-          type: string
-        return_package:
-          type: boolean
-        return_signed_confirmation:
-          type: boolean
-        return_signed_invoices:
-          type: boolean
-        returned_at:
-          type: string
-        sender_address:
-          type: string
-        sender_city:
-          type: string
-        sender_email:
-          type: string
-        sender_name:
-          description: Отправитель
-          type: string
-        sender_phone:
-          type: string
-        sender_postal_code:
-          type: string
-        shipment_category:
-          type: integer
-        shipment_contents:
-          type: integer
-        shipment_type:
-          description: Параметры посылки
-          type: integer
-        status:
-          allOf:
-            - $ref: "#/components/schemas/backend_internal_proj_bexexpress_models.ShipmentSta\
-                tus"
-          description: Статус
-        status_history:
-          description: История статусов
-          items:
-            type: integer
-          type: array
-        status_text:
-          type: string
-        storefront_order_id:
-          type: integer
-        total_packages:
-          type: integer
-        tracking_number:
-          type: string
-        updated_at:
-          type: string
-        weight_kg:
-          type: number
       type: object
     models.BalanceTransaction:
       properties:
@@ -31818,24 +29764,6 @@ components:
         - shipping_address
         - shipping_method
         - storefront_id
-      type: object
-    models.CreatePickupOrderRequest:
-      properties:
-        customer_email:
-          type: string
-        customer_name:
-          type: string
-        customer_phone:
-          type: string
-        notes:
-          type: string
-        order_id:
-          type: integer
-        storefront_order_id:
-          type: integer
-      required:
-        - customer_name
-        - customer_phone
       type: object
     models.CreateProductRequest:
       properties:
@@ -32943,9 +30871,13 @@ components:
           type: integer
         seller_payout_amount:
           type: number
+        shipment_id:
+          type: integer
         shipped_at:
           type: string
         shipping_method:
+          type: string
+        shipping_provider:
           type: string
         status:
           $ref: "#/components/schemas/models.MarketplaceOrderStatus"
@@ -33364,299 +31296,6 @@ components:
         resource:
           type: string
       type: object
-    models.PickupOrderStatus:
-      enum:
-        - pending
-        - ready
-        - picked_up
-        - expired
-        - canceled
-      type: string
-      x-enum-varnames:
-        - PickupOrderStatusPending
-        - PickupOrderStatusReady
-        - PickupOrderStatusPickedUp
-        - PickupOrderStatusExpired
-        - PickupOrderStatusCanceled
-    models.PostExpressLocation:
-      properties:
-        created_at:
-          type: string
-        delivery_zone:
-          type: string
-        district:
-          type: string
-        id:
-          type: integer
-        is_active:
-          type: boolean
-        latitude:
-          type: number
-        longitude:
-          type: number
-        municipality:
-          type: string
-        name:
-          type: string
-        name_cyrillic:
-          type: string
-        post_express_id:
-          type: integer
-        postal_code:
-          type: string
-        region:
-          type: string
-        supports_cod:
-          type: boolean
-        supports_express:
-          type: boolean
-        updated_at:
-          type: string
-      type: object
-    models.PostExpressOffice:
-      properties:
-        accepts_packages:
-          type: boolean
-        address:
-          type: string
-        closed_until:
-          type: string
-        created_at:
-          type: string
-        email:
-          type: string
-        has_atm:
-          type: boolean
-        has_parking:
-          type: boolean
-        id:
-          type: integer
-        is_active:
-          type: boolean
-        issues_packages:
-          type: boolean
-        latitude:
-          type: number
-        location_id:
-          type: integer
-        longitude:
-          type: number
-        name:
-          type: string
-        office_code:
-          type: string
-        phone:
-          type: string
-        temporary_closed:
-          type: boolean
-        updated_at:
-          type: string
-        wheelchair_accessible:
-          type: boolean
-        working_hours:
-          items:
-            type: integer
-          type: array
-      type: object
-    models.PostExpressRate:
-      properties:
-        base_price:
-          type: number
-        cod_fee:
-          type: number
-        created_at:
-          type: string
-        delivery_days_max:
-          type: integer
-        delivery_days_min:
-          type: integer
-        id:
-          type: integer
-        insurance_included_up_to:
-          type: number
-        insurance_rate_percent:
-          type: number
-        is_active:
-          type: boolean
-        is_special_offer:
-          type: boolean
-        max_dimensions_sum_cm:
-          type: integer
-        max_height_cm:
-          type: integer
-        max_length_cm:
-          type: integer
-        max_width_cm:
-          type: integer
-        updated_at:
-          type: string
-        weight_from:
-          type: number
-        weight_to:
-          type: number
-      type: object
-    models.PostExpressSettings:
-      properties:
-        api_endpoint:
-          type: string
-        api_username:
-          type: string
-        auto_print_labels:
-          type: boolean
-        auto_track_shipments:
-          type: boolean
-        created_at:
-          type: string
-        enabled:
-          type: boolean
-        failed_deliveries:
-          type: integer
-        id:
-          type: integer
-        notify_on_delivery:
-          type: boolean
-        notify_on_failed_delivery:
-          type: boolean
-        notify_on_pickup:
-          type: boolean
-        sender_address:
-          type: string
-        sender_city:
-          type: string
-        sender_email:
-          type: string
-        sender_name:
-          type: string
-        sender_phone:
-          type: string
-        sender_postal_code:
-          type: string
-        successful_deliveries:
-          type: integer
-        test_mode:
-          type: boolean
-        total_shipments:
-          type: integer
-        updated_at:
-          type: string
-      type: object
-    models.PostExpressShipment:
-      properties:
-        barcode:
-          type: string
-        base_price:
-          description: Расчет стоимости
-          type: number
-        cod_amount:
-          type: number
-        cod_fee:
-          type: number
-        cod_reference:
-          type: string
-        created_at:
-          type: string
-        declared_value:
-          type: number
-        delivered_at:
-          type: string
-        delivery_instructions:
-          type: string
-        delivery_status:
-          type: string
-        failed_at:
-          type: string
-        failed_reason:
-          type: string
-        height_cm:
-          type: integer
-        id:
-          type: integer
-        insurance_amount:
-          type: number
-        insurance_fee:
-          type: number
-        internal_notes:
-          type: string
-        invoice_url:
-          type: string
-        label_url:
-          description: Документы
-          type: string
-        length_cm:
-          type: integer
-        marketplace_order_id:
-          type: integer
-        notes:
-          description: Дополнительная информация
-          type: string
-        picked_up_at:
-          type: string
-        pod_url:
-          type: string
-        post_express_id:
-          type: string
-        recipient_address:
-          type: string
-        recipient_city:
-          type: string
-        recipient_email:
-          type: string
-        recipient_location_id:
-          type: integer
-        recipient_name:
-          description: Получатель
-          type: string
-        recipient_phone:
-          type: string
-        recipient_postal_code:
-          type: string
-        registered_at:
-          description: Временные метки
-          type: string
-        returned_at:
-          type: string
-        sender_address:
-          type: string
-        sender_city:
-          type: string
-        sender_email:
-          type: string
-        sender_location_id:
-          type: integer
-        sender_name:
-          description: Отправитель
-          type: string
-        sender_phone:
-          type: string
-        sender_postal_code:
-          type: string
-        service_type:
-          description: Услуги
-          type: string
-        status:
-          allOf:
-            - $ref: "#/components/schemas/backend_internal_proj_postexpress_models.ShipmentSt\
-                atus"
-          description: Статусы
-        status_history:
-          description: История статусов
-          items:
-            type: integer
-          type: array
-        storefront_order_id:
-          type: integer
-        total_price:
-          type: number
-        tracking_number:
-          type: string
-        updated_at:
-          type: string
-        weight_kg:
-          description: Параметры посылки
-          type: number
-        width_cm:
-          type: integer
-      type: object
     models.PriceHistoryEntry:
       properties:
         change_percentage:
@@ -33980,22 +31619,6 @@ components:
         version_id:
           type: integer
       type: object
-    models.SearchAddressRequest:
-      properties:
-        city:
-          type: string
-        limit:
-          type: integer
-        municipality_id:
-          type: integer
-        place_id:
-          type: integer
-        query:
-          minLength: 2
-          type: string
-      required:
-        - query
-      type: object
     models.Shipment:
       properties:
         actual_delivery_date:
@@ -34014,7 +31637,7 @@ components:
           type: string
         events:
           items:
-            $ref: "#/components/schemas/backend_internal_proj_delivery_models.TrackingEvent"
+            $ref: "#/components/schemas/models.TrackingEvent"
           type: array
         external_id:
           type: string
@@ -34171,6 +31794,8 @@ components:
           type: string
         email:
           type: string
+        followers_count:
+          type: integer
         formatted_address:
           type: string
         geo_strategy:
@@ -34181,6 +31806,8 @@ components:
           type: integer
         is_active:
           description: Статус и статистика
+          type: boolean
+        is_subscription_active:
           type: boolean
         is_verified:
           type: boolean
@@ -34218,6 +31845,8 @@ components:
           type: string
         subscription_expires_at:
           type: string
+        subscription_id:
+          type: integer
         subscription_plan:
           allOf:
             - $ref: "#/components/schemas/models.SubscriptionPlanType"
@@ -34468,6 +32097,8 @@ components:
       type: object
     models.StorefrontOrder:
       properties:
+        actual_delivery:
+          type: string
         billing_address:
           $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
         canceled_at:
@@ -34490,11 +32121,20 @@ components:
           type: string
         delivered_at:
           type: string
+        delivery_provider:
+          description: Provider code для delivery microservice (только для UI)
+          type: string
+        delivery_status:
+          description: Tracking info from delivery service (NOT stored in DB, enriched
+            from microservice)
+          type: string
         discount:
           type: number
         escrow_days:
           type: integer
         escrow_release_date:
+          type: string
+        estimated_delivery:
           type: string
         id:
           type: integer
@@ -34530,6 +32170,8 @@ components:
           type: number
         seller_notes:
           type: string
+        shipment_id:
+          type: integer
         shipped_at:
           type: string
         shipping:
@@ -34963,6 +32605,29 @@ components:
           type: integer
         type:
           description: '"addition", "deletion", "modification"'
+          type: string
+      type: object
+    models.TrackingEvent:
+      properties:
+        created_at:
+          type: string
+        description:
+          type: string
+        event_time:
+          type: string
+        id:
+          type: integer
+        location:
+          type: string
+        provider_id:
+          type: integer
+        raw_data:
+          items:
+            type: integer
+          type: array
+        shipment_id:
+          type: integer
+        status:
           type: string
       type: object
     models.TranslateModuleRequest:
@@ -35639,8 +33304,6 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/models.OrderStatus"
-        tracking_number:
-          type: string
       required:
         - status
       type: object
@@ -35718,9 +33381,15 @@ components:
           type: string
         id:
           type: integer
+        is_deleted:
+          description: Флаг для placeholder пользователей (не сохраняется в БД)
+          type: boolean
         name:
           type: string
         phone:
+          type: string
+        phone_number:
+          description: Alias для совместимости
           type: string
         picture_url:
           type: string
@@ -35806,6 +33475,9 @@ components:
         is_admin:
           description: Флаг администратора
           type: boolean
+        is_deleted:
+          description: Флаг для placeholder пользователей (не сохраняется в БД)
+          type: boolean
         last_seen:
           type: string
         name:
@@ -35813,6 +33485,9 @@ components:
         notification_email:
           type: boolean
         phone:
+          type: string
+        phone_number:
+          description: Alias для совместимости
           type: string
         picture_url:
           type: string
@@ -36164,112 +33839,6 @@ components:
             $ref: "#/components/schemas/models.TranslationVersion"
           type: array
       type: object
-    models.Warehouse:
-      properties:
-        address:
-          type: string
-        city:
-          type: string
-        code:
-          type: string
-        country:
-          type: string
-        created_at:
-          type: string
-        current_occupancy_m3:
-          type: number
-        email:
-          type: string
-        has_loading_dock:
-          type: boolean
-        has_refrigeration:
-          type: boolean
-        id:
-          type: integer
-        is_active:
-          type: boolean
-        latitude:
-          type: number
-        longitude:
-          type: number
-        manager_name:
-          type: string
-        manager_phone:
-          type: string
-        max_capacity_m3:
-          type: number
-        name:
-          type: string
-        phone:
-          type: string
-        postal_code:
-          type: string
-        storage_area_m2:
-          type: number
-        supports_fbs:
-          type: boolean
-        supports_pickup:
-          type: boolean
-        total_area_m2:
-          type: number
-        type:
-          type: string
-        updated_at:
-          type: string
-        working_hours:
-          items:
-            type: integer
-          type: array
-      type: object
-    models.WarehousePickupOrder:
-      properties:
-        created_at:
-          type: string
-        customer_email:
-          type: string
-        customer_name:
-          type: string
-        customer_phone:
-          type: string
-        expires_at:
-          type: string
-        id:
-          type: integer
-        id_document_number:
-          type: string
-        id_document_type:
-          type: string
-        marketplace_order_id:
-          type: integer
-        notes:
-          type: string
-        notification_sent_at:
-          type: string
-        picked_up_at:
-          type: string
-        pickup_code:
-          type: string
-        pickup_confirmed_by:
-          type: string
-        pickup_photo_url:
-          type: string
-        qr_code_url:
-          type: string
-        ready_at:
-          type: string
-        reminder_sent_at:
-          type: string
-        signature_url:
-          type: string
-        status:
-          $ref: "#/components/schemas/models.PickupOrderStatus"
-        storefront_order_id:
-          type: integer
-        updated_at:
-          type: string
-        warehouse_id:
-          type: integer
-      type: object
     opensearch.StorefrontSearchItem:
       properties:
         address:
@@ -36341,287 +33910,6 @@ components:
           type: array
         total:
           type: integer
-      type: object
-    postexpress.AddressValidationRequest:
-      properties:
-        BrojPodbroj:
-          description: Номер дома (например, "2" или "2a")
-          type: string
-        Datum:
-          description: "Дата (опционально, формат: YYYY-MM-DD)"
-          type: string
-        IdNaselje:
-          description: ID населённого пункта
-          type: integer
-        IdRukovanje:
-          description: ID услуги доставки
-          type: integer
-        IdUlica:
-          description: ID улицы (опционально)
-          type: integer
-        PostanskiBroj:
-          description: Почтовый индекс
-          type: string
-        TipAdrese:
-          description: Тип адреса (0, 1, 2)
-          type: integer
-      type: object
-    postexpress.AddressValidationResponse:
-      properties:
-        Broj:
-          description: Номер дома
-          type: string
-        IdNaselje:
-          description: ID населённого пункта
-          type: integer
-        IdPoste:
-          description: ID почтового отделения
-          type: integer
-        IdUlica:
-          description: ID улицы
-          type: integer
-        NazivNaselja:
-          description: Название населённого пункта
-          type: string
-        NazivPoste:
-          description: Название почтового отделения
-          type: string
-        NazivUlice:
-          description: Название улицы
-          type: string
-        PAK:
-          description: Postal Address Code
-          type: string
-        Poruka:
-          description: Сообщение об ошибке
-          type: string
-        PostanskiBroj:
-          description: Почтовый индекс
-          type: string
-        PostojiAdresa:
-          description: Существует ли адрес
-          type: boolean
-        Rezultat:
-          description: 0 - успех, 1 - ошибка
-          type: integer
-      type: object
-    postexpress.AdresaUPS:
-      properties:
-        Broj:
-          description: Номер дома ("-1" для BB, "-2" если только подbroj)
-          type: string
-        BrojFaha:
-          description: Номер poštanski pregatak (для Vrsta="F")
-          type: string
-        IdNaselje:
-          description: ID населённого пункта (из TX 3)
-          type: integer
-        IdUlica:
-          description: ID улицы (из TX 4)
-          type: integer
-        Napomena:
-          description: Примечание
-          type: string
-        Naselje:
-          description: Название населённого пункта
-          type: string
-        Opstina:
-          description: Муниципалитет
-          type: string
-        Pak:
-          description: Postal Address Code (PAK)
-          type: string
-        Podbroj:
-          description: Подномер (буква или дополнительный номер)
-          type: string
-        Posta:
-          description: Почтовый индекс (5 цифр)
-          type: string
-        Reon:
-          description: Район
-          type: string
-        Sprat:
-          description: Этаж
-          type: string
-        Stan:
-          description: Квартира
-          type: string
-        Ulica:
-          description: Название улицы
-          type: string
-        Vrsta:
-          description: "Тип адреса: S-стандартный, F-fah, P-post restant"
-          type: string
-      type: object
-    postexpress.GetSettlementsResponse:
-      properties:
-        Naselja:
-          description: Массив найденных населённых пунктов
-          items:
-            $ref: "#/components/schemas/postexpress.Settlement"
-          type: array
-        Poruka:
-          description: Сообщение об ошибке
-          type: string
-        Rezultat:
-          description: 0 - успех, 1 - ошибка
-          type: integer
-      type: object
-    postexpress.GetStreetsResponse:
-      properties:
-        Poruka:
-          description: Сообщение об ошибке
-          type: string
-        Rezultat:
-          description: 0 - успех, 1 - ошибка
-          type: integer
-        Ulice:
-          description: Массив найденных улиц
-          items:
-            $ref: "#/components/schemas/postexpress.Street"
-          type: array
-      type: object
-    postexpress.PostageCalculationRequest:
-      properties:
-        IdRukovanje:
-          description: ID услуги доставки
-          type: integer
-        IdZemlja:
-          description: ID страны (0 = внутренние отправления)
-          type: integer
-        Masa:
-          description: Вес в граммах
-          type: integer
-        Otkupnina:
-          description: COD в para (1 RSD = 100 para)
-          type: integer
-        PosebneUsluge:
-          description: Дополнительные услуги через запятую
-          type: string
-        PostanskiBrojDolaska:
-          description: Почтовый индекс прибытия
-          type: string
-        PostanskiBrojOdlaska:
-          description: Почтовый индекс отправления
-          type: string
-        Vrednost:
-          description: Объявленная ценность в para
-          type: integer
-      type: object
-    postexpress.PostageCalculationResponse:
-      properties:
-        IdRukovanje:
-          description: ID услуги
-          type: integer
-        Masa:
-          description: Вес в граммах
-          type: integer
-        Napomena:
-          description: Примечание
-          type: string
-        NazivUsluge:
-          description: Название услуги
-          type: string
-        Otkupnina:
-          description: COD в para
-          type: integer
-        Poruka:
-          description: Сообщение об ошибке
-          type: string
-        PosebneUsluge:
-          description: Дополнительные услуги
-          type: string
-        PostanskiBrojDolaska:
-          description: Почтовый индекс прибытия
-          type: string
-        PostanskiBrojOdlaska:
-          description: Почтовый индекс отправления
-          type: string
-        Postarina:
-          description: Стоимость в para (295 RSD = 29500 para)
-          type: integer
-        Rezultat:
-          description: 0 - успех, 1 - ошибка
-          type: integer
-        Vrednost:
-          description: Объявленная ценность в para
-          type: integer
-      type: object
-    postexpress.ServiceAvailabilityRequest:
-      properties:
-        Adresa:
-          allOf:
-            - $ref: "#/components/schemas/postexpress.AdresaUPS"
-          description: "ОБЯЗАТЕЛЬНО: Полная структура адреса"
-        Datum:
-          description: "Дата доставки (опционально, формат: DD.MM.YYYY)"
-          type: string
-        IdRukovanje:
-          description: ID услуги (29, 30, 55, 58, 59, 71, 85)
-          type: integer
-        TipAdrese:
-          description: "Тип адреса: 0-адрес забора, 1-адрес отправителя, 2-адрес получателя"
-          type: integer
-      type: object
-    postexpress.ServiceAvailabilityResponse:
-      properties:
-        Dostupna:
-          description: Доступна ли услуга
-          type: boolean
-        IdRukovanje:
-          description: ID услуги
-          type: integer
-        Napomena:
-          description: Примечание
-          type: string
-        NazivUsluge:
-          description: Название услуги
-          type: string
-        OcekivanoDana:
-          description: Ожидаемое время доставки (дни)
-          type: integer
-        Poruka:
-          description: Сообщение об ошибке
-          type: string
-        Rezultat:
-          description: 0 - успех, 1 - ошибка
-          type: integer
-      type: object
-    postexpress.Settlement:
-      properties:
-        Id:
-          description: 'ID населённого пункта (ВАЖНО: API возвращает "Id", не "IdNaselje"!)'
-          type: integer
-        IdNaselje:
-          description: Алиас для совместимости
-          type: integer
-        IdOkrug:
-          description: ID округа
-          type: integer
-        Naziv:
-          description: Название
-          type: string
-        NazivOkruga:
-          description: Название округа
-          type: string
-        PostanskiBroj:
-          description: Почтовый индекс
-          type: string
-      type: object
-    postexpress.Street:
-      properties:
-        Id:
-          description: 'ID улицы (ВАЖНО: API возвращает "Id", не "IdUlica"!)'
-          type: integer
-        IdNaselje:
-          description: ID населённого пункта
-          type: integer
-        IdUlica:
-          description: Алиас для совместимости
-          type: integer
-        Naziv:
-          description: Название улицы
-          type: string
       type: object
     postgres.DashboardOrder:
       properties:
@@ -36938,39 +34226,6 @@ components:
           items:
             type: string
           type: array
-      type: object
-    service.CreateShipmentRequest:
-      properties:
-        cod_amount:
-          type: number
-        delivery_type:
-          type: string
-        from_address:
-          $ref: "#/components/schemas/service.Address"
-        insurance_value:
-          type: number
-        notes:
-          type: string
-        order_id:
-          type: integer
-        packages:
-          items:
-            $ref: "#/components/schemas/service.Package"
-          type: array
-        pickup_date:
-          type: string
-        provider_code:
-          type: string
-        provider_id:
-          type: integer
-        reference:
-          type: string
-        services:
-          items:
-            type: string
-          type: array
-        to_address:
-          $ref: "#/components/schemas/service.Address"
       type: object
     service.Dimensions:
       properties:
@@ -37428,40 +34683,6 @@ components:
         reasoning:
           type: string
         suggestedCategory:
-          type: string
-      type: object
-    storage.WarehouseStatistics:
-      properties:
-        average_pickup_time:
-          type: number
-        canceled_orders:
-          type: integer
-        completed_orders:
-          type: integer
-        completed_pickup_orders:
-          type: integer
-        occupancy_percent:
-          type: number
-        pending_orders:
-          type: integer
-        pending_pickup_orders:
-          type: integer
-        ready_orders:
-          type: integer
-        total_inventory_items:
-          type: integer
-        total_orders:
-          type: integer
-        total_pickup_orders:
-          description: Дополнительные поля для совместимости с repository
-          type: integer
-        total_value:
-          type: number
-        total_volume_m3:
-          type: number
-        warehouse_id:
-          type: integer
-        warehouse_name:
           type: string
       type: object
     tgbotapi.Animation:

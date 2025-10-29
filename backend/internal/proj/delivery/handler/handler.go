@@ -301,34 +301,34 @@ func (h *Handler) ApplyCategoryDefaults(c *fiber.Ctx) error {
 // CreateShipmentHTTPRequest - HTTP request structure supporting both formats
 type CreateShipmentHTTPRequest struct {
 	// New format (preferred)
-	ProviderID     *int                      `json:"provider_id"`
-	ProviderCode   *string                   `json:"provider_code"`
-	Provider       *string                   `json:"provider"` // Alias for provider_code
-	OrderID        *int                      `json:"order_id"`
-	FromAddress    *service.Address          `json:"from_address"`
-	ToAddress      *service.Address          `json:"to_address"`
-	Packages       []service.Package         `json:"packages"`
+	ProviderID   *int              `json:"provider_id"`
+	ProviderCode *string           `json:"provider_code"`
+	Provider     *string           `json:"provider"` // Alias for provider_code
+	OrderID      *int              `json:"order_id"`
+	FromAddress  *service.Address  `json:"from_address"`
+	ToAddress    *service.Address  `json:"to_address"`
+	Packages     []service.Package `json:"packages"`
 
 	// Legacy format (backward compatibility)
-	Sender         *LegacySenderRecipient    `json:"sender"`
-	Recipient      *LegacySenderRecipient    `json:"recipient"`
-	Package        *service.Package          `json:"package"`
+	Sender    *LegacySenderRecipient `json:"sender"`
+	Recipient *LegacySenderRecipient `json:"recipient"`
+	Package   *service.Package       `json:"package"`
 
 	// Common fields
-	DeliveryType   string                    `json:"delivery_type"`
-	PickupDate     *time.Time                `json:"pickup_date,omitempty"`
-	InsuranceValue float64                   `json:"insurance_value,omitempty"`
-	CODAmount      float64                   `json:"cod_amount,omitempty"`
-	Services       []string                  `json:"services,omitempty"`
-	Reference      string                    `json:"reference,omitempty"`
-	Notes          string                    `json:"notes,omitempty"`
+	DeliveryType   string     `json:"delivery_type"`
+	PickupDate     *time.Time `json:"pickup_date,omitempty"`
+	InsuranceValue float64    `json:"insurance_value,omitempty"`
+	CODAmount      float64    `json:"cod_amount,omitempty"`
+	Services       []string   `json:"services,omitempty"`
+	Reference      string     `json:"reference,omitempty"`
+	Notes          string     `json:"notes,omitempty"`
 }
 
 // LegacySenderRecipient - legacy format for sender/recipient
 type LegacySenderRecipient struct {
-	Name    string                 `json:"name"`
-	Phone   string                 `json:"phone"`
-	Address *service.Address       `json:"address"`
+	Name    string           `json:"name"`
+	Phone   string           `json:"phone"`
+	Address *service.Address `json:"address"`
 }
 
 // ToServiceRequest converts HTTP request to service request
@@ -359,11 +359,12 @@ func (r *CreateShipmentHTTPRequest) ToServiceRequest() (*service.CreateShipmentR
 	}
 
 	// Addresses - check both formats
-	if r.FromAddress != nil && r.ToAddress != nil {
+	switch {
+	case r.FromAddress != nil && r.ToAddress != nil:
 		// New format
 		req.FromAddress = r.FromAddress
 		req.ToAddress = r.ToAddress
-	} else if r.Sender != nil && r.Recipient != nil {
+	case r.Sender != nil && r.Recipient != nil:
 		// Legacy format - convert
 		req.FromAddress = &service.Address{
 			Street:     r.Sender.Address.Street,
@@ -381,7 +382,7 @@ func (r *CreateShipmentHTTPRequest) ToServiceRequest() (*service.CreateShipmentR
 			Name:       r.Recipient.Name,
 			Phone:      r.Recipient.Phone,
 		}
-	} else {
+	default:
 		return nil, fmt.Errorf("missing addresses: provide either from_address/to_address or sender/recipient")
 	}
 
@@ -391,12 +392,13 @@ func (r *CreateShipmentHTTPRequest) ToServiceRequest() (*service.CreateShipmentR
 	}
 
 	// Packages
-	if len(r.Packages) > 0 {
+	switch {
+	case len(r.Packages) > 0:
 		req.Packages = r.Packages
-	} else if r.Package != nil {
+	case r.Package != nil:
 		// Legacy format - single package
 		req.Packages = []service.Package{*r.Package}
-	} else {
+	default:
 		return nil, fmt.Errorf("at least one package is required")
 	}
 

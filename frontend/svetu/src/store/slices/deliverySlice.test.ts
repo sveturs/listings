@@ -13,7 +13,11 @@ import {
   clearTrackingCache,
   isCacheValid,
 } from './deliverySlice';
-import type { DeliveryQuote, CalculationRequest, CalculationResponse } from '@/types/delivery';
+import type {
+  DeliveryQuote,
+  CalculationRequest,
+  CalculationResponse,
+} from '@/types/delivery';
 
 describe('deliverySlice', () => {
   // ========================================
@@ -40,7 +44,9 @@ describe('deliverySlice', () => {
   describe('selectQuote reducer', () => {
     it('should select quote for storefront', () => {
       // Arrange
-      const initialState = deliverySlice.reducer(undefined, { type: 'unknown' });
+      const initialState = deliverySlice.reducer(undefined, {
+        type: 'unknown',
+      });
       const quote: DeliveryQuote = {
         provider_code: 'post_express',
         provider_name: 'Post Express',
@@ -183,7 +189,10 @@ describe('deliverySlice', () => {
       };
 
       // Act
-      const state = deliverySlice.reducer(initialState, clearCalculationsCache());
+      const state = deliverySlice.reducer(
+        initialState,
+        clearCalculationsCache()
+      );
 
       // Assert
       expect(state.calculations).toEqual({});
@@ -224,7 +233,11 @@ describe('deliverySlice', () => {
     it('should return true for valid cache', () => {
       // Arrange
       const request: CalculationRequest = {
-        from_location: { city: 'Belgrade', postal_code: '11000', country: 'RS' },
+        from_location: {
+          city: 'Belgrade',
+          postal_code: '11000',
+          country: 'RS',
+        },
         to_location: { city: 'Novi Sad', postal_code: '21000', country: 'RS' },
         items: [{ weight: 2.5 }],
       };
@@ -245,7 +258,11 @@ describe('deliverySlice', () => {
     it('should return false for expired cache', () => {
       // Arrange
       const request: CalculationRequest = {
-        from_location: { city: 'Belgrade', postal_code: '11000', country: 'RS' },
+        from_location: {
+          city: 'Belgrade',
+          postal_code: '11000',
+          country: 'RS',
+        },
         to_location: { city: 'Novi Sad', postal_code: '21000', country: 'RS' },
         items: [{ weight: 2.5 }],
       };
@@ -266,13 +283,21 @@ describe('deliverySlice', () => {
     it('should return false for different params', () => {
       // Arrange
       const cachedRequest: CalculationRequest = {
-        from_location: { city: 'Belgrade', postal_code: '11000', country: 'RS' },
+        from_location: {
+          city: 'Belgrade',
+          postal_code: '11000',
+          country: 'RS',
+        },
         to_location: { city: 'Novi Sad', postal_code: '21000', country: 'RS' },
         items: [{ weight: 2.5 }],
       };
 
       const newRequest: CalculationRequest = {
-        from_location: { city: 'Belgrade', postal_code: '11000', country: 'RS' },
+        from_location: {
+          city: 'Belgrade',
+          postal_code: '11000',
+          country: 'RS',
+        },
         to_location: { city: 'Nis', postal_code: '18000', country: 'RS' }, // Different city
         items: [{ weight: 2.5 }],
       };
@@ -310,8 +335,14 @@ describe('deliverySlice', () => {
         currency: 'RSD',
       };
 
-      state = deliverySlice.reducer(state, selectQuote({ storefrontId: '123', quote }));
-      state = deliverySlice.reducer(state, selectQuote({ storefrontId: '456', quote }));
+      state = deliverySlice.reducer(
+        state,
+        selectQuote({ storefrontId: '123', quote })
+      );
+      state = deliverySlice.reducer(
+        state,
+        selectQuote({ storefrontId: '456', quote })
+      );
       state = deliverySlice.reducer(state, clearQuote('123'));
 
       // Assert
@@ -322,10 +353,15 @@ describe('deliverySlice', () => {
 
     it('should handle clearing empty caches gracefully', () => {
       // Arrange
-      const initialState = deliverySlice.reducer(undefined, { type: 'unknown' });
+      const initialState = deliverySlice.reducer(undefined, {
+        type: 'unknown',
+      });
 
       // Act
-      const state = deliverySlice.reducer(initialState, clearCalculationsCache());
+      const state = deliverySlice.reducer(
+        initialState,
+        clearCalculationsCache()
+      );
 
       // Assert
       expect(state.calculations).toEqual({});

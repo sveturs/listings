@@ -308,7 +308,10 @@ export const deliveryService = {
   async calculateRate(
     request: CalculateRateRequest
   ): Promise<ApiResponse<CalculateRateResponse>> {
-    return apiClient.post<CalculateRateResponse>('/delivery/calculate-rate', request);
+    return apiClient.post<CalculateRateResponse>(
+      '/delivery/calculate-rate',
+      request
+    );
   },
 
   /**
@@ -326,7 +329,9 @@ export const deliveryService = {
    * }
    * ```
    */
-  async calculateCart(storefrontId: number): Promise<ApiResponse<CalculateRateResponse>> {
+  async calculateCart(
+    storefrontId: number
+  ): Promise<ApiResponse<CalculateRateResponse>> {
     return apiClient.post<CalculateRateResponse>(
       `/delivery/calculate-cart/${storefrontId}`
     );
@@ -398,7 +403,10 @@ export const deliveryService = {
   async createShipment(
     request: CreateShipmentRequest
   ): Promise<ApiResponse<CreateShipmentResponse>> {
-    return apiClient.post<CreateShipmentResponse>('/delivery/shipments', request);
+    return apiClient.post<CreateShipmentResponse>(
+      '/delivery/shipments',
+      request
+    );
   },
 
   /**
@@ -418,7 +426,9 @@ export const deliveryService = {
    * }
    * ```
    */
-  async trackShipment(trackingToken: string): Promise<ApiResponse<TrackingInfo>> {
+  async trackShipment(
+    trackingToken: string
+  ): Promise<ApiResponse<TrackingInfo>> {
     return apiClient.get<TrackingInfo>(`/delivery/track/${trackingToken}`);
   },
 
@@ -458,8 +468,13 @@ export const deliveryService = {
    * }
    * ```
    */
-  async getProductAttributes(productId: string, type: string): Promise<ApiResponse<any>> {
-    return apiClient.get<any>(`/products/${productId}/delivery-attributes?type=${type}`);
+  async getProductAttributes(
+    productId: string,
+    type: string
+  ): Promise<ApiResponse<any>> {
+    return apiClient.get<any>(
+      `/products/${productId}/delivery-attributes?type=${type}`
+    );
   },
 
   /**
@@ -502,7 +517,9 @@ export const deliveryService = {
    * }
    * ```
    */
-  async getSettlements(searchTerm?: string): Promise<ApiResponse<Settlement[]>> {
+  async getSettlements(
+    searchTerm?: string
+  ): Promise<ApiResponse<Settlement[]>> {
     const url = searchTerm
       ? `/delivery/settlements?search=${encodeURIComponent(searchTerm)}`
       : '/delivery/settlements';
@@ -554,7 +571,9 @@ export const deliveryService = {
    * }
    * ```
    */
-  async getParcelLockers(cityId?: string): Promise<ApiResponse<ParcelLocker[]>> {
+  async getParcelLockers(
+    cityId?: string
+  ): Promise<ApiResponse<ParcelLocker[]>> {
     const url = cityId
       ? `/delivery/parcel-lockers?city_id=${encodeURIComponent(cityId)}`
       : '/delivery/parcel-lockers';
