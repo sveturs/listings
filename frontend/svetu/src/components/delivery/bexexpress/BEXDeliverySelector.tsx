@@ -13,7 +13,7 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface DeliveryOption {
   id: string;
@@ -150,23 +150,17 @@ export default function BEXDeliverySelector({
 
       setLoading(true);
       try {
-        // TODO: Migrate to deliveryService wrapper (task 1.2.2)
         // This component will be DELETED in task 2.2.2 (BEX module removal)
-        const apiUrl = configManager.getApiUrl();
-        const response = await fetch(`${apiUrl}/api/v1/bex/calculate-rate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const response = await apiClient.post('/bex/calculate-rate', {
             weight_kg: weight,
             shipment_category: getShipmentCategory(weight),
             cod_amount: hasCOD ? insuranceAmount : 0,
             insurance_amount: insuranceAmount,
             recipient_city: recipientCity,
-          }),
-        });
+          });
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.data) {
+          const data = response.data;
           if (data.success && data.data) {
             setCalculatedPrices({
               courier: data.data.total_price,

@@ -215,7 +215,27 @@ class ConfigManager {
     this.validationErrors = [];
   }
 
-  // Метод для получения правильного API URL в зависимости от контекста
+  /**
+   * @deprecated Use apiClient instead of direct fetch with getApiUrl()
+   *
+   * ВАЖНО: Этот метод устарел и будет удален!
+   *
+   * ❌ НЕ ИСПОЛЬЗУЙ:
+   * ```typescript
+   * const apiUrl = configManager.getApiUrl();
+   * const response = await fetch(`${apiUrl}/api/v1/...`);
+   * ```
+   *
+   * ✅ ИСПОЛЬЗУЙ apiClient:
+   * ```typescript
+   * import { apiClient } from '@/services/api-client';
+   * const response = await apiClient.get('/...');
+   * ```
+   *
+   * Или специализированные сервисы (deliveryService, etc.)
+   *
+   * Исключение: Server-side код (getApiUrl({ internal: true }))
+   */
   public getApiUrl(options?: { internal?: boolean }): string {
     const config = this.getConfig();
 

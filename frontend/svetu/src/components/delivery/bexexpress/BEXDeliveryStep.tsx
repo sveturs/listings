@@ -15,7 +15,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 // Схема валидации для BEX доставки
 const bexDeliverySchema = z
@@ -191,35 +191,26 @@ export default function BEXDeliveryStep({
 
     setCalculatingRate(true);
     try {
-      // TODO: Migrate to deliveryService wrapper (task 1.2.2)
       // This component will be DELETED in task 2.2.2 (BEX module removal)
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/bex/calculate-rate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          weight_kg: orderWeight,
-          cod_amount: deliveryData.cod_amount || 0,
-          insurance_amount: deliveryData.insurance_amount || 0,
-          recipient_city: deliveryData.address.city,
-          delivery_method: deliveryData.method,
-        }),
+      const response = await apiClient.post('/bex/calculate-rate', {
+        weight_kg: orderWeight,
+        cod_amount: deliveryData.cod_amount || 0,
+        insurance_amount: deliveryData.insurance_amount || 0,
+        recipient_city: deliveryData.address.city,
+        delivery_method: deliveryData.method,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          const rate = {
-            base_price: data.data.base_price,
-            cod_fee: data.data.cod_fee || 0,
-            insurance_fee: data.data.insurance_fee || 0,
-            total_price: data.data.total_price,
-            estimated_days: data.data.estimated_days || 2,
-          };
+      if (response.data) {
+        const rate = {
+          base_price: response.data.base_price,
+          cod_fee: response.data.cod_fee || 0,
+          insurance_fee: response.data.insurance_fee || 0,
+          total_price: response.data.total_price,
+          estimated_days: response.data.estimated_days || 2,
+        };
 
-          setDeliveryData({ ...deliveryData, rate });
-          form.setValue('rate', rate);
-        }
+        setDeliveryData({ ...deliveryData, rate });
+        form.setValue('rate', rate);
       }
     } catch (error) {
       console.error('Failed to calculate rate:', error);

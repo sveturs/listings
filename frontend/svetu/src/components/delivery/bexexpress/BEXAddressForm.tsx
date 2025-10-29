@@ -15,7 +15,7 @@ import {
   ChatBubbleBottomCenterTextIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 // Схема валидации адреса
 const addressSchema = z.object({
@@ -110,21 +110,16 @@ export default function BEXAddressForm({
 
       setIsSearching(true);
       try {
-        // TODO: Migrate to deliveryService wrapper (task 1.2.2)
         // This component will be DELETED in task 2.2.2 (BEX module removal)
-        const apiUrl = configManager.getApiUrl();
-        const response = await fetch(`${apiUrl}/api/v1/bex/search-address`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query, city, limit: 10 }),
+        const response = await apiClient.post('/bex/search-address', {
+          query,
+          city,
+          limit: 10,
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.data) {
-            setAddressSuggestions(data.data);
-            setShowSuggestions(true);
-          }
+        if (response.data) {
+          setAddressSuggestions(response.data);
+          setShowSuggestions(true);
         }
       } catch (error) {
         console.error('Address search failed:', error);
