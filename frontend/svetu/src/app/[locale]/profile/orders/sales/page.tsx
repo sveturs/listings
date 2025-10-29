@@ -27,11 +27,9 @@ export default function MySalesPage() {
   const [shippingModal, setShippingModal] = useState<{
     orderId: number | null;
     shippingMethod: string;
-    trackingNumber: string;
   }>({
     orderId: null,
     shippingMethod: '',
-    trackingNumber: '',
   });
 
   const limit = 20;
@@ -59,8 +57,7 @@ export default function MySalesPage() {
   const handleMarkAsShipped = async () => {
     if (
       !shippingModal.orderId ||
-      !shippingModal.shippingMethod ||
-      !shippingModal.trackingNumber
+      !shippingModal.shippingMethod
     ) {
       toast.error(t('fillAllShippingFields'));
       return;
@@ -70,14 +67,12 @@ export default function MySalesPage() {
     try {
       await marketplaceOrdersService.markAsShipped(
         shippingModal.orderId,
-        shippingModal.shippingMethod,
-        shippingModal.trackingNumber
+        shippingModal.shippingMethod
       );
       toast.success(t('markedAsShipped'));
       setShippingModal({
         orderId: null,
         shippingMethod: '',
-        trackingNumber: '',
       });
       await fetchOrders(); // Обновляем список
     } catch (error) {
@@ -297,7 +292,6 @@ export default function MySalesPage() {
                             setShippingModal({
                               orderId: order.id,
                               shippingMethod: '',
-                              trackingNumber: '',
                             })
                           }
                           className="btn btn-sm btn-primary"
@@ -374,24 +368,6 @@ export default function MySalesPage() {
               </select>
             </div>
 
-            <div className="form-control mb-6">
-              <label className="label">
-                <span className="label-text">{t('trackingNumber')}</span>
-              </label>
-              <input
-                type="text"
-                className="input input-bordered w-full"
-                placeholder={t('trackingNumberPlaceholder')}
-                value={shippingModal.trackingNumber}
-                onChange={(e) =>
-                  setShippingModal({
-                    ...shippingModal,
-                    trackingNumber: e.target.value,
-                  })
-                }
-              />
-            </div>
-
             <div className="modal-action">
               <button
                 className="btn btn-ghost"
@@ -399,7 +375,6 @@ export default function MySalesPage() {
                   setShippingModal({
                     orderId: null,
                     shippingMethod: '',
-                    trackingNumber: '',
                   })
                 }
                 disabled={processingOrderId === shippingModal.orderId}
@@ -411,8 +386,7 @@ export default function MySalesPage() {
                 onClick={handleMarkAsShipped}
                 disabled={
                   processingOrderId === shippingModal.orderId ||
-                  !shippingModal.shippingMethod ||
-                  !shippingModal.trackingNumber
+                  !shippingModal.shippingMethod
                 }
               >
                 {processingOrderId === shippingModal.orderId ? (
@@ -429,7 +403,6 @@ export default function MySalesPage() {
                 setShippingModal({
                   orderId: null,
                   shippingMethod: '',
-                  trackingNumber: '',
                 })
               }
             >

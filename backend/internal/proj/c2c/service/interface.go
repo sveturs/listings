@@ -163,7 +163,7 @@ type OrderServiceInterface interface {
 	GetBuyerOrders(ctx context.Context, buyerID int64, page, limit int) ([]*models.MarketplaceOrder, int, error)
 	GetSellerOrders(ctx context.Context, sellerID int64, page, limit int) ([]*models.MarketplaceOrder, int, error)
 	GetOrderDetails(ctx context.Context, orderID int64, userID int64) (*models.MarketplaceOrder, error)
-	MarkAsShipped(ctx context.Context, orderID int64, sellerID int64, shippingMethod string, trackingNumber string) error
+	MarkAsShipped(ctx context.Context, orderID int64, sellerID int64, shippingMethod string) error
 	ConfirmDelivery(ctx context.Context, orderID int64, buyerID int64) error
 	OpenDispute(ctx context.Context, orderID int64, userID int64, reason string) error
 	ConfirmPayment(ctx context.Context, orderID int64) error

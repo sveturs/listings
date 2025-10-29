@@ -308,7 +308,7 @@ func (h *OrdersHandler) UpdateOrderStatus(c *fiber.Ctx) error {
 
 	userID, _ := authMiddleware.GetUserID(c)
 
-	order, err := h.orderService.UpdateOrderStatus(c.Context(), orderID, storefrontID, userID, req.Status, req.TrackingNumber, req.SellerNotes)
+	order, err := h.orderService.UpdateOrderStatus(c.Context(), orderID, storefrontID, userID, req.Status, req.SellerNotes)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to update order status")
 

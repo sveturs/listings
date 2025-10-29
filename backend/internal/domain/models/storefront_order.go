@@ -205,9 +205,8 @@ type OrderItemRequest struct {
 
 // UpdateOrderStatusRequest представляет запрос на обновление статуса заказа
 type UpdateOrderStatusRequest struct {
-	Status         OrderStatus `json:"status" validate:"required"`
-	TrackingNumber *string     `json:"tracking_number,omitempty"`
-	SellerNotes    *string     `json:"seller_notes,omitempty"`
+	Status      OrderStatus `json:"status" validate:"required"`
+	SellerNotes *string     `json:"seller_notes,omitempty"`
 }
 
 // AddToCartRequest представляет запрос на добавление товара в корзину

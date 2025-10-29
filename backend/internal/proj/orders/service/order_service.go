@@ -13,8 +13,8 @@ import (
 	"backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/storage/postgres"
-	"backend/pkg/logger"
 	deliveryv1 "backend/pkg/grpc/delivery/v1"
+	"backend/pkg/logger"
 )
 
 // OrderService представляет сервис для работы с заказами
@@ -179,7 +179,7 @@ func (s *OrderService) GetOrders(ctx context.Context, filter *models.OrderFilter
 }
 
 // UpdateOrderStatus обновляет статус заказа (для продавца)
-func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, storefrontID int, userID int, status models.OrderStatus, trackingNumber *string, notes *string) (*models.StorefrontOrder, error) {
+func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, storefrontID int, userID int, status models.OrderStatus, notes *string) (*models.StorefrontOrder, error) {
 	s.logger.Info("Updating order status (order_id: %d, new_status: %s)", orderID, status)
 
 	order, err := s.orderRepo.GetByID(ctx, orderID)
@@ -220,8 +220,9 @@ func (s *OrderService) UpdateOrderStatus(ctx context.Context, orderID int64, sto
 		// Заказ взят в обработку
 	case models.OrderStatusShipped:
 		order.ShippedAt = &now
-		if trackingNumber != nil {
-			order.TrackingNumber = trackingNumber
+		// TrackingNumber устанавливается автоматически через delivery service при создании shipment (задача 1.1.5)
+		if order.TrackingNumber == nil {
+			s.logger.Warn("Order marked as shipped but no tracking number present (shipment may not be created yet) order_id=%d", orderID)
 		}
 	case models.OrderStatusDelivered:
 		order.DeliveredAt = &now

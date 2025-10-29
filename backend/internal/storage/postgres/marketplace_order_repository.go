@@ -325,13 +325,13 @@ func (r *MarketplaceOrderRepository) GetSellerOrders(ctx context.Context, seller
 	return orders, total, nil
 }
 
-// UpdateShippingInfo обновляет информацию о доставке
-func (r *MarketplaceOrderRepository) UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string, trackingNumber string) error {
+// UpdateShippingInfo обновляет информацию о доставке (только shipping_method, tracking_number устанавливается через delivery service)
+func (r *MarketplaceOrderRepository) UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string) error {
 	_, err := r.pool.Exec(ctx, `
-		UPDATE marketplace_orders 
-		SET shipping_method = $1, tracking_number = $2, updated_at = NOW()
-		WHERE id = $3`,
-		shippingMethod, trackingNumber, orderID)
+		UPDATE marketplace_orders
+		SET shipping_method = $1, updated_at = NOW()
+		WHERE id = $2`,
+		shippingMethod, orderID)
 	if err != nil {
 		return pkgErrors.Wrap(err, "failed to update shipping info")
 	}

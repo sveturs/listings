@@ -114,7 +114,7 @@ func (e *EmptyOrderService) GetOrderDetails(ctx context.Context, orderID int64, 
 	return nil, fmt.Errorf("order service not available")
 }
 
-func (e *EmptyOrderService) MarkAsShipped(ctx context.Context, orderID int64, sellerID int64, shippingMethod string, trackingNumber string) error {
+func (e *EmptyOrderService) MarkAsShipped(ctx context.Context, orderID int64, sellerID int64, shippingMethod string) error {
 	return fmt.Errorf("order service not available")
 }
 
@@ -300,7 +300,7 @@ func (s *OrderService) ConfirmPayment(ctx context.Context, orderID int64) error 
 }
 
 // MarkAsShipped отмечает заказ как отправленный
-func (s *OrderService) MarkAsShipped(ctx context.Context, orderID int64, sellerID int64, shippingMethod string, trackingNumber string) error {
+func (s *OrderService) MarkAsShipped(ctx context.Context, orderID int64, sellerID int64, shippingMethod string) error {
 	order, err := s.orderRepo.GetByID(ctx, orderID)
 	if err != nil {
 		return errors.Wrap(err, "failed to get order")
@@ -314,8 +314,8 @@ func (s *OrderService) MarkAsShipped(ctx context.Context, orderID int64, sellerI
 		return errors.New("order must be paid before shipping")
 	}
 
-	// Обновляем информацию о доставке
-	err = s.orderRepo.UpdateShippingInfo(ctx, orderID, shippingMethod, trackingNumber)
+	// Обновляем информацию о доставке (только shipping_method, tracking_number уже установлен через delivery service)
+	err = s.orderRepo.UpdateShippingInfo(ctx, orderID, shippingMethod)
 	if err != nil {
 		return errors.Wrap(err, "failed to update shipping info")
 	}
@@ -326,17 +326,31 @@ func (s *OrderService) MarkAsShipped(ctx context.Context, orderID int64, sellerI
 		return errors.Wrap(err, "failed to update order status")
 	}
 
+	// TrackingNumber уже должен быть установлен через delivery service
+	trackingNumber := ""
+	if order.TrackingNumber != nil {
+		trackingNumber = *order.TrackingNumber
+	}
+
 	// Добавляем системное сообщение
+	messageContent := fmt.Sprintf("Заказ отправлен. Способ доставки: %s", shippingMethod)
+	if trackingNumber != "" {
+		messageContent += fmt.Sprintf(". Трек-номер: %s", trackingNumber)
+	}
+
 	message := &models.OrderMessage{
 		OrderID:     orderID,
 		SenderID:    sellerID,
 		MessageType: models.OrderMessageTypeShippingUpdate,
-		Content:     fmt.Sprintf("Заказ отправлен. Способ доставки: %s. Трек-номер: %s", shippingMethod, trackingNumber),
+		Content:     messageContent,
 		Metadata: map[string]interface{}{
 			"shipping_method": shippingMethod,
-			"tracking_number": trackingNumber,
 		},
 	}
+	if trackingNumber != "" {
+		message.Metadata["tracking_number"] = trackingNumber
+	}
+
 	if err := s.orderRepo.AddMessage(ctx, message); err != nil {
 		s.logger.Error("Failed to add shipping message: %v", err)
 	}

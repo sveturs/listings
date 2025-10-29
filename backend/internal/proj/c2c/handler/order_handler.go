@@ -270,7 +270,6 @@ func (h *OrderHandler) ConfirmPayment(c *fiber.Ctx) error {
 // MarkAsShippedRequest запрос на отметку отправки
 type MarkAsShippedRequest struct {
 	ShippingMethod string `json:"shipping_method" validate:"required"`
-	TrackingNumber string `json:"tracking_number" validate:"required"`
 }
 
 // MarkAsShipped отмечает заказ как отправленный
@@ -300,7 +299,7 @@ func (h *OrderHandler) MarkAsShipped(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidData")
 	}
 
-	err = h.orderService.MarkAsShipped(c.Context(), orderID, int64(userID), req.ShippingMethod, req.TrackingNumber)
+	err = h.orderService.MarkAsShipped(c.Context(), orderID, int64(userID), req.ShippingMethod)
 	if err != nil {
 		switch err.Error() {
 		case "unauthorized: not the seller":

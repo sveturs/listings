@@ -16,7 +16,7 @@ type PostgresOrderAdapter struct {
 		GetOrdersForAutoCapture(ctx context.Context) ([]*models.MarketplaceOrder, error)
 		GetBuyerOrders(ctx context.Context, buyerID int64, limit, offset int) ([]*models.MarketplaceOrder, int, error)
 		GetSellerOrders(ctx context.Context, sellerID int64, limit, offset int) ([]*models.MarketplaceOrder, int, error)
-		UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string, trackingNumber string) error
+		UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string) error
 		AddMessage(ctx context.Context, message *models.OrderMessage) error
 		GetOrderMessages(ctx context.Context, orderID int64) ([]*models.OrderMessage, error)
 	}
@@ -33,7 +33,7 @@ func NewPostgresOrderAdapter(repo interface{}) OrderRepositoryInterface {
 		GetOrdersForAutoCapture(ctx context.Context) ([]*models.MarketplaceOrder, error)
 		GetBuyerOrders(ctx context.Context, buyerID int64, limit, offset int) ([]*models.MarketplaceOrder, int, error)
 		GetSellerOrders(ctx context.Context, sellerID int64, limit, offset int) ([]*models.MarketplaceOrder, int, error)
-		UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string, trackingNumber string) error
+		UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string) error
 		AddMessage(ctx context.Context, message *models.OrderMessage) error
 		GetOrderMessages(ctx context.Context, orderID int64) ([]*models.OrderMessage, error)
 	}); ok {
@@ -72,8 +72,8 @@ func (a *PostgresOrderAdapter) GetSellerOrders(ctx context.Context, sellerID int
 	return a.repo.GetSellerOrders(ctx, sellerID, limit, offset)
 }
 
-func (a *PostgresOrderAdapter) UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string, trackingNumber string) error {
-	return a.repo.UpdateShippingInfo(ctx, orderID, shippingMethod, trackingNumber)
+func (a *PostgresOrderAdapter) UpdateShippingInfo(ctx context.Context, orderID int64, shippingMethod string) error {
+	return a.repo.UpdateShippingInfo(ctx, orderID, shippingMethod)
 }
 
 func (a *PostgresOrderAdapter) AddMessage(ctx context.Context, message *models.OrderMessage) error {
