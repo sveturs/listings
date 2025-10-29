@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -13,6 +14,7 @@ import (
 	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/storage/postgres"
 	"backend/pkg/logger"
+	deliveryv1 "backend/pkg/grpc/delivery/v1"
 )
 
 // OrderService представляет сервис для работы с заказами
@@ -621,36 +623,92 @@ func (s *OrderService) addItemToExistingCart(ctx context.Context, cart *models.S
 	return s.cartRepo.GetByID(ctx, cart.ID)
 }
 
-// calculateShippingCost рассчитывает стоимость доставки
+// calculateShippingCost рассчитывает стоимость доставки через delivery service
 func (s *OrderService) calculateShippingCost(ctx context.Context, order *models.StorefrontOrder, storefront *models.Storefront) decimal.Decimal {
-	// TODO: Получить опцию доставки из StorefrontRepository
-	// deliveryOption, err := s.storefrontRepo.GetDeliveryOption(ctx, order.DeliveryOptionID)
-	// if err != nil {
-	//     s.logger.Warn("Failed to get delivery option, using zero shipping: %v", err)
-	//     return decimal.Zero
-	// }
-
-	// Временная реализация: используем базовую логику
-	// Базовая стоимость доставки (например, из настроек витрины)
-	// В будущем это будет браться из deliveryOption.BasePrice
-	basePrice := decimal.NewFromFloat(200.0) // 200 RSD базовая доставка
-
-	// Проверяем порог бесплатной доставки (например, заказы > 5000 RSD)
-	freeShippingThreshold := decimal.NewFromFloat(5000.0)
-	if order.SubtotalAmount.GreaterThanOrEqual(freeShippingThreshold) {
-		s.logger.Info("Free shipping applied (order above threshold: %s >= %s)",
-			order.SubtotalAmount.String(), freeShippingThreshold.String())
-		return decimal.Zero
+	// 1. Проверяем наличие delivery client
+	if s.deliveryClient == nil {
+		s.logger.Warn("Delivery client not available, using fallback rate")
+		return decimal.NewFromFloat(100.0) // Graceful degradation
 	}
 
-	shippingCost := basePrice
+	// 2. Проверяем наличие адреса витрины
+	if storefront.Address == nil || storefront.City == nil || storefront.PostalCode == nil {
+		s.logger.Warn("Storefront address not configured, using fallback rate (storefront_id: %d)", storefront.ID)
+		return decimal.NewFromFloat(100.0)
+	}
 
-	// TODO: Добавить расчёт по расстоянию (PricePerKm)
-	// TODO: Добавить расчёт по весу (PricePerKg)
-	// TODO: Добавить COD fee, insurance, fragile handling
-	// TODO: Применить модификатор зоны доставки
+	// 3. Извлекаем адресные данные из JSONB
+	if order.ShippingAddress == nil || len(order.ShippingAddress) == 0 {
+		s.logger.Warn("Order shipping address not provided, using fallback rate (order_id: %d)", order.ID)
+		return decimal.NewFromFloat(100.0)
+	}
 
-	return shippingCost
+	// Извлекаем поля из JSONB
+	street, _ := order.ShippingAddress["street"].(string)
+	city, _ := order.ShippingAddress["city"].(string)
+	postalCode, _ := order.ShippingAddress["postal_code"].(string)
+
+	if street == "" || city == "" || postalCode == "" {
+		s.logger.Warn("Order shipping address incomplete, using fallback rate (order_id: %d)", order.ID)
+		return decimal.NewFromFloat(100.0)
+	}
+
+	// 4. Подготовить параметры для расчета
+	weight := calculateTotalWeight(order.Items)
+	rateParams := &deliveryv1.CalculateRateRequest{
+		Provider: deliveryv1.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS, // Пока только Post Express
+		FromAddress: &deliveryv1.Address{
+			Street:     *storefront.Address,
+			City:       *storefront.City,
+			PostalCode: *storefront.PostalCode,
+			Country:    "RS", // Serbia
+		},
+		ToAddress: &deliveryv1.Address{
+			Street:     street,
+			City:       city,
+			PostalCode: postalCode,
+			Country:    "RS",
+		},
+		Package: &deliveryv1.Package{
+			Weight:        strconv.FormatFloat(float64(weight), 'f', 2, 32), // Convert to string as required by proto
+			Description:   fmt.Sprintf("Order #%d", order.ID),
+			DeclaredValue: order.SubtotalAmount.StringFixed(2),
+		},
+	}
+
+	// 5. Вызвать delivery service
+	rateResp, err := s.deliveryClient.CalculateRate(ctx, rateParams)
+	if err != nil {
+		s.logger.Error("Failed to calculate delivery rate, using fallback: %v (order_id: %d)", err, order.ID)
+		return decimal.NewFromFloat(100.0) // Graceful degradation
+	}
+
+	// 6. Парсим стоимость из строки
+	cost, err := decimal.NewFromString(rateResp.Cost)
+	if err != nil {
+		s.logger.Error("Failed to parse delivery cost '%s', using fallback: %v (order_id: %d)", rateResp.Cost, err, order.ID)
+		return decimal.NewFromFloat(100.0)
+	}
+
+	s.logger.Info("Delivery rate calculated via delivery service: %s %s (order_id: %d, provider: post_express)",
+		cost.String(), rateResp.Currency, order.ID)
+
+	return cost
+}
+
+// calculateTotalWeight рассчитывает общий вес заказа
+func calculateTotalWeight(items []models.StorefrontOrderItem) float32 {
+	// TODO: В будущем можно добавить реальный вес из product metadata
+	// На данный момент используем фиксированный вес 0.5 кг
+	var totalWeight float32 = 0.5
+
+	// for _, item := range items {
+	//     if item.Weight > 0 {
+	//         totalWeight += item.Weight * float32(item.Quantity)
+	//     }
+	// }
+
+	return totalWeight
 }
 
 // calculateTax рассчитывает налог (НДС)

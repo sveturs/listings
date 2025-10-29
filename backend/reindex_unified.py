@@ -11,7 +11,7 @@ from datetime import datetime
 
 # PostgreSQL configuration
 PG_HOST = "localhost"
-PG_PORT = 5432
+PG_PORT = 5433
 PG_USER = "postgres"
 PG_PASSWORD = "mX3g1XGhMRUZEX3l"
 PG_DATABASE = "svetubd"
