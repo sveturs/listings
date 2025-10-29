@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -297,26 +298,143 @@ func (h *Handler) ApplyCategoryDefaults(c *fiber.Ctx) error {
 	}, "Дефолтные атрибуты применены")
 }
 
+// CreateShipmentHTTPRequest - HTTP request structure supporting both formats
+type CreateShipmentHTTPRequest struct {
+	// New format (preferred)
+	ProviderID     *int                      `json:"provider_id"`
+	ProviderCode   *string                   `json:"provider_code"`
+	Provider       *string                   `json:"provider"` // Alias for provider_code
+	OrderID        *int                      `json:"order_id"`
+	FromAddress    *service.Address          `json:"from_address"`
+	ToAddress      *service.Address          `json:"to_address"`
+	Packages       []service.Package         `json:"packages"`
+
+	// Legacy format (backward compatibility)
+	Sender         *LegacySenderRecipient    `json:"sender"`
+	Recipient      *LegacySenderRecipient    `json:"recipient"`
+	Package        *service.Package          `json:"package"`
+
+	// Common fields
+	DeliveryType   string                    `json:"delivery_type"`
+	PickupDate     *time.Time                `json:"pickup_date,omitempty"`
+	InsuranceValue float64                   `json:"insurance_value,omitempty"`
+	CODAmount      float64                   `json:"cod_amount,omitempty"`
+	Services       []string                  `json:"services,omitempty"`
+	Reference      string                    `json:"reference,omitempty"`
+	Notes          string                    `json:"notes,omitempty"`
+}
+
+// LegacySenderRecipient - legacy format for sender/recipient
+type LegacySenderRecipient struct {
+	Name    string                 `json:"name"`
+	Phone   string                 `json:"phone"`
+	Address *service.Address       `json:"address"`
+}
+
+// ToServiceRequest converts HTTP request to service request
+func (r *CreateShipmentHTTPRequest) ToServiceRequest() (*service.CreateShipmentRequest, error) {
+	req := &service.CreateShipmentRequest{
+		DeliveryType:   r.DeliveryType,
+		PickupDate:     r.PickupDate,
+		InsuranceValue: r.InsuranceValue,
+		CODAmount:      r.CODAmount,
+		Services:       r.Services,
+		Reference:      r.Reference,
+		Notes:          r.Notes,
+	}
+
+	// Provider ID/Code
+	if r.ProviderID != nil {
+		req.ProviderID = *r.ProviderID
+	}
+	if r.ProviderCode != nil {
+		req.ProviderCode = *r.ProviderCode
+	} else if r.Provider != nil {
+		req.ProviderCode = *r.Provider
+	}
+
+	// Order ID
+	if r.OrderID != nil {
+		req.OrderID = *r.OrderID
+	}
+
+	// Addresses - check both formats
+	if r.FromAddress != nil && r.ToAddress != nil {
+		// New format
+		req.FromAddress = r.FromAddress
+		req.ToAddress = r.ToAddress
+	} else if r.Sender != nil && r.Recipient != nil {
+		// Legacy format - convert
+		req.FromAddress = &service.Address{
+			Street:     r.Sender.Address.Street,
+			City:       r.Sender.Address.City,
+			PostalCode: r.Sender.Address.PostalCode,
+			Country:    r.Sender.Address.Country,
+			Name:       r.Sender.Name,
+			Phone:      r.Sender.Phone,
+		}
+		req.ToAddress = &service.Address{
+			Street:     r.Recipient.Address.Street,
+			City:       r.Recipient.Address.City,
+			PostalCode: r.Recipient.Address.PostalCode,
+			Country:    r.Recipient.Address.Country,
+			Name:       r.Recipient.Name,
+			Phone:      r.Recipient.Phone,
+		}
+	} else {
+		return nil, fmt.Errorf("missing addresses: provide either from_address/to_address or sender/recipient")
+	}
+
+	// Validate addresses are not nil
+	if req.FromAddress == nil || req.ToAddress == nil {
+		return nil, fmt.Errorf("from_address and to_address are required")
+	}
+
+	// Packages
+	if len(r.Packages) > 0 {
+		req.Packages = r.Packages
+	} else if r.Package != nil {
+		// Legacy format - single package
+		req.Packages = []service.Package{*r.Package}
+	} else {
+		return nil, fmt.Errorf("at least one package is required")
+	}
+
+	return req, nil
+}
+
 // CreateShipment - создает отправление
 // @Summary Create shipment
 // @Description Create a new shipment with selected provider
 // @Tags delivery
 // @Accept json
 // @Produce json
-// @Param shipment body service.CreateShipmentRequest true "Shipment request"
+// @Param shipment body CreateShipmentHTTPRequest true "Shipment request"
 // @Success 200 {object} utils.SuccessResponseSwag{data=models.Shipment} "Created shipment"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
 // @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/shipments [post]
 func (h *Handler) CreateShipment(c *fiber.Ctx) error {
-	var req service.CreateShipmentRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", nil)
+	var httpReq CreateShipmentHTTPRequest
+	if err := c.BodyParser(&httpReq); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request", fiber.Map{
+			"details": err.Error(),
+		})
 	}
 
-	shipment, err := h.service.CreateShipment(c.Context(), &req)
+	// Convert to service request with validation
+	serviceReq, err := httpReq.ToServiceRequest()
 	if err != nil {
-		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_create_shipment", nil)
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request_format", fiber.Map{
+			"details": err.Error(),
+		})
+	}
+
+	shipment, err := h.service.CreateShipment(c.Context(), serviceReq)
+	if err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_create_shipment", fiber.Map{
+			"details": err.Error(),
+		})
 	}
 
 	return utils.SendSuccessResponse(c, shipment, "Отправление создано")

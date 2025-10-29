@@ -31,10 +31,10 @@ type TestShipmentRequest struct {
 	SenderZip     string `json:"sender_zip" example:"11000"`
 
 	// Параметры отправления
-	Weight       int    `json:"weight" example:"500"` // граммы
-	Content      string `json:"content" example:"Test paket za SVETU"`
-	CODAmount    int64  `json:"cod_amount" example:"0"`    // наложенный платеж (RSD)
-	InsuredValue int64  `json:"insured_value" example:"0"` // объявленная ценность (RSD)
+	Weight       float64 `json:"weight" example:"500"` // граммы
+	Content      string  `json:"content" example:"Test paket za SVETU"`
+	CODAmount    int64   `json:"cod_amount" example:"0"`    // наложенный платеж (RSD)
+	InsuredValue int64   `json:"insured_value" example:"0"` // объявленная ценность (RSD)
 
 	// Дополнительные услуги (для совместимости со старым API)
 	Services         string `json:"services" example:"PNA"`                  // PNA, SMS, OTK, VD
@@ -61,10 +61,10 @@ type TestShipmentResponse struct {
 
 // CalculateTestRequest - запрос расчета стоимости
 type CalculateTestRequest struct {
-	FromCity  string `json:"from_city" example:"Beograd"`
-	ToCity    string `json:"to_city" example:"Novi Sad"`
-	Weight    int    `json:"weight" example:"1000"` // граммы
-	CODAmount int64  `json:"cod_amount" example:"0"`
+	FromCity  string  `json:"from_city" example:"Beograd"`
+	ToCity    string  `json:"to_city" example:"Novi Sad"`
+	Weight    float64 `json:"weight" example:"1000"` // граммы
+	CODAmount int64   `json:"cod_amount" example:"0"`
 }
 
 // CreateTestShipment создает тестовое отправление через delivery gRPC микросервис
