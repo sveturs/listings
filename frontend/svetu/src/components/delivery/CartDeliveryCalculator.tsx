@@ -17,7 +17,7 @@ import {
   DeliveryAttributes,
 } from '@/types/delivery';
 import UniversalDeliverySelector from './UniversalDeliverySelector';
-import configManager from '@/config';
+import { deliveryService } from '@/services/delivery';
 
 interface CartItem {
   id: number;
@@ -87,19 +87,14 @@ export default function CartDeliveryCalculator({
           }
 
           try {
-            // TODO: Migrate to deliveryService wrapper (task 1.2.2)
-            // Replace with: const response = await deliveryService.getProductAttributes(item.product_id, item.product_type);
-            const apiUrl = configManager.getApiUrl();
-            const response = await fetch(
-              `${apiUrl}/api/v1/products/${item.product_id}/delivery-attributes?type=${item.product_type}`
+            const response = await deliveryService.getProductAttributes(
+              item.product_id.toString(),
+              item.product_type
             );
-            const data = await response.json();
 
             return {
               ...item,
-              attributes: data.success
-                ? data.data
-                : await getDefaultAttributes(item.category_id),
+              attributes: response.data || await getDefaultAttributes(item.category_id),
             };
           } catch (error) {
             console.error(
@@ -151,16 +146,10 @@ export default function CartDeliveryCalculator({
     }
 
     try {
-      // TODO: Migrate to deliveryService wrapper (task 1.2.2)
-      // Replace with: const response = await deliveryService.getCategoryDefaults(categoryId);
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/categories/${categoryId}/delivery-defaults`
-      );
-      const data = await response.json();
+      const response = await deliveryService.getCategoryDefaults(categoryId.toString());
 
-      if (data.success && data.data) {
-        const defaults = data.data;
+      if (response.data) {
+        const defaults = response.data;
         return {
           weight_kg: defaults.default_weight_kg || 1,
           dimensions: {

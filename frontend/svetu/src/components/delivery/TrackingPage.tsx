@@ -15,7 +15,7 @@ import {
   DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { useTranslations } from 'next-intl';
-import configManager from '@/config';
+import { deliveryService } from '@/services/delivery';
 
 interface TrackingEvent {
   id: number;
@@ -143,18 +143,12 @@ export default function TrackingPage({
     setError(null);
 
     try {
-      // TODO: Migrate to deliveryService wrapper (task 1.2.2)
-      // Replace with: const response = await deliveryService.trackShipment(trackingNum);
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/shipments/track/${encodeURIComponent(trackingNum)}`
-      );
-      const data = await response.json();
+      const response = await deliveryService.trackShipment(trackingNum);
 
-      if (data.success && data.data) {
-        setShipment(data.data);
+      if (response.data) {
+        setShipment(response.data as unknown as ShipmentInfo);
       } else {
-        setError(data.message || 'Отправление не найдено');
+        setError(response.error?.message || 'Отправление не найдено');
         setShipment(null);
       }
     } catch (err) {

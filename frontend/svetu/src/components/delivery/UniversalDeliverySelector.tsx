@@ -17,7 +17,7 @@ import {
   CalculationRequest,
   CalculationResponse,
 } from '@/types/delivery';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface Props {
   calculationRequest: CalculationRequest;
@@ -64,30 +64,25 @@ export default function UniversalDeliverySelector({
     setError(null);
 
     try {
-      // TODO: Migrate to deliveryService wrapper (task 1.2.2)
-      // Replace with: const response = await deliveryService.calculateRate(calculationRequest);
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/delivery/calculate-universal`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(calculationRequest),
-        }
+      const response = await apiClient.post<CalculationResponse['data']>(
+        '/delivery/calculate-universal',
+        calculationRequest
       );
 
-      const data: CalculationResponse = await response.json();
-
-      if (data.success && data.data) {
-        setQuotes(data.data.providers);
-        setCalculationResponse(data);
+      if (response.data) {
+        setQuotes(response.data.providers);
+        setCalculationResponse({
+          success: true,
+          message: '',
+          data: response.data,
+        });
 
         // Auto-select recommended quote if no quote is selected
-        if (!selectedQuoteId && data.data.recommended) {
-          onQuoteSelected?.(data.data.recommended);
+        if (!selectedQuoteId && response.data.recommended) {
+          onQuoteSelected?.(response.data.recommended);
         }
       } else {
-        setError(data.message || 'Не удалось рассчитать стоимость доставки');
+        setError(response.error?.message || 'Не удалось рассчитать стоимость доставки');
       }
     } catch (err) {
       setError('Ошибка при расчете стоимости доставки');
