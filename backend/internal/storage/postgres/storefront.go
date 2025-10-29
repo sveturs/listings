@@ -229,15 +229,17 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 	var theme, settings, seoMeta, aiConfig json.RawMessage
 
 	err := r.db.pool.QueryRow(ctx, `
-		SELECT 
+		SELECT
 			id, user_id, slug, name, description,
 			logo_url, banner_url, COALESCE(theme, '{}')::jsonb,
 			phone, email, website,
 			address, city, postal_code, country, latitude, longitude,
+			formatted_address, geo_strategy, default_privacy_level, address_verified,
 			COALESCE(settings, '{}')::jsonb, COALESCE(seo_meta, '{}')::jsonb,
 			is_active, is_verified, verification_date,
 			rating, reviews_count, products_count, sales_count, views_count,
 			subscription_plan, subscription_expires_at, commission_rate,
+			subscription_id, is_subscription_active, followers_count,
 			ai_agent_enabled, COALESCE(ai_agent_config, '{}')::jsonb, live_shopping_enabled, group_buying_enabled,
 			created_at, updated_at
 		FROM b2c_stores
@@ -247,10 +249,12 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 		&s.LogoURL, &s.BannerURL, &theme,
 		&s.Phone, &s.Email, &s.Website,
 		&s.Address, &s.City, &s.PostalCode, &s.Country, &s.Latitude, &s.Longitude,
+		&s.FormattedAddress, &s.GeoStrategy, &s.DefaultPrivacyLevel, &s.AddressVerified,
 		&settings, &seoMeta,
 		&s.IsActive, &s.IsVerified, &s.VerificationDate,
 		&s.Rating, &s.ReviewsCount, &s.ProductsCount, &s.SalesCount, &s.ViewsCount,
 		&s.SubscriptionPlan, &s.SubscriptionExpiresAt, &s.CommissionRate,
+		&s.SubscriptionID, &s.IsSubscriptionActive, &s.FollowersCount,
 		&s.AIAgentEnabled, &aiConfig, &s.LiveShoppingEnabled, &s.GroupBuyingEnabled,
 		&s.CreatedAt, &s.UpdatedAt,
 	)
