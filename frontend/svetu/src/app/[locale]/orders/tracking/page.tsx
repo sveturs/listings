@@ -3,8 +3,6 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { PostExpressTracker } from '@/components/delivery/postexpress';
-import { BEXTracker } from '@/components/delivery/bexexpress';
 import { PageTransition } from '@/components/ui/PageTransition';
 import {
   TruckIcon,
@@ -194,9 +192,8 @@ function OrderTrackingContent() {
               Отслеживание заказов
             </h1>
             <p className="text-base-content/70 max-w-2xl mx-auto">
-              Найдите свой заказ по номеру заказа или трек-номеру BEX Express /
-              Post Express и отследите статус доставки в реальном времени с
-              картой маршрута
+              Найдите свой заказ по номеру заказа или трек-номеру службы доставки
+              и отследите статус доставки в реальном времени
             </p>
           </div>
 
@@ -234,7 +231,7 @@ function OrderTrackingContent() {
                       placeholder={
                         searchType === 'order'
                           ? 'Введите номер заказа (например: ORD-2024-001)'
-                          : 'Введите трек-номер BEX или Post Express (например: BEX123456789RS)'
+                          : 'Введите трек-номер службы доставки'
                       }
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -360,11 +357,6 @@ function OrderTrackingContent() {
                         >
                           {getStatusText(selectedOrder.status)}
                         </span>
-                        {selectedOrder.delivery_provider === 'post_express' && (
-                          <span className="badge badge-primary badge-outline">
-                            Post Express
-                          </span>
-                        )}
                       </div>
                     </div>
 
@@ -428,7 +420,7 @@ function OrderTrackingContent() {
                         <div className="space-y-2 text-sm">
                           <div>
                             <div className="text-base-content/70 text-xs">
-                              Трек-номер Post Express:
+                              Трек-номер:
                             </div>
                             <div className="font-mono text-primary font-medium break-all">
                               {selectedOrder.tracking_number}
@@ -485,79 +477,8 @@ function OrderTrackingContent() {
                   </div>
                 </div>
               </div>
-
-              {/* Post Express Tracking */}
-              {selectedOrder.tracking_number &&
-                selectedOrder.delivery_provider === 'post_express' && (
-                  <PostExpressTracker
-                    initialTrackingNumber={selectedOrder.tracking_number}
-                    onTrackingUpdate={(shipment) => {
-                      console.log('PostExpress tracking updated:', shipment);
-                    }}
-                  />
-                )}
-
-              {/* BEX Express Tracking */}
-              {selectedOrder.tracking_number &&
-                selectedOrder.delivery_provider === 'bex' && (
-                  <BEXTracker
-                    initialTrackingNumber={selectedOrder.tracking_number}
-                    onTrackingUpdate={(shipment) => {
-                      console.log('BEX tracking updated:', shipment);
-                    }}
-                  />
-                )}
             </div>
           )}
-
-          {/* Tracking for direct tracking number search */}
-          {searchType === 'tracking' &&
-            searchQuery &&
-            !orders.length &&
-            !loading &&
-            !error && (
-              <div className="space-y-6">
-                {/* Определяем провайдера по формату трек-номера */}
-                {searchQuery.toLowerCase().startsWith('pe') ||
-                searchQuery.toLowerCase().includes('postexpress') ? (
-                  <PostExpressTracker
-                    initialTrackingNumber={searchQuery}
-                    onTrackingUpdate={(shipment) => {
-                      console.log('PostExpress tracking updated:', shipment);
-                    }}
-                  />
-                ) : searchQuery.toLowerCase().startsWith('bex') ||
-                  searchQuery.toLowerCase().includes('bex') ? (
-                  <BEXTracker
-                    initialTrackingNumber={searchQuery}
-                    onTrackingUpdate={(shipment) => {
-                      console.log('BEX tracking updated:', shipment);
-                    }}
-                  />
-                ) : (
-                  // Пробуем оба провайдера
-                  <>
-                    <div className="text-center">
-                      <p className="text-base-content/70 mb-4">
-                        Проверяем трек-номер в различных службах доставки...
-                      </p>
-                    </div>
-                    <BEXTracker
-                      initialTrackingNumber={searchQuery}
-                      onTrackingUpdate={(shipment) => {
-                        console.log('BEX tracking updated:', shipment);
-                      }}
-                    />
-                    <PostExpressTracker
-                      initialTrackingNumber={searchQuery}
-                      onTrackingUpdate={(shipment) => {
-                        console.log('PostExpress tracking updated:', shipment);
-                      }}
-                    />
-                  </>
-                )}
-              </div>
-            )}
 
           {/* Empty State */}
           {!orders.length && !loading && !error && !searchQuery && (
@@ -567,8 +488,8 @@ function OrderTrackingContent() {
                 Отслеживание заказов
               </h3>
               <p className="text-base-content/60 max-w-md mx-auto">
-                Введите номер заказа или трек-номер BEX Express / Post Express
-                для получения информации о статусе доставки с картой маршрута
+                Введите номер заказа или трек-номер службы доставки
+                для получения информации о статусе доставки
               </p>
             </div>
           )}

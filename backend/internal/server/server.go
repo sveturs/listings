@@ -40,7 +40,6 @@ import (
 	b2cModule "backend/internal/proj/b2c"
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
-	"backend/internal/proj/bexexpress"
 	marketplaceHandler "backend/internal/proj/c2c/handler"
 	marketplaceService "backend/internal/proj/c2c/service"
 	configHandler "backend/internal/proj/config"
@@ -57,9 +56,6 @@ import (
 	notificationHandler "backend/internal/proj/notifications/handler"
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
-	postexpressHandler "backend/internal/proj/postexpress/handler"
-	postexpressService "backend/internal/proj/postexpress/service"
-	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
 	recommendationsHandler "backend/internal/proj/recommendations"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
@@ -92,8 +88,6 @@ type Server struct {
 	notifications      *notificationHandler.Handler
 	balance            *balanceHandler.Handler
 	payments           *paymentHandler.Handler
-	postexpress        *postexpressHandler.Handler
-	bexexpress         *bexexpress.Module
 	adminLogistics     *adminLogistics.Module
 	adminTesting       *testingHandler.Handler
 	delivery           *delivery.Module
@@ -228,44 +222,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	contactsHandler := contactsHandler.NewHandler(services, jwtParserMW)
 	paymentsHandler := paymentHandler.NewHandler(services, jwtParserMW)
 
-	// Post Express инициализация
-	postexpressRepo := postexpressRepository.NewRepository(db.GetSQLXDB())
-	postexpressWSPClient := postexpressService.NewWSPClient(&postexpressService.WSPConfig{
-		Endpoint:        cfg.PostExpress.BaseURL,
-		Username:        cfg.PostExpress.Username,
-		Password:        cfg.PostExpress.Password,
-		TestMode:        cfg.PostExpress.TestMode,
-		Timeout:         30 * time.Second,
-		Language:        "",  // ИСПРАВЛЕНО: пустая строка - обходим баг Post Express с отсутствующими колонками PREVOD_*
-		DeviceType:      "2", // ИСПРАВЛЕНО: должна быть строка "2" для веб-приложения
-		MaxRetries:      3,
-		RetryDelay:      1 * time.Second,
-		DeviceName:      "SveTu-Server",
-		ApplicationName: "SveTu-Platform",
-		Version:         "1.0.0",
-		PartnerID:       10109, // ДОБАВЛЕНО: Partner ID для b2b@svetu.rs
-	}, *pkglogger.New())
-	postexpressServiceInstance := postexpressService.NewService(
-		postexpressRepo,
-		postexpressWSPClient,
-		*pkglogger.New(),
-		&postexpressService.ServiceConfig{
-			DefaultWarehouseCode: "MAIN",
-			PickupExpiryDays:     7,
-			EnableAutoTracking:   true,
-			TrackingInterval:     15 * time.Minute,
-			MaxRetries:           3,
-		},
-	)
-	postexpressHandlerInstance := postexpressHandler.NewHandlerWithWSPClient(postexpressServiceInstance, postexpressWSPClient, *pkglogger.New())
-
-	// BEX Express инициализация
-	bexexpressModule, err := bexexpress.NewModule(db.GetSQLXDB().DB, cfg)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to initialize BEX Express module, continuing without it")
-		// Не возвращаем ошибку, продолжаем без BEX
-	}
-
 	// Admin Logistics инициализация
 	adminLogisticsModule, err := adminLogistics.NewModule(db.GetSQLXDB().DB, cfg, pkglogger.New())
 	if err != nil {
@@ -375,8 +331,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		notifications:      notificationsHandler,
 		balance:            balanceHandler,
 		payments:           paymentsHandler,
-		postexpress:        postexpressHandlerInstance,
-		bexexpress:         bexexpressModule,
 		adminLogistics:     adminLogisticsModule,
 		adminTesting:       adminTestingHandler,
 		delivery:           deliveryModule,
@@ -648,16 +602,11 @@ func (s *Server) registerProjectRoutes() {
 	}
 
 	registrars = append(registrars, s.marketplace, s.balance, s.orders, s.storefront,
-		s.geocode, s.gis, s.contacts, s.payments, s.postexpress)
+		s.geocode, s.gis, s.contacts, s.payments)
 
 	// Добавляем Delivery если он инициализирован
 	if s.delivery != nil {
 		registrars = append(registrars, s.delivery)
-	}
-
-	// Добавляем BEX Express если он инициализирован
-	if s.bexexpress != nil {
-		registrars = append(registrars, s.bexexpress)
 	}
 
 	// Добавляем Admin Logistics если он инициализирован
