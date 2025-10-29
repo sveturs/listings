@@ -110,3 +110,8 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 func (m *Module) GetPrefix() string {
 	return "/api/v1/delivery"
 }
+
+// GetGRPCClient возвращает gRPC клиент для delivery микросервиса
+func (m *Module) GetGRPCClient() *grpcclient.Client {
+	return m.grpcClient
+}

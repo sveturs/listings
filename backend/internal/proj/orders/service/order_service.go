@@ -10,6 +10,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/b2c/storage/opensearch"
+	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/storage/postgres"
 	"backend/pkg/logger"
 )
@@ -22,6 +23,7 @@ type OrderService struct {
 	storefrontRepo    StorefrontRepositoryInterface
 	inventoryMgr      InventoryManagerInterface
 	productSearchRepo opensearch.ProductSearchRepository // OpenSearch репозиторий для реиндексации
+	deliveryClient    *grpcclient.Client                 // gRPC клиент для delivery микросервиса
 	logger            logger.Logger
 }
 
@@ -53,6 +55,7 @@ func NewOrderService(
 	storefrontRepo StorefrontRepositoryInterface,
 	inventoryMgr InventoryManagerInterface,
 	productSearchRepo opensearch.ProductSearchRepository,
+	deliveryClient *grpcclient.Client,
 	logger logger.Logger,
 ) *OrderService {
 	return &OrderService{
@@ -62,6 +65,7 @@ func NewOrderService(
 		storefrontRepo:    storefrontRepo,
 		inventoryMgr:      inventoryMgr,
 		productSearchRepo: productSearchRepo,
+		deliveryClient:    deliveryClient,
 		logger:            logger,
 	}
 }

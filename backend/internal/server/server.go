@@ -47,6 +47,7 @@ import (
 	contactsHandler "backend/internal/proj/contacts/handler"
 	creditHandler "backend/internal/proj/credit"
 	"backend/internal/proj/delivery"
+	delivery_grpcclient "backend/internal/proj/delivery/grpcclient"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	gisHandler "backend/internal/proj/gis/handler"
@@ -198,11 +199,29 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services, jwtParserMW)
 	balanceHandler := balanceHandler.NewHandler(services, jwtParserMW)
 	storefrontModule := b2cModule.NewModule(ctx, services)
+
+	// Delivery система инициализация с консолидацией admin/logistics
+	// ВАЖНО: Должна быть инициализирована ДО orders модуля (для передачи deliveryClient)
+	deliveryModule, err := delivery.NewModule(db.GetSQLXDB(), cfg, pkglogger.New())
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to initialize Delivery module, continuing without it")
+		// Не возвращаем ошибку, продолжаем без delivery системы
+	} else if deliveryModule != nil && services != nil {
+		// Подключаем сервис уведомлений к модулю доставки
+		deliveryModule.SetNotificationService(services.Notification())
+		logger.Info().Msg("Notification service integrated with delivery module")
+	}
+
+	// Orders модуль инициализация (ПОСЛЕ delivery модуля для получения deliveryClient)
+	var deliveryClient *delivery_grpcclient.Client
+	if deliveryModule != nil {
+		deliveryClient = deliveryModule.GetGRPCClient()
+	}
 	ordersModule, err := orders.NewModule(db, &opensearch.Config{
 		URL:      cfg.OpenSearch.URL,
 		Username: cfg.OpenSearch.Username,
 		Password: cfg.OpenSearch.Password,
-	})
+	}, deliveryClient)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}
@@ -269,17 +288,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 			Msg("Admin Testing module initialized")
 	} else {
 		logger.Info().Msg("Admin Testing module disabled (no TEST_ADMIN_EMAIL or TEST_ADMIN_PASSWORD)")
-	}
-
-	// Delivery система инициализация с консолидацией admin/logistics
-	deliveryModule, err := delivery.NewModule(db.GetSQLXDB(), cfg, pkglogger.New())
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to initialize Delivery module, continuing without it")
-		// Не возвращаем ошибку, продолжаем без delivery системы
-	} else if deliveryModule != nil && services != nil {
-		// Подключаем сервис уведомлений к модулю доставки
-		deliveryModule.SetNotificationService(services.Notification())
-		logger.Info().Msg("Notification service integrated with delivery module")
 	}
 
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs, jwtParserMW)

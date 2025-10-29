@@ -3,8 +3,11 @@ package orders
 import (
 	"fmt"
 
+	"github.com/gofiber/fiber/v2"
+
 	"backend/internal/middleware"
 	b2c_storesOpensearch "backend/internal/proj/b2c/storage/opensearch"
+	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/proj/orders/adapters"
 	"backend/internal/proj/orders/handler"
 	"backend/internal/proj/orders/service"
@@ -12,8 +15,6 @@ import (
 	opensearchClient "backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"backend/pkg/logger"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 // Module представляет модуль заказов
@@ -22,7 +23,7 @@ type Module struct {
 }
 
 // NewModule создает новый модуль заказов со всеми зависимостями
-func NewModule(db storage.Storage, opensearchCfg *opensearchClient.Config) (*Module, error) {
+func NewModule(db storage.Storage, opensearchCfg *opensearchClient.Config, deliveryClient *grpcclient.Client) (*Module, error) {
 	// Получаем репозитории из storage
 	orderRepo := db.Order().(postgres.OrderRepositoryInterface)
 	cartRepo := db.Cart().(postgres.CartRepositoryInterface)
@@ -57,8 +58,8 @@ func NewModule(db storage.Storage, opensearchCfg *opensearchClient.Config) (*Mod
 	log := logger.New()
 	inventoryManager := service.NewInventoryManager(inventoryRepo, nil, *log)
 
-	// Передаем productSearchRepo в OrderService
-	orderService := service.NewOrderService(orderRepo, cartRepo, productRepo, storefrontRepo, inventoryManager, productSearchRepo, *log)
+	// Передаем productSearchRepo и deliveryClient в OrderService
+	orderService := service.NewOrderService(orderRepo, cartRepo, productRepo, storefrontRepo, inventoryManager, productSearchRepo, deliveryClient, *log)
 	sqlxDB := postgresDB.GetSQLXDB()
 
 	// Создаем handler с поддержкой транзакций
