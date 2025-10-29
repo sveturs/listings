@@ -99,6 +99,13 @@ func (s *OrderService) ConfirmOrder(ctx context.Context, orderID int64) error {
 		return fmt.Errorf("failed to update order status: %w", err)
 	}
 
+	// Создаём shipment в delivery service после подтверждения оплаты
+	if err := s.createShipmentForOrder(ctx, order); err != nil {
+		s.logger.Error("Failed to create shipment, order confirmed but shipment pending: %v (order_id: %d)", err, orderID)
+		// НЕ фейлим весь order - shipment можно создать позже вручную
+		// TODO: добавить в admin UI кнопку "Retry Create Shipment"
+	}
+
 	s.logger.Info("Order confirmed successfully (order_id: %d)", orderID)
 	return nil
 }
@@ -791,4 +798,111 @@ func convertToJSONB(v interface{}) models.JSONB {
 		return models.JSONB{}
 	}
 	return result
+}
+
+// createShipmentForOrder создаёт shipment в delivery service для заказа
+func (s *OrderService) createShipmentForOrder(ctx context.Context, order *models.StorefrontOrder) error {
+	// Валидация: shipment создаём только для orders с доставкой
+	if order.ShippingProvider == nil || *order.ShippingProvider == "" {
+		s.logger.Info("Order has no delivery provider, skipping shipment creation (order_id: %d)", order.ID)
+		return nil // Not an error
+	}
+
+	// Валидация адресов
+	if order.ShippingAddress == nil || len(order.ShippingAddress) == 0 {
+		return fmt.Errorf("missing shipping address")
+	}
+
+	// Извлекаем адрес получателя из JSONB
+	toStreet, _ := order.ShippingAddress["street"].(string)
+	toCity, _ := order.ShippingAddress["city"].(string)
+	toPostalCode, _ := order.ShippingAddress["postal_code"].(string)
+
+	if toStreet == "" || toCity == "" || toPostalCode == "" {
+		return fmt.Errorf("incomplete shipping address")
+	}
+
+	// Получаем storefront для адреса отправителя
+	storefront, err := s.storefrontRepo.GetByID(ctx, order.StorefrontID)
+	if err != nil {
+		return fmt.Errorf("failed to get storefront: %w", err)
+	}
+
+	// Проверяем наличие адреса витрины
+	if storefront.Address == nil || storefront.City == nil || storefront.PostalCode == nil {
+		return fmt.Errorf("storefront address not configured")
+	}
+
+	// Рассчитываем package metrics (используем Items из order)
+	totalWeight := calculateTotalWeight(order.Items)
+
+	// Маппинг provider string → pb.DeliveryProvider
+	providerCode := *order.ShippingProvider
+	var pbProvider deliveryv1.DeliveryProvider
+	switch providerCode {
+	case "post_express":
+		pbProvider = deliveryv1.DeliveryProvider_DELIVERY_PROVIDER_POST_EXPRESS
+	case "bex", "bex_express":
+		pbProvider = deliveryv1.DeliveryProvider_DELIVERY_PROVIDER_BEX_EXPRESS
+	case "aks", "aks_express":
+		pbProvider = deliveryv1.DeliveryProvider_DELIVERY_PROVIDER_AKS_EXPRESS
+	case "d_express":
+		pbProvider = deliveryv1.DeliveryProvider_DELIVERY_PROVIDER_D_EXPRESS
+	case "city_express":
+		pbProvider = deliveryv1.DeliveryProvider_DELIVERY_PROVIDER_CITY_EXPRESS
+	default:
+		return fmt.Errorf("unsupported provider: %s", providerCode)
+	}
+
+	// Подготовить запрос к delivery microservice
+	shipmentReq := &deliveryv1.CreateShipmentRequest{
+		Provider: pbProvider,
+		FromAddress: &deliveryv1.Address{
+			Street:     *storefront.Address,
+			City:       *storefront.City,
+			PostalCode: *storefront.PostalCode,
+			Country:    "RS", // Serbia
+		},
+		ToAddress: &deliveryv1.Address{
+			Street:     toStreet,
+			City:       toCity,
+			PostalCode: toPostalCode,
+			Country:    "RS",
+		},
+		Package: &deliveryv1.Package{
+			Weight:        strconv.FormatFloat(float64(totalWeight), 'f', 2, 32),
+			Description:   fmt.Sprintf("Order #%s", order.OrderNumber),
+			DeclaredValue: order.TotalAmount.StringFixed(2),
+		},
+	}
+
+	s.logger.Info("Creating shipment in delivery microservice (order_id: %d, provider: %s)", order.ID, providerCode)
+
+	// Вызвать delivery microservice
+	shipmentResp, err := s.deliveryClient.CreateShipment(ctx, shipmentReq)
+	if err != nil {
+		return fmt.Errorf("delivery microservice error: %w", err)
+	}
+
+	// Обновить order с shipment_id и delivery_provider (МИНИМУМ - только для UI)
+	// shipmentResp.Shipment.Id - это string (UUID), но ShipmentID в БД - int64
+	// TODO: Возможно нужно поменять ShipmentID на string в будущем
+	// Пока используем TrackingNumber как основной идентификатор
+	trackingNumber := shipmentResp.Shipment.TrackingNumber
+	provider := providerCode
+
+	order.TrackingNumber = &trackingNumber
+	order.DeliveryProvider = &provider
+
+	// Update order в БД
+	if err := s.orderRepo.Update(ctx, order); err != nil {
+		s.logger.Error("Shipment created but failed to update order: %v (order_id: %d, tracking_number: %s)", err, order.ID, trackingNumber)
+		// ВАЖНО: Shipment УЖЕ создан в microservice!
+		// Нужно либо откатить (CancelShipment), либо retry update
+		// TODO: Add to retry queue
+		return fmt.Errorf("failed to update order with shipment: %w", err)
+	}
+
+	s.logger.Info("Shipment created successfully (order_id: %d, tracking_number: %s, provider: %s)", order.ID, trackingNumber, provider)
+	return nil
 }

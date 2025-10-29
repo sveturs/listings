@@ -96,6 +96,7 @@ type StorefrontOrder struct {
 	ShippingProvider *string `json:"shipping_provider,omitempty" db:"shipping_provider"`
 	TrackingNumber   *string `json:"tracking_number,omitempty" db:"tracking_number"`
 	ShipmentID       *int64  `json:"shipment_id,omitempty" db:"shipment_id"`
+	DeliveryProvider *string `json:"delivery_provider,omitempty" db:"delivery_provider"` // Provider code для delivery microservice (только для UI)
 
 	// Заметки и метаданные
 	Notes         *string                `json:"notes,omitempty" db:"notes"`
