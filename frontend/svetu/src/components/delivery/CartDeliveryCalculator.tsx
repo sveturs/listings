@@ -16,7 +16,7 @@ import {
   CalculationRequest,
   DeliveryAttributes,
 } from '@/types/delivery';
-import UniversalDeliverySelector from './UniversalDeliverySelector';
+import UnifiedDeliverySelector from './UnifiedDeliverySelector';
 import { deliveryService } from '@/services/delivery';
 
 interface CartItem {
@@ -418,7 +418,7 @@ export default function CartDeliveryCalculator({
 
       {/* Delivery Options */}
       {!showAddressForm && addressForm.city && !loading && (
-        <UniversalDeliverySelector
+        <UnifiedDeliverySelector
           calculationRequest={buildCalculationRequest()!}
           onQuoteSelected={handleQuoteSelected}
           selectedQuoteId={selectedQuote?.provider_id}

@@ -21,6 +21,7 @@ import {
   fetchCategories,
   fetchPopularCategories,
 } from '@/store/slices/categoriesSlice';
+import { fetchProviders } from '@/store/slices/deliverySlice';
 import type { AppDispatch, RootState } from '@/store';
 import { toast } from 'react-hot-toast';
 import { favoritesService } from '@/services/favorites';
@@ -266,7 +267,11 @@ export default function HomePageClient({
 
     // OAuth авторизация теперь обрабатывается через BFF proxy с httpOnly cookies
     // Токен больше не передается через URL и не сохраняется в localStorage
-  }, []);
+
+    // Prefetch delivery providers для будущего использования в cart/checkout
+    // Это не блокирует рендеринг страницы, но кэширует данные заранее
+    dispatch(fetchProviders());
+  }, [dispatch]);
 
   // Отдельный эффект для инициализации избранного при смене пользователя
   useEffect(() => {

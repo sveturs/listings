@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import SafeImage from '@/components/SafeImage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/utils/toast';
@@ -26,7 +27,22 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import type { AppDispatch } from '@/store';
 import { PageTransition } from '@/components/ui/PageTransition';
-import DeliverySelector from '@/components/cart/DeliverySelector';
+
+// Lazy load DeliverySelector for better performance
+const DeliverySelector = dynamic(() => import('@/components/cart/DeliverySelector'), {
+  loading: () => (
+    <div className="card bg-base-200">
+      <div className="card-body p-6">
+        <div className="skeleton h-8 w-48 mb-4"></div>
+        <div className="space-y-2">
+          <div className="skeleton h-20 w-full"></div>
+          <div className="skeleton h-20 w-full"></div>
+        </div>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
 
 interface DeliverySelection {
   providerId: string;

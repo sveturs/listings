@@ -12,6 +12,7 @@ import universalCompareReducer from './slices/universalCompareSlice';
 import favoritesReducer from './slices/favoritesSlice';
 import savedSearchesReducer from './slices/savedSearchesSlice';
 import categoryProposalsReducer from './slices/categoryProposalsSlice';
+import deliveryReducer from './slices/deliverySlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
@@ -29,6 +30,7 @@ export const store = configureStore({
     favorites: favoritesReducer,
     savedSearches: savedSearchesReducer,
     categoryProposals: categoryProposalsReducer,
+    delivery: deliveryReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
