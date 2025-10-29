@@ -19,7 +19,7 @@ interface OrderStats {
 }
 
 export default function OrderStatistics() {
-  const t = useTranslations('orders');
+  const t = useTranslations('orders.statistics');
   const { isAuthenticated } = useAuthContext();
   const [stats, setStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -203,7 +203,7 @@ export default function OrderStatistics() {
                 <span className="text-sm text-base-content/70">
                   {t('thisMonth')}
                 </span>
-                <span className="badge badge-primary badge-sm">текущий</span>
+                <span className="badge badge-primary badge-sm">{t('current')}</span>
               </div>
               <div className="bg-base-200 rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
