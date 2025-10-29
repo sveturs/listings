@@ -178,8 +178,11 @@ cd frontend/svetu && yarn format && yarn lint && yarn build
 
 ### База данных
 ```bash
-# Подключение
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable"
+# Подключение (PostgreSQL на порту 5433)
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"
+
+# Создание дампа БД
+PGPASSWORD=mX3g1XGhMRUZEX3l pg_dump -h localhost -p 5433 -U postgres -d svetubd --no-owner --no-acl --column-inserts --inserts -f svetubd_full_dump_$(date +%Y%m%d_%H%M%S).sql
 
 # Применить миграции (только схема)
 cd backend && ./migrator up
