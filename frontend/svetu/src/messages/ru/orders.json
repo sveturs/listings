@@ -146,7 +146,20 @@
   "tracking": {
     "number": "Номер отслеживания",
     "provider": "Служба доставки",
-    "title": "Отслеживание"
+    "title": "Отслеживание",
+    "deliveryStatus": "Статус доставки",
+    "estimatedDelivery": "Ожидаемая дата доставки",
+    "actualDelivery": "Фактическая дата доставки",
+    "status": {
+      "SHIPMENT_STATUS_PENDING": "Ожидает отправки",
+      "SHIPMENT_STATUS_CONFIRMED": "Подтверждено",
+      "SHIPMENT_STATUS_IN_TRANSIT": "В пути",
+      "SHIPMENT_STATUS_OUT_FOR_DELIVERY": "На доставке",
+      "SHIPMENT_STATUS_DELIVERED": "Доставлено",
+      "SHIPMENT_STATUS_FAILED": "Не доставлено",
+      "SHIPMENT_STATUS_CANCELLED": "Отменено",
+      "SHIPMENT_STATUS_RETURNED": "Возвращено"
+    }
   },
   "trackingAvailable": "Отслеживание доступно",
   "trackingNumber": "Номер отслеживания",

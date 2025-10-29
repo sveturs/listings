@@ -141,19 +141,60 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
         <div className="card bg-base-200">
           <div className="card-body">
             <h3 className="card-title">{t('tracking.title')}</h3>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-base-content/70">
-                  {t('tracking.number')}
-                </p>
-                <p className="font-medium">{order.tracking_number}</p>
-              </div>
-              {order.shipping_provider && (
+            <div className="space-y-4">
+              {/* Tracking number and provider */}
+              <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-base-content/70">
-                    {t('tracking.provider')}
+                    {t('tracking.number')}
                   </p>
-                  <p className="font-medium">{order.shipping_provider}</p>
+                  <p className="font-medium font-mono">
+                    {order.tracking_number}
+                  </p>
+                </div>
+                {order.shipping_provider && (
+                  <div>
+                    <p className="text-sm text-base-content/70">
+                      {t('tracking.provider')}
+                    </p>
+                    <p className="font-medium">{order.shipping_provider}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Delivery status from microservice */}
+              {(order as any).delivery_status && (
+                <div className="pt-4 border-t border-base-300">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-base-content/70">
+                        {t('tracking.deliveryStatus')}
+                      </p>
+                      <p className="font-medium">
+                        {t(`tracking.status.${(order as any).delivery_status}`)}
+                      </p>
+                    </div>
+                    {(order as any).estimated_delivery && (
+                      <div>
+                        <p className="text-sm text-base-content/70">
+                          {t('tracking.estimatedDelivery')}
+                        </p>
+                        <p className="font-medium">
+                          {formatDate((order as any).estimated_delivery)}
+                        </p>
+                      </div>
+                    )}
+                    {(order as any).actual_delivery && (
+                      <div>
+                        <p className="text-sm text-base-content/70">
+                          {t('tracking.actualDelivery')}
+                        </p>
+                        <p className="font-medium">
+                          {formatDate((order as any).actual_delivery)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

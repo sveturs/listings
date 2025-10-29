@@ -142,7 +142,20 @@
   "tracking": {
     "number": "Tracking Number",
     "provider": "Shipping Provider",
-    "title": "Tracking"
+    "title": "Tracking",
+    "deliveryStatus": "Delivery Status",
+    "estimatedDelivery": "Estimated Delivery",
+    "actualDelivery": "Actual Delivery",
+    "status": {
+      "SHIPMENT_STATUS_PENDING": "Pending",
+      "SHIPMENT_STATUS_CONFIRMED": "Confirmed",
+      "SHIPMENT_STATUS_IN_TRANSIT": "In Transit",
+      "SHIPMENT_STATUS_OUT_FOR_DELIVERY": "Out for Delivery",
+      "SHIPMENT_STATUS_DELIVERED": "Delivered",
+      "SHIPMENT_STATUS_FAILED": "Failed",
+      "SHIPMENT_STATUS_CANCELLED": "Cancelled",
+      "SHIPMENT_STATUS_RETURNED": "Returned"
+    }
   },
   "trackingAvailable": "Tracking available",
   "trackingNumber": "Tracking Number",

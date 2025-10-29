@@ -142,7 +142,20 @@
   "tracking": {
     "number": "Broj za praćenje",
     "provider": "Dostavna služba",
-    "title": "Praćenje"
+    "title": "Praćenje",
+    "deliveryStatus": "Status dostave",
+    "estimatedDelivery": "Očekivana dostava",
+    "actualDelivery": "Stvarna dostava",
+    "status": {
+      "SHIPMENT_STATUS_PENDING": "Na čekanju",
+      "SHIPMENT_STATUS_CONFIRMED": "Potvrđeno",
+      "SHIPMENT_STATUS_IN_TRANSIT": "U tranzitu",
+      "SHIPMENT_STATUS_OUT_FOR_DELIVERY": "Na dostavi",
+      "SHIPMENT_STATUS_DELIVERED": "Dostavljeno",
+      "SHIPMENT_STATUS_FAILED": "Neuspelo",
+      "SHIPMENT_STATUS_CANCELLED": "Otkazano",
+      "SHIPMENT_STATUS_RETURNED": "Vraćeno"
+    }
   },
   "trackingAvailable": "Praćenje dostupno",
   "trackingNumber": "Broj za praćenje",

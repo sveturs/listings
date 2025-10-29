@@ -165,6 +165,9 @@ func (s *OrderService) GetOrderByID(ctx context.Context, orderID int64, userID i
 		}
 	}
 
+	// Обогащаем актуальными данными tracking
+	_ = s.enrichOrderWithTracking(ctx, order) // Игнорируем ошибку
+
 	return order, nil
 }
 
@@ -256,6 +259,11 @@ func (s *OrderService) GetOrdersByUser(ctx context.Context, userID int, filter *
 		return nil, 0, fmt.Errorf("failed to get user orders: %w", err)
 	}
 
+	// Обогащаем каждый заказ tracking информацией
+	for i := range orders {
+		_ = s.enrichOrderWithTracking(ctx, &orders[i])
+	}
+
 	return orders, total, nil
 }
 
@@ -279,6 +287,11 @@ func (s *OrderService) GetOrdersByStorefront(ctx context.Context, storefrontID i
 	orders, total, err := s.orderRepo.List(ctx, *filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get storefront orders: %w", err)
+	}
+
+	// Обогащаем каждый заказ tracking информацией
+	for i := range orders {
+		_ = s.enrichOrderWithTracking(ctx, &orders[i])
 	}
 
 	return orders, total, nil
@@ -905,5 +918,48 @@ func (s *OrderService) createShipmentForOrder(ctx context.Context, order *models
 	}
 
 	s.logger.Info("Shipment created successfully (order_id: %d, tracking_number: %s, provider: %s)", order.ID, trackingNumber, provider)
+	return nil
+}
+
+// enrichOrderWithTracking обогащает order актуальными данными tracking из delivery service
+func (s *OrderService) enrichOrderWithTracking(ctx context.Context, order *models.StorefrontOrder) error {
+	// Проверяем наличие delivery client и tracking_number
+	if s.deliveryClient == nil || order.TrackingNumber == nil || *order.TrackingNumber == "" {
+		return nil // Нет tracking info - это ok
+	}
+
+	// Вызываем TrackShipment
+	trackReq := &deliveryv1.TrackShipmentRequest{
+		TrackingNumber: *order.TrackingNumber,
+	}
+
+	trackResp, err := s.deliveryClient.TrackShipment(ctx, trackReq)
+	if err != nil {
+		// Логируем, но НЕ фейлим весь GetOrder - graceful degradation
+		s.logger.Warn("Failed to fetch tracking info: %v (order_id: %d, tracking_number: %s)", err, order.ID, *order.TrackingNumber)
+		return nil
+	}
+
+	// Обогащаем order данными из delivery service
+	if trackResp.Shipment != nil {
+		// Конвертируем enum status в строку
+		if trackResp.Shipment.Status != deliveryv1.ShipmentStatus_SHIPMENT_STATUS_UNSPECIFIED {
+			statusStr := trackResp.Shipment.Status.String()
+			order.DeliveryStatus = &statusStr
+		}
+
+		if trackResp.Shipment.EstimatedDelivery != nil {
+			estDelivery := trackResp.Shipment.EstimatedDelivery.AsTime().Format(time.RFC3339)
+			order.EstimatedDelivery = &estDelivery
+		}
+
+		if trackResp.Shipment.ActualDelivery != nil {
+			actualDelivery := trackResp.Shipment.ActualDelivery.AsTime().Format(time.RFC3339)
+			order.ActualDelivery = &actualDelivery
+		}
+
+		s.logger.Info("Order enriched with tracking info (order_id: %d, delivery_status: %s)", order.ID, trackResp.Shipment.Status.String())
+	}
+
 	return nil
 }
