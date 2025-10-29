@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/shopspring/decimal"
@@ -179,6 +180,13 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 	return createdOrder, nil
 }
 
+// generateOrderNumberForOrder генерирует уникальный номер заказа
+// Дублируется из order_service_tx.go для независимости модулей
+func generateOrderNumberForOrder(userID int, storefrontID int) string {
+	timestamp := time.Now().Unix()
+	return fmt.Sprintf("ORD-%d-%d-%d", storefrontID, userID, timestamp)
+}
+
 // prepareOrderStruct подготавливает структуру заказа
 func (s *OrderService) prepareOrderStruct(req *models.CreateOrderRequest, userID int, storefront *models.Storefront) *models.StorefrontOrder {
 	// Формируем адрес забора из данных витрины
@@ -198,6 +206,7 @@ func (s *OrderService) prepareOrderStruct(req *models.CreateOrderRequest, userID
 		StorefrontID:    req.StorefrontID,
 		CustomerID:      userID,
 		UserID:          userID, // Для совместимости
+		OrderNumber:     generateOrderNumberForOrder(userID, req.StorefrontID),
 		Status:          models.OrderStatusPending,
 		Currency:        config.GetGlobalDefaultCurrency(),
 		ShippingMethod:  &req.ShippingMethod,
@@ -306,18 +315,19 @@ func (s *OrderService) lockProductForUpdate(ctx context.Context, tx *sqlx.Tx, pr
 func (s *OrderService) createOrderInTransaction(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) (*models.StorefrontOrder, error) {
 	query := `
 		INSERT INTO b2c_orders (
-			storefront_id, customer_id, subtotal_amount, shipping_amount, 
-			tax_amount, total_amount, commission_amount, seller_amount, 
+			storefront_id, customer_id, order_number, subtotal_amount, shipping_amount,
+			tax_amount, total_amount, commission_amount, seller_amount,
 			currency, status, escrow_days, shipping_address, billing_address,
 			shipping_method, customer_notes, payment_method, payment_status, metadata, pickup_address
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
 		) RETURNING id, created_at, updated_at`
 
 	var createdOrder models.StorefrontOrder
 	err := tx.QueryRowContext(ctx, query,
 		order.StorefrontID,
 		order.CustomerID,
+		order.OrderNumber,
 		order.SubtotalAmount,
 		order.ShippingAmount,
 		order.TaxAmount,
@@ -344,6 +354,7 @@ func (s *OrderService) createOrderInTransaction(ctx context.Context, tx *sqlx.Tx
 	createdOrder.StorefrontID = order.StorefrontID
 	createdOrder.CustomerID = order.CustomerID
 	createdOrder.UserID = order.UserID
+	createdOrder.OrderNumber = order.OrderNumber
 	createdOrder.Status = order.Status
 	createdOrder.Currency = order.Currency
 	createdOrder.ShippingMethod = order.ShippingMethod

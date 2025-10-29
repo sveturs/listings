@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/shopspring/decimal"
@@ -134,12 +135,19 @@ func (s *OrderServiceTx) getOrderItems(ctx context.Context, req *models.CreateOr
 	return items, nil
 }
 
+// generateOrderNumber генерирует уникальный номер заказа
+func generateOrderNumber(userID int, storefrontID int) string {
+	timestamp := time.Now().Unix()
+	return fmt.Sprintf("ORD-%d-%d-%d", storefrontID, userID, timestamp)
+}
+
 // prepareOrder подготавливает структуру заказа
 func (s *OrderServiceTx) prepareOrder(req *models.CreateOrderRequest, userID int, storefront *models.Storefront) *models.StorefrontOrder {
 	return &models.StorefrontOrder{
 		StorefrontID:    req.StorefrontID,
 		CustomerID:      userID,
 		UserID:          userID, // Для совместимости
+		OrderNumber:     generateOrderNumber(userID, req.StorefrontID),
 		Status:          models.OrderStatusPending,
 		Currency:        config.GetGlobalDefaultCurrency(),
 		ShippingMethod:  &req.ShippingMethod,
