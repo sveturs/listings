@@ -64,6 +64,8 @@ export default function UniversalDeliverySelector({
     setError(null);
 
     try {
+      // TODO: Migrate to deliveryService wrapper (task 1.2.2)
+      // Replace with: const response = await deliveryService.calculateRate(calculationRequest);
       const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/delivery/calculate-universal`,

@@ -87,6 +87,8 @@ export default function CartDeliveryCalculator({
           }
 
           try {
+            // TODO: Migrate to deliveryService wrapper (task 1.2.2)
+            // Replace with: const response = await deliveryService.getProductAttributes(item.product_id, item.product_type);
             const apiUrl = configManager.getApiUrl();
             const response = await fetch(
               `${apiUrl}/api/v1/products/${item.product_id}/delivery-attributes?type=${item.product_type}`
@@ -149,6 +151,8 @@ export default function CartDeliveryCalculator({
     }
 
     try {
+      // TODO: Migrate to deliveryService wrapper (task 1.2.2)
+      // Replace with: const response = await deliveryService.getCategoryDefaults(categoryId);
       const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/categories/${categoryId}/delivery-defaults`

@@ -114,6 +114,8 @@ export default function PostExpressDeliverySelector({
   const calculateDeliveryRates = async () => {
     setLoading(true);
     try {
+      // TODO: Migrate to deliveryService wrapper (task 1.2.2)
+      // This component will be DELETED in task 2.1.2 (PostExpress module removal)
       const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/postexpress/calculate-rate`,

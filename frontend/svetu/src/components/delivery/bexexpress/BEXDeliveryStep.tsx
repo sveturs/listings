@@ -191,6 +191,8 @@ export default function BEXDeliveryStep({
 
     setCalculatingRate(true);
     try {
+      // TODO: Migrate to deliveryService wrapper (task 1.2.2)
+      // This component will be DELETED in task 2.2.2 (BEX module removal)
       const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/bex/calculate-rate`, {
         method: 'POST',
