@@ -585,7 +585,9 @@ func (r *Repository) WithTransaction(ctx context.Context, fn func(*sqlx.Tx) erro
 
 	defer func() {
 		if p := recover(); p != nil {
-			_ = tx.Rollback()
+			if rbErr := tx.Rollback(); rbErr != nil {
+				r.logger.Error().Err(rbErr).Msg("failed to rollback transaction on panic")
+			}
 			panic(p)
 		}
 	}()
