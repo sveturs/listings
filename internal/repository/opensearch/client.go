@@ -149,6 +149,177 @@ func (c *Client) HealthCheck(ctx context.Context) error {
 	return nil
 }
 
+// SearchListings performs a full-text search on listings
+func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListingsQuery) ([]*domain.Listing, int64, error) {
+	// Build OpenSearch query
+	searchQuery := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must": []interface{}{
+					map[string]interface{}{
+						"multi_match": map[string]interface{}{
+							"query":  query.Query,
+							"fields": []string{"title^3", "description"},
+							"type":   "best_fields",
+						},
+					},
+				},
+				"filter": buildFilters(query),
+			},
+		},
+		"from": query.Offset,
+		"size": query.Limit,
+		"sort": []interface{}{
+			map[string]interface{}{"_score": "desc"},
+			map[string]interface{}{"created_at": "desc"},
+		},
+	}
+
+	body, err := json.Marshal(searchQuery)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to marshal search query: %w", err)
+	}
+
+	res, err := c.client.Search(
+		c.client.Search.WithContext(ctx),
+		c.client.Search.WithIndex(c.index),
+		c.client.Search.WithBody(bytes.NewReader(body)),
+	)
+
+	if err != nil {
+		c.logger.Error().Err(err).Msg("search query failed")
+		return nil, 0, fmt.Errorf("search query failed: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return nil, 0, fmt.Errorf("search query error: %s", res.Status())
+	}
+
+	// Parse response
+	var result map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return nil, 0, fmt.Errorf("failed to parse search response: %w", err)
+	}
+
+	hits := result["hits"].(map[string]interface{})
+	totalHits := int64(hits["total"].(map[string]interface{})["value"].(float64))
+
+	var listings []*domain.Listing
+	for _, hit := range hits["hits"].([]interface{}) {
+		source := hit.(map[string]interface{})["_source"].(map[string]interface{})
+
+		listing := &domain.Listing{
+			ID:             int64(source["id"].(float64)),
+			UUID:           source["uuid"].(string),
+			UserID:         int64(source["user_id"].(float64)),
+			Title:          source["title"].(string),
+			Price:          source["price"].(float64),
+			Currency:       source["currency"].(string),
+			CategoryID:     int64(source["category_id"].(float64)),
+			Status:         source["status"].(string),
+			Visibility:     source["visibility"].(string),
+			Quantity:       int32(source["quantity"].(float64)),
+			ViewsCount:     int32(source["views_count"].(float64)),
+			FavoritesCount: int32(source["favorites_count"].(float64)),
+		}
+
+		// Optional fields
+		if desc, ok := source["description"].(string); ok {
+			listing.Description = &desc
+		}
+		if sfID, ok := source["storefront_id"].(float64); ok {
+			id := int64(sfID)
+			listing.StorefrontID = &id
+		}
+		if sku, ok := source["sku"].(string); ok {
+			listing.SKU = &sku
+		}
+
+		listings = append(listings, listing)
+	}
+
+	c.logger.Debug().
+		Str("query", query.Query).
+		Int("results", len(listings)).
+		Int64("total", totalHits).
+		Msg("search completed")
+
+	return listings, totalHits, nil
+}
+
+// buildFilters constructs filter clauses for search query
+func buildFilters(query *domain.SearchListingsQuery) []interface{} {
+	filters := []interface{}{
+		// Only active, visible listings
+		map[string]interface{}{"term": map[string]interface{}{"status": "active"}},
+		map[string]interface{}{"term": map[string]interface{}{"visibility": "public"}},
+	}
+
+	if query.CategoryID != nil {
+		filters = append(filters, map[string]interface{}{
+			"term": map[string]interface{}{"category_id": *query.CategoryID},
+		})
+	}
+
+	if query.MinPrice != nil || query.MaxPrice != nil {
+		priceRange := map[string]interface{}{}
+		if query.MinPrice != nil {
+			priceRange["gte"] = *query.MinPrice
+		}
+		if query.MaxPrice != nil {
+			priceRange["lte"] = *query.MaxPrice
+		}
+		filters = append(filters, map[string]interface{}{
+			"range": map[string]interface{}{"price": priceRange},
+		})
+	}
+
+	return filters
+}
+
+// GetListingByID retrieves a single listing by ID from OpenSearch
+func (c *Client) GetListingByID(ctx context.Context, listingID int64) (*domain.Listing, error) {
+	res, err := c.client.Get(
+		c.index,
+		fmt.Sprintf("%d", listingID),
+		c.client.Get.WithContext(ctx),
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get listing: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 404 {
+		return nil, fmt.Errorf("listing not found")
+	}
+
+	if res.IsError() {
+		return nil, fmt.Errorf("OpenSearch get error: %s", res.Status())
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	source := result["_source"].(map[string]interface{})
+
+	listing := &domain.Listing{
+		ID:         int64(source["id"].(float64)),
+		UUID:       source["uuid"].(string),
+		UserID:     int64(source["user_id"].(float64)),
+		Title:      source["title"].(string),
+		Price:      source["price"].(float64),
+		Currency:   source["currency"].(string),
+		CategoryID: int64(source["category_id"].(float64)),
+		Status:     source["status"].(string),
+	}
+
+	return listing, nil
+}
+
 // Close closes the OpenSearch client (no-op for opensearch-go client)
 func (c *Client) Close() error {
 	// opensearch-go client doesn't require explicit closing

@@ -320,6 +320,56 @@ Main tables:
 
 See `migrations/000001_initial_schema.up.sql` for complete schema.
 
+## OpenSearch Integration
+
+The microservice uses OpenSearch for full-text search, faceted filtering, and geo-location queries.
+
+### Quick Setup
+
+1. **Create index**:
+   ```bash
+   python3 scripts/create_opensearch_index.py
+   ```
+
+2. **Reindex data**:
+   ```bash
+   python3 scripts/reindex_listings.py --target-password <password>
+   ```
+
+3. **Validate**:
+   ```bash
+   python3 scripts/validate_opensearch.py --target-password <password>
+   ```
+
+### Configuration
+
+```env
+SVETULISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
+SVETULISTINGS_OPENSEARCH_USERNAME=admin
+SVETULISTINGS_OPENSEARCH_PASSWORD=admin
+SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
+```
+
+**Note:** Change index name from `marketplace_listings` (monolith) to `listings_microservice` (microservice).
+
+### Features
+
+- **Full-text search** on title and description (Russian stopwords)
+- **Autocomplete** support (edge n-grams)
+- **Price range filtering** (scaled_float)
+- **Category and status faceting**
+- **Geo-location queries** (geo_point)
+- **Nested objects** for images and attributes
+
+### Documentation
+
+See [OPENSEARCH_SETUP.md](./OPENSEARCH_SETUP.md) for comprehensive guide including:
+- Index schema details
+- Reindexing procedures
+- Search API examples
+- Troubleshooting
+- Performance tuning
+
 ## Monitoring
 
 ### Prometheus Metrics

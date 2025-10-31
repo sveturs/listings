@@ -1,0 +1,142 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "listing_analyzer": {
+          "type": "standard",
+          "stopwords": "_russian_"
+        },
+        "autocomplete_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "autocomplete_filter"]
+        }
+      },
+      "filter": {
+        "autocomplete_filter": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 20
+        }
+      }
+    },
+    "index": {
+      "max_result_window": 10000,
+      "refresh_interval": "5s"
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long"
+      },
+      "uuid": {
+        "type": "keyword"
+      },
+      "user_id": {
+        "type": "long"
+      },
+      "storefront_id": {
+        "type": "long"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "listing_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          },
+          "autocomplete": {
+            "type": "text",
+            "analyzer": "autocomplete_analyzer"
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "listing_analyzer"
+      },
+      "price": {
+        "type": "scaled_float",
+        "scaling_factor": 100
+      },
+      "currency": {
+        "type": "keyword"
+      },
+      "category_id": {
+        "type": "long"
+      },
+      "status": {
+        "type": "keyword"
+      },
+      "visibility": {
+        "type": "keyword"
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "sku": {
+        "type": "keyword"
+      },
+      "views_count": {
+        "type": "integer"
+      },
+      "favorites_count": {
+        "type": "integer"
+      },
+      "location": {
+        "type": "geo_point"
+      },
+      "country": {
+        "type": "keyword"
+      },
+      "city": {
+        "type": "keyword"
+      },
+      "postal_code": {
+        "type": "keyword"
+      },
+      "address_line1": {
+        "type": "text"
+      },
+      "address_line2": {
+        "type": "text"
+      },
+      "images": {
+        "type": "nested",
+        "properties": {
+          "id": {"type": "long"},
+          "url": {"type": "keyword"},
+          "thumbnail_url": {"type": "keyword"},
+          "display_order": {"type": "integer"},
+          "is_primary": {"type": "boolean"}
+        }
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "attributes": {
+        "type": "nested",
+        "properties": {
+          "key": {"type": "keyword"},
+          "value": {"type": "text"}
+        }
+      },
+      "created_at": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "updated_at": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "published_at": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      }
+    }
+  }
+}
