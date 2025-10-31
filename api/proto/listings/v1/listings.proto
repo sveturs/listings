@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package listings.v1;
+
+option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingsv1";
+
+// ListingsService provides RPC methods for managing marketplace listings
+service ListingsService {
+  // GetListing retrieves a single listing by ID
+  rpc GetListing(GetListingRequest) returns (GetListingResponse);
+
+  // CreateListing creates a new listing
+  rpc CreateListing(CreateListingRequest) returns (CreateListingResponse);
+
+  // UpdateListing updates an existing listing
+  rpc UpdateListing(UpdateListingRequest) returns (UpdateListingResponse);
+
+  // DeleteListing soft-deletes a listing
+  rpc DeleteListing(DeleteListingRequest) returns (DeleteListingResponse);
+
+  // SearchListings performs full-text search on listings
+  rpc SearchListings(SearchListingsRequest) returns (SearchListingsResponse);
+
+  // ListListings returns a paginated list of listings
+  rpc ListListings(ListListingsRequest) returns (ListListingsResponse);
+}
+
+// Listing represents a marketplace listing
+message Listing {
+  int64 id = 1;
+  string uuid = 2;
+  int64 user_id = 3;
+  int64 storefront_id = 4;
+  string title = 5;
+  string description = 6;
+  double price = 7;
+  string currency = 8;
+  int64 category_id = 9;
+  string status = 10;
+  string visibility = 11;
+  int32 quantity = 12;
+  string sku = 13;
+  int32 views_count = 14;
+  int32 favorites_count = 15;
+  string created_at = 16;
+  string updated_at = 17;
+  string published_at = 18;
+}
+
+// GetListing messages
+message GetListingRequest {
+  int64 id = 1;
+}
+
+message GetListingResponse {
+  Listing listing = 1;
+}
+
+// CreateListing messages
+message CreateListingRequest {
+  int64 user_id = 1;
+  int64 storefront_id = 2;
+  string title = 3;
+  string description = 4;
+  double price = 5;
+  string currency = 6;
+  int64 category_id = 7;
+  int32 quantity = 8;
+  string sku = 9;
+}
+
+message CreateListingResponse {
+  Listing listing = 1;
+}
+
+// UpdateListing messages
+message UpdateListingRequest {
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  double price = 4;
+  int32 quantity = 5;
+  string status = 6;
+}
+
+message UpdateListingResponse {
+  Listing listing = 1;
+}
+
+// DeleteListing messages
+message DeleteListingRequest {
+  int64 id = 1;
+}
+
+message DeleteListingResponse {
+  bool success = 1;
+}
+
+// SearchListings messages
+message SearchListingsRequest {
+  string query = 1;
+  int64 category_id = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message SearchListingsResponse {
+  repeated Listing listings = 1;
+  int32 total = 2;
+}
+
+// ListListings messages
+message ListListingsRequest {
+  int64 user_id = 1;
+  int64 storefront_id = 2;
+  string status = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message ListListingsResponse {
+  repeated Listing listings = 1;
+  int32 total = 2;
+}
