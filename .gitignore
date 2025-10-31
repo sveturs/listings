@@ -21,6 +21,7 @@ go.work
 .env
 .env.local
 .env.*.local
+.env.prod
 
 # IDE specific files
 .idea/

@@ -1,0 +1,46 @@
+[Unit]
+Description=Listings Microservice (dev)
+Documentation=https://github.com/sveturs/listings
+After=network-online.target postgresql.service redis.service
+Wants=network-online.target
+Requires=postgresql.service redis.service
+
+[Service]
+Type=simple
+User=svetu
+Group=svetu
+WorkingDirectory=/opt/listings-dev
+
+# Environment file
+EnvironmentFile=/opt/listings-dev/.env
+
+# Binary location
+ExecStart=/opt/listings-dev/bin/listings-service
+
+# Restart policy
+Restart=on-failure
+RestartSec=10s
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/listings-dev
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=listings-service
+
+# Graceful shutdown (30s timeout)
+TimeoutStopSec=30s
+KillMode=mixed
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
