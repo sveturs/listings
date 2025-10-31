@@ -58,8 +58,12 @@ clean: ## Clean build artifacts
 
 ## Testing commands
 
-test: ## Run all tests
-	@echo "$(GREEN)Running tests...$(NC)"
+test: ## Run unit tests (excludes integration)
+	@echo "$(GREEN)Running unit tests...$(NC)"
+	@$(GO) test -v -race -cover -short ./...
+
+test-all: ## Run all tests (unit + integration)
+	@echo "$(GREEN)Running all tests (unit + integration)...$(NC)"
 	@$(GO) test -v -race -cover ./...
 
 test-coverage: ## Run tests with coverage report
@@ -67,21 +71,70 @@ test-coverage: ## Run tests with coverage report
 	@$(GO) test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 	@$(GO) tool cover -html=coverage.txt -o coverage.html
 	@echo "$(GREEN)Coverage report generated: coverage.html$(NC)"
+	@echo "$(YELLOW)Coverage summary:$(NC)"
+	@$(GO) tool cover -func=coverage.txt | tail -1
+
+test-coverage-check: test-coverage ## Check if coverage meets threshold (70%)
+	@echo "$(GREEN)Checking coverage threshold...$(NC)"
+	@COVERAGE=$$($(GO) tool cover -func=coverage.txt | grep total | awk '{print $$3}' | sed 's/%//'); \
+	if [ "$$(echo "$$COVERAGE < 70" | bc -l)" -eq 1 ]; then \
+		echo "$(RED)Coverage $$COVERAGE% is below 70% threshold$(NC)"; \
+		exit 1; \
+	else \
+		echo "$(GREEN)Coverage $$COVERAGE% meets threshold$(NC)"; \
+	fi
+
+test-unit: ## Run only unit tests
+	@echo "$(GREEN)Running unit tests...$(NC)"
+	@$(GO) test -v -race -cover -short ./internal/...
 
 test-integration: ## Run integration tests
 	@echo "$(GREEN)Running integration tests...$(NC)"
-	@$(GO) test -v -tags=integration ./...
+	@$(GO) test -v -tags=integration ./tests/integration/...
+
+test-e2e: ## Run end-to-end tests
+	@echo "$(GREEN)Running E2E tests...$(NC)"
+	@$(GO) test -v ./tests/e2e/...
 
 bench: ## Run benchmarks
 	@echo "$(GREEN)Running benchmarks...$(NC)"
-	@$(GO) test -bench=. -benchmem ./...
+	@$(GO) test -bench=. -benchmem ./tests/performance/...
+
+bench-cpu: ## Run benchmarks with CPU profiling
+	@echo "$(GREEN)Running benchmarks with CPU profiling...$(NC)"
+	@$(GO) test -bench=. -benchmem -cpuprofile=cpu.prof ./tests/performance/...
+	@echo "$(YELLOW)View profile: go tool pprof cpu.prof$(NC)"
+
+bench-mem: ## Run benchmarks with memory profiling
+	@echo "$(GREEN)Running benchmarks with memory profiling...$(NC)"
+	@$(GO) test -bench=. -benchmem -memprofile=mem.prof ./tests/performance/...
+	@echo "$(YELLOW)View profile: go tool pprof mem.prof$(NC)"
+
+test-verbose: ## Run tests with verbose output
+	@echo "$(GREEN)Running tests (verbose)...$(NC)"
+	@$(GO) test -v -race -cover ./... 2>&1 | tee test-output.log
+
+test-watch: ## Run tests in watch mode (requires entr)
+	@echo "$(GREEN)Running tests in watch mode...$(NC)"
+	@which entr > /dev/null || (echo "$(RED)entr not installed$(NC)" && exit 1)
+	@find . -name '*.go' | entr -c make test
+
+generate-mocks: ## Generate mocks using mockgen
+	@echo "$(GREEN)Generating mocks...$(NC)"
+	@which mockgen > /dev/null || go install go.uber.org/mock/mockgen@latest
+	@echo "$(YELLOW)Note: Mock generation will be implemented in Sprint 4.2$(NC)"
 
 ## Code quality commands
 
 lint: ## Run linter (golangci-lint)
 	@echo "$(GREEN)Running linter...$(NC)"
-	@which golangci-lint > /dev/null || (echo "$(RED)golangci-lint not installed. Run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin$(NC)" && exit 1)
+	@which golangci-lint > /dev/null || (echo "$(RED)golangci-lint not installed. Run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin latest$(NC)" && exit 1)
 	@golangci-lint run --timeout=5m
+
+lint-fix: ## Run linter with auto-fix
+	@echo "$(GREEN)Running linter with auto-fix...$(NC)"
+	@which golangci-lint > /dev/null || (echo "$(RED)golangci-lint not installed. Run: make lint$(NC)" && exit 1)
+	@golangci-lint run --fix --timeout=5m
 
 format: ## Format code with gofmt and goimports
 	@echo "$(GREEN)Formatting code...$(NC)"

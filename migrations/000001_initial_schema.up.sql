@@ -10,17 +10,17 @@ CREATE TABLE IF NOT EXISTS listings (
     uuid UUID NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
 
     -- User & ownership
-    user_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL CHECK (user_id > 0),
     storefront_id BIGINT,
 
     -- Core fields
-    title VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL CHECK (LENGTH(TRIM(title)) >= 3),
     description TEXT,
-    price DECIMAL(15,2) NOT NULL CHECK (price >= 0),
+    price DECIMAL(15,2) NOT NULL CHECK (price > 0),
     currency VARCHAR(3) NOT NULL DEFAULT 'RSD',
 
     -- Categorization
-    category_id BIGINT NOT NULL,
+    category_id BIGINT NOT NULL CHECK (category_id > 0),
 
     -- Status & visibility
     status VARCHAR(50) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'inactive', 'sold', 'archived')),

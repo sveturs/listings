@@ -24,8 +24,8 @@ type Config struct {
 
 // AppConfig contains general application settings
 type AppConfig struct {
-	Env      string `envconfig:"SVETULISTINGS_ENV" default:"development"`
-	LogLevel string `envconfig:"SVETULISTINGS_LOG_LEVEL" default:"info"`
+	Env       string `envconfig:"SVETULISTINGS_ENV" default:"development"`
+	LogLevel  string `envconfig:"SVETULISTINGS_LOG_LEVEL" default:"info"`
 	LogFormat string `envconfig:"SVETULISTINGS_LOG_FORMAT" default:"json"`
 }
 
@@ -116,12 +116,12 @@ type WorkerConfig struct {
 
 // FeatureFlags contains feature toggle settings
 type FeatureFlags struct {
-	AsyncIndexing      bool `envconfig:"SVETULISTINGS_FEATURE_ASYNC_INDEXING" default:"true"`
-	ImageOptimization  bool `envconfig:"SVETULISTINGS_FEATURE_IMAGE_OPTIMIZATION" default:"true"`
-	CacheEnabled       bool `envconfig:"SVETULISTINGS_FEATURE_CACHE_ENABLED" default:"true"`
-	RateLimitEnabled   bool `envconfig:"SVETULISTINGS_RATE_LIMIT_ENABLED" default:"true"`
-	RateLimitRPS       int  `envconfig:"SVETULISTINGS_RATE_LIMIT_RPS" default:"100"`
-	RateLimitBurst     int  `envconfig:"SVETULISTINGS_RATE_LIMIT_BURST" default:"200"`
+	AsyncIndexing     bool `envconfig:"SVETULISTINGS_FEATURE_ASYNC_INDEXING" default:"true"`
+	ImageOptimization bool `envconfig:"SVETULISTINGS_FEATURE_IMAGE_OPTIMIZATION" default:"true"`
+	CacheEnabled      bool `envconfig:"SVETULISTINGS_FEATURE_CACHE_ENABLED" default:"true"`
+	RateLimitEnabled  bool `envconfig:"SVETULISTINGS_RATE_LIMIT_ENABLED" default:"true"`
+	RateLimitRPS      int  `envconfig:"SVETULISTINGS_RATE_LIMIT_RPS" default:"100"`
+	RateLimitBurst    int  `envconfig:"SVETULISTINGS_RATE_LIMIT_BURST" default:"200"`
 }
 
 // TracingConfig contains tracing and monitoring settings
