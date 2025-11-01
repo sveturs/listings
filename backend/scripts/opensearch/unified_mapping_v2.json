@@ -1,0 +1,267 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "max_result_window": 10000,
+    "analysis": {
+      "analyzer": {
+        "default_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding", "word_delimiter"]
+        },
+        "serbian_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        },
+        "russian_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "russian_stop", "russian_stemmer"]
+        },
+        "english_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "english_stop", "english_stemmer"]
+        }
+      },
+      "filter": {
+        "russian_stop": {
+          "type": "stop",
+          "stopwords": "_russian_"
+        },
+        "russian_stemmer": {
+          "type": "stemmer",
+          "language": "russian"
+        },
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        },
+        "english_stemmer": {
+          "type": "stemmer",
+          "language": "english"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "source_type": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "default_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          },
+          "serbian": {
+            "type": "text",
+            "analyzer": "serbian_analyzer"
+          },
+          "russian": {
+            "type": "text",
+            "analyzer": "russian_analyzer"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "default_analyzer",
+        "fields": {
+          "serbian": {
+            "type": "text",
+            "analyzer": "serbian_analyzer"
+          },
+          "russian": {
+            "type": "text",
+            "analyzer": "russian_analyzer"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          }
+        }
+      },
+      "price": {
+        "type": "float"
+      },
+      "currency": {
+        "type": "keyword"
+      },
+      "status": {
+        "type": "keyword"
+      },
+      "visibility": {
+        "type": "keyword"
+      },
+      "category_id": {
+        "type": "integer"
+      },
+      "category_name": {
+        "type": "text",
+        "analyzer": "default_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "category_path_ids": {
+        "type": "integer"
+      },
+      "user_id": {
+        "type": "integer"
+      },
+      "seller_type": {
+        "type": "keyword"
+      },
+      "storefront_id": {
+        "type": "integer"
+      },
+      "storefront_name": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "location": {
+        "type": "geo_point"
+      },
+      "city": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "country": {
+        "type": "keyword"
+      },
+      "images": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "keyword"
+          },
+          "thumbnail_url": {
+            "type": "keyword"
+          },
+          "is_main": {
+            "type": "boolean"
+          },
+          "display_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "has_images": {
+        "type": "boolean"
+      },
+      "image_count": {
+        "type": "integer"
+      },
+      "primary_image_url": {
+        "type": "keyword"
+      },
+      "thumbnail_url": {
+        "type": "keyword"
+      },
+      "attributes": {
+        "type": "nested",
+        "properties": {
+          "attribute_id": {
+            "type": "integer"
+          },
+          "attribute_name": {
+            "type": "keyword"
+          },
+          "attribute_type": {
+            "type": "keyword"
+          },
+          "display_name": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          },
+          "value": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          },
+          "display_value": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword"
+              }
+            }
+          },
+          "numeric_value": {
+            "type": "float"
+          },
+          "boolean_value": {
+            "type": "boolean"
+          }
+        }
+      },
+      "condition": {
+        "type": "keyword"
+      },
+      "negotiable": {
+        "type": "boolean"
+      },
+      "sku": {
+        "type": "keyword"
+      },
+      "stock_quantity": {
+        "type": "integer"
+      },
+      "stock_status": {
+        "type": "keyword"
+      },
+      "views_count": {
+        "type": "integer"
+      },
+      "original_language": {
+        "type": "keyword"
+      },
+      "supported_languages": {
+        "type": "keyword"
+      },
+      "created_at": {
+        "type": "date"
+      },
+      "updated_at": {
+        "type": "date"
+      },
+      "translations": {
+        "type": "object",
+        "enabled": false
+      }
+    }
+  }
+}

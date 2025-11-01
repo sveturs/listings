@@ -1,0 +1,341 @@
+name: Backend Deploy with Traffic Router
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-traffic-router-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      traffic_percent:
+        description: 'Traffic percentage to microservice (0-100)'
+        required: true
+        default: '0'
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip test execution (use with caution)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  # Job 1: Run all tests
+  test:
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_tests }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: backend/go.sum
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          go mod download
+
+      - name: Run unit tests
+        run: |
+          cd backend
+          make test
+
+      - name: Run integration tests
+        run: |
+          cd backend
+          make test-integration
+        env:
+          POSTGRES_DSN: postgres://postgres:password@localhost:5432/test_db?sslmode=disable
+          REDIS_URL: redis://localhost:6379
+
+      - name: Run E2E tests
+        run: |
+          cd backend
+          make test-e2e
+        env:
+          POSTGRES_DSN: postgres://postgres:password@localhost:5432/test_db?sslmode=disable
+
+  # Job 2: Linting and code quality
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: backend/go.sum
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: backend
+          args: --timeout=5m
+
+      - name: Run gofmt check
+        run: |
+          cd backend
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Code is not formatted. Run 'make format' locally."
+            gofmt -s -l .
+            exit 1
+          fi
+
+  # Job 3: Build Docker image
+  build:
+    needs: [test, lint]
+    if: ${{ !cancelled() && (success() || inputs.skip_tests) }}
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.HARBOR_REGISTRY }}/svetu/backend
+          tags: |
+            type=sha,prefix={{branch}}-
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=${{ secrets.HARBOR_REGISTRY }}/svetu/backend:buildcache
+          cache-to: type=registry,ref=${{ secrets.HARBOR_REGISTRY }}/svetu/backend:buildcache,mode=max
+          build-args: |
+            VERSION=${{ github.sha }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp }}
+
+  # Job 4: Deploy to staging
+  deploy-staging:
+    needs: build
+    if: ${{ github.event.inputs.environment == 'staging' || github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add host key to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy deployment scripts to server
+        run: |
+          scp scripts/deploy-with-traffic-control.sh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/tmp/
+          scp scripts/pre-deploy-check.sh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:/tmp/
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "chmod +x /tmp/deploy-with-traffic-control.sh /tmp/pre-deploy-check.sh"
+
+      - name: Run pre-deployment checks
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "cd /opt/svetu-staging && /tmp/pre-deploy-check.sh"
+
+      - name: Deploy to staging
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "\
+            cd /opt/svetu-staging && \
+            export TRAFFIC_ROUTER_ENABLED=true && \
+            export TRAFFIC_ROUTER_PERCENT=${{ github.event.inputs.traffic_percent || 0 }} && \
+            export MICROSERVICE_TIMEOUT=500ms && \
+            export CIRCUIT_BREAKER_ENABLED=true && \
+            docker-compose pull backend && \
+            docker-compose up -d backend"
+
+      - name: Wait for service to be ready
+        run: |
+          echo "Waiting for backend to be ready..."
+          sleep 10
+
+      - name: Health check
+        run: |
+          for i in {1..30}; do
+            if curl -f -s -o /dev/null -w "%{http_code}" https://staging.svetu.rs/health | grep -q "200"; then
+              echo "✅ Health check passed"
+              exit 0
+            fi
+            echo "Attempt $i/30 failed, retrying in 2 seconds..."
+            sleep 2
+          done
+          echo "❌ Health check failed after 30 attempts"
+          exit 1
+
+      - name: Run smoke tests
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "cd /opt/svetu-staging/backend/tests/e2e && \
+            BACKEND_URL=https://staging.svetu.rs go test -v -tags=smoke -timeout=5m"
+
+      - name: Verify deployment version
+        run: |
+          DEPLOYED_VERSION=$(curl -s https://staging.svetu.rs/ | grep -oP 'Svetu API \K[0-9.]+')
+          echo "Deployed version: $DEPLOYED_VERSION"
+
+  # Job 5: Canary monitoring and auto-rollback
+  canary-monitoring:
+    needs: deploy-staging
+    if: ${{ github.event.inputs.traffic_percent > 0 }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add host key to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Monitor canary metrics (5 minutes)
+        id: monitor
+        run: |
+          echo "📊 Monitoring canary deployment for 5 minutes..."
+          PROMETHEUS_URL="${{ secrets.PROMETHEUS_URL }}"
+
+          for i in {1..60}; do
+            echo "Check $i/60..."
+
+            # Query error rate from traffic router
+            ERROR_RATE=$(curl -s "${PROMETHEUS_URL}/api/v1/query?query=rate(traffic_router_errors_total[1m])" | jq -r '.data.result[0].value[1] // "0"')
+
+            # Query response time p99
+            RESPONSE_TIME_P99=$(curl -s "${PROMETHEUS_URL}/api/v1/query?query=histogram_quantile(0.99, rate(traffic_router_request_duration_seconds_bucket[1m]))" | jq -r '.data.result[0].value[1] // "0"')
+
+            # Query microservice availability
+            MICROSERVICE_AVAILABILITY=$(curl -s "${PROMETHEUS_URL}/api/v1/query?query=up{job=\"marketplace-microservice\"}" | jq -r '.data.result[0].value[1] // "0"')
+
+            echo "Error rate: $ERROR_RATE"
+            echo "Response time P99: ${RESPONSE_TIME_P99}s"
+            echo "Microservice availability: $MICROSERVICE_AVAILABILITY"
+
+            # Check if error rate is too high (> 1%)
+            if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
+              echo "🔴 Error rate too high: $ERROR_RATE (threshold: 0.01)"
+              echo "rollback_needed=true" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+
+            # Check if response time is too slow (> 2s)
+            if (( $(echo "$RESPONSE_TIME_P99 > 2.0" | bc -l) )); then
+              echo "🔴 Response time too slow: ${RESPONSE_TIME_P99}s (threshold: 2.0s)"
+              echo "rollback_needed=true" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+
+            # Check if microservice is down
+            if (( $(echo "$MICROSERVICE_AVAILABILITY < 1" | bc -l) )); then
+              echo "🔴 Microservice is down"
+              echo "rollback_needed=true" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+          echo "✅ Canary monitoring completed successfully"
+          echo "rollback_needed=false" >> $GITHUB_OUTPUT
+
+      - name: Auto rollback on failure
+        if: ${{ failure() || steps.monitor.outputs.rollback_needed == 'true' }}
+        run: |
+          echo "🔴 Auto-rolling back deployment due to high error rate or poor performance"
+
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "\
+            cd /opt/svetu-staging && \
+            export TRAFFIC_ROUTER_PERCENT=0 && \
+            docker-compose restart backend"
+
+          echo "✅ Rollback completed - all traffic routed to monolith"
+
+      - name: Post monitoring results
+        if: always()
+        run: |
+          if [ "${{ steps.monitor.outputs.rollback_needed }}" == "true" ]; then
+            echo "❌ Canary deployment failed - rolled back to monolith"
+          else
+            echo "✅ Canary deployment successful - ${{ github.event.inputs.traffic_percent }}% traffic to microservice"
+          fi
+
+  # Job 6: Production deployment (manual approval required)
+  deploy-production:
+    needs: [build, canary-monitoring]
+    if: ${{ github.event.inputs.environment == 'production' && success() }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+
+      - name: Add host key to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.PROD_SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to production
+        run: |
+          ssh ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SERVER_HOST }} "\
+            cd /opt/svetu-prod && \
+            export TRAFFIC_ROUTER_ENABLED=true && \
+            export TRAFFIC_ROUTER_PERCENT=${{ github.event.inputs.traffic_percent }} && \
+            docker-compose pull backend && \
+            docker-compose up -d backend"
+
+      - name: Verify production deployment
+        run: |
+          for i in {1..30}; do
+            if curl -f -s -o /dev/null -w "%{http_code}" https://svetu.rs/health | grep -q "200"; then
+              echo "✅ Production health check passed"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "❌ Production health check failed"
+          exit 1
+
+      - name: Notification
+        if: always()
+        run: |
+          echo "🚀 Production deployment ${{ job.status }}"
+          echo "Traffic to microservice: ${{ github.event.inputs.traffic_percent }}%"

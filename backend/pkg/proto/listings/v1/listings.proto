@@ -1,0 +1,180 @@
+syntax = "proto3";
+
+package listings.v1;
+
+option go_package = "github.com/sveturs/svetu/backend/pkg/proto/listings/v1;listingsv1";
+
+// ListingsService provides RPC methods for managing marketplace listings
+service ListingsService {
+  // GetListing retrieves a single listing by ID
+  rpc GetListing(GetListingRequest) returns (GetListingResponse);
+
+  // CreateListing creates a new listing
+  rpc CreateListing(CreateListingRequest) returns (CreateListingResponse);
+
+  // UpdateListing updates an existing listing
+  rpc UpdateListing(UpdateListingRequest) returns (UpdateListingResponse);
+
+  // DeleteListing soft-deletes a listing
+  rpc DeleteListing(DeleteListingRequest) returns (DeleteListingResponse);
+
+  // SearchListings performs full-text search on listings
+  rpc SearchListings(SearchListingsRequest) returns (SearchListingsResponse);
+
+  // ListListings returns a paginated list of listings
+  rpc ListListings(ListListingsRequest) returns (ListListingsResponse);
+}
+
+// Listing represents a marketplace listing
+message Listing {
+  int64 id = 1;
+  string uuid = 2;
+  int64 user_id = 3;
+  optional int64 storefront_id = 4;
+  string title = 5;
+  optional string description = 6;
+  double price = 7;
+  string currency = 8;
+  int64 category_id = 9;
+  string status = 10;
+  string visibility = 11;
+  int32 quantity = 12;
+  optional string sku = 13;
+  int32 views_count = 14;
+  int32 favorites_count = 15;
+  string created_at = 16;
+  string updated_at = 17;
+  optional string published_at = 18;
+  optional string deleted_at = 19;
+  bool is_deleted = 20;
+
+  // Relations
+  repeated ListingImage images = 21;
+  repeated ListingAttribute attributes = 22;
+  repeated string tags = 23;
+  optional ListingLocation location = 24;
+}
+
+// ListingImage represents an image associated with a listing
+message ListingImage {
+  int64 id = 1;
+  int64 listing_id = 2;
+  string url = 3;
+  optional string storage_path = 4;
+  optional string thumbnail_url = 5;
+  int32 display_order = 6;
+  bool is_primary = 7;
+  optional int32 width = 8;
+  optional int32 height = 9;
+  optional int64 file_size = 10;
+  optional string mime_type = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}
+
+// ListingAttribute represents flexible key-value attributes
+message ListingAttribute {
+  int64 id = 1;
+  int64 listing_id = 2;
+  string attribute_key = 3;
+  string attribute_value = 4;
+  string created_at = 5;
+}
+
+// ListingLocation represents geographic location
+message ListingLocation {
+  int64 id = 1;
+  int64 listing_id = 2;
+  optional string country = 3;
+  optional string city = 4;
+  optional string postal_code = 5;
+  optional string address_line1 = 6;
+  optional string address_line2 = 7;
+  optional double latitude = 8;
+  optional double longitude = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+// GetListing messages
+message GetListingRequest {
+  int64 id = 1;
+}
+
+message GetListingResponse {
+  Listing listing = 1;
+}
+
+// CreateListing messages
+message CreateListingRequest {
+  int64 user_id = 1;
+  optional int64 storefront_id = 2;
+  string title = 3;
+  optional string description = 4;
+  double price = 5;
+  string currency = 6;
+  int64 category_id = 7;
+  int32 quantity = 8;
+  optional string sku = 9;
+}
+
+message CreateListingResponse {
+  Listing listing = 1;
+}
+
+// UpdateListing messages
+message UpdateListingRequest {
+  int64 id = 1;
+  int64 user_id = 2; // Required for ownership check
+  optional string title = 3;
+  optional string description = 4;
+  optional double price = 5;
+  optional int32 quantity = 6;
+  optional string status = 7;
+}
+
+message UpdateListingResponse {
+  Listing listing = 1;
+}
+
+// DeleteListing messages
+message DeleteListingRequest {
+  int64 id = 1;
+  int64 user_id = 2; // Required for ownership check
+}
+
+message DeleteListingResponse {
+  bool success = 1;
+}
+
+// SearchListings messages
+message SearchListingsRequest {
+  string query = 1;
+  optional int64 category_id = 2;
+  optional double min_price = 3;
+  optional double max_price = 4;
+  int32 limit = 5;
+  int32 offset = 6;
+}
+
+message SearchListingsResponse {
+  repeated Listing listings = 1;
+  int32 total = 2;
+}
+
+// ListListings messages
+message ListListingsRequest {
+  optional int64 user_id = 1;
+  optional int64 storefront_id = 2;
+  optional int64 category_id = 3;
+  optional string status = 4;
+  optional double min_price = 5;
+  optional double max_price = 6;
+  int32 limit = 7;
+  int32 offset = 8;
+}
+
+message ListListingsResponse {
+  repeated Listing listings = 1;
+  int32 total = 2;
+}

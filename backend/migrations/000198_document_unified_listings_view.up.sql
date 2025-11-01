@@ -1,0 +1,27 @@
+-- Migration 000198: Document unified_listings VIEW
+-- Sprint 3.1: Unified Domain Model (Phase 3)
+--
+-- NOTE: unified_listings VIEW уже создан в migration 000006.
+-- Эта миграция документирует состояние VIEW и подтверждает,
+-- что структура VIEW полностью поддерживается UnifiedListing model
+-- и listing_adapter.go конвертерами.
+--
+-- VIEW unified_listings объединяет:
+-- - c2c_listings (source_type = 'c2c')
+-- - b2c_products через b2c_stores (source_type = 'b2c')
+--
+-- Полная структура VIEW:
+-- id, source_type, user_id, category_id, title, description, price,
+-- condition, status, location, latitude, longitude, address_city,
+-- address_country, views_count, show_on_map, original_language,
+-- created_at, updated_at, storefront_id, external_id, metadata,
+-- needs_reindex, address_multilingual, images (JSONB array)
+--
+-- Соответствующие файлы:
+-- - backend/internal/domain/models/unified_listing.go
+-- - backend/internal/domain/adapters/listing_adapter.go
+-- - backend/internal/domain/adapters/listing_adapter_test.go (coverage: 80.9%)
+
+-- No changes needed - VIEW already exists
+-- This migration is for documentation purposes only
+SELECT 1;

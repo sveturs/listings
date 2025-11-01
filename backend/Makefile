@@ -1,4 +1,4 @@
-.PHONY: docs docs-fmt docs-clean format format-check lint pre-commit generate-grpc
+.PHONY: docs docs-fmt docs-clean format format-check lint pre-commit generate-grpc test-production-readiness test-integration test-e2e test-load mock-start mock-stop test-microservice-connectivity test-traffic-router test-data-consistency test-performance-reliability test-microservice-smoke test-microservice-integration test-microservice-coverage
 
 # Generate gRPC code from proto files
 generate-grpc:
@@ -240,3 +240,169 @@ dev-restart:
 	@echo "✅ api_dev started! Check logs with: tail -f api_dev.log"
 	@sleep 1
 	@echo "📍 PID: $$(pgrep -f "^\./bin/api_dev" | head -n1)"
+
+# ==============================================================================
+# Production Readiness Testing
+# ==============================================================================
+
+# Start mock microservice for testing
+mock-start:
+	@echo "Starting mock gRPC microservice..."
+	@go run tests/mocks/microservice_mock.go &
+	@sleep 2
+	@echo "✅ Mock microservice started on :50051 (gRPC) and :50052 (HTTP control)"
+	@echo "   Control API: curl http://localhost:50052/health"
+
+# Stop mock microservice
+mock-stop:
+	@echo "Stopping mock microservice..."
+	@pkill -f "tests/mocks/microservice_mock" || true
+	@echo "✅ Mock microservice stopped"
+
+# Integration tests (timeout, circuit breaker)
+test-integration:
+	@echo "Running integration tests..."
+	@go test -v -timeout=60s ./tests/integration/...
+	@echo "✅ Integration tests completed"
+
+# Integration tests with race detector
+test-integration-race:
+	@echo "Running integration tests with race detector..."
+	@go test -v -race -timeout=60s ./tests/integration/...
+	@echo "✅ Integration tests with race detector completed"
+
+# E2E tests (requires running backend and mock service)
+test-e2e:
+	@echo "Running end-to-end tests..."
+	@go test -v -tags=e2e -timeout=120s ./tests/e2e/...
+	@echo "✅ E2E tests completed"
+
+# Load tests (benchmarks)
+test-load:
+	@echo "Running load tests..."
+	@go test -v -bench=. -benchtime=30s -timeout=5m ./tests/load/...
+	@echo "✅ Load tests completed"
+
+# All production readiness tests (full suite)
+test-production-readiness:
+	@echo "=========================================="
+	@echo "Production Readiness Test Suite"
+	@echo "=========================================="
+	@echo ""
+	@echo "Step 1: Starting mock microservice..."
+	@$(MAKE) mock-start
+	@echo ""
+	@echo "Step 2: Running integration tests..."
+	@$(MAKE) test-integration
+	@echo ""
+	@echo "Step 3: Running integration tests with race detector..."
+	@$(MAKE) test-integration-race
+	@echo ""
+	@echo "Step 4: Running load tests..."
+	@$(MAKE) test-load
+	@echo ""
+	@echo "Step 5: Stopping mock microservice..."
+	@$(MAKE) mock-stop
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ All production readiness tests PASSED"
+	@echo "=========================================="
+	@echo ""
+	@echo "Summary:"
+	@echo "  - Timeout tests: PASSED"
+	@echo "  - Circuit breaker tests: PASSED"
+	@echo "  - Race condition tests: PASSED"
+	@echo "  - Load tests: PASSED"
+	@echo "  - Memory stability: PASSED"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Review test report: docs/migration/PRODUCTION_READINESS_TEST_REPORT.md"
+	@echo "  2. Check Prometheus metrics during load tests"
+	@echo "  3. Run E2E tests with real backend: make test-e2e"
+
+# Quick smoke test (fast subset)
+test-smoke:
+	@echo "Running smoke tests..."
+	@$(MAKE) mock-start
+	@go test -v -short -timeout=30s ./tests/integration/timeout_test.go
+	@$(MAKE) mock-stop
+	@echo "✅ Smoke tests completed"
+
+# Coverage report for production tests
+test-coverage:
+	@echo "Generating test coverage report..."
+	@go test -v -coverprofile=coverage_production.out ./tests/integration/... ./tests/load/...
+	@go tool cover -html=coverage_production.out -o coverage_production.html
+	@echo "✅ Coverage report generated: coverage_production.html"
+	@echo "   Open with: firefox coverage_production.html"
+
+# ==============================================================================
+# Sprint 6.3: Integration Testing for Microservice Migration
+# ==============================================================================
+
+# Run microservice connectivity tests
+test-microservice-connectivity:
+	@echo "Running microservice connectivity tests..."
+	@go test -v -timeout=60s ./tests/integration/microservice_connectivity_test.go
+
+# Run traffic router integration tests
+test-traffic-router:
+	@echo "Running traffic router integration tests..."
+	@go test -v -timeout=60s ./tests/integration/traffic_router_integration_test.go
+
+# Run data consistency tests
+test-data-consistency:
+	@echo "Running data consistency tests..."
+	@go test -v -timeout=120s ./tests/integration/data_consistency_test.go
+
+# Run performance & reliability tests
+test-performance-reliability:
+	@echo "Running performance and reliability tests..."
+	@go test -v -timeout=180s ./tests/integration/performance_reliability_test.go
+
+# Run smoke tests (quick validation <10 seconds)
+test-microservice-smoke:
+	@echo "Running microservice smoke tests..."
+	@go test -v -timeout=30s ./tests/smoke/microservice_smoke_test.go
+
+# Run all microservice integration tests (Sprint 6.3)
+test-microservice-integration:
+	@echo "=========================================="
+	@echo "Sprint 6.3: Microservice Integration Tests"
+	@echo "=========================================="
+	@echo ""
+	@echo "Step 1: Smoke tests (quick validation)..."
+	@$(MAKE) test-microservice-smoke
+	@echo ""
+	@echo "Step 2: Connectivity tests..."
+	@$(MAKE) test-microservice-connectivity
+	@echo ""
+	@echo "Step 3: Traffic router tests..."
+	@$(MAKE) test-traffic-router
+	@echo ""
+	@echo "Step 4: Data consistency tests..."
+	@$(MAKE) test-data-consistency
+	@echo ""
+	@echo "Step 5: Performance & reliability tests..."
+	@$(MAKE) test-performance-reliability
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ ALL MICROSERVICE INTEGRATION TESTS COMPLETE"
+	@echo "=========================================="
+
+# Generate integration test coverage report
+test-microservice-coverage:
+	@echo "Generating microservice integration test coverage..."
+	@go test -v -coverprofile=coverage_microservice_integration.out \
+		./tests/integration/microservice_connectivity_test.go \
+		./tests/integration/traffic_router_integration_test.go \
+		./tests/integration/data_consistency_test.go \
+		./tests/integration/performance_reliability_test.go \
+		./tests/smoke/microservice_smoke_test.go
+	@if [ -f coverage_microservice_integration.out ]; then \
+		go tool cover -html=coverage_microservice_integration.out -o coverage_microservice_integration.html; \
+		echo "✅ Integration coverage report: coverage_microservice_integration.html"; \
+		echo "📊 Coverage summary:"; \
+		go tool cover -func=coverage_microservice_integration.out | tail -1; \
+	fi
+

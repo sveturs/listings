@@ -50,7 +50,10 @@ type Config struct {
 	ReindexOnAPI             string            `yaml:"reindex_on_api"`    // on
 	FeatureFlags             *FeatureFlags     `yaml:"feature_flags"`
 	Currency                 CurrencyConfig    `yaml:"currency"`
-	DeliveryGRPCURL          string            `yaml:"delivery_grpc_url"` // URL для delivery микросервиса через gRPC
+	DeliveryGRPCURL          string            `yaml:"delivery_grpc_url"`         // URL для delivery микросервиса через gRPC
+	ListingsGRPCURL          string            `yaml:"listings_grpc_url"`         // URL для listings микросервиса через gRPC
+	UseListingsMicroservice  bool              `yaml:"use_listings_microservice"` // Feature flag для включения listings микросервиса
+	Marketplace              MarketplaceConfig `yaml:"marketplace"`               // Marketplace microservice migration config
 }
 
 type FileStorageConfig struct {
@@ -101,12 +104,65 @@ type RedisConfig struct {
 	AttributeGroupTTL time.Duration `yaml:"attribute_group_ttl"`
 }
 
+// MarketplaceConfig содержит настройки для миграции marketplace на microservice
+type MarketplaceConfig struct {
+	// Feature flag для включения microservice
+	UseMicroservice bool `yaml:"use_microservice" envconfig:"USE_MARKETPLACE_MICROSERVICE" default:"false"`
+
+	// Процент трафика, который идёт на microservice (0-100)
+	RolloutPercent int `yaml:"rollout_percent" envconfig:"MARKETPLACE_ROLLOUT_PERCENT" default:"0"`
+
+	// URL microservice через gRPC
+	MicroserviceGRPCURL string `yaml:"microservice_grpc_url" envconfig:"MARKETPLACE_MICROSERVICE_GRPC_URL" default:"localhost:50053"`
+
+	// Admin override - админы всегда используют microservice (для тестирования)
+	AdminOverride bool `yaml:"admin_override" envconfig:"MARKETPLACE_ADMIN_OVERRIDE" default:"true"`
+
+	// Список canary user IDs (через запятую) - эти пользователи всегда на microservice
+	CanaryUserIDs string `yaml:"canary_user_ids" envconfig:"MARKETPLACE_CANARY_USERIDS" default:""`
+
+	// Timeout для gRPC запросов
+	GRPCTimeout time.Duration `yaml:"grpc_timeout" envconfig:"MARKETPLACE_GRPC_TIMEOUT" default:"5s"`
+
+	// Timeout для microservice запросов (per-request context deadline)
+	MicroserviceTimeout time.Duration `yaml:"microservice_timeout" envconfig:"MICROSERVICE_TIMEOUT" default:"500ms"`
+
+	// Fallback на monolith при ошибках microservice
+	FallbackToMonolith bool `yaml:"fallback_to_monolith" envconfig:"MARKETPLACE_FALLBACK_TO_MONOLITH" default:"true"`
+
+	// Circuit breaker configuration
+	CircuitBreaker CircuitBreakerConfig `yaml:"circuit_breaker"`
+}
+
+// CircuitBreakerConfig defines circuit breaker configuration for marketplace microservice
+type CircuitBreakerConfig struct {
+	// Enabled включает/выключает circuit breaker
+	Enabled bool `yaml:"enabled" envconfig:"MARKETPLACE_CB_ENABLED" default:"true"`
+
+	// FailureThreshold количество consecutive failures для открытия circuit
+	FailureThreshold int `yaml:"failure_threshold" envconfig:"MARKETPLACE_CB_FAILURE_THRESHOLD" default:"5"`
+
+	// SuccessThreshold количество successful requests в HALF_OPEN для закрытия circuit
+	SuccessThreshold int `yaml:"success_threshold" envconfig:"MARKETPLACE_CB_SUCCESS_THRESHOLD" default:"2"`
+
+	// Timeout время ожидания перед переходом из OPEN в HALF_OPEN
+	Timeout time.Duration `yaml:"timeout" envconfig:"MARKETPLACE_CB_TIMEOUT" default:"60s"`
+
+	// HalfOpenMaxRequests максимальное количество requests в HALF_OPEN state
+	HalfOpenMaxRequests int `yaml:"half_open_max_requests" envconfig:"MARKETPLACE_CB_HALF_OPEN_MAX" default:"3"`
+
+	// CounterResetInterval интервал сброса счётчиков (для sliding window)
+	CounterResetInterval time.Duration `yaml:"counter_reset_interval" envconfig:"MARKETPLACE_CB_COUNTER_RESET_INTERVAL" default:"60s"`
+}
+
 type OpenSearchConfig struct {
-	URL      string `yaml:"url"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	C2CIndex string `yaml:"c2c_index"` // C2C (Customer-to-Customer) index
-	B2CIndex string `yaml:"b2c_index"` // B2C (Business-to-Customer) index
+	URL            string `yaml:"url"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	C2CIndex       string `yaml:"c2c_index"`        // C2C (Customer-to-Customer) index - legacy
+	B2CIndex       string `yaml:"b2c_index"`        // B2C (Business-to-Customer) index - legacy
+	UnifiedIndex   string `yaml:"unified_index"`    // Unified index (Sprint 2.2) - c2c + b2c unified
+	UnifiedIndexV2 string `yaml:"unified_index_v2"` // Unified index v2 (optimized mapping, 30 fields)
 }
 
 // FileUploadConfig содержит настройки для загрузки файлов
@@ -215,6 +271,15 @@ func NewConfig() (*Config, error) {
 	// Delivery gRPC service configuration (required in .env)
 	config.DeliveryGRPCURL = os.Getenv("DELIVERY_GRPC_URL")
 
+	// Listings gRPC service configuration (optional - feature flag controlled)
+	config.ListingsGRPCURL = os.Getenv("LISTINGS_GRPC_URL")
+	if config.ListingsGRPCURL == "" {
+		config.ListingsGRPCURL = "localhost:50051" // Default gRPC port
+	}
+
+	// Feature flag для использования listings микросервиса (по умолчанию false - используем local DB)
+	config.UseListingsMicroservice = os.Getenv("USE_LISTINGS_MICROSERVICE") == envValueTrue
+
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
 	if minioPublicURL == "" {
@@ -223,11 +288,13 @@ func NewConfig() (*Config, error) {
 	config.MinIOPublicURL = minioPublicURL
 
 	config.OpenSearch = OpenSearchConfig{
-		URL:      os.Getenv("OPENSEARCH_URL"),
-		Username: os.Getenv("OPENSEARCH_USERNAME"),
-		Password: os.Getenv("OPENSEARCH_PASSWORD"),
-		C2CIndex: os.Getenv("OPENSEARCH_C2C_INDEX"),
-		B2CIndex: os.Getenv("OPENSEARCH_B2C_INDEX"),
+		URL:            os.Getenv("OPENSEARCH_URL"),
+		Username:       os.Getenv("OPENSEARCH_USERNAME"),
+		Password:       os.Getenv("OPENSEARCH_PASSWORD"),
+		C2CIndex:       os.Getenv("OPENSEARCH_C2C_INDEX"),
+		B2CIndex:       os.Getenv("OPENSEARCH_B2C_INDEX"),
+		UnifiedIndex:   os.Getenv("OPENSEARCH_UNIFIED_INDEX"),
+		UnifiedIndexV2: os.Getenv("OPENSEARCH_UNIFIED_INDEX_V2"),
 	}
 
 	// Если индекс C2C не указан, используем значение по умолчанию
@@ -238,6 +305,16 @@ func NewConfig() (*Config, error) {
 	// Если индекс B2C не указан, используем значение по умолчанию
 	if config.OpenSearch.B2CIndex == "" {
 		config.OpenSearch.B2CIndex = "b2c_products"
+	}
+
+	// Если индекс Unified не указан, используем значение по умолчанию
+	if config.OpenSearch.UnifiedIndex == "" {
+		config.OpenSearch.UnifiedIndex = "marketplace_listings"
+	}
+
+	// Если индекс Unified V2 не указан, используем значение по умолчанию
+	if config.OpenSearch.UnifiedIndexV2 == "" {
+		config.OpenSearch.UnifiedIndexV2 = "unified_listings_v2"
 	}
 
 	// Настройки хранилища файлов
@@ -474,6 +551,54 @@ func NewConfig() (*Config, error) {
 		currencyConfig.ExchangeRatesProvider = exchangeRatesProvider
 	}
 
+	// Загружаем конфигурацию marketplace microservice migration
+	marketplaceConfig := MarketplaceConfig{
+		UseMicroservice:     os.Getenv("USE_MARKETPLACE_MICROSERVICE") == envValueTrue,
+		RolloutPercent:      0,
+		MicroserviceGRPCURL: "localhost:50053",
+		AdminOverride:       true,
+		CanaryUserIDs:       os.Getenv("MARKETPLACE_CANARY_USERIDS"),
+		GRPCTimeout:         5 * time.Second,
+		MicroserviceTimeout: 500 * time.Millisecond,
+		FallbackToMonolith:  true,
+	}
+
+	// Парсим rollout percent
+	if rolloutStr := os.Getenv("MARKETPLACE_ROLLOUT_PERCENT"); rolloutStr != "" {
+		if rollout, err := strconv.Atoi(rolloutStr); err == nil && rollout >= 0 && rollout <= 100 {
+			marketplaceConfig.RolloutPercent = rollout
+		}
+	}
+
+	// Парсим microservice URL
+	if grpcURL := os.Getenv("MARKETPLACE_MICROSERVICE_GRPC_URL"); grpcURL != "" {
+		marketplaceConfig.MicroserviceGRPCURL = grpcURL
+	}
+
+	// Парсим admin override
+	if adminOverride := os.Getenv("MARKETPLACE_ADMIN_OVERRIDE"); adminOverride != "" {
+		marketplaceConfig.AdminOverride = adminOverride == envValueTrue
+	}
+
+	// Парсим gRPC timeout
+	if timeoutStr := os.Getenv("MARKETPLACE_GRPC_TIMEOUT"); timeoutStr != "" {
+		if timeout, err := time.ParseDuration(timeoutStr); err == nil && timeout > 0 {
+			marketplaceConfig.GRPCTimeout = timeout
+		}
+	}
+
+	// Парсим microservice timeout
+	if timeoutStr := os.Getenv("MICROSERVICE_TIMEOUT"); timeoutStr != "" {
+		if timeout, err := time.ParseDuration(timeoutStr); err == nil && timeout > 0 {
+			marketplaceConfig.MicroserviceTimeout = timeout
+		}
+	}
+
+	// Парсим fallback flag
+	if fallbackStr := os.Getenv("MARKETPLACE_FALLBACK_TO_MONOLITH"); fallbackStr != "" {
+		marketplaceConfig.FallbackToMonolith = fallbackStr == envValueTrue
+	}
+
 	return &Config{
 		Port:                     port,
 		DatabaseURL:              dbURL,
@@ -495,6 +620,8 @@ func NewConfig() (*Config, error) {
 		BackendURL:               config.BackendURL,
 		MinIOPublicURL:           config.MinIOPublicURL,
 		DeliveryGRPCURL:          config.DeliveryGRPCURL,
+		ListingsGRPCURL:          config.ListingsGRPCURL,
+		UseListingsMicroservice:  config.UseListingsMicroservice,
 		OpenSearch:               config.OpenSearch,
 		FileStorage:              config.FileStorage,
 		FileUpload:               fileUploadConfig,
@@ -510,6 +637,7 @@ func NewConfig() (*Config, error) {
 		ReindexOnAPI:             reindexOnAPI,
 		FeatureFlags:             LoadFeatureFlags(),
 		Currency:                 currencyConfig,
+		Marketplace:              marketplaceConfig,
 	}, nil
 }
 

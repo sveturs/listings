@@ -335,13 +335,23 @@ func (m *MockStorage) GetUserFavorites(ctx context.Context, userID int) ([]model
 }
 
 func (m *MockStorage) GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error) {
-	return nil, ErrNotImplemented
+	args := m.Called(ctx, listingID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.PriceHistoryEntry), args.Error(1)
 }
 
 func (m *MockStorage) AddPriceHistoryEntry(ctx context.Context, entry *models.PriceHistoryEntry) error {
-	return nil
+	args := m.Called(ctx, entry)
+	return args.Error(0)
 }
-func (m *MockStorage) ClosePriceHistoryEntry(ctx context.Context, listingID int) error { return nil }
+
+func (m *MockStorage) ClosePriceHistoryEntry(ctx context.Context, listingID int) error {
+	args := m.Called(ctx, listingID)
+	return args.Error(0)
+}
+
 func (m *MockStorage) CheckPriceManipulation(ctx context.Context, listingID int) (bool, error) {
 	return false, nil
 }
@@ -354,6 +364,11 @@ func (m *MockStorage) GetListingAttributes(ctx context.Context, listingID int) (
 	return nil, ErrNotImplemented
 }
 func (m *MockStorage) SynchronizeDiscountMetadata(ctx context.Context) error { return nil }
+func (m *MockStorage) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
+	args := m.Called(ctx, listing)
+	return args.Error(0)
+}
+
 func (m *MockStorage) GetUserBalance(ctx context.Context, userID int) (*models.UserBalance, error) {
 	return nil, ErrNotImplemented
 }
@@ -459,7 +474,8 @@ func (m *MockStorage) CanUserReviewEntity(ctx context.Context, userID int, entit
 }
 
 func (m *MockStorage) Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
-	return nil, ErrNotImplemented
+	mockArgs := m.Called(ctx, sql, args)
+	return nil, mockArgs.Error(1)
 }
 
 func (m *MockStorage) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
@@ -503,10 +519,7 @@ func (m *MockStorage) SearchListingsOpenSearch(ctx context.Context, params *sear
 func (m *MockStorage) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
 	return nil, ErrNotImplemented
 }
-func (m *MockStorage) ReindexAllListings(ctx context.Context) error { return nil }
-func (m *MockStorage) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	return nil
-}
+func (m *MockStorage) ReindexAllListings(ctx context.Context) error            { return nil }
 func (m *MockStorage) DeleteListingIndex(ctx context.Context, id string) error { return nil }
 func (m *MockStorage) PrepareIndex(ctx context.Context) error                  { return nil }
 func (m *MockStorage) SearchStorefrontsOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error) {

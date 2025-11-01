@@ -1,0 +1,161 @@
+# Docker Compose configuration with Traffic Router support
+# This extends the base docker-compose configuration with traffic routing capabilities
+#
+# Usage:
+#   docker-compose -f docker-compose.dev.yml -f docker-compose.traffic-router.yml up -d
+#
+# Environment variables:
+#   TRAFFIC_ROUTER_ENABLED=true/false          - Enable/disable traffic router
+#   TRAFFIC_ROUTER_PERCENT=0-100               - Percentage of traffic to microservice
+#   MICROSERVICE_TIMEOUT=500ms                 - Timeout for microservice calls
+#   CIRCUIT_BREAKER_ENABLED=true/false         - Enable circuit breaker
+#   CIRCUIT_BREAKER_THRESHOLD=5                - Number of failures before opening
+#   CIRCUIT_BREAKER_TIMEOUT=30s                - Timeout before retry
+
+services:
+  backend:
+    environment:
+      # Traffic Router Configuration
+      TRAFFIC_ROUTER_ENABLED: ${TRAFFIC_ROUTER_ENABLED:-false}
+      TRAFFIC_ROUTER_PERCENT: ${TRAFFIC_ROUTER_PERCENT:-0}
+      MICROSERVICE_URL: ${MICROSERVICE_URL:-http://marketplace-microservice:8080}
+      MICROSERVICE_TIMEOUT: ${MICROSERVICE_TIMEOUT:-500ms}
+
+      # Circuit Breaker Configuration
+      CIRCUIT_BREAKER_ENABLED: ${CIRCUIT_BREAKER_ENABLED:-true}
+      CIRCUIT_BREAKER_THRESHOLD: ${CIRCUIT_BREAKER_THRESHOLD:-5}
+      CIRCUIT_BREAKER_TIMEOUT: ${CIRCUIT_BREAKER_TIMEOUT:-30s}
+      CIRCUIT_BREAKER_MAX_REQUESTS: ${CIRCUIT_BREAKER_MAX_REQUESTS:-1}
+
+      # Monitoring Configuration
+      PROMETHEUS_ENABLED: ${PROMETHEUS_ENABLED:-true}
+      METRICS_PORT: ${METRICS_PORT:-3000}
+      METRICS_PATH: ${METRICS_PATH:-/metrics}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    labels:
+      - "prometheus.scrape=true"
+      - "prometheus.port=3000"
+      - "prometheus.path=/metrics"
+      - "service.name=backend"
+      - "service.version=${VERSION:-latest}"
+
+  # Marketplace Microservice (when deployed)
+  marketplace-microservice:
+    image: ${HARBOR_REGISTRY:-harbor.svetu.rs}/svetu/marketplace-microservice:${MICROSERVICE_VERSION:-latest}
+    environment:
+      # Database Configuration
+      POSTGRES_DSN: postgres://${DATABASE_USER}:${DATABASE_PASS}@db:5432/${DATABASE_DBNAME}?sslmode=disable
+
+      # Redis Configuration
+      REDIS_URL: redis://redis:6379
+
+      # OpenSearch Configuration
+      OPENSEARCH_URL: http://opensearch:9200
+      OPENSEARCH_MARKETPLACE_INDEX: ${OPENSEARCH_MARKETPLACE_INDEX}
+
+      # MinIO Configuration
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_USE_SSL: ${MINIO_USE_SSL}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
+
+      # Monitoring
+      PROMETHEUS_ENABLED: true
+      METRICS_PORT: 8080
+
+    ports:
+      - "${MICROSERVICE_PORT:-8080}:8080"
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opensearch:
+        condition: service_started
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    networks:
+      - svetu_network_dev
+
+    labels:
+      - "prometheus.scrape=true"
+      - "prometheus.port=8080"
+      - "prometheus.path=/metrics"
+      - "service.name=marketplace-microservice"
+      - "service.version=${MICROSERVICE_VERSION:-latest}"
+
+    restart: unless-stopped
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - svetu_network_dev
+    restart: unless-stopped
+    labels:
+      - "service.name=prometheus"
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "${GRAFANA_PORT:-3002}:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - svetu_network_dev
+    restart: unless-stopped
+    labels:
+      - "service.name=grafana"
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  svetu_network_dev:
+    external: true

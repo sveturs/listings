@@ -190,6 +190,68 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 	})
 }
 
+// enrichListingDetails обогащает объявление дополнительной информацией:
+// - инкрементирует счетчик просмотров
+// - загружает информацию о пользователе
+// - проверяет статус избранного
+// Это unified функция для GetListing и GetListingBySlug
+func (h *ListingsHandler) enrichListingDetails(c *fiber.Ctx, listing *models.MarketplaceListing, loadUserInfo bool) error {
+	// Инкрементируем счетчик просмотров в горутине
+	currentUserID, _ := authMiddleware.GetUserID(c)
+	viewCtx := context.WithValue(context.Background(), contextKeyUserID, currentUserID)
+
+	// Получаем IP адрес клиента
+	clientIP := c.IP()
+	if clientIP == "" {
+		clientIP = c.Get("X-Forwarded-For", "")
+		if clientIP == "" {
+			clientIP = c.Get("X-Real-IP", "")
+		}
+		if clientIP == "" {
+			clientIP = "127.0.0.1"
+		}
+	}
+	viewCtx = context.WithValue(viewCtx, contextKeyIPAddress, clientIP)
+
+	logger.Debug().Str("clientIP", clientIP).Int("listingId", listing.ID).Msg("Incrementing views count")
+
+	go func(listingID int, ctx context.Context) {
+		err := h.services.Storage().IncrementViewsCount(ctx, listingID)
+		if err != nil {
+			logger.Error().Err(err).Int("listingId", listingID).Msg("Failed to increment views count")
+		}
+	}(listing.ID, viewCtx)
+
+	// Загружаем информацию о пользователе из auth-service (если требуется)
+	if loadUserInfo && listing.UserID > 0 {
+		userInfo, err := h.services.User().GetUserByID(c.Context(), listing.UserID)
+		if err != nil {
+			logger.Warn().Err(err).Int("userId", listing.UserID).Msg("Failed to load user info from auth-service")
+			// Не прерываем выполнение, просто оставляем пустой User
+		} else {
+			listing.User = userInfo
+		}
+	}
+
+	// Проверяем, находится ли объявление в избранном у пользователя
+	userID, ok := authMiddleware.GetUserID(c)
+	if ok && userID > 0 {
+		var favorites []models.MarketplaceListing
+		favorites, err := h.marketplaceService.GetUserFavorites(c.Context(), userID)
+		if err == nil {
+			for _, fav := range favorites {
+				if fav.ID == listing.ID {
+					listing.IsFavorite = true
+					break
+				}
+			}
+		}
+	}
+
+	// Возвращаем детали объявления
+	return utils.SuccessResponse(c, listing)
+}
+
 // GetListing получает детали объявления
 // @Summary Get listing details
 // @Description Returns detailed information about a specific listing including attributes and images
@@ -255,64 +317,8 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 		}
 	}
 
-	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
-	// Создаем новый контекст с данными из текущего запроса
-	currentUserID, _ := authMiddleware.GetUserID(c)
-	viewCtx := context.WithValue(context.Background(), contextKeyUserID, currentUserID)
-
-	// Получаем IP адрес клиента
-	clientIP := c.IP()
-	if clientIP == "" {
-		// Если c.IP() пустой, пробуем получить из заголовков
-		clientIP = c.Get("X-Forwarded-For", "")
-		if clientIP == "" {
-			clientIP = c.Get("X-Real-IP", "")
-		}
-		if clientIP == "" {
-			// В крайнем случае используем localhost
-			clientIP = "127.0.0.1"
-		}
-	}
-	viewCtx = context.WithValue(viewCtx, contextKeyIPAddress, clientIP)
-
-	logger.Debug().Str("clientIP", clientIP).Int("listingId", id).Msg("Incrementing views count")
-
-	go func(listingID int, ctx context.Context) {
-		err := h.services.Storage().IncrementViewsCount(ctx, listingID)
-		if err != nil {
-			logger.Error().Err(err).Int("listingId", listingID).Msg("Failed to increment views count")
-		}
-	}(id, viewCtx)
-
-	// Загружаем информацию о пользователе из auth-service
-	if listing.UserID > 0 {
-		userInfo, err := h.services.User().GetUserByID(c.Context(), listing.UserID)
-		if err != nil {
-			logger.Warn().Err(err).Int("userId", listing.UserID).Msg("Failed to load user info from auth-service")
-			// Не прерываем выполнение, просто оставляем пустой User
-		} else {
-			listing.User = userInfo
-		}
-	}
-
-	// Получаем ID пользователя из контекста для проверки избранного
-	userID, ok := authMiddleware.GetUserID(c)
-	if ok && userID > 0 {
-		// Проверяем, находится ли объявление в избранном у пользователя
-		var favorites []models.MarketplaceListing
-		favorites, err = h.marketplaceService.GetUserFavorites(c.Context(), userID)
-		if err == nil {
-			for _, fav := range favorites {
-				if fav.ID == listing.ID {
-					listing.IsFavorite = true
-					break
-				}
-			}
-		}
-	}
-
-	// Возвращаем детали объявления
-	return utils.SuccessResponse(c, listing)
+	// Обогащаем объявление дополнительной информацией и возвращаем
+	return h.enrichListingDetails(c, listing, true)
 }
 
 // GetListingBySlug получает детали объявления по slug
@@ -349,53 +355,9 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getError")
 	}
 
-	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
-	// Создаем новый контекст с данными из текущего запроса
-	currentUserID, _ := authMiddleware.GetUserID(c)
-	viewCtx := context.WithValue(context.Background(), contextKeyUserID, currentUserID)
-
-	// Получаем IP адрес клиента
-	clientIP := c.IP()
-	if clientIP == "" {
-		// Если c.IP() пустой, пробуем получить из заголовков
-		clientIP = c.Get("X-Forwarded-For", "")
-		if clientIP == "" {
-			clientIP = c.Get("X-Real-IP", "")
-		}
-		if clientIP == "" {
-			// В крайнем случае используем localhost
-			clientIP = "127.0.0.1"
-		}
-	}
-	viewCtx = context.WithValue(viewCtx, contextKeyIPAddress, clientIP)
-
-	logger.Debug().Str("clientIP", clientIP).Int("listingId", listing.ID).Msg("Incrementing views count")
-
-	go func(listingID int, ctx context.Context) {
-		err := h.services.Storage().IncrementViewsCount(ctx, listingID)
-		if err != nil {
-			logger.Error().Err(err).Int("listingId", listingID).Msg("Failed to increment views count")
-		}
-	}(listing.ID, viewCtx)
-
-	// Получаем ID пользователя из контекста для проверки избранного
-	userID, ok := authMiddleware.GetUserID(c)
-	if ok && userID > 0 {
-		// Проверяем, находится ли объявление в избранном у пользователя
-		var favorites []models.MarketplaceListing
-		favorites, err = h.marketplaceService.GetUserFavorites(c.Context(), userID)
-		if err == nil {
-			for _, fav := range favorites {
-				if fav.ID == listing.ID {
-					listing.IsFavorite = true
-					break
-				}
-			}
-		}
-	}
-
-	// Возвращаем детали объявления
-	return utils.SuccessResponse(c, listing)
+	// Обогащаем объявление дополнительной информацией и возвращаем
+	// loadUserInfo = false для slug endpoints (не загружаем info из auth-service)
+	return h.enrichListingDetails(c, listing, false)
 }
 
 // GetListings получает список объявлений

@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { apiClient } from '@/services/api-client';
-import configManager from '@/config';
 
 // Типы для геокодирования
 export interface AddressGeocodingResult {
@@ -69,9 +68,6 @@ export interface UseAddressGeocodingReturn {
   clearError: () => void;
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || configManager.getApiUrl();
-
 export function useAddressGeocoding(
   options: UseAddressGeocodingOptions = {}
 ): UseAddressGeocodingReturn {
@@ -138,21 +134,15 @@ export function useAddressGeocoding(
             searchParams.set('country_code', country.join(','));
           }
 
-          const response = await fetch(
-            `${API_BASE_URL}/api/v1/gis/geocode/suggestions?${searchParams}`,
-            {
-              signal: abortControllerRef.current.signal,
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            }
+          const apiResponse = await apiClient.get(
+            `/gis/geocode/suggestions?${searchParams}`
           );
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          if (apiResponse.error) {
+            throw new Error(apiResponse.error.message);
           }
 
-          const data = await response.json();
+          const data = apiResponse.data;
 
           if (data.success && Array.isArray(data.data)) {
             // Конвертируем данные в нужный формат
@@ -227,20 +217,15 @@ export function useAddressGeocoding(
           language,
         });
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/v1/gis/geocode/reverse?${searchParams}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
+        const apiResponse = await apiClient.get(
+          `/gis/geocode/reverse?${searchParams}`
         );
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (apiResponse.error) {
+          throw new Error(apiResponse.error.message);
         }
 
-        const data = await response.json();
+        const data = apiResponse.data;
 
         if (data && (data as any).success && (data as any).data) {
           return {
@@ -293,26 +278,17 @@ export function useAddressGeocoding(
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/v1/gis/geocode/validate`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              address,
-              language,
-              country_code: country[0], // Используем первую страну как основную
-            }),
-          }
-        );
+        const apiResponse = await apiClient.post(`/gis/geocode/validate`, {
+          address,
+          language,
+          country_code: country[0], // Используем первую страну как основную
+        });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (apiResponse.error) {
+          throw new Error(apiResponse.error.message);
         }
 
-        const data = await response.json();
+        const data = apiResponse.data;
 
         if (data && (data as any).success && (data as any).data) {
           return {

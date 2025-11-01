@@ -1,0 +1,49 @@
+# Prometheus Configuration для мониторинга Marketplace Microservice Migration
+# backend/deployments/prometheus.yml
+
+global:
+  scrape_interval: 15s      # Как часто scraping метрик
+  evaluation_interval: 15s  # Как часто evaluation правил
+  external_labels:
+    cluster: 'svetu-backend'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'localhost:9093'  # Alertmanager address
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  - 'prometheus-alerts.yml'  # Alert rules для marketplace migration
+
+# Scrape configurations
+scrape_configs:
+  # Job для scraping metrics с backend API
+  - job_name: 'svetu-backend'
+    static_configs:
+      - targets:
+          - 'localhost:3000'  # Backend API server
+    metrics_path: '/metrics'  # Путь к metrics endpoint
+    scrape_interval: 15s      # Scrape each 15 seconds
+    scrape_timeout: 10s       # Timeout после 10 секунд
+
+    # Добавляем labels для идентификации источника метрик
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'backend-api'
+
+  # Job для scraping Prometheus собственных метрик
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+
+  # Job для scraping Alertmanager метрик (опционально)
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets:
+          - 'localhost:9093'

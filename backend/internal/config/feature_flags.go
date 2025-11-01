@@ -17,6 +17,11 @@ type FeatureFlags struct {
 	LogAttributeSystemCalls  bool `yaml:"log_attribute_system_calls"`  // Логировать все вызовы
 	AttributeCacheEnabled    bool `yaml:"attribute_cache_enabled"`     // Включить кеширование атрибутов
 	AttributeCacheTTLMinutes int  `yaml:"attribute_cache_ttl_minutes"` // TTL кеша в минутах
+
+	// OpenSearch Unified Index (Sprint 2.2 - Phase 2)
+	UseUnifiedSearchIndex bool `yaml:"use_unified_search_index"` // Использовать unified_listings_v2 вместо раздельных индексов
+	UnifiedIndexFallback  bool `yaml:"unified_index_fallback"`   // Откат на старые индексы при ошибках
+	UnifiedIndexPercent   int  `yaml:"unified_index_percent"`    // Процент трафика на unified index (0-100)
 }
 
 // LoadFeatureFlags загружает флаги из переменных окружения
@@ -30,6 +35,10 @@ func LoadFeatureFlags() *FeatureFlags {
 		LogAttributeSystemCalls:   false,
 		AttributeCacheEnabled:     true,
 		AttributeCacheTTLMinutes:  30,
+		// OpenSearch unified index flags (Sprint 2.2 - default OFF for safety)
+		UseUnifiedSearchIndex: false,
+		UnifiedIndexFallback:  true,
+		UnifiedIndexPercent:   0,
 	}
 
 	// Загрузка из переменных окружения
@@ -67,6 +76,23 @@ func LoadFeatureFlags() *FeatureFlags {
 		}
 	}
 
+	// OpenSearch unified index flags
+	if val := os.Getenv("USE_UNIFIED_SEARCH_INDEX"); val != "" {
+		flags.UseUnifiedSearchIndex = val == envValueTrue
+	}
+
+	if val := os.Getenv("UNIFIED_INDEX_FALLBACK"); val != "" {
+		flags.UnifiedIndexFallback = val == envValueTrue
+	}
+
+	if val := os.Getenv("UNIFIED_INDEX_PERCENT"); val != "" {
+		if percent, err := strconv.Atoi(val); err == nil {
+			if percent >= 0 && percent <= 100 {
+				flags.UnifiedIndexPercent = percent
+			}
+		}
+	}
+
 	return flags
 }
 
@@ -86,6 +112,21 @@ func (ff *FeatureFlags) ShouldUseUnifiedAttributes(userID int) bool {
 	return true
 }
 
+// ShouldUseUnifiedSearchIndex определяет, должен ли запрос использовать unified index
+func (ff *FeatureFlags) ShouldUseUnifiedSearchIndex(userID int) bool {
+	if !ff.UseUnifiedSearchIndex {
+		return false
+	}
+
+	// A/B тестирование по проценту пользователей
+	if ff.UnifiedIndexPercent < 100 {
+		userGroup := userID % 100
+		return userGroup < ff.UnifiedIndexPercent
+	}
+
+	return true
+}
+
 // IsFeatureEnabled проверяет, включена ли функция
 func (ff *FeatureFlags) IsFeatureEnabled(feature string) bool {
 	switch feature {
@@ -99,6 +140,10 @@ func (ff *FeatureFlags) IsFeatureEnabled(feature string) bool {
 		return ff.AttributeCacheEnabled
 	case "attribute_logging":
 		return ff.LogAttributeSystemCalls
+	case "unified_search_index":
+		return ff.UseUnifiedSearchIndex
+	case "unified_index_fallback":
+		return ff.UnifiedIndexFallback
 	default:
 		return false
 	}
@@ -109,6 +154,8 @@ func (ff *FeatureFlags) GetFeaturePercentage(feature string) int {
 	switch feature {
 	case "unified_attributes":
 		return ff.UnifiedAttributesPercent
+	case "unified_search_index":
+		return ff.UnifiedIndexPercent
 	default:
 		return 0
 	}
@@ -166,6 +213,9 @@ func (ff *FeatureFlags) GetCurrentConfiguration() map[string]interface{} {
 		"log_attribute_system_calls":  ff.LogAttributeSystemCalls,
 		"attribute_cache_enabled":     ff.AttributeCacheEnabled,
 		"attribute_cache_ttl_minutes": ff.AttributeCacheTTLMinutes,
+		"use_unified_search_index":    ff.UseUnifiedSearchIndex,
+		"unified_index_fallback":      ff.UnifiedIndexFallback,
+		"unified_index_percent":       ff.UnifiedIndexPercent,
 	}
 }
 

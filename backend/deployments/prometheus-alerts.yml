@@ -1,0 +1,380 @@
+# Prometheus Alert Rules для Marketplace Microservice Migration
+# backend/deployments/prometheus-alerts.yml
+# Last Updated: 2025-11-01 (Sprint 6.4 - Canary 1%)
+
+groups:
+  # ===========================
+  # CANARY 1% DEPLOYMENT ALERTS (Sprint 6.4)
+  # ===========================
+  - name: marketplace_canary_1pct
+    interval: 30s
+    rules:
+      # CRITICAL: Error rate delta > +0.1% (vs monolith AVERAGE over 24h)
+      - alert: CanaryErrorRateDeltaHigh
+        expr: |
+          (
+            rate(marketplace_requests_total{source="microservice",status=~"5.."}[5m]) -
+            rate(marketplace_requests_total{source="monolith",status=~"5.."}[5m])
+          ) > 0.001
+        for: 5m
+        labels:
+          severity: critical
+          component: traffic-router
+          sprint: sprint_6_4
+          action: auto_rollback
+        annotations:
+          summary: "Canary 1% error rate delta exceeds threshold"
+          description: |
+            Microservice error rate is {{ $value | humanizePercentage }} higher than monolith
+
+            **AUTO-ROLLBACK WILL TRIGGER IN 5 MINUTES**
+
+            Success Criteria: error rate delta < +0.1%
+            Current Delta: {{ $value | humanizePercentage }}
+          runbook: "SPRINT_6.4_CANARY_1PCT_PLAN.md#rollback-procedure"
+
+      # CRITICAL: P99 latency delta > +100ms (vs monolith AVERAGE over 24h)
+      - alert: CanaryLatencyDeltaHigh
+        expr: |
+          (
+            histogram_quantile(0.99, rate(marketplace_request_duration_seconds_bucket{source="microservice"}[5m])) -
+            histogram_quantile(0.99, rate(marketplace_request_duration_seconds_bucket{source="monolith"}[5m]))
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: traffic-router
+          sprint: sprint_6_4
+        annotations:
+          summary: "Canary 1% P99 latency degraded"
+          description: "Microservice P99 latency is {{ $value }}s slower than monolith"
+          action: "Investigate microservice performance - manual decision needed"
+
+      # CRITICAL: Circuit breaker opened for 2+ minutes
+      - alert: CanaryCircuitBreakerOpen
+        expr: |
+          marketplace_circuit_breaker_state{state="open"} == 1
+        for: 2m
+        labels:
+          severity: critical
+          component: circuit-breaker
+          sprint: sprint_6_4
+          action: auto_rollback
+        annotations:
+          summary: "Circuit breaker opened for microservice"
+          description: |
+            Circuit breaker has been OPEN for 2 minutes
+
+            **AUTO-ROLLBACK WILL TRIGGER**
+
+            Failure threshold: {{ query "marketplace_circuit_breaker_threshold" | first | value }}
+            Current failures: {{ query "marketplace_circuit_breaker_failures" | first | value }}
+          action: "Auto-rollback will trigger if sustained"
+
+      # WARNING: Traffic percentage drift > ±0.2% from target 1%
+      - alert: CanaryTrafficDrift
+        expr: |
+          abs(
+            (sum(rate(marketplace_requests_total{source="microservice"}[5m])) /
+             sum(rate(marketplace_requests_total[5m])) * 100) - 1
+          ) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          component: traffic-router
+          sprint: sprint_6_4
+        annotations:
+          summary: "Traffic percentage drifted from target 1%"
+          description: |
+            Actual traffic is {{ $value }}% away from target 1%
+
+            Expected: 1% ± 0.2%
+            Actual: {{ query "sum(rate(marketplace_requests_total{source=\"microservice\"}[5m])) / sum(rate(marketplace_requests_total[5m])) * 100" | first | value }}%
+          action: "Check TrafficRouter configuration"
+
+      # CRITICAL: Data consistency check failed
+      - alert: CanaryDataInconsistency
+        expr: |
+          marketplace_data_consistency_check_failures_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: data-migration
+          sprint: sprint_6_4
+          action: immediate_rollback
+        annotations:
+          summary: "Data consistency check failed"
+          description: |
+            Found {{ $value }} data inconsistencies between microservice and monolith
+
+            **IMMEDIATE ROLLBACK REQUIRED**
+          action: "Rollback to 0% immediately and investigate"
+
+  # ===========================
+  # CRITICAL ALERTS - требуют немедленного реагирования
+  # ===========================
+  - name: marketplace_migration_critical
+    interval: 30s
+    rules:
+      # CRITICAL: Высокая error rate на microservice (> 1%)
+      # Trigger: автоматический rollback
+      - alert: MicroserviceHighErrorRate
+        expr: |
+          (
+            sum(rate(marketplace_microservice_errors_total[5m]))
+            /
+            sum(rate(marketplace_route_total{destination="microservice"}[5m]))
+          ) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+          component: marketplace
+          team: backend
+          action: rollback
+        annotations:
+          summary: "Microservice error rate > 1% - ROLLBACK REQUIRED"
+          description: |
+            Microservice error rate: {{ $value | humanizePercentage }}
+
+            This exceeds the 1% threshold for automatic rollback.
+            Current rollout: {{ query "marketplace_rollout_percent" | first | value }}%
+
+            **ACTION REQUIRED:**
+            1. Execute rollback immediately: `MARKETPLACE_ROLLOUT_PERCENT=0`
+            2. Investigate root cause
+            3. Check error types: {{ query "sum by (error_type) (rate(marketplace_microservice_errors_total[5m]))" }}
+
+          runbook: "https://docs.svetu.rs/runbooks/marketplace-migration-rollback"
+          dashboard: "http://localhost:3030/d/marketplace-migration"
+
+      # EMERGENCY: Критически высокая error rate (> 5%)
+      - alert: MicroserviceEmergencyErrorRate
+        expr: |
+          (
+            sum(rate(marketplace_microservice_errors_total[5m]))
+            /
+            sum(rate(marketplace_route_total{destination="microservice"}[5m]))
+          ) > 0.05
+        for: 1m
+        labels:
+          severity: page
+          component: marketplace
+          team: backend
+          action: emergency_rollback
+        annotations:
+          summary: "EMERGENCY: Microservice error rate > 5%"
+          description: |
+            **EMERGENCY SITUATION!**
+            Microservice error rate: {{ $value | humanizePercentage }}
+
+            Automatic rollback should have triggered.
+            If not - execute manual rollback NOW!
+
+            **IMMEDIATE ACTIONS:**
+            1. Set MARKETPLACE_ROLLOUT_PERCENT=0
+            2. Restart backend: systemctl restart svetu-backend
+            3. Page on-call engineer
+            4. Create incident report
+
+          runbook: "https://docs.svetu.rs/runbooks/marketplace-migration-emergency"
+
+      # CRITICAL: Очень высокая fallback rate (> 10%)
+      - alert: HighFallbackRate
+        expr: |
+          (
+            sum(rate(marketplace_fallback_total[5m]))
+            /
+            sum(rate(marketplace_route_total{destination="microservice"}[5m]))
+          ) > 0.1
+        for: 3m
+        labels:
+          severity: critical
+          component: marketplace
+          team: backend
+        annotations:
+          summary: "High fallback rate > 10%"
+          description: |
+            Fallback rate: {{ $value | humanizePercentage }}
+
+            More than 10% of microservice requests are falling back to monolith.
+            This indicates microservice instability.
+
+            Fallback reasons: {{ query "sum by (reason) (rate(marketplace_fallback_total[5m]))" }}
+
+          dashboard: "http://localhost:3030/d/marketplace-migration"
+
+  # WARNING ALERTS - требуют внимания
+  - name: marketplace_migration_warning
+    interval: 1m
+    rules:
+      # WARNING: Высокая latency на microservice (P99 > 500ms)
+      - alert: MicroserviceHighLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum by (le) (rate(marketplace_route_duration_seconds_bucket{destination="microservice"}[5m]))
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: marketplace
+          team: backend
+        annotations:
+          summary: "Microservice P99 latency > 500ms"
+          description: |
+            P99 latency: {{ $value | humanizeDuration }}
+
+            Microservice is responding slower than expected.
+
+            Compare with monolith:
+            - Microservice P99: {{ query "histogram_quantile(0.99, sum by (le) (rate(marketplace_route_duration_seconds_bucket{destination=\"microservice\"}[5m])))" | first | value | humanizeDuration }}
+            - Monolith P99: {{ query "histogram_quantile(0.99, sum by (le) (rate(marketplace_route_duration_seconds_bucket{destination=\"monolith\"}[5m])))" | first | value | humanizeDuration }}
+
+          dashboard: "http://localhost:3030/d/marketplace-migration"
+
+      # WARNING: Средняя error rate (0.5% - 1%)
+      - alert: MicroserviceModerateErrorRate
+        expr: |
+          (
+            sum(rate(marketplace_microservice_errors_total[5m]))
+            /
+            sum(rate(marketplace_route_total{destination="microservice"}[5m]))
+          ) > 0.005 and < 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: marketplace
+          team: backend
+        annotations:
+          summary: "Microservice error rate 0.5% - 1%"
+          description: |
+            Error rate: {{ $value | humanizePercentage }}
+
+            Approaching critical threshold of 1%.
+            Monitor closely and investigate error types.
+
+          error_breakdown: "{{ query \"sum by (error_type) (rate(marketplace_microservice_errors_total[5m]))\" }}"
+
+      # WARNING: Увеличение fallback rate (5% - 10%)
+      - alert: ModeratelyHighFallbackRate
+        expr: |
+          (
+            sum(rate(marketplace_fallback_total[5m]))
+            /
+            sum(rate(marketplace_route_total{destination="microservice"}[5m]))
+          ) > 0.05 and < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: marketplace
+        annotations:
+          summary: "Fallback rate 5% - 10%"
+          description: |
+            Fallback rate: {{ $value | humanizePercentage }}
+
+            Microservice is experiencing issues but not critical yet.
+            Investigate before it gets worse.
+
+      # WARNING: Microservice недоступен но rollout > 0
+      - alert: MicroserviceUnavailableWithTraffic
+        expr: |
+          marketplace_rollout_percent > 0
+          and
+          absent(up{job="svetu-backend"}) == 1
+        for: 2m
+        labels:
+          severity: warning
+          component: marketplace
+        annotations:
+          summary: "Microservice unavailable but receiving traffic"
+          description: |
+            Rollout percent: {{ query "marketplace_rollout_percent" | first | value }}%
+
+            Microservice should be available but metrics endpoint is down.
+            All requests will fallback to monolith.
+
+  # INFO ALERTS - информационные события
+  - name: marketplace_migration_info
+    interval: 5m
+    rules:
+      # INFO: Rollout percentage изменился
+      - alert: RolloutPercentageChanged
+        expr: |
+          changes(marketplace_rollout_percent[2m]) > 0
+        labels:
+          severity: info
+          component: marketplace
+        annotations:
+          summary: "Rollout percentage changed"
+          description: |
+            New rollout value: {{ query "marketplace_rollout_percent" | first | value }}%
+
+            Monitor metrics closely for the next 30 minutes.
+
+          dashboard: "http://localhost:3030/d/marketplace-migration"
+
+      # INFO: Feature flag отключен
+      - alert: MicroserviceFeatureFlagDisabled
+        expr: |
+          marketplace_feature_flag_enabled == 0
+        for: 5m
+        labels:
+          severity: info
+          component: marketplace
+        annotations:
+          summary: "Microservice feature flag disabled"
+          description: |
+            All traffic is going to monolith.
+            Feature flag: {{ query "marketplace_feature_flag_enabled" | first | value }}
+            Rollout percent: {{ query "marketplace_rollout_percent" | first | value }}%
+
+      # INFO: Новые canary users добавлены
+      - alert: CanaryUsersCountChanged
+        expr: |
+          changes(marketplace_canary_users[5m]) > 0
+        labels:
+          severity: info
+          component: marketplace
+        annotations:
+          summary: "Canary users count changed"
+          description: |
+            New canary users count: {{ query "marketplace_canary_users" | first | value }}
+
+            These users will always be routed to microservice.
+
+      # INFO: Ассиметрия в routing (>80% в одну сторону при rollout 50%)
+      - alert: RoutingAsymmetry
+        expr: |
+          (
+            marketplace_rollout_percent > 40 and marketplace_rollout_percent < 60
+          )
+          and
+          (
+            (
+              sum(rate(marketplace_route_total{destination="microservice"}[10m]))
+              /
+              sum(rate(marketplace_route_total[10m]))
+            ) > 0.8
+            or
+            (
+              sum(rate(marketplace_route_total{destination="microservice"}[10m]))
+              /
+              sum(rate(marketplace_route_total[10m]))
+            ) < 0.2
+          )
+        for: 10m
+        labels:
+          severity: info
+          component: marketplace
+        annotations:
+          summary: "Routing asymmetry detected"
+          description: |
+            Rollout percent: {{ query "marketplace_rollout_percent" | first | value }}%
+
+            But actual traffic distribution is skewed:
+            - Microservice: {{ query "sum(rate(marketplace_route_total{destination=\"microservice\"}[10m])) / sum(rate(marketplace_route_total[10m])) * 100" | first | value }}%
+            - Monolith: {{ query "sum(rate(marketplace_route_total{destination=\"monolith\"}[10m])) / sum(rate(marketplace_route_total[10m])) * 100" | first | value }}%
+
+            Possible causes:
+            - Canary users dominating traffic
+            - Admin override affecting routing
+            - Consistent hashing distribution issue

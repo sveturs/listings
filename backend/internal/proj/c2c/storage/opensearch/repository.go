@@ -2,7 +2,13 @@
 package opensearch
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/jmoiron/sqlx"
+
 	"backend/internal/config"
+	"backend/internal/logger"
 	"backend/internal/storage"
 	osClient "backend/internal/storage/opensearch"
 	"backend/pkg/transliteration"
@@ -28,6 +34,8 @@ type Repository struct {
 	storage        storage.Storage
 	transliterator *transliteration.SerbianTransliterator
 	boostWeights   *config.OpenSearchBoostWeights
+	asyncIndexer   *AsyncIndexer // Async indexer for non-blocking indexing
+	useAsync       bool          // Flag to enable/disable async indexing
 }
 
 // NewRepository создает новый репозиторий
@@ -37,13 +45,54 @@ func NewRepository(client *osClient.OpenSearchClient, indexName string, storage 
 		boostWeights = &searchWeights.OpenSearchBoosts
 	}
 
-	return &Repository{
+	repo := &Repository{
 		client:         client,
 		indexName:      indexName,
 		storage:        storage,
 		transliterator: transliteration.NewSerbianTransliterator(),
 		boostWeights:   boostWeights,
+		useAsync:       false, // По умолчанию выключен (для обратной совместимости)
 	}
+
+	return repo
+}
+
+// EnableAsyncIndexing включает асинхронную индексацию с указанными параметрами
+func (r *Repository) EnableAsyncIndexing(db interface{}, workers int, queueSize int) error {
+	// Проверяем тип db - должен быть *sqlx.DB
+	sqlxDB, ok := db.(*sqlx.DB)
+	if !ok {
+		return fmt.Errorf("db must be *sqlx.DB, got %T", db)
+	}
+
+	r.asyncIndexer = NewAsyncIndexer(r, sqlxDB, workers, queueSize)
+	r.useAsync = true
+
+	logger.Info().
+		Int("workers", workers).
+		Int("queueSize", queueSize).
+		Msg("Async indexing enabled for repository")
+
+	return nil
+}
+
+// DisableAsyncIndexing выключает асинхронную индексацию
+func (r *Repository) DisableAsyncIndexing() {
+	r.useAsync = false
+	logger.Info().Msg("Async indexing disabled for repository")
+}
+
+// ShutdownAsyncIndexer gracefully останавливает async indexer
+func (r *Repository) ShutdownAsyncIndexer(timeout time.Duration) error {
+	if r.asyncIndexer != nil {
+		return r.asyncIndexer.Shutdown(timeout)
+	}
+	return nil
+}
+
+// GetAsyncIndexer возвращает async indexer (для тестов и мониторинга)
+func (r *Repository) GetAsyncIndexer() *AsyncIndexer {
+	return r.asyncIndexer
 }
 
 func (r *Repository) GetClient() *osClient.OpenSearchClient {

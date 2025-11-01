@@ -28,9 +28,42 @@ func (r *Repository) IndexListing(ctx context.Context, listing *models.Marketpla
 		return fmt.Errorf("listing ID is 0")
 	}
 
+	// Если включена async индексация - используем её
+	if r.useAsync && r.asyncIndexer != nil {
+		task := IndexTask{
+			ListingID: listing.ID,
+			Action:    "index",
+			Data:      listing,
+			Attempt:   0,
+			CreatedAt: time.Now(),
+		}
+
+		err := r.asyncIndexer.Enqueue(task)
+		if err != nil {
+			// Fallback на синхронную индексацию если async не сработал
+			logger.Warn().
+				Err(err).
+				Int("listingID", listing.ID).
+				Msg("Async enqueue failed, falling back to sync indexing")
+			return r.indexListingSync(ctx, listing)
+		}
+
+		logger.Debug().
+			Int("listingID", listing.ID).
+			Msg("Listing enqueued for async indexing")
+
+		return nil
+	}
+
+	// Синхронная индексация (backward compatible)
+	return r.indexListingSync(ctx, listing)
+}
+
+// indexListingSync выполняет синхронную индексацию
+func (r *Repository) indexListingSync(ctx context.Context, listing *models.MarketplaceListing) error {
 	doc := r.listingToDoc(ctx, listing)
 	docJSON, _ := json.MarshalIndent(doc, "", "  ")
-	logger.Info().Msgf("INFO: Начинаем индексацию объявления ID=%d в индекс '%s'", listing.ID, r.indexName)
+	logger.Info().Msgf("INFO: Начинаем синхронную индексацию объявления ID=%d в индекс '%s'", listing.ID, r.indexName)
 	logger.Debug().Msgf("DEBUG: Данные для индексации: %s", string(docJSON))
 
 	err := r.client.IndexDocument(ctx, r.indexName, fmt.Sprintf("%d", listing.ID), doc)
@@ -66,6 +99,43 @@ func (r *Repository) BulkIndexListings(ctx context.Context, listings []*models.M
 
 // DeleteListing удаляет объявление из индекса
 func (r *Repository) DeleteListing(ctx context.Context, listingID string) error {
+	// Если включена async индексация - используем её
+	if r.useAsync && r.asyncIndexer != nil {
+		// Конвертируем listingID в int
+		var id int
+		_, err := fmt.Sscanf(listingID, "%d", &id)
+		if err != nil {
+			logger.Warn().
+				Str("listingID", listingID).
+				Err(err).
+				Msg("Failed to parse listing ID for async deletion, using sync")
+			return r.client.DeleteDocument(ctx, r.indexName, listingID)
+		}
+
+		task := IndexTask{
+			ListingID: id,
+			Action:    "delete",
+			Attempt:   0,
+			CreatedAt: time.Now(),
+		}
+
+		err = r.asyncIndexer.Enqueue(task)
+		if err != nil {
+			logger.Warn().
+				Err(err).
+				Str("listingID", listingID).
+				Msg("Async enqueue failed for delete, falling back to sync")
+			return r.client.DeleteDocument(ctx, r.indexName, listingID)
+		}
+
+		logger.Debug().
+			Str("listingID", listingID).
+			Msg("Delete task enqueued for async processing")
+
+		return nil
+	}
+
+	// Синхронное удаление (backward compatible)
 	return r.client.DeleteDocument(ctx, r.indexName, listingID)
 }
 
