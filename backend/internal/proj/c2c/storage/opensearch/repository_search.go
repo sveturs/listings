@@ -391,6 +391,13 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		},
 	}
 
+	// DEBUG: Log query structure
+	logger.Info().
+		Int("size", size).
+		Int("from", (params.Page-1)*size).
+		Bool("track_total_hits", true).
+		Msg("buildSearchQuery: query structure created")
+
 	if params.Status == "" {
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 		filter = append(filter, map[string]interface{}{
