@@ -109,6 +109,12 @@ func NewDatabaseOpenSearchAdapter(db DatabaseInterface) *DatabaseOpenSearchAdapt
 // SearchListings выполняет поиск через OpenSearch
 // Конвертирует ServiceParams в SearchParams для Database
 func (a *DatabaseOpenSearchAdapter) SearchListings(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error) {
+	// Validate and set default for Size to prevent OpenSearch "numHits must be > 0" error
+	size := params.Size
+	if size <= 0 {
+		size = 10 // Default size
+	}
+
 	// Конвертируем ServiceParams → SearchParams
 	// CategoryID: string → *int
 	var categoryID *int
@@ -134,7 +140,7 @@ func (a *DatabaseOpenSearchAdapter) SearchListings(ctx context.Context, params *
 		PriceMax:      priceMax,
 		Condition:     params.Condition,
 		Page:          params.Page,
-		Size:          params.Size,
+		Size:          size,
 		Sort:          params.Sort,
 		SortDirection: params.SortDirection,
 		City:          params.City,
@@ -158,8 +164,9 @@ func (a *DatabaseOpenSearchAdapter) SearchListings(ctx context.Context, params *
 	}
 
 	// Конвертируем SearchResult → ServiceResult
-	totalPages := result.Total / params.Size
-	if result.Total%params.Size > 0 {
+	// Use validated size for calculations
+	totalPages := result.Total / size
+	if result.Total%size > 0 {
 		totalPages++
 	}
 
@@ -167,7 +174,7 @@ func (a *DatabaseOpenSearchAdapter) SearchListings(ctx context.Context, params *
 		Items:       result.Listings,
 		Total:       result.Total,
 		Page:        params.Page,
-		Size:        params.Size,
+		Size:        size,
 		TotalPages:  totalPages,
 		Took:        result.Took,
 		Facets:      result.Aggregations,
