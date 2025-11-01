@@ -378,8 +378,14 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		logger.Warn().Int("requested_size", params.Size).Int("default_size", size).Msg("Invalid size parameter, using default")
 	}
 
+	// Validate page to prevent negative 'from' value
+	page := params.Page
+	if page < 1 {
+		page = 1 // Pages start from 1
+	}
+
 	query := map[string]interface{}{
-		"from":              (params.Page - 1) * size,
+		"from":              (page - 1) * size,
 		"size":              size,
 		"track_total_hits":  true, // Required for OpenSearch to correctly handle queries
 		"query": map[string]interface{}{
@@ -394,7 +400,8 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 	// DEBUG: Log query structure
 	logger.Info().
 		Int("size", size).
-		Int("from", (params.Page-1)*size).
+		Int("page", page).
+		Int("from", (page-1)*size).
 		Bool("track_total_hits", true).
 		Msg("buildSearchQuery: query structure created")
 
