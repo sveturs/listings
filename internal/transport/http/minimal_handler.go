@@ -9,6 +9,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/adaptor/v2"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 
 	"github.com/sveturs/listings/internal/domain"
@@ -49,6 +51,9 @@ func (h *MinimalHandler) SetupRoutes(app *fiber.App) {
 		return c.JSON(fiber.Map{"status": "ready", "timestamp": time.Now().Unix()})
 	})
 
+	// Prometheus metrics endpoint
+	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
+
 	api := app.Group("/api/v1")
 	api.Get("/listings", h.ListListings)
 	api.Get("/listings/:id", h.GetListing)
@@ -57,6 +62,9 @@ func (h *MinimalHandler) SetupRoutes(app *fiber.App) {
 
 // GetListing handles GET listing
 func (h *MinimalHandler) GetListing(c *fiber.Ctx) error {
+	// Add X-Served-By header for traffic distribution measurement (Phase 3)
+	c.Set("X-Served-By", "microservice")
+
 	id, _ := c.ParamsInt("id")
 	listing, err := h.service.GetListing(c.Context(), int64(id))
 	if err != nil {
@@ -67,6 +75,9 @@ func (h *MinimalHandler) GetListing(c *fiber.Ctx) error {
 
 // CreateListing handles POST listing
 func (h *MinimalHandler) CreateListing(c *fiber.Ctx) error {
+	// Add X-Served-By header for traffic distribution measurement (Phase 3)
+	c.Set("X-Served-By", "microservice")
+
 	var input domain.CreateListingInput
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid body"})
@@ -82,6 +93,9 @@ func (h *MinimalHandler) CreateListing(c *fiber.Ctx) error {
 
 // ListListings handles GET listings
 func (h *MinimalHandler) ListListings(c *fiber.Ctx) error {
+	// Add X-Served-By header for traffic distribution measurement (Phase 3)
+	c.Set("X-Served-By", "microservice")
+
 	filter := &domain.ListListingsFilter{Limit: 20, Offset: 0}
 	listings, total, err := h.service.ListListings(c.Context(), filter)
 	if err != nil {
