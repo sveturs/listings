@@ -4,9 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -35,10 +33,11 @@ func NewHandler(db *sql.DB, redis *redis.Client) *Handler {
 }
 
 // RegisterRoutes registers health check routes
+// NOTE: /metrics endpoint is registered separately in server.go to avoid duplication
 func (h *Handler) RegisterRoutes(router fiber.Router) {
 	router.Get("/health/live", h.LiveCheck)
 	router.Get("/health/ready", h.ReadyCheck)
-	router.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
+	// Removed: router.Get("/metrics", ...) - now registered in server.go only
 }
 
 // LiveCheck checks if the service is alive

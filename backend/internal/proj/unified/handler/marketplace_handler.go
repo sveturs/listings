@@ -171,9 +171,11 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 		})
 	}
 
-	// Парсинг source_type
-	sourceType := c.Query("source_type", "")
-	if sourceType != service.SourceTypeC2C && sourceType != service.SourceTypeB2C {
+	// Парсинг source_type (default = "all" для совместимости)
+	sourceType := c.Query("source_type", "all")
+
+	// Валидация: допустимы "c2c", "b2c", "all"
+	if sourceType != "all" && sourceType != service.SourceTypeC2C && sourceType != service.SourceTypeB2C {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "marketplace.invalid_source_type",
 		})
@@ -340,9 +342,11 @@ func (h *MarketplaceHandler) DeleteListing(c *fiber.Ctx) error {
 		})
 	}
 
-	// Парсинг source_type
-	sourceType := c.Query("source_type", "")
-	if sourceType != service.SourceTypeC2C && sourceType != service.SourceTypeB2C {
+	// Парсинг source_type (default = "all" для совместимости)
+	sourceType := c.Query("source_type", "all")
+
+	// Валидация: допустимы "c2c", "b2c", "all"
+	if sourceType != "all" && sourceType != service.SourceTypeC2C && sourceType != service.SourceTypeB2C {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "marketplace.invalid_source_type",
 		})

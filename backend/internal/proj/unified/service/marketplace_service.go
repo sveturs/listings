@@ -346,8 +346,26 @@ func (s *MarketplaceService) GetListing(ctx context.Context, id int64, sourceTyp
 		return s.getC2CListing(ctx, int(id))
 	case SourceTypeB2C:
 		return s.getB2CListing(ctx, int(id))
+	case "all":
+		// Попытка получить из C2C, затем B2C
+		c2cListing, errC2C := s.getC2CListing(ctx, int(id))
+		if errC2C == nil {
+			return c2cListing, nil
+		}
+
+		s.logger.Debug().Err(errC2C).Msg("C2C listing not found, trying B2C")
+
+		b2cListing, errB2C := s.getB2CListing(ctx, int(id))
+		if errB2C == nil {
+			return b2cListing, nil
+		}
+
+		s.logger.Debug().Err(errB2C).Msg("B2C listing not found either")
+
+		// Если не найдено ни в C2C, ни в B2C
+		return nil, fmt.Errorf("listing not found in any source (C2C or B2C)")
 	default:
-		return nil, fmt.Errorf("invalid source_type: %s (must be '%s' or '%s')", sourceType, SourceTypeC2C, SourceTypeB2C)
+		return nil, fmt.Errorf("invalid source_type: %s (must be '%s', '%s', or 'all')", sourceType, SourceTypeC2C, SourceTypeB2C)
 	}
 }
 
@@ -613,8 +631,26 @@ func (s *MarketplaceService) DeleteListing(ctx context.Context, id int64, source
 		return s.deleteC2CListing(ctx, int(id))
 	case SourceTypeB2C:
 		return s.deleteB2CListing(ctx, int(id))
+	case "all":
+		// Попытка удалить из C2C, затем B2C
+		errC2C := s.deleteC2CListing(ctx, int(id))
+		if errC2C == nil {
+			return nil
+		}
+
+		s.logger.Debug().Err(errC2C).Msg("C2C listing not found for deletion, trying B2C")
+
+		errB2C := s.deleteB2CListing(ctx, int(id))
+		if errB2C == nil {
+			return nil
+		}
+
+		s.logger.Debug().Err(errB2C).Msg("B2C listing not found for deletion either")
+
+		// Если не найдено ни в C2C, ни в B2C
+		return fmt.Errorf("listing not found in any source (C2C or B2C) for deletion")
 	default:
-		return fmt.Errorf("invalid source_type: %s (must be '%s' or '%s')", sourceType, SourceTypeC2C, SourceTypeB2C)
+		return fmt.Errorf("invalid source_type: %s (must be '%s', '%s', or 'all')", sourceType, SourceTypeC2C, SourceTypeB2C)
 	}
 }
 
