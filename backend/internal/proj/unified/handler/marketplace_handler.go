@@ -195,6 +195,9 @@ func (h *MarketplaceHandler) GetListing(c *fiber.Ctx) error {
 		})
 	}
 
+	// Add X-Served-By header for traffic distribution measurement (Phase 3)
+	c.Set("X-Served-By", "monolith")
+
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data":    listing,

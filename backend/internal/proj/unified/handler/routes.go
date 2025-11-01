@@ -10,12 +10,20 @@ import (
 
 // RegisterMarketplaceRoutes регистрирует unified marketplace routes
 func (h *MarketplaceHandler) RegisterMarketplaceRoutes(app *fiber.App, mw *middleware.Middleware, jwtParserMW fiber.Handler) error {
+	// Middleware для добавления X-Served-By header (Phase 3 traffic measurement)
+	servedByMiddleware := func(c *fiber.Ctx) error {
+		// Устанавливаем default header (monolith)
+		// Microservice может override через свой response
+		c.Set("X-Served-By", "monolith")
+		return c.Next()
+	}
+
 	// Public routes (без аутентификации)
-	app.Get("/api/v1/marketplace/search", h.SearchListings)
-	app.Get("/api/v1/marketplace/listings/:id", h.GetListing)
+	app.Get("/api/v1/marketplace/search", servedByMiddleware, h.SearchListings)
+	app.Get("/api/v1/marketplace/listings/:id", servedByMiddleware, h.GetListing)
 
 	// Protected routes (требуют аутентификацию)
-	protected := app.Group("/api/v1/marketplace", jwtParserMW, authMiddleware.RequireAuth())
+	protected := app.Group("/api/v1/marketplace", servedByMiddleware, jwtParserMW, authMiddleware.RequireAuth())
 	protected.Post("/listings", h.CreateListing)
 	protected.Put("/listings/:id", h.UpdateListing)
 	protected.Delete("/listings/:id", h.DeleteListing)
