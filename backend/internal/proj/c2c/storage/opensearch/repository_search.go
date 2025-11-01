@@ -379,8 +379,9 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 	}
 
 	query := map[string]interface{}{
-		"from": (params.Page - 1) * size,
-		"size": size,
+		"from":              (params.Page - 1) * size,
+		"size":              size,
+		"track_total_hits":  true, // Required for OpenSearch to correctly handle queries
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{
 				"must":   []interface{}{},
