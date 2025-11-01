@@ -13,9 +13,16 @@ func (r *Repository) buildImprovedSearchQuery(ctx context.Context, params *searc
 	logger.Info().Msgf("Строим улучшенный запрос: категория = %v, язык = %s, поисковый запрос = %s",
 		params.CategoryID, params.Language, params.Query)
 
+	// Validate and set default for size to prevent OpenSearch "numHits must be > 0" error
+	size := params.Size
+	if size <= 0 {
+		size = 10 // Default size
+		logger.Warn().Int("requested_size", params.Size).Int("default_size", size).Msg("Invalid size parameter, using default")
+	}
+
 	query := map[string]interface{}{
-		"from": (params.Page - 1) * params.Size,
-		"size": params.Size,
+		"from": (params.Page - 1) * size,
+		"size": size,
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{
 				"must":   []interface{}{},

@@ -445,8 +445,14 @@ func (r *ProductRepository) ReindexAll(ctx context.Context) error {
 
 // buildSearchQuery строит запрос для поиска товаров
 func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[string]interface{} {
+	// Validate and set default for limit to prevent OpenSearch "numHits must be > 0" error
+	limit := params.Limit
+	if limit <= 0 {
+		limit = 10 // Default limit
+	}
+
 	query := map[string]interface{}{
-		"size": params.Limit,
+		"size": limit,
 		"from": params.Offset,
 	}
 

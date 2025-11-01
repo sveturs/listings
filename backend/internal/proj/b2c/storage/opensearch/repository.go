@@ -197,8 +197,14 @@ func (r *StorefrontRepository) storefrontToDoc(storefront *models.Storefront) ma
 
 // buildSearchQuery строит запрос для поиска витрин
 func (r *StorefrontRepository) buildSearchQuery(params *StorefrontSearchParams) map[string]interface{} {
+	// Validate and set default for limit to prevent OpenSearch "numHits must be > 0" error
+	limit := params.Limit
+	if limit <= 0 {
+		limit = 10 // Default limit
+	}
+
 	query := map[string]interface{}{
-		"size": params.Limit,
+		"size": limit,
 		"from": params.Offset,
 	}
 
