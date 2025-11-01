@@ -30,21 +30,70 @@ message Listing {
   int64 id = 1;
   string uuid = 2;
   int64 user_id = 3;
-  int64 storefront_id = 4;
+  optional int64 storefront_id = 4;
   string title = 5;
-  string description = 6;
+  optional string description = 6;
   double price = 7;
   string currency = 8;
   int64 category_id = 9;
   string status = 10;
   string visibility = 11;
   int32 quantity = 12;
-  string sku = 13;
+  optional string sku = 13;
   int32 views_count = 14;
   int32 favorites_count = 15;
   string created_at = 16;
   string updated_at = 17;
-  string published_at = 18;
+  optional string published_at = 18;
+  optional string deleted_at = 19;
+  bool is_deleted = 20;
+
+  // Relations
+  repeated ListingImage images = 21;
+  repeated ListingAttribute attributes = 22;
+  repeated string tags = 23;
+  optional ListingLocation location = 24;
+}
+
+// ListingImage represents an image associated with a listing
+message ListingImage {
+  int64 id = 1;
+  int64 listing_id = 2;
+  string url = 3;
+  optional string storage_path = 4;
+  optional string thumbnail_url = 5;
+  int32 display_order = 6;
+  bool is_primary = 7;
+  optional int32 width = 8;
+  optional int32 height = 9;
+  optional int64 file_size = 10;
+  optional string mime_type = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}
+
+// ListingAttribute represents flexible key-value attributes
+message ListingAttribute {
+  int64 id = 1;
+  int64 listing_id = 2;
+  string attribute_key = 3;
+  string attribute_value = 4;
+  string created_at = 5;
+}
+
+// ListingLocation represents geographic location
+message ListingLocation {
+  int64 id = 1;
+  int64 listing_id = 2;
+  optional string country = 3;
+  optional string city = 4;
+  optional string postal_code = 5;
+  optional string address_line1 = 6;
+  optional string address_line2 = 7;
+  optional double latitude = 8;
+  optional double longitude = 9;
+  string created_at = 10;
+  string updated_at = 11;
 }
 
 // GetListing messages
@@ -59,14 +108,14 @@ message GetListingResponse {
 // CreateListing messages
 message CreateListingRequest {
   int64 user_id = 1;
-  int64 storefront_id = 2;
+  optional int64 storefront_id = 2;
   string title = 3;
-  string description = 4;
+  optional string description = 4;
   double price = 5;
   string currency = 6;
   int64 category_id = 7;
   int32 quantity = 8;
-  string sku = 9;
+  optional string sku = 9;
 }
 
 message CreateListingResponse {
@@ -76,11 +125,12 @@ message CreateListingResponse {
 // UpdateListing messages
 message UpdateListingRequest {
   int64 id = 1;
-  string title = 2;
-  string description = 3;
-  double price = 4;
-  int32 quantity = 5;
-  string status = 6;
+  int64 user_id = 2; // Required for ownership check
+  optional string title = 3;
+  optional string description = 4;
+  optional double price = 5;
+  optional int32 quantity = 6;
+  optional string status = 7;
 }
 
 message UpdateListingResponse {
@@ -90,6 +140,7 @@ message UpdateListingResponse {
 // DeleteListing messages
 message DeleteListingRequest {
   int64 id = 1;
+  int64 user_id = 2; // Required for ownership check
 }
 
 message DeleteListingResponse {
@@ -99,9 +150,11 @@ message DeleteListingResponse {
 // SearchListings messages
 message SearchListingsRequest {
   string query = 1;
-  int64 category_id = 2;
-  int32 limit = 3;
-  int32 offset = 4;
+  optional int64 category_id = 2;
+  optional double min_price = 3;
+  optional double max_price = 4;
+  int32 limit = 5;
+  int32 offset = 6;
 }
 
 message SearchListingsResponse {
@@ -111,11 +164,14 @@ message SearchListingsResponse {
 
 // ListListings messages
 message ListListingsRequest {
-  int64 user_id = 1;
-  int64 storefront_id = 2;
-  string status = 3;
-  int32 limit = 4;
-  int32 offset = 5;
+  optional int64 user_id = 1;
+  optional int64 storefront_id = 2;
+  optional int64 category_id = 3;
+  optional string status = 4;
+  optional double min_price = 5;
+  optional double max_price = 6;
+  int32 limit = 7;
+  int32 offset = 8;
 }
 
 message ListListingsResponse {

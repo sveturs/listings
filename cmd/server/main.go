@@ -4,19 +4,24 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/rs/zerolog"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
+	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/cache"
 	"github.com/sveturs/listings/internal/config"
 	"github.com/sveturs/listings/internal/metrics"
 	"github.com/sveturs/listings/internal/repository/opensearch"
 	"github.com/sveturs/listings/internal/repository/postgres"
 	"github.com/sveturs/listings/internal/service/listings"
+	grpcTransport "github.com/sveturs/listings/internal/transport/grpc"
 	httpTransport "github.com/sveturs/listings/internal/transport/http"
 	"github.com/sveturs/listings/internal/worker"
 )
@@ -126,6 +131,27 @@ func main() {
 		defer indexWorker.Stop()
 	}
 
+	// Initialize gRPC server
+	grpcServer := grpc.NewServer()
+	grpcHandler := grpcTransport.NewServer(listingsService, logger)
+	pb.RegisterListingsServiceServer(grpcServer, grpcHandler)
+
+	// Enable gRPC reflection for tools like grpcurl
+	reflection.Register(grpcServer)
+
+	// Start gRPC server in goroutine
+	grpcListener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", cfg.Server.GRPCHost, cfg.Server.GRPCPort))
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to create gRPC listener")
+	}
+
+	go func() {
+		logger.Info().Int("port", cfg.Server.GRPCPort).Msg("Starting gRPC server")
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			logger.Error().Err(err).Msg("gRPC server error")
+		}
+	}()
+
 	// Initialize HTTP server
 	httpHandler := httpTransport.NewMinimalHandler(listingsService, logger)
 	httpApp, err := httpTransport.StartMinimalServer(
@@ -142,7 +168,7 @@ func main() {
 	logger.Info().
 		Int("http_port", cfg.Server.HTTPPort).
 		Int("grpc_port", cfg.Server.GRPCPort).
-		Msg("Listings Service started successfully")
+		Msg("Listings Service started successfully (HTTP + gRPC)")
 
 	// Wait for termination signal
 	sig := make(chan os.Signal, 1)
@@ -161,6 +187,10 @@ func main() {
 			logger.Error().Err(err).Msg("error stopping worker")
 		}
 	}
+
+	// Shutdown gRPC server
+	logger.Info().Msg("Stopping gRPC server...")
+	grpcServer.GracefulStop()
 
 	// Shutdown HTTP server
 	if err := httpApp.ShutdownWithContext(ctx); err != nil {
