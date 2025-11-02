@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"backend/internal/domain/models"
-	"backend/internal/domain/search"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/service"
@@ -27,19 +25,15 @@ func NewMessageHandler(
 	botService *service.BotService,
 	infobipService *service.InfobipBotService,
 	services globalService.ServicesInterface,
-	marketplaceService marketplaceService.MarketplaceServiceInterface,
-	storefrontService storefrontService.StorefrontService,
 	useInfobip bool,
 	cfg *config.ViberConfig,
 ) *MessageHandler {
 	return &MessageHandler{
-		botService:         botService,
-		infobipService:     infobipService,
-		services:           services,
-		marketplaceService: marketplaceService,
-		storefrontService:  storefrontService,
-		useInfobip:         useInfobip,
-		config:             cfg,
+		botService:     botService,
+		infobipService: infobipService,
+		services:       services,
+		useInfobip:     useInfobip,
+		config:         cfg,
 	}
 }
 
@@ -53,15 +47,14 @@ func (m *MessageHandler) HandleSearch(ctx context.Context, viberID, query string
 		return m.sendMessage(ctx, viberID, msg)
 	}
 
-	// Ищем товары в маркетплейсе
-	searchParams := &search.ServiceParams{
-		Query:    cleanQuery,
-		Page:     1,
-		Size:     5,
-		Language: "ru",
-	}
+	// TODO: Marketplace service removed - need to integrate with marketplace microservice
+	// Temporary stub - return "service unavailable" message
+	_ = cleanQuery // reserved for future use with marketplace integration
+	msg := "Поиск временно недоступен. Мы работаем над улучшением сервиса."
+	return m.sendMessage(ctx, viberID, msg)
 
-	results, err := // TODO: m.marketplaceService.SearchListingsAdvanced(ctx, searchParams)
+	// Unreachable code below - kept for reference
+	/*
 	if err != nil {
 		msg := "Произошла ошибка при поиске. Попробуйте позже или измените запрос."
 		return m.sendMessage(ctx, viberID, msg)
@@ -69,7 +62,7 @@ func (m *MessageHandler) HandleSearch(ctx context.Context, viberID, query string
 
 	if len(results.Items) == 0 {
 		// Предлагаем альтернативы
-		suggestions, _ := // TODO: m.marketplaceService.GetSuggestions(ctx, cleanQuery, 3)
+		suggestions, _ := m.marketplaceService.GetSuggestions(ctx, cleanQuery, 3)
 		msg := fmt.Sprintf("По запросу \"%s\" ничего не найдено.\n\n", cleanQuery)
 
 		if len(suggestions) > 0 {
@@ -103,6 +96,7 @@ func (m *MessageHandler) HandleSearch(ctx context.Context, viberID, query string
 	}
 
 	return m.sendMessage(ctx, viberID, msg)
+	*/
 }
 
 // HandleMyOrders обрабатывает запрос "Мои заказы"
@@ -159,17 +153,13 @@ func (m *MessageHandler) HandleTrackDelivery(ctx context.Context, viberID, track
 
 // HandleStorefronts обрабатывает запрос "Витрины"
 func (m *MessageHandler) HandleStorefronts(ctx context.Context, viberID string) error {
-	// Ищем популярные витрины
-	isActive := true
-	filter := &models.StorefrontFilter{
-		IsActive:  &isActive,
-		Limit:     5,
-		Offset:    0,
-		SortBy:    "created_at",
-		SortOrder: "DESC",
-	}
+	// TODO: Storefront service removed - need to integrate with storefront microservice
+	// Temporary stub
+	msg := "Витрины временно недоступны. Мы работаем над улучшением сервиса."
+	return m.sendMessage(ctx, viberID, msg)
 
-	b2c_stores, total, err := // TODO: m.storefrontService.Search(ctx, filter)
+	// Unreachable code below - kept for reference
+	/*
 	if err != nil {
 		msg := "Произошла ошибка при загрузке витрин. Попробуйте позже."
 		return m.sendMessage(ctx, viberID, msg)
@@ -203,6 +193,7 @@ func (m *MessageHandler) HandleStorefronts(ctx context.Context, viberID string) 
 	}
 
 	return m.sendMessage(ctx, viberID, msg)
+	*/
 }
 
 // HandleHelp обрабатывает запрос помощи
@@ -227,8 +218,15 @@ func (m *MessageHandler) HandleHelp(ctx context.Context, viberID string) error {
 
 // HandleNearbyProducts обрабатывает поиск товаров рядом
 func (m *MessageHandler) HandleNearbyProducts(ctx context.Context, viberID string, lat, lng float64) error {
+	// TODO: Marketplace service removed - need to integrate with marketplace microservice
+	// Temporary stub
+	msg := "Поиск товаров рядом временно недоступен. Мы работаем над улучшением сервиса."
+	return m.sendMessage(ctx, viberID, msg)
+
+	// Unreachable code below - kept for reference
+	/*
 	// Ищем товары в радиусе 5 км
-	markers, err := // TODO: m.marketplaceService.GetListingsInBounds(ctx,
+	markers, err := m.marketplaceService.GetListingsInBounds(ctx,
 		lat+0.045, // ~5км к северу
 		lng+0.063, // ~5км к востоку
 		lat-0.045, // ~5км к югу
@@ -282,6 +280,7 @@ func (m *MessageHandler) HandleNearbyProducts(ctx context.Context, viberID strin
 	}
 
 	return m.sendMessage(ctx, viberID, msg)
+	*/
 }
 
 // calculateDistance вычисляет расстояние между двумя точками в километрах

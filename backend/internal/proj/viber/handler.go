@@ -47,8 +47,6 @@ func NewViberHandler(db *postgres.Database, services globalService.ServicesInter
 		botService,
 		infobipService,
 		services,
-		services.Marketplace(),
-		services.Storefront(),
 		cfg.UseInfobip,
 		cfg,
 	)
