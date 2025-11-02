@@ -1,16 +1,18 @@
 package handler
 
 import (
-	"time"
 
 	"github.com/gofiber/fiber/v2"
-	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 )
 
 // RegisterRoutes регистрирует маршруты для модуля contacts
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
+	// TODO: Contacts routes temporarily disabled during refactoring
+	return nil
+
+	/*
 	// Группа маршрутов для контактов
 	// БЕЗ CSRF - используем BFF proxy архитектуру
 	contacts := app.Group("/api/v1/contacts", h.jwtParserMW, authMiddleware.RequireAuthString(), mw.RateLimitByUser(300, time.Minute))
@@ -26,6 +28,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	contacts.Put("/privacy", h.UpdatePrivacySettings)               // Обновить настройки приватности
 
 	return nil
+	*/
 }
 
 // GetPrefix возвращает префикс проекта для логирования

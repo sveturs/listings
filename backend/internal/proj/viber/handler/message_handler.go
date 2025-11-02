@@ -61,7 +61,7 @@ func (m *MessageHandler) HandleSearch(ctx context.Context, viberID, query string
 		Language: "ru",
 	}
 
-	results, err := m.marketplaceService.SearchListingsAdvanced(ctx, searchParams)
+	results, err := // TODO: m.marketplaceService.SearchListingsAdvanced(ctx, searchParams)
 	if err != nil {
 		msg := "Произошла ошибка при поиске. Попробуйте позже или измените запрос."
 		return m.sendMessage(ctx, viberID, msg)
@@ -69,7 +69,7 @@ func (m *MessageHandler) HandleSearch(ctx context.Context, viberID, query string
 
 	if len(results.Items) == 0 {
 		// Предлагаем альтернативы
-		suggestions, _ := m.marketplaceService.GetSuggestions(ctx, cleanQuery, 3)
+		suggestions, _ := // TODO: m.marketplaceService.GetSuggestions(ctx, cleanQuery, 3)
 		msg := fmt.Sprintf("По запросу \"%s\" ничего не найдено.\n\n", cleanQuery)
 
 		if len(suggestions) > 0 {
@@ -169,7 +169,7 @@ func (m *MessageHandler) HandleStorefronts(ctx context.Context, viberID string) 
 		SortOrder: "DESC",
 	}
 
-	b2c_stores, total, err := m.storefrontService.Search(ctx, filter)
+	b2c_stores, total, err := // TODO: m.storefrontService.Search(ctx, filter)
 	if err != nil {
 		msg := "Произошла ошибка при загрузке витрин. Попробуйте позже."
 		return m.sendMessage(ctx, viberID, msg)
@@ -228,7 +228,7 @@ func (m *MessageHandler) HandleHelp(ctx context.Context, viberID string) error {
 // HandleNearbyProducts обрабатывает поиск товаров рядом
 func (m *MessageHandler) HandleNearbyProducts(ctx context.Context, viberID string, lat, lng float64) error {
 	// Ищем товары в радиусе 5 км
-	markers, err := m.marketplaceService.GetListingsInBounds(ctx,
+	markers, err := // TODO: m.marketplaceService.GetListingsInBounds(ctx,
 		lat+0.045, // ~5км к северу
 		lng+0.063, // ~5км к востоку
 		lat-0.045, // ~5км к югу

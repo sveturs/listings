@@ -362,7 +362,7 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
 func (db *Database) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
 	log.Println("SearchListings: OpenSearch disabled during refactoring")
 	return &search.SearchResult{
-		Listings: []models.MarketplaceListing{},
+		Listings: nil,
 		Total:    0,
 	}, nil
 }
@@ -400,7 +400,7 @@ func (db *Database) AddContact(ctx context.Context, contact *models.UserContact)
 }
 
 func (db *Database) UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateContactStatus(ctx, userID, contactUserID, status, notes)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateContactStatus(ctx, userID, contactUserID, status, notes)
 }
 
 func (db *Database) GetContact(ctx context.Context, userID, contactUserID int) (*models.UserContact, error) {
@@ -416,7 +416,7 @@ func (db *Database) GetIncomingContactRequests(ctx context.Context, userID int, 
 }
 
 func (db *Database) RemoveContact(ctx context.Context, userID, contactUserID int) error {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.RemoveContact(ctx, userID, contactUserID)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.RemoveContact(ctx, userID, contactUserID)
 }
 
 func (db *Database) GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
@@ -424,7 +424,7 @@ func (db *Database) GetUserPrivacySettings(ctx context.Context, userID int) (*mo
 }
 
 func (db *Database) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
 }
 
 func (db *Database) GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
@@ -432,11 +432,11 @@ func (db *Database) GetPrivacySettings(ctx context.Context, userID int) (*models
 }
 
 func (db *Database) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
 }
 
 func (db *Database) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateChatSettings(ctx, userID, settings)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateChatSettings(ctx, userID, settings)
 }
 
 func (db *Database) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {
@@ -444,7 +444,7 @@ func (db *Database) CanAddContact(ctx context.Context, userID, targetUserID int)
 }
 
 func (db *Database) AreContacts(ctx context.Context, userID1, userID2 int) (bool, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.AreContacts(ctx, userID1, userID2)
+	return false, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.AreContacts(ctx, userID1, userID2)
 }
 
 // Marketplace listing variants methods

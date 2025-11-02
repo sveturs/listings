@@ -11,11 +11,11 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
+	"backend/pkg/utils"
 )
 
 // Handler объединяет все глобальные обработчики
 type Handler struct {
-	UnifiedSearch *UnifiedSearchHandler
 	service       globalService.ServicesInterface
 	searchWeights *config.SearchWeights
 }
@@ -23,7 +23,6 @@ type Handler struct {
 // NewHandler создает новый глобальный обработчик
 func NewHandler(services globalService.ServicesInterface, searchWeights *config.SearchWeights) *Handler {
 	return &Handler{
-		UnifiedSearch: NewUnifiedSearchHandler(services),
 		service:       services,
 		searchWeights: searchWeights,
 	}
@@ -38,7 +37,7 @@ func (h *Handler) GetPrefix() string {
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Регистрируем унифицированный поиск напрямую в app,
 	// чтобы избежать конфликтов с другими middleware
-	app.Get("/api/v1/search", h.UnifiedSearch.UnifiedSearch)
+	app.Get("/api/v1/search", h.UnifiedSearch)
 
 	// Добавляем алиас для suggestions
 	app.Get("/api/v1/search/suggestions", h.GetSuggestions)
@@ -111,14 +110,6 @@ func (h *Handler) GetSuggestions(c *fiber.Ctx) error {
 		params.Category = &category
 	}
 
-	// Используем GetUnifiedSuggestions для получения структурированных подсказок
-	suggestions, err := /* TODO: Marketplace service removed */ nil.GetUnifiedSuggestions(c.Context(), params)
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get suggestions")
-	}
-
-	// Возвращаем в формате совместимом с API
-	return c.JSON(fiber.Map{
-		"data": suggestions,
-	})
+	// TODO: Suggestions temporarily disabled during refactoring
+	return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "service.temporarilyDisabled")
 }

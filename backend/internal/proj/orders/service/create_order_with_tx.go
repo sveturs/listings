@@ -483,7 +483,7 @@ func (s *OrderService) clearCartTx(ctx context.Context, tx *sqlx.Tx, cartID int6
 // updateProductStocksInSearch обновляет остатки товаров в OpenSearch после создания заказа
 func (s *OrderService) updateProductStocksInSearch(ctx context.Context, orderItems []models.StorefrontOrderItem) {
 	// Проверяем наличие OpenSearch репозитория
-	if s.productSearchRepo == nil {
+	if // TODO: s.productSearchRepo == nil {
 		s.logger.Info("ProductSearchRepo is not configured, skipping stock update in OpenSearch")
 		return
 	}
@@ -536,7 +536,7 @@ func (s *OrderService) updateProductStocksInSearch(ctx context.Context, orderIte
 
 		// Обновляем данные в OpenSearch
 		// Для товаров витрин используем префикс sp_ в ID документа
-		err = s.productSearchRepo.UpdateProductStock(ctx, int(item.ProductID), stockData)
+		err = // TODO: s.productSearchRepo.UpdateProductStock(ctx, int(item.ProductID), stockData)
 		if err != nil {
 			// Если товар не найден с обычным ID, пробуем с префиксом sp_ для товаров витрин
 			s.logger.Info("Trying to update storefront product sp_%d in OpenSearch", item.ProductID)

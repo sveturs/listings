@@ -33,14 +33,11 @@ func (db *Database) PrepareIndex(ctx context.Context) error {
 		return nil
 	}
 
-	// Используем уже инициализированный репозиторий для проверки индекса
-	return db.osMarketplaceRepo.PrepareIndex(ctx)
+	// TODO: OpenSearch temporarily disabled during refactoring
+	return nil
 }
 
-// SearchListingsOpenSearch выполняет поиск листингов через OpenSearch
+// SearchListingsOpenSearch - TODO: temporarily disabled during refactoring
 func (db *Database) SearchListingsOpenSearch(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	if db.osMarketplaceRepo == nil {
-		return nil, fmt.Errorf("OpenSearch не настроен")
-	}
-	return db.osMarketplaceRepo.SearchListings(ctx, params)
+	return nil, fmt.Errorf("OpenSearch temporarily disabled")
 }

@@ -59,3 +59,13 @@ func (h *Handler) UpdatePrivacySettings(c *fiber.Ctx) error {
 func (h *Handler) CheckContactStatus(c *fiber.Ctx) error {
 	return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "service.temporarilyDisabled")
 }
+
+// GetIncomingRequests - TODO: temporarily disabled
+func (h *Handler) GetIncomingRequests(c *fiber.Ctx) error {
+	return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "service.temporarilyDisabled")
+}
+
+// GetContactStatus - TODO: temporarily disabled
+func (h *Handler) GetContactStatus(c *fiber.Ctx) error {
+	return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "service.temporarilyDisabled")
+}

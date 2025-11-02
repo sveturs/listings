@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 
 	"backend/internal/config"
 	"backend/internal/storage"
