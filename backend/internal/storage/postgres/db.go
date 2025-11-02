@@ -51,13 +51,13 @@ type Database struct {
 	b2cProductIndex      string // Индекс для B2C товаров
 	attributeGroups      AttributeGroupStorage
 	fsStorage            filestorage.FileStorageInterface
-	storefrontRepo       StorefrontRepository                         // Репозиторий для витрин
-	cartRepo             CartRepositoryInterface                      // Репозиторий для корзин
-	orderRepo            OrderRepositoryInterface                     // Репозиторий для заказов
-	searchWeights        *config.SearchWeights                        // Веса для поиска
-	inventoryRepo        InventoryRepositoryInterface                 // Репозиторий для инвентаря
-	marketplaceOrderRepo *MarketplaceOrderRepository                  // Репозиторий для заказов маркетплейса
-	productSearchRepo    storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
+	storefrontRepo       StorefrontRepository            // Репозиторий для витрин
+	cartRepo             CartRepositoryInterface         // Репозиторий для корзин
+	orderRepo            OrderRepositoryInterface        // Репозиторий для заказов
+	searchWeights        *config.SearchWeights           // Веса для поиска
+	inventoryRepo        InventoryRepositoryInterface    // Репозиторий для инвентаря
+	marketplaceOrderRepo *MarketplaceOrderRepository     // Репозиторий для заказов маркетплейса
+	productSearchRepo    ProductSearchRepositoryStub     // Заглушка для поиска товаров витрин (TODO: восстановить после рефакторинга OpenSearch)
 }
 
 // NewDatabase создает новый экземпляр Database
@@ -110,28 +110,12 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 	// Инициализируем репозиторий заказов маркетплейса
 	db.marketplaceOrderRepo = NewMarketplaceOrderRepository(pool)
 
-	// Инициализируем репозиторий OpenSearch, если клиент передан
+	// TODO: Инициализация OpenSearch репозиториев временно отключена
+	// Необходимо рефакторинг OpenSearch модуля
 	if osClient != nil {
-		db.osMarketplaceRepo = opensearch.NewRepository(osClient, indexName, db, searchWeights)
-		// Подготавливаем индекс
-		if err := db.osMarketplaceRepo.PrepareIndex(ctx); err != nil {
-			log.Printf("Ошибка подготовки индекса OpenSearch: %v", err)
-		}
-
-		// Инициализируем репозиторий витрин в OpenSearch
-		db.osStorefrontRepo = storefrontOpenSearch.NewStorefrontRepository(osClient, db.storefrontIndex)
-		// Подготавливаем индекс витрин
-		if err := db.osStorefrontRepo.PrepareIndex(ctx); err != nil {
-			log.Printf("Ошибка подготовки индекса витрин в OpenSearch: %v", err)
-		}
-
-		// Инициализируем репозиторий товаров витрин в OpenSearch
-		// Используем отдельный индекс b2c_products для B2C товаров
-		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, db.b2cProductIndex)
-		// Подготавливаем индекс товаров витрин
-		if err := db.productSearchRepo.PrepareIndex(ctx); err != nil {
-			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
-		}
+		log.Println("OpenSearch client available, but repositories initialization is disabled during refactoring")
+		// Используем заглушку для productSearchRepo
+		db.productSearchRepo = &productSearchStub{}
 	}
 
 	// Сохраняем search weights
@@ -141,3 +125,13 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 }
 
 var _ storage.Storage = (*Database)(nil)
+
+// ProductSearchRepositoryStub - временная заглушка для ProductSearchRepository
+// TODO: Восстановить после завершения рефакторинга OpenSearch
+type ProductSearchRepositoryStub interface{}
+
+// productSearchStub - реализация заглушки
+type productSearchStub struct{}
+
+// Ensure stub implements the interface (if needed)
+var _ ProductSearchRepositoryStub = (*productSearchStub)(nil)

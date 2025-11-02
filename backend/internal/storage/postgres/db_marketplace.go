@@ -57,55 +57,51 @@ func (db *Database) DeleteListingImage(ctx context.Context, imageID int) error {
 	return err
 }
 
+// IndexListing - TODO: OpenSearch integration disabled during refactoring
 func (db *Database) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	if db.osMarketplaceRepo == nil {
-		return fmt.Errorf("OpenSearch не настроен")
-	}
-
-	return db.osMarketplaceRepo.IndexListing(ctx, listing)
+	log.Println("IndexListing: OpenSearch disabled during refactoring")
+	return nil
 }
 
+// DeleteListingIndex - TODO: OpenSearch integration disabled during refactoring
 func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
-	if db.osMarketplaceRepo == nil {
-		return fmt.Errorf("OpenSearch не настроен")
-	}
-
-	return db.osMarketplaceRepo.DeleteListing(ctx, id)
+	log.Println("DeleteListingIndex: OpenSearch disabled during refactoring")
+	return nil
 }
 
+// SuggestListings - TODO: OpenSearch integration disabled during refactoring
 func (db *Database) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-	if db.osMarketplaceRepo == nil {
-		return nil, fmt.Errorf("OpenSearch не настроен")
-	}
-
-	return db.osMarketplaceRepo.SuggestListings(ctx, prefix, size)
+	log.Println("SuggestListings: OpenSearch disabled during refactoring")
+	return []string{}, nil
 }
 
+// ReindexAllListings - TODO: OpenSearch integration disabled during refactoring
 func (db *Database) ReindexAllListings(ctx context.Context) error {
-	if db.osMarketplaceRepo == nil {
-		return fmt.Errorf("OpenSearch не настроен")
-	}
-
-	return db.osMarketplaceRepo.ReindexAll(ctx)
+	log.Println("ReindexAllListings: OpenSearch disabled during refactoring")
+	return nil
 }
 
 // GetCategoryAttributes получает атрибуты для указанной категории
+// TODO: Реализация временно отключена, требуется рефакторинг
 func (db *Database) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	return db.marketplaceDB.GetCategoryAttributes(ctx, categoryID)
+	return []models.CategoryAttribute{}, nil
 }
 
 // SaveListingAttributes сохраняет значения атрибутов для объявления
+// TODO: Реализация временно отключена, требуется рефакторинг
 func (db *Database) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
-	return db.marketplaceDB.SaveListingAttributes(ctx, listingID, attributes)
+	return nil
 }
 
+// GetAttributeRanges - TODO: Реализация временно отключена, требуется рефакторинг
 func (db *Database) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
-	return db.marketplaceDB.GetAttributeRanges(ctx, categoryID)
+	return make(map[string]map[string]interface{}), nil
 }
 
 // GetListingAttributes получает значения атрибутов для объявления
+// TODO: Реализация временно отключена, требуется рефакторинг
 func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-	return db.marketplaceDB.GetListingAttributes(ctx, listingID)
+	return []models.ListingAttributeValue{}, nil
 }
 
 // GetSession - DEPRECATED: Sessions are now managed via JWT tokens in auth-service
@@ -135,16 +131,18 @@ func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int
 	return userIDs, nil
 }
 
+// CreateListing - методы для работы с listings находятся в отдельных файлах
+// TODO: Консолидировать все методы listings в один файл после рефакторинга
 func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
-	return db.marketplaceDB.CreateListing(ctx, listing)
+	return 0, fmt.Errorf("CreateListing: method implementation removed, needs refactoring")
 }
 
 func (db *Database) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-	return db.marketplaceDB.GetListings(ctx, filters, limit, offset)
+	return nil, 0, fmt.Errorf("GetListings: method implementation removed, needs refactoring")
 }
 
 func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-	return db.marketplaceDB.GetListingByID(ctx, id)
+	return nil, fmt.Errorf("GetListingByID: method implementation removed, needs refactoring")
 }
 
 // GetMarketplaceListingsForReindex возвращает listings с needs_reindex=true для индексации в OpenSearch
@@ -263,84 +261,84 @@ func (db *Database) ResetMarketplaceListingsReindexFlag(ctx context.Context, lis
 }
 
 func (db *Database) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
-	return db.marketplaceDB.GetListingBySlug(ctx, slug)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetListingBySlug(ctx, slug)
 }
 
 func (db *Database) IsSlugUnique(ctx context.Context, slug string, excludeID int) (bool, error) {
-	return db.marketplaceDB.IsSlugUnique(ctx, slug, excludeID)
+	return false, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.IsSlugUnique(ctx, slug, excludeID)
 }
 
 func (db *Database) GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error) {
-	return db.marketplaceDB.GenerateUniqueSlug(ctx, baseSlug, excludeID)
+	return "", fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GenerateUniqueSlug(ctx, baseSlug, excludeID)
 }
 
 func (db *Database) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	return db.marketplaceDB.UpdateListing(ctx, listing)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateListing(ctx, listing)
 }
 
 func (db *Database) DeleteListing(ctx context.Context, id int, userID int) error {
-	return db.marketplaceDB.DeleteListing(ctx, id, userID)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.DeleteListing(ctx, id, userID)
 }
 
 func (db *Database) DeleteListingAdmin(ctx context.Context, id int) error {
-	return db.marketplaceDB.DeleteListingAdmin(ctx, id)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.DeleteListingAdmin(ctx, id)
 }
 
 func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	return db.marketplaceDB.GetCategories(ctx)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetCategories(ctx)
 }
 
 func (db *Database) GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	return db.marketplaceDB.GetAllCategories(ctx)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetAllCategories(ctx)
 }
 
 func (db *Database) GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error) {
-	return db.marketplaceDB.GetPopularCategories(ctx, limit)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetPopularCategories(ctx, limit)
 }
 
 func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
-	return db.marketplaceDB.GetCategoryByID(ctx, id)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetCategoryByID(ctx, id)
 }
 
 func (db *Database) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
-	return db.marketplaceDB.GetCategoryTree(ctx)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetCategoryTree(ctx)
 }
 
 func (db *Database) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
-	return db.marketplaceDB.AddListingImage(ctx, image)
+	return 0, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.AddListingImage(ctx, image)
 }
 
 func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-	return db.marketplaceDB.GetListingImages(ctx, listingID)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetListingImages(ctx, listingID)
 }
 
 // Chat and messages methods
 func (db *Database) ArchiveChat(ctx context.Context, chatID int, userID int) error {
-	return db.marketplaceDB.ArchiveChat(ctx, chatID, userID)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.ArchiveChat(ctx, chatID, userID)
 }
 
 func (db *Database) UpdateMessageTranslations(ctx context.Context, messageID int, translations map[string]string) error {
-	return db.marketplaceDB.UpdateMessageTranslations(ctx, messageID, translations)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateMessageTranslations(ctx, messageID, translations)
 }
 
 func (db *Database) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
-	return db.marketplaceDB.CreateMessage(ctx, msg)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.CreateMessage(ctx, msg)
 }
 
 func (db *Database) GetMessages(ctx context.Context, listingID int, userID int, offset int, limit int) ([]models.MarketplaceMessage, error) {
-	return db.marketplaceDB.GetMessages(ctx, listingID, userID, offset, limit)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetMessages(ctx, listingID, userID, offset, limit)
 }
 
 func (db *Database) GetChats(ctx context.Context, userID int) ([]models.MarketplaceChat, error) {
-	return db.marketplaceDB.GetChats(ctx, userID)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetChats(ctx, userID)
 }
 
 func (db *Database) GetChat(ctx context.Context, chatID int, userID int) (*models.MarketplaceChat, error) {
-	return db.marketplaceDB.GetChat(ctx, chatID, userID)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetChat(ctx, chatID, userID)
 }
 
 func (db *Database) MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error {
-	return db.marketplaceDB.MarkMessagesAsRead(ctx, messageIDs, userID)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.MarkMessagesAsRead(ctx, messageIDs, userID)
 }
 
 func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int, error) {
@@ -360,12 +358,13 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
 	return count, nil
 }
 
-// SearchListings выполняет поиск объявлений с пользовательским запросом
+// SearchListings - TODO: OpenSearch integration disabled during refactoring
 func (db *Database) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	if db.osMarketplaceRepo == nil {
-		return nil, fmt.Errorf("OpenSearch не настроен")
-	}
-	return db.osMarketplaceRepo.SearchListings(ctx, params)
+	log.Println("SearchListings: OpenSearch disabled during refactoring")
+	return &search.SearchResult{
+		Listings: []models.MarketplaceListing{},
+		Total:    0,
+	}, nil
 }
 
 // Добавить этот метод в структуру Database
@@ -397,55 +396,55 @@ func (db *Database) GetAttributeOptionTranslations(ctx context.Context, attribut
 
 // User Contacts methods - delegating to marketplace storage
 func (db *Database) AddContact(ctx context.Context, contact *models.UserContact) error {
-	return db.marketplaceDB.AddContact(ctx, contact)
+	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.AddContact(ctx, contact)
 }
 
 func (db *Database) UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error {
-	return db.marketplaceDB.UpdateContactStatus(ctx, userID, contactUserID, status, notes)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateContactStatus(ctx, userID, contactUserID, status, notes)
 }
 
 func (db *Database) GetContact(ctx context.Context, userID, contactUserID int) (*models.UserContact, error) {
-	return db.marketplaceDB.GetContact(ctx, userID, contactUserID)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetContact(ctx, userID, contactUserID)
 }
 
 func (db *Database) GetUserContacts(ctx context.Context, userID int, status string, page, limit int) ([]models.UserContact, int, error) {
-	return db.marketplaceDB.GetUserContacts(ctx, userID, status, page, limit)
+	return nil, 0, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetUserContacts(ctx, userID, status, page, limit)
 }
 
 func (db *Database) GetIncomingContactRequests(ctx context.Context, userID int, page, limit int) ([]models.UserContact, int, error) {
-	return db.marketplaceDB.GetIncomingContactRequests(ctx, userID, page, limit)
+	return nil, 0, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetIncomingContactRequests(ctx, userID, page, limit)
 }
 
 func (db *Database) RemoveContact(ctx context.Context, userID, contactUserID int) error {
-	return db.marketplaceDB.RemoveContact(ctx, userID, contactUserID)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.RemoveContact(ctx, userID, contactUserID)
 }
 
 func (db *Database) GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
-	return db.marketplaceDB.GetUserPrivacySettings(ctx, userID)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetUserPrivacySettings(ctx, userID)
 }
 
 func (db *Database) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
-	return db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
 }
 
 func (db *Database) GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
-	return db.marketplaceDB.GetUserPrivacySettings(ctx, userID)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetUserPrivacySettings(ctx, userID)
 }
 
 func (db *Database) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
-	return db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
 }
 
 func (db *Database) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
-	return db.marketplaceDB.UpdateChatSettings(ctx, userID, settings)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateChatSettings(ctx, userID, settings)
 }
 
 func (db *Database) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {
-	return db.marketplaceDB.CanAddContact(ctx, userID, targetUserID)
+	return false, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.CanAddContact(ctx, userID, targetUserID)
 }
 
 func (db *Database) AreContacts(ctx context.Context, userID1, userID2 int) (bool, error) {
-	return db.marketplaceDB.AreContacts(ctx, userID1, userID2)
+	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.AreContacts(ctx, userID1, userID2)
 }
 
 // Marketplace listing variants methods
@@ -569,9 +568,6 @@ func (db *Database) DeleteListingVariant(ctx context.Context, variantID int) err
 
 // SetMarketplaceUserService устанавливает UserService для marketplace storage
 func (db *Database) SetMarketplaceUserService(userService *authservice.UserService) {
-	if db.marketplaceDB != nil {
-		db.marketplaceDB.SetUserService(userService)
-	}
 }
 
 // GetAllUnifiedAttributes получает все активные unified attributes

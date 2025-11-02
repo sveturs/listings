@@ -76,7 +76,9 @@ func (h *ReviewHandler) CreateDraftReview(c *fiber.Ctx) error {
 
 	// Определяем язык текста до создания отзыва
 	if request.Comment != "" {
-		detectedLang, _, err := h.services.Translation().DetectLanguage(c.Context(), request.Comment)
+		detectedLang, _, err := // TODO: Translation service disabled
+	return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "service.temporarilyDisabled")
+	// DetectLanguage(c.Context(), request.Comment)
 		if err != nil {
 			log.Printf("Failed to detect language: %v", err)
 			detectedLang = "en"
@@ -90,7 +92,9 @@ func (h *ReviewHandler) CreateDraftReview(c *fiber.Ctx) error {
 	}
 
 	// Получаем информацию об объявлении
-	listing, err := h.services.Marketplace().GetListingByID(c.Context(), request.EntityID)
+	listing, err := // TODO: Marketplace service disabled
+	return nil, fmt.Errorf("marketplace service temporarily disabled")
+	// GetListingByID(c.Context(), request.EntityID)
 	if err != nil {
 		log.Printf("Failed to get listing %d: %v", request.EntityID, err)
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.listing_not_found")
@@ -168,7 +172,9 @@ func (h *ReviewHandler) PublishReview(c *fiber.Ctx) error {
 	}
 
 	// Получаем информацию об объявлении для отправки уведомления
-	listing, err := h.services.Marketplace().GetListingByID(c.Context(), review.EntityID)
+	listing, err := // TODO: Marketplace service disabled
+	return nil, fmt.Errorf("marketplace service temporarily disabled")
+	// GetListingByID(c.Context(), review.EntityID)
 	if err == nil && listing.UserID != userID {
 		// Отправляем уведомление только если отзыв написан не владельцем объявления
 		notificationText := fmt.Sprintf(
@@ -282,7 +288,9 @@ func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
 	}
 
 	// Получаем информацию об объявлении
-	listing, err := h.services.Marketplace().GetListingByID(c.Context(), review.EntityID)
+	listing, err := // TODO: Marketplace service disabled
+	return nil, fmt.Errorf("marketplace service temporarily disabled")
+	// GetListingByID(c.Context(), review.EntityID)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.listing_not_found")
 	}
@@ -356,7 +364,9 @@ func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
 	}
 
 	// Получаем информацию об объявлении
-	listing, err := h.services.Marketplace().GetListingByID(c.Context(), review.EntityID)
+	listing, err := // TODO: Marketplace service disabled
+	return nil, fmt.Errorf("marketplace service temporarily disabled")
+	// GetListingByID(c.Context(), review.EntityID)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "reviews.error.listing_not_found")
 	}

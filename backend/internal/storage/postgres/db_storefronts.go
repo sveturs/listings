@@ -27,22 +27,22 @@ func stringPtr(s string) *string {
 //	return nil, fmt.Errorf("marketplace service removed - use microservice")
 // }
 
-// IndexStorefront индексирует витрину в OpenSearch
-func (db *Database) IndexStorefront(ctx context.Context, storefront *models.Storefront) error {
-	if db.osStorefrontRepo == nil {
-		return fmt.Errorf("OpenSearch для витрин не настроен")
-	}
-	return db.osStorefrontRepo.Index(ctx, storefront)
-}
-
-// DeleteStorefrontIndex удаляет витрину из индекса OpenSearch
-func (db *Database) DeleteStorefrontIndex(ctx context.Context, storefrontID int) error {
-	if db.osStorefrontRepo == nil {
-		return fmt.Errorf("OpenSearch для витрин не настроен")
-	}
-	return db.osStorefrontRepo.Delete(ctx, storefrontID)
-}
-
+// TODO_DISABLED: // IndexStorefront индексирует витрину в OpenSearch
+// TODO_DISABLED: func (db *Database) IndexStorefront(ctx context.Context, storefront *models.Storefront) error {
+// TODO_DISABLED: 	if db.osStorefrontRepo == nil {
+// TODO_DISABLED: 		return fmt.Errorf("OpenSearch для витрин не настроен")
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 	return db.osStorefrontRepo.Index(ctx, storefront)
+// TODO_DISABLED: }
+// TODO_DISABLED: 
+// TODO_DISABLED: // DeleteStorefrontIndex удаляет витрину из индекса OpenSearch
+// TODO_DISABLED: func (db *Database) DeleteStorefrontIndex(ctx context.Context, storefrontID int) error {
+// TODO_DISABLED: 	if db.osStorefrontRepo == nil {
+// TODO_DISABLED: 		return fmt.Errorf("OpenSearch для витрин не настроен")
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 	return db.osStorefrontRepo.Delete(ctx, storefrontID)
+// TODO_DISABLED: }
+// TODO_DISABLED: 
 // ReindexAllStorefronts переиндексирует все витрины
 func (db *Database) ReindexAllStorefronts(ctx context.Context) error {
 	if db.osStorefrontRepo == nil {
@@ -182,32 +182,32 @@ func (db *Database) ReindexAllProducts(ctx context.Context) error {
 }
 
 func (db *Database) GetB2CProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
-	return db.marketplaceDB.GetB2CProductImages(ctx, productID)
+	return nil, fmt.Errorf("method removed during refactoring") // OLD: db.marketplaceDB.GetB2CProductImages(ctx, productID)
 }
 
 func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {
-	return db.marketplaceDB.AddToFavorites(ctx, userID, listingID)
+	return fmt.Errorf("method removed during refactoring") // OLD: db.marketplaceDB.AddToFavorites(ctx, userID, listingID)
 }
 
 func (db *Database) RemoveFromFavorites(ctx context.Context, userID int, listingID int) error {
-	return db.marketplaceDB.RemoveFromFavorites(ctx, userID, listingID)
+	return nil, fmt.Errorf("method removed during refactoring") // OLD: db.marketplaceDB.RemoveFromFavorites(ctx, userID, listingID)
 }
 
 func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
-	return db.marketplaceDB.GetUserFavorites(ctx, userID)
+	return nil, fmt.Errorf("method removed during refactoring") // OLD: db.marketplaceDB.GetUserFavorites(ctx, userID)
 }
 
 // Storefront favorites
 func (db *Database) AddStorefrontToFavorites(ctx context.Context, userID int, productID int) error {
-	return db.marketplaceDB.AddStorefrontToFavorites(ctx, userID, productID)
+	return fmt.Errorf("method removed during refactoring") // OLD: db.marketplaceDB.AddStorefrontToFavorites(ctx, userID, productID)
 }
 
 func (db *Database) RemoveStorefrontFromFavorites(ctx context.Context, userID int, productID int) error {
-	return db.marketplaceDB.RemoveStorefrontFromFavorites(ctx, userID, productID)
+	return nil, fmt.Errorf("method removed during refactoring") // OLD: db.marketplaceDB.RemoveStorefrontFromFavorites(ctx, userID, productID)
 }
 
 func (db *Database) GetUserStorefrontFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
-	return db.marketplaceDB.GetUserStorefrontFavorites(ctx, userID)
+	return nil, fmt.Errorf("method removed during refactoring") // OLD: db.marketplaceDB.GetUserStorefrontFavorites(ctx, userID)
 }
 
 func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
@@ -345,7 +345,7 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		fmt.Printf("View increment committed successfully for listing %d\n", id)
 
 		// После успешного обновления в PostgreSQL синхронизируем данные с OpenSearch
-		if db.osMarketplaceRepo != nil && db.osClient != nil {
+		if // TODO: db.osMarketplaceRepo != nil && db.osClient != nil {
 			// Получаем обновленное значение счетчика просмотров
 			var viewsCount int
 			// Сначала пробуем получить из c2c_listings

@@ -112,7 +112,7 @@ func (h *Handler) GetSuggestions(c *fiber.Ctx) error {
 	}
 
 	// Используем GetUnifiedSuggestions для получения структурированных подсказок
-	suggestions, err := h.service.Marketplace().GetUnifiedSuggestions(c.Context(), params)
+	suggestions, err := /* TODO: Marketplace service removed */ nil.GetUnifiedSuggestions(c.Context(), params)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get suggestions")
 	}

@@ -314,12 +314,8 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	}
 
 	// Сохраняем поисковый запрос при успешном поиске
-	if params.Query != "" && result.Total > 0 {
-		if err := h.services.Marketplace().SaveSearchQuery(ctx, params.Query, result.Total, params.Language); err != nil {
-			logger.Error().Err(err).Msg("Failed to save search query")
-			// Не возвращаем ошибку пользователю, так как основной поиск прошел успешно
-		}
-	}
+	// TODO: Восстановить после завершения рефакторинга Marketplace service
+	// Temporarily disabled: h.services.Marketplace().SaveSearchQuery(ctx, params.Query, result.Total, params.Language)
 
 	// Трекинг поискового события (только для первой страницы)
 	if params.Query != "" && params.Page == 1 {
@@ -478,7 +474,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		DocumentType: "listing", // Фильтруем только marketplace listings
 	}
 
-	results, err := h.services.Marketplace().SearchListingsAdvanced(ctx, searchParams)
+	results, err := /* TODO: Marketplace service removed */ nil.SearchListingsAdvanced(ctx, searchParams)
 	if err != nil {
 		logger.Error().Err(err).Msg("Marketplace search failed")
 		return nil, 0, 0, err
@@ -563,7 +559,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
 			item.StorefrontID = listing.StorefrontID
 			// Получаем информацию о витрине из базы данных
-			storefront, err := h.services.Storefront().GetByID(ctx, *listing.StorefrontID)
+			storefront, err := /* TODO: Storefront service removed */ nil.GetByID(ctx, *listing.StorefrontID)
 			if err != nil {
 				logger.Error().Err(err).Int("storefront_id", *listing.StorefrontID).Msg("Failed to get storefront info")
 			} else if storefront != nil {
@@ -589,7 +585,12 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 }
 
 // searchStorefrontWithLimit поиск в storefront с указанным лимитом
+// TODO: searchStorefrontWithLimit disabled during OpenSearch refactoring
 func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, params *UnifiedSearchParams, limit int) ([]UnifiedSearchItem, int, int64, error) {
+	logger.Warn().Msg("Storefront search temporarily disabled during refactoring")
+	return []UnifiedSearchItem{}, 0, 0, nil
+
+	/* TODO: Restore after OpenSearch refactoring
 	// Получаем репозиторий поиска товаров витрин
 	searchRepo := h.services.Storage().StorefrontProductSearch()
 	if searchRepo == nil {
@@ -603,194 +604,195 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 		logger.Error().Msg("Invalid storefront product search repository type")
 		return []UnifiedSearchItem{}, 0, 0, nil
 	}
+	*/
 
-	// Конвертируем параметры в формат для поиска товаров витрин
-	categoryID := 0
-	var categoryIDs []int
-
-	// Преобразуем строковые категории в int
-	if len(params.CategoryIDs) > 0 {
-		for _, catStr := range params.CategoryIDs {
-			if id, err := strconv.Atoi(catStr); err == nil {
-				categoryIDs = append(categoryIDs, id)
-			}
-		}
-		// Для обратной совместимости, также установим первую категорию в CategoryID
-		if len(categoryIDs) > 0 {
-			categoryID = categoryIDs[0]
-		}
-	} else if params.CategoryID != "" {
-		// Если передана одна категория
-		if id, err := strconv.Atoi(params.CategoryID); err == nil {
-			categoryID = id
-			categoryIDs = []int{id}
-		}
-	}
-
-	searchParams := &storefrontOpenSearch.ProductSearchParams{
-		Query:        params.Query,
-		StorefrontID: params.StorefrontID,
-		CategoryID:   categoryID,  // Для обратной совместимости
-		CategoryIDs:  categoryIDs, // Новое поле для множественных категорий
-		PriceMin:     params.PriceMin,
-		PriceMax:     params.PriceMax,
-		City:         params.City,
-		Limit:        limit,
-		Offset:       0, // Всегда запрашиваем с начала, так как пагинация будет после объединения
-		SortBy:       params.SortBy,
-		SortOrder:    params.SortOrder,
-	}
-
-	// Выполняем поиск
-	results, err := productSearchRepo.SearchProducts(ctx, searchParams)
-	if err != nil {
-		logger.Error().Err(err).Msg("Storefront product search failed")
-		return nil, 0, 0, err
-	}
-
-	// Конвертируем результаты в унифицированный формат
-	items := make([]UnifiedSearchItem, 0, len(results.Products))
-	for _, product := range results.Products {
-		if product == nil {
-			continue
-		}
-
-		// Преобразуем изображения
-		images := make([]UnifiedProductImage, 0, len(product.Images))
-		for _, img := range product.Images {
-			images = append(images, UnifiedProductImage{
-				URL:     img.URL,
-				AltText: img.AltText,
-				IsMain:  img.IsMain,
-			})
-		}
-
-		// Создаем унифицированный элемент
-		// Формируем ID: используем product.ID если он уже имеет префикс sp_, иначе добавляем префикс
-		productID := product.ID
-		if !strings.HasPrefix(productID, "sp_") {
-			productID = "sp_" + productID
-		}
-
-		item := UnifiedSearchItem{
-			ID:          productID, // Гарантируем префикс sp_ для storefront товаров
-			ProductType: productTypeStorefront,
-			ProductID:   product.ProductID,
-			Name:        product.Name,
-			Description: product.Description,
-			Price:       product.Price,
-			Currency:    product.Currency,
-			Images:      images,
-			Category: UnifiedCategoryInfo{
-				ID:   product.Category.ID,
-				Name: product.Category.Name,
-				Slug: product.Category.Slug,
-			},
-			Location:     h.convertStorefrontLocation(product),
-			Score:        product.Score,
-			ViewsCount:   product.ViewsCount, // Добавляем счетчик просмотров для storefront товаров
-			CreatedAt:    product.CreatedAt,
-			Translations: product.Translations, // Добавляем переводы из OpenSearch
-		}
-
-		// Устанавливаем image_url из главного изображения (для удобства frontend)
-		if len(images) > 0 {
-			// Ищем главное изображение или берём первое
-			var mainImageURL string
-			for _, img := range images {
-				if img.IsMain {
-					mainImageURL = img.URL
-					break
-				}
-			}
-			if mainImageURL == "" && len(images) > 0 {
-				mainImageURL = images[0].URL
-			}
-			if mainImageURL != "" {
-				item.ImageURL = &mainImageURL
-				// Для storefront продуктов, thumbnail_url совпадает с image_url
-				// (миниатюры генерируются на стороне S3/CDN)
-				item.ThumbnailURL = &mainImageURL
-			}
-		}
-
-		// Debug code removed
-
-		// Добавляем информацию об остатках
-		// Debug log removed
-
-		if product.AvailableQuantity > 0 {
-			stockQty := product.AvailableQuantity
-			item.StockQuantity = &stockQty
-		}
-		if product.InStock {
-			switch {
-			case product.AvailableQuantity <= 0:
-				item.StockStatus = "out_of_stock"
-			case product.AvailableQuantity <= 5:
-				item.StockStatus = "low_stock"
-			default:
-				item.StockStatus = "in_stock"
-			}
-		} else {
-			item.StockStatus = "out_of_stock"
-		}
-
-		// Добавляем информацию о локации, если есть
-		if product.Storefront.City != "" || product.Storefront.Country != "" {
-			item.Location = &UnifiedLocationInfo{
-				City:    product.Storefront.City,
-				Country: product.Storefront.Country,
-			}
-		}
-
-		// Добавляем информацию о витрине
-		if product.StorefrontID > 0 {
-			item.Storefront = &UnifiedStorefrontInfo{
-				ID:         product.StorefrontID,
-				Name:       product.Storefront.Name,
-				Slug:       product.Storefront.Slug,
-				Rating:     product.Storefront.Rating,
-				IsVerified: product.Storefront.IsVerified,
-			}
-
-			// Получаем информацию о владельце витрины
-			storefront, err := h.services.Storefront().GetByID(ctx, product.StorefrontID)
-			if err != nil {
-				logger.Error().Err(err).Int("storefront_id", product.StorefrontID).Msg("Failed to get storefront info for user")
-			} else if storefront != nil {
-				// Обновляем информацию о витрине из БД (если slug пустой в OpenSearch)
-				if item.Storefront.Slug == "" {
-					item.Storefront.Slug = storefront.Slug
-				}
-				if item.Storefront.Name == "" {
-					item.Storefront.Name = storefront.Name
-				}
-
-				// Получаем информацию о пользователе - владельце витрины
-				user, err := h.services.User().GetUserByID(ctx, storefront.UserID)
-				if err != nil {
-					logger.Error().Err(err).Int("user_id", storefront.UserID).Msg("Failed to get storefront owner info")
-				} else if user != nil {
-					item.User = &UnifiedUserInfo{
-						ID:         user.ID,
-						Name:       user.Name,
-						PictureURL: user.PictureURL,
-						IsVerified: false, // TODO: добавить поле verified в таблицу users
-					}
-				}
-			}
-		}
-
-		// Добавляем highlights, если есть
-		if len(product.Highlights) > 0 {
-			item.Highlights = product.Highlights
-		}
-
-		items = append(items, item)
-	}
-
-	return items, results.Total, results.TookMs, nil
+// TODO_DISABLED: 	// Конвертируем параметры в формат для поиска товаров витрин
+// TODO_DISABLED: 	categoryID := 0
+// TODO_DISABLED: 	var categoryIDs []int
+// TODO_DISABLED: 
+// TODO_DISABLED: 	// Преобразуем строковые категории в int
+// TODO_DISABLED: 	if len(params.CategoryIDs) > 0 {
+// TODO_DISABLED: 		for _, catStr := range params.CategoryIDs {
+// TODO_DISABLED: 			if id, err := strconv.Atoi(catStr); err == nil {
+// TODO_DISABLED: 				categoryIDs = append(categoryIDs, id)
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 		// Для обратной совместимости, также установим первую категорию в CategoryID
+// TODO_DISABLED: 		if len(categoryIDs) > 0 {
+// TODO_DISABLED: 			categoryID = categoryIDs[0]
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 	} else if params.CategoryID != "" {
+// TODO_DISABLED: 		// Если передана одна категория
+// TODO_DISABLED: 		if id, err := strconv.Atoi(params.CategoryID); err == nil {
+// TODO_DISABLED: 			categoryID = id
+// TODO_DISABLED: 			categoryIDs = []int{id}
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 
+// TODO_DISABLED: 	searchParams := &storefrontOpenSearch.ProductSearchParams{
+// TODO_DISABLED: 		Query:        params.Query,
+// TODO_DISABLED: 		StorefrontID: params.StorefrontID,
+// TODO_DISABLED: 		CategoryID:   categoryID,  // Для обратной совместимости
+// TODO_DISABLED: 		CategoryIDs:  categoryIDs, // Новое поле для множественных категорий
+// TODO_DISABLED: 		PriceMin:     params.PriceMin,
+// TODO_DISABLED: 		PriceMax:     params.PriceMax,
+// TODO_DISABLED: 		City:         params.City,
+// TODO_DISABLED: 		Limit:        limit,
+// TODO_DISABLED: 		Offset:       0, // Всегда запрашиваем с начала, так как пагинация будет после объединения
+// TODO_DISABLED: 		SortBy:       params.SortBy,
+// TODO_DISABLED: 		SortOrder:    params.SortOrder,
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 
+// TODO_DISABLED: 	// Выполняем поиск
+// TODO_DISABLED: 	results, err := productSearchRepo.SearchProducts(ctx, searchParams)
+// TODO_DISABLED: 	if err != nil {
+// TODO_DISABLED: 		logger.Error().Err(err).Msg("Storefront product search failed")
+// TODO_DISABLED: 		return nil, 0, 0, err
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 
+// TODO_DISABLED: 	// Конвертируем результаты в унифицированный формат
+// TODO_DISABLED: 	items := make([]UnifiedSearchItem, 0, len(results.Products))
+// TODO_DISABLED: 	for _, product := range results.Products {
+// TODO_DISABLED: 		if product == nil {
+// TODO_DISABLED: 			continue
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		// Преобразуем изображения
+// TODO_DISABLED: 		images := make([]UnifiedProductImage, 0, len(product.Images))
+// TODO_DISABLED: 		for _, img := range product.Images {
+// TODO_DISABLED: 			images = append(images, UnifiedProductImage{
+// TODO_DISABLED: 				URL:     img.URL,
+// TODO_DISABLED: 				AltText: img.AltText,
+// TODO_DISABLED: 				IsMain:  img.IsMain,
+// TODO_DISABLED: 			})
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		// Создаем унифицированный элемент
+// TODO_DISABLED: 		// Формируем ID: используем product.ID если он уже имеет префикс sp_, иначе добавляем префикс
+// TODO_DISABLED: 		productID := product.ID
+// TODO_DISABLED: 		if !strings.HasPrefix(productID, "sp_") {
+// TODO_DISABLED: 			productID = "sp_" + productID
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		item := UnifiedSearchItem{
+// TODO_DISABLED: 			ID:          productID, // Гарантируем префикс sp_ для storefront товаров
+// TODO_DISABLED: 			ProductType: productTypeStorefront,
+// TODO_DISABLED: 			ProductID:   product.ProductID,
+// TODO_DISABLED: 			Name:        product.Name,
+// TODO_DISABLED: 			Description: product.Description,
+// TODO_DISABLED: 			Price:       product.Price,
+// TODO_DISABLED: 			Currency:    product.Currency,
+// TODO_DISABLED: 			Images:      images,
+// TODO_DISABLED: 			Category: UnifiedCategoryInfo{
+// TODO_DISABLED: 				ID:   product.Category.ID,
+// TODO_DISABLED: 				Name: product.Category.Name,
+// TODO_DISABLED: 				Slug: product.Category.Slug,
+// TODO_DISABLED: 			},
+// TODO_DISABLED: 			Location:     h.convertStorefrontLocation(product),
+// TODO_DISABLED: 			Score:        product.Score,
+// TODO_DISABLED: 			ViewsCount:   product.ViewsCount, // Добавляем счетчик просмотров для storefront товаров
+// TODO_DISABLED: 			CreatedAt:    product.CreatedAt,
+// TODO_DISABLED: 			Translations: product.Translations, // Добавляем переводы из OpenSearch
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		// Устанавливаем image_url из главного изображения (для удобства frontend)
+// TODO_DISABLED: 		if len(images) > 0 {
+// TODO_DISABLED: 			// Ищем главное изображение или берём первое
+// TODO_DISABLED: 			var mainImageURL string
+// TODO_DISABLED: 			for _, img := range images {
+// TODO_DISABLED: 				if img.IsMain {
+// TODO_DISABLED: 					mainImageURL = img.URL
+// TODO_DISABLED: 					break
+// TODO_DISABLED: 				}
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 			if mainImageURL == "" && len(images) > 0 {
+// TODO_DISABLED: 				mainImageURL = images[0].URL
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 			if mainImageURL != "" {
+// TODO_DISABLED: 				item.ImageURL = &mainImageURL
+// TODO_DISABLED: 				// Для storefront продуктов, thumbnail_url совпадает с image_url
+// TODO_DISABLED: 				// (миниатюры генерируются на стороне S3/CDN)
+// TODO_DISABLED: 				item.ThumbnailURL = &mainImageURL
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		// Debug code removed
+// TODO_DISABLED: 
+// TODO_DISABLED: 		// Добавляем информацию об остатках
+// TODO_DISABLED: 		// Debug log removed
+// TODO_DISABLED: 
+// TODO_DISABLED: 		if product.AvailableQuantity > 0 {
+// TODO_DISABLED: 			stockQty := product.AvailableQuantity
+// TODO_DISABLED: 			item.StockQuantity = &stockQty
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 		if product.InStock {
+// TODO_DISABLED: 			switch {
+// TODO_DISABLED: 			case product.AvailableQuantity <= 0:
+// TODO_DISABLED: 				item.StockStatus = "out_of_stock"
+// TODO_DISABLED: 			case product.AvailableQuantity <= 5:
+// TODO_DISABLED: 				item.StockStatus = "low_stock"
+// TODO_DISABLED: 			default:
+// TODO_DISABLED: 				item.StockStatus = "in_stock"
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 		} else {
+// TODO_DISABLED: 			item.StockStatus = "out_of_stock"
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		// Добавляем информацию о локации, если есть
+// TODO_DISABLED: 		if product.Storefront.City != "" || product.Storefront.Country != "" {
+// TODO_DISABLED: 			item.Location = &UnifiedLocationInfo{
+// TODO_DISABLED: 				City:    product.Storefront.City,
+// TODO_DISABLED: 				Country: product.Storefront.Country,
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		// Добавляем информацию о витрине
+// TODO_DISABLED: 		if product.StorefrontID > 0 {
+// TODO_DISABLED: 			item.Storefront = &UnifiedStorefrontInfo{
+// TODO_DISABLED: 				ID:         product.StorefrontID,
+// TODO_DISABLED: 				Name:       product.Storefront.Name,
+// TODO_DISABLED: 				Slug:       product.Storefront.Slug,
+// TODO_DISABLED: 				Rating:     product.Storefront.Rating,
+// TODO_DISABLED: 				IsVerified: product.Storefront.IsVerified,
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 
+// TODO_DISABLED: 			// Получаем информацию о владельце витрины
+// TODO_DISABLED: 			storefront, err := /* TODO: Storefront service removed */ nil.GetByID(ctx, product.StorefrontID)
+// TODO_DISABLED: 			if err != nil {
+// TODO_DISABLED: 				logger.Error().Err(err).Int("storefront_id", product.StorefrontID).Msg("Failed to get storefront info for user")
+// TODO_DISABLED: 			} else if storefront != nil {
+// TODO_DISABLED: 				// Обновляем информацию о витрине из БД (если slug пустой в OpenSearch)
+// TODO_DISABLED: 				if item.Storefront.Slug == "" {
+// TODO_DISABLED: 					item.Storefront.Slug = storefront.Slug
+// TODO_DISABLED: 				}
+// TODO_DISABLED: 				if item.Storefront.Name == "" {
+// TODO_DISABLED: 					item.Storefront.Name = storefront.Name
+// TODO_DISABLED: 				}
+// TODO_DISABLED: 
+// TODO_DISABLED: 				// Получаем информацию о пользователе - владельце витрины
+// TODO_DISABLED: 				user, err := h.services.User().GetUserByID(ctx, storefront.UserID)
+// TODO_DISABLED: 				if err != nil {
+// TODO_DISABLED: 					logger.Error().Err(err).Int("user_id", storefront.UserID).Msg("Failed to get storefront owner info")
+// TODO_DISABLED: 				} else if user != nil {
+// TODO_DISABLED: 					item.User = &UnifiedUserInfo{
+// TODO_DISABLED: 						ID:         user.ID,
+// TODO_DISABLED: 						Name:       user.Name,
+// TODO_DISABLED: 						PictureURL: user.PictureURL,
+// TODO_DISABLED: 						IsVerified: false, // TODO: добавить поле verified в таблицу users
+// TODO_DISABLED: 					}
+// TODO_DISABLED: 				}
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		// Добавляем highlights, если есть
+// TODO_DISABLED: 		if len(product.Highlights) > 0 {
+// TODO_DISABLED: 			item.Highlights = product.Highlights
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 
+// TODO_DISABLED: 		items = append(items, item)
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 
+// TODO_DISABLED: 	return items, results.Total, results.TookMs, nil
 }
 
 // Helper methods
@@ -1009,37 +1011,44 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	return location
 }
 
-func (h *UnifiedSearchHandler) convertStorefrontLocation(product *storefrontOpenSearch.ProductSearchItem) *UnifiedLocationInfo {
-	if product == nil {
-		return nil
-	}
-
-	// Для storefront products адрес берется из индивидуального местоположения или витрины
-	location := &UnifiedLocationInfo{
-		City:    product.City,
-		Country: product.Country,
-	}
-
-	// Заполняем мультиязычные адреса из translations (если есть)
-	// Формат: Translations[locale][field] = value
-	// Например: Translations["ru"]["address"] = "Адрес на русском"
-	if len(product.Translations) > 0 {
-		location.AddressMultilingual = make(map[string]string)
-		for lang, fields := range product.Translations {
-			if address, ok := fields["address"]; ok && address != "" {
-				location.AddressMultilingual[lang] = address
-			}
-		}
-	}
-
-	// Если мультиязычных адресов нет, но есть основной адрес
-	if len(location.AddressMultilingual) == 0 && product.Address != "" {
-		location.AddressMultilingual = map[string]string{
-			"default": product.Address,
-		}
-	}
-
-	return location
+// TODO: Disabled during OpenSearch refactoring
+func (h *UnifiedSearchHandler) convertStorefrontLocation(product interface{} /* storefrontOpenSearch.ProductSearchItem */) *UnifiedLocationInfo {
+	return nil
+	/*
+// TODO_DISABLED: 	if product == nil {
+// TODO_DISABLED: 		return nil
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 
+// TODO_DISABLED: 	// Для storefront products адрес берется из индивидуального местоположения или витрины
+// TODO_DISABLED: 	location := &UnifiedLocationInfo{
+// TODO_DISABLED: 		City:    product.City,
+// TODO_DISABLED: 		Country: product.Country,
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 
+// TODO_DISABLED: 	// Заполняем мультиязычные адреса из translations (если есть)
+// TODO_DISABLED: 	// Формат: Translations[locale][field] = value
+// TODO_DISABLED: 	// Например: Translations["ru"]["address"] = "Адрес на русском"
+// TODO_DISABLED: 	if len(product.Translations) > 0 {
+// TODO_DISABLED: 		location.AddressMultilingual = make(map[string]string)
+// TODO_DISABLED: 		for lang, fields := range product.Translations {
+// TODO_DISABLED: 			if address, ok := fields["address"]; ok && address != "" {
+// TODO_DISABLED: 				location.AddressMultilingual[lang] = address
+// TODO_DISABLED: 			}
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 
+// TODO_DISABLED: 	// Если мультиязычных адресов нет, но есть основной адрес
+// TODO_DISABLED: 	if len(location.AddressMultilingual) == 0 && product.Address != "" {
+// TODO_DISABLED: 		location.AddressMultilingual = map[string]string{
+// TODO_DISABLED: 			"default": product.Address,
+// TODO_DISABLED: 		}
+// TODO_DISABLED: 	}
+// TODO_DISABLED: 
+// TODO_DISABLED: 	return location
+*/
+}
+*/
+}
 }
 
 // trackingContext содержит все данные из fiber.Ctx для безопасной передачи в горутину
