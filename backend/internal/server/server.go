@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	version "backend/internal/version"
@@ -33,7 +32,6 @@ import (
 	"backend/internal/config"
 	"backend/internal/interfaces"
 	"backend/internal/logger"
-	"backend/internal/metrics"
 	"backend/internal/middleware"
 	adminLogistics "backend/internal/proj/admin/logistics"
 	testingHandler "backend/internal/proj/admin/testing/handler"
@@ -50,12 +48,10 @@ import (
 	delivery_grpcclient "backend/internal/proj/delivery/grpcclient"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
-	listingsClient "backend/internal/clients/listings"
 	gisHandler "backend/internal/proj/gis/handler"
 	globalHandler "backend/internal/proj/global/handler"
 	globalService "backend/internal/proj/global/service"
 	healthHandler "backend/internal/proj/health"
-	marketplaceRouterService "backend/internal/proj/marketplace/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
@@ -155,11 +151,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		}
 	}
 
-	translationService, err := initializeTranslationService(cfg, db)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize translation service: %w", err)
-	}
-
 	// Create auth service client BEFORE creating services
 	authClient, err := authclient.NewClientWithResponses(cfg.AuthServiceURL)
 	if err != nil {
@@ -177,7 +168,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	oauthServiceInstance := authService.NewOAuthService(authClient)
 
 	// Now create services with authService and userService
-	services := globalService.NewService(ctx, db, cfg, translationService, authServiceInstance, userServiceInstance)
+	services := globalService.NewService(ctx, db, cfg, authServiceInstance, userServiceInstance)
 
 	configModule := configHandler.NewModule(cfg)
 	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
@@ -212,7 +203,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}
-	contactsHandler := contactsHandler.NewHandler(services, jwtParserMW)
+	contactsHandler := contactsHandler.NewHandler(services)
 	paymentsHandler := paymentHandler.NewHandler(services, jwtParserMW)
 
 	// Admin Logistics инициализация
@@ -253,7 +244,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db, osClient, jwtParserMW)
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool(), jwtParserMW)
-	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, translationService, jwtParserMW)
+	// Translation service moved to listings microservice - pass nil for now
+	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, nil, jwtParserMW)
 	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New(), cfg.OpenSearch.B2CIndex)
 	// TODO: После рефакторинга передать storage или services для переиндексации
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
@@ -352,54 +344,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	return server, nil
 }
 
-func initializeTranslationService(cfg *config.Config, db *postgres.Database) (marketplaceService.TranslationServiceInterface, error) {
-	// Используем новую фабрику V2 с поддержкой 4 провайдеров
-	factoryConfig := struct {
-		GoogleAPIKey    string
-		OpenAIAPIKey    string
-		ClaudeAPIKey    string
-		DeepLAPIKey     string
-		DeepLUseFreeAPI bool
-	}{
-		GoogleAPIKey:    cfg.GoogleTranslateAPIKey,
-		OpenAIAPIKey:    cfg.OpenAIAPIKey,
-		ClaudeAPIKey:    cfg.ClaudeAPIKey,
-		DeepLAPIKey:     cfg.DeepLAPIKey,
-		DeepLUseFreeAPI: cfg.DeepLUseFreeAPI,
-	}
-
-	translationFactory, err := marketplaceService.NewTranslationServiceFactoryV2(factoryConfig, db)
-	if err == nil {
-		availableProviders := translationFactory.GetAvailableProviders()
-		logger.Info().
-			Interface("providers", availableProviders).
-			Int("count", len(availableProviders)).
-			Msg("Создана фабрика сервисов перевода V2")
-		return translationFactory, nil
-	}
-
-	// Fallback на старую версию если V2 не работает
-	if cfg.GoogleTranslateAPIKey != "" && cfg.OpenAIAPIKey != "" {
-		translationFactory, err := marketplaceService.NewTranslationServiceFactory(cfg.GoogleTranslateAPIKey, cfg.OpenAIAPIKey, db)
-		if err == nil {
-			logger.Info().Msg("Создана фабрика сервисов перевода (старая версия)")
-			return translationFactory, nil
-		}
-	}
-
-	// Крайний fallback на простой OpenAI сервис
-	if cfg.OpenAIAPIKey != "" {
-		translationService, err := marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
-		if err != nil {
-			return nil, err
-		}
-		logger.Info().Msg("Создан сервис перевода на базе OpenAI (fallback)")
-		return translationService, nil
-	}
-
-	return nil, fmt.Errorf("не указан ни один API ключ для перевода")
-}
-
 func initializeOpenSearch(cfg *config.Config) (*opensearch.OpenSearchClient, error) {
 	if cfg.OpenSearch.URL == "" {
 		return nil, errors.New("OpenSearch URL не указан, поиск будет отключен")
@@ -462,47 +406,15 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 		DeepLinking: false,
 	}))
 
-	// WebSocket с проверкой аутентификации и rate limiting
-	// ВАЖНО: WebSocket передает токен в query параметре, не в cookie/header
-	// Используем кастомный middleware для извлечения токена из query и валидации через auth service
+	// WebSocket /ws/chat moved to listings microservice (chat functionality)
+	// TODO: Re-enable when chat microservice is integrated
+	/*
 	s.app.Get("/ws/chat", func(c *fiber.Ctx) error {
-		// Получаем токен из query параметра
-		token := c.Query("token")
-		if token == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Missing authentication token",
-			})
-		}
-
-		// Устанавливаем токен в Authorization header для JWT Parser middleware
-		c.Request().Header.Set("Authorization", "Bearer "+token)
-
-		return c.Next()
-	}, s.jwtParserMW, authMiddleware.RequireAuth(), s.middleware.RateLimitByUser(30, time.Minute), func(c *fiber.Ctx) error {
-		// Проверяем, что это WebSocket запрос
-		if websocket.IsWebSocketUpgrade(c) {
-			// Получаем userID из контекста, установленного auth middleware
-			userID, ok := authMiddleware.GetUserID(c)
-			if !ok || userID == 0 {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-					"error": "Invalid user authentication",
-				})
-			}
-
-			return websocket.New(func(conn *websocket.Conn) {
-				// Передаем userID через контекст соединения
-				// В Fiber WebSocket, Locals доступен только для чтения
-				// Поэтому создаем обертку с сохраненным userID
-				s.marketplace.Chat.HandleWebSocketWithAuth(conn, userID)
-			}, websocket.Config{
-				HandshakeTimeout:  10 * time.Second,
-				ReadBufferSize:    1024,
-				WriteBufferSize:   1024,
-				EnableCompression: false,
-			})(c)
-		}
-		return fiber.ErrUpgradeRequired
+		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+			"error": "Chat service temporarily unavailable during migration",
+		})
 	})
+	*/
 
 	// WebSocket для трекинга доставок (публичный, по токену)
 	s.app.Get("/ws/tracking/:token", func(c *fiber.Ctx) error {
