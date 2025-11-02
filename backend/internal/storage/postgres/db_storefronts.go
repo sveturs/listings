@@ -10,7 +10,6 @@ import (
 	"log"
 
 	"backend/internal/domain/models"
-	storefrontOpenSearch "backend/internal/proj/b2c/storage/opensearch"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -23,11 +22,10 @@ func stringPtr(s string) *string {
 	return &s
 }
 
-func (db *Database) SearchStorefrontsOpenSearch(ctx context.Context, params *storefrontOpenSearch.StorefrontSearchParams) (*storefrontOpenSearch.StorefrontSearchResult, error) {
-	if db.osStorefrontRepo == nil {
-		return nil, fmt.Errorf("OpenSearch для витрин не настроен")
-	}
-	return db.osStorefrontRepo.Search(ctx, params)
+// SearchStorefrontsOpenSearch removed - use microservice
+// func (db *Database) SearchStorefrontsOpenSearch(ctx context.Context, params *storefrontOpenSearch.StorefrontSearchParams) (*storefrontOpenSearch.StorefrontSearchResult, error) {
+//	return nil, fmt.Errorf("marketplace service removed - use microservice")
+//
 }
 
 // IndexStorefront индексирует витрину в OpenSearch

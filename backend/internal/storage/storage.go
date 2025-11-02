@@ -7,7 +7,6 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/storage/filestorage"
 )
 
@@ -184,8 +183,7 @@ type Storage interface {
 	DeleteListingIndex(ctx context.Context, id string) error
 	PrepareIndex(ctx context.Context) error
 
-	// Storefront OpenSearch методы
-	SearchStorefrontsOpenSearch(ctx context.Context, params *opensearch.StorefrontSearchParams) (*opensearch.StorefrontSearchResult, error)
+	// Storefront OpenSearch методы (TODO: migrate to microservice)
 	IndexStorefront(ctx context.Context, storefront *models.Storefront) error
 	DeleteStorefrontIndex(ctx context.Context, storefrontID int) error
 	ReindexAllStorefronts(ctx context.Context) error

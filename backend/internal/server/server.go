@@ -41,11 +41,8 @@ import (
 	testingStorage "backend/internal/proj/admin/testing/storage/postgres"
 	aiHandler "backend/internal/proj/ai/handler"
 	"backend/internal/proj/analytics"
-	b2cModule "backend/internal/proj/b2c"
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
-	marketplaceHandler "backend/internal/proj/c2c/handler"
-	marketplaceService "backend/internal/proj/c2c/service"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	creditHandler "backend/internal/proj/credit"
@@ -69,9 +66,6 @@ import (
 	"backend/internal/proj/subscriptions"
 	"backend/internal/proj/tracking"
 	"backend/internal/proj/translation_admin"
-	unifiedHandler "backend/internal/proj/unified/handler"
-	unifiedService "backend/internal/proj/unified/service"
-	unifiedStorage "backend/internal/proj/unified/storage/postgres"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/proj/viber"
 	vinModule "backend/internal/proj/vin"
@@ -91,7 +85,6 @@ type Server struct {
 	authService        *authService.AuthService
 	jwtParserMW        fiber.Handler
 	review             *reviewHandler.Handler
-	marketplace        *marketplaceHandler.Handler
 	notifications      *notificationHandler.Handler
 	balance            *balanceHandler.Handler
 	payments           *paymentHandler.Handler
@@ -99,7 +92,6 @@ type Server struct {
 	adminTesting       *testingHandler.Handler
 	delivery           *delivery.Module
 	orders             *orders.Module
-	storefront         *b2cModule.Module
 	geocode            *geocodeHandler.Handler
 	contacts           *contactsHandler.Handler
 	docs               *docsHandler.Handler
@@ -116,8 +108,6 @@ type Server struct {
 	vin                *vinModule.Module
 	credit             *creditHandler.Handler
 	recommendations    *recommendationsHandler.Handler
-	unified            *unifiedHandler.UnifiedHandler
-	unifiedMarketplace *unifiedHandler.MarketplaceHandler
 	fileStorage        filestorage.FileStorageInterface
 	health             *healthHandler.Handler
 	redisClient        *redis.Client
@@ -198,9 +188,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	reviewHandler := reviewHandler.NewHandler(services, jwtParserMW)
 	notificationsHandler := notificationHandler.NewHandler(services.Notification(), jwtParserMW)
-	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services, jwtParserMW)
 	balanceHandler := balanceHandler.NewHandler(services, jwtParserMW)
-	storefrontModule := b2cModule.NewModule(ctx, services)
 
 	// Delivery система инициализация с консолидацией admin/logistics
 	// ВАЖНО: Должна быть инициализирована ДО orders модуля (для передачи deliveryClient)
@@ -291,107 +279,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	creditHandlerInstance := creditHandler.NewHandler()
 	recommendationsHandlerInstance := recommendationsHandler.NewHandler(db)
 
-	// Инициализация unified listings handler (legacy)
-	unifiedStorageInstance := unifiedStorage.NewUnifiedStorage(db.GetPool(), logger.Get())
-	unifiedHandlerInstance := unifiedHandler.NewUnifiedHandler(unifiedStorageInstance, logger.Get())
-
-	// Инициализация unified marketplace service и handler (Phase 3)
-	// Создаем адаптеры для Database чтобы соответствовать интерфейсам unified service
-	c2cAdapter := unifiedService.NewDatabaseC2CAdapter(db)
-	b2cAdapter := unifiedService.NewDatabaseB2CAdapter(db)
-	osAdapter := unifiedService.NewDatabaseOpenSearchAdapter(db)
-
-	unifiedMarketplaceService := unifiedService.NewMarketplaceService(
-		c2cAdapter, // C2CRepository
-		b2cAdapter, // B2CRepository
-		osAdapter,  // OpenSearchRepository
-		*logger.Get(),
-	)
-
-	// Инициализация Traffic Router для marketplace microservice migration (Sprint 6.1)
-	// Router принимает решения о маршрутизации запросов: monolith vs microservice
-	trafficRouter := marketplaceRouterService.NewTrafficRouter(&cfg.Marketplace, *logger.Get())
-	if err := trafficRouter.ValidateConfig(); err != nil {
-		logger.Error().Err(err).Msg("Invalid marketplace traffic router configuration")
-		return nil, pkgErrors.Wrap(err, "failed to validate traffic router config")
-	}
-	logger.Info().
-		Bool("use_microservice", cfg.Marketplace.UseMicroservice).
-		Int("rollout_percent", cfg.Marketplace.RolloutPercent).
-		Str("grpc_url", cfg.Marketplace.MicroserviceGRPCURL).
-		Bool("admin_override", cfg.Marketplace.AdminOverride).
-		Msg("Traffic router initialized successfully")
-
-	// Инициализируем Prometheus gauge метрики для marketplace migration
-	metrics.SetFeatureFlagEnabled(cfg.Marketplace.UseMicroservice)
-	metrics.SetRolloutPercent(cfg.Marketplace.RolloutPercent)
-
-	// Подсчитываем количество canary users
-	canaryCount := 0
-	if cfg.Marketplace.CanaryUserIDs != "" {
-		canaryList := strings.Split(cfg.Marketplace.CanaryUserIDs, ",")
-		canaryCount = len(canaryList)
-	}
-	metrics.SetCanaryUsers(canaryCount)
-
-	logger.Info().
-		Bool("feature_flag", cfg.Marketplace.UseMicroservice).
-		Int("rollout_percent", cfg.Marketplace.RolloutPercent).
-		Int("canary_users", canaryCount).
-		Msg("Prometheus metrics initialized for marketplace migration")
-
-	// Инициализация listings microservice gRPC client если включен
-	var grpcListingsClientAdapter *listingsClient.ClientAdapter
-	if cfg.Marketplace.UseMicroservice {
-		logger.Info().
-			Str("grpc_url", cfg.Marketplace.MicroserviceGRPCURL).
-			Msg("Initializing listings gRPC client")
-
-		rawClient, err := listingsClient.NewClient(
-			cfg.Marketplace.MicroserviceGRPCURL,
-			*logger.Get(),
-		)
-		if err != nil {
-			logger.Error().
-				Err(err).
-				Str("grpc_url", cfg.Marketplace.MicroserviceGRPCURL).
-				Msg("Failed to create listings gRPC client - will fallback to monolith only")
-			// Don't fail server startup, just log error and continue with monolith only
-			grpcListingsClientAdapter = nil
-		} else {
-			logger.Info().
-				Str("grpc_url", cfg.Marketplace.MicroserviceGRPCURL).
-				Msg("Listings gRPC client created successfully")
-
-			// Wrap raw gRPC client with adapter (proto -> UnifiedListing)
-			grpcListingsClientAdapter = listingsClient.NewClientAdapter(rawClient)
-			logger.Info().Msg("Listings gRPC client adapter initialized")
-		}
-	} else {
-		logger.Info().
-			Bool("microservice_enabled", false).
-			Msg("Listings microservice disabled - using monolith only")
-	}
-
-	// Устанавливаем router в unified marketplace service через adapter
-	// Adapter конвертирует marketplace.TrafficRouter -> unified.TrafficRouter interface
-	routerAdapter := marketplaceRouterService.NewRouterAdapter(trafficRouter)
-	unifiedMarketplaceService.SetTrafficRouter(routerAdapter)
-
-	// Устанавливаем gRPC client если инициализирован успешно
-	if grpcListingsClientAdapter != nil {
-		logger.Info().Msg("Setting listings gRPC client in UnifiedMarketplaceService")
-		unifiedMarketplaceService.SetListingsGRPCClient(
-			grpcListingsClientAdapter,
-			cfg.Marketplace.UseMicroservice,
-		)
-	} else if cfg.Marketplace.UseMicroservice {
-		logger.Warn().
-			Msg("Microservice enabled but gRPC client failed to initialize - using monolith fallback")
-	}
-
-	unifiedMarketplaceHandler := unifiedHandler.NewMarketplaceHandler(unifiedMarketplaceService)
-
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// Детальное логирование ошибки
@@ -432,7 +319,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		authService:        authServiceInstance,
 		jwtParserMW:        jwtParserMW,
 		review:             reviewHandler,
-		marketplace:        marketplaceHandlerInstance,
 		notifications:      notificationsHandler,
 		balance:            balanceHandler,
 		payments:           paymentsHandler,
@@ -440,7 +326,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		adminTesting:       adminTestingHandler,
 		delivery:           deliveryModule,
 		orders:             ordersModule,
-		storefront:         storefrontModule,
 		geocode:            geocodeHandler,
 		contacts:           contactsHandler,
 		docs:               docsHandlerInstance,
@@ -457,8 +342,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		vin:                vinModule,
 		credit:             creditHandlerInstance,
 		recommendations:    recommendationsHandlerInstance,
-		unified:            unifiedHandlerInstance,
-		unifiedMarketplace: unifiedMarketplaceHandler,
 		fileStorage:        fileStorage,
 		health:             healthHandlerInstance,
 		redisClient:        redisClient,
@@ -699,27 +582,17 @@ func (s *Server) registerProjectRoutes() {
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// config регистрируется отдельно до этого метода для публичных роутов
 	// analytics должен быть РАНЬШЕ остальных, чтобы публичный /api/v1/analytics/event зарегистрировался первым
-	// unified должен быть раньше marketplace для публичных роутов unified listings
-	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
-	// subscriptions должен быть раньше marketplace, чтобы публичные роуты не перехватывались auth middleware
-	// tracking должен быть раньше marketplace, чтобы его публичные роуты не перехватывались auth middleware
-	registrars = append(registrars, s.global, s.analytics, s.unified, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
-
-	// Регистрируем unified marketplace routes (Phase 3 - новый unified API)
-	if s.unifiedMarketplace != nil {
-		if err := s.unifiedMarketplace.RegisterMarketplaceRoutes(s.app, s.middleware, s.jwtParserMW); err != nil {
-			logger.Error().Err(err).Msg("Failed to register unified marketplace routes")
-		} else {
-			logger.Info().Msg("Unified marketplace routes registered successfully")
-		}
-	}
+	// searchOptimization должен быть раньше, чтобы избежать конфликта с глобальным middleware
+	// subscriptions должен быть раньше, чтобы публичные роуты не перехватывались auth middleware
+	// tracking должен быть раньше, чтобы его публичные роуты не перехватывались auth middleware
+	registrars = append(registrars, s.global, s.analytics, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
 
 	// Добавляем Subscriptions если он инициализирован - ДО marketplace чтобы избежать конфликтов с auth middleware
 	if s.subscriptions != nil {
 		registrars = append(registrars, s.subscriptions)
 	}
 
-	registrars = append(registrars, s.marketplace, s.balance, s.orders, s.storefront,
+	registrars = append(registrars, s.balance, s.orders,
 		s.geocode, s.gis, s.contacts, s.payments)
 
 	// Добавляем Delivery если он инициализирован

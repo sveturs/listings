@@ -1,22 +1,18 @@
 package postgres
 
 import (
-	"backend/internal/proj/c2c/service"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Storage struct {
-	pool               *pgxpool.Pool
-	translationService service.TranslationServiceInterface
-	AttributeGroups    AttributeGroupStorage
+	pool            *pgxpool.Pool
+	AttributeGroups AttributeGroupStorage
 }
 
-func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface) *Storage {
+func NewStorage(pool *pgxpool.Pool) *Storage {
 	return &Storage{
-		pool:               pool,
-		translationService: translationService,
-		AttributeGroups:    NewAttributeGroupStorage(pool),
+		pool:            pool,
+		AttributeGroups: NewAttributeGroupStorage(pool),
 	}
 }
 

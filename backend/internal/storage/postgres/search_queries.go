@@ -3,38 +3,31 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	"backend/internal/domain/models"
-	marketplaceService "backend/internal/proj/c2c/service"
 )
 
 // GetPopularSearchQueries возвращает популярные поисковые запросы
+// TODO: Migrate to marketplace microservice
 func (db *Database) GetPopularSearchQueries(ctx context.Context, query string, limit int) ([]interface{}, error) {
-	queries, err := db.marketplaceDB.GetPopularSearchQueries(ctx, query, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	// Конвертируем в []interface{}
-	result := make([]interface{}, len(queries))
-	for i, q := range queries {
-		result[i] = q
-	}
-
-	return result, nil
+	return nil, errors.New("marketplace service removed - use microservice")
 }
 
 // SaveSearchQuery сохраняет или обновляет поисковый запрос
+// TODO: Migrate to marketplace microservice
 func (db *Database) SaveSearchQuery(ctx context.Context, query, normalizedQuery string, resultsCount int, language string) error {
-	return db.marketplaceDB.SaveSearchQuery(ctx, query, normalizedQuery, resultsCount, language)
+	return errors.New("marketplace service removed - use microservice")
 }
 
 // SearchCategories ищет категории по названию
+// TODO: Migrate to marketplace microservice
 func (db *Database) SearchCategories(ctx context.Context, query string, limit int) ([]models.MarketplaceCategory, error) {
-	return db.marketplaceDB.SearchCategories(ctx, query, limit)
+	return nil, errors.New("marketplace service removed - use microservice")
 }
 
 // GetPopularSearchQueriesTyped возвращает типизированные популярные поисковые запросы для сервисов
-func (db *Database) GetPopularSearchQueriesTyped(ctx context.Context, query string, limit int) ([]marketplaceService.SearchQuery, error) {
-	return db.marketplaceDB.GetPopularSearchQueries(ctx, query, limit)
+// TODO: Migrate to marketplace microservice
+func (db *Database) GetPopularSearchQueriesTyped(ctx context.Context, query string, limit int) ([]interface{}, error) {
+	return nil, errors.New("marketplace service removed - use microservice")
 }

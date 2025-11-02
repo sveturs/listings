@@ -17,13 +17,9 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 
-	marketplaceService "backend/internal/proj/c2c/service"
-	marketplaceStorage "backend/internal/proj/c2c/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
 	reviewStorage "backend/internal/proj/reviews/storage/postgres"
 
-	storefrontOpenSearch "backend/internal/proj/b2c/storage/opensearch"
-	"backend/internal/proj/c2c/storage/opensearch"
 	osClient "backend/internal/storage/opensearch"
 )
 
@@ -44,13 +40,9 @@ var ErrStorefrontNotFound = errors.New("storefront not found")
 
 // Database представляет главную структуру для работы с базой данных
 type Database struct {
-	pool          *pgxpool.Pool
-	marketplaceDB *marketplaceStorage.Storage
-
+	pool                 *pgxpool.Pool
 	reviewDB             *reviewStorage.Storage
 	notificationsDB      *notificationStorage.Storage
-	osMarketplaceRepo    opensearch.MarketplaceSearchRepository
-	osStorefrontRepo     storefrontOpenSearch.StorefrontSearchRepository
 	osClient             *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
 	db                   *sql.DB
 	sqlxDB               *sqlx.DB // sqlx.DB для работы с sqlx библиотекой
@@ -89,18 +81,11 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 	stdDB := stdlib.OpenDBFromPool(pool)
 	sqlxDB := sqlx.NewDb(stdDB, "pgx")
 
-	// Создаем сервис переводов
-	translationService, err := marketplaceService.NewTranslationService(os.Getenv("OPENAI_API_KEY"))
-	if err != nil {
-		return nil, fmt.Errorf("error creating translation service: %w", err)
-	}
-
 	db := &Database{
 		pool:             pool,
 		db:               stdDB,
 		sqlxDB:           sqlxDB,
-		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService, nil), // userService будет установлен позже
-		reviewDB:         reviewStorage.NewStorage(pool, translationService),
+		reviewDB:         reviewStorage.NewStorage(pool, nil), // translation service теперь не нужен для reviews
 		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
 		osClient:         osClient,     // Сохраняем клиент OpenSearch
 		marketplaceIndex: indexName,    // Сохраняем имя индекса

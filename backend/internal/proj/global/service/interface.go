@@ -7,10 +7,8 @@ import (
 	authService "github.com/sveturs/auth/pkg/http/service"
 
 	"backend/internal/config"
-	storefrontService "backend/internal/proj/b2c/service"
 	balanceService "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
-	marketplaceService "backend/internal/proj/c2c/service"
 	geocodeService "backend/internal/proj/geocode/service"
 	notificationService "backend/internal/proj/notifications/service"
 	paymentService "backend/internal/proj/payments/service"
@@ -30,41 +28,24 @@ type SearchLogsServiceInterface interface {
 type ServicesInterface interface {
 	User() userService.UserServiceInterface
 	Config() *config.Config
-	Marketplace() marketplaceService.MarketplaceServiceInterface
 	Review() reviewService.ReviewServiceInterface
-	Chat() marketplaceService.ChatServiceInterface
-	Contacts() marketplaceService.ContactsServiceInterface
 	Notification() notificationService.NotificationServiceInterface
-	Translation() marketplaceService.TranslationServiceInterface
 	Balance() balanceService.BalanceServiceInterface
 	Payment() paymentService.PaymentServiceInterface
-	Storefront() storefrontService.StorefrontService
 	Storage() storage.Storage
 	Geocode() geocodeService.GeocodeServiceInterface
 
 	// FileStorage возвращает сервис для работы с файловым хранилищем
 	FileStorage() filestorage.FileStorageInterface
 
-	// ChatAttachment возвращает сервис для работы с вложениями чата
-	ChatAttachment() marketplaceService.ChatAttachmentServiceInterface
-
-	// ChatTranslation возвращает сервис для переводов сообщений чата
-	ChatTranslation() *marketplaceService.ChatTranslationService
-
 	// UnifiedSearch возвращает сервис для унифицированного поиска
 	UnifiedSearch() UnifiedSearchServiceInterface
-
-	// Orders возвращает сервис для работы с заказами маркетплейса
-	Orders() marketplaceService.OrderServiceInterface
 
 	// BehaviorTracking возвращает сервис для трекинга поведения пользователей
 	BehaviorTracking() behaviorTrackingService.BehaviorTrackingService
 
 	// SearchLogs возвращает сервис для логирования поисковых запросов
 	SearchLogs() SearchLogsServiceInterface
-
-	// UnifiedCar возвращает сервис для работы с автомобилями
-	UnifiedCar() *marketplaceService.UnifiedCarService
 
 	// NewImageService создает новый ImageService
 	NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface, cfg services.ImageServiceConfig) *services.ImageService

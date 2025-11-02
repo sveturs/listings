@@ -8,8 +8,6 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	storefrontService "backend/internal/proj/b2c/service"
-	marketplaceService "backend/internal/proj/c2c/service"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/service"
@@ -17,13 +15,11 @@ import (
 
 // MessageHandler обрабатывает сообщения от пользователей Viber
 type MessageHandler struct {
-	botService         *service.BotService
-	infobipService     *service.InfobipBotService
-	services           globalService.ServicesInterface
-	marketplaceService marketplaceService.MarketplaceServiceInterface
-	storefrontService  storefrontService.StorefrontService
-	useInfobip         bool
-	config             *config.ViberConfig
+	botService     *service.BotService
+	infobipService *service.InfobipBotService
+	services       globalService.ServicesInterface
+	useInfobip     bool
+	config         *config.ViberConfig
 }
 
 // NewMessageHandler создаёт новый обработчик сообщений

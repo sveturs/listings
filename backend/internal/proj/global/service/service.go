@@ -13,11 +13,9 @@ import (
 
 	"backend/internal/cache"
 	"backend/internal/config"
-	storefrontService "backend/internal/proj/b2c/service"
 	balance "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
 	behaviorTrackingPostgres "backend/internal/proj/behavior_tracking/storage/postgres"
-	marketplaceService "backend/internal/proj/c2c/service"
 	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
 	notificationService "backend/internal/proj/notifications/service"
 	payment "backend/internal/proj/payments/service"
@@ -31,24 +29,16 @@ import (
 
 type Service struct {
 	users            *userService.Service
-	marketplace      *marketplaceService.Service
 	review           *reviewService.Service
-	chat             *marketplaceService.Service
-	contacts         *marketplaceService.ContactsService
 	config           *config.Config
 	notification     *notificationService.Service
-	translation      marketplaceService.TranslationServiceInterface
 	balance          *balance.BalanceService
 	payment          payment.PaymentServiceInterface
-	storefront       storefrontService.StorefrontService
 	storage          storage.Storage
 	geocode          geocodeService.GeocodeServiceInterface
 	fileStorage      filestorage.FileStorageInterface
-	chatAttachment   *marketplaceService.ChatAttachmentService
-	chatTranslation  *marketplaceService.ChatTranslationService
 	unifiedSearch    UnifiedSearchServiceInterface
 	behaviorTracking behaviorTrackingService.BehaviorTrackingService
-	unifiedCar       *marketplaceService.UnifiedCarService
 	authUserService  *authService.UserService // Auth библиотека UserService
 }
 

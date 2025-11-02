@@ -9,8 +9,6 @@ import (
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 
-	storefrontOpenSearch "backend/internal/proj/b2c/storage/opensearch"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -215,14 +213,11 @@ func (db *Database) MarketplaceOrder() interface{} {
 }
 
 // StorefrontProductSearch возвращает репозиторий для поиска товаров витрин
+// TODO: Migrate to marketplace microservice
 func (db *Database) StorefrontProductSearch() interface{} {
 	if db.productSearchRepo != nil {
 		return db.productSearchRepo
 	}
-	// Возвращаем новый репозиторий если есть клиент OpenSearch
-	if db.osClient != nil {
-		// Используем отдельный индекс b2c_products для B2C товаров
-		return storefrontOpenSearch.NewProductRepository(db.osClient, db.b2cProductIndex)
-	}
+	// OpenSearch disabled after removing b2c
 	return nil
 }

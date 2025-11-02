@@ -7,7 +7,6 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/domain/search"
-	"backend/internal/proj/c2c/storage/opensearch"
 )
 
 // GetSearchWeights возвращает веса для поиска
@@ -26,14 +25,9 @@ func (db *Database) GetOpenSearchClient() (interface {
 	return db.osClient, nil
 }
 
-// GetOpenSearchRepository возвращает репозиторий OpenSearch для маркетплейса
-func (db *Database) GetOpenSearchRepository() opensearch.MarketplaceSearchRepository {
-	return db.osMarketplaceRepo
-}
-
 // PrepareIndex подготавливает индекс OpenSearch
 func (db *Database) PrepareIndex(ctx context.Context) error {
-	if db.osMarketplaceRepo == nil {
+	if true { // OpenSearch disabled after removing c2c
 		// Если репозиторий OpenSearch не инициализирован, просто возвращаем nil
 		// Поиск будет работать без OpenSearch
 		return nil
