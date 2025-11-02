@@ -167,8 +167,8 @@ func testMarketplaceCRUD(ctx context.Context, baseURL, token string) *domain.Tes
 		StartedAt: time.Now().UTC(),
 	}
 
-	// Test GET /api/v1/unified/listings
-	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=5", nil)
+	// Test GET /api/v1/marketplace/search
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/marketplace/search?limit=5", nil)
 	if err != nil {
 		return failTest(result, "Failed to create request", err)
 	}
@@ -350,7 +350,7 @@ func testReviewCreation(ctx context.Context, baseURL, token string) *domain.Test
 	client := &http.Client{Timeout: 10 * time.Second}
 
 	// Step 1: Get multiple listings to use the first available
-	reqListings, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=1", nil)
+	reqListings, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/marketplace/search?limit=1", nil)
 	if err != nil {
 		return failTest(result, "Failed to create listings request", err)
 	}
@@ -752,7 +752,7 @@ func testListingsExtremeLimit(ctx context.Context, baseURL, token string) *domai
 	client := &http.Client{Timeout: 15 * time.Second}
 
 	// Test with limit=0
-	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=0", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/marketplace/search?limit=0", nil)
 	if err != nil {
 		return failTest(result, "Failed to create request for limit=0", err)
 	}
@@ -772,7 +772,7 @@ func testListingsExtremeLimit(ctx context.Context, baseURL, token string) *domai
 	_ = resp.Body.Close()
 
 	// Test with very large limit (should be capped by backend)
-	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=10000", nil)
+	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/marketplace/search?limit=10000", nil)
 	if err != nil {
 		return failTest(result, "Failed to create request for limit=10000", err)
 	}

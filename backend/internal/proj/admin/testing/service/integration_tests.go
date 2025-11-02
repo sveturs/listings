@@ -44,8 +44,8 @@ func testRedisCache(ctx context.Context, baseURL, token string) *domain.TestResu
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Test 1: Cache listings (triggers Redis SET)
-	req1, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=5", nil)
+	// Test 1: Fetch listings via marketplace search
+	req1, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/marketplace/search?limit=5", nil)
 	if err != nil {
 		return failTest(result, "Failed to create listings request", err)
 	}
@@ -61,8 +61,8 @@ func testRedisCache(ctx context.Context, baseURL, token string) *domain.TestResu
 		return failTest(result, fmt.Sprintf("Expected status 200, got %d", resp1.StatusCode), nil)
 	}
 
-	// Test 2: Fetch again (should hit cache)
-	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=5", nil)
+	// Test 2: Fetch again (verify consistent results)
+	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/marketplace/search?limit=5", nil)
 	if err != nil {
 		return failTest(result, "Failed to create listings request (2nd)", err)
 	}
@@ -75,7 +75,7 @@ func testRedisCache(ctx context.Context, baseURL, token string) *domain.TestResu
 	defer func() { _ = resp2.Body.Close() }()
 
 	if resp2.StatusCode != http.StatusOK {
-		return failTest(result, fmt.Sprintf("Expected status 200 on cache hit, got %d", resp2.StatusCode), nil)
+		return failTest(result, fmt.Sprintf("Expected status 200 on second request, got %d", resp2.StatusCode), nil)
 	}
 
 	// Test 3: Verify search endpoint (also uses cache)
@@ -157,9 +157,9 @@ func testPostgresConnection(ctx context.Context, baseURL, token string) *domain.
 	client := &http.Client{Timeout: 10 * time.Second}
 
 	// Test database connectivity through API endpoints
-	// We use /api/v1/unified/listings as it requires DB query
+	// We use /api/v1/marketplace/search as it requires DB query via microservice
 
-	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=1", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/marketplace/search?limit=1", nil)
 	if err != nil {
 		return failTest(result, "Failed to create listings request", err)
 	}

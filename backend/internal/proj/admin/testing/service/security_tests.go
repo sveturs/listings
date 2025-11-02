@@ -367,7 +367,7 @@ func testCSRFProtection(ctx context.Context, baseURL, token string) *domain.Test
 	}
 
 	// Test that with valid token, operation is allowed (authentication works)
-	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/unified/listings?limit=1", nil)
+	req2, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/marketplace/search?limit=1", nil)
 	if err != nil {
 		return failTest(result, "Failed to create authenticated test request", err)
 	}

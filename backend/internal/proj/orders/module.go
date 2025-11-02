@@ -6,13 +6,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/middleware"
-	b2c_storesOpensearch "backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/proj/orders/adapters"
 	"backend/internal/proj/orders/handler"
 	"backend/internal/proj/orders/service"
 	"backend/internal/storage"
-	opensearchClient "backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"backend/pkg/logger"
 )
@@ -23,7 +21,7 @@ type Module struct {
 }
 
 // NewModule создает новый модуль заказов со всеми зависимостями
-func NewModule(db storage.Storage, opensearchCfg *opensearchClient.Config, deliveryClient *grpcclient.Client) (*Module, error) {
+func NewModule(db storage.Storage, deliveryClient *grpcclient.Client) (*Module, error) {
 	// Получаем репозитории из storage
 	orderRepo := db.Order().(postgres.OrderRepositoryInterface)
 	cartRepo := db.Cart().(postgres.CartRepositoryInterface)
@@ -39,27 +37,12 @@ func NewModule(db storage.Storage, opensearchCfg *opensearchClient.Config, deliv
 	// Создаем адаптер для работы с продуктами
 	productRepo := adapters.NewProductRepositoryAdapter(postgresDB)
 
-	// Создаем OpenSearch репозиторий для обновления остатков
-	var productSearchRepo b2c_storesOpensearch.ProductSearchRepository
-	if opensearchCfg != nil && opensearchCfg.URL != "" {
-		osClient, err := opensearchClient.NewOpenSearchClient(*opensearchCfg)
-		if err != nil {
-			// Логируем ошибку, но продолжаем без OpenSearch
-			log := logger.New()
-			log.Error("Failed to create OpenSearch client for orders module: %v", err)
-		} else {
-			// Используем правильный индекс для товаров витрин
-			// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
-			productSearchRepo = b2c_storesOpensearch.NewProductRepository(osClient, "c2c_listings")
-		}
-	}
-
 	// Создаем сервисы
 	log := logger.New()
 	inventoryManager := service.NewInventoryManager(inventoryRepo, nil, *log)
 
-	// Передаем productSearchRepo и deliveryClient в OrderService
-	orderService := service.NewOrderService(orderRepo, cartRepo, productRepo, storefrontRepo, inventoryManager, productSearchRepo, deliveryClient, *log)
+	// Создаем OrderService с deliveryClient для создания shipments
+	orderService := service.NewOrderService(orderRepo, cartRepo, productRepo, storefrontRepo, inventoryManager, deliveryClient, *log)
 	sqlxDB := postgresDB.GetSQLXDB()
 
 	// Создаем handler с поддержкой транзакций

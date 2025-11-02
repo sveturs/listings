@@ -207,11 +207,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	if deliveryModule != nil {
 		deliveryClient = deliveryModule.GetGRPCClient()
 	}
-	ordersModule, err := orders.NewModule(db, &opensearch.Config{
-		URL:      cfg.OpenSearch.URL,
-		Username: cfg.OpenSearch.Username,
-		Password: cfg.OpenSearch.Password,
-	}, deliveryClient)
+	// OpenSearch integration removed (c2c/b2c deprecated)
+	ordersModule, err := orders.NewModule(db, deliveryClient)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}

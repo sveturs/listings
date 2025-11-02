@@ -47,8 +47,8 @@ func testMarketplaceListingConsistency(ctx context.Context, baseURL, token strin
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Step 1: Get a listing from unified endpoint (combines DB + cache + search)
-	listingsURL := fmt.Sprintf("%s/api/v1/unified/listings?limit=1", baseURL)
+	// Step 1: Get a listing from marketplace search endpoint (unified search via microservice)
+	listingsURL := fmt.Sprintf("%s/api/v1/marketplace/search?limit=1", baseURL)
 	req, err := http.NewRequestWithContext(ctx, "GET", listingsURL, nil)
 	if err != nil {
 		return failTest(result, "Failed to create listings request", err)
@@ -87,9 +87,9 @@ func testMarketplaceListingConsistency(ctx context.Context, baseURL, token strin
 		return failTest(result, "Listing ID not found", fmt.Errorf("invalid listing structure"))
 	}
 
-	// Step 2: Query the same listing again to verify cache consistency
-	// If cache is working, the second request should return same data
-	listingsURL2 := fmt.Sprintf("%s/api/v1/unified/listings?limit=10", baseURL)
+	// Step 2: Query the same listing again to verify consistency
+	// Multiple requests should return consistent data from microservice
+	listingsURL2 := fmt.Sprintf("%s/api/v1/marketplace/search?limit=10", baseURL)
 	req2, err := http.NewRequestWithContext(ctx, "GET", listingsURL2, nil)
 	if err != nil {
 		return failTest(result, "Failed to create second listings request", err)
@@ -187,8 +187,8 @@ func testTransactionRollback(ctx context.Context, baseURL, token string) *domain
 	}
 
 	// Step 2: Verify DB is still consistent after failed transaction
-	// Query listings to ensure DB is still operational
-	testListingsURL := fmt.Sprintf("%s/api/v1/unified/listings?limit=1", baseURL)
+	// Query marketplace search to ensure system is still operational
+	testListingsURL := fmt.Sprintf("%s/api/v1/marketplace/search?limit=1", baseURL)
 	req2, err := http.NewRequestWithContext(ctx, "GET", testListingsURL, nil)
 	if err != nil {
 		return failTest(result, "Failed to create test query", err)
@@ -224,8 +224,8 @@ func testImageOrphanCleanup(ctx context.Context, baseURL, token string) *domain.
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Step 1: Get listings with images
-	listingsURL := fmt.Sprintf("%s/api/v1/unified/listings?limit=5", baseURL)
+	// Step 1: Get listings with images via marketplace search
+	listingsURL := fmt.Sprintf("%s/api/v1/marketplace/search?limit=5", baseURL)
 	req, err := http.NewRequestWithContext(ctx, "GET", listingsURL, nil)
 	if err != nil {
 		return failTest(result, "Failed to create listings request", err)

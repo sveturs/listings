@@ -61,7 +61,7 @@ func testAPIResponseTime(ctx context.Context, baseURL, token string) *domain.Tes
 		threshold time.Duration // expected response time
 	}{
 		{"Auth Me", "/api/v1/auth/me", 100 * time.Millisecond},
-		{"Unified Listings", "/api/v1/unified/listings?limit=10", 200 * time.Millisecond},
+		{"Marketplace Search", "/api/v1/marketplace/search?limit=10", 200 * time.Millisecond},
 		{"Search", "/api/v1/search?query=test&limit=10", 300 * time.Millisecond},
 		{"Admin Categories", "/api/v1/admin/categories", 150 * time.Millisecond},
 	}
@@ -127,7 +127,7 @@ func testConcurrentUsers(ctx context.Context, baseURL, token string) *domain.Tes
 
 	// Test with different concurrency levels
 	concurrencyLevels := []int{10, 50, 100}
-	endpoint := "/api/v1/unified/listings?limit=5"
+	endpoint := "/api/v1/marketplace/search?limit=5"
 
 	for _, concurrency := range concurrencyLevels {
 		var wg sync.WaitGroup
@@ -213,7 +213,7 @@ func testDatabaseQueryPerformance(ctx context.Context, baseURL, token string) *d
 		threshold time.Duration
 	}{
 		{"Search with filters", "/api/v1/search?query=test&category=1&min_price=10&max_price=1000&limit=20", 300 * time.Millisecond},
-		{"Unified listings full", "/api/v1/unified/listings?limit=100", 500 * time.Millisecond},
+		{"Marketplace search full", "/api/v1/marketplace/search?limit=100", 500 * time.Millisecond},
 		{"Admin admins list", "/api/v1/admin/admins", 500 * time.Millisecond},
 	}
 

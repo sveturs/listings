@@ -10,7 +10,6 @@ import (
 	"github.com/shopspring/decimal"
 
 	"backend/internal/domain/models"
-	"backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/storage/postgres"
 	deliveryv1 "backend/pkg/grpc/delivery/v1"
@@ -19,14 +18,13 @@ import (
 
 // OrderService представляет сервис для работы с заказами
 type OrderService struct {
-	orderRepo         postgres.OrderRepositoryInterface
-	cartRepo          postgres.CartRepositoryInterface
-	productRepo       ProductRepositoryInterface
-	storefrontRepo    StorefrontRepositoryInterface
-	inventoryMgr      InventoryManagerInterface
-	productSearchRepo opensearch.ProductSearchRepository // OpenSearch репозиторий для реиндексации
-	deliveryClient    *grpcclient.Client                 // gRPC клиент для delivery микросервиса
-	logger            logger.Logger
+	orderRepo      postgres.OrderRepositoryInterface
+	cartRepo       postgres.CartRepositoryInterface
+	productRepo    ProductRepositoryInterface
+	storefrontRepo StorefrontRepositoryInterface
+	inventoryMgr   InventoryManagerInterface
+	deliveryClient *grpcclient.Client // gRPC клиент для delivery микросервиса
+	logger         logger.Logger
 }
 
 // Интерфейсы зависимостей
@@ -56,19 +54,17 @@ func NewOrderService(
 	productRepo ProductRepositoryInterface,
 	storefrontRepo StorefrontRepositoryInterface,
 	inventoryMgr InventoryManagerInterface,
-	productSearchRepo opensearch.ProductSearchRepository,
 	deliveryClient *grpcclient.Client,
 	logger logger.Logger,
 ) *OrderService {
 	return &OrderService{
-		orderRepo:         orderRepo,
-		cartRepo:          cartRepo,
-		productRepo:       productRepo,
-		storefrontRepo:    storefrontRepo,
-		inventoryMgr:      inventoryMgr,
-		productSearchRepo: productSearchRepo,
-		deliveryClient:    deliveryClient,
-		logger:            logger,
+		orderRepo:      orderRepo,
+		cartRepo:       cartRepo,
+		productRepo:    productRepo,
+		storefrontRepo: storefrontRepo,
+		inventoryMgr:   inventoryMgr,
+		deliveryClient: deliveryClient,
+		logger:         logger,
 	}
 }
 
