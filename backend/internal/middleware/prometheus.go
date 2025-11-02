@@ -118,9 +118,17 @@ func PrometheusMiddleware() fiber.Handler {
 		// Get status code
 		status := strconv.Itoa(c.Response().StatusCode())
 
-		// Record metrics
-		httpRequestsTotal.WithLabelValues(c.Method(), c.Path(), status).Inc()
-		httpRequestDuration.WithLabelValues(c.Method(), c.Path()).Observe(duration)
+		// Get normalized endpoint (route pattern instead of actual path)
+		// This prevents high cardinality labels (e.g. /listings/123 -> /listings/:id)
+		endpoint := c.Route().Path
+		if endpoint == "" {
+			// Fallback to actual path if route is not found (e.g. 404 requests)
+			endpoint = c.Path()
+		}
+
+		// Record metrics with normalized endpoint
+		httpRequestsTotal.WithLabelValues(c.Method(), endpoint, status).Inc()
+		httpRequestDuration.WithLabelValues(c.Method(), endpoint).Observe(duration)
 
 		return err
 	}
