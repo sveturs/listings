@@ -26,23 +26,9 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 		}
 	}()
 
-	// Сначала модерируем оригинальный текст
+	// Translation service removed - moderation is now handled at service layer
+	// Storage layer only stores data, no translation/moderation logic
 	moderatedComment := review.Comment
-	if review.Comment != "" {
-		// Используем текущий сервис перевода для модерации текста
-		// В режиме безопасной обработки с обработкой ошибок
-		moderatedComment, err = s.translationService.ModerateText(ctx, review.Comment, review.OriginalLanguage)
-		if err != nil {
-			// В случае ошибки модерации, просто используем оригинальный текст
-			log.Printf("Warning: failed to moderate comment: %v, using original text", err)
-			moderatedComment = review.Comment
-			err = nil // Сбрасываем ошибку, чтобы продолжить выполнение
-		}
-
-		if err != nil {
-			return nil, fmt.Errorf("failed to moderate comment: %w", err)
-		}
-	}
 
 	// Создаем запись отзыва с модерированным текстом
 	err = tx.QueryRow(ctx, `
@@ -68,30 +54,18 @@ func (s *Storage) CreateReview(ctx context.Context, review *models.Review) (*mod
 		return nil, fmt.Errorf("failed to save original translation: %w", err)
 	}
 
-	// Создаем переводы на другие языки
+	// Translation service removed - translations are now handled at service layer
+	// Storage layer only stores data, no translation logic
+	// Save original text as translation for original language
 	targetLangs := []string{"en", "ru", "sr"}
 	for _, lang := range targetLangs {
 		if lang == review.OriginalLanguage {
 			continue
 		}
-
-		// Используем простой подход с обработкой ошибок для максимальной надежности
-		var translatedText string
-		var translateErr error
-
-		// Пытаемся перевести текст
-		translatedText, translateErr = s.translationService.Translate(ctx, moderatedComment, review.OriginalLanguage, lang)
-
-		// Обрабатываем возможную ошибку перевода
-		if translateErr != nil {
-			log.Printf("Failed to translate to %s: %v, using original text", lang, translateErr)
-			translatedText = moderatedComment // Используем оригинальный текст как запасной вариант
-		}
-
-		// Создаем перевод в БД
-		if err := s.saveTranslation(ctx, tx, "review", review.ID, lang, "comment", translatedText, true, false); err != nil {
+		// For non-original languages, save the same text as placeholder
+		// Service layer should handle actual translations
+		if err := s.saveTranslation(ctx, tx, "review", review.ID, lang, "comment", moderatedComment, false, false); err != nil {
 			log.Printf("Failed to save translation to %s: %v", lang, err)
-			// Продолжаем выполнение даже при ошибке сохранения перевода
 		}
 	}
 

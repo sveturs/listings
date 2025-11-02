@@ -25,23 +25,10 @@ func NewUnifiedSearchService(services ServicesInterface) UnifiedSearchServiceInt
 
 // GetSuggestions возвращает предложения для автодополнения из всех источников
 func (s *UnifiedSearchService) GetSuggestions(ctx context.Context, prefix string, limit int) ([]string, error) {
-	var allSuggestions []string
-
-	// Получаем предложения от marketplace
-	marketplaceSuggestions, err := s.services.Marketplace().GetSuggestions(ctx, prefix, limit/2)
-	if err == nil {
-		allSuggestions = append(allSuggestions, marketplaceSuggestions...)
-	}
-
-	// TODO: Добавить предложения от storefront сервиса
-
-	// Убираем дубликаты и ограничиваем количество
-	uniqueSuggestions := s.removeDuplicates(allSuggestions)
-	if len(uniqueSuggestions) > limit {
-		uniqueSuggestions = uniqueSuggestions[:limit]
-	}
-
-	return uniqueSuggestions, nil
+	// TODO: Implement suggestions from microservices
+	// Marketplace microservice removed - need to integrate marketplace microservice
+	// For now return empty list
+	return []string{}, nil
 }
 
 // removeDuplicates удаляет дубликаты из списка строк

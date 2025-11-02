@@ -25,8 +25,7 @@ func stringPtr(s string) *string {
 // SearchStorefrontsOpenSearch removed - use microservice
 // func (db *Database) SearchStorefrontsOpenSearch(ctx context.Context, params *storefrontOpenSearch.StorefrontSearchParams) (*storefrontOpenSearch.StorefrontSearchResult, error) {
 //	return nil, fmt.Errorf("marketplace service removed - use microservice")
-//
-}
+// }
 
 // IndexStorefront индексирует витрину в OpenSearch
 func (db *Database) IndexStorefront(ctx context.Context, storefront *models.Storefront) error {
