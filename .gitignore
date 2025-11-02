@@ -124,6 +124,8 @@ docker-compose.yml
 coverage.out
 
 # Private documentation moved to separate repo
-# Note: docs/DELIVERY*.md files are force-added with git add -f
+# Exception: AUDIT*.md, BLOCKER*.md and SPRINT*.md are tracked
 docs/
-!docs/SPRINT_6.4_PHASE3_ISSUE_FIXES_REPORT.md
+!docs/AUDIT*.md
+!docs/BLOCKER*.md
+!docs/SPRINT*.md
