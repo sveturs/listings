@@ -427,8 +427,16 @@ func (h *MarketplaceHandler) SearchListings(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 20)
 
 	// Валидация limit ПЕРЕД созданием params
-	if limit < 1 || limit > 100 {
-		limit = 20
+	if limit < 1 {
+		limit = 20 // Default для невалидных значений
+	} else if limit > 100 {
+		limit = 100 // Max limit
+	}
+
+	// Валидация offset
+	offset := c.QueryInt("offset", 0)
+	if offset < 0 {
+		offset = 0 // Offset не может быть отрицательным
 	}
 
 	params := &service.SearchParams{
@@ -441,7 +449,7 @@ func (h *MarketplaceHandler) SearchListings(c *fiber.Ctx) error {
 		StorefrontID: c.QueryInt("storefront_id", 0),
 		UserID:       c.QueryInt("user_id", 0),
 		Limit:        limit,
-		Offset:       c.QueryInt("offset", 0),
+		Offset:       offset,
 		SortBy:       c.Query("sort_by", "created_at"),
 		SortOrder:    c.Query("sort_order", "desc"),
 	}
@@ -475,12 +483,24 @@ func (h *MarketplaceHandler) SearchListings(c *fiber.Ctx) error {
 		Int64("total", total).
 		Msg("SearchListings: success")
 
+	// Вычисляем метаданные пагинации
+	// ВАЖНО: используем params.Limit, так как он уже валидирован в storage layer
+	totalPages := int(total) / params.Limit
+	if int(total)%params.Limit > 0 {
+		totalPages++
+	}
+	page := params.Offset/params.Limit + 1
+
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data":    listings,
-		"total":   total,
-		"limit":   params.Limit,
-		"offset":  params.Offset,
+		"meta": fiber.Map{
+			"total":       total,
+			"page":        page,
+			"limit":       params.Limit,
+			"total_pages": totalPages,
+			"has_more":    page < totalPages,
+		},
 	})
 }
 

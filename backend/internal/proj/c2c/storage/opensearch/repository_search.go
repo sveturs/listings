@@ -16,6 +16,21 @@ import (
 )
 
 func (r *Repository) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
+	// КРИТИЧНО: Валидация и нормализация параметров ПЕРЕД любыми операциями
+	// Это гарантирует что meta будет заполнен корректными значениями
+	if params.Size <= 0 {
+		logger.Warn().Int("requested_size", params.Size).Msg("Invalid size parameter, using default 20")
+		params.Size = 20 // Default size
+	}
+	if params.Size > 100 {
+		logger.Warn().Int("requested_size", params.Size).Msg("Size too large, limiting to 100")
+		params.Size = 100 // Max size
+	}
+	if params.Page < 1 {
+		logger.Warn().Int("requested_page", params.Page).Msg("Invalid page parameter, using default 1")
+		params.Page = 1 // Pages start from 1
+	}
+
 	var query map[string]interface{}
 
 	// ВАЖНО: проверяем наличие CustomQuery и используем его напрямую, если он задан
