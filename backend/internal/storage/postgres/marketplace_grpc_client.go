@@ -9,6 +9,7 @@ import (
 	listingsv1 "github.com/sveturs/listings/api/proto/listings/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
@@ -346,6 +347,346 @@ func (c *MarketplaceGRPCClient) DeleteListingAdmin(ctx context.Context, id int) 
 	return nil
 }
 
+// GetListingImage retrieves a single image by ID via microservice
+func (c *MarketplaceGRPCClient) GetListingImage(ctx context.Context, imageID int64) (*models.MarketplaceImage, error) {
+	req := &listingsv1.ImageIDRequest{
+		ImageId: imageID,
+	}
+
+	resp, err := c.client.GetListingImage(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get listing image %d via gRPC: %w", imageID, err)
+	}
+
+	return convertProtoToImage(resp.Image), nil
+}
+
+// DeleteListingImage removes an image from a listing via microservice
+func (c *MarketplaceGRPCClient) DeleteListingImage(ctx context.Context, imageID int64) error {
+	req := &listingsv1.ImageIDRequest{
+		ImageId: imageID,
+	}
+
+	_, err := c.client.DeleteListingImage(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to delete listing image %d via gRPC: %w", imageID, err)
+	}
+
+	logger.Debug().Int64("image_id", imageID).Msg("Listing image deleted successfully via gRPC")
+	return nil
+}
+
+// AddListingImage adds a new image to a listing via microservice
+func (c *MarketplaceGRPCClient) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (*models.MarketplaceImage, error) {
+	req := &listingsv1.AddImageRequest{
+		ListingId:    int64(image.ListingID),
+		Url:          image.PublicURL,
+		DisplayOrder: int32(image.DisplayOrder),
+		IsPrimary:    image.IsMain,
+	}
+
+	if image.FilePath != "" {
+		req.StoragePath = &image.FilePath
+	}
+	if image.ThumbnailURL != "" {
+		req.ThumbnailUrl = &image.ThumbnailURL
+	}
+	if image.FileSize > 0 {
+		fileSize := int64(image.FileSize)
+		req.FileSize = &fileSize
+	}
+	if image.ContentType != "" {
+		req.MimeType = &image.ContentType
+	}
+
+	resp, err := c.client.AddListingImage(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add listing image via gRPC: %w", err)
+	}
+
+	result := convertProtoToImage(resp.Image)
+	logger.Debug().Int("listing_id", image.ListingID).Int("image_id", result.ID).Msg("Listing image added successfully via gRPC")
+	return result, nil
+}
+
+// GetListingImages retrieves all images for a listing via microservice
+func (c *MarketplaceGRPCClient) GetListingImages(ctx context.Context, listingID int64) ([]*models.MarketplaceImage, error) {
+	req := &listingsv1.ListingIDRequest{
+		ListingId: listingID,
+	}
+
+	resp, err := c.client.GetListingImages(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get listing images via gRPC: %w", err)
+	}
+
+	images := make([]*models.MarketplaceImage, len(resp.Images))
+	for i, pbImg := range resp.Images {
+		images[i] = convertProtoToImage(pbImg)
+	}
+
+	return images, nil
+}
+
+// GetRootCategories retrieves all top-level categories via microservice
+func (c *MarketplaceGRPCClient) GetRootCategories(ctx context.Context) ([]*models.MarketplaceCategory, error) {
+	resp, err := c.client.GetRootCategories(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get root categories via gRPC: %w", err)
+	}
+
+	categories := make([]*models.MarketplaceCategory, len(resp.Categories))
+	for i, pbCat := range resp.Categories {
+		categories[i] = convertProtoToCategory(pbCat)
+	}
+
+	return categories, nil
+}
+
+// GetAllCategories retrieves all categories via microservice
+func (c *MarketplaceGRPCClient) GetAllCategories(ctx context.Context) ([]*models.MarketplaceCategory, error) {
+	resp, err := c.client.GetAllCategories(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get all categories via gRPC: %w", err)
+	}
+
+	categories := make([]*models.MarketplaceCategory, len(resp.Categories))
+	for i, pbCat := range resp.Categories {
+		categories[i] = convertProtoToCategory(pbCat)
+	}
+
+	return categories, nil
+}
+
+// GetPopularCategories retrieves popular categories by listing count via microservice
+func (c *MarketplaceGRPCClient) GetPopularCategories(ctx context.Context, limit int) ([]*models.MarketplaceCategory, error) {
+	req := &listingsv1.PopularCategoriesRequest{
+		Limit: int32(limit),
+	}
+
+	resp, err := c.client.GetPopularCategories(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get popular categories via gRPC: %w", err)
+	}
+
+	categories := make([]*models.MarketplaceCategory, len(resp.Categories))
+	for i, pbCat := range resp.Categories {
+		categories[i] = convertProtoToCategory(pbCat)
+	}
+
+	return categories, nil
+}
+
+// GetCategoryByID retrieves a single category by ID via microservice
+func (c *MarketplaceGRPCClient) GetCategoryByID(ctx context.Context, categoryID int64) (*models.MarketplaceCategory, error) {
+	req := &listingsv1.CategoryIDRequest{
+		CategoryId: categoryID,
+	}
+
+	resp, err := c.client.GetCategory(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get category by ID %d via gRPC: %w", categoryID, err)
+	}
+
+	return convertProtoToCategory(resp.Category), nil
+}
+
+// GetCategoryTree retrieves category hierarchy starting from a node via microservice
+func (c *MarketplaceGRPCClient) GetCategoryTree(ctx context.Context, categoryID int64) (*models.CategoryTreeNode, error) {
+	req := &listingsv1.CategoryIDRequest{
+		CategoryId: categoryID,
+	}
+
+	resp, err := c.client.GetCategoryTree(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get category tree for %d via gRPC: %w", categoryID, err)
+	}
+
+	return convertProtoToCategoryTree(resp.Tree), nil
+}
+
+// GetFavoritedUsers retrieves list of user IDs who favorited a listing via microservice
+func (c *MarketplaceGRPCClient) GetFavoritedUsers(ctx context.Context, listingID int64) ([]string, error) {
+	req := &listingsv1.ListingIDRequest{
+		ListingId: listingID,
+	}
+
+	resp, err := c.client.GetFavoritedUsers(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get favorited users via gRPC: %w", err)
+	}
+
+	// Convert int64 user IDs to strings
+	userIDs := make([]string, len(resp.UserIds))
+	for i, uid := range resp.UserIds {
+		userIDs[i] = fmt.Sprintf("%d", uid)
+	}
+
+	return userIDs, nil
+}
+
+// CreateListingVariants creates multiple variants for a listing via microservice
+func (c *MarketplaceGRPCClient) CreateListingVariants(ctx context.Context, listingID int64, variants []*models.MarketplaceListingVariant) error {
+	variantInputs := make([]*listingsv1.VariantInput, len(variants))
+	for i, v := range variants {
+		variantInputs[i] = &listingsv1.VariantInput{
+			Sku:        v.SKU,
+			IsActive:   true,
+			Attributes: make(map[string]string),
+		}
+
+		if v.Price != nil {
+			variantInputs[i].Price = v.Price
+		}
+		if v.Stock != nil {
+			stock := int32(*v.Stock)
+			variantInputs[i].Stock = &stock
+		}
+		if v.ImageURL != nil && *v.ImageURL != "" {
+			variantInputs[i].ImageUrl = v.ImageURL
+		}
+
+		// Convert attributes map to proto map
+		if len(v.Attributes) > 0 {
+			for key, val := range v.Attributes {
+				variantInputs[i].Attributes[key] = val
+			}
+		}
+	}
+
+	req := &listingsv1.CreateVariantsRequest{
+		ListingId: listingID,
+		Variants:  variantInputs,
+	}
+
+	_, err := c.client.CreateVariants(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to create listing variants via gRPC: %w", err)
+	}
+
+	logger.Debug().Int64("listing_id", listingID).Int("count", len(variants)).Msg("Listing variants created successfully via gRPC")
+	return nil
+}
+
+// GetListingVariants retrieves all variants for a listing via microservice
+func (c *MarketplaceGRPCClient) GetListingVariants(ctx context.Context, listingID int64) ([]*models.MarketplaceListingVariant, error) {
+	req := &listingsv1.ListingIDRequest{
+		ListingId: listingID,
+	}
+
+	resp, err := c.client.GetVariants(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get listing variants via gRPC: %w", err)
+	}
+
+	variants := make([]*models.MarketplaceListingVariant, len(resp.Variants))
+	for i, pbVariant := range resp.Variants {
+		variants[i] = convertProtoToVariant(pbVariant)
+	}
+
+	return variants, nil
+}
+
+// UpdateListingVariant updates a specific variant via microservice
+func (c *MarketplaceGRPCClient) UpdateListingVariant(ctx context.Context, variant *models.MarketplaceListingVariant) error {
+	req := &listingsv1.UpdateVariantRequest{
+		VariantId:  int64(variant.ID),
+		Attributes: make(map[string]string),
+	}
+
+	if variant.SKU != "" {
+		req.Sku = &variant.SKU
+	}
+	if variant.Price != nil {
+		req.Price = variant.Price
+	}
+	if variant.Stock != nil {
+		stock := int32(*variant.Stock)
+		req.Stock = &stock
+	}
+	if variant.ImageURL != nil && *variant.ImageURL != "" {
+		req.ImageUrl = variant.ImageURL
+	}
+
+	isActive := variant.IsActive
+	req.IsActive = &isActive
+
+	// Convert attributes map to proto map
+	if len(variant.Attributes) > 0 {
+		for key, val := range variant.Attributes {
+			req.Attributes[key] = val
+		}
+	}
+
+	_, err := c.client.UpdateVariant(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to update listing variant %d via gRPC: %w", variant.ID, err)
+	}
+
+	logger.Debug().Int("variant_id", variant.ID).Msg("Listing variant updated successfully via gRPC")
+	return nil
+}
+
+// DeleteListingVariant removes a variant from a listing via microservice
+func (c *MarketplaceGRPCClient) DeleteListingVariant(ctx context.Context, variantID int64) error {
+	req := &listingsv1.VariantIDRequest{
+		VariantId: variantID,
+	}
+
+	_, err := c.client.DeleteVariant(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to delete listing variant %d via gRPC: %w", variantID, err)
+	}
+
+	logger.Debug().Int64("variant_id", variantID).Msg("Listing variant deleted successfully via gRPC")
+	return nil
+}
+
+// GetMarketplaceListingsForReindex retrieves listings that need reindexing via microservice
+func (c *MarketplaceGRPCClient) GetMarketplaceListingsForReindex(ctx context.Context, limit int) ([]*models.MarketplaceListing, error) {
+	req := &listingsv1.ReindexRequest{
+		BatchSize: int32(limit),
+	}
+
+	resp, err := c.client.GetListingsForReindex(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get listings for reindex via gRPC: %w", err)
+	}
+
+	listings := make([]*models.MarketplaceListing, len(resp.Listings))
+	for i, pbListing := range resp.Listings {
+		listings[i] = convertProtoToListing(pbListing)
+	}
+
+	return listings, nil
+}
+
+// ResetMarketplaceListingsReindexFlag resets reindex flags for specified listings via microservice
+func (c *MarketplaceGRPCClient) ResetMarketplaceListingsReindexFlag(ctx context.Context, listingIDs []int64) error {
+	req := &listingsv1.ResetFlagsRequest{
+		ListingIds: listingIDs,
+	}
+
+	_, err := c.client.ResetReindexFlags(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to reset reindex flags via gRPC: %w", err)
+	}
+
+	logger.Debug().Int("count", len(listingIDs)).Msg("Reindex flags reset successfully via gRPC")
+	return nil
+}
+
+// SynchronizeDiscountMetadata synchronizes discount information across listings via microservice
+func (c *MarketplaceGRPCClient) SynchronizeDiscountMetadata(ctx context.Context) error {
+	_, err := c.client.SyncDiscounts(ctx, &emptypb.Empty{})
+	if err != nil {
+		return fmt.Errorf("failed to synchronize discount metadata via gRPC: %w", err)
+	}
+
+	logger.Info().Msg("Discount metadata synchronized successfully via gRPC")
+	return nil
+}
+
 // convertProtoToListing converts protobuf Listing to domain MarketplaceListing
 func convertProtoToListing(pb *listingsv1.Listing) *models.MarketplaceListing {
 	listing := &models.MarketplaceListing{
@@ -445,4 +786,145 @@ func convertProtoToListing(pb *listingsv1.Listing) *models.MarketplaceListing {
 	}
 
 	return listing
+}
+
+// convertProtoToImage converts protobuf ListingImage to domain MarketplaceImage
+func convertProtoToImage(pb *listingsv1.ListingImage) *models.MarketplaceImage {
+	image := &models.MarketplaceImage{
+		ID:           int(pb.Id),
+		ListingID:    int(pb.ListingId),
+		PublicURL:    pb.Url,
+		IsMain:       pb.IsPrimary,
+		DisplayOrder: int(pb.DisplayOrder),
+	}
+
+	if pb.StoragePath != nil {
+		image.FilePath = *pb.StoragePath
+	}
+	if pb.ThumbnailUrl != nil {
+		image.ThumbnailURL = *pb.ThumbnailUrl
+	}
+	if pb.FileSize != nil {
+		image.FileSize = int(*pb.FileSize)
+	}
+	if pb.MimeType != nil {
+		image.ContentType = *pb.MimeType
+	}
+
+	// Parse timestamps
+	if pb.CreatedAt != "" {
+		createdAt, err := time.Parse(time.RFC3339, pb.CreatedAt)
+		if err == nil {
+			image.CreatedAt = createdAt
+		}
+	}
+
+	return image
+}
+
+// convertProtoToCategory converts protobuf Category to domain MarketplaceCategory
+func convertProtoToCategory(pb *listingsv1.Category) *models.MarketplaceCategory {
+	cat := &models.MarketplaceCategory{
+		ID:           int(pb.Id),
+		Name:         pb.Name,
+		Slug:         pb.Slug,
+		IsActive:     true, // default
+		SortOrder:    int(pb.SortOrder),
+		Level:        int(pb.Level),
+		ListingCount: int(pb.ListingCount),
+		HasCustomUI:  pb.HasCustomUi,
+	}
+
+	if pb.ParentId != nil {
+		parentID := int(*pb.ParentId)
+		cat.ParentID = &parentID
+	}
+	if pb.Icon != nil {
+		cat.Icon = pb.Icon
+	}
+	if pb.Description != nil {
+		cat.Description = pb.Description
+	}
+	if pb.CustomUiComponent != nil {
+		cat.CustomUIComponent = pb.CustomUiComponent
+	}
+
+	// Parse timestamps
+	if pb.CreatedAt != "" {
+		createdAt, err := time.Parse(time.RFC3339, pb.CreatedAt)
+		if err == nil {
+			cat.CreatedAt = createdAt
+		}
+	}
+
+	return cat
+}
+
+// convertProtoToCategoryTree converts protobuf CategoryTreeNode to domain CategoryTreeNode
+func convertProtoToCategoryTree(pb *listingsv1.CategoryTreeNode) *models.CategoryTreeNode {
+	node := &models.CategoryTreeNode{
+		ID:            int(pb.Id),
+		Name:          pb.Name,
+		Slug:          pb.Slug,
+		Level:         int(pb.Level),
+		Path:          pb.Path,
+		ListingCount:  int(pb.ListingCount),
+		ChildrenCount: int(pb.ChildrenCount),
+		HasCustomUI:   pb.HasCustomUi,
+		Children:      []models.CategoryTreeNode{},
+		Translations:  pb.Translations,
+	}
+
+	if pb.Icon != nil {
+		node.Icon = *pb.Icon
+	}
+	if pb.ParentId != nil {
+		parentID := int(*pb.ParentId)
+		node.ParentID = &parentID
+	}
+	if pb.CustomUiComponent != nil {
+		node.CustomUIComponent = *pb.CustomUiComponent
+	}
+
+	// Recursively convert children
+	if len(pb.Children) > 0 {
+		node.Children = make([]models.CategoryTreeNode, len(pb.Children))
+		for i, child := range pb.Children {
+			converted := convertProtoToCategoryTree(child)
+			if converted != nil {
+				node.Children[i] = *converted
+			}
+		}
+	}
+
+	return node
+}
+
+// convertProtoToVariant converts protobuf ListingVariant to domain MarketplaceListingVariant
+func convertProtoToVariant(pb *listingsv1.ListingVariant) *models.MarketplaceListingVariant {
+	variant := &models.MarketplaceListingVariant{
+		ID:         int(pb.Id),
+		ListingID:  int(pb.ListingId),
+		SKU:        pb.Sku,
+		IsActive:   true, // default
+		Attributes: make(map[string]string),
+	}
+
+	if pb.Price != nil {
+		variant.Price = pb.Price
+	}
+	if pb.Stock != nil {
+		stock := int(*pb.Stock)
+		variant.Stock = &stock
+	}
+	if pb.ImageUrl != nil {
+		variant.ImageURL = pb.ImageUrl
+	}
+
+	// Convert attributes map
+	if len(pb.Attributes) > 0 {
+		variant.Attributes = pb.Attributes
+	}
+
+	return variant
 }

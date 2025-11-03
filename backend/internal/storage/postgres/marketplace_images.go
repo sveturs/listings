@@ -3,7 +3,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
@@ -12,84 +11,31 @@ import (
 
 // AddListingImage добавляет изображение к листингу
 func (db *Database) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
-	query := `
-		INSERT INTO c2c_images
-		(listing_id, file_path, file_name, file_size, content_type, is_main, storage_type, storage_bucket, public_url)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id
-	`
-
-	var imageID int
-	err := db.pool.QueryRow(ctx, query,
-		image.ListingID,
-		image.FilePath,
-		image.FileName,
-		image.FileSize,
-		image.ContentType,
-		image.IsMain,
-		image.StorageType,
-		sql.NullString{String: image.StorageBucket, Valid: image.StorageBucket != ""},
-		sql.NullString{String: image.PublicURL, Valid: image.PublicURL != ""},
-	).Scan(&imageID)
+	result, err := db.grpcClient.AddListingImage(ctx, image)
 	if err != nil {
-		return 0, fmt.Errorf("failed to add listing image: %w", err)
+		return 0, err
 	}
-
-	return imageID, nil
+	return result.ID, nil
 }
 
 // GetListingImages возвращает все изображения для листинга
 func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-	query := `
-		SELECT
-			id, listing_id, file_path, file_name, file_size, content_type,
-			is_main, created_at, storage_type, storage_bucket, public_url
-		FROM c2c_images
-		WHERE listing_id = $1
-		ORDER BY is_main DESC, id ASC
-	`
-
-	rows, err := db.pool.Query(ctx, query, listingID)
+	// Convert string listingID to int64
+	var listingIDInt64 int64
+	_, err := fmt.Sscanf(listingID, "%d", &listingIDInt64)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query listing images: %w", err)
-	}
-	defer rows.Close()
-
-	var images []models.MarketplaceImage
-	for rows.Next() {
-		var image models.MarketplaceImage
-		var storageBucket, publicURL sql.NullString
-
-		err := rows.Scan(
-			&image.ID,
-			&image.ListingID,
-			&image.FilePath,
-			&image.FileName,
-			&image.FileSize,
-			&image.ContentType,
-			&image.IsMain,
-			&image.CreatedAt,
-			&image.StorageType,
-			&storageBucket,
-			&publicURL,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan image: %w", err)
-		}
-
-		// Handle nullable fields
-		if storageBucket.Valid {
-			image.StorageBucket = storageBucket.String
-		}
-		if publicURL.Valid {
-			image.PublicURL = publicURL.String
-		}
-
-		images = append(images, image)
+		return nil, fmt.Errorf("invalid listing ID format: %s", listingID)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating images: %w", err)
+	imagesPtrs, err := db.grpcClient.GetListingImages(ctx, listingIDInt64)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert []*models.MarketplaceImage to []models.MarketplaceImage
+	images := make([]models.MarketplaceImage, len(imagesPtrs))
+	for i, img := range imagesPtrs {
+		images[i] = *img
 	}
 
 	return images, nil

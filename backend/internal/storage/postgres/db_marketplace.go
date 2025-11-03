@@ -3,8 +3,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -18,44 +16,11 @@ import (
 )
 
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
-	var image models.MarketplaceImage
-	var storageBucket, publicURL sql.NullString
-
-	err := db.pool.QueryRow(ctx, `
-		SELECT id, listing_id, file_path, file_name, file_size, content_type, is_main,
-		       storage_type, storage_bucket, public_url, created_at
-		FROM c2c_images
-		WHERE id = $1
-	`, imageID).Scan(
-		&image.ID, &image.ListingID, &image.FilePath, &image.FileName, &image.FileSize,
-		&image.ContentType, &image.IsMain, &image.StorageType, &storageBucket,
-		&publicURL, &image.CreatedAt,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("image not found")
-		}
-		return nil, err
-	}
-
-	// Handle nullable fields
-	if storageBucket.Valid {
-		image.StorageBucket = storageBucket.String
-	}
-	if publicURL.Valid {
-		image.PublicURL = publicURL.String
-	}
-
-	return &image, nil
+	return db.grpcClient.GetListingImage(ctx, int64(imageID))
 }
 
 func (db *Database) DeleteListingImage(ctx context.Context, imageID int) error {
-	_, err := db.pool.Exec(ctx, `
-		DELETE FROM c2c_images
-		WHERE id = $1
-	`, imageID)
-
-	return err
+	return db.grpcClient.DeleteListingImage(ctx, int64(imageID))
 }
 
 // IndexListing indexes listing in OpenSearch via gRPC microservice
@@ -143,24 +108,17 @@ func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]
 // This method is kept for backward compatibility but should not be used in new code
 
 func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
-	query := `
-        SELECT user_id
-        FROM c2c_favorites
-        WHERE listing_id = $1
-    `
-	rows, err := db.pool.Query(ctx, query, listingID)
+	userIDStrs, err := db.grpcClient.GetFavoritedUsers(ctx, int64(listingID))
 	if err != nil {
-		return nil, fmt.Errorf("error querying favorited users: %w", err)
+		return nil, err
 	}
-	defer rows.Close()
 
-	var userIDs []int
-	for rows.Next() {
-		var userID int
-		if err := rows.Scan(&userID); err != nil {
-			return nil, fmt.Errorf("error scanning user ID: %w", err)
-		}
-		userIDs = append(userIDs, userID)
+	// Convert string user IDs to int
+	userIDs := make([]int, len(userIDStrs))
+	for i, idStr := range userIDStrs {
+		var id int
+		fmt.Sscanf(idStr, "%d", &id)
+		userIDs[i] = id
 	}
 
 	return userIDs, nil
@@ -190,93 +148,7 @@ func (db *Database) GetMarketplaceListingsForReindex(ctx context.Context, limit 
 		limit = 1000 // default limit
 	}
 
-	query := `
-		SELECT
-			id, user_id, category_id, title, description, price,
-			condition, status, location, latitude, longitude,
-			address_city, address_country, views_count, show_on_map,
-			original_language, created_at, updated_at,
-			storefront_id, external_id, metadata,
-			address_multilingual
-		FROM c2c_listings
-		WHERE needs_reindex = true
-		  AND status = 'active'
-		ORDER BY id
-		LIMIT $1
-	`
-
-	rows, err := db.pool.Query(ctx, query, limit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query marketplace listings for reindex: %w", err)
-	}
-	defer rows.Close()
-
-	listings := make([]*models.MarketplaceListing, 0)
-	for rows.Next() {
-		listing := &models.MarketplaceListing{}
-		var addressMultilingual []byte
-		var metadataJSON []byte
-		var city sql.NullString
-		var country sql.NullString
-
-		err := rows.Scan(
-			&listing.ID,
-			&listing.UserID,
-			&listing.CategoryID,
-			&listing.Title,
-			&listing.Description,
-			&listing.Price,
-			&listing.Condition,
-			&listing.Status,
-			&listing.Location,
-			&listing.Latitude,
-			&listing.Longitude,
-			&city,
-			&country,
-			&listing.ViewsCount,
-			&listing.ShowOnMap,
-			&listing.OriginalLanguage,
-			&listing.CreatedAt,
-			&listing.UpdatedAt,
-			&listing.StorefrontID,
-			&listing.ExternalID,
-			&metadataJSON,
-			&addressMultilingual,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan marketplace listing: %w", err)
-		}
-
-		// Handle nullable fields
-		if city.Valid {
-			listing.City = city.String
-		}
-		if country.Valid {
-			listing.Country = country.String
-		}
-
-		// Parse metadata JSON
-		if len(metadataJSON) > 0 {
-			if err := json.Unmarshal(metadataJSON, &listing.Metadata); err != nil {
-				log.Printf("Warning: failed to unmarshal metadata for listing %d: %v", listing.ID, err)
-			}
-		}
-
-		// Parse address_multilingual JSON
-		if len(addressMultilingual) > 0 {
-			if err := json.Unmarshal(addressMultilingual, &listing.AddressMultilingual); err != nil {
-				log.Printf("Warning: failed to unmarshal address_multilingual for listing %d: %v", listing.ID, err)
-			}
-		}
-
-		listings = append(listings, listing)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating marketplace listings: %w", err)
-	}
-
-	return listings, nil
+	return db.grpcClient.GetMarketplaceListingsForReindex(ctx, limit)
 }
 
 // ResetMarketplaceListingsReindexFlag сбрасывает флаг needs_reindex для listings после успешной индексации
@@ -285,18 +157,13 @@ func (db *Database) ResetMarketplaceListingsReindexFlag(ctx context.Context, lis
 		return nil
 	}
 
-	query := `
-		UPDATE c2c_listings
-		SET needs_reindex = false
-		WHERE id = ANY($1)
-	`
-
-	_, err := db.pool.Exec(ctx, query, listingIDs)
-	if err != nil {
-		return fmt.Errorf("failed to reset needs_reindex flag: %w", err)
+	// Convert []int to []int64
+	listingIDs64 := make([]int64, len(listingIDs))
+	for i, id := range listingIDs {
+		listingIDs64[i] = int64(id)
 	}
 
-	return nil
+	return db.grpcClient.ResetMarketplaceListingsReindexFlag(ctx, listingIDs64)
 }
 
 // GetListingBySlug retrieves a single listing by slug via gRPC microservice
@@ -607,117 +474,36 @@ func (db *Database) CreateListingVariants(ctx context.Context, listingID int, va
 		return nil
 	}
 
-	tx, err := db.pool.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer func() {
-		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-			log.Printf("Failed to rollback transaction: %v", rollbackErr)
-		}
-	}()
-
-	for _, variant := range variants {
-		attributesJSON, err := json.Marshal(variant.Attributes)
-		if err != nil {
-			return fmt.Errorf("failed to marshal variant attributes: %w", err)
-		}
-
-		_, err = tx.Exec(ctx, `
-			INSERT INTO marketplace_listing_variants (listing_id, sku, price, stock, attributes, image_url, is_active)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`, listingID, variant.SKU, variant.Price, variant.Stock, attributesJSON, variant.ImageURL, variant.IsActive)
-		if err != nil {
-			return fmt.Errorf("failed to insert variant: %w", err)
-		}
+	// Convert []models.MarketplaceListingVariant to []*models.MarketplaceListingVariant
+	variantsPtrs := make([]*models.MarketplaceListingVariant, len(variants))
+	for i := range variants {
+		variantsPtrs[i] = &variants[i]
 	}
 
-	return tx.Commit(ctx)
+	return db.grpcClient.CreateListingVariants(ctx, int64(listingID), variantsPtrs)
 }
 
 func (db *Database) GetListingVariants(ctx context.Context, listingID int) ([]models.MarketplaceListingVariant, error) {
-	query := `
-		SELECT id, listing_id, sku, price, stock, attributes, image_url, is_active,
-		       created_at::text, updated_at::text
-		FROM c2c_listing_variants
-		WHERE listing_id = $1 AND is_active = true
-		ORDER BY id
-	`
-
-	rows, err := db.pool.Query(ctx, query, listingID)
+	variantsPtrs, err := db.grpcClient.GetListingVariants(ctx, int64(listingID))
 	if err != nil {
-		return nil, fmt.Errorf("failed to query variants: %w", err)
-	}
-	defer rows.Close()
-
-	var variants []models.MarketplaceListingVariant
-	for rows.Next() {
-		var variant models.MarketplaceListingVariant
-		var attributesJSON []byte
-
-		err := rows.Scan(
-			&variant.ID, &variant.ListingID, &variant.SKU, &variant.Price, &variant.Stock,
-			&attributesJSON, &variant.ImageURL, &variant.IsActive,
-			&variant.CreatedAt, &variant.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan variant: %w", err)
-		}
-
-		if len(attributesJSON) > 0 {
-			err = json.Unmarshal(attributesJSON, &variant.Attributes)
-			if err != nil {
-				return nil, fmt.Errorf("failed to unmarshal variant attributes: %w", err)
-			}
-		}
-
-		variants = append(variants, variant)
+		return nil, err
 	}
 
-	return variants, rows.Err()
+	// Convert []*models.MarketplaceListingVariant to []models.MarketplaceListingVariant
+	variants := make([]models.MarketplaceListingVariant, len(variantsPtrs))
+	for i, v := range variantsPtrs {
+		variants[i] = *v
+	}
+
+	return variants, nil
 }
 
 func (db *Database) UpdateListingVariant(ctx context.Context, variant *models.MarketplaceListingVariant) error {
-	attributesJSON, err := json.Marshal(variant.Attributes)
-	if err != nil {
-		return fmt.Errorf("failed to marshal variant attributes: %w", err)
-	}
-
-	query := `
-		UPDATE marketplace_listing_variants
-		SET sku = $1, price = $2, stock = $3, attributes = $4, image_url = $5, is_active = $6
-		WHERE id = $7
-	`
-
-	result, err := db.pool.Exec(ctx, query,
-		variant.SKU, variant.Price, variant.Stock, attributesJSON,
-		variant.ImageURL, variant.IsActive, variant.ID,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to update variant: %w", err)
-	}
-
-	if result.RowsAffected() == 0 {
-		return fmt.Errorf("variant not found")
-	}
-
-	return nil
+	return db.grpcClient.UpdateListingVariant(ctx, variant)
 }
 
 func (db *Database) DeleteListingVariant(ctx context.Context, variantID int) error {
-	// Soft delete - просто помечаем как неактивный
-	query := `UPDATE marketplace_listing_variants SET is_active = false WHERE id = $1`
-
-	result, err := db.pool.Exec(ctx, query, variantID)
-	if err != nil {
-		return fmt.Errorf("failed to delete variant: %w", err)
-	}
-
-	if result.RowsAffected() == 0 {
-		return fmt.Errorf("variant not found")
-	}
-
-	return nil
+	return db.grpcClient.DeleteListingVariant(ctx, int64(variantID))
 }
 
 // SetMarketplaceUserService устанавливает UserService для marketplace storage
@@ -837,69 +623,5 @@ func (db *Database) GetChatActivityStats(ctx context.Context, buyerID int, selle
 }
 
 func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
-	// Получаем все объявления с информацией о скидке
-	query := `
-        SELECT id, price, metadata
-        FROM c2c_listings
-        WHERE metadata->>'discount' IS NOT NULL
-    `
-
-	rows, err := db.pool.Query(ctx, query)
-	if err != nil {
-		return fmt.Errorf("error querying listings with discounts: %w", err)
-	}
-	defer rows.Close()
-
-	count := 0
-	for rows.Next() {
-		var id int
-		var price float64
-		var metadataJSON []byte
-
-		if err := rows.Scan(&id, &price, &metadataJSON); err != nil {
-			log.Printf("Error scanning row: %v", err)
-			continue
-		}
-
-		var metadata map[string]interface{}
-		if err := json.Unmarshal(metadataJSON, &metadata); err != nil {
-			log.Printf("Error unmarshaling metadata: %v", err)
-			continue
-		}
-
-		// Проверяем и обновляем информацию о скидке
-		if discount, ok := metadata["discount"].(map[string]interface{}); ok {
-			if prevPrice, ok := discount["previous_price"].(float64); ok && prevPrice > 0 {
-				// Пересчитываем актуальный процент скидки
-				if prevPrice > price {
-					discountPercent := int((prevPrice - price) / prevPrice * 100)
-					discount["discount_percent"] = float64(discountPercent)
-
-					// Обновляем метаданные в БД
-					metadata["discount"] = discount
-					updatedMetadataJSON, err := json.Marshal(metadata)
-					if err != nil {
-						log.Printf("Error marshaling updated metadata: %v", err)
-						continue
-					}
-
-					_, err = db.pool.Exec(ctx, `
-                        UPDATE c2c_listings
-                        SET metadata = $1
-                        WHERE id = $2
-                    `, updatedMetadataJSON, id)
-					if err != nil {
-						log.Printf("Error updating metadata for listing %d: %v", id, err)
-						continue
-					}
-
-					count++
-					log.Printf("Updated discount percentage for listing %d: %d%%", id, discountPercent)
-				}
-			}
-		}
-	}
-
-	log.Printf("Synchronized discount metadata for %d listings", count)
-	return nil
+	return db.grpcClient.SynchronizeDiscountMetadata(ctx)
 }

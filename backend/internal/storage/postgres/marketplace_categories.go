@@ -3,91 +3,22 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 
 	"backend/internal/domain/models"
-
-	"github.com/jackc/pgx/v5"
 )
 
 // GetCategories возвращает все активные категории с базовой информацией
 func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	query := `
-		SELECT
-			id, name, slug, parent_id, icon, description,
-			is_active, created_at, sort_order, level,
-			has_custom_ui, custom_ui_component, external_id,
-			seo_title, seo_description, seo_keywords,
-			COALESCE((SELECT COUNT(*) FROM c2c_listings WHERE category_id = mc.id AND status = 'active'), 0) as listing_count
-		FROM marketplace_categories mc
-		WHERE is_active = true
-		ORDER BY sort_order ASC, name ASC
-	`
-
-	rows, err := db.pool.Query(ctx, query)
+	categoriesPtrs, err := db.grpcClient.GetAllCategories(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query categories: %w", err)
-	}
-	defer rows.Close()
-
-	var categories []models.MarketplaceCategory
-	for rows.Next() {
-		cat := models.MarketplaceCategory{}
-		var icon, description, customUIComponent, externalID, seoTitle, seoDescription, seoKeywords sql.NullString
-
-		err := rows.Scan(
-			&cat.ID,
-			&cat.Name,
-			&cat.Slug,
-			&cat.ParentID,
-			&icon,
-			&description,
-			&cat.IsActive,
-			&cat.CreatedAt,
-			&cat.SortOrder,
-			&cat.Level,
-			&cat.HasCustomUI,
-			&customUIComponent,
-			&externalID,
-			&seoTitle,
-			&seoDescription,
-			&seoKeywords,
-			&cat.ListingCount,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan category: %w", err)
-		}
-
-		// Handle nullable fields
-		if icon.Valid {
-			cat.Icon = &icon.String
-		}
-		if description.Valid {
-			cat.Description = &description.String
-		}
-		if customUIComponent.Valid {
-			cat.CustomUIComponent = &customUIComponent.String
-		}
-		if externalID.Valid {
-			cat.ExternalID = &externalID.String
-		}
-		if seoTitle.Valid {
-			cat.SEOTitle = &seoTitle.String
-		}
-		if seoDescription.Valid {
-			cat.SEODescription = &seoDescription.String
-		}
-		if seoKeywords.Valid {
-			cat.SEOKeywords = &seoKeywords.String
-		}
-
-		categories = append(categories, cat)
+		return nil, err
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows iteration error: %w", err)
+	// Convert []*models.MarketplaceCategory to []models.MarketplaceCategory
+	categories := make([]models.MarketplaceCategory, len(categoriesPtrs))
+	for i, cat := range categoriesPtrs {
+		categories[i] = *cat
 	}
 
 	return categories, nil
@@ -100,70 +31,7 @@ func (db *Database) GetAllCategories(ctx context.Context) ([]models.MarketplaceC
 
 // GetCategoryByID возвращает категорию по ID
 func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
-	query := `
-		SELECT
-			id, name, slug, parent_id, icon, description,
-			is_active, created_at, sort_order, level,
-			has_custom_ui, custom_ui_component, external_id,
-			seo_title, seo_description, seo_keywords,
-			COALESCE((SELECT COUNT(*) FROM c2c_listings WHERE category_id = mc.id AND status = 'active'), 0) as listing_count
-		FROM marketplace_categories mc
-		WHERE id = $1
-	`
-
-	cat := &models.MarketplaceCategory{}
-	var icon, description, customUIComponent, externalID, seoTitle, seoDescription, seoKeywords sql.NullString
-
-	err := db.pool.QueryRow(ctx, query, id).Scan(
-		&cat.ID,
-		&cat.Name,
-		&cat.Slug,
-		&cat.ParentID,
-		&icon,
-		&description,
-		&cat.IsActive,
-		&cat.CreatedAt,
-		&cat.SortOrder,
-		&cat.Level,
-		&cat.HasCustomUI,
-		&customUIComponent,
-		&externalID,
-		&seoTitle,
-		&seoDescription,
-		&seoKeywords,
-		&cat.ListingCount,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("category not found")
-		}
-		return nil, fmt.Errorf("failed to get category: %w", err)
-	}
-
-	// Handle nullable fields
-	if icon.Valid {
-		cat.Icon = &icon.String
-	}
-	if description.Valid {
-		cat.Description = &description.String
-	}
-	if customUIComponent.Valid {
-		cat.CustomUIComponent = &customUIComponent.String
-	}
-	if externalID.Valid {
-		cat.ExternalID = &externalID.String
-	}
-	if seoTitle.Valid {
-		cat.SEOTitle = &seoTitle.String
-	}
-	if seoDescription.Valid {
-		cat.SEODescription = &seoDescription.String
-	}
-	if seoKeywords.Valid {
-		cat.SEOKeywords = &seoKeywords.String
-	}
-
-	return cat, nil
+	return db.grpcClient.GetCategoryByID(ctx, int64(id))
 }
 
 // GetPopularCategories возвращает топ N категорий по количеству активных объявлений
@@ -172,86 +40,15 @@ func (db *Database) GetPopularCategories(ctx context.Context, limit int) ([]mode
 		limit = 10 // default limit
 	}
 
-	query := `
-		SELECT
-			mc.id, mc.name, mc.slug, mc.parent_id, mc.icon, mc.description,
-			mc.is_active, mc.created_at, mc.sort_order, mc.level,
-			mc.has_custom_ui, mc.custom_ui_component, mc.external_id,
-			mc.seo_title, mc.seo_description, mc.seo_keywords,
-			COUNT(l.id) as listing_count
-		FROM marketplace_categories mc
-		LEFT JOIN c2c_listings l ON l.category_id = mc.id AND l.status = 'active'
-		WHERE mc.is_active = true
-		GROUP BY mc.id, mc.name, mc.slug, mc.parent_id, mc.icon, mc.description,
-				 mc.is_active, mc.created_at, mc.sort_order, mc.level,
-				 mc.has_custom_ui, mc.custom_ui_component, mc.external_id,
-				 mc.seo_title, mc.seo_description, mc.seo_keywords
-		ORDER BY listing_count DESC, mc.name ASC
-		LIMIT $1
-	`
-
-	rows, err := db.pool.Query(ctx, query, limit)
+	categoriesPtrs, err := db.grpcClient.GetPopularCategories(ctx, limit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query popular categories: %w", err)
-	}
-	defer rows.Close()
-
-	var categories []models.MarketplaceCategory
-	for rows.Next() {
-		cat := models.MarketplaceCategory{}
-		var icon, description, customUIComponent, externalID, seoTitle, seoDescription, seoKeywords sql.NullString
-
-		err := rows.Scan(
-			&cat.ID,
-			&cat.Name,
-			&cat.Slug,
-			&cat.ParentID,
-			&icon,
-			&description,
-			&cat.IsActive,
-			&cat.CreatedAt,
-			&cat.SortOrder,
-			&cat.Level,
-			&cat.HasCustomUI,
-			&customUIComponent,
-			&externalID,
-			&seoTitle,
-			&seoDescription,
-			&seoKeywords,
-			&cat.ListingCount,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan popular category: %w", err)
-		}
-
-		// Handle nullable fields
-		if icon.Valid {
-			cat.Icon = &icon.String
-		}
-		if description.Valid {
-			cat.Description = &description.String
-		}
-		if customUIComponent.Valid {
-			cat.CustomUIComponent = &customUIComponent.String
-		}
-		if externalID.Valid {
-			cat.ExternalID = &externalID.String
-		}
-		if seoTitle.Valid {
-			cat.SEOTitle = &seoTitle.String
-		}
-		if seoDescription.Valid {
-			cat.SEODescription = &seoDescription.String
-		}
-		if seoKeywords.Valid {
-			cat.SEOKeywords = &seoKeywords.String
-		}
-
-		categories = append(categories, cat)
+		return nil, err
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows iteration error: %w", err)
+	// Convert []*models.MarketplaceCategory to []models.MarketplaceCategory
+	categories := make([]models.MarketplaceCategory, len(categoriesPtrs))
+	for i, cat := range categoriesPtrs {
+		categories[i] = *cat
 	}
 
 	return categories, nil
