@@ -1,0 +1,51 @@
+-- Migration Rollback: Restore legacy C2C and B2C tables
+-- Phase 7.4 Rollback
+-- Date: 2025-11-03
+--
+-- WARNING: This is NOT a simple table recreation!
+--
+-- To rollback this migration, you MUST restore from the backup created before the drop:
+--   Backup location: /tmp/backup_before_drop_legacy_YYYYMMDD_HHMMSS.sql
+--
+-- ROLLBACK PROCEDURE:
+--
+-- 1. Find the backup file:
+--    ls -lh /tmp/backup_before_drop_legacy_*.sql
+--
+-- 2. Verify backup integrity:
+--    head -n 20 /tmp/backup_before_drop_legacy_YYYYMMDD_HHMMSS.sql
+--
+-- 3. Restore from backup (WARNING: This will restore ALL data, not just dropped tables):
+--    sudo -u postgres psql -d svetubd -f /tmp/backup_before_drop_legacy_YYYYMMDD_HHMMSS.sql
+--
+-- 4. Verify tables restored:
+--    sudo -u postgres psql -d svetubd -c "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND (tablename LIKE 'c2c_%' OR tablename LIKE 'b2c_%') ORDER BY tablename;"
+--
+-- 5. Check row counts:
+--    sudo -u postgres psql -d svetubd -c "SELECT schemaname, relname, n_live_tup FROM pg_stat_user_tables WHERE relname LIKE 'c2c_%' OR relname LIKE 'b2c_%' ORDER BY relname;"
+--
+-- ALTERNATIVE: Selective table restore (if you only need specific tables)
+--
+-- 1. Extract table schema from backup:
+--    grep -A 50 "CREATE TABLE c2c_listings" /tmp/backup_before_drop_legacy_YYYYMMDD_HHMMSS.sql > /tmp/restore_c2c_listings.sql
+--
+-- 2. Extract table data:
+--    grep "INSERT INTO c2c_listings" /tmp/backup_before_drop_legacy_YYYYMMDD_HHMMSS.sql >> /tmp/restore_c2c_listings.sql
+--
+-- 3. Restore specific table:
+--    sudo -u postgres psql -d svetubd -f /tmp/restore_c2c_listings.sql
+--
+-- IMPORTANT NOTES:
+-- - This migration is DESTRUCTIVE and cannot be automatically rolled back
+-- - Always verify the backup before attempting rollback
+-- - Consider the state of marketplace_listings and other unified tables before rollback
+-- - Rollback may cause data inconsistency if new data was created in marketplace tables
+--
+-- AUDIT LOG:
+-- Check migration_audit_log table for details of what was dropped:
+--   SELECT * FROM migration_audit_log WHERE migration_number = '000199' ORDER BY created_at;
+
+DO $$
+BEGIN
+    RAISE EXCEPTION 'This migration cannot be automatically rolled back. See migration file for manual rollback instructions.';
+END $$;
