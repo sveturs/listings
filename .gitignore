@@ -124,9 +124,9 @@ docker-compose.yml
 coverage.out
 
 # Private documentation moved to separate repo
-# Exception: AUDIT*.md, BLOCKER*.md and SPRINT*.md are tracked
-docs/
+# Exception: AUDIT*.md, BLOCKER*.md, SPRINT*.md and migration docs are tracked
+docs/*
 !docs/AUDIT*.md
 !docs/BLOCKER*.md
 !docs/SPRINT*.md
-!docs/migration/**
+!docs/migration/
