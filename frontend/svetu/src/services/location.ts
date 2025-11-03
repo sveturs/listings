@@ -45,7 +45,7 @@ export const LocationService = {
     radius: number = 10
   ): Promise<any[]> {
     const response = await apiClient.get<any[]>(
-      `/api/v1/c2c/listings/nearby?lat=${lat}&lng=${lng}&radius=${radius}`
+      `/api/v1/marketplace/listings/nearby?lat=${lat}&lng=${lng}&radius=${radius}`
     );
 
     if (response.error) {

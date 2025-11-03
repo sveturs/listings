@@ -196,12 +196,15 @@ export const fetchStorefronts = createAsyncThunk<
         });
       }
 
-      const response = await fetch(`/api/v1/b2c?${queryParams.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `/api/v1/storefronts?${queryParams.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response
@@ -377,7 +380,7 @@ export const fetchStorefrontAnalytics = createAsyncThunk<
       if (to) queryParams.append('to', to);
 
       const response = await fetch(
-        `/api/v1/b2c/${id}/analytics?${queryParams.toString()}`,
+        `/api/v1/storefronts/${id}/analytics?${queryParams.toString()}`,
         {
           method: 'GET',
           headers: {
@@ -412,7 +415,9 @@ export const fetchDashboardStats = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchDashboardStats', async (slug, { rejectWithValue }) => {
   try {
-    const response = await apiClient.get(`/api/v1/b2c/${slug}/dashboard/stats`);
+    const response = await apiClient.get(
+      `/api/v1/storefronts/${slug}/dashboard/stats`
+    );
     return response.data.data;
   } catch (error: any) {
     return rejectWithValue(
@@ -430,7 +435,7 @@ export const fetchRecentOrders = createAsyncThunk<
   async ({ slug, limit = 5 }, { rejectWithValue }) => {
     try {
       const response = await apiClient.get(
-        `/api/v1/b2c/${slug}/dashboard/recent-orders?limit=${limit}`
+        `/api/v1/storefronts/${slug}/dashboard/recent-orders?limit=${limit}`
       );
       return response.data.data;
     } catch (error: any) {
@@ -448,7 +453,7 @@ export const fetchLowStockProducts = createAsyncThunk<
 >('storefronts/fetchLowStockProducts', async (slug, { rejectWithValue }) => {
   try {
     const response = await apiClient.get(
-      `/api/v1/b2c/${slug}/dashboard/low-stock`
+      `/api/v1/storefronts/${slug}/dashboard/low-stock`
     );
     return response.data.data;
   } catch (error: any) {
@@ -467,7 +472,7 @@ export const fetchDashboardNotifications = createAsyncThunk<
   async ({ slug, limit = 10 }, { rejectWithValue }) => {
     try {
       const response = await apiClient.get(
-        `/api/v1/b2c/${slug}/dashboard/notifications?limit=${limit}`
+        `/api/v1/storefronts/${slug}/dashboard/notifications?limit=${limit}`
       );
       return response.data.data;
     } catch (error: any) {

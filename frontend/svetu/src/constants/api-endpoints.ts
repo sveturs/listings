@@ -39,20 +39,28 @@ export const API_ENDPOINTS = {
     },
   },
 
-  // Marketplace endpoints
+  // Marketplace endpoints (unified c2c/b2c)
   marketplace: {
-    listings: '/api/v1/c2c/listings',
-    listing: (id: number) => `/api/v1/c2c/listings/${id}`,
-    create: '/api/v1/c2c/listings/create',
-    update: (id: number) => `/api/v1/c2c/listings/${id}`,
-    delete: (id: number) => `/api/v1/c2c/listings/${id}`,
-    search: '/api/v1/c2c/search',
-    categories: '/api/v1/c2c/categories',
+    listings: '/api/v1/marketplace/listings',
+    listing: (id: number) => `/api/v1/marketplace/listings/${id}`,
+    create: '/api/v1/marketplace/listings/create',
+    update: (id: number) => `/api/v1/marketplace/listings/${id}`,
+    delete: (id: number) => `/api/v1/marketplace/listings/${id}`,
+    search: '/api/v1/marketplace/search',
+    categories: '/api/v1/marketplace/categories',
+    popularCategories: '/api/v1/marketplace/categories?popular=true&limit=8',
     favorites: {
-      list: '/api/v1/c2c/favorites',
-      add: (id: number) => `/api/v1/c2c/listings/${id}/favorite`,
-      remove: (id: number) => `/api/v1/c2c/listings/${id}/unfavorite`,
+      list: '/api/v1/marketplace/favorites',
+      add: (id: number) => `/api/v1/marketplace/favorites/${id}`,
+      remove: (id: number) => `/api/v1/marketplace/favorites/${id}`,
     },
+  },
+
+  // Storefronts endpoints (former b2c)
+  storefronts: {
+    list: '/api/v1/storefronts',
+    detail: (slug: string) => `/api/v1/storefronts/${slug}`,
+    products: (slug: string) => `/api/v1/storefronts/${slug}/products`,
   },
 
   // Contacts endpoints

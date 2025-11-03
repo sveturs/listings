@@ -23,7 +23,7 @@ export class ImportApi {
     }
   ): Promise<ImportJob> {
     const response = await apiClient.post(
-      `/api/v1/b2c/slug/${storefrontSlug}/import/url`,
+      `/api/v1/storefronts/slug/${storefrontSlug}/import/url`,
       {
         url,
         ...options,
@@ -101,7 +101,7 @@ export class ImportApi {
     request: Omit<ImportRequest, 'storefront_id'>
   ): Promise<ImportJob> {
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/url`,
+      `/api/v1/storefronts/${storefrontId}/import/url`,
       {
         ...request,
         storefront_id: storefrontId,
@@ -185,7 +185,7 @@ export class ImportApi {
     formData.append('file_type', fileType);
 
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/validate`,
+      `/api/v1/storefronts/${storefrontId}/import/validate`,
       formData,
       {
         headers: {
@@ -227,7 +227,7 @@ export class ImportApi {
     if (params?.offset) queryParams.append('offset', params.offset.toString());
 
     const queryString = queryParams.toString();
-    const url = `/api/v1/b2c/${storefrontId}/import/jobs${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/storefronts/${storefrontId}/import/jobs${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get(url);
     return response.data;
@@ -241,7 +241,7 @@ export class ImportApi {
     jobId: number
   ): Promise<ImportJob & { errors?: any[] }> {
     const response = await apiClient.get(
-      `/api/v1/b2c/${storefrontId}/import/jobs/${jobId}`
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}`
     );
     return response.data;
   }
@@ -264,7 +264,7 @@ export class ImportApi {
    * Gets supported import formats information
    */
   static async getFormats(): Promise<ImportFormats> {
-    const response = await apiClient.get('/api/v1/b2c/import/formats');
+    const response = await apiClient.get('/api/v1/storefronts/import/formats');
     return response.data;
   }
 
@@ -273,7 +273,7 @@ export class ImportApi {
    */
   static async cancelJob(storefrontId: number, jobId: number): Promise<void> {
     await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/jobs/${jobId}/cancel`
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}/cancel`
     );
   }
 
@@ -285,7 +285,7 @@ export class ImportApi {
     jobId: number
   ): Promise<ImportJob> {
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/jobs/${jobId}/retry`
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}/retry`
     );
     return response.data;
   }
@@ -319,7 +319,7 @@ export class ImportApi {
     if (params?.end_date) queryParams.append('end_date', params.end_date);
 
     const queryString = queryParams.toString();
-    const url = `/api/v1/b2c/${storefrontId}/import/summary${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/v1/storefronts/${storefrontId}/import/summary${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get(url);
     return response.data;
@@ -344,7 +344,7 @@ export class ImportApi {
     formData.append('preview_limit', previewLimit.toString());
 
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/preview`,
+      `/api/v1/storefronts/${storefrontId}/import/preview`,
       formData,
       {
         headers: {
@@ -406,7 +406,7 @@ export class ImportApi {
     }>;
   }> {
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/category-mappings`,
+      `/api/v1/storefronts/${storefrontId}/import/category-mappings`,
       {
         categories: importCategories,
       }
@@ -427,7 +427,7 @@ export class ImportApi {
     }
   ): Promise<void> {
     await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/category-mappings/create`,
+      `/api/v1/storefronts/${storefrontId}/import/category-mappings/create`,
       mapping
     );
   }
@@ -466,7 +466,7 @@ export class ImportApi {
     formData.append('file_type', fileType);
 
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/analyze-categories`,
+      `/api/v1/storefronts/${storefrontId}/import/analyze-categories`,
       formData
       // НЕ устанавливаем Content-Type вручную - браузер сам добавит правильный multipart/form-data с boundary
     );
@@ -490,7 +490,7 @@ export class ImportApi {
     formData.append('file_type', fileType);
 
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/analyze-attributes`,
+      `/api/v1/storefronts/${storefrontId}/import/analyze-attributes`,
       formData
       // НЕ устанавливаем Content-Type вручную - браузер сам добавит правильный multipart/form-data с boundary
     );
@@ -514,7 +514,7 @@ export class ImportApi {
     formData.append('file_type', fileType);
 
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/detect-variants`,
+      `/api/v1/storefronts/${storefrontId}/import/detect-variants`,
       formData
     );
 
@@ -537,7 +537,7 @@ export class ImportApi {
     formData.append('file_type', fileType);
 
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/import/analyze-client-categories`,
+      `/api/v1/storefronts/${storefrontId}/import/analyze-client-categories`,
       formData,
       {
         headers: {

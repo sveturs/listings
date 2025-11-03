@@ -76,7 +76,7 @@ export class MarketplaceService {
     if (params.search) searchParams.append('search', params.search);
     if (params.locale) searchParams.append('lang', params.locale);
 
-    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/c2c/search?${searchParams.toString()}`;
+    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/search?${searchParams.toString()}`;
     console.log('MarketplaceService.search - URL:', url);
 
     try {
@@ -135,7 +135,7 @@ export class MarketplaceService {
       params.append('lang', locale);
     }
 
-    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/c2c/categories${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/categories${params.toString() ? `?${params.toString()}` : ''}`;
 
     try {
       const response = await fetch(url);
@@ -155,7 +155,7 @@ export class MarketplaceService {
   static async getCategoryAttributes(
     categoryId: number
   ): Promise<CategoryAttributesResponse> {
-    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/c2c/categories/${categoryId}/attributes`;
+    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/categories/${categoryId}/attributes`;
 
     try {
       const response = await fetch(url);

@@ -348,7 +348,7 @@ export default function MockClient() {
                               localStorage.getItem('access_token');
 
                             const response = await fetch(
-                              `/api/v1/c2c/orders/${orderId}/confirm-payment`,
+                              `/api/v1/marketplace/orders/${orderId}/confirm-payment`,
                               {
                                 method: 'POST',
                                 headers: {

@@ -305,7 +305,9 @@ export default function DiscountsDemo() {
                     <li>• График изменения цены (Chart.js)</li>
                     <li>• Детекция манипуляций с ценой</li>
                     <li>• Статистика: мин/макс/текущая цена</li>
-                    <li>• API: /api/v1/c2c/listings/:id/price-history</li>
+                    <li>
+                      • API: /api/v1/marketplace/listings/:id/price-history
+                    </li>
                     <li>• Автоматические предупреждения</li>
                   </ul>
                 </div>

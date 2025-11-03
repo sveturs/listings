@@ -32,7 +32,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
     try {
       setLoading(true);
       const response = await apiClient.get(
-        `/api/v1/c2c/categories?lang=${locale}`
+        `/api/v1/marketplace/categories?lang=${locale}`
       );
 
       if (response.data) {

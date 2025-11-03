@@ -13,7 +13,7 @@ export default function B2CProductRedirect() {
   useEffect(() => {
     // Загружаем информацию о товаре чтобы получить slug витрины
     const apiUrl = config.getApiUrl();
-    fetch(`${apiUrl}/api/v1/b2c/products/${productId}`, {
+    fetch(`${apiUrl}/api/v1/storefronts/products/${productId}`, {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',

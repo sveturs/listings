@@ -82,7 +82,7 @@ export default function ListingDetailBySlugPage() {
         setError(null);
 
         const response = await apiClient.get<{ data: Listing }>(
-          `/api/v1/c2c/listings/slug/${slug}`
+          `/api/v1/marketplace/listings/slug/${slug}`
         );
 
         if (!response.error && response.data) {

@@ -35,11 +35,11 @@ export class UserApi extends ApiEndpoint {
 }
 
 /**
- * Marketplace API endpoints
+ * Marketplace API endpoints (unified c2c/b2c)
  */
 export class MarketplaceApi extends ApiEndpoint {
   constructor() {
-    super('/api/v1/c2c');
+    super('/api/v1/marketplace');
   }
 
   async getListings(params?: {
@@ -66,7 +66,7 @@ export class MarketplaceApi extends ApiEndpoint {
   }
 
   async addToFavorites(listingId: string): Promise<ApiResponse<void>> {
-    return apiClient.post(`${this.basePath}/listings/${listingId}/favorite`);
+    return apiClient.post(`${this.basePath}/favorites/${listingId}`);
   }
 }
 

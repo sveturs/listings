@@ -54,7 +54,7 @@ export const storefrontProductsService = {
     if (params?.in_stock_only) searchParams.append('in_stock_only', 'true');
 
     const response = await apiClient.get(
-      `/api/v1/b2c/slug/${storefrontSlug}/products?${searchParams}`
+      `/api/v1/storefronts/slug/${storefrontSlug}/products?${searchParams}`
     );
     return {
       products: response.data || [],
@@ -68,7 +68,7 @@ export const storefrontProductsService = {
     productId: number
   ): Promise<B2CProduct> {
     const response = await apiClient.get(
-      `/api/v1/b2c/slug/${storefrontSlug}/products/${productId}`
+      `/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}`
     );
 
     if (response.error) {
@@ -84,7 +84,9 @@ export const storefrontProductsService = {
 
   // Получить товар напрямую по ID (без slug витрины)
   async getProductById(productId: number): Promise<B2CProduct> {
-    const response = await apiClient.get(`/api/v1/b2c/products/${productId}`);
+    const response = await apiClient.get(
+      `/api/v1/storefronts/products/${productId}`
+    );
 
     if (response.error) {
       throw new Error(response.error.message || 'Failed to fetch product');
@@ -103,7 +105,7 @@ export const storefrontProductsService = {
     productData: CreateProductRequest | CreateProductWithVariantsRequest
   ): Promise<B2CProduct> {
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontSlug}/products`,
+      `/api/v1/storefronts/${storefrontSlug}/products`,
       productData
     );
     return response.data;
@@ -116,7 +118,7 @@ export const storefrontProductsService = {
     productData: UpdateProductRequest
   ): Promise<B2CProduct> {
     const response = await apiClient.put(
-      `/api/v1/b2c/${storefrontSlug}/products/${productId}`,
+      `/api/v1/storefronts/${storefrontSlug}/products/${productId}`,
       productData
     );
     return response.data;
@@ -128,7 +130,7 @@ export const storefrontProductsService = {
     productId: number
   ): Promise<void> {
     await apiClient.delete(
-      `/api/v1/b2c/${storefrontSlug}/products/${productId}`
+      `/api/v1/storefronts/${storefrontSlug}/products/${productId}`
     );
   },
 
@@ -176,7 +178,7 @@ export const storefrontProductsService = {
       try {
         // НЕ устанавливаем Content-Type вручную - браузер сделает это сам с правильным boundary
         const response = await apiClient.post(
-          `/api/v1/b2c/${storefrontSlug}/products/${productId}/images`,
+          `/api/v1/storefronts/${storefrontSlug}/products/${productId}/images`,
           formData
         );
         console.log(`Image ${index} uploaded successfully:`, response.data);
@@ -198,7 +200,7 @@ export const storefrontProductsService = {
     imageId: number
   ): Promise<void> {
     await apiClient.delete(
-      `/api/v1/b2c/${storefrontSlug}/products/${productId}/images/${imageId}`
+      `/api/v1/storefronts/${storefrontSlug}/products/${productId}/images/${imageId}`
     );
   },
 
@@ -209,7 +211,7 @@ export const storefrontProductsService = {
     imageId: number
   ): Promise<void> {
     await apiClient.put(
-      `/api/v1/b2c/${storefrontSlug}/products/${productId}/images/${imageId}/main`,
+      `/api/v1/storefronts/${storefrontSlug}/products/${productId}/images/${imageId}/main`,
       {}
     );
   },

@@ -46,7 +46,7 @@ export default function B2CProductQuickView({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/v1/b2c/products/${productId}`);
+      const response = await fetch(`/api/v1/storefronts/products/${productId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch product');
       }
@@ -56,7 +56,7 @@ export default function B2CProductQuickView({
       if (data.storefront_id) {
         try {
           const storefrontResp = await fetch(
-            `/api/v1/b2c/${data.storefront_id}`
+            `/api/v1/storefronts/${data.storefront_id}`
           );
           if (storefrontResp.ok) {
             const storefrontData = await storefrontResp.json();

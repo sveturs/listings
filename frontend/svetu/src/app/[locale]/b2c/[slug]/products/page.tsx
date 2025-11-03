@@ -52,7 +52,7 @@ export default function ProductsPage({ params }: PageProps) {
         });
 
         const response = await apiClient.get(
-          `/api/v1/b2c/slug/${slug}/products?${params}`
+          `/api/v1/storefronts/slug/${slug}/products?${params}`
         );
 
         if (response.data) {

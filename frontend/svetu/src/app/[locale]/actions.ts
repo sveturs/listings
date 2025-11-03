@@ -43,7 +43,7 @@ export async function getHomePageData(locale: string) {
   try {
     // Получаем категории
     const categoriesResponse = await apiClientServer.get(
-      `/api/v1/c2c/categories?lang=${locale}`
+      `/api/v1/marketplace/categories?lang=${locale}`
     );
     console.log(
       '[getHomePageData] Categories response:',

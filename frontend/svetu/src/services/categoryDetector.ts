@@ -92,7 +92,7 @@ export class CategoryDetectorService {
 
       // Используем новый AI эндпоинт с многоуровневой системой определения
       const response = await fetch(
-        `${this.baseUrl}/api/v1/c2c/ai/detect-category`,
+        `${this.baseUrl}/api/v1/marketplace/ai/detect-category`,
         {
           method: 'POST',
           headers,
@@ -142,7 +142,7 @@ export class CategoryDetectorService {
       }
 
       const response = await fetch(
-        `${this.baseUrl}/api/v1/c2c/ai/detect-category/${statsId}/confirm`,
+        `${this.baseUrl}/api/v1/marketplace/ai/detect-category/${statsId}/confirm`,
         {
           method: 'PUT',
           headers,
@@ -189,7 +189,7 @@ export class CategoryDetectorService {
     }>
   > {
     try {
-      let url = `${this.baseUrl}/api/v1/c2c/categories/${categoryId}/keywords`;
+      let url = `${this.baseUrl}/api/v1/marketplace/categories/${categoryId}/keywords`;
       if (language) {
         url += `?language=${language}`;
       }

@@ -217,7 +217,7 @@ export default function AIPoweredListingCreationPage() {
     const loadCategories = async () => {
       try {
         const apiUrl = configManager.getApiUrl();
-        const response = await fetch(`${apiUrl}/api/v1/c2c/categories`);
+        const response = await fetch(`${apiUrl}/api/v1/marketplace/categories`);
         if (response.ok) {
           const data = await response.json();
           if (data.data) {
@@ -540,7 +540,7 @@ export default function AIPoweredListingCreationPage() {
     try {
       const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `${apiUrl}/api/v1/c2c/categories/${categoryId}/attributes`
+        `${apiUrl}/api/v1/marketplace/categories/${categoryId}/attributes`
       );
       if (response.ok) {
         const data = await response.json();

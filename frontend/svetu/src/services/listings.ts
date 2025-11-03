@@ -276,7 +276,7 @@ export class ListingsService {
     }
 
     const response = await apiClient.post<CreateListingResponse>(
-      '/api/v1/c2c/listings',
+      '/api/v1/marketplace/listings',
       request
     );
 
@@ -317,7 +317,7 @@ export class ListingsService {
     });
 
     const response = await apiClient.upload<UploadImagesResponse>(
-      `/api/v1/c2c/listings/${listingId}/images`,
+      `/api/v1/marketplace/listings/${listingId}/images`,
       formData
       // Не устанавливаем Content-Type для FormData - браузер сделает это автоматически с boundary
     );

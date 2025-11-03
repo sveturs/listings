@@ -241,7 +241,7 @@ export default function ListingPage({ params }: Props) {
     try {
       // Сначала пробуем загрузить как обычное объявление
       let response = await fetch(
-        `${config.getApiUrl()}/api/v1/c2c/listings/${id}?lang=${locale}`
+        `${config.getApiUrl()}/api/v1/marketplace/listings/${id}?lang=${locale}`
       );
 
       let isB2CProduct = false;
@@ -249,7 +249,7 @@ export default function ListingPage({ params }: Props) {
       if (!response.ok) {
         // Если не найдено как обычное объявление, пробуем как товар витрины
         response = await fetch(
-          `${config.getApiUrl()}/api/v1/b2c/products/${id}`
+          `${config.getApiUrl()}/api/v1/storefronts/products/${id}`
         );
         if (!response.ok) {
           // Оба API не вернули результат - объявление не найдено
@@ -269,7 +269,7 @@ export default function ListingPage({ params }: Props) {
         // Если у объявления есть storefront_id, это товар витрины - загружаем его через storefront API для получения переводов
         if (tempData.storefront_id) {
           response = await fetch(
-            `${config.getApiUrl()}/api/v1/b2c/products/${id}`
+            `${config.getApiUrl()}/api/v1/storefronts/products/${id}`
           );
           if (response.ok) {
             isB2CProduct = true;
@@ -293,7 +293,7 @@ export default function ListingPage({ params }: Props) {
         let storefrontInfo = null;
         try {
           const storefrontResponse = await fetch(
-            `${config.getApiUrl()}/api/v1/b2c/${listingData.storefront_id}`
+            `${config.getApiUrl()}/api/v1/storefronts/${listingData.storefront_id}`
           );
           if (storefrontResponse.ok) {
             storefrontInfo = await storefrontResponse.json();
@@ -361,7 +361,7 @@ export default function ListingPage({ params }: Props) {
         // Сначала получаем информацию о витрине
         try {
           const storefrontResponse = await fetch(
-            `${config.getApiUrl()}/api/v1/b2c/${listingData.storefront_id}`
+            `${config.getApiUrl()}/api/v1/storefronts/${listingData.storefront_id}`
           );
           if (storefrontResponse.ok) {
             const storefrontData = await storefrontResponse.json();
@@ -372,7 +372,7 @@ export default function ListingPage({ params }: Props) {
             const storefrontIdentifier =
               listingData.storefront.slug || listingData.storefront_id;
             const productResponse = await fetch(
-              `${config.getApiUrl()}/api/v1/b2c/slug/${storefrontIdentifier}/products/${listingData.id}`
+              `${config.getApiUrl()}/api/v1/storefronts/slug/${storefrontIdentifier}/products/${listingData.id}`
             );
             console.log('Product response status:', productResponse.status);
             if (productResponse.ok) {

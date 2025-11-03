@@ -66,7 +66,9 @@ export default function VariantSelectionModal({
           storefrontId
         );
         try {
-          const storefrontResponse = await fetch(`/api/v1/b2c/${storefrontId}`);
+          const storefrontResponse = await fetch(
+            `/api/v1/storefronts/${storefrontId}`
+          );
           if (storefrontResponse.ok) {
             const storefrontData = await storefrontResponse.json();
             actualSlug = storefrontData.slug || '';

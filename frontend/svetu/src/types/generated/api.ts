@@ -13598,7 +13598,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores': {
+  '/api/v1/storefronts_stores': {
     parameters: {
       query?: never;
       header?: never;
@@ -13737,7 +13737,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}': {
+  '/api/v1/storefronts_stores/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -13942,7 +13942,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/aggregated-rating': {
+  '/api/v1/storefronts_stores/{id}/aggregated-rating': {
     parameters: {
       query?: never;
       header?: never;
@@ -14004,7 +14004,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/analytics': {
+  '/api/v1/storefronts_stores/{id}/analytics': {
     parameters: {
       query?: never;
       header?: never;
@@ -14096,7 +14096,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/banner': {
+  '/api/v1/storefronts_stores/{id}/banner': {
     parameters: {
       query?: never;
       header?: never;
@@ -14186,7 +14186,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/delivery-options': {
+  '/api/v1/storefronts_stores/{id}/delivery-options': {
     parameters: {
       query?: never;
       header?: never;
@@ -14271,7 +14271,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/hours': {
+  '/api/v1/storefronts_stores/{id}/hours': {
     parameters: {
       query?: never;
       header?: never;
@@ -14356,7 +14356,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/logo': {
+  '/api/v1/storefronts_stores/{id}/logo': {
     parameters: {
       query?: never;
       header?: never;
@@ -14446,7 +14446,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/payment-methods': {
+  '/api/v1/storefronts_stores/{id}/payment-methods': {
     parameters: {
       query?: never;
       header?: never;
@@ -14531,7 +14531,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/restore': {
+  '/api/v1/storefronts_stores/{id}/restore': {
     parameters: {
       query?: never;
       header?: never;
@@ -14611,7 +14611,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/staff': {
+  '/api/v1/storefronts_stores/{id}/staff': {
     parameters: {
       query?: never;
       header?: never;
@@ -14740,7 +14740,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/staff/{staffId}/permissions': {
+  '/api/v1/storefronts_stores/{id}/staff/{staffId}/permissions': {
     parameters: {
       query?: never;
       header?: never;
@@ -14836,7 +14836,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/staff/{userId}': {
+  '/api/v1/storefronts_stores/{id}/staff/{userId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -14927,7 +14927,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{id}/view': {
+  '/api/v1/storefronts_stores/{id}/view': {
     parameters: {
       query?: never;
       header?: never;
@@ -14989,7 +14989,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/dashboard/low-stock': {
+  '/api/v1/storefronts_stores/{slug}/dashboard/low-stock': {
     parameters: {
       query?: never;
       header?: never;
@@ -15060,7 +15060,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/dashboard/notifications': {
+  '/api/v1/storefronts_stores/{slug}/dashboard/notifications': {
     parameters: {
       query?: never;
       header?: never;
@@ -15134,7 +15134,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/dashboard/recent-orders': {
+  '/api/v1/storefronts_stores/{slug}/dashboard/recent-orders': {
     parameters: {
       query?: never;
       header?: never;
@@ -15208,7 +15208,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/dashboard/stats': {
+  '/api/v1/storefronts_stores/{slug}/dashboard/stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -15277,7 +15277,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/products': {
+  '/api/v1/storefronts_stores/{slug}/products': {
     parameters: {
       query?: never;
       header?: never;
@@ -15420,7 +15420,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/products/{id}': {
+  '/api/v1/storefronts_stores/{slug}/products/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -15618,7 +15618,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/products/{id}/inventory': {
+  '/api/v1/storefronts_stores/{slug}/products/{id}/inventory': {
     parameters: {
       query?: never;
       header?: never;
@@ -15703,7 +15703,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/products/bulk/create': {
+  '/api/v1/storefronts_stores/{slug}/products/bulk/create': {
     parameters: {
       query?: never;
       header?: never;
@@ -15780,7 +15780,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/products/bulk/delete': {
+  '/api/v1/storefronts_stores/{slug}/products/bulk/delete': {
     parameters: {
       query?: never;
       header?: never;
@@ -15857,7 +15857,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/products/bulk/status': {
+  '/api/v1/storefronts_stores/{slug}/products/bulk/status': {
     parameters: {
       query?: never;
       header?: never;
@@ -15934,7 +15934,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/products/bulk/update': {
+  '/api/v1/storefronts_stores/{slug}/products/bulk/update': {
     parameters: {
       query?: never;
       header?: never;
@@ -16011,7 +16011,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{slug}/products/stats': {
+  '/api/v1/storefronts_stores/{slug}/products/stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -16071,7 +16071,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/cart': {
+  '/api/v1/storefronts_stores/{storefront_id}/cart': {
     parameters: {
       query?: never;
       header?: never;
@@ -16197,7 +16197,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/cart/items': {
+  '/api/v1/storefronts_stores/{storefront_id}/cart/items': {
     parameters: {
       query?: never;
       header?: never;
@@ -16282,7 +16282,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/cart/items/{item_id}': {
+  '/api/v1/storefronts_stores/{storefront_id}/cart/items/{item_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -16435,7 +16435,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/analyze-attributes': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/analyze-attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -16513,7 +16513,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/analyze-categories': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/analyze-categories': {
     parameters: {
       query?: never;
       header?: never;
@@ -16591,7 +16591,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/analyze-client-categories': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/analyze-client-categories': {
     parameters: {
       query?: never;
       header?: never;
@@ -16674,7 +16674,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/detect-variants': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/detect-variants': {
     parameters: {
       query?: never;
       header?: never;
@@ -16752,7 +16752,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/file': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/file': {
     parameters: {
       query?: never;
       header?: never;
@@ -16857,7 +16857,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/jobs': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/jobs': {
     parameters: {
       query?: never;
       header?: never;
@@ -16942,7 +16942,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/preview': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/preview': {
     parameters: {
       query?: never;
       header?: never;
@@ -17040,7 +17040,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/url': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/url': {
     parameters: {
       query?: never;
       header?: never;
@@ -17123,7 +17123,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/import/validate': {
+  '/api/v1/storefronts_stores/{storefront_id}/import/validate': {
     parameters: {
       query?: never;
       header?: never;
@@ -17201,7 +17201,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/orders': {
+  '/api/v1/storefronts_stores/{storefront_id}/orders': {
     parameters: {
       query?: never;
       header?: never;
@@ -17288,7 +17288,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/{storefront_id}/orders/{order_id}/status': {
+  '/api/v1/storefronts_stores/{storefront_id}/orders/{order_id}/status': {
     parameters: {
       query?: never;
       header?: never;
@@ -17384,7 +17384,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/ai/ab-test-titles': {
+  '/api/v1/storefronts_stores/ai/ab-test-titles': {
     parameters: {
       query?: never;
       header?: never;
@@ -17446,7 +17446,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/ai/analyze-product-image': {
+  '/api/v1/storefronts_stores/ai/analyze-product-image': {
     parameters: {
       query?: never;
       header?: never;
@@ -17510,7 +17510,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/ai/detect-category': {
+  '/api/v1/storefronts_stores/ai/detect-category': {
     parameters: {
       query?: never;
       header?: never;
@@ -17574,7 +17574,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/ai/metrics': {
+  '/api/v1/storefronts_stores/ai/metrics': {
     parameters: {
       query?: never;
       header?: never;
@@ -17622,7 +17622,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/ai/translate-content': {
+  '/api/v1/storefronts_stores/ai/translate-content': {
     parameters: {
       query?: never;
       header?: never;
@@ -17684,7 +17684,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/building': {
+  '/api/v1/storefronts_stores/building': {
     parameters: {
       query?: never;
       header?: never;
@@ -17746,7 +17746,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/import/csv-template': {
+  '/api/v1/storefronts_stores/import/csv-template': {
     parameters: {
       query?: never;
       header?: never;
@@ -17785,7 +17785,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/import/formats': {
+  '/api/v1/storefronts_stores/import/formats': {
     parameters: {
       query?: never;
       header?: never;
@@ -17826,7 +17826,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/map': {
+  '/api/v1/storefronts_stores/map': {
     parameters: {
       query?: never;
       header?: never;
@@ -17894,7 +17894,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/my': {
+  '/api/v1/storefronts_stores/my': {
     parameters: {
       query?: never;
       header?: never;
@@ -17951,7 +17951,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/nearby': {
+  '/api/v1/storefronts_stores/nearby': {
     parameters: {
       query?: never;
       header?: never;
@@ -18017,7 +18017,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/products/{id}': {
+  '/api/v1/storefronts_stores/products/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -18077,7 +18077,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/search': {
+  '/api/v1/storefronts_stores/search': {
     parameters: {
       query?: never;
       header?: never;
@@ -18165,7 +18165,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/slug/{slug}': {
+  '/api/v1/storefronts_stores/slug/{slug}': {
     parameters: {
       query?: never;
       header?: never;
@@ -18225,7 +18225,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images': {
+  '/api/v1/storefronts_stores/slug/{slug}/products/{product_id}/images': {
     parameters: {
       query?: never;
       header?: never;
@@ -18378,7 +18378,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/{image_id}': {
+  '/api/v1/storefronts_stores/slug/{slug}/products/{product_id}/images/{image_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -18460,7 +18460,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/{image_id}/main': {
+  '/api/v1/storefronts_stores/slug/{slug}/products/{product_id}/images/{image_id}/main': {
     parameters: {
       query?: never;
       header?: never;
@@ -18542,7 +18542,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/order': {
+  '/api/v1/storefronts_stores/slug/{slug}/products/{product_id}/images/order': {
     parameters: {
       query?: never;
       header?: never;

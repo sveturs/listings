@@ -52,7 +52,7 @@ export function AttributesSection({
   const loadAttributes = useCallback(async () => {
     try {
       const response = await apiClient.get(
-        `/api/v1/c2c/categories/${categoryId}/attributes`
+        `/api/v1/marketplace/categories/${categoryId}/attributes`
       );
       if (response.data) {
         // Проверяем структуру ответа

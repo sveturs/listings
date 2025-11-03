@@ -281,7 +281,7 @@ function SimpleVariantConfig({
 
       try {
         const response = await fetch(
-          `/api/v1/c2c/categories/${productData.category_id}/attributes`
+          `/api/v1/marketplace/categories/${productData.category_id}/attributes`
         );
         if (response.ok) {
           const data = await response.json();

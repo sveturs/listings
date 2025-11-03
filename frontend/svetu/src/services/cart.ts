@@ -18,7 +18,9 @@ export const cartService = {
 
   // Получить корзину витрины
   async getCart(storefrontId: number): Promise<ShoppingCart> {
-    const response = await apiClient.get(`/api/v1/b2c/${storefrontId}/cart`);
+    const response = await apiClient.get(
+      `/api/v1/storefronts/${storefrontId}/cart`
+    );
     return response.data.data;
   },
 
@@ -28,7 +30,7 @@ export const cartService = {
     item: AddToCartRequest
   ): Promise<ShoppingCart> {
     const response = await apiClient.post(
-      `/api/v1/b2c/${storefrontId}/cart/items`,
+      `/api/v1/storefronts/${storefrontId}/cart/items`,
       item
     );
     return response.data.data;
@@ -41,7 +43,7 @@ export const cartService = {
     data: UpdateCartItemRequest
   ): Promise<ShoppingCart> {
     const response = await apiClient.put(
-      `/api/v1/b2c/${storefrontId}/cart/items/${itemId}`,
+      `/api/v1/storefronts/${storefrontId}/cart/items/${itemId}`,
       data
     );
     return response.data.data;
@@ -53,13 +55,13 @@ export const cartService = {
     itemId: number
   ): Promise<ShoppingCart> {
     const response = await apiClient.delete(
-      `/api/v1/b2c/${storefrontId}/cart/items/${itemId}`
+      `/api/v1/storefronts/${storefrontId}/cart/items/${itemId}`
     );
     return response.data.data;
   },
 
   // Очистить корзину
   async clearCart(storefrontId: number): Promise<void> {
-    await apiClient.delete(`/api/v1/b2c/${storefrontId}/cart`);
+    await apiClient.delete(`/api/v1/storefronts/${storefrontId}/cart`);
   },
 };

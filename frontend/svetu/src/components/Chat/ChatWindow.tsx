@@ -192,12 +192,15 @@ export default function ChatWindow({
   useEffect(() => {
     if (chat?.storefront_product_id && !storefrontProduct) {
       const apiUrl = configManager.getApiUrl();
-      fetch(`${apiUrl}/api/v1/b2c/products/${chat.storefront_product_id}`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      fetch(
+        `${apiUrl}/api/v1/storefronts/products/${chat.storefront_product_id}`,
+        {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
         .then((res) => res.json())
         .then((result) => {
           const data = result.data || result;
@@ -234,7 +237,7 @@ export default function ChatWindow({
     // Для обычных объявлений
     if (isNewChat && initialListingId && !listingInfo && !isContactChat) {
       const apiUrl = configManager.getApiUrl();
-      fetch(`${apiUrl}/api/v1/c2c/listings/${initialListingId}`, {
+      fetch(`${apiUrl}/api/v1/marketplace/listings/${initialListingId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',

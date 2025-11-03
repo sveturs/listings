@@ -87,7 +87,10 @@ export interface OrderListResponse {
 export const marketplaceOrdersService = {
   // Создать заказ
   async createOrder(data: CreateOrderRequest): Promise<CreateOrderResponse> {
-    const response = await apiClient.post('/api/v1/c2c/orders/create', data);
+    const response = await apiClient.post(
+      '/api/v1/marketplace/orders/create',
+      data
+    );
     return response.data?.data || response.data;
   },
 
@@ -98,7 +101,7 @@ export const marketplaceOrdersService = {
       limit: limit.toString(),
     });
     const response = await apiClient.get(
-      `/api/v1/c2c/orders/my/purchases?${params.toString()}`
+      `/api/v1/marketplace/orders/my/purchases?${params.toString()}`
     );
     return response.data?.data || response.data;
   },
@@ -110,39 +113,43 @@ export const marketplaceOrdersService = {
       limit: limit.toString(),
     });
     const response = await apiClient.get(
-      `/api/v1/c2c/orders/my/sales?${params.toString()}`
+      `/api/v1/marketplace/orders/my/sales?${params.toString()}`
     );
     return response.data?.data || response.data;
   },
 
   // Получить детали заказа
   async getOrderDetails(orderId: number): Promise<C2COrder> {
-    const response = await apiClient.get(`/api/v1/c2c/orders/${orderId}`);
+    const response = await apiClient.get(
+      `/api/v1/marketplace/orders/${orderId}`
+    );
     return response.data?.data || response.data;
   },
 
   // Отметить как отправленный
   async markAsShipped(orderId: number, shippingMethod: string): Promise<void> {
-    await apiClient.post(`/api/v1/c2c/orders/${orderId}/ship`, {
+    await apiClient.post(`/api/v1/marketplace/orders/${orderId}/ship`, {
       shipping_method: shippingMethod,
     });
   },
 
   // Подтвердить доставку
   async confirmDelivery(orderId: number): Promise<void> {
-    await apiClient.post(`/api/v1/c2c/orders/${orderId}/confirm-delivery`);
+    await apiClient.post(
+      `/api/v1/marketplace/orders/${orderId}/confirm-delivery`
+    );
   },
 
   // Открыть спор
   async openDispute(orderId: number, reason: string): Promise<void> {
-    await apiClient.post(`/api/v1/c2c/orders/${orderId}/dispute`, {
+    await apiClient.post(`/api/v1/marketplace/orders/${orderId}/dispute`, {
       reason,
     });
   },
 
   // Добавить сообщение
   async addMessage(orderId: number, content: string): Promise<void> {
-    await apiClient.post(`/api/v1/c2c/orders/${orderId}/message`, {
+    await apiClient.post(`/api/v1/marketplace/orders/${orderId}/message`, {
       content,
     });
   },

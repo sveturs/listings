@@ -53,7 +53,7 @@ export default function NearbyStats() {
 
       // Используем правильный базовый URL для API через утилиту
       const apiUrl = publicEnv.API_URL;
-      const url = `${apiUrl}/api/v1/c2c/neighborhood-stats?lat=${lat}&lon=${lon}&radius=5`;
+      const url = `${apiUrl}/api/v1/marketplace/neighborhood-stats?lat=${lat}&lon=${lon}&radius=5`;
       console.log('[NearbyStats] API URL:', apiUrl);
       console.log('[NearbyStats] Fetching from URL:', url);
 

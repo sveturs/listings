@@ -16,9 +16,12 @@ async function getCarDetails(id: string): Promise<C2CListing | null> {
     // Server Component - используем прямой fetch к backend
     const backendUrl =
       process.env.BACKEND_INTERNAL_URL || 'http://localhost:3000';
-    const response = await fetch(`${backendUrl}/api/v1/c2c/listings/${id}`, {
-      cache: 'no-store', // Всегда получаем свежие данные
-    });
+    const response = await fetch(
+      `${backendUrl}/api/v1/marketplace/listings/${id}`,
+      {
+        cache: 'no-store', // Всегда получаем свежие данные
+      }
+    );
 
     if (!response.ok) {
       return null;

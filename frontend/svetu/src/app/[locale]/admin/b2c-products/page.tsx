@@ -11,7 +11,7 @@ async function getProductsStats() {
   try {
     // Получаем список всех витрин для админ панели
     const storefrontsResponse = await fetch(
-      'http://localhost:3000/api/v1/b2c',
+      'http://localhost:3000/api/v1/storefronts',
       {
         cache: 'no-store',
       }
@@ -40,7 +40,7 @@ async function getProductsStats() {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/api/v1/b2c/slug/${storefront.slug}/products?limit=100`,
+          `http://localhost:3000/api/v1/storefronts/slug/${storefront.slug}/products?limit=100`,
           {
             cache: 'no-store',
           }

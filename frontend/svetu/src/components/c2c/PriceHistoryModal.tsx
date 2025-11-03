@@ -57,7 +57,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
       setError(null);
 
       const response = await fetch(
-        `/api/v1/c2c/listings/${listingId}/price-history`
+        `/api/v1/marketplace/listings/${listingId}/price-history`
       );
 
       if (!response.ok) {

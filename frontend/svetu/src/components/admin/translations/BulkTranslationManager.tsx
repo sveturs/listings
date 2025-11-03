@@ -124,7 +124,7 @@ export default function BulkTranslationManager() {
           }
 
           const response = await fetch(
-            `/api/v1/c2c/listings?${params.toString()}`,
+            `/api/v1/marketplace/listings?${params.toString()}`,
             {
               method: 'GET',
               headers: {

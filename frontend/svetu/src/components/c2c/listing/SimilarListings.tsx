@@ -46,7 +46,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
         const response = await apiClient.get<{
           data: C2CItem[];
           success: boolean;
-        }>(`/api/v1/c2c/listings/${listingId}/similar?limit=100`);
+        }>(`/api/v1/marketplace/listings/${listingId}/similar?limit=100`);
 
         // API может вернуть либо массив напрямую, либо объект с полем data
         const items = Array.isArray(response.data)

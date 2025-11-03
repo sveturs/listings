@@ -36,7 +36,7 @@ export function useCategoryFilters(
 
     try {
       const response = await fetch(
-        `/api/v1/c2c/categories/${categoryId}/attributes?lang=${lang}`,
+        `/api/v1/marketplace/categories/${categoryId}/attributes?lang=${lang}`,
         {
           method: 'GET',
           headers: {

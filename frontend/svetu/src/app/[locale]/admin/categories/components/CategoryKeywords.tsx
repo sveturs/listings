@@ -39,7 +39,7 @@ export default function CategoryKeywords({
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/v1/c2c/categories/${categoryId}/keywords`
+        `/api/v1/marketplace/categories/${categoryId}/keywords`
       );
       if (response.ok) {
         const data = await response.json();
