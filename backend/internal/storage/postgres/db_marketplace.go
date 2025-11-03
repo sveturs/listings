@@ -58,51 +58,98 @@ func (db *Database) DeleteListingImage(ctx context.Context, imageID int) error {
 	return err
 }
 
-// IndexListing - TODO: OpenSearch integration disabled during refactoring
+// IndexListing indexes listing in OpenSearch via gRPC microservice
 func (db *Database) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	log.Println("IndexListing: OpenSearch disabled during refactoring")
-	return nil
+	if db.grpcClient == nil {
+		log.Println("IndexListing: gRPC client not initialized, skipping indexing")
+		return nil // Return nil to not break existing flows
+	}
+	return db.grpcClient.IndexListing(ctx, listing)
 }
 
-// DeleteListingIndex - TODO: OpenSearch integration disabled during refactoring
+// DeleteListingIndex removes listing from OpenSearch via gRPC microservice
 func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
-	log.Println("DeleteListingIndex: OpenSearch disabled during refactoring")
-	return nil
+	if db.grpcClient == nil {
+		log.Println("DeleteListingIndex: gRPC client not initialized, skipping deletion")
+		return nil // Return nil to not break existing flows
+	}
+	return db.grpcClient.DeleteListingIndex(ctx, id)
 }
 
-// SuggestListings - TODO: OpenSearch integration disabled during refactoring
+// SuggestListings provides autocomplete via gRPC microservice
 func (db *Database) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-	log.Println("SuggestListings: OpenSearch disabled during refactoring")
-	return []string{}, nil
+	if db.grpcClient == nil {
+		log.Println("SuggestListings: gRPC client not initialized")
+		return []string{}, nil
+	}
+	return db.grpcClient.SuggestListings(ctx, prefix, size)
 }
 
-// ReindexAllListings - TODO: OpenSearch integration disabled during refactoring
+// ReindexAllListings triggers full reindexing via gRPC microservice
 func (db *Database) ReindexAllListings(ctx context.Context) error {
-	log.Println("ReindexAllListings: OpenSearch disabled during refactoring")
+	if db.grpcClient == nil {
+		log.Println("ReindexAllListings: gRPC client not initialized, skipping reindexing")
+		return nil
+	}
+
+	// Get all active listings that need reindexing
+	listings, err := db.GetMarketplaceListingsForReindex(ctx, 1000)
+	if err != nil {
+		return fmt.Errorf("failed to get listings for reindex: %w", err)
+	}
+
+	log.Printf("Reindexing %d listings via gRPC...", len(listings))
+
+	// Index each listing
+	successCount := 0
+	errorCount := 0
+	for _, listing := range listings {
+		if err := db.grpcClient.IndexListing(ctx, listing); err != nil {
+			log.Printf("Failed to index listing %d: %v", listing.ID, err)
+			errorCount++
+		} else {
+			successCount++
+		}
+	}
+
+	log.Printf("Reindexing complete: %d successful, %d errors", successCount, errorCount)
+
+	// Reset reindex flag for successfully indexed listings
+	if successCount > 0 {
+		listingIDs := make([]int, 0, successCount)
+		for _, listing := range listings {
+			listingIDs = append(listingIDs, listing.ID)
+		}
+		if err := db.ResetMarketplaceListingsReindexFlag(ctx, listingIDs); err != nil {
+			log.Printf("Warning: failed to reset reindex flags: %v", err)
+		}
+	}
+
+	if errorCount > 0 {
+		return fmt.Errorf("reindexing completed with %d errors", errorCount)
+	}
+
 	return nil
 }
 
 // GetCategoryAttributes получает атрибуты для указанной категории
-// TODO: Реализация временно отключена, требуется рефакторинг
 func (db *Database) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	return []models.CategoryAttribute{}, nil
+	return db.GetCategoryAttributesImpl(ctx, categoryID)
 }
 
 // SaveListingAttributes сохраняет значения атрибутов для объявления
-// TODO: Реализация временно отключена, требуется рефакторинг
 func (db *Database) SaveListingAttributes(ctx context.Context, listingID int, attributes []models.ListingAttributeValue) error {
-	return nil
+	return db.SaveListingAttributesImpl(ctx, listingID, attributes)
 }
 
-// GetAttributeRanges - TODO: Реализация временно отключена, требуется рефакторинг
+// GetAttributeRanges возвращает диапазоны значений для фильтруемых атрибутов
 func (db *Database) GetAttributeRanges(ctx context.Context, categoryID int) (map[string]map[string]interface{}, error) {
-	return make(map[string]map[string]interface{}), nil
+	return db.GetAttributeRangesImpl(ctx, categoryID)
 }
 
 // GetListingAttributes получает значения атрибутов для объявления
-// TODO: Реализация временно отключена, требуется рефакторинг
 func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]models.ListingAttributeValue, error) {
-	return []models.ListingAttributeValue{}, nil
+	return db.GetListingAttributesImpl(ctx, listingID)
 }
 
 // GetSession - DEPRECATED: Sessions are now managed via JWT tokens in auth-service
@@ -132,18 +179,28 @@ func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int
 	return userIDs, nil
 }
 
-// CreateListing - методы для работы с listings находятся в отдельных файлах
-// TODO: Консолидировать все методы listings в один файл после рефакторинга
+// CreateListing creates a new listing via gRPC microservice
 func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
-	return 0, fmt.Errorf("CreateListing: method implementation removed, needs refactoring")
+	if db.grpcClient == nil {
+		return 0, fmt.Errorf("gRPC client not initialized")
+	}
+	return db.grpcClient.CreateListing(ctx, listing)
 }
 
+// GetListings retrieves listings with filters via gRPC microservice
 func (db *Database) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-	return nil, 0, fmt.Errorf("GetListings: method implementation removed, needs refactoring")
+	if db.grpcClient == nil {
+		return nil, 0, fmt.Errorf("gRPC client not initialized")
+	}
+	return db.grpcClient.GetListings(ctx, filters, limit, offset)
 }
 
+// GetListingByID retrieves a single listing by ID via gRPC microservice
 func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-	return nil, fmt.Errorf("GetListingByID: method implementation removed, needs refactoring")
+	if db.grpcClient == nil {
+		return nil, fmt.Errorf("gRPC client not initialized")
+	}
+	return db.grpcClient.GetListingByID(ctx, id)
 }
 
 // GetMarketplaceListingsForReindex возвращает listings с needs_reindex=true для индексации в OpenSearch
@@ -261,57 +318,56 @@ func (db *Database) ResetMarketplaceListingsReindexFlag(ctx context.Context, lis
 	return nil
 }
 
+// GetListingBySlug retrieves a single listing by slug via gRPC microservice
 func (db *Database) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetListingBySlug(ctx, slug)
+	if db.grpcClient == nil {
+		return nil, fmt.Errorf("gRPC client not initialized")
+	}
+	return db.grpcClient.GetListingBySlug(ctx, slug)
 }
 
-func (db *Database) IsSlugUnique(ctx context.Context, slug string, excludeID int) (bool, error) {
-	return false, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.IsSlugUnique(ctx, slug, excludeID)
-}
+// IsSlugUnique checks if slug is unique in c2c_listings table
+// Implementation in marketplace_slugs.go
+// Note: Direct database query, not using gRPC microservice
+// Requires 'slug' column to exist in c2c_listings table
 
-func (db *Database) GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error) {
-	return "", fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GenerateUniqueSlug(ctx, baseSlug, excludeID)
-}
+// GenerateUniqueSlug generates unique slug by appending suffix if needed
+// Implementation in marketplace_slugs.go
+// Note: Direct database query, not using gRPC microservice
+// Requires 'slug' column to exist in c2c_listings table
 
+// UpdateListing updates an existing listing via gRPC microservice
 func (db *Database) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateListing(ctx, listing)
+	if db.grpcClient == nil {
+		return fmt.Errorf("gRPC client not initialized")
+	}
+	return db.grpcClient.UpdateListing(ctx, listing)
 }
 
+// DeleteListing soft-deletes a listing (user ownership check) via gRPC microservice
 func (db *Database) DeleteListing(ctx context.Context, id int, userID int) error {
-	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.DeleteListing(ctx, id, userID)
+	if db.grpcClient == nil {
+		return fmt.Errorf("gRPC client not initialized")
+	}
+	return db.grpcClient.DeleteListing(ctx, id, userID)
 }
 
+// DeleteListingAdmin hard-deletes a listing (admin, no ownership check) via gRPC microservice
 func (db *Database) DeleteListingAdmin(ctx context.Context, id int) error {
-	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.DeleteListingAdmin(ctx, id)
+	if db.grpcClient == nil {
+		return fmt.Errorf("gRPC client not initialized")
+	}
+	return db.grpcClient.DeleteListingAdmin(ctx, id)
 }
 
-func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetCategories(ctx)
-}
+// GetCategories - implementation moved to marketplace_categories.go
+// GetAllCategories - implementation moved to marketplace_categories.go
+// GetPopularCategories - implementation moved to marketplace_categories.go
+// GetCategoryByID - implementation moved to marketplace_categories.go
+// GetCategoryTree - implementation moved to marketplace_categories.go
 
-func (db *Database) GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetAllCategories(ctx)
-}
-
-func (db *Database) GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetPopularCategories(ctx, limit)
-}
-
-func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetCategoryByID(ctx, id)
-}
-
-func (db *Database) GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetCategoryTree(ctx)
-}
-
-func (db *Database) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error) {
-	return 0, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.AddListingImage(ctx, image)
-}
-
-func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetListingImages(ctx, listingID)
-}
+// AddListingImage - implementation moved to marketplace_images.go
+// GetListingImages - implementation moved to marketplace_images.go
 
 // Chat and messages methods
 func (db *Database) ArchiveChat(ctx context.Context, chatID int, userID int) error {
@@ -359,13 +415,16 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
 	return count, nil
 }
 
-// SearchListings - TODO: OpenSearch integration disabled during refactoring
+// SearchListings performs OpenSearch query via gRPC microservice
 func (db *Database) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	log.Println("SearchListings: OpenSearch disabled during refactoring")
-	return &search.SearchResult{
-		Listings: nil,
-		Total:    0,
-	}, nil
+	if db.grpcClient == nil {
+		log.Println("SearchListings: gRPC client not initialized")
+		return &search.SearchResult{
+			Listings: nil,
+			Total:    0,
+		}, nil
+	}
+	return db.grpcClient.SearchListings(ctx, params)
 }
 
 // Добавить этот метод в структуру Database

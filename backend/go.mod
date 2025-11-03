@@ -56,6 +56,7 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/minio/crc64nvme v1.0.2 // indirect
+	github.com/pashagolub/pgxmock/v3 v3.4.0 // indirect
 	github.com/sony/gobreaker v1.0.0 // indirect
 )
 

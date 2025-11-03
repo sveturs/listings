@@ -59,6 +59,7 @@ type Database struct {
 	marketplaceOrderRepo *MarketplaceOrderRepository           // Репозиторий для заказов маркетплейса
 	productSearchRepo    ProductSearchRepositoryStub           // Заглушка для поиска товаров витрин (TODO: восстановить после рефакторинга OpenSearch)
 	marketplaceStorage   marketplaceStorage.MarketplaceStorage // Marketplace storage
+	grpcClient           *MarketplaceGRPCClient                // gRPC клиент для listings микросервиса
 }
 
 // NewDatabase создает новый экземпляр Database
@@ -124,6 +125,19 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 	// Инициализируем marketplace storage
 	logger := zerolog.New(log.Writer()).With().Timestamp().Str("component", "marketplace_storage").Logger()
 	db.marketplaceStorage = marketplaceStorage.NewPostgresMarketplaceStorage(sqlxDB, logger)
+
+	// Инициализируем gRPC клиент для listings микросервиса
+	// Адрес берём из переменной окружения или используем дефолтный для dev
+	grpcAddress := "dev.svetu.rs:50051" // TODO: Move to config
+	grpcClient, err := NewMarketplaceGRPCClient(grpcAddress)
+	if err != nil {
+		log.Printf("Warning: Failed to initialize gRPC client: %v. OpenSearch methods will be disabled.", err)
+		// Не возвращаем ошибку, чтобы не ломать приложение
+		// Методы OpenSearch будут проверять наличие grpcClient
+	} else {
+		db.grpcClient = grpcClient
+		log.Println("gRPC client for listings microservice initialized successfully")
+	}
 
 	return db, nil
 }

@@ -15,6 +15,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
+
 	// "backend/internal/proj/unified/service" // REMOVED: unified architecture deleted in Phase 7
 
 	"github.com/rs/zerolog"

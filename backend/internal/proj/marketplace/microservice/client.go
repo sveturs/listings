@@ -73,12 +73,12 @@ func (c *Client) GetListing(ctx context.Context, id int64) (*listingsv1.Listing,
 func (c *Client) CreateListing(ctx context.Context, listing *listingsv1.Listing) (*listingsv1.Listing, error) {
 	// Map Listing to CreateListingRequest
 	req := &listingsv1.CreateListingRequest{
-		UserId:      listing.UserId,
-		Title:       listing.Title,
-		Price:       listing.Price,
-		Currency:    listing.Currency,
-		CategoryId:  listing.CategoryId,
-		Quantity:    listing.Quantity,
+		UserId:     listing.UserId,
+		Title:      listing.Title,
+		Price:      listing.Price,
+		Currency:   listing.Currency,
+		CategoryId: listing.CategoryId,
+		Quantity:   listing.Quantity,
 	}
 
 	// Optional fields

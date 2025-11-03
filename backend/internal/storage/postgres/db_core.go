@@ -27,6 +27,12 @@ func (db *Database) Close() {
 			_ = err // Explicitly ignore error
 		}
 	}
+	if db.grpcClient != nil {
+		if err := db.grpcClient.Close(); err != nil {
+			// Логируем ошибку при закрытии gRPC соединения
+			_ = err // Explicitly ignore error
+		}
+	}
 }
 
 // GetSQLXDB возвращает sqlx.DB для использования в модулях, которые требуют sqlx

@@ -18,6 +18,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+
 	// "backend/internal/proj/b2c/storage/opensearch" // REMOVED
 	osClientPkg "backend/internal/storage/opensearch"
 	postgresStorage "backend/internal/storage/postgres"
