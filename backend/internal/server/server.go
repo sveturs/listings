@@ -41,6 +41,7 @@ import (
 	"backend/internal/proj/analytics"
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
+	chat "backend/internal/proj/chat"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	creditHandler "backend/internal/proj/credit"
@@ -52,6 +53,7 @@ import (
 	globalHandler "backend/internal/proj/global/handler"
 	globalService "backend/internal/proj/global/service"
 	healthHandler "backend/internal/proj/health"
+	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	notificationHandler "backend/internal/proj/notifications/handler"
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
@@ -102,6 +104,8 @@ type Server struct {
 	tracking           *tracking.Module
 	viber              *viber.Module
 	vin                *vinModule.Module
+	chat               *chat.Module
+	marketplace        *marketplaceHandler.Handler
 	credit             *creditHandler.Handler
 	recommendations    *recommendationsHandler.Handler
 	fileStorage        filestorage.FileStorageInterface
@@ -264,6 +268,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	// Инициализация модуля VIN декодера
 	vinModule := vinModule.NewModule(db.GetSQLXDB())
 
+	// TEMPORARY: Инициализация модуля чата (будет перенесен в микросервис)
+	// Включен с заглушкой - возвращает сообщение об отключении функционала
+	chatModule := chat.New(services, cfg, jwtParserMW)
+
+	// TEMPORARY: Marketplace handler (minimal functionality until microservice migration)
+	marketplaceHandlerInstance := marketplaceHandler.NewHandler(db.GetSQLXDB(), services, jwtParserMW, zerologLogger)
+
 	// Инициализация универсальных handlers
 	creditHandlerInstance := creditHandler.NewHandler()
 	recommendationsHandlerInstance := recommendationsHandler.NewHandler(db)
@@ -329,6 +340,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		tracking:           trackingModule,
 		viber:              viberModule,
 		vin:                vinModule,
+		chat:               chatModule, // Enabled with stub - returns disabled message
+		marketplace:        marketplaceHandlerInstance,
 		credit:             creditHandlerInstance,
 		recommendations:    recommendationsHandlerInstance,
 		fileStorage:        fileStorage,
@@ -406,15 +419,11 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 		DeepLinking: false,
 	}))
 
-	// WebSocket /ws/chat moved to listings microservice (chat functionality)
-	// TODO: Re-enable when chat microservice is integrated
-	/*
-	s.app.Get("/ws/chat", func(c *fiber.Ctx) error {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"error": "Chat service temporarily unavailable during migration",
-		})
-	})
-	*/
+	// TEMPORARY: WebSocket /ws/chat (will be moved to chat microservice)
+	// Регистрируем WebSocket роут для чата с JWT аутентификацией
+	if s.chat != nil {
+		s.chat.RegisterRoutes(s.app)
+	}
 
 	// WebSocket для трекинга доставок (публичный, по токену)
 	s.app.Get("/ws/tracking/:token", func(c *fiber.Ctx) error {
@@ -494,6 +503,10 @@ func (s *Server) registerProjectRoutes() {
 	// searchOptimization должен быть раньше, чтобы избежать конфликта с глобальным middleware
 	// subscriptions должен быть раньше, чтобы публичные роуты не перехватывались auth middleware
 	// tracking должен быть раньше, чтобы его публичные роуты не перехватывались auth middleware
+	// TEMPORARY: marketplace должен быть раньше, чтобы публичные категории не требовали auth
+	if s.marketplace != nil {
+		registrars = append(registrars, s.marketplace)
+	}
 	registrars = append(registrars, s.global, s.analytics, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
 
 	// Добавляем Subscriptions если он инициализирован - ДО marketplace чтобы избежать конфликтов с auth middleware
@@ -527,6 +540,8 @@ func (s *Server) registerProjectRoutes() {
 	if s.vin != nil {
 		registrars = append(registrars, s.vin)
 	}
+
+	// TEMPORARY: Marketplace уже зарегистрирован в начале для избежания middleware конфликтов
 
 	// Добавляем универсальные handlers
 	if s.credit != nil {
