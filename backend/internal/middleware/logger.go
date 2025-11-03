@@ -15,6 +15,7 @@ var noiseLogPaths = []string{
 	"/api/v1/admin/marketplace-translations/status",
 	"/api/v1/admin/c2c-translations/status",
 	"/api/v1/admin/tests/runs/", // Frequent polling during test execution
+	"/ws/chat",                  // WebSocket chat connections (frequent reconnects)
 }
 
 // shouldSkipLogging проверяет нужно ли пропустить логирование для данного пути
