@@ -26,6 +26,7 @@ type MarketplaceStorage interface {
 
 	// Storefronts (B2C)
 	GetStorefronts(ctx context.Context, filters StorefrontFilters) ([]models.Storefront, int, error)
+	GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
 }
 
 // StorefrontFilters параметры фильтрации витрин

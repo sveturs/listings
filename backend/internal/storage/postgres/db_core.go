@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	marketplaceStorage "backend/internal/proj/marketplace/storage"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 
@@ -43,6 +44,11 @@ func (db *Database) GetSQLXDB() *sqlx.DB {
 // FileStorage возвращает интерфейс файлового хранилища
 func (db *Database) FileStorage() filestorage.FileStorageInterface {
 	return db.fsStorage
+}
+
+// Marketplace возвращает интерфейс для работы с marketplace storage
+func (db *Database) Marketplace() marketplaceStorage.MarketplaceStorage {
+	return db.marketplaceStorage
 }
 
 // GetSQLDB returns the raw sql.DB connection

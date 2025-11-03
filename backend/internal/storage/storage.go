@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
+	marketplaceStorage "backend/internal/proj/marketplace/storage"
 	"backend/internal/storage/filestorage"
 )
 
@@ -224,6 +225,9 @@ type Storage interface {
 	SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error)
 	GetCarListingsCount(ctx context.Context) (int, error)
 	GetTotalCarModelsCount(ctx context.Context) (int, error)
+
+	// Marketplace возвращает интерфейс для работы с marketplace storage
+	Marketplace() marketplaceStorage.MarketplaceStorage
 
 	// Database connection
 	Close()

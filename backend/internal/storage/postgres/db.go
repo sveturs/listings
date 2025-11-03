@@ -15,10 +15,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
 
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
 	reviewStorage "backend/internal/proj/reviews/storage/postgres"
 
+	marketplaceStorage "backend/internal/proj/marketplace/storage"
 	osClient "backend/internal/storage/opensearch"
 )
 
@@ -50,13 +52,14 @@ type Database struct {
 	b2cProductIndex      string // Индекс для B2C товаров
 	attributeGroups      AttributeGroupStorage
 	fsStorage            filestorage.FileStorageInterface
-	storefrontRepo       StorefrontRepository            // Репозиторий для витрин
-	cartRepo             CartRepositoryInterface         // Репозиторий для корзин
-	orderRepo            OrderRepositoryInterface        // Репозиторий для заказов
-	searchWeights        *config.SearchWeights           // Веса для поиска
-	inventoryRepo        InventoryRepositoryInterface    // Репозиторий для инвентаря
-	marketplaceOrderRepo *MarketplaceOrderRepository     // Репозиторий для заказов маркетплейса
-	productSearchRepo    ProductSearchRepositoryStub     // Заглушка для поиска товаров витрин (TODO: восстановить после рефакторинга OpenSearch)
+	storefrontRepo       StorefrontRepository         // Репозиторий для витрин
+	cartRepo             CartRepositoryInterface      // Репозиторий для корзин
+	orderRepo            OrderRepositoryInterface     // Репозиторий для заказов
+	searchWeights        *config.SearchWeights        // Веса для поиска
+	inventoryRepo        InventoryRepositoryInterface // Репозиторий для инвентаря
+	marketplaceOrderRepo *MarketplaceOrderRepository  // Репозиторий для заказов маркетплейса
+	productSearchRepo    ProductSearchRepositoryStub  // Заглушка для поиска товаров витрин (TODO: восстановить после рефакторинга OpenSearch)
+	marketplaceStorage   marketplaceStorage.MarketplaceStorage // Marketplace storage
 }
 
 // NewDatabase создает новый экземпляр Database
@@ -119,6 +122,10 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 
 	// Сохраняем search weights
 	db.searchWeights = searchWeights
+
+	// Инициализируем marketplace storage
+	logger := zerolog.New(log.Writer()).With().Timestamp().Str("component", "marketplace_storage").Logger()
+	db.marketplaceStorage = marketplaceStorage.NewPostgresMarketplaceStorage(sqlxDB, logger)
 
 	return db, nil
 }

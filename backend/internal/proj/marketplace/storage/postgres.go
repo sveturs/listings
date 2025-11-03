@@ -315,3 +315,31 @@ func (s *postgresMarketplaceStorage) GetStorefronts(ctx context.Context, filters
 
 	return storefronts, total, nil
 }
+
+// GetStorefrontByID получает витрину по ID
+func (s *postgresMarketplaceStorage) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
+	query := `
+		SELECT
+			id, user_id, slug, name, description, logo_url, banner_url,
+			theme, phone, email, website, address, city, postal_code, country,
+			latitude, longitude, settings, seo_meta, is_active, is_verified,
+			verification_date, rating, reviews_count, products_count, sales_count,
+			views_count, subscription_plan, subscription_expires_at, commission_rate,
+			ai_agent_enabled, ai_agent_config, live_shopping_enabled, group_buying_enabled,
+			created_at, updated_at, formatted_address, geo_strategy, default_privacy_level,
+			address_verified, subscription_id, is_subscription_active, followers_count
+		FROM b2c_stores
+		WHERE id = $1
+	`
+
+	var storefront models.Storefront
+	if err := s.db.GetContext(ctx, &storefront, query, id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("storefront not found: %d", id)
+		}
+		s.logger.Error().Err(err).Int("id", id).Msg("Failed to get storefront by ID")
+		return nil, fmt.Errorf("failed to get storefront: %w", err)
+	}
+
+	return &storefront, nil
+}
