@@ -1,3 +1,8 @@
+//go:build ignore
+// +build ignore
+
+// DEPRECATED: This tool uses outdated Database API (ReindexAllProducts method removed)
+// Use reindex_unified.py script instead
 package main
 
 import (

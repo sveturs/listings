@@ -1,3 +1,8 @@
+//go:build ignore
+// +build ignore
+
+// DEPRECATED: This tool uses outdated Database API (C2CIndex, B2CIndex fields removed)
+// Categories management is now handled through admin API
 package main
 
 import (

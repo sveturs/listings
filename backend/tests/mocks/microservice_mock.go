@@ -104,16 +104,20 @@ func (s *ListingsServiceServer) GetListing(ctx context.Context, req *pb.GetListi
 	}
 
 	// Normal response
+	description := "This is a mock listing for testing"
+	createdAt := time.Now().Format(time.RFC3339)
+	updatedAt := time.Now().Format(time.RFC3339)
+
 	return &pb.GetListingResponse{
 		Listing: &pb.Listing{
 			Id:          req.Id,
 			Title:       fmt.Sprintf("Test Listing %d", req.Id),
-			Description: "This is a mock listing for testing",
+			Description: &description,
 			Price:       1000,
 			Currency:    "USD",
 			Status:      "active",
-			CreatedAt:   time.Now().Unix(),
-			UpdatedAt:   time.Now().Unix(),
+			CreatedAt:   createdAt,
+			UpdatedAt:   updatedAt,
 		},
 	}, nil
 }
@@ -129,6 +133,9 @@ func (s *ListingsServiceServer) CreateListing(ctx context.Context, req *pb.Creat
 		return nil, status.Error(codes.Internal, "mock service configured to fail")
 	}
 
+	createdAt := time.Now().Format(time.RFC3339)
+	updatedAt := time.Now().Format(time.RFC3339)
+
 	return &pb.CreateListingResponse{
 		Listing: &pb.Listing{
 			Id:          123,
@@ -137,8 +144,8 @@ func (s *ListingsServiceServer) CreateListing(ctx context.Context, req *pb.Creat
 			Price:       req.Price,
 			Currency:    req.Currency,
 			Status:      "active",
-			CreatedAt:   time.Now().Unix(),
-			UpdatedAt:   time.Now().Unix(),
+			CreatedAt:   createdAt,
+			UpdatedAt:   updatedAt,
 		},
 	}, nil
 }
@@ -153,15 +160,28 @@ func (s *ListingsServiceServer) UpdateListing(ctx context.Context, req *pb.Updat
 		return nil, status.Error(codes.Internal, "mock service configured to fail")
 	}
 
+	updatedAt := time.Now().Format(time.RFC3339)
+
+	// Безопасная разыменовка pointer полей
+	var title string
+	if req.Title != nil {
+		title = *req.Title
+	}
+
+	var price float64
+	if req.Price != nil {
+		price = *req.Price
+	}
+
 	return &pb.UpdateListingResponse{
 		Listing: &pb.Listing{
 			Id:          req.Id,
-			Title:       req.Title,
+			Title:       title,
 			Description: req.Description,
-			Price:       req.Price,
-			Currency:    req.Currency,
+			Price:       price,
+			Currency:    "USD", // Фиксированное значение для мока
 			Status:      "active",
-			UpdatedAt:   time.Now().Unix(),
+			UpdatedAt:   updatedAt,
 		},
 	}, nil
 }
@@ -197,12 +217,15 @@ func (s *ListingsServiceServer) SearchListings(ctx context.Context, req *pb.Sear
 	}
 
 	// Return mock results
+	desc1 := "Mock search result"
+	desc2 := "Mock search result"
+
 	return &pb.SearchListingsResponse{
 		Listings: []*pb.Listing{
 			{
 				Id:          1,
 				Title:       "Search Result 1",
-				Description: "Mock search result",
+				Description: &desc1,
 				Price:       1000,
 				Currency:    "USD",
 				Status:      "active",
@@ -210,13 +233,13 @@ func (s *ListingsServiceServer) SearchListings(ctx context.Context, req *pb.Sear
 			{
 				Id:          2,
 				Title:       "Search Result 2",
-				Description: "Mock search result",
+				Description: &desc2,
 				Price:       2000,
 				Currency:    "USD",
 				Status:      "active",
 			},
 		},
-		TotalCount: 2,
+		Total: 2,
 	}, nil
 }
 
@@ -230,18 +253,20 @@ func (s *ListingsServiceServer) ListListings(ctx context.Context, req *pb.ListLi
 		return nil, status.Error(codes.Internal, "mock service configured to fail")
 	}
 
+	desc := "Mock listing"
+
 	return &pb.ListListingsResponse{
 		Listings: []*pb.Listing{
 			{
 				Id:          1,
 				Title:       "Listing 1",
-				Description: "Mock listing",
+				Description: &desc,
 				Price:       1000,
 				Currency:    "USD",
 				Status:      "active",
 			},
 		},
-		TotalCount: 1,
+		Total: 1,
 	}, nil
 }
 

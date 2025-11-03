@@ -10,14 +10,13 @@ import (
 )
 
 const (
-	marketplaceIndex        = "c2c_listings" // Индекс для listings (C2C)
-	marketplaceListingIndex = "c2c_listings" // Listings индексируются сюда
-	b2c_storesIndex         = "b2c_stores"   // Индекс для самих витрин
+	marketplaceIndex        = "marketplace_listings" // Unified индекс для всех listings (C2C + B2C)
+	marketplaceListingIndex = "marketplace_listings" // Listings индексируются сюда
+	storefrontProductsIndex = "marketplace_listings" // B2C products также идут в unified индекс
+	b2c_storesIndex         = "b2c_stores"           // Индекс для самих витрин (metadata)
 	listingType             = "listing"
 	productType             = "product"
 )
-
-// storefrontProductsIndex удален - теперь используется s.b2cIndexName из конфигурации
 
 // IndexInfo представляет информацию об индексе
 type IndexInfo struct {
@@ -69,7 +68,7 @@ func (s *Service) GetIndexInfo(ctx context.Context) ([]IndexInfo, error) {
 	}
 
 	// Получаем информацию о всех основных индексах
-	indices := []string{marketplaceIndex, s.b2cIndexName, b2c_storesIndex}
+	indices := []string{marketplaceIndex, b2c_storesIndex}
 	var results []IndexInfo
 
 	for _, indexName := range indices {
@@ -578,34 +577,38 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 	// Очистка индексов перед переиндексацией для удаления старых документов
 	if shouldIndexListings {
-		// Удаляем все документы из индекса c2c_listings
+		// Удаляем только C2C документы из unified индекса
 		deleteQuery := map[string]interface{}{
 			"query": map[string]interface{}{
-				"match_all": map[string]interface{}{},
+				"term": map[string]interface{}{
+					"source_type": "c2c",
+				},
 			},
 		}
 		deleteJSON, _ := json.Marshal(deleteQuery)
 		_, err := s.osClient.Execute(ctx, "POST", "/"+marketplaceListingIndex+"/_delete_by_query", deleteJSON)
 		if err != nil {
-			logger.Warn().Msgf("Warning: Failed to clean c2c_listings index: %v", err)
+			logger.Warn().Msgf("Warning: Failed to clean C2C listings from %s index: %v", marketplaceListingIndex, err)
 		} else {
-			logger.Info().Msg("Successfully cleaned c2c_listings index")
+			logger.Info().Msgf("Successfully cleaned C2C listings from %s index", marketplaceListingIndex)
 		}
 	}
 
 	if shouldIndexProducts {
-		// Удаляем все документы из индекса B2C
+		// Удаляем только B2C документы из unified индекса
 		deleteQuery := map[string]interface{}{
 			"query": map[string]interface{}{
-				"match_all": map[string]interface{}{},
+				"term": map[string]interface{}{
+					"source_type": "b2c",
+				},
 			},
 		}
 		deleteJSON, _ := json.Marshal(deleteQuery)
-		_, err := s.osClient.Execute(ctx, "POST", "/"+s.b2cIndexName+"/_delete_by_query", deleteJSON)
+		_, err := s.osClient.Execute(ctx, "POST", "/"+storefrontProductsIndex+"/_delete_by_query", deleteJSON)
 		if err != nil {
-			logger.Warn().Msgf("Warning: Failed to clean %s index: %v", s.b2cIndexName, err)
+			logger.Warn().Msgf("Warning: Failed to clean B2C products from %s index: %v", storefrontProductsIndex, err)
 		} else {
-			logger.Info().Msgf("Successfully cleaned %s index", s.b2cIndexName)
+			logger.Info().Msgf("Successfully cleaned B2C products from %s index", storefrontProductsIndex)
 		}
 	}
 
@@ -921,7 +924,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 			// Индексируем пакет при достижении размера
 			if len(batch) >= batchSize {
-				if err := s.indexBatch(ctx, batch, s.b2cIndexName); err != nil {
+				if err := s.indexBatch(ctx, batch, storefrontProductsIndex); err != nil {
 					fmt.Printf("Error indexing batch: %v\n", err)
 					totalErrors += len(batch)
 				} else {
@@ -933,7 +936,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 		// Индексируем оставшийся пакет
 		if len(batch) > 0 {
-			if err := s.indexBatch(ctx, batch, s.b2cIndexName); err != nil {
+			if err := s.indexBatch(ctx, batch, storefrontProductsIndex); err != nil {
 				fmt.Printf("Error indexing final batch: %v\n", err)
 				totalErrors += len(batch)
 			} else {

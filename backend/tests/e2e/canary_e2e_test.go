@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	backendURL  = "http://localhost:3000"
+	// backendURL is defined in resilience_test.go to avoid redeclaration
 	testTimeout = 10 * time.Second
 )
 

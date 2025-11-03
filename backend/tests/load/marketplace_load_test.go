@@ -1,4 +1,9 @@
+//go:build ignore
+// +build ignore
+
 // backend/tests/load/marketplace_load_test.go
+// DEPRECATED: Load tests for unified architecture that was removed in Phase 7
+// To enable: remove //go:build ignore directive and update to use marketplace service
 package load
 
 import (

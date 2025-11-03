@@ -1,3 +1,8 @@
+//go:build ignore
+// +build ignore
+
+// DEPRECATED: This tool uses outdated b2c/storage which was removed
+// Use reindex_unified.py script instead
 package main
 
 import (
@@ -13,7 +18,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/internal/proj/b2c/storage/opensearch"
+	// "backend/internal/proj/b2c/storage/opensearch" // REMOVED
 	osClientPkg "backend/internal/storage/opensearch"
 	postgresStorage "backend/internal/storage/postgres"
 	"backend/internal/version"

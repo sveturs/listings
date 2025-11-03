@@ -1,4 +1,10 @@
+//go:build ignore
+// +build ignore
+
 // backend/tests/e2e/marketplace_microservice_e2e_test.go
+// DEPRECATED: E2E tests for unified architecture that was removed in Phase 7
+// These tests are kept for reference but disabled
+// To enable: remove //go:build ignore directive and restore unified/service import
 package e2e
 
 import (
@@ -9,23 +15,32 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"backend/internal/proj/unified/service"
+	// "backend/internal/proj/unified/service" // REMOVED: unified architecture deleted in Phase 7
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// Skip all e2e tests - unified architecture was removed
+const skipUnifiedE2ETests = true
+
 // defaultRoutingContext создаёт дефолтный routing context для тестов
-func defaultRoutingContext() *service.RoutingContext {
-	return &service.RoutingContext{
-		UserID:  100,
-		IsAdmin: false,
-	}
-}
+// NOTE: Commented out as unified/service was removed
+// type RoutingContext struct {
+//     UserID  int
+//     IsAdmin bool
+// }
+// func defaultRoutingContext() *RoutingContext {
+// 	return &RoutingContext{
+// 		UserID:  100,
+// 		IsAdmin: false,
+// 	}
+// }
 
 // TestE2E_FullFlow_MonolithToMicroservice проверяет полный поток через monolith → microservice
 func TestE2E_FullFlow_MonolithToMicroservice(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping E2E test in short mode")
 	}
@@ -140,6 +155,7 @@ func TestE2E_FullFlow_MonolithToMicroservice(t *testing.T) {
 
 // TestE2E_FeatureFlag проверяет переключение feature flag в runtime
 func TestE2E_FeatureFlag(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping E2E test in short mode")
 	}
@@ -189,6 +205,7 @@ func TestE2E_FeatureFlag(t *testing.T) {
 
 // TestE2E_Fallback проверяет fallback на monolith при отказе microservice
 func TestE2E_Fallback(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping E2E test in short mode")
 	}
@@ -272,6 +289,7 @@ func TestE2E_Fallback(t *testing.T) {
 
 // TestE2E_DataConsistency проверяет согласованность данных
 func TestE2E_DataConsistency(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping E2E test in short mode")
 	}
@@ -322,6 +340,7 @@ func TestE2E_DataConsistency(t *testing.T) {
 
 // TestE2E_ConcurrentOperations проверяет конкурентные операции
 func TestE2E_ConcurrentOperations(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping E2E test in short mode")
 	}

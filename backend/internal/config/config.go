@@ -159,8 +159,6 @@ type OpenSearchConfig struct {
 	URL            string `yaml:"url"`
 	Username       string `yaml:"username"`
 	Password       string `yaml:"password"`
-	C2CIndex       string `yaml:"c2c_index"`        // C2C (Customer-to-Customer) index - legacy
-	B2CIndex       string `yaml:"b2c_index"`        // B2C (Business-to-Customer) index - legacy
 	UnifiedIndex   string `yaml:"unified_index"`    // Unified index (Sprint 2.2) - c2c + b2c unified
 	UnifiedIndexV2 string `yaml:"unified_index_v2"` // Unified index v2 (optimized mapping, 30 fields)
 }
@@ -291,20 +289,8 @@ func NewConfig() (*Config, error) {
 		URL:            os.Getenv("OPENSEARCH_URL"),
 		Username:       os.Getenv("OPENSEARCH_USERNAME"),
 		Password:       os.Getenv("OPENSEARCH_PASSWORD"),
-		C2CIndex:       os.Getenv("OPENSEARCH_C2C_INDEX"),
-		B2CIndex:       os.Getenv("OPENSEARCH_B2C_INDEX"),
 		UnifiedIndex:   os.Getenv("OPENSEARCH_UNIFIED_INDEX"),
 		UnifiedIndexV2: os.Getenv("OPENSEARCH_UNIFIED_INDEX_V2"),
-	}
-
-	// Если индекс C2C не указан, используем значение по умолчанию
-	if config.OpenSearch.C2CIndex == "" {
-		config.OpenSearch.C2CIndex = "c2c_listings"
-	}
-
-	// Если индекс B2C не указан, используем значение по умолчанию
-	if config.OpenSearch.B2CIndex == "" {
-		config.OpenSearch.B2CIndex = "b2c_products"
 	}
 
 	// Если индекс Unified не указан, используем значение по умолчанию

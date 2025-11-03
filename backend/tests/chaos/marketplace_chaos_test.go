@@ -1,4 +1,10 @@
+//go:build ignore
+// +build ignore
+
 // backend/tests/chaos/marketplace_chaos_test.go
+// DEPRECATED: Tests for unified architecture that was removed in Phase 7
+// These tests are kept for reference but disabled
+// To enable: remove //go:build ignore directive and restore unified/service import
 package chaos
 
 import (
@@ -12,21 +18,28 @@ import (
 	"backend/internal/domain/search"
 
 	"backend/internal/domain/models"
-	"backend/internal/proj/unified/service"
+	// "backend/internal/proj/unified/service" // REMOVED: unified architecture deleted in Phase 7
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// Skip all tests - unified architecture was removed
+const skipUnifiedTests = true
+
 // ChaosConfig конфигурация для chaos testing
-// defaultRoutingContext создаёт дефолтный routing context для тестов
-func defaultRoutingContext() *service.RoutingContext {
-	return &service.RoutingContext{
-		UserID:  100,
-		IsAdmin: false,
-	}
-}
+// NOTE: Types below are commented out as unified/service was removed
+// type RoutingContext struct {
+//     UserID  int
+//     IsAdmin bool
+// }
+// func defaultRoutingContext() *RoutingContext {
+// 	return &RoutingContext{
+// 		UserID:  100,
+// 		IsAdmin: false,
+// 	}
+// }
 
 type ChaosConfig struct {
 	FailureRate      float64 // 0.0 - 1.0 (probability of failure)
@@ -38,6 +51,7 @@ type ChaosConfig struct {
 
 // TestChaos_NetworkPartition проверяет поведение при network partition
 func TestChaos_NetworkPartition(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping chaos test in short mode")
 	}
@@ -82,6 +96,7 @@ func TestChaos_NetworkPartition(t *testing.T) {
 
 // TestChaos_SlowMicroservice проверяет поведение при медленном microservice
 func TestChaos_SlowMicroservice(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping chaos test in short mode")
 	}
@@ -132,6 +147,7 @@ func TestChaos_SlowMicroservice(t *testing.T) {
 
 // TestChaos_PartialFailures проверяет частичные отказы
 func TestChaos_PartialFailures(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping chaos test in short mode")
 	}
@@ -195,6 +211,7 @@ func TestChaos_PartialFailures(t *testing.T) {
 
 // TestChaos_DatabaseFailure проверяет отказ БД microservice
 func TestChaos_DatabaseFailure(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping chaos test in short mode")
 	}
@@ -239,6 +256,7 @@ func TestChaos_DatabaseFailure(t *testing.T) {
 
 // TestChaos_CascadingFailures проверяет каскадные отказы
 func TestChaos_CascadingFailures(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping chaos test in short mode")
 	}
@@ -288,6 +306,7 @@ func TestChaos_CascadingFailures(t *testing.T) {
 
 // TestChaos_FlappingService проверяет нестабильный сервис (flapping)
 func TestChaos_FlappingService(t *testing.T) {
+	t.Skip("DEPRECATED: Test disabled - unified architecture was removed in Phase 7")
 	if testing.Short() {
 		t.Skip("Skipping chaos test in short mode")
 	}

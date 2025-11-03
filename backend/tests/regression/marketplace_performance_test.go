@@ -1,4 +1,10 @@
+//go:build ignore
+// +build ignore
+
 // backend/tests/regression/marketplace_performance_test.go
+// DEPRECATED: Performance tests for unified architecture that was removed in Phase 7
+// These tests are kept for reference but disabled
+// To enable: remove //go:build ignore directive and restore unified/service import
 package regression
 
 import (
@@ -10,21 +16,29 @@ import (
 	"backend/internal/domain/search"
 
 	"backend/internal/domain/models"
-	"backend/internal/proj/unified/service"
+	// "backend/internal/proj/unified/service" // REMOVED: unified architecture deleted in Phase 7
 
 	"github.com/rs/zerolog"
 )
 
+// Skip all benchmarks - unified architecture was removed
+const skipUnifiedBenchmarks = true
+
 // BenchmarkGetListing_Monolith бенчмарк GetListing через monolith (local DB)
-// defaultRoutingContext создаёт дефолтный routing context для тестов
-func defaultRoutingContext() *service.RoutingContext {
-	return &service.RoutingContext{
-		UserID:  100,
-		IsAdmin: false,
-	}
-}
+// NOTE: defaultRoutingContext commented out as unified/service was removed
+// type RoutingContext struct {
+//     UserID  int
+//     IsAdmin bool
+// }
+// func defaultRoutingContext() *RoutingContext {
+// 	return &RoutingContext{
+// 		UserID:  100,
+// 		IsAdmin: false,
+// 	}
+// }
 
 func BenchmarkGetListing_Monolith(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -42,6 +56,7 @@ func BenchmarkGetListing_Monolith(b *testing.B) {
 
 // BenchmarkGetListing_Microservice бенчмарк GetListing через microservice
 func BenchmarkGetListing_Microservice(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -70,6 +85,7 @@ func BenchmarkGetListing_Microservice(b *testing.B) {
 
 // BenchmarkCreateListing_Monolith бенчмарк CreateListing через monolith
 func BenchmarkCreateListing_Monolith(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -93,6 +109,7 @@ func BenchmarkCreateListing_Monolith(b *testing.B) {
 
 // BenchmarkCreateListing_Microservice бенчмарк CreateListing через microservice
 func BenchmarkCreateListing_Microservice(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -117,6 +134,7 @@ func BenchmarkCreateListing_Microservice(b *testing.B) {
 
 // BenchmarkUpdateListing_Monolith бенчмарк UpdateListing через monolith
 func BenchmarkUpdateListing_Monolith(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -145,6 +163,7 @@ func BenchmarkUpdateListing_Monolith(b *testing.B) {
 
 // BenchmarkUpdateListing_Microservice бенчмарк UpdateListing через microservice
 func BenchmarkUpdateListing_Microservice(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -173,6 +192,7 @@ func BenchmarkUpdateListing_Microservice(b *testing.B) {
 
 // BenchmarkDeleteListing_Monolith бенчмарк DeleteListing через monolith
 func BenchmarkDeleteListing_Monolith(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -189,6 +209,7 @@ func BenchmarkDeleteListing_Monolith(b *testing.B) {
 
 // BenchmarkDeleteListing_Microservice бенчмарк DeleteListing через microservice
 func BenchmarkDeleteListing_Microservice(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -217,6 +238,7 @@ func BenchmarkDeleteListing_Microservice(b *testing.B) {
 
 // BenchmarkConcurrentReads_Monolith бенчмарк конкурентного чтения (monolith)
 func BenchmarkConcurrentReads_Monolith(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -237,6 +259,7 @@ func BenchmarkConcurrentReads_Monolith(b *testing.B) {
 
 // BenchmarkConcurrentReads_Microservice бенчмарк конкурентного чтения (microservice)
 func BenchmarkConcurrentReads_Microservice(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -269,6 +292,7 @@ func BenchmarkConcurrentReads_Microservice(b *testing.B) {
 
 // BenchmarkConcurrentWrites_Monolith бенчмарк конкурентной записи (monolith)
 func BenchmarkConcurrentWrites_Monolith(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -296,6 +320,7 @@ func BenchmarkConcurrentWrites_Monolith(b *testing.B) {
 
 // BenchmarkConcurrentWrites_Microservice бенчмарк конкурентной записи (microservice)
 func BenchmarkConcurrentWrites_Microservice(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -324,6 +349,7 @@ func BenchmarkConcurrentWrites_Microservice(b *testing.B) {
 
 // BenchmarkFallback_Performance бенчмарк fallback производительности
 func BenchmarkFallback_Performance(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -351,6 +377,7 @@ func BenchmarkFallback_Performance(b *testing.B) {
 
 // BenchmarkMemoryAllocation_Monolith проверяет memory allocation (monolith)
 func BenchmarkMemoryAllocation_Monolith(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 
@@ -376,6 +403,7 @@ func BenchmarkMemoryAllocation_Monolith(b *testing.B) {
 
 // BenchmarkMemoryAllocation_Microservice проверяет memory allocation (microservice)
 func BenchmarkMemoryAllocation_Microservice(b *testing.B) {
+	b.Skip("DEPRECATED: Benchmark disabled - unified architecture was removed in Phase 7")
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
 	ctx := context.Background()
 

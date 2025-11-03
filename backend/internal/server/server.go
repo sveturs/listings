@@ -145,7 +145,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.C2CIndex, cfg.OpenSearch.B2CIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.UnifiedIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize database")
 	}
@@ -250,7 +250,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool(), jwtParserMW)
 	// Translation service moved to listings microservice - pass nil for now
 	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, nil, jwtParserMW)
-	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New(), cfg.OpenSearch.B2CIndex)
+	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New())
 	// TODO: После рефакторинга передать storage или services для переиндексации
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())

@@ -71,9 +71,28 @@ func (c *Client) GetListing(ctx context.Context, id int64) (*listingsv1.Listing,
 
 // CreateListing creates a new listing
 func (c *Client) CreateListing(ctx context.Context, listing *listingsv1.Listing) (*listingsv1.Listing, error) {
-	resp, err := c.client.CreateListing(ctx, &listingsv1.CreateListingRequest{
-		Listing: listing,
-	})
+	// Map Listing to CreateListingRequest
+	req := &listingsv1.CreateListingRequest{
+		UserId:      listing.UserId,
+		Title:       listing.Title,
+		Price:       listing.Price,
+		Currency:    listing.Currency,
+		CategoryId:  listing.CategoryId,
+		Quantity:    listing.Quantity,
+	}
+
+	// Optional fields
+	if listing.StorefrontId != nil {
+		req.StorefrontId = listing.StorefrontId
+	}
+	if listing.Description != nil {
+		req.Description = listing.Description
+	}
+	if listing.Sku != nil {
+		req.Sku = listing.Sku
+	}
+
+	resp, err := c.client.CreateListing(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create listing: %w", err)
 	}
@@ -82,9 +101,30 @@ func (c *Client) CreateListing(ctx context.Context, listing *listingsv1.Listing)
 
 // UpdateListing updates an existing listing
 func (c *Client) UpdateListing(ctx context.Context, listing *listingsv1.Listing) (*listingsv1.Listing, error) {
-	resp, err := c.client.UpdateListing(ctx, &listingsv1.UpdateListingRequest{
-		Listing: listing,
-	})
+	// Map Listing to UpdateListingRequest
+	req := &listingsv1.UpdateListingRequest{
+		Id:     listing.Id,
+		UserId: listing.UserId, // Required for ownership check
+	}
+
+	// Optional fields (only set if not nil/empty)
+	if listing.Title != "" {
+		req.Title = &listing.Title
+	}
+	if listing.Description != nil && *listing.Description != "" {
+		req.Description = listing.Description
+	}
+	if listing.Price != 0 {
+		req.Price = &listing.Price
+	}
+	if listing.Quantity != 0 {
+		req.Quantity = &listing.Quantity
+	}
+	if listing.Status != "" {
+		req.Status = &listing.Status
+	}
+
+	resp, err := c.client.UpdateListing(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update listing %d: %w", listing.Id, err)
 	}
