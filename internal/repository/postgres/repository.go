@@ -584,7 +584,7 @@ func (r *Repository) Close() error {
 	return r.db.Close()
 }
 
-// WithTransaction executes a function within a database transaction
+// WithTransaction executes a function within a database transaction (accepts sqlx.Tx)
 func (r *Repository) WithTransaction(ctx context.Context, fn func(*sqlx.Tx) error) error {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -611,5 +611,48 @@ func (r *Repository) WithTransaction(ctx context.Context, fn func(*sqlx.Tx) erro
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	return nil
+}
+
+// GetListingsForReindex retrieves listings that need reindexing
+func (r *Repository) GetListingsForReindex(ctx context.Context, limit int) ([]*domain.Listing, error) {
+	query := `
+		SELECT id, gen_random_uuid() as uuid, user_id, storefront_id, title, description, price,
+		       'RSD' as currency, category_id, status, 'public' as visibility,
+		       1 as quantity, NULL as sku, views_count, 0 as favorites_count,
+		       created_at, updated_at, NULL as published_at, NULL as deleted_at, false as is_deleted
+		FROM c2c_listings
+		WHERE status = 'active'
+		ORDER BY id ASC
+		LIMIT $1
+	`
+
+	var listings []*domain.Listing
+	err := r.db.SelectContext(ctx, &listings, query, limit)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to get listings for reindex")
+		return nil, fmt.Errorf("failed to get listings for reindex: %w", err)
+	}
+
+	return listings, nil
+}
+
+// ResetReindexFlags resets reindex flags for specified listings (stub implementation)
+func (r *Repository) ResetReindexFlags(ctx context.Context, listingIDs []int64) error {
+	if len(listingIDs) == 0 {
+		return nil
+	}
+
+	// Currently c2c_listings doesn't have needs_reindex flag
+	// This is a placeholder for future implementation when we add the flag
+	r.logger.Info().Int("count", len(listingIDs)).Msg("reset reindex flags (noop - flag not implemented)")
+	return nil
+}
+
+// SyncDiscounts synchronizes discount information across listings (stub implementation)
+func (r *Repository) SyncDiscounts(ctx context.Context) error {
+	// Placeholder for discount sync logic
+	// This will be implemented when discount system is added
+	r.logger.Info().Msg("sync discounts (noop - discounts not implemented)")
 	return nil
 }

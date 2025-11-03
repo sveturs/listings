@@ -9,6 +9,7 @@ package listingsv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -49,6 +50,7 @@ type Listing struct {
 	Attributes    []*ListingAttribute `protobuf:"bytes,22,rep,name=attributes,proto3" json:"attributes,omitempty"`
 	Tags          []string            `protobuf:"bytes,23,rep,name=tags,proto3" json:"tags,omitempty"`
 	Location      *ListingLocation    `protobuf:"bytes,24,opt,name=location,proto3,oneof" json:"location,omitempty"`
+	Variants      []*ListingVariant   `protobuf:"bytes,25,rep,name=variants,proto3" json:"variants,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -247,6 +249,13 @@ func (x *Listing) GetTags() []string {
 func (x *Listing) GetLocation() *ListingLocation {
 	if x != nil {
 		return x.Location
+	}
+	return nil
+}
+
+func (x *Listing) GetVariants() []*ListingVariant {
+	if x != nil {
+		return x.Variants
 	}
 	return nil
 }
@@ -594,6 +603,421 @@ func (x *ListingLocation) GetUpdatedAt() string {
 	return ""
 }
 
+// ListingVariant represents a product variant
+type ListingVariant struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	ListingId     int64                  `protobuf:"varint,2,opt,name=listing_id,json=listingId,proto3" json:"listing_id,omitempty"`
+	Sku           string                 `protobuf:"bytes,3,opt,name=sku,proto3" json:"sku,omitempty"`
+	Price         *float64               `protobuf:"fixed64,4,opt,name=price,proto3,oneof" json:"price,omitempty"`
+	Stock         *int32                 `protobuf:"varint,5,opt,name=stock,proto3,oneof" json:"stock,omitempty"`
+	Attributes    map[string]string      `protobuf:"bytes,6,rep,name=attributes,proto3" json:"attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ImageUrl      *string                `protobuf:"bytes,7,opt,name=image_url,json=imageUrl,proto3,oneof" json:"image_url,omitempty"`
+	IsActive      bool                   `protobuf:"varint,8,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	CreatedAt     *string                `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3,oneof" json:"created_at,omitempty"`
+	UpdatedAt     *string                `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3,oneof" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListingVariant) Reset() {
+	*x = ListingVariant{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListingVariant) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListingVariant) ProtoMessage() {}
+
+func (x *ListingVariant) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListingVariant.ProtoReflect.Descriptor instead.
+func (*ListingVariant) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListingVariant) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *ListingVariant) GetListingId() int64 {
+	if x != nil {
+		return x.ListingId
+	}
+	return 0
+}
+
+func (x *ListingVariant) GetSku() string {
+	if x != nil {
+		return x.Sku
+	}
+	return ""
+}
+
+func (x *ListingVariant) GetPrice() float64 {
+	if x != nil && x.Price != nil {
+		return *x.Price
+	}
+	return 0
+}
+
+func (x *ListingVariant) GetStock() int32 {
+	if x != nil && x.Stock != nil {
+		return *x.Stock
+	}
+	return 0
+}
+
+func (x *ListingVariant) GetAttributes() map[string]string {
+	if x != nil {
+		return x.Attributes
+	}
+	return nil
+}
+
+func (x *ListingVariant) GetImageUrl() string {
+	if x != nil && x.ImageUrl != nil {
+		return *x.ImageUrl
+	}
+	return ""
+}
+
+func (x *ListingVariant) GetIsActive() bool {
+	if x != nil {
+		return x.IsActive
+	}
+	return false
+}
+
+func (x *ListingVariant) GetCreatedAt() string {
+	if x != nil && x.CreatedAt != nil {
+		return *x.CreatedAt
+	}
+	return ""
+}
+
+func (x *ListingVariant) GetUpdatedAt() string {
+	if x != nil && x.UpdatedAt != nil {
+		return *x.UpdatedAt
+	}
+	return ""
+}
+
+// Category represents a marketplace category
+type Category struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Slug              string                 `protobuf:"bytes,3,opt,name=slug,proto3" json:"slug,omitempty"`
+	ParentId          *int64                 `protobuf:"varint,4,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
+	Icon              *string                `protobuf:"bytes,5,opt,name=icon,proto3,oneof" json:"icon,omitempty"`
+	Description       *string                `protobuf:"bytes,6,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	IsActive          bool                   `protobuf:"varint,7,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	ListingCount      int32                  `protobuf:"varint,8,opt,name=listing_count,json=listingCount,proto3" json:"listing_count,omitempty"`
+	SortOrder         int32                  `protobuf:"varint,9,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
+	Level             int32                  `protobuf:"varint,10,opt,name=level,proto3" json:"level,omitempty"`
+	Translations      map[string]string      `protobuf:"bytes,11,rep,name=translations,proto3" json:"translations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	HasCustomUi       bool                   `protobuf:"varint,12,opt,name=has_custom_ui,json=hasCustomUi,proto3" json:"has_custom_ui,omitempty"`
+	CustomUiComponent *string                `protobuf:"bytes,13,opt,name=custom_ui_component,json=customUiComponent,proto3,oneof" json:"custom_ui_component,omitempty"`
+	CreatedAt         string                 `protobuf:"bytes,14,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *Category) Reset() {
+	*x = Category{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Category) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Category) ProtoMessage() {}
+
+func (x *Category) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Category.ProtoReflect.Descriptor instead.
+func (*Category) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Category) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Category) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Category) GetSlug() string {
+	if x != nil {
+		return x.Slug
+	}
+	return ""
+}
+
+func (x *Category) GetParentId() int64 {
+	if x != nil && x.ParentId != nil {
+		return *x.ParentId
+	}
+	return 0
+}
+
+func (x *Category) GetIcon() string {
+	if x != nil && x.Icon != nil {
+		return *x.Icon
+	}
+	return ""
+}
+
+func (x *Category) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
+func (x *Category) GetIsActive() bool {
+	if x != nil {
+		return x.IsActive
+	}
+	return false
+}
+
+func (x *Category) GetListingCount() int32 {
+	if x != nil {
+		return x.ListingCount
+	}
+	return 0
+}
+
+func (x *Category) GetSortOrder() int32 {
+	if x != nil {
+		return x.SortOrder
+	}
+	return 0
+}
+
+func (x *Category) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *Category) GetTranslations() map[string]string {
+	if x != nil {
+		return x.Translations
+	}
+	return nil
+}
+
+func (x *Category) GetHasCustomUi() bool {
+	if x != nil {
+		return x.HasCustomUi
+	}
+	return false
+}
+
+func (x *Category) GetCustomUiComponent() string {
+	if x != nil && x.CustomUiComponent != nil {
+		return *x.CustomUiComponent
+	}
+	return ""
+}
+
+func (x *Category) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+// CategoryTreeNode represents a category with its children
+type CategoryTreeNode struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Slug              string                 `protobuf:"bytes,3,opt,name=slug,proto3" json:"slug,omitempty"`
+	Icon              *string                `protobuf:"bytes,4,opt,name=icon,proto3,oneof" json:"icon,omitempty"`
+	ParentId          *int64                 `protobuf:"varint,5,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
+	Level             int32                  `protobuf:"varint,6,opt,name=level,proto3" json:"level,omitempty"`
+	Path              string                 `protobuf:"bytes,7,opt,name=path,proto3" json:"path,omitempty"`
+	ListingCount      int32                  `protobuf:"varint,8,opt,name=listing_count,json=listingCount,proto3" json:"listing_count,omitempty"`
+	ChildrenCount     int32                  `protobuf:"varint,9,opt,name=children_count,json=childrenCount,proto3" json:"children_count,omitempty"`
+	Children          []*CategoryTreeNode    `protobuf:"bytes,10,rep,name=children,proto3" json:"children,omitempty"`
+	Translations      map[string]string      `protobuf:"bytes,11,rep,name=translations,proto3" json:"translations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	HasCustomUi       bool                   `protobuf:"varint,12,opt,name=has_custom_ui,json=hasCustomUi,proto3" json:"has_custom_ui,omitempty"`
+	CustomUiComponent *string                `protobuf:"bytes,13,opt,name=custom_ui_component,json=customUiComponent,proto3,oneof" json:"custom_ui_component,omitempty"`
+	CreatedAt         string                 `protobuf:"bytes,14,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *CategoryTreeNode) Reset() {
+	*x = CategoryTreeNode{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CategoryTreeNode) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CategoryTreeNode) ProtoMessage() {}
+
+func (x *CategoryTreeNode) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CategoryTreeNode.ProtoReflect.Descriptor instead.
+func (*CategoryTreeNode) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CategoryTreeNode) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *CategoryTreeNode) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CategoryTreeNode) GetSlug() string {
+	if x != nil {
+		return x.Slug
+	}
+	return ""
+}
+
+func (x *CategoryTreeNode) GetIcon() string {
+	if x != nil && x.Icon != nil {
+		return *x.Icon
+	}
+	return ""
+}
+
+func (x *CategoryTreeNode) GetParentId() int64 {
+	if x != nil && x.ParentId != nil {
+		return *x.ParentId
+	}
+	return 0
+}
+
+func (x *CategoryTreeNode) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *CategoryTreeNode) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *CategoryTreeNode) GetListingCount() int32 {
+	if x != nil {
+		return x.ListingCount
+	}
+	return 0
+}
+
+func (x *CategoryTreeNode) GetChildrenCount() int32 {
+	if x != nil {
+		return x.ChildrenCount
+	}
+	return 0
+}
+
+func (x *CategoryTreeNode) GetChildren() []*CategoryTreeNode {
+	if x != nil {
+		return x.Children
+	}
+	return nil
+}
+
+func (x *CategoryTreeNode) GetTranslations() map[string]string {
+	if x != nil {
+		return x.Translations
+	}
+	return nil
+}
+
+func (x *CategoryTreeNode) GetHasCustomUi() bool {
+	if x != nil {
+		return x.HasCustomUi
+	}
+	return false
+}
+
+func (x *CategoryTreeNode) GetCustomUiComponent() string {
+	if x != nil && x.CustomUiComponent != nil {
+		return *x.CustomUiComponent
+	}
+	return ""
+}
+
+func (x *CategoryTreeNode) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
 // GetListing messages
 type GetListingRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -604,7 +1028,7 @@ type GetListingRequest struct {
 
 func (x *GetListingRequest) Reset() {
 	*x = GetListingRequest{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[4]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -616,7 +1040,7 @@ func (x *GetListingRequest) String() string {
 func (*GetListingRequest) ProtoMessage() {}
 
 func (x *GetListingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[4]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -629,7 +1053,7 @@ func (x *GetListingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetListingRequest.ProtoReflect.Descriptor instead.
 func (*GetListingRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{4}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetListingRequest) GetId() int64 {
@@ -648,7 +1072,7 @@ type GetListingResponse struct {
 
 func (x *GetListingResponse) Reset() {
 	*x = GetListingResponse{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[5]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -660,7 +1084,7 @@ func (x *GetListingResponse) String() string {
 func (*GetListingResponse) ProtoMessage() {}
 
 func (x *GetListingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[5]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -673,7 +1097,7 @@ func (x *GetListingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetListingResponse.ProtoReflect.Descriptor instead.
 func (*GetListingResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{5}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetListingResponse) GetListing() *Listing {
@@ -701,7 +1125,7 @@ type CreateListingRequest struct {
 
 func (x *CreateListingRequest) Reset() {
 	*x = CreateListingRequest{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[6]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -713,7 +1137,7 @@ func (x *CreateListingRequest) String() string {
 func (*CreateListingRequest) ProtoMessage() {}
 
 func (x *CreateListingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[6]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -726,7 +1150,7 @@ func (x *CreateListingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateListingRequest.ProtoReflect.Descriptor instead.
 func (*CreateListingRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{6}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateListingRequest) GetUserId() int64 {
@@ -801,7 +1225,7 @@ type CreateListingResponse struct {
 
 func (x *CreateListingResponse) Reset() {
 	*x = CreateListingResponse{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[7]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -813,7 +1237,7 @@ func (x *CreateListingResponse) String() string {
 func (*CreateListingResponse) ProtoMessage() {}
 
 func (x *CreateListingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[7]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -826,7 +1250,7 @@ func (x *CreateListingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateListingResponse.ProtoReflect.Descriptor instead.
 func (*CreateListingResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{7}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CreateListingResponse) GetListing() *Listing {
@@ -852,7 +1276,7 @@ type UpdateListingRequest struct {
 
 func (x *UpdateListingRequest) Reset() {
 	*x = UpdateListingRequest{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[8]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -864,7 +1288,7 @@ func (x *UpdateListingRequest) String() string {
 func (*UpdateListingRequest) ProtoMessage() {}
 
 func (x *UpdateListingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[8]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -877,7 +1301,7 @@ func (x *UpdateListingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateListingRequest.ProtoReflect.Descriptor instead.
 func (*UpdateListingRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{8}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *UpdateListingRequest) GetId() int64 {
@@ -938,7 +1362,7 @@ type UpdateListingResponse struct {
 
 func (x *UpdateListingResponse) Reset() {
 	*x = UpdateListingResponse{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[9]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -950,7 +1374,7 @@ func (x *UpdateListingResponse) String() string {
 func (*UpdateListingResponse) ProtoMessage() {}
 
 func (x *UpdateListingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[9]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -963,7 +1387,7 @@ func (x *UpdateListingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateListingResponse.ProtoReflect.Descriptor instead.
 func (*UpdateListingResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{9}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UpdateListingResponse) GetListing() *Listing {
@@ -984,7 +1408,7 @@ type DeleteListingRequest struct {
 
 func (x *DeleteListingRequest) Reset() {
 	*x = DeleteListingRequest{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[10]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -996,7 +1420,7 @@ func (x *DeleteListingRequest) String() string {
 func (*DeleteListingRequest) ProtoMessage() {}
 
 func (x *DeleteListingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[10]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1009,7 +1433,7 @@ func (x *DeleteListingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteListingRequest.ProtoReflect.Descriptor instead.
 func (*DeleteListingRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{10}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *DeleteListingRequest) GetId() int64 {
@@ -1035,7 +1459,7 @@ type DeleteListingResponse struct {
 
 func (x *DeleteListingResponse) Reset() {
 	*x = DeleteListingResponse{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[11]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1047,7 +1471,7 @@ func (x *DeleteListingResponse) String() string {
 func (*DeleteListingResponse) ProtoMessage() {}
 
 func (x *DeleteListingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[11]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1060,7 +1484,7 @@ func (x *DeleteListingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteListingResponse.ProtoReflect.Descriptor instead.
 func (*DeleteListingResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{11}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *DeleteListingResponse) GetSuccess() bool {
@@ -1085,7 +1509,7 @@ type SearchListingsRequest struct {
 
 func (x *SearchListingsRequest) Reset() {
 	*x = SearchListingsRequest{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[12]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1097,7 +1521,7 @@ func (x *SearchListingsRequest) String() string {
 func (*SearchListingsRequest) ProtoMessage() {}
 
 func (x *SearchListingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[12]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1110,7 +1534,7 @@ func (x *SearchListingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchListingsRequest.ProtoReflect.Descriptor instead.
 func (*SearchListingsRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{12}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *SearchListingsRequest) GetQuery() string {
@@ -1165,7 +1589,7 @@ type SearchListingsResponse struct {
 
 func (x *SearchListingsResponse) Reset() {
 	*x = SearchListingsResponse{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[13]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1177,7 +1601,7 @@ func (x *SearchListingsResponse) String() string {
 func (*SearchListingsResponse) ProtoMessage() {}
 
 func (x *SearchListingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[13]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1190,7 +1614,7 @@ func (x *SearchListingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchListingsResponse.ProtoReflect.Descriptor instead.
 func (*SearchListingsResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{13}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SearchListingsResponse) GetListings() []*Listing {
@@ -1224,7 +1648,7 @@ type ListListingsRequest struct {
 
 func (x *ListListingsRequest) Reset() {
 	*x = ListListingsRequest{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[14]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1236,7 +1660,7 @@ func (x *ListListingsRequest) String() string {
 func (*ListListingsRequest) ProtoMessage() {}
 
 func (x *ListListingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[14]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1249,7 +1673,7 @@ func (x *ListListingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListListingsRequest.ProtoReflect.Descriptor instead.
 func (*ListListingsRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{14}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListListingsRequest) GetUserId() int64 {
@@ -1318,7 +1742,7 @@ type ListListingsResponse struct {
 
 func (x *ListListingsResponse) Reset() {
 	*x = ListListingsResponse{}
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[15]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1330,7 +1754,7 @@ func (x *ListListingsResponse) String() string {
 func (*ListListingsResponse) ProtoMessage() {}
 
 func (x *ListListingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[15]
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1343,7 +1767,7 @@ func (x *ListListingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListListingsResponse.ProtoReflect.Descriptor instead.
 func (*ListListingsResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{15}
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListListingsResponse) GetListings() []*Listing {
@@ -1360,11 +1784,1058 @@ func (x *ListListingsResponse) GetTotal() int32 {
 	return 0
 }
 
+// ImageIDRequest requests an image by ID
+type ImageIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ImageId       int64                  `protobuf:"varint,1,opt,name=image_id,json=imageId,proto3" json:"image_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImageIDRequest) Reset() {
+	*x = ImageIDRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImageIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImageIDRequest) ProtoMessage() {}
+
+func (x *ImageIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImageIDRequest.ProtoReflect.Descriptor instead.
+func (*ImageIDRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ImageIDRequest) GetImageId() int64 {
+	if x != nil {
+		return x.ImageId
+	}
+	return 0
+}
+
+// ImageResponse returns a single image
+type ImageResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Image         *ListingImage          `protobuf:"bytes,1,opt,name=image,proto3" json:"image,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImageResponse) Reset() {
+	*x = ImageResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImageResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImageResponse) ProtoMessage() {}
+
+func (x *ImageResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImageResponse.ProtoReflect.Descriptor instead.
+func (*ImageResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ImageResponse) GetImage() *ListingImage {
+	if x != nil {
+		return x.Image
+	}
+	return nil
+}
+
+// AddImageRequest adds a new image to a listing
+type AddImageRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ListingId     int64                  `protobuf:"varint,1,opt,name=listing_id,json=listingId,proto3" json:"listing_id,omitempty"`
+	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	StoragePath   *string                `protobuf:"bytes,3,opt,name=storage_path,json=storagePath,proto3,oneof" json:"storage_path,omitempty"`
+	ThumbnailUrl  *string                `protobuf:"bytes,4,opt,name=thumbnail_url,json=thumbnailUrl,proto3,oneof" json:"thumbnail_url,omitempty"`
+	DisplayOrder  int32                  `protobuf:"varint,5,opt,name=display_order,json=displayOrder,proto3" json:"display_order,omitempty"`
+	IsPrimary     bool                   `protobuf:"varint,6,opt,name=is_primary,json=isPrimary,proto3" json:"is_primary,omitempty"`
+	Width         *int32                 `protobuf:"varint,7,opt,name=width,proto3,oneof" json:"width,omitempty"`
+	Height        *int32                 `protobuf:"varint,8,opt,name=height,proto3,oneof" json:"height,omitempty"`
+	FileSize      *int64                 `protobuf:"varint,9,opt,name=file_size,json=fileSize,proto3,oneof" json:"file_size,omitempty"`
+	MimeType      *string                `protobuf:"bytes,10,opt,name=mime_type,json=mimeType,proto3,oneof" json:"mime_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddImageRequest) Reset() {
+	*x = AddImageRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddImageRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddImageRequest) ProtoMessage() {}
+
+func (x *AddImageRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddImageRequest.ProtoReflect.Descriptor instead.
+func (*AddImageRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *AddImageRequest) GetListingId() int64 {
+	if x != nil {
+		return x.ListingId
+	}
+	return 0
+}
+
+func (x *AddImageRequest) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *AddImageRequest) GetStoragePath() string {
+	if x != nil && x.StoragePath != nil {
+		return *x.StoragePath
+	}
+	return ""
+}
+
+func (x *AddImageRequest) GetThumbnailUrl() string {
+	if x != nil && x.ThumbnailUrl != nil {
+		return *x.ThumbnailUrl
+	}
+	return ""
+}
+
+func (x *AddImageRequest) GetDisplayOrder() int32 {
+	if x != nil {
+		return x.DisplayOrder
+	}
+	return 0
+}
+
+func (x *AddImageRequest) GetIsPrimary() bool {
+	if x != nil {
+		return x.IsPrimary
+	}
+	return false
+}
+
+func (x *AddImageRequest) GetWidth() int32 {
+	if x != nil && x.Width != nil {
+		return *x.Width
+	}
+	return 0
+}
+
+func (x *AddImageRequest) GetHeight() int32 {
+	if x != nil && x.Height != nil {
+		return *x.Height
+	}
+	return 0
+}
+
+func (x *AddImageRequest) GetFileSize() int64 {
+	if x != nil && x.FileSize != nil {
+		return *x.FileSize
+	}
+	return 0
+}
+
+func (x *AddImageRequest) GetMimeType() string {
+	if x != nil && x.MimeType != nil {
+		return *x.MimeType
+	}
+	return ""
+}
+
+// ListingIDRequest requests data by listing ID
+type ListingIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ListingId     int64                  `protobuf:"varint,1,opt,name=listing_id,json=listingId,proto3" json:"listing_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListingIDRequest) Reset() {
+	*x = ListingIDRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListingIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListingIDRequest) ProtoMessage() {}
+
+func (x *ListingIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListingIDRequest.ProtoReflect.Descriptor instead.
+func (*ListingIDRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ListingIDRequest) GetListingId() int64 {
+	if x != nil {
+		return x.ListingId
+	}
+	return 0
+}
+
+// ImagesResponse returns multiple images
+type ImagesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Images        []*ListingImage        `protobuf:"bytes,1,rep,name=images,proto3" json:"images,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImagesResponse) Reset() {
+	*x = ImagesResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImagesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImagesResponse) ProtoMessage() {}
+
+func (x *ImagesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImagesResponse.ProtoReflect.Descriptor instead.
+func (*ImagesResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ImagesResponse) GetImages() []*ListingImage {
+	if x != nil {
+		return x.Images
+	}
+	return nil
+}
+
+// PopularCategoriesRequest requests popular categories
+type PopularCategoriesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"` // Maximum number of categories to return
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PopularCategoriesRequest) Reset() {
+	*x = PopularCategoriesRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PopularCategoriesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PopularCategoriesRequest) ProtoMessage() {}
+
+func (x *PopularCategoriesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PopularCategoriesRequest.ProtoReflect.Descriptor instead.
+func (*PopularCategoriesRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *PopularCategoriesRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+// CategoriesResponse returns multiple categories
+type CategoriesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Categories    []*Category            `protobuf:"bytes,1,rep,name=categories,proto3" json:"categories,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CategoriesResponse) Reset() {
+	*x = CategoriesResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CategoriesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CategoriesResponse) ProtoMessage() {}
+
+func (x *CategoriesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CategoriesResponse.ProtoReflect.Descriptor instead.
+func (*CategoriesResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *CategoriesResponse) GetCategories() []*Category {
+	if x != nil {
+		return x.Categories
+	}
+	return nil
+}
+
+// CategoryIDRequest requests a category by ID
+type CategoryIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CategoryId    int64                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CategoryIDRequest) Reset() {
+	*x = CategoryIDRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CategoryIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CategoryIDRequest) ProtoMessage() {}
+
+func (x *CategoryIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CategoryIDRequest.ProtoReflect.Descriptor instead.
+func (*CategoryIDRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *CategoryIDRequest) GetCategoryId() int64 {
+	if x != nil {
+		return x.CategoryId
+	}
+	return 0
+}
+
+// CategoryResponse returns a single category
+type CategoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Category      *Category              `protobuf:"bytes,1,opt,name=category,proto3" json:"category,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CategoryResponse) Reset() {
+	*x = CategoryResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CategoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CategoryResponse) ProtoMessage() {}
+
+func (x *CategoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CategoryResponse.ProtoReflect.Descriptor instead.
+func (*CategoryResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *CategoryResponse) GetCategory() *Category {
+	if x != nil {
+		return x.Category
+	}
+	return nil
+}
+
+// CategoryTreeResponse returns category tree
+type CategoryTreeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tree          *CategoryTreeNode      `protobuf:"bytes,1,opt,name=tree,proto3" json:"tree,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CategoryTreeResponse) Reset() {
+	*x = CategoryTreeResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CategoryTreeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CategoryTreeResponse) ProtoMessage() {}
+
+func (x *CategoryTreeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CategoryTreeResponse.ProtoReflect.Descriptor instead.
+func (*CategoryTreeResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *CategoryTreeResponse) GetTree() *CategoryTreeNode {
+	if x != nil {
+		return x.Tree
+	}
+	return nil
+}
+
+// UserIDsResponse returns list of user IDs
+type UserIDsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserIds       []int64                `protobuf:"varint,1,rep,packed,name=user_ids,json=userIds,proto3" json:"user_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserIDsResponse) Reset() {
+	*x = UserIDsResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserIDsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserIDsResponse) ProtoMessage() {}
+
+func (x *UserIDsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserIDsResponse.ProtoReflect.Descriptor instead.
+func (*UserIDsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *UserIDsResponse) GetUserIds() []int64 {
+	if x != nil {
+		return x.UserIds
+	}
+	return nil
+}
+
+// CreateVariantsRequest creates multiple variants
+type CreateVariantsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ListingId     int64                  `protobuf:"varint,1,opt,name=listing_id,json=listingId,proto3" json:"listing_id,omitempty"`
+	Variants      []*VariantInput        `protobuf:"bytes,2,rep,name=variants,proto3" json:"variants,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateVariantsRequest) Reset() {
+	*x = CreateVariantsRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateVariantsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateVariantsRequest) ProtoMessage() {}
+
+func (x *CreateVariantsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateVariantsRequest.ProtoReflect.Descriptor instead.
+func (*CreateVariantsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *CreateVariantsRequest) GetListingId() int64 {
+	if x != nil {
+		return x.ListingId
+	}
+	return 0
+}
+
+func (x *CreateVariantsRequest) GetVariants() []*VariantInput {
+	if x != nil {
+		return x.Variants
+	}
+	return nil
+}
+
+// VariantInput represents input data for creating a variant
+type VariantInput struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sku           string                 `protobuf:"bytes,1,opt,name=sku,proto3" json:"sku,omitempty"`
+	Price         *float64               `protobuf:"fixed64,2,opt,name=price,proto3,oneof" json:"price,omitempty"`
+	Stock         *int32                 `protobuf:"varint,3,opt,name=stock,proto3,oneof" json:"stock,omitempty"`
+	Attributes    map[string]string      `protobuf:"bytes,4,rep,name=attributes,proto3" json:"attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ImageUrl      *string                `protobuf:"bytes,5,opt,name=image_url,json=imageUrl,proto3,oneof" json:"image_url,omitempty"`
+	IsActive      bool                   `protobuf:"varint,6,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VariantInput) Reset() {
+	*x = VariantInput{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VariantInput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VariantInput) ProtoMessage() {}
+
+func (x *VariantInput) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VariantInput.ProtoReflect.Descriptor instead.
+func (*VariantInput) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *VariantInput) GetSku() string {
+	if x != nil {
+		return x.Sku
+	}
+	return ""
+}
+
+func (x *VariantInput) GetPrice() float64 {
+	if x != nil && x.Price != nil {
+		return *x.Price
+	}
+	return 0
+}
+
+func (x *VariantInput) GetStock() int32 {
+	if x != nil && x.Stock != nil {
+		return *x.Stock
+	}
+	return 0
+}
+
+func (x *VariantInput) GetAttributes() map[string]string {
+	if x != nil {
+		return x.Attributes
+	}
+	return nil
+}
+
+func (x *VariantInput) GetImageUrl() string {
+	if x != nil && x.ImageUrl != nil {
+		return *x.ImageUrl
+	}
+	return ""
+}
+
+func (x *VariantInput) GetIsActive() bool {
+	if x != nil {
+		return x.IsActive
+	}
+	return false
+}
+
+// VariantsResponse returns multiple variants
+type VariantsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Variants      []*ListingVariant      `protobuf:"bytes,1,rep,name=variants,proto3" json:"variants,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VariantsResponse) Reset() {
+	*x = VariantsResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VariantsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VariantsResponse) ProtoMessage() {}
+
+func (x *VariantsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VariantsResponse.ProtoReflect.Descriptor instead.
+func (*VariantsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *VariantsResponse) GetVariants() []*ListingVariant {
+	if x != nil {
+		return x.Variants
+	}
+	return nil
+}
+
+// UpdateVariantRequest updates a variant
+type UpdateVariantRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VariantId     int64                  `protobuf:"varint,1,opt,name=variant_id,json=variantId,proto3" json:"variant_id,omitempty"`
+	Sku           *string                `protobuf:"bytes,2,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
+	Price         *float64               `protobuf:"fixed64,3,opt,name=price,proto3,oneof" json:"price,omitempty"`
+	Stock         *int32                 `protobuf:"varint,4,opt,name=stock,proto3,oneof" json:"stock,omitempty"`
+	ImageUrl      *string                `protobuf:"bytes,5,opt,name=image_url,json=imageUrl,proto3,oneof" json:"image_url,omitempty"`
+	IsActive      *bool                  `protobuf:"varint,6,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
+	Attributes    map[string]string      `protobuf:"bytes,7,rep,name=attributes,proto3" json:"attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateVariantRequest) Reset() {
+	*x = UpdateVariantRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateVariantRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateVariantRequest) ProtoMessage() {}
+
+func (x *UpdateVariantRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateVariantRequest.ProtoReflect.Descriptor instead.
+func (*UpdateVariantRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *UpdateVariantRequest) GetVariantId() int64 {
+	if x != nil {
+		return x.VariantId
+	}
+	return 0
+}
+
+func (x *UpdateVariantRequest) GetSku() string {
+	if x != nil && x.Sku != nil {
+		return *x.Sku
+	}
+	return ""
+}
+
+func (x *UpdateVariantRequest) GetPrice() float64 {
+	if x != nil && x.Price != nil {
+		return *x.Price
+	}
+	return 0
+}
+
+func (x *UpdateVariantRequest) GetStock() int32 {
+	if x != nil && x.Stock != nil {
+		return *x.Stock
+	}
+	return 0
+}
+
+func (x *UpdateVariantRequest) GetImageUrl() string {
+	if x != nil && x.ImageUrl != nil {
+		return *x.ImageUrl
+	}
+	return ""
+}
+
+func (x *UpdateVariantRequest) GetIsActive() bool {
+	if x != nil && x.IsActive != nil {
+		return *x.IsActive
+	}
+	return false
+}
+
+func (x *UpdateVariantRequest) GetAttributes() map[string]string {
+	if x != nil {
+		return x.Attributes
+	}
+	return nil
+}
+
+// VariantIDRequest requests a variant by ID
+type VariantIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VariantId     int64                  `protobuf:"varint,1,opt,name=variant_id,json=variantId,proto3" json:"variant_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VariantIDRequest) Reset() {
+	*x = VariantIDRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VariantIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VariantIDRequest) ProtoMessage() {}
+
+func (x *VariantIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VariantIDRequest.ProtoReflect.Descriptor instead.
+func (*VariantIDRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *VariantIDRequest) GetVariantId() int64 {
+	if x != nil {
+		return x.VariantId
+	}
+	return 0
+}
+
+// ReindexRequest requests listings for reindexing
+type ReindexRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BatchSize     int32                  `protobuf:"varint,1,opt,name=batch_size,json=batchSize,proto3" json:"batch_size,omitempty"`
+	LastId        *int64                 `protobuf:"varint,2,opt,name=last_id,json=lastId,proto3,oneof" json:"last_id,omitempty"` // For cursor-based pagination
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReindexRequest) Reset() {
+	*x = ReindexRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReindexRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReindexRequest) ProtoMessage() {}
+
+func (x *ReindexRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReindexRequest.ProtoReflect.Descriptor instead.
+func (*ReindexRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *ReindexRequest) GetBatchSize() int32 {
+	if x != nil {
+		return x.BatchSize
+	}
+	return 0
+}
+
+func (x *ReindexRequest) GetLastId() int64 {
+	if x != nil && x.LastId != nil {
+		return *x.LastId
+	}
+	return 0
+}
+
+// ListingsResponse returns multiple listings
+type ListingsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Listings      []*Listing             `protobuf:"bytes,1,rep,name=listings,proto3" json:"listings,omitempty"`
+	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	NextCursor    *int64                 `protobuf:"varint,3,opt,name=next_cursor,json=nextCursor,proto3,oneof" json:"next_cursor,omitempty"` // Next cursor for pagination
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListingsResponse) Reset() {
+	*x = ListingsResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListingsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListingsResponse) ProtoMessage() {}
+
+func (x *ListingsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListingsResponse.ProtoReflect.Descriptor instead.
+func (*ListingsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *ListingsResponse) GetListings() []*Listing {
+	if x != nil {
+		return x.Listings
+	}
+	return nil
+}
+
+func (x *ListingsResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *ListingsResponse) GetNextCursor() int64 {
+	if x != nil && x.NextCursor != nil {
+		return *x.NextCursor
+	}
+	return 0
+}
+
+// ResetFlagsRequest resets reindex flags
+type ResetFlagsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ListingIds    []int64                `protobuf:"varint,1,rep,packed,name=listing_ids,json=listingIds,proto3" json:"listing_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetFlagsRequest) Reset() {
+	*x = ResetFlagsRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResetFlagsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResetFlagsRequest) ProtoMessage() {}
+
+func (x *ResetFlagsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResetFlagsRequest.ProtoReflect.Descriptor instead.
+func (*ResetFlagsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *ResetFlagsRequest) GetListingIds() []int64 {
+	if x != nil {
+		return x.ListingIds
+	}
+	return nil
+}
+
 var File_api_proto_listings_v1_listings_proto protoreflect.FileDescriptor
 
 const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\n" +
-	"$api/proto/listings/v1/listings.proto\x12\vlistings.v1\"\xfa\x06\n" +
+	"$api/proto/listings/v1/listings.proto\x12\vlistings.v1\x1a\x1bgoogle/protobuf/empty.proto\"\xb3\a\n" +
 	"\aListing\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04uuid\x18\x02 \x01(\tR\x04uuid\x12\x17\n" +
@@ -1400,7 +2871,8 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"attributes\x18\x16 \x03(\v2\x1d.listings.v1.ListingAttributeR\n" +
 	"attributes\x12\x12\n" +
 	"\x04tags\x18\x17 \x03(\tR\x04tags\x12=\n" +
-	"\blocation\x18\x18 \x01(\v2\x1c.listings.v1.ListingLocationH\x05R\blocation\x88\x01\x01B\x10\n" +
+	"\blocation\x18\x18 \x01(\v2\x1c.listings.v1.ListingLocationH\x05R\blocation\x88\x01\x01\x127\n" +
+	"\bvariants\x18\x19 \x03(\v2\x1b.listings.v1.ListingVariantR\bvariantsB\x10\n" +
 	"\x0e_storefront_idB\x0e\n" +
 	"\f_descriptionB\x06\n" +
 	"\x04_skuB\x0f\n" +
@@ -1467,7 +2939,83 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x0e_address_line2B\v\n" +
 	"\t_latitudeB\f\n" +
 	"\n" +
-	"_longitude\"#\n" +
+	"_longitude\"\xda\x03\n" +
+	"\x0eListingVariant\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1d\n" +
+	"\n" +
+	"listing_id\x18\x02 \x01(\x03R\tlistingId\x12\x10\n" +
+	"\x03sku\x18\x03 \x01(\tR\x03sku\x12\x19\n" +
+	"\x05price\x18\x04 \x01(\x01H\x00R\x05price\x88\x01\x01\x12\x19\n" +
+	"\x05stock\x18\x05 \x01(\x05H\x01R\x05stock\x88\x01\x01\x12K\n" +
+	"\n" +
+	"attributes\x18\x06 \x03(\v2+.listings.v1.ListingVariant.AttributesEntryR\n" +
+	"attributes\x12 \n" +
+	"\timage_url\x18\a \x01(\tH\x02R\bimageUrl\x88\x01\x01\x12\x1b\n" +
+	"\tis_active\x18\b \x01(\bR\bisActive\x12\"\n" +
+	"\n" +
+	"created_at\x18\t \x01(\tH\x03R\tcreatedAt\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"updated_at\x18\n" +
+	" \x01(\tH\x04R\tupdatedAt\x88\x01\x01\x1a=\n" +
+	"\x0fAttributesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\b\n" +
+	"\x06_priceB\b\n" +
+	"\x06_stockB\f\n" +
+	"\n" +
+	"_image_urlB\r\n" +
+	"\v_created_atB\r\n" +
+	"\v_updated_at\"\xe0\x04\n" +
+	"\bCategory\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
+	"\x04slug\x18\x03 \x01(\tR\x04slug\x12 \n" +
+	"\tparent_id\x18\x04 \x01(\x03H\x00R\bparentId\x88\x01\x01\x12\x17\n" +
+	"\x04icon\x18\x05 \x01(\tH\x01R\x04icon\x88\x01\x01\x12%\n" +
+	"\vdescription\x18\x06 \x01(\tH\x02R\vdescription\x88\x01\x01\x12\x1b\n" +
+	"\tis_active\x18\a \x01(\bR\bisActive\x12#\n" +
+	"\rlisting_count\x18\b \x01(\x05R\flistingCount\x12\x1d\n" +
+	"\n" +
+	"sort_order\x18\t \x01(\x05R\tsortOrder\x12\x14\n" +
+	"\x05level\x18\n" +
+	" \x01(\x05R\x05level\x12K\n" +
+	"\ftranslations\x18\v \x03(\v2'.listings.v1.Category.TranslationsEntryR\ftranslations\x12\"\n" +
+	"\rhas_custom_ui\x18\f \x01(\bR\vhasCustomUi\x123\n" +
+	"\x13custom_ui_component\x18\r \x01(\tH\x03R\x11customUiComponent\x88\x01\x01\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x0e \x01(\tR\tcreatedAt\x1a?\n" +
+	"\x11TranslationsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\f\n" +
+	"\n" +
+	"_parent_idB\a\n" +
+	"\x05_iconB\x0e\n" +
+	"\f_descriptionB\x16\n" +
+	"\x14_custom_ui_component\"\xf3\x04\n" +
+	"\x10CategoryTreeNode\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
+	"\x04slug\x18\x03 \x01(\tR\x04slug\x12\x17\n" +
+	"\x04icon\x18\x04 \x01(\tH\x00R\x04icon\x88\x01\x01\x12 \n" +
+	"\tparent_id\x18\x05 \x01(\x03H\x01R\bparentId\x88\x01\x01\x12\x14\n" +
+	"\x05level\x18\x06 \x01(\x05R\x05level\x12\x12\n" +
+	"\x04path\x18\a \x01(\tR\x04path\x12#\n" +
+	"\rlisting_count\x18\b \x01(\x05R\flistingCount\x12%\n" +
+	"\x0echildren_count\x18\t \x01(\x05R\rchildrenCount\x129\n" +
+	"\bchildren\x18\n" +
+	" \x03(\v2\x1d.listings.v1.CategoryTreeNodeR\bchildren\x12S\n" +
+	"\ftranslations\x18\v \x03(\v2/.listings.v1.CategoryTreeNode.TranslationsEntryR\ftranslations\x12\"\n" +
+	"\rhas_custom_ui\x18\f \x01(\bR\vhasCustomUi\x123\n" +
+	"\x13custom_ui_component\x18\r \x01(\tH\x02R\x11customUiComponent\x88\x01\x01\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x0e \x01(\tR\tcreatedAt\x1a?\n" +
+	"\x11TranslationsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\a\n" +
+	"\x05_iconB\f\n" +
+	"\n" +
+	"_parent_idB\x16\n" +
+	"\x14_custom_ui_component\"#\n" +
 	"\x11GetListingRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"D\n" +
 	"\x12GetListingResponse\x12.\n" +
@@ -1545,7 +3093,114 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"_max_price\"^\n" +
 	"\x14ListListingsResponse\x120\n" +
 	"\blistings\x18\x01 \x03(\v2\x14.listings.v1.ListingR\blistings\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total2\x98\x04\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"+\n" +
+	"\x0eImageIDRequest\x12\x19\n" +
+	"\bimage_id\x18\x01 \x01(\x03R\aimageId\"@\n" +
+	"\rImageResponse\x12/\n" +
+	"\x05image\x18\x01 \x01(\v2\x19.listings.v1.ListingImageR\x05image\"\xa8\x03\n" +
+	"\x0fAddImageRequest\x12\x1d\n" +
+	"\n" +
+	"listing_id\x18\x01 \x01(\x03R\tlistingId\x12\x10\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\x12&\n" +
+	"\fstorage_path\x18\x03 \x01(\tH\x00R\vstoragePath\x88\x01\x01\x12(\n" +
+	"\rthumbnail_url\x18\x04 \x01(\tH\x01R\fthumbnailUrl\x88\x01\x01\x12#\n" +
+	"\rdisplay_order\x18\x05 \x01(\x05R\fdisplayOrder\x12\x1d\n" +
+	"\n" +
+	"is_primary\x18\x06 \x01(\bR\tisPrimary\x12\x19\n" +
+	"\x05width\x18\a \x01(\x05H\x02R\x05width\x88\x01\x01\x12\x1b\n" +
+	"\x06height\x18\b \x01(\x05H\x03R\x06height\x88\x01\x01\x12 \n" +
+	"\tfile_size\x18\t \x01(\x03H\x04R\bfileSize\x88\x01\x01\x12 \n" +
+	"\tmime_type\x18\n" +
+	" \x01(\tH\x05R\bmimeType\x88\x01\x01B\x0f\n" +
+	"\r_storage_pathB\x10\n" +
+	"\x0e_thumbnail_urlB\b\n" +
+	"\x06_widthB\t\n" +
+	"\a_heightB\f\n" +
+	"\n" +
+	"_file_sizeB\f\n" +
+	"\n" +
+	"_mime_type\"1\n" +
+	"\x10ListingIDRequest\x12\x1d\n" +
+	"\n" +
+	"listing_id\x18\x01 \x01(\x03R\tlistingId\"C\n" +
+	"\x0eImagesResponse\x121\n" +
+	"\x06images\x18\x01 \x03(\v2\x19.listings.v1.ListingImageR\x06images\"0\n" +
+	"\x18PopularCategoriesRequest\x12\x14\n" +
+	"\x05limit\x18\x01 \x01(\x05R\x05limit\"K\n" +
+	"\x12CategoriesResponse\x125\n" +
+	"\n" +
+	"categories\x18\x01 \x03(\v2\x15.listings.v1.CategoryR\n" +
+	"categories\"4\n" +
+	"\x11CategoryIDRequest\x12\x1f\n" +
+	"\vcategory_id\x18\x01 \x01(\x03R\n" +
+	"categoryId\"E\n" +
+	"\x10CategoryResponse\x121\n" +
+	"\bcategory\x18\x01 \x01(\v2\x15.listings.v1.CategoryR\bcategory\"I\n" +
+	"\x14CategoryTreeResponse\x121\n" +
+	"\x04tree\x18\x01 \x01(\v2\x1d.listings.v1.CategoryTreeNodeR\x04tree\",\n" +
+	"\x0fUserIDsResponse\x12\x19\n" +
+	"\buser_ids\x18\x01 \x03(\x03R\auserIds\"m\n" +
+	"\x15CreateVariantsRequest\x12\x1d\n" +
+	"\n" +
+	"listing_id\x18\x01 \x01(\x03R\tlistingId\x125\n" +
+	"\bvariants\x18\x02 \x03(\v2\x19.listings.v1.VariantInputR\bvariants\"\xc1\x02\n" +
+	"\fVariantInput\x12\x10\n" +
+	"\x03sku\x18\x01 \x01(\tR\x03sku\x12\x19\n" +
+	"\x05price\x18\x02 \x01(\x01H\x00R\x05price\x88\x01\x01\x12\x19\n" +
+	"\x05stock\x18\x03 \x01(\x05H\x01R\x05stock\x88\x01\x01\x12I\n" +
+	"\n" +
+	"attributes\x18\x04 \x03(\v2).listings.v1.VariantInput.AttributesEntryR\n" +
+	"attributes\x12 \n" +
+	"\timage_url\x18\x05 \x01(\tH\x02R\bimageUrl\x88\x01\x01\x12\x1b\n" +
+	"\tis_active\x18\x06 \x01(\bR\bisActive\x1a=\n" +
+	"\x0fAttributesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\b\n" +
+	"\x06_priceB\b\n" +
+	"\x06_stockB\f\n" +
+	"\n" +
+	"_image_url\"K\n" +
+	"\x10VariantsResponse\x127\n" +
+	"\bvariants\x18\x01 \x03(\v2\x1b.listings.v1.ListingVariantR\bvariants\"\x90\x03\n" +
+	"\x14UpdateVariantRequest\x12\x1d\n" +
+	"\n" +
+	"variant_id\x18\x01 \x01(\x03R\tvariantId\x12\x15\n" +
+	"\x03sku\x18\x02 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x19\n" +
+	"\x05price\x18\x03 \x01(\x01H\x01R\x05price\x88\x01\x01\x12\x19\n" +
+	"\x05stock\x18\x04 \x01(\x05H\x02R\x05stock\x88\x01\x01\x12 \n" +
+	"\timage_url\x18\x05 \x01(\tH\x03R\bimageUrl\x88\x01\x01\x12 \n" +
+	"\tis_active\x18\x06 \x01(\bH\x04R\bisActive\x88\x01\x01\x12Q\n" +
+	"\n" +
+	"attributes\x18\a \x03(\v21.listings.v1.UpdateVariantRequest.AttributesEntryR\n" +
+	"attributes\x1a=\n" +
+	"\x0fAttributesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x06\n" +
+	"\x04_skuB\b\n" +
+	"\x06_priceB\b\n" +
+	"\x06_stockB\f\n" +
+	"\n" +
+	"_image_urlB\f\n" +
+	"\n" +
+	"_is_active\"1\n" +
+	"\x10VariantIDRequest\x12\x1d\n" +
+	"\n" +
+	"variant_id\x18\x01 \x01(\x03R\tvariantId\"Y\n" +
+	"\x0eReindexRequest\x12\x1d\n" +
+	"\n" +
+	"batch_size\x18\x01 \x01(\x05R\tbatchSize\x12\x1c\n" +
+	"\alast_id\x18\x02 \x01(\x03H\x00R\x06lastId\x88\x01\x01B\n" +
+	"\n" +
+	"\b_last_id\"\x90\x01\n" +
+	"\x10ListingsResponse\x120\n" +
+	"\blistings\x18\x01 \x03(\v2\x14.listings.v1.ListingR\blistings\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\x12$\n" +
+	"\vnext_cursor\x18\x03 \x01(\x03H\x00R\n" +
+	"nextCursor\x88\x01\x01B\x0e\n" +
+	"\f_next_cursor\"4\n" +
+	"\x11ResetFlagsRequest\x12\x1f\n" +
+	"\vlisting_ids\x18\x01 \x03(\x03R\n" +
+	"listingIds2\xcf\x0e\n" +
 	"\x0fListingsService\x12M\n" +
 	"\n" +
 	"GetListing\x12\x1e.listings.v1.GetListingRequest\x1a\x1f.listings.v1.GetListingResponse\x12V\n" +
@@ -1553,7 +3208,24 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\rUpdateListing\x12!.listings.v1.UpdateListingRequest\x1a\".listings.v1.UpdateListingResponse\x12V\n" +
 	"\rDeleteListing\x12!.listings.v1.DeleteListingRequest\x1a\".listings.v1.DeleteListingResponse\x12Y\n" +
 	"\x0eSearchListings\x12\".listings.v1.SearchListingsRequest\x1a#.listings.v1.SearchListingsResponse\x12S\n" +
-	"\fListListings\x12 .listings.v1.ListListingsRequest\x1a!.listings.v1.ListListingsResponseB>Z<github.com/sveturs/listings/api/proto/listings/v1;listingsv1b\x06proto3"
+	"\fListListings\x12 .listings.v1.ListListingsRequest\x1a!.listings.v1.ListListingsResponse\x12J\n" +
+	"\x0fGetListingImage\x12\x1b.listings.v1.ImageIDRequest\x1a\x1a.listings.v1.ImageResponse\x12I\n" +
+	"\x12DeleteListingImage\x12\x1b.listings.v1.ImageIDRequest\x1a\x16.google.protobuf.Empty\x12K\n" +
+	"\x0fAddListingImage\x12\x1c.listings.v1.AddImageRequest\x1a\x1a.listings.v1.ImageResponse\x12N\n" +
+	"\x10GetListingImages\x12\x1d.listings.v1.ListingIDRequest\x1a\x1b.listings.v1.ImagesResponse\x12L\n" +
+	"\x11GetRootCategories\x12\x16.google.protobuf.Empty\x1a\x1f.listings.v1.CategoriesResponse\x12K\n" +
+	"\x10GetAllCategories\x12\x16.google.protobuf.Empty\x1a\x1f.listings.v1.CategoriesResponse\x12^\n" +
+	"\x14GetPopularCategories\x12%.listings.v1.PopularCategoriesRequest\x1a\x1f.listings.v1.CategoriesResponse\x12L\n" +
+	"\vGetCategory\x12\x1e.listings.v1.CategoryIDRequest\x1a\x1d.listings.v1.CategoryResponse\x12T\n" +
+	"\x0fGetCategoryTree\x12\x1e.listings.v1.CategoryIDRequest\x1a!.listings.v1.CategoryTreeResponse\x12P\n" +
+	"\x11GetFavoritedUsers\x12\x1d.listings.v1.ListingIDRequest\x1a\x1c.listings.v1.UserIDsResponse\x12L\n" +
+	"\x0eCreateVariants\x12\".listings.v1.CreateVariantsRequest\x1a\x16.google.protobuf.Empty\x12K\n" +
+	"\vGetVariants\x12\x1d.listings.v1.ListingIDRequest\x1a\x1d.listings.v1.VariantsResponse\x12J\n" +
+	"\rUpdateVariant\x12!.listings.v1.UpdateVariantRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
+	"\rDeleteVariant\x12\x1d.listings.v1.VariantIDRequest\x1a\x16.google.protobuf.Empty\x12S\n" +
+	"\x15GetListingsForReindex\x12\x1b.listings.v1.ReindexRequest\x1a\x1d.listings.v1.ListingsResponse\x12K\n" +
+	"\x11ResetReindexFlags\x12\x1e.listings.v1.ResetFlagsRequest\x1a\x16.google.protobuf.Empty\x12?\n" +
+	"\rSyncDiscounts\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.EmptyB>Z<github.com/sveturs/listings/api/proto/listings/v1;listingsv1b\x06proto3"
 
 var (
 	file_api_proto_listings_v1_listings_proto_rawDescOnce sync.Once
@@ -1567,51 +3239,128 @@ func file_api_proto_listings_v1_listings_proto_rawDescGZIP() []byte {
 	return file_api_proto_listings_v1_listings_proto_rawDescData
 }
 
-var file_api_proto_listings_v1_listings_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_api_proto_listings_v1_listings_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
 var file_api_proto_listings_v1_listings_proto_goTypes = []any{
-	(*Listing)(nil),                // 0: listings.v1.Listing
-	(*ListingImage)(nil),           // 1: listings.v1.ListingImage
-	(*ListingAttribute)(nil),       // 2: listings.v1.ListingAttribute
-	(*ListingLocation)(nil),        // 3: listings.v1.ListingLocation
-	(*GetListingRequest)(nil),      // 4: listings.v1.GetListingRequest
-	(*GetListingResponse)(nil),     // 5: listings.v1.GetListingResponse
-	(*CreateListingRequest)(nil),   // 6: listings.v1.CreateListingRequest
-	(*CreateListingResponse)(nil),  // 7: listings.v1.CreateListingResponse
-	(*UpdateListingRequest)(nil),   // 8: listings.v1.UpdateListingRequest
-	(*UpdateListingResponse)(nil),  // 9: listings.v1.UpdateListingResponse
-	(*DeleteListingRequest)(nil),   // 10: listings.v1.DeleteListingRequest
-	(*DeleteListingResponse)(nil),  // 11: listings.v1.DeleteListingResponse
-	(*SearchListingsRequest)(nil),  // 12: listings.v1.SearchListingsRequest
-	(*SearchListingsResponse)(nil), // 13: listings.v1.SearchListingsResponse
-	(*ListListingsRequest)(nil),    // 14: listings.v1.ListListingsRequest
-	(*ListListingsResponse)(nil),   // 15: listings.v1.ListListingsResponse
+	(*Listing)(nil),                  // 0: listings.v1.Listing
+	(*ListingImage)(nil),             // 1: listings.v1.ListingImage
+	(*ListingAttribute)(nil),         // 2: listings.v1.ListingAttribute
+	(*ListingLocation)(nil),          // 3: listings.v1.ListingLocation
+	(*ListingVariant)(nil),           // 4: listings.v1.ListingVariant
+	(*Category)(nil),                 // 5: listings.v1.Category
+	(*CategoryTreeNode)(nil),         // 6: listings.v1.CategoryTreeNode
+	(*GetListingRequest)(nil),        // 7: listings.v1.GetListingRequest
+	(*GetListingResponse)(nil),       // 8: listings.v1.GetListingResponse
+	(*CreateListingRequest)(nil),     // 9: listings.v1.CreateListingRequest
+	(*CreateListingResponse)(nil),    // 10: listings.v1.CreateListingResponse
+	(*UpdateListingRequest)(nil),     // 11: listings.v1.UpdateListingRequest
+	(*UpdateListingResponse)(nil),    // 12: listings.v1.UpdateListingResponse
+	(*DeleteListingRequest)(nil),     // 13: listings.v1.DeleteListingRequest
+	(*DeleteListingResponse)(nil),    // 14: listings.v1.DeleteListingResponse
+	(*SearchListingsRequest)(nil),    // 15: listings.v1.SearchListingsRequest
+	(*SearchListingsResponse)(nil),   // 16: listings.v1.SearchListingsResponse
+	(*ListListingsRequest)(nil),      // 17: listings.v1.ListListingsRequest
+	(*ListListingsResponse)(nil),     // 18: listings.v1.ListListingsResponse
+	(*ImageIDRequest)(nil),           // 19: listings.v1.ImageIDRequest
+	(*ImageResponse)(nil),            // 20: listings.v1.ImageResponse
+	(*AddImageRequest)(nil),          // 21: listings.v1.AddImageRequest
+	(*ListingIDRequest)(nil),         // 22: listings.v1.ListingIDRequest
+	(*ImagesResponse)(nil),           // 23: listings.v1.ImagesResponse
+	(*PopularCategoriesRequest)(nil), // 24: listings.v1.PopularCategoriesRequest
+	(*CategoriesResponse)(nil),       // 25: listings.v1.CategoriesResponse
+	(*CategoryIDRequest)(nil),        // 26: listings.v1.CategoryIDRequest
+	(*CategoryResponse)(nil),         // 27: listings.v1.CategoryResponse
+	(*CategoryTreeResponse)(nil),     // 28: listings.v1.CategoryTreeResponse
+	(*UserIDsResponse)(nil),          // 29: listings.v1.UserIDsResponse
+	(*CreateVariantsRequest)(nil),    // 30: listings.v1.CreateVariantsRequest
+	(*VariantInput)(nil),             // 31: listings.v1.VariantInput
+	(*VariantsResponse)(nil),         // 32: listings.v1.VariantsResponse
+	(*UpdateVariantRequest)(nil),     // 33: listings.v1.UpdateVariantRequest
+	(*VariantIDRequest)(nil),         // 34: listings.v1.VariantIDRequest
+	(*ReindexRequest)(nil),           // 35: listings.v1.ReindexRequest
+	(*ListingsResponse)(nil),         // 36: listings.v1.ListingsResponse
+	(*ResetFlagsRequest)(nil),        // 37: listings.v1.ResetFlagsRequest
+	nil,                              // 38: listings.v1.ListingVariant.AttributesEntry
+	nil,                              // 39: listings.v1.Category.TranslationsEntry
+	nil,                              // 40: listings.v1.CategoryTreeNode.TranslationsEntry
+	nil,                              // 41: listings.v1.VariantInput.AttributesEntry
+	nil,                              // 42: listings.v1.UpdateVariantRequest.AttributesEntry
+	(*emptypb.Empty)(nil),            // 43: google.protobuf.Empty
 }
 var file_api_proto_listings_v1_listings_proto_depIdxs = []int32{
 	1,  // 0: listings.v1.Listing.images:type_name -> listings.v1.ListingImage
 	2,  // 1: listings.v1.Listing.attributes:type_name -> listings.v1.ListingAttribute
 	3,  // 2: listings.v1.Listing.location:type_name -> listings.v1.ListingLocation
-	0,  // 3: listings.v1.GetListingResponse.listing:type_name -> listings.v1.Listing
-	0,  // 4: listings.v1.CreateListingResponse.listing:type_name -> listings.v1.Listing
-	0,  // 5: listings.v1.UpdateListingResponse.listing:type_name -> listings.v1.Listing
-	0,  // 6: listings.v1.SearchListingsResponse.listings:type_name -> listings.v1.Listing
-	0,  // 7: listings.v1.ListListingsResponse.listings:type_name -> listings.v1.Listing
-	4,  // 8: listings.v1.ListingsService.GetListing:input_type -> listings.v1.GetListingRequest
-	6,  // 9: listings.v1.ListingsService.CreateListing:input_type -> listings.v1.CreateListingRequest
-	8,  // 10: listings.v1.ListingsService.UpdateListing:input_type -> listings.v1.UpdateListingRequest
-	10, // 11: listings.v1.ListingsService.DeleteListing:input_type -> listings.v1.DeleteListingRequest
-	12, // 12: listings.v1.ListingsService.SearchListings:input_type -> listings.v1.SearchListingsRequest
-	14, // 13: listings.v1.ListingsService.ListListings:input_type -> listings.v1.ListListingsRequest
-	5,  // 14: listings.v1.ListingsService.GetListing:output_type -> listings.v1.GetListingResponse
-	7,  // 15: listings.v1.ListingsService.CreateListing:output_type -> listings.v1.CreateListingResponse
-	9,  // 16: listings.v1.ListingsService.UpdateListing:output_type -> listings.v1.UpdateListingResponse
-	11, // 17: listings.v1.ListingsService.DeleteListing:output_type -> listings.v1.DeleteListingResponse
-	13, // 18: listings.v1.ListingsService.SearchListings:output_type -> listings.v1.SearchListingsResponse
-	15, // 19: listings.v1.ListingsService.ListListings:output_type -> listings.v1.ListListingsResponse
-	14, // [14:20] is the sub-list for method output_type
-	8,  // [8:14] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	4,  // 3: listings.v1.Listing.variants:type_name -> listings.v1.ListingVariant
+	38, // 4: listings.v1.ListingVariant.attributes:type_name -> listings.v1.ListingVariant.AttributesEntry
+	39, // 5: listings.v1.Category.translations:type_name -> listings.v1.Category.TranslationsEntry
+	6,  // 6: listings.v1.CategoryTreeNode.children:type_name -> listings.v1.CategoryTreeNode
+	40, // 7: listings.v1.CategoryTreeNode.translations:type_name -> listings.v1.CategoryTreeNode.TranslationsEntry
+	0,  // 8: listings.v1.GetListingResponse.listing:type_name -> listings.v1.Listing
+	0,  // 9: listings.v1.CreateListingResponse.listing:type_name -> listings.v1.Listing
+	0,  // 10: listings.v1.UpdateListingResponse.listing:type_name -> listings.v1.Listing
+	0,  // 11: listings.v1.SearchListingsResponse.listings:type_name -> listings.v1.Listing
+	0,  // 12: listings.v1.ListListingsResponse.listings:type_name -> listings.v1.Listing
+	1,  // 13: listings.v1.ImageResponse.image:type_name -> listings.v1.ListingImage
+	1,  // 14: listings.v1.ImagesResponse.images:type_name -> listings.v1.ListingImage
+	5,  // 15: listings.v1.CategoriesResponse.categories:type_name -> listings.v1.Category
+	5,  // 16: listings.v1.CategoryResponse.category:type_name -> listings.v1.Category
+	6,  // 17: listings.v1.CategoryTreeResponse.tree:type_name -> listings.v1.CategoryTreeNode
+	31, // 18: listings.v1.CreateVariantsRequest.variants:type_name -> listings.v1.VariantInput
+	41, // 19: listings.v1.VariantInput.attributes:type_name -> listings.v1.VariantInput.AttributesEntry
+	4,  // 20: listings.v1.VariantsResponse.variants:type_name -> listings.v1.ListingVariant
+	42, // 21: listings.v1.UpdateVariantRequest.attributes:type_name -> listings.v1.UpdateVariantRequest.AttributesEntry
+	0,  // 22: listings.v1.ListingsResponse.listings:type_name -> listings.v1.Listing
+	7,  // 23: listings.v1.ListingsService.GetListing:input_type -> listings.v1.GetListingRequest
+	9,  // 24: listings.v1.ListingsService.CreateListing:input_type -> listings.v1.CreateListingRequest
+	11, // 25: listings.v1.ListingsService.UpdateListing:input_type -> listings.v1.UpdateListingRequest
+	13, // 26: listings.v1.ListingsService.DeleteListing:input_type -> listings.v1.DeleteListingRequest
+	15, // 27: listings.v1.ListingsService.SearchListings:input_type -> listings.v1.SearchListingsRequest
+	17, // 28: listings.v1.ListingsService.ListListings:input_type -> listings.v1.ListListingsRequest
+	19, // 29: listings.v1.ListingsService.GetListingImage:input_type -> listings.v1.ImageIDRequest
+	19, // 30: listings.v1.ListingsService.DeleteListingImage:input_type -> listings.v1.ImageIDRequest
+	21, // 31: listings.v1.ListingsService.AddListingImage:input_type -> listings.v1.AddImageRequest
+	22, // 32: listings.v1.ListingsService.GetListingImages:input_type -> listings.v1.ListingIDRequest
+	43, // 33: listings.v1.ListingsService.GetRootCategories:input_type -> google.protobuf.Empty
+	43, // 34: listings.v1.ListingsService.GetAllCategories:input_type -> google.protobuf.Empty
+	24, // 35: listings.v1.ListingsService.GetPopularCategories:input_type -> listings.v1.PopularCategoriesRequest
+	26, // 36: listings.v1.ListingsService.GetCategory:input_type -> listings.v1.CategoryIDRequest
+	26, // 37: listings.v1.ListingsService.GetCategoryTree:input_type -> listings.v1.CategoryIDRequest
+	22, // 38: listings.v1.ListingsService.GetFavoritedUsers:input_type -> listings.v1.ListingIDRequest
+	30, // 39: listings.v1.ListingsService.CreateVariants:input_type -> listings.v1.CreateVariantsRequest
+	22, // 40: listings.v1.ListingsService.GetVariants:input_type -> listings.v1.ListingIDRequest
+	33, // 41: listings.v1.ListingsService.UpdateVariant:input_type -> listings.v1.UpdateVariantRequest
+	34, // 42: listings.v1.ListingsService.DeleteVariant:input_type -> listings.v1.VariantIDRequest
+	35, // 43: listings.v1.ListingsService.GetListingsForReindex:input_type -> listings.v1.ReindexRequest
+	37, // 44: listings.v1.ListingsService.ResetReindexFlags:input_type -> listings.v1.ResetFlagsRequest
+	43, // 45: listings.v1.ListingsService.SyncDiscounts:input_type -> google.protobuf.Empty
+	8,  // 46: listings.v1.ListingsService.GetListing:output_type -> listings.v1.GetListingResponse
+	10, // 47: listings.v1.ListingsService.CreateListing:output_type -> listings.v1.CreateListingResponse
+	12, // 48: listings.v1.ListingsService.UpdateListing:output_type -> listings.v1.UpdateListingResponse
+	14, // 49: listings.v1.ListingsService.DeleteListing:output_type -> listings.v1.DeleteListingResponse
+	16, // 50: listings.v1.ListingsService.SearchListings:output_type -> listings.v1.SearchListingsResponse
+	18, // 51: listings.v1.ListingsService.ListListings:output_type -> listings.v1.ListListingsResponse
+	20, // 52: listings.v1.ListingsService.GetListingImage:output_type -> listings.v1.ImageResponse
+	43, // 53: listings.v1.ListingsService.DeleteListingImage:output_type -> google.protobuf.Empty
+	20, // 54: listings.v1.ListingsService.AddListingImage:output_type -> listings.v1.ImageResponse
+	23, // 55: listings.v1.ListingsService.GetListingImages:output_type -> listings.v1.ImagesResponse
+	25, // 56: listings.v1.ListingsService.GetRootCategories:output_type -> listings.v1.CategoriesResponse
+	25, // 57: listings.v1.ListingsService.GetAllCategories:output_type -> listings.v1.CategoriesResponse
+	25, // 58: listings.v1.ListingsService.GetPopularCategories:output_type -> listings.v1.CategoriesResponse
+	27, // 59: listings.v1.ListingsService.GetCategory:output_type -> listings.v1.CategoryResponse
+	28, // 60: listings.v1.ListingsService.GetCategoryTree:output_type -> listings.v1.CategoryTreeResponse
+	29, // 61: listings.v1.ListingsService.GetFavoritedUsers:output_type -> listings.v1.UserIDsResponse
+	43, // 62: listings.v1.ListingsService.CreateVariants:output_type -> google.protobuf.Empty
+	32, // 63: listings.v1.ListingsService.GetVariants:output_type -> listings.v1.VariantsResponse
+	43, // 64: listings.v1.ListingsService.UpdateVariant:output_type -> google.protobuf.Empty
+	43, // 65: listings.v1.ListingsService.DeleteVariant:output_type -> google.protobuf.Empty
+	36, // 66: listings.v1.ListingsService.GetListingsForReindex:output_type -> listings.v1.ListingsResponse
+	43, // 67: listings.v1.ListingsService.ResetReindexFlags:output_type -> google.protobuf.Empty
+	43, // 68: listings.v1.ListingsService.SyncDiscounts:output_type -> google.protobuf.Empty
+	46, // [46:69] is the sub-list for method output_type
+	23, // [23:46] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_listings_v1_listings_proto_init() }
@@ -1622,17 +3371,25 @@ func file_api_proto_listings_v1_listings_proto_init() {
 	file_api_proto_listings_v1_listings_proto_msgTypes[0].OneofWrappers = []any{}
 	file_api_proto_listings_v1_listings_proto_msgTypes[1].OneofWrappers = []any{}
 	file_api_proto_listings_v1_listings_proto_msgTypes[3].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[4].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[5].OneofWrappers = []any{}
 	file_api_proto_listings_v1_listings_proto_msgTypes[6].OneofWrappers = []any{}
-	file_api_proto_listings_v1_listings_proto_msgTypes[8].OneofWrappers = []any{}
-	file_api_proto_listings_v1_listings_proto_msgTypes[12].OneofWrappers = []any{}
-	file_api_proto_listings_v1_listings_proto_msgTypes[14].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[9].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[11].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[15].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[17].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[21].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[31].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[33].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[35].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[36].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_listings_v1_listings_proto_rawDesc), len(file_api_proto_listings_v1_listings_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   43,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

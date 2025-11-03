@@ -141,9 +141,9 @@ func TestCreateListing_ValidationErrors(t *testing.T) {
 	server, _ := setupTestServer()
 
 	tests := []struct {
-		name    string
-		req     *pb.CreateListingRequest
-		errMsg  string
+		name   string
+		req    *pb.CreateListingRequest
+		errMsg string
 	}{
 		{
 			name: "missing user_id",
@@ -390,23 +390,23 @@ func TestConverters_DomainToProto(t *testing.T) {
 	sku := "SKU-123"
 
 	listing := &domain.Listing{
-		ID:          1,
-		UUID:        "test-uuid",
-		UserID:      100,
-		Title:       "Test Listing",
-		Description: &desc,
-		Price:       99.99,
-		Currency:    "RSD",
-		CategoryID:  10,
-		Status:      "active",
-		Visibility:  "public",
-		Quantity:    5,
-		SKU:         &sku,
-		ViewsCount:  10,
+		ID:             1,
+		UUID:           "test-uuid",
+		UserID:         100,
+		Title:          "Test Listing",
+		Description:    &desc,
+		Price:          99.99,
+		Currency:       "RSD",
+		CategoryID:     10,
+		Status:         "active",
+		Visibility:     "public",
+		Quantity:       5,
+		SKU:            &sku,
+		ViewsCount:     10,
 		FavoritesCount: 3,
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		IsDeleted:   false,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+		IsDeleted:      false,
 	}
 
 	pbListing := DomainToProtoListing(listing)

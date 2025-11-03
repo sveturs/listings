@@ -3,8 +3,8 @@ package grpc
 import (
 	"time"
 
-	"github.com/sveturs/listings/internal/domain"
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	"github.com/sveturs/listings/internal/domain"
 )
 
 // DomainToProtoListing converts domain.Listing to protobuf Listing
@@ -14,21 +14,21 @@ func DomainToProtoListing(listing *domain.Listing) *pb.Listing {
 	}
 
 	pbListing := &pb.Listing{
-		Id:              listing.ID,
-		Uuid:            listing.UUID,
-		UserId:          listing.UserID,
-		Title:           listing.Title,
-		Price:           listing.Price,
-		Currency:        listing.Currency,
-		CategoryId:      listing.CategoryID,
-		Status:          listing.Status,
-		Visibility:      listing.Visibility,
-		Quantity:        listing.Quantity,
-		ViewsCount:      listing.ViewsCount,
-		FavoritesCount:  listing.FavoritesCount,
-		CreatedAt:       listing.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:       listing.UpdatedAt.Format(time.RFC3339),
-		IsDeleted:       listing.IsDeleted,
+		Id:             listing.ID,
+		Uuid:           listing.UUID,
+		UserId:         listing.UserID,
+		Title:          listing.Title,
+		Price:          listing.Price,
+		Currency:       listing.Currency,
+		CategoryId:     listing.CategoryID,
+		Status:         listing.Status,
+		Visibility:     listing.Visibility,
+		Quantity:       listing.Quantity,
+		ViewsCount:     listing.ViewsCount,
+		FavoritesCount: listing.FavoritesCount,
+		CreatedAt:      listing.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:      listing.UpdatedAt.Format(time.RFC3339),
+		IsDeleted:      listing.IsDeleted,
 	}
 
 	// Optional fields
@@ -306,4 +306,195 @@ func ProtoToSearchListingsQuery(req *pb.SearchListingsRequest) *domain.SearchLis
 	}
 
 	return query
+}
+
+// DomainToProtoCategory converts domain.Category to protobuf Category
+func DomainToProtoCategory(cat *domain.Category) *pb.Category {
+	if cat == nil {
+		return nil
+	}
+
+	pbCategory := &pb.Category{
+		Id:           cat.ID,
+		Name:         cat.Name,
+		Slug:         cat.Slug,
+		IsActive:     cat.IsActive,
+		ListingCount: cat.ListingCount,
+		SortOrder:    cat.SortOrder,
+		Level:        cat.Level,
+		Translations: make(map[string]string), // Placeholder for translations
+		HasCustomUi:  cat.HasCustomUI,
+		CreatedAt:    cat.CreatedAt.Format(time.RFC3339),
+	}
+
+	// Optional fields
+	if cat.ParentID != nil {
+		pbCategory.ParentId = cat.ParentID
+	}
+
+	if cat.Icon != nil {
+		pbCategory.Icon = cat.Icon
+	}
+
+	if cat.Description != nil {
+		pbCategory.Description = cat.Description
+	}
+
+	if cat.CustomUIComponent != nil {
+		pbCategory.CustomUiComponent = cat.CustomUIComponent
+	}
+
+	return pbCategory
+}
+
+// DomainToProtoCategoryTree converts domain.CategoryTreeNode to protobuf CategoryTreeNode
+func DomainToProtoCategoryTree(node *domain.CategoryTreeNode) *pb.CategoryTreeNode {
+	if node == nil {
+		return nil
+	}
+
+	pbNode := &pb.CategoryTreeNode{
+		Id:            node.ID,
+		Name:          node.Name,
+		Slug:          node.Slug,
+		Level:         node.Level,
+		Path:          node.Path,
+		ListingCount:  node.ListingCount,
+		ChildrenCount: node.ChildrenCount,
+		Translations:  make(map[string]string), // Placeholder for translations
+		HasCustomUi:   node.HasCustomUI,
+		CreatedAt:     node.CreatedAt,
+	}
+
+	// Optional fields
+	if node.Icon != nil {
+		pbNode.Icon = node.Icon
+	}
+
+	if node.ParentID != nil {
+		pbNode.ParentId = node.ParentID
+	}
+
+	if node.CustomUIComponent != nil {
+		pbNode.CustomUiComponent = node.CustomUIComponent
+	}
+
+	// Convert children recursively
+	if len(node.Children) > 0 {
+		pbNode.Children = make([]*pb.CategoryTreeNode, len(node.Children))
+		for i, child := range node.Children {
+			childCopy := child // Create copy to avoid pointer issues
+			pbNode.Children[i] = DomainToProtoCategoryTree(&childCopy)
+		}
+	}
+
+	return pbNode
+}
+
+// DomainToProtoVariant converts domain.ListingVariant to protobuf ListingVariant
+func DomainToProtoVariant(variant *domain.ListingVariant) *pb.ListingVariant {
+	if variant == nil {
+		return nil
+	}
+
+	pbVariant := &pb.ListingVariant{
+		Id:         variant.ID,
+		ListingId:  variant.ListingID,
+		Sku:        variant.SKU,
+		IsActive:   variant.IsActive,
+		Attributes: variant.Attributes,
+	}
+
+	// Optional fields
+	if variant.Price != nil {
+		pbVariant.Price = variant.Price
+	}
+
+	if variant.Stock != nil {
+		pbVariant.Stock = variant.Stock
+	}
+
+	if variant.ImageURL != nil {
+		pbVariant.ImageUrl = variant.ImageURL
+	}
+
+	if variant.CreatedAt != nil {
+		createdStr := variant.CreatedAt.Format(time.RFC3339)
+		pbVariant.CreatedAt = &createdStr
+	}
+
+	if variant.UpdatedAt != nil {
+		updatedStr := variant.UpdatedAt.Format(time.RFC3339)
+		pbVariant.UpdatedAt = &updatedStr
+	}
+
+	return pbVariant
+}
+
+// ProtoToVariantInput converts pb.VariantInput to domain.ListingVariant
+func ProtoToVariantInput(input *pb.VariantInput, listingID int64) *domain.ListingVariant {
+	if input == nil {
+		return nil
+	}
+
+	variant := &domain.ListingVariant{
+		ListingID:  listingID,
+		SKU:        input.Sku,
+		IsActive:   input.IsActive,
+		Attributes: input.Attributes,
+	}
+
+	if input.Price != nil {
+		variant.Price = input.Price
+	}
+
+	if input.Stock != nil {
+		variant.Stock = input.Stock
+	}
+
+	if input.ImageUrl != nil {
+		variant.ImageURL = input.ImageUrl
+	}
+
+	return variant
+}
+
+// ProtoToAddImageInput converts pb.AddImageRequest to domain.ListingImage
+func ProtoToAddImageInput(req *pb.AddImageRequest) *domain.ListingImage {
+	if req == nil {
+		return nil
+	}
+
+	image := &domain.ListingImage{
+		ListingID:    req.ListingId,
+		URL:          req.Url,
+		DisplayOrder: req.DisplayOrder,
+		IsPrimary:    req.IsPrimary,
+	}
+
+	if req.StoragePath != nil {
+		image.StoragePath = req.StoragePath
+	}
+
+	if req.ThumbnailUrl != nil {
+		image.ThumbnailURL = req.ThumbnailUrl
+	}
+
+	if req.Width != nil {
+		image.Width = req.Width
+	}
+
+	if req.Height != nil {
+		image.Height = req.Height
+	}
+
+	if req.FileSize != nil {
+		image.FileSize = req.FileSize
+	}
+
+	if req.MimeType != nil {
+		image.MimeType = req.MimeType
+	}
+
+	return image
 }

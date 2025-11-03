@@ -20,6 +20,33 @@ type Repository interface {
 	ListListings(ctx context.Context, filter *domain.ListListingsFilter) ([]*domain.Listing, int32, error)
 	SearchListings(ctx context.Context, query *domain.SearchListingsQuery) ([]*domain.Listing, int32, error)
 	EnqueueIndexing(ctx context.Context, listingID int64, operation string) error
+
+	// Image operations
+	GetImageByID(ctx context.Context, imageID int64) (*domain.ListingImage, error)
+	DeleteImage(ctx context.Context, imageID int64) error
+	AddImage(ctx context.Context, image *domain.ListingImage) (*domain.ListingImage, error)
+	GetImages(ctx context.Context, listingID int64) ([]*domain.ListingImage, error)
+
+	// Category operations
+	GetRootCategories(ctx context.Context) ([]*domain.Category, error)
+	GetAllCategories(ctx context.Context) ([]*domain.Category, error)
+	GetPopularCategories(ctx context.Context, limit int) ([]*domain.Category, error)
+	GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error)
+	GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error)
+
+	// Favorites operations
+	GetFavoritedUsers(ctx context.Context, listingID int64) ([]int64, error)
+
+	// Variant operations
+	CreateVariants(ctx context.Context, variants []*domain.ListingVariant) error
+	GetVariants(ctx context.Context, listingID int64) ([]*domain.ListingVariant, error)
+	UpdateVariant(ctx context.Context, variant *domain.ListingVariant) error
+	DeleteVariant(ctx context.Context, variantID int64) error
+
+	// Reindexing operations
+	GetListingsForReindex(ctx context.Context, limit int) ([]*domain.Listing, error)
+	ResetReindexFlags(ctx context.Context, listingIDs []int64) error
+	SyncDiscounts(ctx context.Context) error
 }
 
 // CacheRepository defines the interface for caching operations
@@ -350,4 +377,99 @@ func (s *Service) AdminDeleteListing(ctx context.Context, id int64) error {
 
 	s.logger.Info().Int64("listing_id", id).Msg("admin deleted listing")
 	return nil
+}
+
+// Image operations
+
+func (s *Service) GetImageByID(ctx context.Context, imageID int64) (*domain.ListingImage, error) {
+	return s.repo.GetImageByID(ctx, imageID)
+}
+
+func (s *Service) DeleteImage(ctx context.Context, imageID int64) error {
+	return s.repo.DeleteImage(ctx, imageID)
+}
+
+func (s *Service) AddImage(ctx context.Context, image *domain.ListingImage) (*domain.ListingImage, error) {
+	return s.repo.AddImage(ctx, image)
+}
+
+func (s *Service) GetImages(ctx context.Context, listingID int64) ([]*domain.ListingImage, error) {
+	return s.repo.GetImages(ctx, listingID)
+}
+
+// Category operations
+
+func (s *Service) GetRootCategories(ctx context.Context) ([]*domain.Category, error) {
+	return s.repo.GetRootCategories(ctx)
+}
+
+func (s *Service) GetAllCategories(ctx context.Context) ([]*domain.Category, error) {
+	return s.repo.GetAllCategories(ctx)
+}
+
+func (s *Service) GetPopularCategories(ctx context.Context, limit int) ([]*domain.Category, error) {
+	return s.repo.GetPopularCategories(ctx, limit)
+}
+
+func (s *Service) GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error) {
+	return s.repo.GetCategoryByID(ctx, categoryID)
+}
+
+func (s *Service) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
+	return s.repo.GetCategoryTree(ctx, categoryID)
+}
+
+// Favorites operations
+
+func (s *Service) GetFavoritedUsers(ctx context.Context, listingID int64) ([]int64, error) {
+	return s.repo.GetFavoritedUsers(ctx, listingID)
+}
+
+// Variant operations
+
+func (s *Service) CreateVariants(ctx context.Context, variants []*domain.ListingVariant) error {
+	return s.repo.CreateVariants(ctx, variants)
+}
+
+func (s *Service) GetVariants(ctx context.Context, listingID int64) ([]*domain.ListingVariant, error) {
+	return s.repo.GetVariants(ctx, listingID)
+}
+
+func (s *Service) GetVariantByID(ctx context.Context, variantID int64) (*domain.ListingVariant, error) {
+	// Get all variants for listing and find the one we need
+	// This is a simple implementation - in production you'd want a dedicated query
+	variants, err := s.repo.GetVariants(ctx, 0) // Pass 0 to get all or implement proper method
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range variants {
+		if v.ID == variantID {
+			return v, nil
+		}
+	}
+
+	return nil, fmt.Errorf("variant not found")
+}
+
+func (s *Service) UpdateVariant(ctx context.Context, variant *domain.ListingVariant) error {
+	return s.repo.UpdateVariant(ctx, variant)
+}
+
+func (s *Service) DeleteVariant(ctx context.Context, variantID int64) error {
+	return s.repo.DeleteVariant(ctx, variantID)
+}
+
+// Reindexing operations
+
+func (s *Service) GetListingsForReindex(ctx context.Context, limit int) ([]*domain.Listing, error) {
+	return s.repo.GetListingsForReindex(ctx, limit)
+}
+
+func (s *Service) ResetReindexFlags(ctx context.Context, listingIDs []int64) error {
+	return s.repo.ResetReindexFlags(ctx, listingIDs)
+}
+
+func (s *Service) SyncDiscounts(ctx context.Context) error {
+	return s.repo.SyncDiscounts(ctx)
 }

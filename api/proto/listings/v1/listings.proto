@@ -2,10 +2,14 @@ syntax = "proto3";
 
 package listings.v1;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingsv1";
 
 // ListingsService provides RPC methods for managing marketplace listings
 service ListingsService {
+  // === Core Listing Operations ===
+
   // GetListing retrieves a single listing by ID
   rpc GetListing(GetListingRequest) returns (GetListingResponse);
 
@@ -23,7 +27,72 @@ service ListingsService {
 
   // ListListings returns a paginated list of listings
   rpc ListListings(ListListingsRequest) returns (ListListingsResponse);
+
+  // === Image Management (HIGH PRIORITY) ===
+
+  // GetListingImage retrieves a single image by ID
+  rpc GetListingImage(ImageIDRequest) returns (ImageResponse);
+
+  // DeleteListingImage removes an image from a listing
+  rpc DeleteListingImage(ImageIDRequest) returns (google.protobuf.Empty);
+
+  // AddListingImage adds a new image to a listing
+  rpc AddListingImage(AddImageRequest) returns (ImageResponse);
+
+  // GetListingImages retrieves all images for a listing
+  rpc GetListingImages(ListingIDRequest) returns (ImagesResponse);
+
+  // === Category Management (HIGH PRIORITY) ===
+
+  // GetRootCategories retrieves all top-level categories (no parent)
+  rpc GetRootCategories(google.protobuf.Empty) returns (CategoriesResponse);
+
+  // GetAllCategories retrieves all categories in the system
+  rpc GetAllCategories(google.protobuf.Empty) returns (CategoriesResponse);
+
+  // GetPopularCategories retrieves most popular categories by listing count
+  rpc GetPopularCategories(PopularCategoriesRequest) returns (CategoriesResponse);
+
+  // GetCategory retrieves a single category by ID
+  rpc GetCategory(CategoryIDRequest) returns (CategoryResponse);
+
+  // GetCategoryTree retrieves category hierarchy starting from a node
+  rpc GetCategoryTree(CategoryIDRequest) returns (CategoryTreeResponse);
+
+  // === Favorites Management (MEDIUM PRIORITY) ===
+
+  // GetFavoritedUsers retrieves list of user IDs who favorited a listing
+  rpc GetFavoritedUsers(ListingIDRequest) returns (UserIDsResponse);
+
+  // === Variants Management (MEDIUM PRIORITY) ===
+
+  // CreateVariants creates multiple variants for a listing
+  rpc CreateVariants(CreateVariantsRequest) returns (google.protobuf.Empty);
+
+  // GetVariants retrieves all variants for a listing
+  rpc GetVariants(ListingIDRequest) returns (VariantsResponse);
+
+  // UpdateVariant updates a specific variant
+  rpc UpdateVariant(UpdateVariantRequest) returns (google.protobuf.Empty);
+
+  // DeleteVariant removes a variant from a listing
+  rpc DeleteVariant(VariantIDRequest) returns (google.protobuf.Empty);
+
+  // === Reindexing Support (MEDIUM PRIORITY) ===
+
+  // GetListingsForReindex retrieves listings that need reindexing
+  rpc GetListingsForReindex(ReindexRequest) returns (ListingsResponse);
+
+  // ResetReindexFlags resets reindex flags for specified listings
+  rpc ResetReindexFlags(ResetFlagsRequest) returns (google.protobuf.Empty);
+
+  // SyncDiscounts synchronizes discount information across listings
+  rpc SyncDiscounts(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
+
+// ============================================================================
+// Core Entity Messages
+// ============================================================================
 
 // Listing represents a marketplace listing
 message Listing {
@@ -53,6 +122,7 @@ message Listing {
   repeated ListingAttribute attributes = 22;
   repeated string tags = 23;
   optional ListingLocation location = 24;
+  repeated ListingVariant variants = 25;
 }
 
 // ListingImage represents an image associated with a listing
@@ -95,6 +165,60 @@ message ListingLocation {
   string created_at = 10;
   string updated_at = 11;
 }
+
+// ListingVariant represents a product variant
+message ListingVariant {
+  int64 id = 1;
+  int64 listing_id = 2;
+  string sku = 3;
+  optional double price = 4;
+  optional int32 stock = 5;
+  map<string, string> attributes = 6;
+  optional string image_url = 7;
+  bool is_active = 8;
+  optional string created_at = 9;
+  optional string updated_at = 10;
+}
+
+// Category represents a marketplace category
+message Category {
+  int64 id = 1;
+  string name = 2;
+  string slug = 3;
+  optional int64 parent_id = 4;
+  optional string icon = 5;
+  optional string description = 6;
+  bool is_active = 7;
+  int32 listing_count = 8;
+  int32 sort_order = 9;
+  int32 level = 10;
+  map<string, string> translations = 11;
+  bool has_custom_ui = 12;
+  optional string custom_ui_component = 13;
+  string created_at = 14;
+}
+
+// CategoryTreeNode represents a category with its children
+message CategoryTreeNode {
+  int64 id = 1;
+  string name = 2;
+  string slug = 3;
+  optional string icon = 4;
+  optional int64 parent_id = 5;
+  int32 level = 6;
+  string path = 7;
+  int32 listing_count = 8;
+  int32 children_count = 9;
+  repeated CategoryTreeNode children = 10;
+  map<string, string> translations = 11;
+  bool has_custom_ui = 12;
+  optional string custom_ui_component = 13;
+  string created_at = 14;
+}
+
+// ============================================================================
+// Request/Response Messages - Core Listing Operations
+// ============================================================================
 
 // GetListing messages
 message GetListingRequest {
@@ -177,4 +301,143 @@ message ListListingsRequest {
 message ListListingsResponse {
   repeated Listing listings = 1;
   int32 total = 2;
+}
+
+// ============================================================================
+// Request/Response Messages - Image Management
+// ============================================================================
+
+// ImageIDRequest requests an image by ID
+message ImageIDRequest {
+  int64 image_id = 1;
+}
+
+// ImageResponse returns a single image
+message ImageResponse {
+  ListingImage image = 1;
+}
+
+// AddImageRequest adds a new image to a listing
+message AddImageRequest {
+  int64 listing_id = 1;
+  string url = 2;
+  optional string storage_path = 3;
+  optional string thumbnail_url = 4;
+  int32 display_order = 5;
+  bool is_primary = 6;
+  optional int32 width = 7;
+  optional int32 height = 8;
+  optional int64 file_size = 9;
+  optional string mime_type = 10;
+}
+
+// ListingIDRequest requests data by listing ID
+message ListingIDRequest {
+  int64 listing_id = 1;
+}
+
+// ImagesResponse returns multiple images
+message ImagesResponse {
+  repeated ListingImage images = 1;
+}
+
+// ============================================================================
+// Request/Response Messages - Category Management
+// ============================================================================
+
+// PopularCategoriesRequest requests popular categories
+message PopularCategoriesRequest {
+  int32 limit = 1; // Maximum number of categories to return
+}
+
+// CategoriesResponse returns multiple categories
+message CategoriesResponse {
+  repeated Category categories = 1;
+}
+
+// CategoryIDRequest requests a category by ID
+message CategoryIDRequest {
+  int64 category_id = 1;
+}
+
+// CategoryResponse returns a single category
+message CategoryResponse {
+  Category category = 1;
+}
+
+// CategoryTreeResponse returns category tree
+message CategoryTreeResponse {
+  CategoryTreeNode tree = 1;
+}
+
+// ============================================================================
+// Request/Response Messages - Favorites Management
+// ============================================================================
+
+// UserIDsResponse returns list of user IDs
+message UserIDsResponse {
+  repeated int64 user_ids = 1;
+}
+
+// ============================================================================
+// Request/Response Messages - Variants Management
+// ============================================================================
+
+// CreateVariantsRequest creates multiple variants
+message CreateVariantsRequest {
+  int64 listing_id = 1;
+  repeated VariantInput variants = 2;
+}
+
+// VariantInput represents input data for creating a variant
+message VariantInput {
+  string sku = 1;
+  optional double price = 2;
+  optional int32 stock = 3;
+  map<string, string> attributes = 4;
+  optional string image_url = 5;
+  bool is_active = 6;
+}
+
+// VariantsResponse returns multiple variants
+message VariantsResponse {
+  repeated ListingVariant variants = 1;
+}
+
+// UpdateVariantRequest updates a variant
+message UpdateVariantRequest {
+  int64 variant_id = 1;
+  optional string sku = 2;
+  optional double price = 3;
+  optional int32 stock = 4;
+  optional string image_url = 5;
+  optional bool is_active = 6;
+  map<string, string> attributes = 7;
+}
+
+// VariantIDRequest requests a variant by ID
+message VariantIDRequest {
+  int64 variant_id = 1;
+}
+
+// ============================================================================
+// Request/Response Messages - Reindexing Support
+// ============================================================================
+
+// ReindexRequest requests listings for reindexing
+message ReindexRequest {
+  int32 batch_size = 1;
+  optional int64 last_id = 2; // For cursor-based pagination
+}
+
+// ListingsResponse returns multiple listings
+message ListingsResponse {
+  repeated Listing listings = 1;
+  int32 total = 2;
+  optional int64 next_cursor = 3; // Next cursor for pagination
+}
+
+// ResetFlagsRequest resets reindex flags
+message ResetFlagsRequest {
+  repeated int64 listing_ids = 1;
 }

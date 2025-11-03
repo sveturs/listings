@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,12 +20,29 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ListingsService_GetListing_FullMethodName     = "/listings.v1.ListingsService/GetListing"
-	ListingsService_CreateListing_FullMethodName  = "/listings.v1.ListingsService/CreateListing"
-	ListingsService_UpdateListing_FullMethodName  = "/listings.v1.ListingsService/UpdateListing"
-	ListingsService_DeleteListing_FullMethodName  = "/listings.v1.ListingsService/DeleteListing"
-	ListingsService_SearchListings_FullMethodName = "/listings.v1.ListingsService/SearchListings"
-	ListingsService_ListListings_FullMethodName   = "/listings.v1.ListingsService/ListListings"
+	ListingsService_GetListing_FullMethodName            = "/listings.v1.ListingsService/GetListing"
+	ListingsService_CreateListing_FullMethodName         = "/listings.v1.ListingsService/CreateListing"
+	ListingsService_UpdateListing_FullMethodName         = "/listings.v1.ListingsService/UpdateListing"
+	ListingsService_DeleteListing_FullMethodName         = "/listings.v1.ListingsService/DeleteListing"
+	ListingsService_SearchListings_FullMethodName        = "/listings.v1.ListingsService/SearchListings"
+	ListingsService_ListListings_FullMethodName          = "/listings.v1.ListingsService/ListListings"
+	ListingsService_GetListingImage_FullMethodName       = "/listings.v1.ListingsService/GetListingImage"
+	ListingsService_DeleteListingImage_FullMethodName    = "/listings.v1.ListingsService/DeleteListingImage"
+	ListingsService_AddListingImage_FullMethodName       = "/listings.v1.ListingsService/AddListingImage"
+	ListingsService_GetListingImages_FullMethodName      = "/listings.v1.ListingsService/GetListingImages"
+	ListingsService_GetRootCategories_FullMethodName     = "/listings.v1.ListingsService/GetRootCategories"
+	ListingsService_GetAllCategories_FullMethodName      = "/listings.v1.ListingsService/GetAllCategories"
+	ListingsService_GetPopularCategories_FullMethodName  = "/listings.v1.ListingsService/GetPopularCategories"
+	ListingsService_GetCategory_FullMethodName           = "/listings.v1.ListingsService/GetCategory"
+	ListingsService_GetCategoryTree_FullMethodName       = "/listings.v1.ListingsService/GetCategoryTree"
+	ListingsService_GetFavoritedUsers_FullMethodName     = "/listings.v1.ListingsService/GetFavoritedUsers"
+	ListingsService_CreateVariants_FullMethodName        = "/listings.v1.ListingsService/CreateVariants"
+	ListingsService_GetVariants_FullMethodName           = "/listings.v1.ListingsService/GetVariants"
+	ListingsService_UpdateVariant_FullMethodName         = "/listings.v1.ListingsService/UpdateVariant"
+	ListingsService_DeleteVariant_FullMethodName         = "/listings.v1.ListingsService/DeleteVariant"
+	ListingsService_GetListingsForReindex_FullMethodName = "/listings.v1.ListingsService/GetListingsForReindex"
+	ListingsService_ResetReindexFlags_FullMethodName     = "/listings.v1.ListingsService/ResetReindexFlags"
+	ListingsService_SyncDiscounts_FullMethodName         = "/listings.v1.ListingsService/SyncDiscounts"
 )
 
 // ListingsServiceClient is the client API for ListingsService service.
@@ -45,6 +63,40 @@ type ListingsServiceClient interface {
 	SearchListings(ctx context.Context, in *SearchListingsRequest, opts ...grpc.CallOption) (*SearchListingsResponse, error)
 	// ListListings returns a paginated list of listings
 	ListListings(ctx context.Context, in *ListListingsRequest, opts ...grpc.CallOption) (*ListListingsResponse, error)
+	// GetListingImage retrieves a single image by ID
+	GetListingImage(ctx context.Context, in *ImageIDRequest, opts ...grpc.CallOption) (*ImageResponse, error)
+	// DeleteListingImage removes an image from a listing
+	DeleteListingImage(ctx context.Context, in *ImageIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// AddListingImage adds a new image to a listing
+	AddListingImage(ctx context.Context, in *AddImageRequest, opts ...grpc.CallOption) (*ImageResponse, error)
+	// GetListingImages retrieves all images for a listing
+	GetListingImages(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*ImagesResponse, error)
+	// GetRootCategories retrieves all top-level categories (no parent)
+	GetRootCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CategoriesResponse, error)
+	// GetAllCategories retrieves all categories in the system
+	GetAllCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CategoriesResponse, error)
+	// GetPopularCategories retrieves most popular categories by listing count
+	GetPopularCategories(ctx context.Context, in *PopularCategoriesRequest, opts ...grpc.CallOption) (*CategoriesResponse, error)
+	// GetCategory retrieves a single category by ID
+	GetCategory(ctx context.Context, in *CategoryIDRequest, opts ...grpc.CallOption) (*CategoryResponse, error)
+	// GetCategoryTree retrieves category hierarchy starting from a node
+	GetCategoryTree(ctx context.Context, in *CategoryIDRequest, opts ...grpc.CallOption) (*CategoryTreeResponse, error)
+	// GetFavoritedUsers retrieves list of user IDs who favorited a listing
+	GetFavoritedUsers(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*UserIDsResponse, error)
+	// CreateVariants creates multiple variants for a listing
+	CreateVariants(ctx context.Context, in *CreateVariantsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// GetVariants retrieves all variants for a listing
+	GetVariants(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*VariantsResponse, error)
+	// UpdateVariant updates a specific variant
+	UpdateVariant(ctx context.Context, in *UpdateVariantRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// DeleteVariant removes a variant from a listing
+	DeleteVariant(ctx context.Context, in *VariantIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// GetListingsForReindex retrieves listings that need reindexing
+	GetListingsForReindex(ctx context.Context, in *ReindexRequest, opts ...grpc.CallOption) (*ListingsResponse, error)
+	// ResetReindexFlags resets reindex flags for specified listings
+	ResetReindexFlags(ctx context.Context, in *ResetFlagsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// SyncDiscounts synchronizes discount information across listings
+	SyncDiscounts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type listingsServiceClient struct {
@@ -115,6 +167,176 @@ func (c *listingsServiceClient) ListListings(ctx context.Context, in *ListListin
 	return out, nil
 }
 
+func (c *listingsServiceClient) GetListingImage(ctx context.Context, in *ImageIDRequest, opts ...grpc.CallOption) (*ImageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ImageResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetListingImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) DeleteListingImage(ctx context.Context, in *ImageIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_DeleteListingImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) AddListingImage(ctx context.Context, in *AddImageRequest, opts ...grpc.CallOption) (*ImageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ImageResponse)
+	err := c.cc.Invoke(ctx, ListingsService_AddListingImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetListingImages(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*ImagesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ImagesResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetListingImages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetRootCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CategoriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoriesResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetRootCategories_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetAllCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CategoriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoriesResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetAllCategories_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetPopularCategories(ctx context.Context, in *PopularCategoriesRequest, opts ...grpc.CallOption) (*CategoriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoriesResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetPopularCategories_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetCategory(ctx context.Context, in *CategoryIDRequest, opts ...grpc.CallOption) (*CategoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoryResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetCategoryTree(ctx context.Context, in *CategoryIDRequest, opts ...grpc.CallOption) (*CategoryTreeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoryTreeResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetCategoryTree_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetFavoritedUsers(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*UserIDsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UserIDsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetFavoritedUsers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) CreateVariants(ctx context.Context, in *CreateVariantsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_CreateVariants_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetVariants(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*VariantsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VariantsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetVariants_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) UpdateVariant(ctx context.Context, in *UpdateVariantRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_UpdateVariant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) DeleteVariant(ctx context.Context, in *VariantIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_DeleteVariant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetListingsForReindex(ctx context.Context, in *ReindexRequest, opts ...grpc.CallOption) (*ListingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListingsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetListingsForReindex_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) ResetReindexFlags(ctx context.Context, in *ResetFlagsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_ResetReindexFlags_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) SyncDiscounts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_SyncDiscounts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ListingsServiceServer is the server API for ListingsService service.
 // All implementations must embed UnimplementedListingsServiceServer
 // for forward compatibility.
@@ -133,6 +355,40 @@ type ListingsServiceServer interface {
 	SearchListings(context.Context, *SearchListingsRequest) (*SearchListingsResponse, error)
 	// ListListings returns a paginated list of listings
 	ListListings(context.Context, *ListListingsRequest) (*ListListingsResponse, error)
+	// GetListingImage retrieves a single image by ID
+	GetListingImage(context.Context, *ImageIDRequest) (*ImageResponse, error)
+	// DeleteListingImage removes an image from a listing
+	DeleteListingImage(context.Context, *ImageIDRequest) (*emptypb.Empty, error)
+	// AddListingImage adds a new image to a listing
+	AddListingImage(context.Context, *AddImageRequest) (*ImageResponse, error)
+	// GetListingImages retrieves all images for a listing
+	GetListingImages(context.Context, *ListingIDRequest) (*ImagesResponse, error)
+	// GetRootCategories retrieves all top-level categories (no parent)
+	GetRootCategories(context.Context, *emptypb.Empty) (*CategoriesResponse, error)
+	// GetAllCategories retrieves all categories in the system
+	GetAllCategories(context.Context, *emptypb.Empty) (*CategoriesResponse, error)
+	// GetPopularCategories retrieves most popular categories by listing count
+	GetPopularCategories(context.Context, *PopularCategoriesRequest) (*CategoriesResponse, error)
+	// GetCategory retrieves a single category by ID
+	GetCategory(context.Context, *CategoryIDRequest) (*CategoryResponse, error)
+	// GetCategoryTree retrieves category hierarchy starting from a node
+	GetCategoryTree(context.Context, *CategoryIDRequest) (*CategoryTreeResponse, error)
+	// GetFavoritedUsers retrieves list of user IDs who favorited a listing
+	GetFavoritedUsers(context.Context, *ListingIDRequest) (*UserIDsResponse, error)
+	// CreateVariants creates multiple variants for a listing
+	CreateVariants(context.Context, *CreateVariantsRequest) (*emptypb.Empty, error)
+	// GetVariants retrieves all variants for a listing
+	GetVariants(context.Context, *ListingIDRequest) (*VariantsResponse, error)
+	// UpdateVariant updates a specific variant
+	UpdateVariant(context.Context, *UpdateVariantRequest) (*emptypb.Empty, error)
+	// DeleteVariant removes a variant from a listing
+	DeleteVariant(context.Context, *VariantIDRequest) (*emptypb.Empty, error)
+	// GetListingsForReindex retrieves listings that need reindexing
+	GetListingsForReindex(context.Context, *ReindexRequest) (*ListingsResponse, error)
+	// ResetReindexFlags resets reindex flags for specified listings
+	ResetReindexFlags(context.Context, *ResetFlagsRequest) (*emptypb.Empty, error)
+	// SyncDiscounts synchronizes discount information across listings
+	SyncDiscounts(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedListingsServiceServer()
 }
 
@@ -160,6 +416,57 @@ func (UnimplementedListingsServiceServer) SearchListings(context.Context, *Searc
 }
 func (UnimplementedListingsServiceServer) ListListings(context.Context, *ListListingsRequest) (*ListListingsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListListings not implemented")
+}
+func (UnimplementedListingsServiceServer) GetListingImage(context.Context, *ImageIDRequest) (*ImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetListingImage not implemented")
+}
+func (UnimplementedListingsServiceServer) DeleteListingImage(context.Context, *ImageIDRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteListingImage not implemented")
+}
+func (UnimplementedListingsServiceServer) AddListingImage(context.Context, *AddImageRequest) (*ImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddListingImage not implemented")
+}
+func (UnimplementedListingsServiceServer) GetListingImages(context.Context, *ListingIDRequest) (*ImagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetListingImages not implemented")
+}
+func (UnimplementedListingsServiceServer) GetRootCategories(context.Context, *emptypb.Empty) (*CategoriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRootCategories not implemented")
+}
+func (UnimplementedListingsServiceServer) GetAllCategories(context.Context, *emptypb.Empty) (*CategoriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllCategories not implemented")
+}
+func (UnimplementedListingsServiceServer) GetPopularCategories(context.Context, *PopularCategoriesRequest) (*CategoriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPopularCategories not implemented")
+}
+func (UnimplementedListingsServiceServer) GetCategory(context.Context, *CategoryIDRequest) (*CategoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategory not implemented")
+}
+func (UnimplementedListingsServiceServer) GetCategoryTree(context.Context, *CategoryIDRequest) (*CategoryTreeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryTree not implemented")
+}
+func (UnimplementedListingsServiceServer) GetFavoritedUsers(context.Context, *ListingIDRequest) (*UserIDsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFavoritedUsers not implemented")
+}
+func (UnimplementedListingsServiceServer) CreateVariants(context.Context, *CreateVariantsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateVariants not implemented")
+}
+func (UnimplementedListingsServiceServer) GetVariants(context.Context, *ListingIDRequest) (*VariantsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetVariants not implemented")
+}
+func (UnimplementedListingsServiceServer) UpdateVariant(context.Context, *UpdateVariantRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVariant not implemented")
+}
+func (UnimplementedListingsServiceServer) DeleteVariant(context.Context, *VariantIDRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteVariant not implemented")
+}
+func (UnimplementedListingsServiceServer) GetListingsForReindex(context.Context, *ReindexRequest) (*ListingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetListingsForReindex not implemented")
+}
+func (UnimplementedListingsServiceServer) ResetReindexFlags(context.Context, *ResetFlagsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResetReindexFlags not implemented")
+}
+func (UnimplementedListingsServiceServer) SyncDiscounts(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SyncDiscounts not implemented")
 }
 func (UnimplementedListingsServiceServer) mustEmbedUnimplementedListingsServiceServer() {}
 func (UnimplementedListingsServiceServer) testEmbeddedByValue()                         {}
@@ -290,6 +597,312 @@ func _ListingsService_ListListings_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_GetListingImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetListingImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetListingImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetListingImage(ctx, req.(*ImageIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_DeleteListingImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).DeleteListingImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_DeleteListingImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).DeleteListingImage(ctx, req.(*ImageIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_AddListingImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).AddListingImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_AddListingImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).AddListingImage(ctx, req.(*AddImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetListingImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListingIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetListingImages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetListingImages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetListingImages(ctx, req.(*ListingIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetRootCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetRootCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetRootCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetRootCategories(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetAllCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetAllCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetAllCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetAllCategories(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetPopularCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PopularCategoriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetPopularCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetPopularCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetPopularCategories(ctx, req.(*PopularCategoriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CategoryIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetCategory(ctx, req.(*CategoryIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetCategoryTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CategoryIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetCategoryTree(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetCategoryTree_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetCategoryTree(ctx, req.(*CategoryIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetFavoritedUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListingIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetFavoritedUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetFavoritedUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetFavoritedUsers(ctx, req.(*ListingIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_CreateVariants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateVariantsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CreateVariants(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CreateVariants_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CreateVariants(ctx, req.(*CreateVariantsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetVariants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListingIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetVariants(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetVariants_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetVariants(ctx, req.(*ListingIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_UpdateVariant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateVariantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).UpdateVariant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_UpdateVariant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).UpdateVariant(ctx, req.(*UpdateVariantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_DeleteVariant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VariantIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).DeleteVariant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_DeleteVariant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).DeleteVariant(ctx, req.(*VariantIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetListingsForReindex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReindexRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetListingsForReindex(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetListingsForReindex_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetListingsForReindex(ctx, req.(*ReindexRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_ResetReindexFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetFlagsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ResetReindexFlags(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ResetReindexFlags_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ResetReindexFlags(ctx, req.(*ResetFlagsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_SyncDiscounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).SyncDiscounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_SyncDiscounts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).SyncDiscounts(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ListingsService_ServiceDesc is the grpc.ServiceDesc for ListingsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -320,6 +933,74 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListListings",
 			Handler:    _ListingsService_ListListings_Handler,
+		},
+		{
+			MethodName: "GetListingImage",
+			Handler:    _ListingsService_GetListingImage_Handler,
+		},
+		{
+			MethodName: "DeleteListingImage",
+			Handler:    _ListingsService_DeleteListingImage_Handler,
+		},
+		{
+			MethodName: "AddListingImage",
+			Handler:    _ListingsService_AddListingImage_Handler,
+		},
+		{
+			MethodName: "GetListingImages",
+			Handler:    _ListingsService_GetListingImages_Handler,
+		},
+		{
+			MethodName: "GetRootCategories",
+			Handler:    _ListingsService_GetRootCategories_Handler,
+		},
+		{
+			MethodName: "GetAllCategories",
+			Handler:    _ListingsService_GetAllCategories_Handler,
+		},
+		{
+			MethodName: "GetPopularCategories",
+			Handler:    _ListingsService_GetPopularCategories_Handler,
+		},
+		{
+			MethodName: "GetCategory",
+			Handler:    _ListingsService_GetCategory_Handler,
+		},
+		{
+			MethodName: "GetCategoryTree",
+			Handler:    _ListingsService_GetCategoryTree_Handler,
+		},
+		{
+			MethodName: "GetFavoritedUsers",
+			Handler:    _ListingsService_GetFavoritedUsers_Handler,
+		},
+		{
+			MethodName: "CreateVariants",
+			Handler:    _ListingsService_CreateVariants_Handler,
+		},
+		{
+			MethodName: "GetVariants",
+			Handler:    _ListingsService_GetVariants_Handler,
+		},
+		{
+			MethodName: "UpdateVariant",
+			Handler:    _ListingsService_UpdateVariant_Handler,
+		},
+		{
+			MethodName: "DeleteVariant",
+			Handler:    _ListingsService_DeleteVariant_Handler,
+		},
+		{
+			MethodName: "GetListingsForReindex",
+			Handler:    _ListingsService_GetListingsForReindex_Handler,
+		},
+		{
+			MethodName: "ResetReindexFlags",
+			Handler:    _ListingsService_ResetReindexFlags_Handler,
+		},
+		{
+			MethodName: "SyncDiscounts",
+			Handler:    _ListingsService_SyncDiscounts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

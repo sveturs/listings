@@ -175,3 +175,51 @@ const (
 	IndexStatusCompleted  = "completed"
 	IndexStatusFailed     = "failed"
 )
+
+// Category represents a marketplace category
+type Category struct {
+	ID                int64     `json:"id" db:"id"`
+	Name              string    `json:"name" db:"name"`
+	Slug              string    `json:"slug" db:"slug"`
+	ParentID          *int64    `json:"parent_id,omitempty" db:"parent_id"`
+	Icon              *string   `json:"icon,omitempty" db:"icon"`
+	Description       *string   `json:"description,omitempty" db:"description"`
+	IsActive          bool      `json:"is_active" db:"is_active"`
+	ListingCount      int32     `json:"listing_count" db:"listing_count"`
+	SortOrder         int32     `json:"sort_order" db:"sort_order"`
+	Level             int32     `json:"level" db:"level"`
+	HasCustomUI       bool      `json:"has_custom_ui" db:"has_custom_ui"`
+	CustomUIComponent *string   `json:"custom_ui_component,omitempty" db:"custom_ui_component"`
+	CreatedAt         time.Time `json:"created_at" db:"created_at"`
+}
+
+// CategoryTreeNode represents a category with its children in a tree structure
+type CategoryTreeNode struct {
+	ID                int64              `json:"id"`
+	Name              string             `json:"name"`
+	Slug              string             `json:"slug"`
+	Icon              *string            `json:"icon,omitempty"`
+	ParentID          *int64             `json:"parent_id,omitempty"`
+	Level             int32              `json:"level"`
+	Path              string             `json:"path"`
+	ListingCount      int32              `json:"listing_count"`
+	ChildrenCount     int32              `json:"children_count"`
+	Children          []CategoryTreeNode `json:"children"`
+	HasCustomUI       bool               `json:"has_custom_ui"`
+	CustomUIComponent *string            `json:"custom_ui_component,omitempty"`
+	CreatedAt         string             `json:"created_at"`
+}
+
+// ListingVariant represents a product variant
+type ListingVariant struct {
+	ID         int64             `json:"id" db:"id"`
+	ListingID  int64             `json:"listing_id" db:"listing_id"`
+	SKU        string            `json:"sku" db:"sku"`
+	Price      *float64          `json:"price,omitempty" db:"price"`
+	Stock      *int32            `json:"stock,omitempty" db:"stock"`
+	Attributes map[string]string `json:"attributes,omitempty" db:"attributes"`
+	ImageURL   *string           `json:"image_url,omitempty" db:"image_url"`
+	IsActive   bool              `json:"is_active" db:"is_active"`
+	CreatedAt  *time.Time        `json:"created_at,omitempty" db:"created_at"`
+	UpdatedAt  *time.Time        `json:"updated_at,omitempty" db:"updated_at"`
+}
