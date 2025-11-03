@@ -482,11 +482,10 @@ func (s *OrderService) clearCartTx(ctx context.Context, tx *sqlx.Tx, cartID int6
 
 // updateProductStocksInSearch обновляет остатки товаров в OpenSearch после создания заказа
 func (s *OrderService) updateProductStocksInSearch(ctx context.Context, orderItems []models.StorefrontOrderItem) {
-	// Проверяем наличие OpenSearch репозитория
-	if // TODO: s.productSearchRepo == nil {
-		s.logger.Info("ProductSearchRepo is not configured, skipping stock update in OpenSearch")
-		return
-	}
+	// TODO: OpenSearch integration removed (c2c/b2c deprecated)
+	// ProductSearchRepo was removed - stock updates now go directly to PostgreSQL only
+	s.logger.Info("ProductSearchRepo removed (deprecated), skipping stock update in OpenSearch")
+	return
 
 	// Обновляем остатки для каждого товара в заказе
 	for _, item := range orderItems {
@@ -535,16 +534,9 @@ func (s *OrderService) updateProductStocksInSearch(ctx context.Context, orderIte
 		stockData["stock_status"] = stockStatus
 
 		// Обновляем данные в OpenSearch
-		// Для товаров витрин используем префикс sp_ в ID документа
-		err = // TODO: s.productSearchRepo.UpdateProductStock(ctx, int(item.ProductID), stockData)
-		if err != nil {
-			// Если товар не найден с обычным ID, пробуем с префиксом sp_ для товаров витрин
-			s.logger.Info("Trying to update storefront product sp_%d in OpenSearch", item.ProductID)
-			// Здесь нужно использовать специальный метод для обновления товаров витрин
-			// Но пока просто логируем ошибку
-			s.logger.Error("Failed to update product %d stock in OpenSearch: %v", item.ProductID, err)
-			// Не прерываем процесс, продолжаем с другими товарами
-		} else {
+		// TODO: OpenSearch update removed - this code is unreachable (return above)
+		// err = s.productSearchRepo.UpdateProductStock(ctx, int(item.ProductID), stockData)
+		if false { // Unreachable code - kept for reference
 			s.logger.Info("Successfully updated stock for product %d in OpenSearch (new quantity: %d)",
 				item.ProductID, stockQuantity)
 		}
