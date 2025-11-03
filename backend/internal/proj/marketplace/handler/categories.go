@@ -2,9 +2,12 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
+	"backend/internal/domain/models"
 	"backend/pkg/utils"
 )
 
@@ -21,12 +24,86 @@ import (
 func (h *Handler) GetCategories(c *fiber.Ctx) error {
 	lang := c.Query("lang", "ru")
 
+	// Phase 7.4: Route to microservice if feature flag is enabled
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		h.logger.Info().
+			Bool("use_microservice", true).
+			Str("lang", lang).
+			Msg("Routing GetCategories to listings microservice")
+
+		// Call microservice via gRPC
+		grpcResp, err := h.listingsClient.GetAllCategories(c.Context())
+		if err != nil {
+			h.logger.Error().Err(err).Msg("Failed to get categories from microservice, falling back to monolith")
+			// Fallback to monolith
+			categories, err := h.storage.GetCategories(c.Context(), lang)
+			if err != nil {
+				h.logger.Error().Err(err).Msg("Failed to get categories from monolith")
+				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.get_categories_failed")
+			}
+			return utils.SuccessResponse(c, categories)
+		}
+
+		// Convert proto.Category to models.MarketplaceCategory
+		categories := make([]models.MarketplaceCategory, 0, len(grpcResp.Categories))
+		for _, protoCategory := range grpcResp.Categories {
+			category := models.MarketplaceCategory{
+				ID:          int(protoCategory.Id),
+				Name:        protoCategory.Name,
+				Slug:        protoCategory.Slug,
+				IsActive:    protoCategory.IsActive,
+				Translations: protoCategory.Translations,
+				ListingCount: int(protoCategory.ListingCount),
+				HasCustomUI: protoCategory.HasCustomUi,
+				SortOrder:   int(protoCategory.SortOrder),
+				Level:       int(protoCategory.Level),
+			}
+
+			// Optional fields
+			if protoCategory.ParentId != nil {
+				parentID := int(*protoCategory.ParentId)
+				category.ParentID = &parentID
+			}
+			if protoCategory.Icon != nil {
+				category.Icon = protoCategory.Icon
+			}
+			if protoCategory.Description != nil {
+				category.Description = protoCategory.Description
+			}
+			if protoCategory.CustomUiComponent != nil {
+				category.CustomUIComponent = protoCategory.CustomUiComponent
+			}
+			// Parse created_at (proto uses string, model uses time.Time)
+			if createdAt, err := time.Parse(time.RFC3339, protoCategory.CreatedAt); err == nil {
+				category.CreatedAt = createdAt
+			}
+
+			categories = append(categories, category)
+		}
+
+		h.logger.Info().
+			Int("count", len(categories)).
+			Bool("served_by_microservice", true).
+			Msg("Successfully retrieved categories from microservice")
+
+		// Add header to indicate microservice was used
+		c.Set("X-Served-By", "microservice")
+		return utils.SuccessResponse(c, categories)
+	}
+
+	// Default: use monolith storage
+	h.logger.Debug().
+		Bool("use_microservice", false).
+		Str("lang", lang).
+		Msg("Routing GetCategories to monolith")
+
 	categories, err := h.storage.GetCategories(c.Context(), lang)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("Failed to get categories")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.get_categories_failed")
 	}
 
+	c.Set("X-Served-By", "monolith")
 	return utils.SuccessResponse(c, categories)
 }
 

@@ -5,6 +5,7 @@
 package handler
 
 import (
+	"backend/internal/clients/listings"
 	"backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/storage"
 
@@ -14,10 +15,12 @@ import (
 )
 
 type Handler struct {
-	storage     storage.MarketplaceStorage
-	services    service.ServicesInterface
-	jwtParserMW fiber.Handler
-	logger      zerolog.Logger
+	storage              storage.MarketplaceStorage
+	services             service.ServicesInterface
+	jwtParserMW          fiber.Handler
+	logger               zerolog.Logger
+	listingsClient       *listings.Client
+	useListingsMicroservice bool
 }
 
 func NewHandler(
@@ -25,11 +28,15 @@ func NewHandler(
 	services service.ServicesInterface,
 	jwtParserMW fiber.Handler,
 	logger zerolog.Logger,
+	listingsClient *listings.Client,
+	useListingsMicroservice bool,
 ) *Handler {
 	return &Handler{
-		storage:     storage.NewPostgresMarketplaceStorage(db, logger),
-		services:    services,
-		jwtParserMW: jwtParserMW,
-		logger:      logger.With().Str("module", "marketplace_handler").Logger(),
+		storage:              storage.NewPostgresMarketplaceStorage(db, logger),
+		services:             services,
+		jwtParserMW:          jwtParserMW,
+		logger:               logger.With().Str("module", "marketplace_handler").Logger(),
+		listingsClient:       listingsClient,
+		useListingsMicroservice: useListingsMicroservice,
 	}
 }

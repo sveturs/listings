@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/rs/zerolog"
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
@@ -347,6 +348,52 @@ func (c *Client) ListListings(ctx context.Context, req *pb.ListListingsRequest) 
 	c.onFailure()
 	c.logger.Error().Err(err).Msg("ListListings failed after all retries")
 	return nil, fmt.Errorf("failed to list listings after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// GetAllCategories получает все категории из microservice
+func (c *Client) GetAllCategories(ctx context.Context) (*pb.CategoriesResponse, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting GetAllCategories request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var resp *pb.CategoriesResponse
+	var err error
+
+	backoff := initialBackoff
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying GetAllCategories")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		// GetAllCategories doesn't take any parameters (uses google.protobuf.Empty)
+		resp, err = c.client.GetAllCategories(ctx, &emptypb.Empty{})
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().Int("count", len(resp.Categories)).Msg("GetAllCategories successful")
+			return resp, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in GetAllCategories")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in GetAllCategories")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("GetAllCategories failed after all retries")
+	return nil, fmt.Errorf("failed to get all categories after %d attempts: %w", maxRetries, MapGRPCError(err))
 }
 
 // shouldRetry определяет, нужно ли повторять запрос при данной ошибке

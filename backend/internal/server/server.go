@@ -42,6 +42,7 @@ import (
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
 	chat "backend/internal/proj/chat"
+	"backend/internal/clients/listings"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	creditHandler "backend/internal/proj/credit"
@@ -272,8 +273,23 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	// Включен с заглушкой - возвращает сообщение об отключении функционала
 	chatModule := chat.New(services, cfg, jwtParserMW)
 
+	// Listings gRPC client (Phase 7.4 - Categories Integration)
+	var listingsClient *listings.Client
+	if cfg.UseListingsMicroservice && cfg.ListingsGRPCURL != "" {
+		var err error
+		listingsClient, err = listings.NewClient(cfg.ListingsGRPCURL, zerologLogger)
+		if err != nil {
+			logger.Error().Err(err).Str("url", cfg.ListingsGRPCURL).Msg("Failed to create listings gRPC client, falling back to monolith")
+			listingsClient = nil // Fallback to monolith
+		} else {
+			logger.Info().Str("url", cfg.ListingsGRPCURL).Msg("Listings gRPC client initialized successfully")
+		}
+	} else {
+		logger.Info().Bool("use_microservice", cfg.UseListingsMicroservice).Str("grpc_url", cfg.ListingsGRPCURL).Msg("Listings microservice disabled, using monolith")
+	}
+
 	// TEMPORARY: Marketplace handler (minimal functionality until microservice migration)
-	marketplaceHandlerInstance := marketplaceHandler.NewHandler(db.GetSQLXDB(), services, jwtParserMW, zerologLogger)
+	marketplaceHandlerInstance := marketplaceHandler.NewHandler(db.GetSQLXDB(), services, jwtParserMW, zerologLogger, listingsClient, cfg.UseListingsMicroservice)
 
 	// Инициализация универсальных handlers
 	creditHandlerInstance := creditHandler.NewHandler()
