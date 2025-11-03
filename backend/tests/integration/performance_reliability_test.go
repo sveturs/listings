@@ -3,7 +3,6 @@ package integration
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -11,8 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"backend/internal/logger"
 	listingsClient "backend/internal/clients/listings"
+	"backend/internal/logger"
+
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 

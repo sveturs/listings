@@ -102,20 +102,20 @@ type MarketplaceCategory struct {
 	Slug              string            `json:"slug" db:"slug"`
 	ParentID          *int              `json:"parent_id,omitempty" db:"parent_id"`
 	Icon              *string           `json:"icon,omitempty" db:"icon"`
-	Description       string            `json:"description,omitempty" db:"description"`
+	Description       *string           `json:"description,omitempty" db:"description"`
 	IsActive          bool              `json:"is_active" db:"is_active"`
 	CreatedAt         time.Time         `json:"created_at" db:"created_at"`
 	Translations      map[string]string `json:"translations,omitempty"`
 	ListingCount      int               `json:"listing_count" db:"listing_count"`
 	HasCustomUI       bool              `json:"has_custom_ui,omitempty" db:"has_custom_ui"`
-	CustomUIComponent string            `json:"custom_ui_component,omitempty" db:"custom_ui_component"`
+	CustomUIComponent *string           `json:"custom_ui_component,omitempty" db:"custom_ui_component"`
 	SortOrder         int               `json:"sort_order" db:"sort_order"`
 	Level             int               `json:"level" db:"level"`
 	Count             int               `json:"count" db:"count"`
-	ExternalID        string            `json:"external_id,omitempty" db:"external_id"`
-	SEOTitle          string            `json:"seo_title,omitempty" db:"seo_title"`
-	SEODescription    string            `json:"seo_description,omitempty" db:"seo_description"`
-	SEOKeywords       string            `json:"seo_keywords,omitempty" db:"seo_keywords"`
+	ExternalID        *string           `json:"external_id,omitempty" db:"external_id"`
+	SEOTitle          *string           `json:"seo_title,omitempty" db:"seo_title"`
+	SEODescription    *string           `json:"seo_description,omitempty" db:"seo_description"`
+	SEOKeywords       *string           `json:"seo_keywords,omitempty" db:"seo_keywords"`
 }
 
 type MarketplaceImage struct {

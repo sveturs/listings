@@ -268,15 +268,12 @@ func (s *UserService) RemoveAdmin(ctx context.Context, email string) error {
 
 // GetPrivacySettings возвращает настройки приватности пользователя
 func (s *UserService) GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
-	// Privacy settings могут остаться в нашей БД или переехать в auth-service
-	// TODO: Реализовать
-	return nil, fmt.Errorf("privacy settings not implemented yet")
+	return s.storage.GetPrivacySettings(ctx, userID)
 }
 
 // UpdatePrivacySettings обновляет настройки приватности пользователя
 func (s *UserService) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
-	// TODO: Реализовать
-	return fmt.Errorf("privacy settings not implemented yet")
+	return s.storage.UpdatePrivacySettings(ctx, userID, settings)
 }
 
 // GetChatSettings возвращает настройки чата пользователя из JSONB поля settings

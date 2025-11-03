@@ -28,7 +28,7 @@ export default function Header() {
   const extractStorefrontIdFromPath = (path: string): number | null => {
     // Для страниц витрин вида /b2c/tech-store-dmitry или /b2c/tech-store-dmitry/products/1
     // можем временно извлечь ID из slug, если известно соответствие
-    if (path.includes('/b2c/')) {
+    if (path.includes('/marketplace/storefronts/')) {
       // Временное решение для витрины tech-store-dmitry = ID 4
       if (path.includes('tech-store-dmitry')) {
         return 4;
@@ -41,7 +41,7 @@ export default function Header() {
   // Определяем активную витрину из URL
   const currentStorefrontId = searchParams?.get('storefront')
     ? Number(searchParams?.get('storefront'))
-    : pathname?.includes('/b2c/')
+    : pathname?.includes('/marketplace/storefronts/')
       ? extractStorefrontIdFromPath(pathname)
       : null;
 

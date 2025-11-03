@@ -14,6 +14,7 @@ import (
 
 	listingsClient "backend/internal/clients/listings"
 	"backend/internal/logger"
+
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 
@@ -218,7 +219,6 @@ func TestCircuitBreakerStateTransitions(t *testing.T) {
 		_, err := client.GetListing(ctx, &pb.GetListingRequest{
 			ListingId: 777, // Special ID that triggers errors in mock
 		})
-
 		if err != nil {
 			failureCount++
 			t.Logf("Failure %d/5: %v", failureCount, err)
@@ -306,7 +306,6 @@ func TestConcurrentRequests(t *testing.T) {
 				Page:     1,
 				PageSize: 5,
 			})
-
 			if err != nil {
 				errors <- err
 			}

@@ -185,23 +185,22 @@ func (s *postgresMarketplaceStorage) IsFavorite(ctx context.Context, userID, lis
 func (s *postgresMarketplaceStorage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
 	query := `
 		SELECT
-			uca.id,
-			uca.category_id,
-			uca.attribute_id,
-			uca.is_enabled,
-			uca.is_required,
-			uca.sort_order,
-			uca.category_specific_options,
-			ua.name as attribute_name,
-			ua.slug as attribute_slug,
-			ua.type as attribute_type,
-			ua.is_filterable,
-			ua.is_searchable,
+			ua.id,
+			ua.name,
+			ua.display_name,
+			ua.attribute_type,
+			ua.icon,
 			ua.options,
 			ua.validation_rules,
-			ua.is_multi_select,
-			ua.is_custom_value_allowed,
-			ua.is_dynamic
+			ua.is_searchable,
+			ua.is_filterable,
+			uca.is_required,
+			ua.show_in_card,
+			false as show_in_list,
+			uca.sort_order,
+			ua.created_at,
+			ua.is_variant_compatible,
+			ua.affects_stock
 		FROM unified_category_attributes uca
 		JOIN unified_attributes ua ON uca.attribute_id = ua.id
 		WHERE uca.category_id = $1 AND uca.is_enabled = true
@@ -342,4 +341,127 @@ func (s *postgresMarketplaceStorage) GetStorefrontByID(ctx context.Context, id i
 	}
 
 	return &storefront, nil
+}
+
+// CreateListing создает новое объявление
+// TEMPORARY: Direct DB insert until microservice fully integrated
+func (s *postgresMarketplaceStorage) CreateListing(
+	ctx context.Context,
+	userID int,
+	categoryID int,
+	title string,
+	description *string,
+	price float64,
+	currency string,
+	quantity int32,
+	sku *string,
+	storefrontID *int,
+) (*models.MarketplaceListing, error) {
+	query := `
+		INSERT INTO c2c_listings (
+			user_id, category_id, title, description, price,
+			status, created_at, updated_at, storefront_id
+		)
+		VALUES ($1, $2, $3, $4, $5, 'draft', NOW(), NOW(), $6)
+		RETURNING id, user_id, category_id, title, description, price,
+				  status, created_at, updated_at, storefront_id, views_count
+	`
+
+	var listing models.MarketplaceListing
+	var dbDescription sql.NullString
+	var dbStorefrontID sql.NullInt32
+
+	err := s.db.QueryRowContext(ctx, query,
+		userID, categoryID, title, description, price, storefrontID,
+	).Scan(
+		&listing.ID,
+		&listing.UserID,
+		&listing.CategoryID,
+		&listing.Title,
+		&dbDescription,
+		&listing.Price,
+		&listing.Status,
+		&listing.CreatedAt,
+		&listing.UpdatedAt,
+		&dbStorefrontID,
+		&listing.ViewsCount,
+	)
+	if err != nil {
+		s.logger.Error().Err(err).
+			Int("user_id", userID).
+			Int("category_id", categoryID).
+			Msg("Failed to create listing")
+		return nil, fmt.Errorf("failed to create listing: %w", err)
+	}
+
+	// Convert nullable fields
+	if dbDescription.Valid {
+		listing.Description = dbDescription.String
+	}
+	if dbStorefrontID.Valid {
+		storefrontIDValue := int(dbStorefrontID.Int32)
+		listing.StorefrontID = &storefrontIDValue
+	}
+
+	s.logger.Info().
+		Int("listing_id", listing.ID).
+		Int("user_id", userID).
+		Str("title", title).
+		Msg("Listing created successfully")
+
+	return &listing, nil
+}
+
+// GetListing получает объявление по ID
+// TEMPORARY: Direct DB query until microservice fully integrated
+func (s *postgresMarketplaceStorage) GetListing(ctx context.Context, listingID int) (*models.MarketplaceListing, error) {
+	query := `
+		SELECT
+			id, user_id, category_id, title, description, price,
+			status, created_at, updated_at, storefront_id, views_count,
+			condition
+		FROM c2c_listings
+		WHERE id = $1
+	`
+
+	var listing models.MarketplaceListing
+	var dbDescription sql.NullString
+	var dbStorefrontID sql.NullInt32
+	var dbCondition sql.NullString
+
+	err := s.db.QueryRowContext(ctx, query, listingID).Scan(
+		&listing.ID,
+		&listing.UserID,
+		&listing.CategoryID,
+		&listing.Title,
+		&dbDescription,
+		&listing.Price,
+		&listing.Status,
+		&listing.CreatedAt,
+		&listing.UpdatedAt,
+		&dbStorefrontID,
+		&listing.ViewsCount,
+		&dbCondition,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("listing not found: %d", listingID)
+		}
+		s.logger.Error().Err(err).Int("listing_id", listingID).Msg("Failed to get listing")
+		return nil, fmt.Errorf("failed to get listing: %w", err)
+	}
+
+	// Convert nullable fields
+	if dbDescription.Valid {
+		listing.Description = dbDescription.String
+	}
+	if dbStorefrontID.Valid {
+		storefrontIDValue := int(dbStorefrontID.Int32)
+		listing.StorefrontID = &storefrontIDValue
+	}
+	if dbCondition.Valid {
+		listing.Condition = dbCondition.String
+	}
+
+	return &listing, nil
 }

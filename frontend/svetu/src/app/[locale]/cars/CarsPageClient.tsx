@@ -75,7 +75,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
       setLoading(true);
 
       // Загружаем статистику автомобилей
-      const statsResponse = await apiClient.get('/c2c/cars/stats');
+      const statsResponse = await apiClient.get('/marketplace/cars/stats');
       if (statsResponse.data?.data) {
         setStats({
           totalListings: statsResponse.data.data.totalListings || 0,
@@ -202,7 +202,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         }
       });
 
-      const response = await apiClient.post('/c2c/search', searchParams);
+      const response = await apiClient.post('/marketplace/search', searchParams);
 
       // API возвращает массив напрямую в data, не в data.items
       if (response.data?.data) {

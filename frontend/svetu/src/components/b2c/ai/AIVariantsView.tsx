@@ -48,7 +48,7 @@ export default function AIVariantsView({
       try {
         // Сначала получаем slug категории по ID
         const categoriesResponse = await fetch(
-          `/api/v2/c2c/categories?page=1&limit=1000`
+          `/api/v2/marketplace/categories?page=1&limit=1000`
         );
 
         if (!categoriesResponse.ok) {
@@ -79,7 +79,7 @@ export default function AIVariantsView({
 
         // Загружаем variant attributes для этой категории
         const variantAttrsResponse = await fetch(
-          `/api/v2/c2c/categories/${category.slug}/variant-attributes`
+          `/api/v2/marketplace/categories/${category.slug}/variant-attributes`
         );
 
         if (variantAttrsResponse.ok) {

@@ -29,7 +29,7 @@ class FavoritesService {
     if (this.isInitialized) return;
 
     try {
-      const response = await apiClient.get('/c2c/favorites');
+      const response = await apiClient.get('/marketplace/favorites');
       if (response.data?.success && Array.isArray(response.data.data)) {
         this.favoriteIds = new Set(
           response.data.data.map((item: any) => item.id)
@@ -59,7 +59,7 @@ class FavoritesService {
 
     try {
       // Получаем избранные объявления (включая товары витрин)
-      const response = await apiClient.get('/c2c/favorites');
+      const response = await apiClient.get('/marketplace/favorites');
       if (response.data?.success) {
         const rawFavorites = response.data.data || [];
         // Преобразуем backend данные в FavoriteItem
@@ -135,8 +135,8 @@ class FavoritesService {
 
       // Для товаров витрин передаем специальный параметр type
       const endpoint = isB2CProduct
-        ? `/c2c/favorites/${listingId.replace('sp_', '')}?type=storefront`
-        : `/c2c/favorites/${listingId}`;
+        ? `/marketplace/favorites/${listingId.replace('sp_', '')}?type=storefront`
+        : `/marketplace/favorites/${listingId}`;
 
       const response = await apiClient.post(endpoint);
       if (response.data?.success) {
@@ -171,8 +171,8 @@ class FavoritesService {
       const isB2CProduct =
         typeof listingId === 'string' && listingId.startsWith('sp_');
       const endpoint = isB2CProduct
-        ? `/c2c/favorites/${listingId.replace('sp_', '')}?type=storefront`
-        : `/c2c/favorites/${listingId}`;
+        ? `/marketplace/favorites/${listingId.replace('sp_', '')}?type=storefront`
+        : `/marketplace/favorites/${listingId}`;
 
       const response = await apiClient.delete(endpoint);
       if (response.data?.success) {
@@ -226,7 +226,7 @@ class FavoritesService {
   // Проверить статус на сервере
   async checkFavoriteStatus(listingId: number): Promise<boolean> {
     try {
-      const response = await apiClient.get(`/c2c/favorites/${listingId}/check`);
+      const response = await apiClient.get(`/marketplace/favorites/${listingId}/check`);
       if (response.data?.success) {
         const isInFavorites = response.data.data?.isInFavorites || false;
         if (isInFavorites) {
@@ -246,7 +246,7 @@ class FavoritesService {
   // Получить количество избранных
   async getFavoritesCount(): Promise<number> {
     try {
-      const response = await apiClient.get('/c2c/favorites/count');
+      const response = await apiClient.get('/marketplace/favorites/count');
       if (response.data?.success) {
         return response.data.data?.count || 0;
       }

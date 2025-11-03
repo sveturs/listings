@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	listingsv1 "backend/pkg/proto/listings/v1"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

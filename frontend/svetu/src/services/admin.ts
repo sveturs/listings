@@ -233,7 +233,7 @@ export const adminApi = {
     async getAttributes(categoryId: number): Promise<Attribute[]> {
       const currentLocale = getCurrentLocale();
       const response = await apiClient.get(
-        `/c2c/categories/${categoryId}/attributes?lang=${currentLocale}`
+        `/marketplace/categories/${categoryId}/attributes?lang=${currentLocale}`
       );
 
       if (response.error) {
@@ -563,7 +563,7 @@ export const adminApi = {
 
     for (const targetLang of targetLanguages) {
       try {
-        const response = await apiClient.post('/c2c/translations/translate', {
+        const response = await apiClient.post('/marketplace/translations/translate', {
           text,
           source_lang: 'ru', // Предполагаем, что исходный текст на русском
           target_lang: targetLang,

@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	testGRPCURL            = "localhost:50053" // Mock microservice URL
-	timeoutTestTimeout     = 500 * time.Millisecond
+	testGRPCURL        = "localhost:50053" // Mock microservice URL
+	timeoutTestTimeout = 500 * time.Millisecond
 )
 
 // TestTimeoutTriggersAtConfiguredDuration verifies timeout triggers at 500ms

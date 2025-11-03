@@ -6,7 +6,7 @@ import configManager from '@/config';
  */
 export function getSecureAttachmentUrl(attachmentId: number): string {
   // Используем BFF proxy - автоматически добавит cookies для авторизации
-  return `/api/v2/c2c/chat/attachments/${attachmentId}/download`;
+  return `/api/v2/marketplace/chat/attachments/${attachmentId}/download`;
 }
 
 /**

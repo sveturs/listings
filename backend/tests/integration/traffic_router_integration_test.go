@@ -10,10 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	listingsClient "backend/internal/clients/listings"
 	"backend/internal/domain"
 	"backend/internal/logger"
 	"backend/internal/metrics"
-	listingsClient "backend/internal/clients/listings"
+
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 
@@ -77,9 +78,9 @@ func TestTrafficRouter_UserWhitelisting(t *testing.T) {
 		userID             int64
 		expectMicroservice bool
 	}{
-		{userID: 1, expectMicroservice: true},  // Whitelisted
-		{userID: 2, expectMicroservice: true},  // Whitelisted
-		{userID: 3, expectMicroservice: true},  // Whitelisted
+		{userID: 1, expectMicroservice: true},    // Whitelisted
+		{userID: 2, expectMicroservice: true},    // Whitelisted
+		{userID: 3, expectMicroservice: true},    // Whitelisted
 		{userID: 100, expectMicroservice: false}, // Not whitelisted
 		{userID: 999, expectMicroservice: false}, // Not whitelisted
 	}

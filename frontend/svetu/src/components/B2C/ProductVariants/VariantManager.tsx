@@ -78,7 +78,7 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const response = await apiClient.get(
-        `/b2c/storefront/products/${productId}/variants`
+        `/marketplace/storefronts/storefront/products/${productId}/variants`
       );
       if (response.data) {
         setVariants(response.data);
@@ -139,7 +139,7 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const response = await apiClient.get(
-        `/b2c/storefront/products/${productId}/variant-matrix`
+        `/marketplace/storefronts/storefront/products/${productId}/variant-matrix`
       );
       if (response.data) {
         setVariantMatrix(response.data);
@@ -155,7 +155,7 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const response = await apiClient.get(
-        `/b2c/storefront/products/${productId}/variants/analytics`
+        `/marketplace/storefronts/storefront/products/${productId}/variants/analytics`
       );
       if (response.data) {
         setAnalytics(response.data);
@@ -208,7 +208,7 @@ export default function VariantManager({
       };
 
       const response = await apiClient.post(
-        '/b2c/storefront/variants/generate',
+        '/marketplace/storefronts/storefront/variants/generate',
         request
       );
 
@@ -240,7 +240,7 @@ export default function VariantManager({
       };
 
       const response = await apiClient.post(
-        `/b2c/storefront/products/${productId}/variants/bulk-update-stock`,
+        `/marketplace/storefronts/storefront/products/${productId}/variants/bulk-update-stock`,
         request
       );
 

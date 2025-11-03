@@ -57,7 +57,7 @@ export default function AttributeSetup({
   const loadAvailableAttributes = useCallback(async () => {
     try {
       const response = await apiClient.get(
-        `/b2c/storefront/categories/${categoryId}/attributes`
+        `/marketplace/storefronts/storefront/categories/${categoryId}/attributes`
       );
       if (response.data) {
         const attributes = response.data;
@@ -78,7 +78,7 @@ export default function AttributeSetup({
   const loadCurrentSetup = useCallback(async () => {
     try {
       const response = await apiClient.get(
-        `/b2c/storefront/products/${productId}/attributes`
+        `/marketplace/storefronts/storefront/products/${productId}/attributes`
       );
       if (response.data) {
         const currentAttributes = response.data;

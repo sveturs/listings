@@ -109,7 +109,7 @@ export default function AutocompleteSearch({
 
       try {
         // Fetch car makes/models matching query
-        const makesData = await apiClient.get('/c2c/cars/makes');
+        const makesData = await apiClient.get('/marketplace/cars/makes');
 
         const matchingMakes: SearchSuggestion[] =
           makesData.data

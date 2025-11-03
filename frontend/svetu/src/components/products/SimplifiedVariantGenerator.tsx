@@ -86,7 +86,7 @@ export default function SimplifiedVariantGenerator({
 
         // Загружаем вариативные атрибуты для конкретной категории
         const response = await fetch(
-          `/api/v2/c2c/categories/${categorySlug}/variant-attributes`
+          `/api/v2/marketplace/categories/${categorySlug}/variant-attributes`
         );
 
         if (!response.ok) {

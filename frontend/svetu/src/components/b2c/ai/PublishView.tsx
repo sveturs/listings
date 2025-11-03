@@ -86,7 +86,7 @@ export default function PublishView({
       };
 
       const createResponse = await apiClient.post(
-        `/b2c/slug/${storefrontSlug}/products`,
+        `/marketplace/storefronts/slug/${storefrontSlug}/products`,
         productData
       );
 
@@ -116,7 +116,7 @@ export default function PublishView({
         // НЕ устанавливаем Content-Type вручную для FormData!
         // Браузер сам добавит правильный заголовок с boundary
         return apiClient.post(
-          `/b2c/slug/${storefrontSlug}/products/${productId}/images`,
+          `/marketplace/storefronts/slug/${storefrontSlug}/products/${productId}/images`,
           formData
         );
       });

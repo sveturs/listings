@@ -8,23 +8,24 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
-	_ "github.com/lib/pq"
 
-	"backend/internal/logger"
 	listingsClient "backend/internal/clients/listings"
+	"backend/internal/logger"
+
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 
 const (
-	microserviceAddr = "localhost:50053"
-	monolithDBURL    = "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable"
+	microserviceAddr  = "localhost:50053"
+	monolithDBURL     = "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable"
 	microserviceDBURL = "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/listings?sslmode=disable"
-	openSearchURL    = "http://localhost:9200"
-	smokeTimeout     = 3 * time.Second
+	openSearchURL     = "http://localhost:9200"
+	smokeTimeout      = 3 * time.Second
 )
 
 // TestSmoke_MicroserviceIsAlive verifies microservice is running
@@ -43,7 +44,6 @@ func TestSmoke_MicroserviceIsAlive(t *testing.T) {
 
 	healthClient := grpc_health_v1.NewHealthClient(conn)
 	resp, err := healthClient.Check(ctx, &grpc_health_v1.HealthCheckRequest{})
-
 	if err != nil {
 		t.Fatalf("❌ Health check failed: %v", err)
 	}
@@ -90,7 +90,6 @@ func TestSmoke_MicroserviceDatabaseAccessible(t *testing.T) {
 			AND table_name = 'listings'
 		)
 	`).Scan(&tableExists)
-
 	if err != nil {
 		t.Fatalf("❌ Cannot query microservice DB: %v", err)
 	}
@@ -125,7 +124,6 @@ func TestSmoke_MonolithDatabaseAccessible(t *testing.T) {
 			AND table_name = 'marketplace_listings'
 		)
 	`).Scan(&tableExists)
-
 	if err != nil {
 		t.Fatalf("❌ Cannot query monolith DB: %v", err)
 	}

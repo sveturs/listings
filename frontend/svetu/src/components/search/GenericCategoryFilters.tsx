@@ -35,7 +35,7 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
     setLoading(true);
     try {
       const response = await apiClient.get(
-        `/c2c/categories/${categoryId}/attributes`
+        `/marketplace/categories/${categoryId}/attributes`
       );
       if (response.data?.data) {
         const filterableAttributes = response.data.data.filter(

@@ -35,14 +35,14 @@ type CanaryRequestOptions struct {
 
 // CanaryMetrics contains parsed canary metrics from Prometheus
 type CanaryMetrics struct {
-	FeatureFlagEnabled   float64
-	RolloutPercent       float64
-	CanaryUsers          float64
-	CircuitBreakerState  float64
-	CircuitBreakerTrips  float64
-	FailedRequests       float64
-	RejectedRequests     float64
-	Recoveries           float64
+	FeatureFlagEnabled  float64
+	RolloutPercent      float64
+	CanaryUsers         float64
+	CircuitBreakerState float64
+	CircuitBreakerTrips float64
+	FailedRequests      float64
+	RejectedRequests    float64
+	Recoveries          float64
 }
 
 // CreateCanaryRequest создаёт HTTP запрос с canary параметрами

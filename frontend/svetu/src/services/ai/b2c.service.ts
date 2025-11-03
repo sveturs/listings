@@ -123,7 +123,7 @@ class StorefrontAIService {
   ): Promise<ProductAnalysisResult> {
     // Используем apiClient для автоматической передачи JWT через BFF proxy
     const response = await apiClient.post<ProductAnalysisResult>(
-      '/b2c/ai/analyze-product-image',
+      '/marketplace/storefronts/ai/analyze-product-image',
       {
         imageData: imageBase64,
         language,
@@ -161,7 +161,7 @@ class StorefrontAIService {
     language: string = 'ru'
   ): Promise<CategoryDetectionResult> {
     const response = await apiClient.post<CategoryDetectionResult>(
-      '/b2c/ai/detect-category',
+      '/marketplace/storefronts/ai/detect-category',
       {
         title,
         description,
@@ -193,7 +193,7 @@ class StorefrontAIService {
     }
 
     const response = await apiClient.post<ABTestResult>(
-      '/b2c/ai/ab-test-titles',
+      '/marketplace/storefronts/ai/ab-test-titles',
       {
         titleVariants,
       }
@@ -228,7 +228,7 @@ class StorefrontAIService {
     }
 
     const response = await apiClient.post<TranslationResult>(
-      '/b2c/ai/translate-content',
+      '/marketplace/storefronts/ai/translate-content',
       {
         content,
         targetLanguages,
@@ -253,7 +253,7 @@ class StorefrontAIService {
    * Получить метрики AI для товаров витрин
    */
   async getMetrics(): Promise<AIMetrics> {
-    const response = await apiClient.get<AIMetrics>('/b2c/ai/metrics');
+    const response = await apiClient.get<AIMetrics>('/marketplace/storefronts/ai/metrics');
 
     if (response.error) {
       throw new Error(response.error.message || 'Failed to get metrics');

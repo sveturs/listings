@@ -71,7 +71,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
     ) {
       const storefrontId =
         marker.storefront_id || parsedMetadata?.storefront_id || marker.id;
-      router.push(`/b2c/${storefrontId}`);
+      router.push(`/marketplace/storefronts/${storefrontId}`);
     } else if (parsedData?.id || marker.id) {
       router.push(`/c2c/${parsedData?.id || marker.id}`);
     }

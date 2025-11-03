@@ -32,7 +32,7 @@ func NewPublicVariantHandler(variantRepo *repository.VariantRepository) *PublicV
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /api/v1/public/b2c_stores/{slug}/products/{product_id}/variants [get]
+// @Router /api/v1/public/marketplace/storefronts/{slug}/products/{product_id}/variants [get]
 func (h *PublicVariantHandler) GetProductVariantsPublic(c *fiber.Ctx) error {
 	productID, err := strconv.Atoi(c.Params("product_id"))
 	if err != nil {
@@ -119,7 +119,7 @@ func (h *PublicVariantHandler) GetVariantAttributeValuesPublic(c *fiber.Ctx) err
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /api/v1/public/b2c_stores/{slug}/products/{product_id} [get]
+// @Router /api/v1/public/marketplace/storefronts/{slug}/products/{product_id} [get]
 func (h *PublicVariantHandler) GetProductPublic(c *fiber.Ctx) error {
 	slug := c.Params("slug")
 

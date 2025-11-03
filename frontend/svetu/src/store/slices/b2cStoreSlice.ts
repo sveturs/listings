@@ -232,7 +232,7 @@ export const fetchStorefrontById = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchStorefrontById', async (id, { rejectWithValue }) => {
   try {
-    const response = await apiClient.get(`/b2c/${id}`);
+    const response = await apiClient.get(`/marketplace/storefronts/${id}`);
 
     if (!response.data) {
       return rejectWithValue('Failed to fetch storefront');
@@ -254,7 +254,7 @@ export const fetchStorefrontBySlug = createAsyncThunk<
 >('storefronts/fetchStorefrontBySlug', async (slug, { rejectWithValue }) => {
   try {
     // Используем BFF proxy - автоматически добавит cookies для авторизации
-    const response = await apiClient.get(`/b2c/slug/${slug}`);
+    const response = await apiClient.get(`/marketplace/storefronts/slug/${slug}`);
 
     if (!response.data) {
       return rejectWithValue('Failed to fetch storefront');
@@ -276,7 +276,7 @@ export const fetchMyStorefronts = createAsyncThunk<
 >('storefronts/fetchMyStorefronts', async (_, { rejectWithValue }) => {
   try {
     // Используем BFF proxy - автоматически добавит cookies для авторизации
-    const response = await apiClient.get('/b2c/my');
+    const response = await apiClient.get('/marketplace/storefronts/my');
 
     if (!response.data) {
       return rejectWithValue('Failed to fetch my storefronts');
@@ -309,7 +309,7 @@ export const createStorefront = createAsyncThunk<
   'storefronts/createStorefront',
   async (storefrontData, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post('/b2c', storefrontData);
+      const response = await apiClient.post('/marketplace/storefronts', storefrontData);
 
       if (!response.data) {
         return rejectWithValue('Failed to create storefront');
@@ -331,7 +331,7 @@ export const updateStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/updateStorefront', async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await apiClient.put(`/b2c/${id}`, data);
+    const response = await apiClient.put(`/marketplace/storefronts/${id}`, data);
 
     if (!response.data) {
       return rejectWithValue('Failed to update storefront');
@@ -352,7 +352,7 @@ export const deleteStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/deleteStorefront', async (id, { rejectWithValue }) => {
   try {
-    const response = await apiClient.delete(`/b2c/${id}`);
+    const response = await apiClient.delete(`/marketplace/storefronts/${id}`);
 
     if (!response.data) {
       return rejectWithValue('Failed to delete storefront');

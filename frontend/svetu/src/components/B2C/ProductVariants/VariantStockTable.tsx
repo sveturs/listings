@@ -88,7 +88,7 @@ export default function VariantStockTable({
     try {
       setLoading(true);
       const response = await apiClient.get<ProductVariant[]>(
-        `/b2c/storefront/products/${productId}/variants`
+        `/marketplace/storefronts/storefront/products/${productId}/variants`
       );
 
       if (response.data) {
@@ -288,7 +288,7 @@ export default function VariantStockTable({
       const request: BulkUpdateStockRequest = { updates };
 
       const response = await apiClient.post(
-        `/b2c/storefront/products/${productId}/variants/bulk-update-stock`,
+        `/marketplace/storefronts/storefront/products/${productId}/variants/bulk-update-stock`,
         request
       );
 
@@ -352,7 +352,7 @@ export default function VariantStockTable({
       formData.append('file', file);
 
       const response = await apiClient.upload(
-        `/b2c/storefront/products/${productId}/variants/import`,
+        `/marketplace/storefronts/storefront/products/${productId}/variants/import`,
         formData
       );
 

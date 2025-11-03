@@ -4,16 +4,16 @@ package integration
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"testing"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	_ "github.com/lib/pq"
 
-	"backend/internal/logger"
 	listingsClient "backend/internal/clients/listings"
+	"backend/internal/logger"
+
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 
@@ -184,8 +184,8 @@ func TestReferentialIntegrity(t *testing.T) {
 		expected int
 	}{
 		{
-			name:  "Monolith - orphaned images",
-			dbURL: monolithDBURL,
+			name:   "Monolith - orphaned images",
+			dbURL:  monolithDBURL,
 			dbName: "monolith",
 			query: `
 				SELECT COUNT(*)
@@ -196,8 +196,8 @@ func TestReferentialIntegrity(t *testing.T) {
 			expected: 0,
 		},
 		{
-			name:  "Monolith - orphaned attributes",
-			dbURL: monolithDBURL,
+			name:   "Monolith - orphaned attributes",
+			dbURL:  monolithDBURL,
 			dbName: "monolith",
 			query: `
 				SELECT COUNT(*)
@@ -208,8 +208,8 @@ func TestReferentialIntegrity(t *testing.T) {
 			expected: 0,
 		},
 		{
-			name:  "Microservice - orphaned images",
-			dbURL: microserviceDBURL,
+			name:   "Microservice - orphaned images",
+			dbURL:  microserviceDBURL,
 			dbName: "microservice",
 			query: `
 				SELECT COUNT(*)

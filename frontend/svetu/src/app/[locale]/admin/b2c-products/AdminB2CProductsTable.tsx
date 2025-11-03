@@ -134,7 +134,7 @@ export default function AdminB2CProductsTable() {
 
         // Используем правильный эндпоинт с slug в пути
         const response = await apiClient.get(
-          `/b2c/slug/${storefront.slug}/products?${params}`
+          `/marketplace/storefronts/slug/${storefront.slug}/products?${params}`
         );
 
         if (response.data) {
@@ -303,7 +303,7 @@ export default function AdminB2CProductsTable() {
       }
 
       const response = await apiClient.delete(
-        `/b2c/slug/${slug}/products/${id}`
+        `/marketplace/storefronts/slug/${slug}/products/${id}`
       );
 
       if (response.data) {
@@ -351,7 +351,7 @@ export default function AdminB2CProductsTable() {
         async ([slug, productIds]) => {
           try {
             const _response = await apiClient.put(
-              `/b2c/slug/${slug}/products/bulk/status`,
+              `/marketplace/storefronts/slug/${slug}/products/bulk/status`,
               {
                 product_ids: productIds,
                 is_active: true,
@@ -424,7 +424,7 @@ export default function AdminB2CProductsTable() {
         async ([slug, productIds]) => {
           try {
             const _response = await apiClient.put(
-              `/b2c/slug/${slug}/products/bulk/status`,
+              `/marketplace/storefronts/slug/${slug}/products/bulk/status`,
               {
                 product_ids: productIds,
                 is_active: false,
@@ -486,7 +486,7 @@ export default function AdminB2CProductsTable() {
 
         try {
           const response = await apiClient.delete(
-            `/b2c/slug/${slug}/products/${id}?hard=true`
+            `/marketplace/storefronts/slug/${slug}/products/${id}?hard=true`
           );
 
           if (!response.data) {
@@ -525,7 +525,7 @@ export default function AdminB2CProductsTable() {
         return;
       }
 
-      const response = await apiClient.put(`/b2c/slug/${slug}/products/${id}`, {
+      const response = await apiClient.put(`/marketplace/storefronts/slug/${slug}/products/${id}`, {
         is_active: !isActive,
       });
 

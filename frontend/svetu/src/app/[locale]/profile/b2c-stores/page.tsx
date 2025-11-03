@@ -378,7 +378,7 @@ export default function MyStorefrontsPage() {
                   {/* Action Buttons */}
                   <div className="card-actions pb-6">
                     <Link
-                      href={`/b2c/${storefront.slug}/dashboard`}
+                      href={`/marketplace/storefronts/${storefront.slug}/dashboard`}
                       className="btn btn-primary flex-1"
                     >
                       <ChartBarIcon className="w-5 h-5" />
@@ -400,7 +400,7 @@ export default function MyStorefrontsPage() {
                       >
                         <li>
                           <Link
-                            href={`/b2c/${storefront.slug}`}
+                            href={`/marketplace/storefronts/${storefront.slug}`}
                             className="gap-3"
                           >
                             <EyeIcon className="w-4 h-4" />
@@ -409,7 +409,7 @@ export default function MyStorefrontsPage() {
                         </li>
                         <li>
                           <Link
-                            href={`/b2c/${storefront.slug}/edit`}
+                            href={`/marketplace/storefronts/${storefront.slug}/edit`}
                             className="gap-3"
                           >
                             <PencilIcon className="w-4 h-4" />
@@ -418,7 +418,7 @@ export default function MyStorefrontsPage() {
                         </li>
                         <li>
                           <Link
-                            href={`/b2c/${storefront.slug}/products`}
+                            href={`/marketplace/storefronts/${storefront.slug}/products`}
                             className="gap-3"
                           >
                             <ShoppingBagIcon className="w-4 h-4" />
@@ -427,7 +427,7 @@ export default function MyStorefrontsPage() {
                         </li>
                         <li>
                           <Link
-                            href={`/b2c/${storefront.slug}/staff`}
+                            href={`/marketplace/storefronts/${storefront.slug}/staff`}
                             className="gap-3"
                           >
                             <UserGroupIcon className="w-4 h-4" />
@@ -436,7 +436,7 @@ export default function MyStorefrontsPage() {
                         </li>
                         <li>
                           <Link
-                            href={`/b2c/${storefront.slug}/reviews`}
+                            href={`/marketplace/storefronts/${storefront.slug}/reviews`}
                             className="gap-3"
                           >
                             <StarIcon className="w-4 h-4" />
@@ -445,7 +445,7 @@ export default function MyStorefrontsPage() {
                         </li>
                         <li>
                           <Link
-                            href={`/b2c/${storefront.slug}/messages`}
+                            href={`/marketplace/storefronts/${storefront.slug}/messages`}
                             className="gap-3"
                           >
                             <ChatBubbleLeftRightIcon className="w-4 h-4" />

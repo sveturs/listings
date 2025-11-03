@@ -29,6 +29,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Delete("/api/v1/marketplace/favorites/:id", h.jwtParserMW, authMiddleware.RequireAuth(), h.RemoveFromFavorites)
 	app.Get("/api/v1/marketplace/chat", h.jwtParserMW, authMiddleware.RequireAuth(), h.GetChats)
 
+	// Listings CRUD (TEMPORARY: direct DB until microservice migration complete)
+	app.Post("/api/v1/marketplace/listings", h.jwtParserMW, authMiddleware.RequireAuth(), h.CreateListing)
+	app.Get("/api/v1/marketplace/listings/:id", h.GetListing)
+
 	return nil
 }
 

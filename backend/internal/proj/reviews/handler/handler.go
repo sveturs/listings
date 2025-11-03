@@ -23,8 +23,8 @@ type Handler struct {
 }
 
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
-	app.Get("/api/v1/public/b2c_stores/:id/reviews", h.Review.GetStorefrontReviews)
-	app.Get("/api/v1/public/b2c_stores/:id/rating", h.Review.GetStorefrontRatingSummary)
+	app.Get("/api/v1/public/marketplace/storefronts/:id/reviews", h.Review.GetStorefrontReviews)
+	app.Get("/api/v1/public/marketplace/storefronts/:id/rating", h.Review.GetStorefrontRatingSummary)
 
 	entityStats := app.Group("/api/v1/entity")
 	entityStats.Get("/:type/:id/rating", h.Review.GetEntityRating)
@@ -32,13 +32,13 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	// Новые endpoints для агрегированных рейтингов
 	app.Get("/api/v1/users/:id/aggregated-rating", h.Review.GetUserAggregatedRating)
-	app.Get("/api/v1/b2c_stores/:id/aggregated-rating", h.Review.GetStorefrontAggregatedRating)
+	app.Get("/api/v1/marketplace/storefronts/:id/aggregated-rating", h.Review.GetStorefrontAggregatedRating)
 
 	// Protected GET endpoints (требуют только Auth, БЕЗ CSRF так как это GET)
 	app.Get("/api/v1/users/:id/reviews", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetUserReviews)
 	app.Get("/api/v1/users/:id/rating", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetUserRatingSummary)
-	app.Get("/api/v1/b2c_stores/:id/reviews", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetStorefrontReviews)
-	app.Get("/api/v1/b2c_stores/:id/rating", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetStorefrontRatingSummary)
+	app.Get("/api/v1/marketplace/storefronts/:id/reviews", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetStorefrontReviews)
+	app.Get("/api/v1/marketplace/storefronts/:id/rating", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetStorefrontRatingSummary)
 
 	// Публичные GET endpoints (без middleware)
 	app.Get("/api/v1/reviews", h.Review.GetReviews)

@@ -86,7 +86,7 @@ export const productApi = {
     const params = productIds?.length ? `?ids=${productIds.join(',')}` : '';
     // Используем BFF proxy - автоматически добавит cookies для авторизации
     const response = await fetch(
-      `/api/v2/b2c/slug/${storefrontSlug}/products/export/csv${params}`,
+      `/api/v2/marketplace/storefronts/slug/${storefrontSlug}/products/export/csv${params}`,
       {
         credentials: 'include', // Включаем cookies
       }
@@ -119,7 +119,7 @@ export const productApi = {
     const params = productIds?.length ? `?ids=${productIds.join(',')}` : '';
     // Используем BFF proxy - автоматически добавит cookies для авторизации
     const response = await fetch(
-      `/api/v2/b2c/slug/${storefrontSlug}/products/export/xml${params}`,
+      `/api/v2/marketplace/storefronts/slug/${storefrontSlug}/products/export/xml${params}`,
       {
         credentials: 'include', // Включаем cookies
       }

@@ -72,7 +72,7 @@ export const reviewApi = {
     const endpoint =
       entityType === 'user'
         ? `/users/${entityId}/aggregated-rating`
-        : `/b2c/${entityId}/aggregated-rating`;
+        : `/marketplace/storefronts/${entityId}/aggregated-rating`;
 
     const response = await apiClient.get<{ data: AggregatedRating }>(endpoint);
     if (!response.data) {

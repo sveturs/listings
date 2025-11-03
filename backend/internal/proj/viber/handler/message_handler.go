@@ -55,47 +55,47 @@ func (m *MessageHandler) HandleSearch(ctx context.Context, viberID, query string
 
 	// Unreachable code below - kept for reference
 	/*
-	if err != nil {
-		msg := "Произошла ошибка при поиске. Попробуйте позже или измените запрос."
-		return m.sendMessage(ctx, viberID, msg)
-	}
+		if err != nil {
+			msg := "Произошла ошибка при поиске. Попробуйте позже или измените запрос."
+			return m.sendMessage(ctx, viberID, msg)
+		}
 
-	if len(results.Items) == 0 {
-		// Предлагаем альтернативы
-		suggestions, _ := m.marketplaceService.GetSuggestions(ctx, cleanQuery, 3)
-		msg := fmt.Sprintf("По запросу \"%s\" ничего не найдено.\n\n", cleanQuery)
+		if len(results.Items) == 0 {
+			// Предлагаем альтернативы
+			suggestions, _ := m.marketplaceService.GetSuggestions(ctx, cleanQuery, 3)
+			msg := fmt.Sprintf("По запросу \"%s\" ничего не найдено.\n\n", cleanQuery)
 
-		if len(suggestions) > 0 {
-			msg += "Возможно, вы искали:\n"
-			for _, suggestion := range suggestions {
-				msg += fmt.Sprintf("• %s\n", suggestion)
+			if len(suggestions) > 0 {
+				msg += "Возможно, вы искали:\n"
+				for _, suggestion := range suggestions {
+					msg += fmt.Sprintf("• %s\n", suggestion)
+				}
+			} else {
+				msg += "Попробуйте:\n• Изменить запрос\n• Использовать синонимы\n• Проверить орфографию"
 			}
-		} else {
-			msg += "Попробуйте:\n• Изменить запрос\n• Использовать синонимы\n• Проверить орфографию"
+
+			return m.sendMessage(ctx, viberID, msg)
+		}
+
+		// Формируем ответ с результатами
+		msg := fmt.Sprintf("Найдено %d товаров по запросу \"%s\":\n\n", len(results.Items), cleanQuery)
+
+		for i, listing := range results.Items {
+			price := "Цена не указана"
+			if listing.Price > 0 {
+				price = fmt.Sprintf("%.0f RSD", listing.Price)
+			}
+
+			msg += fmt.Sprintf("%d. %s\n💰 %s\n📍 %s\n🔗 https://svetu.rs/marketplace/listing/%d\n\n",
+				i+1, listing.Title, price, listing.Location, listing.ID)
+		}
+
+		if results.Total > len(results.Items) {
+			msg += fmt.Sprintf("Показаны первые %d из %d результатов.\n", len(results.Items), results.Total)
+			msg += "Больше результатов на сайте: https://svetu.rs/marketplace/search?q=" + cleanQuery
 		}
 
 		return m.sendMessage(ctx, viberID, msg)
-	}
-
-	// Формируем ответ с результатами
-	msg := fmt.Sprintf("Найдено %d товаров по запросу \"%s\":\n\n", len(results.Items), cleanQuery)
-
-	for i, listing := range results.Items {
-		price := "Цена не указана"
-		if listing.Price > 0 {
-			price = fmt.Sprintf("%.0f RSD", listing.Price)
-		}
-
-		msg += fmt.Sprintf("%d. %s\n💰 %s\n📍 %s\n🔗 https://svetu.rs/marketplace/listing/%d\n\n",
-			i+1, listing.Title, price, listing.Location, listing.ID)
-	}
-
-	if results.Total > len(results.Items) {
-		msg += fmt.Sprintf("Показаны первые %d из %d результатов.\n", len(results.Items), results.Total)
-		msg += "Больше результатов на сайте: https://svetu.rs/marketplace/search?q=" + cleanQuery
-	}
-
-	return m.sendMessage(ctx, viberID, msg)
 	*/
 }
 
@@ -160,39 +160,39 @@ func (m *MessageHandler) HandleStorefronts(ctx context.Context, viberID string) 
 
 	// Unreachable code below - kept for reference
 	/*
-	if err != nil {
-		msg := "Произошла ошибка при загрузке витрин. Попробуйте позже."
-		return m.sendMessage(ctx, viberID, msg)
-	}
-
-	if len(b2c_stores) == 0 {
-		msg := "Пока нет активных витрин.\n\n" +
-			"Создайте свою витрину на сайте:\n" +
-			"🔗 https://svetu.rs/b2c_stores/create"
-		return m.sendMessage(ctx, viberID, msg)
-	}
-
-	msg := fmt.Sprintf("Найдено витрин: %d\n\n", total)
-
-	for i, storefront := range b2c_stores {
-		msg += fmt.Sprintf("%d. %s\n", i+1, storefront.Name)
-		if storefront.Description != nil && *storefront.Description != "" {
-			// Обрезаем описание до 100 символов
-			desc := *storefront.Description
-			if len(desc) > 100 {
-				desc = desc[:97] + "..."
-			}
-			msg += fmt.Sprintf("📝 %s\n", desc)
+		if err != nil {
+			msg := "Произошла ошибка при загрузке витрин. Попробуйте позже."
+			return m.sendMessage(ctx, viberID, msg)
 		}
-		msg += fmt.Sprintf("🔗 https://svetu.rs/storefront/%s\n\n", storefront.Slug)
-	}
 
-	if total > len(b2c_stores) {
-		msg += fmt.Sprintf("Показаны первые %d из %d витрин.\n", len(b2c_stores), total)
-		msg += "Все витрины: https://svetu.rs/b2c_stores"
-	}
+		if len(b2c_stores) == 0 {
+			msg := "Пока нет активных витрин.\n\n" +
+				"Создайте свою витрину на сайте:\n" +
+				"🔗 https://svetu.rs/b2c_stores/create"
+			return m.sendMessage(ctx, viberID, msg)
+		}
 
-	return m.sendMessage(ctx, viberID, msg)
+		msg := fmt.Sprintf("Найдено витрин: %d\n\n", total)
+
+		for i, storefront := range b2c_stores {
+			msg += fmt.Sprintf("%d. %s\n", i+1, storefront.Name)
+			if storefront.Description != nil && *storefront.Description != "" {
+				// Обрезаем описание до 100 символов
+				desc := *storefront.Description
+				if len(desc) > 100 {
+					desc = desc[:97] + "..."
+				}
+				msg += fmt.Sprintf("📝 %s\n", desc)
+			}
+			msg += fmt.Sprintf("🔗 https://svetu.rs/storefront/%s\n\n", storefront.Slug)
+		}
+
+		if total > len(b2c_stores) {
+			msg += fmt.Sprintf("Показаны первые %d из %d витрин.\n", len(b2c_stores), total)
+			msg += "Все витрины: https://svetu.rs/b2c_stores"
+		}
+
+		return m.sendMessage(ctx, viberID, msg)
 	*/
 }
 
@@ -225,61 +225,61 @@ func (m *MessageHandler) HandleNearbyProducts(ctx context.Context, viberID strin
 
 	// Unreachable code below - kept for reference
 	/*
-	// Ищем товары в радиусе 5 км
-	markers, err := m.marketplaceService.GetListingsInBounds(ctx,
-		lat+0.045, // ~5км к северу
-		lng+0.063, // ~5км к востоку
-		lat-0.045, // ~5км к югу
-		lng-0.063, // ~5км к западу
-		14,        // zoom level
-		"",        // все категории
-		"",        // все состояния
-		nil, nil,  // без фильтра по цене
-		"") // без фильтра атрибутов
-	if err != nil {
-		msg := "Произошла ошибка при поиске товаров рядом с вами. Попробуйте позже."
-		return m.sendMessage(ctx, viberID, msg)
-	}
-
-	if len(markers) == 0 {
-		msg := "Рядом с вами пока нет товаров.\n\n" +
-			"Попробуйте:\n" +
-			"🔍 Поиск по всему сайту\n" +
-			"🏪 Просмотр витрин\n" +
-			"📍 Изменить местоположение\n\n" +
-			"🌐 Перейти на сайт: https://svetu.rs"
-		return m.sendMessage(ctx, viberID, msg)
-	}
-
-	msg := fmt.Sprintf("📍 Найдено %d товаров рядом с вами:\n\n", len(markers))
-
-	// Ограничиваем до 5 товаров
-	limit := len(markers)
-	if limit > 5 {
-		limit = 5
-	}
-
-	for i := 0; i < limit; i++ {
-		marker := markers[i]
-		distance := m.calculateDistance(lat, lng, marker.Latitude, marker.Longitude)
-
-		msg += fmt.Sprintf("%d. %s\n", i+1, marker.Title)
-		if marker.Price > 0 {
-			msg += fmt.Sprintf("💰 %.0f RSD\n", marker.Price)
+		// Ищем товары в радиусе 5 км
+		markers, err := m.marketplaceService.GetListingsInBounds(ctx,
+			lat+0.045, // ~5км к северу
+			lng+0.063, // ~5км к востоку
+			lat-0.045, // ~5км к югу
+			lng-0.063, // ~5км к западу
+			14,        // zoom level
+			"",        // все категории
+			"",        // все состояния
+			nil, nil,  // без фильтра по цене
+			"") // без фильтра атрибутов
+		if err != nil {
+			msg := "Произошла ошибка при поиске товаров рядом с вами. Попробуйте позже."
+			return m.sendMessage(ctx, viberID, msg)
 		}
-		msg += fmt.Sprintf("📍 ~%.1f км от вас\n", distance)
-		if marker.City != "" {
-			msg += fmt.Sprintf("🏠 %s\n", marker.City)
+
+		if len(markers) == 0 {
+			msg := "Рядом с вами пока нет товаров.\n\n" +
+				"Попробуйте:\n" +
+				"🔍 Поиск по всему сайту\n" +
+				"🏪 Просмотр витрин\n" +
+				"📍 Изменить местоположение\n\n" +
+				"🌐 Перейти на сайт: https://svetu.rs"
+			return m.sendMessage(ctx, viberID, msg)
 		}
-		msg += fmt.Sprintf("🔗 https://svetu.rs/marketplace/listing/%d\n\n", marker.ID)
-	}
 
-	if len(markers) > 5 {
-		msg += fmt.Sprintf("Показаны первые 5 из %d товаров.\n", len(markers))
-		msg += "Больше на карте: https://svetu.rs/map"
-	}
+		msg := fmt.Sprintf("📍 Найдено %d товаров рядом с вами:\n\n", len(markers))
 
-	return m.sendMessage(ctx, viberID, msg)
+		// Ограничиваем до 5 товаров
+		limit := len(markers)
+		if limit > 5 {
+			limit = 5
+		}
+
+		for i := 0; i < limit; i++ {
+			marker := markers[i]
+			distance := m.calculateDistance(lat, lng, marker.Latitude, marker.Longitude)
+
+			msg += fmt.Sprintf("%d. %s\n", i+1, marker.Title)
+			if marker.Price > 0 {
+				msg += fmt.Sprintf("💰 %.0f RSD\n", marker.Price)
+			}
+			msg += fmt.Sprintf("📍 ~%.1f км от вас\n", distance)
+			if marker.City != "" {
+				msg += fmt.Sprintf("🏠 %s\n", marker.City)
+			}
+			msg += fmt.Sprintf("🔗 https://svetu.rs/marketplace/listing/%d\n\n", marker.ID)
+		}
+
+		if len(markers) > 5 {
+			msg += fmt.Sprintf("Показаны первые 5 из %d товаров.\n", len(markers))
+			msg += "Больше на карте: https://svetu.rs/map"
+		}
+
+		return m.sendMessage(ctx, viberID, msg)
 	*/
 }
 

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
@@ -420,23 +421,150 @@ func (db *Database) RemoveContact(ctx context.Context, userID, contactUserID int
 }
 
 func (db *Database) GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetUserPrivacySettings(ctx, userID)
+	var settings models.UserPrivacySettings
+
+	query := `
+		SELECT
+			user_id,
+			allow_contact_requests,
+			allow_messages_from_contacts_only,
+			settings,
+			created_at,
+			updated_at
+		FROM user_privacy_settings
+		WHERE user_id = $1
+	`
+
+	err := db.pool.QueryRow(ctx, query, userID).Scan(
+		&settings.UserID,
+		&settings.AllowContactRequests,
+		&settings.AllowMessagesFromContactsOnly,
+		&settings.Settings,
+		&settings.CreatedAt,
+		&settings.UpdatedAt,
+	)
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			// Создаем дефолтные настройки если их нет
+			insertQuery := `
+				INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only, settings)
+				VALUES ($1, true, false, '{}'::jsonb)
+				RETURNING user_id, allow_contact_requests, allow_messages_from_contacts_only, settings, created_at, updated_at
+			`
+			err = db.pool.QueryRow(ctx, insertQuery, userID).Scan(
+				&settings.UserID,
+				&settings.AllowContactRequests,
+				&settings.AllowMessagesFromContactsOnly,
+				&settings.Settings,
+				&settings.CreatedAt,
+				&settings.UpdatedAt,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create default privacy settings: %w", err)
+			}
+			return &settings, nil
+		}
+		return nil, fmt.Errorf("failed to get privacy settings: %w", err)
+	}
+
+	return &settings, nil
 }
 
 func (db *Database) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
-	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+	// Сначала убеждаемся что запись существует
+	_, err := db.GetUserPrivacySettings(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing settings: %w", err)
+	}
+
+	// Строим динамический UPDATE query
+	updates := []string{}
+	args := []interface{}{}
+	argPos := 1
+
+	if settings.AllowContactRequests != nil {
+		updates = append(updates, fmt.Sprintf("allow_contact_requests = $%d", argPos))
+		args = append(args, *settings.AllowContactRequests)
+		argPos++
+	}
+
+	if settings.AllowMessagesFromContactsOnly != nil {
+		updates = append(updates, fmt.Sprintf("allow_messages_from_contacts_only = $%d", argPos))
+		args = append(args, *settings.AllowMessagesFromContactsOnly)
+		argPos++
+	}
+
+	if len(updates) == 0 {
+		return nil // Nothing to update
+	}
+
+	args = append(args, userID)
+	query := fmt.Sprintf(`
+		UPDATE user_privacy_settings
+		SET %s
+		WHERE user_id = $%d
+	`, strings.Join(updates, ", "), argPos)
+
+	_, err = db.pool.Exec(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to update privacy settings: %w", err)
+	}
+
+	return nil
 }
 
 func (db *Database) GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
-	return nil, fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.GetUserPrivacySettings(ctx, userID)
+	// Используем реализованный метод GetUserPrivacySettings
+	return db.GetUserPrivacySettings(ctx, userID)
 }
 
 func (db *Database) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
-	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+	// Используем реализованный метод UpdateUserPrivacySettings
+	return db.UpdateUserPrivacySettings(ctx, userID, settings)
 }
 
 func (db *Database) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
-	return fmt.Errorf("method removed during refactoring, needs reimplementation") // OLD: db.marketplaceDB.UpdateChatSettings(ctx, userID, settings)
+	// Сначала убеждаемся что запись существует
+	_, err := db.GetUserPrivacySettings(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing settings: %w", err)
+	}
+
+	// Обновляем JSONB поле settings с chat настройками
+	query := `
+		UPDATE user_privacy_settings
+		SET settings = jsonb_set(
+			jsonb_set(
+				jsonb_set(
+					jsonb_set(
+						settings,
+						'{auto_translate_chat}',
+						to_jsonb($2::boolean)
+					),
+					'{preferred_language}',
+					to_jsonb($3::text)
+				),
+				'{show_original_language_badge}',
+				to_jsonb($4::boolean)
+			),
+			'{chat_tone_moderation}',
+			to_jsonb($5::boolean)
+		)
+		WHERE user_id = $1
+	`
+
+	_, err = db.pool.Exec(ctx, query,
+		userID,
+		settings.AutoTranslate,
+		settings.PreferredLanguage,
+		settings.ShowLanguageBadge,
+		settings.ModerateTone,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update chat settings: %w", err)
+	}
+
+	return nil
 }
 
 func (db *Database) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {

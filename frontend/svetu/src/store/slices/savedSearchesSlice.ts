@@ -57,7 +57,7 @@ export const fetchSavedSearches = createAsyncThunk(
   'savedSearches/fetch',
   async (searchType?: string) => {
     const params = searchType ? `?search_type=${searchType}` : '';
-    const response = await apiClient.get(`/c2c/saved-searches${params}`);
+    const response = await apiClient.get(`/marketplace/saved-searches${params}`);
     return response.data;
   }
 );
@@ -71,7 +71,7 @@ export const createSavedSearch = createAsyncThunk(
     notify_enabled?: boolean;
     notify_frequency?: string;
   }) => {
-    const response = await apiClient.post('/c2c/saved-searches', {
+    const response = await apiClient.post('/marketplace/saved-searches', {
       ...data,
       search_type: data.search_type || 'cars',
       notify_enabled: data.notify_enabled || false,
@@ -95,7 +95,7 @@ export const updateSavedSearch = createAsyncThunk(
       notify_frequency?: string;
     };
   }) => {
-    const response = await apiClient.put(`/c2c/saved-searches/${id}`, data);
+    const response = await apiClient.put(`/marketplace/saved-searches/${id}`, data);
     return response.data;
   }
 );
@@ -103,7 +103,7 @@ export const updateSavedSearch = createAsyncThunk(
 export const deleteSavedSearch = createAsyncThunk(
   'savedSearches/delete',
   async (id: number) => {
-    await apiClient.delete(`/c2c/saved-searches/${id}`);
+    await apiClient.delete(`/marketplace/saved-searches/${id}`);
     return id;
   }
 );
@@ -111,7 +111,7 @@ export const deleteSavedSearch = createAsyncThunk(
 export const executeSavedSearch = createAsyncThunk(
   'savedSearches/execute',
   async (id: number) => {
-    const response = await apiClient.get(`/c2c/saved-searches/${id}/execute`);
+    const response = await apiClient.get(`/marketplace/saved-searches/${id}/execute`);
     return { id, results: response.data };
   }
 );

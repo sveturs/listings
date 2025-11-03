@@ -18,13 +18,16 @@ import (
 type Handler struct {
 	service       globalService.ServicesInterface
 	searchWeights *config.SearchWeights
+	unifiedSearch *UnifiedSearchHandler
 }
 
 // NewHandler создает новый глобальный обработчик
 func NewHandler(services globalService.ServicesInterface, searchWeights *config.SearchWeights) *Handler {
+	unifiedSearchHandler := NewUnifiedSearchHandler(services)
 	return &Handler{
 		service:       services,
 		searchWeights: searchWeights,
+		unifiedSearch: unifiedSearchHandler,
 	}
 }
 
@@ -37,7 +40,7 @@ func (h *Handler) GetPrefix() string {
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Регистрируем унифицированный поиск напрямую в app,
 	// чтобы избежать конфликтов с другими middleware
-	app.Get("/api/v1/search", h.UnifiedSearch)
+	app.Get("/api/v1/search", h.unifiedSearch.UnifiedSearch)
 
 	// Добавляем алиас для suggestions
 	app.Get("/api/v1/search/suggestions", h.GetSuggestions)

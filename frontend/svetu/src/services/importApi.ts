@@ -87,7 +87,7 @@ export class ImportApi {
       });
 
       // Используем BFF proxy - автоматически добавит cookies для авторизации
-      xhr.open('POST', `/api/v2/b2c/slug/${storefrontSlug}/import/file`);
+      xhr.open('POST', `/api/v2/marketplace/storefronts/slug/${storefrontSlug}/import/file`);
       xhr.withCredentials = true; // Include cookies
 
       xhr.send(formData);
@@ -165,7 +165,7 @@ export class ImportApi {
       });
 
       // Используем BFF proxy - автоматически добавит cookies для авторизации
-      xhr.open('POST', `/api/v2/b2c/${storefrontId}/import/file`);
+      xhr.open('POST', `/api/v2/marketplace/storefronts/${storefrontId}/import/file`);
       xhr.withCredentials = true; // Include cookies
 
       xhr.send(formData);
@@ -205,7 +205,7 @@ export class ImportApi {
     jobId: number
   ): Promise<ImportJobStatus> {
     const response = await apiClient.get(
-      `/b2c/${storefrontId}/import/jobs/${jobId}/status`
+      `/marketplace/storefronts/${storefrontId}/import/jobs/${jobId}/status`
     );
     return response.data;
   }
@@ -251,7 +251,7 @@ export class ImportApi {
    */
   static async downloadCsvTemplate(): Promise<Blob> {
     // Используем BFF proxy - автоматически добавит cookies для авторизации
-    const response = await fetch('/api/v2/b2c/import/csv-template', {
+    const response = await fetch('/api/v2/marketplace/storefronts/import/csv-template', {
       credentials: 'include',
     });
     if (!response.ok) {
@@ -376,7 +376,7 @@ export class ImportApi {
 
     // Use fetch directly with BFF proxy
     const response = await fetch(
-      `/api/v2/b2c/slug/${storefrontSlug}/import/preview`,
+      `/api/v2/marketplace/storefronts/slug/${storefrontSlug}/import/preview`,
       {
         method: 'POST',
         body: formData,
@@ -437,7 +437,7 @@ export class ImportApi {
    */
   static async downloadSample(format: 'csv' | 'xml'): Promise<Blob> {
     // Используем BFF proxy - автоматически добавит cookies для авторизации
-    const response = await fetch(`/api/v2/b2c/import/sample/${format}`, {
+    const response = await fetch(`/api/v2/marketplace/storefronts/import/sample/${format}`, {
       credentials: 'include',
     });
     if (!response.ok) {

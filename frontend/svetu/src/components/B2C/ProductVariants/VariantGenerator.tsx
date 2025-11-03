@@ -62,7 +62,7 @@ export default function VariantGenerator({
   const loadProductAttributes = useCallback(async () => {
     try {
       const response = await apiClient.get(
-        `/b2c/storefront/products/${productId}/attributes`
+        `/marketplace/storefronts/storefront/products/${productId}/attributes`
       );
       if (response.data) {
         const attrs = response.data;

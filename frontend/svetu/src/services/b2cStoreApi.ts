@@ -118,7 +118,7 @@ class StorefrontApiService {
   async getStorefronts(
     params?: StorefrontSearchParams
   ): Promise<StorefrontsListResponse> {
-    const endpoint = this.createEndpoint('/b2c', params);
+    const endpoint = this.createEndpoint('/marketplace/storefronts', params);
     return this.request<StorefrontsListResponse>(endpoint);
   }
 
@@ -126,7 +126,7 @@ class StorefrontApiService {
    * Получение витрины по ID
    */
   async getStorefrontById(id: number): Promise<B2CStore> {
-    const endpoint = `/b2c/${id}`;
+    const endpoint = `/marketplace/storefronts/${id}`;
     return this.request<B2CStore>(endpoint);
   }
 
@@ -134,7 +134,7 @@ class StorefrontApiService {
    * Получение витрины по slug
    */
   async getStorefrontBySlug(slug: string): Promise<B2CStore> {
-    const endpoint = `/b2c/slug/${slug}`;
+    const endpoint = `/marketplace/storefronts/slug/${slug}`;
     const storefront = await this.request<B2CStore>(endpoint);
 
     if (!storefront) {
@@ -148,7 +148,7 @@ class StorefrontApiService {
    * Получение витрины по ID
    */
   async getStorefront(id: number): Promise<B2CStore> {
-    const endpoint = `/b2c/${id}`;
+    const endpoint = `/marketplace/storefronts/${id}`;
     const storefront = await this.request<B2CStore>(endpoint);
 
     if (!storefront) {
@@ -162,7 +162,7 @@ class StorefrontApiService {
    * Получение витрин текущего пользователя
    */
   async getMyStorefronts(): Promise<StorefrontsListResponse> {
-    const endpoint = '/b2c/my';
+    const endpoint = '/marketplace/storefronts/my';
     return this.request<StorefrontsListResponse>(endpoint);
   }
 
@@ -170,7 +170,7 @@ class StorefrontApiService {
    * Создание новой витрины
    */
   async createStorefront(data: B2CStoreCreateDTO): Promise<B2CStore> {
-    const endpoint = '/b2c';
+    const endpoint = '/marketplace/storefronts';
     return this.request<B2CStore>(endpoint, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -184,7 +184,7 @@ class StorefrontApiService {
     id: number,
     data: B2CStoreUpdateDTO
   ): Promise<B2CStore> {
-    const endpoint = `/b2c/${id}`;
+    const endpoint = `/marketplace/storefronts/${id}`;
     return this.request<B2CStore>(endpoint, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -195,7 +195,7 @@ class StorefrontApiService {
    * Удаление витрины
    */
   async deleteStorefront(id: number): Promise<void> {
-    const endpoint = `/b2c/${id}`;
+    const endpoint = `/marketplace/storefronts/${id}`;
     return this.request<void>(endpoint, {
       method: 'DELETE',
     });
@@ -209,7 +209,7 @@ class StorefrontApiService {
     formData.append('logo', file);
 
     const response = await apiClient.post(
-      `/b2c/${storefrontId}/logo`,
+      `/marketplace/storefronts/${storefrontId}/logo`,
       formData,
       {
         headers: {
@@ -236,7 +236,7 @@ class StorefrontApiService {
     formData.append('banner', file);
 
     const response = await apiClient.post(
-      `/b2c/${storefrontId}/banner`,
+      `/marketplace/storefronts/${storefrontId}/banner`,
       formData,
       {
         headers: {
@@ -260,7 +260,7 @@ class StorefrontApiService {
   async searchStorefronts(
     params: StorefrontSearchParams
   ): Promise<StorefrontSearchResult> {
-    const endpoint = '/b2c/search/opensearch';
+    const endpoint = '/marketplace/storefronts/search/opensearch';
     return this.request<StorefrontSearchResult>(endpoint, {
       method: 'POST',
       body: JSON.stringify(params),
@@ -277,7 +277,7 @@ class StorefrontApiService {
       east: bounds.east,
       west: bounds.west,
     };
-    const endpoint = this.createEndpoint('/b2c/map', params);
+    const endpoint = this.createEndpoint('/marketplace/storefronts/map', params);
     return this.request<B2CStoreMapData[]>(endpoint);
   }
 
@@ -291,7 +291,7 @@ class StorefrontApiService {
     limit?: number
   ): Promise<B2CStore[]> {
     const params = { latitude, longitude, radius_km: radiusKm, limit };
-    const endpoint = this.createEndpoint('/b2c/nearby', params);
+    const endpoint = this.createEndpoint('/marketplace/storefronts/nearby', params);
     return this.request<B2CStore[]>(endpoint);
   }
 
@@ -305,7 +305,7 @@ class StorefrontApiService {
   ): Promise<StorefrontAnalytics> {
     const { storefrontId, ...queryParams } = params;
     const endpoint = this.createEndpoint(
-      `/b2c/${storefrontId}/analytics`,
+      `/marketplace/storefronts/${storefrontId}/analytics`,
       queryParams
     );
     return this.request<StorefrontAnalytics>(endpoint);
@@ -315,7 +315,7 @@ class StorefrontApiService {
    * Получение рейтинга витрины
    */
   async getStorefrontRating(id: number): Promise<StorefrontRatingSummary> {
-    const endpoint = `/b2c/${id}/rating`;
+    const endpoint = `/marketplace/storefronts/${id}/rating`;
     return this.request<StorefrontRatingSummary>(endpoint);
   }
 
@@ -325,7 +325,7 @@ class StorefrontApiService {
    * Получение часов работы витрины
    */
   async getWorkingHours(storefrontId: number): Promise<StorefrontHours[]> {
-    const endpoint = `/b2c/${storefrontId}/hours`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/hours`;
     return this.request<StorefrontHours[]>(endpoint);
   }
 
@@ -336,7 +336,7 @@ class StorefrontApiService {
     storefrontId: number,
     hours: StorefrontHours[]
   ): Promise<void> {
-    const endpoint = `/b2c/${storefrontId}/hours`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/hours`;
     return this.request<void>(endpoint, {
       method: 'PUT',
       body: JSON.stringify({ hours }),
@@ -349,7 +349,7 @@ class StorefrontApiService {
   async getPaymentMethods(
     storefrontId: number
   ): Promise<StorefrontPaymentMethod[]> {
-    const endpoint = `/b2c/${storefrontId}/payment-methods`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/payment-methods`;
     return this.request<StorefrontPaymentMethod[]>(endpoint);
   }
 
@@ -360,7 +360,7 @@ class StorefrontApiService {
     storefrontId: number,
     methods: StorefrontPaymentMethod[]
   ): Promise<void> {
-    const endpoint = `/b2c/${storefrontId}/payment-methods`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/payment-methods`;
     return this.request<void>(endpoint, {
       method: 'PUT',
       body: JSON.stringify({ methods }),
@@ -373,7 +373,7 @@ class StorefrontApiService {
   async getDeliveryOptions(
     storefrontId: number
   ): Promise<StorefrontDeliveryOption[]> {
-    const endpoint = `/b2c/${storefrontId}/delivery-options`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/delivery-options`;
     return this.request<StorefrontDeliveryOption[]>(endpoint);
   }
 
@@ -384,7 +384,7 @@ class StorefrontApiService {
     storefrontId: number,
     options: StorefrontDeliveryOption[]
   ): Promise<void> {
-    const endpoint = `/b2c/${storefrontId}/delivery-options`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/delivery-options`;
     return this.request<void>(endpoint, {
       method: 'PUT',
       body: JSON.stringify({ options }),
@@ -397,7 +397,7 @@ class StorefrontApiService {
    * Получение сотрудников витрины
    */
   async getStaff(storefrontId: number): Promise<any[]> {
-    const endpoint = `/b2c/${storefrontId}/staff`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/staff`;
     return this.request<any[]>(endpoint);
   }
 
@@ -409,7 +409,7 @@ class StorefrontApiService {
     userId: number,
     role: string
   ): Promise<void> {
-    const endpoint = `/b2c/${storefrontId}/staff`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/staff`;
     return this.request<void>(endpoint, {
       method: 'POST',
       body: JSON.stringify({ user_id: userId, role }),
@@ -420,7 +420,7 @@ class StorefrontApiService {
    * Удаление сотрудника
    */
   async removeStaff(storefrontId: number, userId: number): Promise<void> {
-    const endpoint = `/b2c/${storefrontId}/staff/${userId}`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/staff/${userId}`;
     return this.request<void>(endpoint, {
       method: 'DELETE',
     });
@@ -432,7 +432,7 @@ class StorefrontApiService {
    * Записать просмотр витрины
    */
   async recordView(storefrontId: number): Promise<void> {
-    const endpoint = `/b2c/${storefrontId}/view`;
+    const endpoint = `/marketplace/storefronts/${storefrontId}/view`;
     return this.request<void>(endpoint, {
       method: 'POST',
     });

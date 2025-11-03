@@ -25,7 +25,7 @@ func (h *Handler) AddContact(c *fiber.Ctx) error {
 	return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "service.temporarilyDisabled")
 }
 
-// UpdateContactStatus обновляет статус контакта - TODO: temporarily disabled  
+// UpdateContactStatus обновляет статус контакта - TODO: temporarily disabled
 func (h *Handler) UpdateContactStatus(c *fiber.Ctx) error {
 	return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "service.temporarilyDisabled")
 }

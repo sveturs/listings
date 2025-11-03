@@ -28,7 +28,7 @@ type NeighborhoodStatsResponse struct {
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.statsError"
 // @Router /api/v1/marketplace/neighborhood-stats [get]
 func (h *Handler) GetNeighborhoodStats(c *fiber.Ctx) error {
-	lat := c.QueryFloat("lat", 44.8176)  // Default Belgrade coordinates
+	lat := c.QueryFloat("lat", 44.8176) // Default Belgrade coordinates
 	lon := c.QueryFloat("lon", 20.4633)
 	radiusKm := c.QueryFloat("radius", 5.0)
 
