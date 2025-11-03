@@ -107,10 +107,12 @@ type RedisConfig struct {
 // MarketplaceConfig содержит настройки для миграции marketplace на microservice
 type MarketplaceConfig struct {
 	// Feature flag для включения microservice
-	UseMicroservice bool `yaml:"use_microservice" envconfig:"USE_MARKETPLACE_MICROSERVICE" default:"false"`
+	// Default: true (100% microservice for dev environment)
+	UseMicroservice bool `yaml:"use_microservice" envconfig:"USE_MARKETPLACE_MICROSERVICE" default:"true"`
 
 	// Процент трафика, который идёт на microservice (0-100)
-	RolloutPercent int `yaml:"rollout_percent" envconfig:"MARKETPLACE_ROLLOUT_PERCENT" default:"0"`
+	// Default: 100 (100% microservice for dev environment)
+	RolloutPercent int `yaml:"rollout_percent" envconfig:"MARKETPLACE_ROLLOUT_PERCENT" default:"100"`
 
 	// URL microservice через gRPC
 	MicroserviceGRPCURL string `yaml:"microservice_grpc_url" envconfig:"MARKETPLACE_MICROSERVICE_GRPC_URL" default:"localhost:50053"`

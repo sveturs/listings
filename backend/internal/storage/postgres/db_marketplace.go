@@ -59,39 +59,26 @@ func (db *Database) DeleteListingImage(ctx context.Context, imageID int) error {
 }
 
 // IndexListing indexes listing in OpenSearch via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	if db.grpcClient == nil {
-		log.Println("IndexListing: gRPC client not initialized, skipping indexing")
-		return nil // Return nil to not break existing flows
-	}
 	return db.grpcClient.IndexListing(ctx, listing)
 }
 
 // DeleteListingIndex removes listing from OpenSearch via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) DeleteListingIndex(ctx context.Context, id string) error {
-	if db.grpcClient == nil {
-		log.Println("DeleteListingIndex: gRPC client not initialized, skipping deletion")
-		return nil // Return nil to not break existing flows
-	}
 	return db.grpcClient.DeleteListingIndex(ctx, id)
 }
 
 // SuggestListings provides autocomplete via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
-	if db.grpcClient == nil {
-		log.Println("SuggestListings: gRPC client not initialized")
-		return []string{}, nil
-	}
 	return db.grpcClient.SuggestListings(ctx, prefix, size)
 }
 
 // ReindexAllListings triggers full reindexing via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) ReindexAllListings(ctx context.Context) error {
-	if db.grpcClient == nil {
-		log.Println("ReindexAllListings: gRPC client not initialized, skipping reindexing")
-		return nil
-	}
-
 	// Get all active listings that need reindexing
 	listings, err := db.GetMarketplaceListingsForReindex(ctx, 1000)
 	if err != nil {
@@ -180,26 +167,20 @@ func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int
 }
 
 // CreateListing creates a new listing via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error) {
-	if db.grpcClient == nil {
-		return 0, fmt.Errorf("gRPC client not initialized")
-	}
 	return db.grpcClient.CreateListing(ctx, listing)
 }
 
 // GetListings retrieves listings with filters via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
-	if db.grpcClient == nil {
-		return nil, 0, fmt.Errorf("gRPC client not initialized")
-	}
 	return db.grpcClient.GetListings(ctx, filters, limit, offset)
 }
 
 // GetListingByID retrieves a single listing by ID via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
-	if db.grpcClient == nil {
-		return nil, fmt.Errorf("gRPC client not initialized")
-	}
 	return db.grpcClient.GetListingByID(ctx, id)
 }
 
@@ -319,10 +300,8 @@ func (db *Database) ResetMarketplaceListingsReindexFlag(ctx context.Context, lis
 }
 
 // GetListingBySlug retrieves a single listing by slug via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
-	if db.grpcClient == nil {
-		return nil, fmt.Errorf("gRPC client not initialized")
-	}
 	return db.grpcClient.GetListingBySlug(ctx, slug)
 }
 
@@ -337,26 +316,20 @@ func (db *Database) GetListingBySlug(ctx context.Context, slug string) (*models.
 // Requires 'slug' column to exist in c2c_listings table
 
 // UpdateListing updates an existing listing via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error {
-	if db.grpcClient == nil {
-		return fmt.Errorf("gRPC client not initialized")
-	}
 	return db.grpcClient.UpdateListing(ctx, listing)
 }
 
 // DeleteListing soft-deletes a listing (user ownership check) via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) DeleteListing(ctx context.Context, id int, userID int) error {
-	if db.grpcClient == nil {
-		return fmt.Errorf("gRPC client not initialized")
-	}
 	return db.grpcClient.DeleteListing(ctx, id, userID)
 }
 
 // DeleteListingAdmin hard-deletes a listing (admin, no ownership check) via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) DeleteListingAdmin(ctx context.Context, id int) error {
-	if db.grpcClient == nil {
-		return fmt.Errorf("gRPC client not initialized")
-	}
 	return db.grpcClient.DeleteListingAdmin(ctx, id)
 }
 
@@ -416,14 +389,8 @@ func (db *Database) GetUnreadMessagesCount(ctx context.Context, userID int) (int
 }
 
 // SearchListings performs OpenSearch query via gRPC microservice
+// DEV MODE: grpcClient must be initialized (fail-fast if nil)
 func (db *Database) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
-	if db.grpcClient == nil {
-		log.Println("SearchListings: gRPC client not initialized")
-		return &search.SearchResult{
-			Listings: nil,
-			Total:    0,
-		}, nil
-	}
 	return db.grpcClient.SearchListings(ctx, params)
 }
 

@@ -145,7 +145,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.UnifiedIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.UnifiedIndex, fileStorage, cfg.SearchWeights, cfg)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize database")
 	}

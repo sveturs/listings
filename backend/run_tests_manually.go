@@ -28,7 +28,7 @@ func main() {
 
 	// Initialize database
 	ctx := context.Background()
-	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, nil, "", "", nil, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, nil, "", nil, cfg.SearchWeights, cfg)
 	if err != nil {
 		fmt.Printf("Failed to initialize database: %v\n", err)
 		os.Exit(1)

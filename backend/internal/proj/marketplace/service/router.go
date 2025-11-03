@@ -60,73 +60,23 @@ type RoutingDecision struct {
 
 // ShouldUseMicroservice определяет, должен ли запрос идти на microservice
 //
-// Логика принятия решения:
-// 1. Если feature flag выключен (UseMicroservice=false) → monolith
-// 2. Если пользователь админ И AdminOverride=true → microservice (для тестирования)
-// 3. Если пользователь в canary списке → microservice
-// 4. Иначе используем consistent hashing с RolloutPercent
+// DEV MODE: Always returns UseMicroservice=true
+// In production, this would contain canary release logic with:
+// - Feature flags
+// - Admin override
+// - Canary users
+// - Consistent hashing for gradual rollout
+//
+// Current implementation: 100% microservice traffic for dev environment
 func (r *TrafficRouter) ShouldUseMicroservice(userID string, isAdmin bool) *RoutingDecision {
+	// DEV MODE: Always use microservice
 	decision := &RoutingDecision{
-		UseМicroservice: false,
+		UseМicroservice: true, // Always true in dev
 		UserID:          userID,
 		IsAdmin:         isAdmin,
 		IsCanary:        false,
 		Hash:            0,
-	}
-
-	// Feature flag выключен → monolith
-	if !r.config.UseMicroservice {
-		decision.Reason = "feature_flag_disabled"
-		r.logDecision(decision)
-		return decision
-	}
-
-	// Admin override - админы всегда на microservice (если включено)
-	// Priority: admin override идёт ПЕРЕД canary и rollout checks
-	if isAdmin && r.config.AdminOverride {
-		decision.UseМicroservice = true
-		decision.Reason = "admin_override"
-		r.logDecision(decision)
-		return decision
-	}
-
-	// Canary users - всегда на microservice
-	// Priority: canary идёт ПЕРЕД rollout percent check
-	if r.isCanaryUser(userID) {
-		decision.UseМicroservice = true
-		decision.IsCanary = true
-		decision.Reason = "canary_user"
-		r.logDecision(decision)
-		return decision
-	}
-
-	// Rollout 0% → monolith (после canary/admin checks)
-	if r.config.RolloutPercent == 0 {
-		decision.Reason = "rollout_zero_percent"
-		r.logDecision(decision)
-		return decision
-	}
-
-	// Rollout 100% → microservice (для всех)
-	if r.config.RolloutPercent == 100 {
-		decision.UseМicroservice = true
-		decision.Reason = "rollout_full"
-		r.logDecision(decision)
-		return decision
-	}
-
-	// Consistent hashing для плавного rollout
-	hash := r.consistentHash(userID)
-	decision.Hash = hash
-
-	// Определяем threshold на основе RolloutPercent
-	// Например, если RolloutPercent=10, то threshold = 10% от maxUint32
-	// hash % 100 < RolloutPercent → microservice
-	if (hash % 100) < uint32(r.config.RolloutPercent) {
-		decision.UseМicroservice = true
-		decision.Reason = "rollout_percent"
-	} else {
-		decision.Reason = "rollout_percent_monolith"
+		Reason:          "dev_mode_always_microservice",
 	}
 
 	r.logDecision(decision)

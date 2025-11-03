@@ -63,7 +63,7 @@ type Database struct {
 }
 
 // NewDatabase создает новый экземпляр Database
-func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
+func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights, cfg *config.Config) (*Database, error) {
 	// Настраиваем конфигурацию пула
 	poolConfig, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
@@ -127,17 +127,21 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 	db.marketplaceStorage = marketplaceStorage.NewPostgresMarketplaceStorage(sqlxDB, logger)
 
 	// Инициализируем gRPC клиент для listings микросервиса
-	// Адрес берём из переменной окружения или используем дефолтный для dev
-	grpcAddress := "dev.svetu.rs:50051" // TODO: Move to config
-	grpcClient, err := NewMarketplaceGRPCClient(grpcAddress)
-	if err != nil {
-		log.Printf("Warning: Failed to initialize gRPC client: %v. OpenSearch methods will be disabled.", err)
-		// Не возвращаем ошибку, чтобы не ломать приложение
-		// Методы OpenSearch будут проверять наличие grpcClient
-	} else {
-		db.grpcClient = grpcClient
-		log.Println("gRPC client for listings microservice initialized successfully")
+	// DEV MODE: Microservice is REQUIRED - fail fast if URL is empty or connection fails
+	grpcURL := cfg.ListingsGRPCURL
+	if grpcURL == "" {
+		return nil, fmt.Errorf("LISTINGS_GRPC_URL is required - listings microservice must be running. Backend cannot start without it")
 	}
+
+	grpcClient, err := NewMarketplaceGRPCClient(grpcURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to listings microservice at %s: %w. Make sure microservice is running on this address", grpcURL, err)
+	}
+
+	db.grpcClient = grpcClient
+	logger.Info().
+		Str("grpc_url", grpcURL).
+		Msg("Connected to listings microservice (REQUIRED for operation)")
 
 	return db, nil
 }
