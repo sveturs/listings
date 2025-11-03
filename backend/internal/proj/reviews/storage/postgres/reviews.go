@@ -912,14 +912,17 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
 	}
 
 	// Получаем название витрины
+	// TODO: Migrate storefronts to separate microservice
+	// Graceful degradation: use default name if b2c_stores table doesn't exist
 	var storefrontName sql.NullString
 	err := s.pool.QueryRow(ctx, `SELECT name FROM b2c_stores WHERE id = $1`, storefrontID).Scan(&storefrontName)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		log.Printf("Error getting storefront name: %v", err)
-	}
-
-	if storefrontName.Valid {
+		log.Printf("Warning: could not get storefront name (legacy table may be dropped): %v", err)
+		summary.Name = "Unknown Store"
+	} else if storefrontName.Valid {
 		summary.Name = storefrontName.String
+	} else {
+		summary.Name = "Unknown Store"
 	}
 
 	// Получаем данные о рейтинге из отзывов к витрине

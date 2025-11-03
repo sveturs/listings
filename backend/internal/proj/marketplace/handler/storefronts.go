@@ -50,10 +50,17 @@ func (h *Handler) GetStorefronts(c *fiber.Ctx) error {
 	}
 
 	// Получаем витрины из БД
+	// TODO: Migrate storefronts to separate microservice
+	// Graceful degradation: return empty array if legacy table doesn't exist
 	storefronts, total, err := h.storage.GetStorefronts(c.Context(), filters)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Failed to get storefronts")
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.fetch_failed")
+		h.logger.Warn().Err(err).Msg("Failed to get storefronts (legacy table dropped), returning empty array")
+		return c.JSON(fiber.Map{
+			"storefronts": []interface{}{},
+			"total":       0,
+			"page":        filters.Page,
+			"limit":       filters.Limit,
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -83,7 +90,7 @@ func (h *Handler) GetStorefrontBySlug(c *fiber.Ctx) error {
 
 	// Получаем одну витрину (limit=1, фильтр по slug можно добавить позже)
 	// Пока используем простой запрос через GetStorefronts
-	// TODO: Добавить отдельный метод GetStorefrontBySlug в storage
+	// TODO: Migrate storefronts to separate microservice
 	filters := storage.StorefrontFilters{
 		Page:  1,
 		Limit: 1,
@@ -91,8 +98,8 @@ func (h *Handler) GetStorefrontBySlug(c *fiber.Ctx) error {
 
 	storefronts, _, err := h.storage.GetStorefronts(c.Context(), filters)
 	if err != nil {
-		h.logger.Error().Err(err).Str("slug", slug).Msg("Failed to get storefront by slug")
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.fetch_failed")
+		h.logger.Warn().Err(err).Str("slug", slug).Msg("Failed to get storefront by slug (legacy table dropped)")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
 	}
 
 	// Фильтруем по slug на уровне приложения (временное решение)

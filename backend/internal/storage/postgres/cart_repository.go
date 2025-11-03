@@ -590,11 +590,13 @@ func (r *cartRepository) CleanupExpiredCarts(ctx context.Context, olderThanDays 
 
 // GetAllUserCarts получает все корзины пользователя
 func (r *cartRepository) GetAllUserCarts(ctx context.Context, userID int) ([]*models.ShoppingCart, error) {
+	// TODO: Migrate storefronts to separate microservice
+	// Use LEFT JOIN for graceful degradation if b2c_stores table doesn't exist
 	query := `
 		SELECT c.id, c.user_id, c.storefront_id, c.session_id, c.created_at, c.updated_at,
-			   s.name as storefront_name
+			   COALESCE(s.name, 'Unknown Store') as storefront_name
 		FROM shopping_carts c
-		JOIN b2c_stores s ON s.id = c.storefront_id
+		LEFT JOIN b2c_stores s ON s.id = c.storefront_id
 		WHERE c.user_id = $1
 		ORDER BY c.updated_at DESC`
 

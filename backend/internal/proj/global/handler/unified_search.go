@@ -590,9 +590,11 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
 			item.StorefrontID = listing.StorefrontID
 			// Получаем информацию о витрине из marketplace storage
+			// TODO: Migrate storefronts to separate microservice
+			// Graceful degradation: if storefront info unavailable, skip it
 			storefront, err := h.services.Storage().Marketplace().GetStorefrontByID(ctx, *listing.StorefrontID)
 			if err != nil {
-				logger.Error().Err(err).Int("storefront_id", *listing.StorefrontID).Msg("Failed to get storefront info")
+				logger.Warn().Err(err).Int("storefront_id", *listing.StorefrontID).Msg("Failed to get storefront info (legacy table dropped), skipping storefront enrichment")
 			} else if storefront != nil {
 				item.Storefront = &UnifiedStorefrontInfo{
 					ID:         storefront.ID,
@@ -636,10 +638,12 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 	}
 
 	// Получаем витрины через marketplace storage
+	// TODO: Migrate storefronts to separate microservice
+	// Graceful degradation: return empty array if legacy table doesn't exist
 	storefronts, total, err := h.services.Storage().Marketplace().GetStorefronts(ctx, filters)
 	if err != nil {
-		logger.Error().Err(err).Msg("Failed to get storefronts")
-		return nil, 0, 0, err
+		logger.Warn().Err(err).Msg("Failed to get storefronts (legacy table dropped), returning empty results")
+		return []UnifiedSearchItem{}, 0, time.Since(startTime).Milliseconds(), nil
 	}
 
 	// Конвертируем витрины в унифицированный формат

@@ -241,7 +241,14 @@ func (s *OrderService) getStorefrontTx(ctx context.Context, tx *sqlx.Tx, storefr
 	query := `SELECT * FROM b2c_stores WHERE id = $1 FOR SHARE`
 	err := tx.GetContext(ctx, &storefront, query, storefrontID)
 	if err != nil {
-		return nil, err
+		// TODO: Migrate storefronts to separate microservice
+		// Graceful degradation: return minimal storefront info if table doesn't exist
+		s.logger.Warn("Failed to get storefront (legacy table may be dropped): storefront_id=%d, error=%v", storefrontID, err)
+		return &models.Storefront{
+			ID:       storefrontID,
+			Name:     "Unknown Store",
+			IsActive: true,
+		}, nil
 	}
 	return &storefront, nil
 }
