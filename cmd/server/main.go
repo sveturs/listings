@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,9 +20,11 @@ import (
 	"github.com/sveturs/listings/internal/cache"
 	"github.com/sveturs/listings/internal/config"
 	"github.com/sveturs/listings/internal/metrics"
+	"github.com/sveturs/listings/internal/ratelimit"
 	"github.com/sveturs/listings/internal/repository/opensearch"
 	"github.com/sveturs/listings/internal/repository/postgres"
 	"github.com/sveturs/listings/internal/service/listings"
+	"github.com/sveturs/listings/internal/timeout"
 	grpcTransport "github.com/sveturs/listings/internal/transport/grpc"
 	httpTransport "github.com/sveturs/listings/internal/transport/http"
 	"github.com/sveturs/listings/internal/worker"
@@ -64,6 +68,15 @@ func main() {
 	// Initialize metrics
 	metricsInstance := metrics.NewMetrics("listings")
 
+	// Start pprof server on separate port (for profiling)
+	go func() {
+		pprofAddr := ":6060"
+		logger.Info().Str("addr", pprofAddr).Msg("Starting pprof server")
+		if err := http.ListenAndServe(pprofAddr, nil); err != nil {
+			logger.Error().Err(err).Msg("pprof server failed")
+		}
+	}()
+
 	// Initialize PostgreSQL
 	db, err := postgres.InitDB(
 		cfg.DB.DSN(),
@@ -79,6 +92,11 @@ func main() {
 	defer db.Close()
 
 	pgRepo := postgres.NewRepository(db, logger)
+
+	// Start DB stats collector
+	dbStatsCollector := metrics.NewDBStatsCollector(db, metricsInstance, logger, 15*time.Second)
+	go dbStatsCollector.Start(context.Background())
+	defer dbStatsCollector.Stop()
 
 	// Initialize Redis cache
 	redisCache, err := cache.NewRedisCache(
@@ -135,9 +153,42 @@ func main() {
 		}()
 	}
 
-	// Initialize gRPC server
-	grpcServer := grpc.NewServer()
-	grpcHandler := grpcTransport.NewServer(listingsService, logger)
+	// Initialize rate limiter (conditionally based on config)
+	var rateLimiterInterceptor grpc.UnaryServerInterceptor
+	if cfg.Features.RateLimitEnabled {
+		rateLimiterConfig := ratelimit.NewDefaultConfig()
+		rateLimiterInstance := ratelimit.NewRedisLimiter(redisCache.GetClient(), logger)
+		logger.Info().Msg("Rate limiter initialized with Redis backend")
+
+		// Create rate limiter interceptor with metrics
+		rateLimiterInterceptor = ratelimit.UnaryServerInterceptorWithMetrics(
+			rateLimiterInstance,
+			rateLimiterConfig,
+			metricsInstance,
+			logger,
+		)
+	} else {
+		logger.Warn().Msg("Rate limiting DISABLED - not recommended for production")
+	}
+
+	// Create timeout interceptor
+	timeoutInterceptor := timeout.UnaryServerInterceptor(metricsInstance, logger)
+
+	// Build interceptor chain (conditionally include rate limiter)
+	interceptors := []grpc.UnaryServerInterceptor{
+		timeoutInterceptor,
+	}
+	if cfg.Features.RateLimitEnabled {
+		interceptors = append(interceptors, rateLimiterInterceptor)
+	}
+	interceptors = append(interceptors, metricsInstance.UnaryServerInterceptor())
+
+	// Initialize gRPC server with interceptors (timeout + optional rate limiting + metrics)
+	// Order: timeout (outermost) → rate limiting (if enabled) → metrics (innermost)
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(interceptors...),
+	)
+	grpcHandler := grpcTransport.NewServer(listingsService, metricsInstance, logger)
 	pb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 
 	// Enable gRPC reflection for tools like grpcurl
