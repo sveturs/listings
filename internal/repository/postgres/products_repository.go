@@ -1186,3 +1186,528 @@ func (r *Repository) DeleteProduct(ctx context.Context, productID, storefrontID 
 
 	return variantsCount, nil
 }
+
+// BulkCreateProducts creates multiple products in a single atomic transaction
+func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64, inputs []*domain.CreateProductInput) ([]*domain.Product, []domain.BulkProductError, error) {
+	r.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int("product_count", len(inputs)).
+		Msg("bulk creating products")
+
+	// Validate inputs
+	if storefrontID <= 0 {
+		return nil, nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+	if len(inputs) == 0 {
+		return nil, nil, fmt.Errorf("products.bulk_empty")
+	}
+	if len(inputs) > 1000 {
+		return nil, nil, fmt.Errorf("products.bulk_too_large")
+	}
+
+	// Start transaction
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to begin transaction")
+		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Collect all SKUs for uniqueness validation
+	var skusToCheck []string
+	for _, input := range inputs {
+		if input.SKU != nil && *input.SKU != "" {
+			skusToCheck = append(skusToCheck, *input.SKU)
+		}
+	}
+
+	// Check for duplicate SKUs within storefront
+	if len(skusToCheck) > 0 {
+		duplicateQuery := `
+			SELECT sku FROM b2c_products
+			WHERE storefront_id = $1 AND sku = ANY($2::text[])
+		`
+		rows, err := tx.QueryContext(ctx, duplicateQuery, storefrontID, pq.Array(skusToCheck))
+		if err != nil {
+			r.logger.Error().Err(err).Msg("failed to check duplicate SKUs")
+			return nil, nil, fmt.Errorf("failed to check duplicate SKUs: %w", err)
+		}
+		defer rows.Close()
+
+		duplicateSKUs := make(map[string]bool)
+		for rows.Next() {
+			var sku string
+			if err := rows.Scan(&sku); err != nil {
+				return nil, nil, fmt.Errorf("failed to scan duplicate SKU: %w", err)
+			}
+			duplicateSKUs[sku] = true
+		}
+
+		// If duplicates found, return errors for all items with duplicate SKUs
+		if len(duplicateSKUs) > 0 {
+			var errors []domain.BulkProductError
+			for idx, input := range inputs {
+				if input.SKU != nil && duplicateSKUs[*input.SKU] {
+					errors = append(errors, domain.BulkProductError{
+						Index:        int32(idx),
+						ErrorCode:    "products.sku_duplicate",
+						ErrorMessage: fmt.Sprintf("SKU %s already exists in storefront", *input.SKU),
+					})
+				}
+			}
+			return nil, errors, fmt.Errorf("products.sku_duplicate")
+		}
+	}
+
+	// Prepare batch insert using VALUES clause
+	var createdProducts []*domain.Product
+	var errors []domain.BulkProductError
+
+	// Insert products one by one (can be optimized later with true batch INSERT)
+	for idx, input := range inputs {
+		// Validate individual input
+		if input.Name == "" {
+			errors = append(errors, domain.BulkProductError{
+				Index:        int32(idx),
+				ErrorCode:    "products.validation_failed",
+				ErrorMessage: "product name cannot be empty",
+			})
+			continue
+		}
+		if input.Price < 0 {
+			errors = append(errors, domain.BulkProductError{
+				Index:        int32(idx),
+				ErrorCode:    "products.validation_failed",
+				ErrorMessage: "price must be non-negative",
+			})
+			continue
+		}
+		if input.StockQuantity < 0 {
+			errors = append(errors, domain.BulkProductError{
+				Index:        int32(idx),
+				ErrorCode:    "products.validation_failed",
+				ErrorMessage: "stock_quantity must be non-negative",
+			})
+			continue
+		}
+
+		// Marshal attributes
+		var attributesJSON []byte
+		if input.Attributes != nil && len(input.Attributes) > 0 {
+			attributesJSON, err = json.Marshal(input.Attributes)
+			if err != nil {
+				errors = append(errors, domain.BulkProductError{
+					Index:        int32(idx),
+					ErrorCode:    "products.validation_failed",
+					ErrorMessage: fmt.Sprintf("failed to marshal attributes: %v", err),
+				})
+				continue
+			}
+		}
+
+		// Determine stock_status
+		stockStatus := domain.StockStatusOutOfStock
+		if input.StockQuantity > 0 {
+			stockStatus = domain.StockStatusInStock
+		}
+
+		// Insert product
+		query := `
+			INSERT INTO b2c_products (
+				storefront_id, name, description, price, currency, category_id,
+				sku, barcode, stock_quantity, stock_status, is_active,
+				attributes, view_count, sold_count,
+				has_individual_location, individual_address,
+				individual_latitude, individual_longitude,
+				location_privacy, show_on_map, has_variants
+			) VALUES (
+				$1, $2, $3, $4, $5, $6,
+				$7, $8, $9, $10, true,
+				$11, 0, 0,
+				$12, $13, $14, $15, $16, $17, false
+			)
+			RETURNING
+				id, storefront_id, name, description, price, currency,
+				category_id, sku, barcode, stock_quantity, stock_status,
+				is_active, attributes, view_count, sold_count,
+				created_at, updated_at,
+				has_individual_location, individual_address,
+				individual_latitude, individual_longitude,
+				location_privacy, show_on_map, has_variants
+		`
+
+		var product domain.Product
+		var description sql.NullString
+		var sku, barcode sql.NullString
+		var individualAddress, locationPrivacy sql.NullString
+		var individualLatitude, individualLongitude sql.NullFloat64
+		var returnedAttributesJSON []byte
+
+		err = tx.QueryRowContext(
+			ctx,
+			query,
+			storefrontID,
+			input.Name,
+			input.Description,
+			input.Price,
+			input.Currency,
+			input.CategoryID,
+			input.SKU,
+			input.Barcode,
+			input.StockQuantity,
+			stockStatus,
+			attributesJSON,
+			input.HasIndividualLocation,
+			input.IndividualAddress,
+			input.IndividualLatitude,
+			input.IndividualLongitude,
+			input.LocationPrivacy,
+			input.ShowOnMap,
+		).Scan(
+			&product.ID,
+			&product.StorefrontID,
+			&product.Name,
+			&description,
+			&product.Price,
+			&product.Currency,
+			&product.CategoryID,
+			&sku,
+			&barcode,
+			&product.StockQuantity,
+			&product.StockStatus,
+			&product.IsActive,
+			&returnedAttributesJSON,
+			&product.ViewCount,
+			&product.SoldCount,
+			&product.CreatedAt,
+			&product.UpdatedAt,
+			&product.HasIndividualLocation,
+			&individualAddress,
+			&individualLatitude,
+			&individualLongitude,
+			&locationPrivacy,
+			&product.ShowOnMap,
+			&product.HasVariants,
+		)
+
+		if err != nil {
+			// Check for unique constraint violation
+			if pqErr, ok := err.(*pq.Error); ok {
+				if pqErr.Code == "23505" { // unique_violation
+					errors = append(errors, domain.BulkProductError{
+						Index:        int32(idx),
+						ErrorCode:    "products.sku_duplicate",
+						ErrorMessage: fmt.Sprintf("SKU already exists"),
+					})
+					continue
+				}
+			}
+			errors = append(errors, domain.BulkProductError{
+				Index:        int32(idx),
+				ErrorCode:    "products.bulk_create_failed",
+				ErrorMessage: fmt.Sprintf("failed to create product: %v", err),
+			})
+			continue
+		}
+
+		// Handle nullable fields
+		if description.Valid {
+			product.Description = description.String
+		}
+		if sku.Valid {
+			product.SKU = &sku.String
+		}
+		if barcode.Valid {
+			product.Barcode = &barcode.String
+		}
+		if individualAddress.Valid {
+			product.IndividualAddress = &individualAddress.String
+		}
+		if individualLatitude.Valid {
+			product.IndividualLatitude = &individualLatitude.Float64
+		}
+		if individualLongitude.Valid {
+			product.IndividualLongitude = &individualLongitude.Float64
+		}
+		if locationPrivacy.Valid {
+			product.LocationPrivacy = &locationPrivacy.String
+		}
+
+		// Parse returned JSONB attributes
+		if len(returnedAttributesJSON) > 0 {
+			if err := json.Unmarshal(returnedAttributesJSON, &product.Attributes); err != nil {
+				r.logger.Error().Err(err).Msg("failed to unmarshal returned product attributes")
+				// Don't fail the entire operation for this
+			}
+		}
+
+		createdProducts = append(createdProducts, &product)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		r.logger.Error().Err(err).Msg("failed to commit transaction")
+		return nil, nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	r.logger.Info().
+		Int("successful", len(createdProducts)).
+		Int("failed", len(errors)).
+		Msg("bulk product creation completed")
+
+	return createdProducts, errors, nil
+}
+
+// BulkDeleteProducts deletes multiple products in a single atomic transaction
+func (r *Repository) BulkDeleteProducts(ctx context.Context, storefrontID int64, productIDs []int64, hardDelete bool) (int32, int32, int32, map[int64]string, error) {
+	r.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int("product_count", len(productIDs)).
+		Bool("hard_delete", hardDelete).
+		Msg("bulk deleting products")
+
+	// Validate inputs
+	if storefrontID <= 0 {
+		return 0, 0, 0, nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+
+	if len(productIDs) == 0 {
+		return 0, 0, 0, nil, fmt.Errorf("product_ids list cannot be empty")
+	}
+
+	if len(productIDs) > 1000 {
+		return 0, 0, 0, nil, fmt.Errorf("cannot delete more than 1000 products at once")
+	}
+
+	// Deduplicate product IDs
+	uniqueIDs := make(map[int64]bool)
+	deduplicatedIDs := make([]int64, 0, len(productIDs))
+	for _, id := range productIDs {
+		if id > 0 && !uniqueIDs[id] {
+			uniqueIDs[id] = true
+			deduplicatedIDs = append(deduplicatedIDs, id)
+		}
+	}
+
+	if len(deduplicatedIDs) == 0 {
+		return 0, 0, 0, nil, fmt.Errorf("no valid product IDs provided")
+	}
+
+	// Start transaction
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to begin transaction")
+		return 0, 0, 0, nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	var successCount int32
+	var failedCount int32
+	var totalVariantsDeleted int32
+	errors := make(map[int64]string)
+
+	// Process in batches of 100 for better performance
+	batchSize := 100
+	for i := 0; i < len(deduplicatedIDs); i += batchSize {
+		end := i + batchSize
+		if end > len(deduplicatedIDs) {
+			end = len(deduplicatedIDs)
+		}
+		batchIDs := deduplicatedIDs[i:end]
+
+		// Step 1: Validate ownership for batch
+		ownershipQuery := `
+			SELECT id
+			FROM b2c_products
+			WHERE id = ANY($1::bigint[]) AND storefront_id = $2
+		`
+		rows, err := tx.QueryContext(ctx, ownershipQuery, pq.Array(batchIDs), storefrontID)
+		if err != nil {
+			r.logger.Error().Err(err).Msg("failed to check ownership")
+			return 0, 0, 0, nil, fmt.Errorf("failed to check ownership: %w", err)
+		}
+
+		validIDs := make([]int64, 0, len(batchIDs))
+		validIDsMap := make(map[int64]bool)
+		for rows.Next() {
+			var id int64
+			if err := rows.Scan(&id); err != nil {
+				rows.Close()
+				r.logger.Error().Err(err).Msg("failed to scan product ID")
+				return 0, 0, 0, nil, fmt.Errorf("failed to scan product ID: %w", err)
+			}
+			validIDs = append(validIDs, id)
+			validIDsMap[id] = true
+		}
+		rows.Close()
+
+		if err := rows.Err(); err != nil {
+			r.logger.Error().Err(err).Msg("rows iteration error")
+			return 0, 0, 0, nil, fmt.Errorf("rows iteration error: %w", err)
+		}
+
+		// Mark invalid IDs as failed (not found or not owned)
+		for _, id := range batchIDs {
+			if !validIDsMap[id] {
+				errors[id] = "products.not_found"
+				failedCount++
+			}
+		}
+
+		// Skip if no valid IDs in this batch
+		if len(validIDs) == 0 {
+			continue
+		}
+
+		// Step 2: Count variants before deletion for valid IDs
+		countQuery := `
+			SELECT product_id, COUNT(*)
+			FROM b2c_product_variants
+			WHERE product_id = ANY($1::bigint[])
+			GROUP BY product_id
+		`
+		variantRows, err := tx.QueryContext(ctx, countQuery, pq.Array(validIDs))
+		if err != nil {
+			r.logger.Error().Err(err).Msg("failed to count variants")
+			return 0, 0, 0, nil, fmt.Errorf("failed to count variants: %w", err)
+		}
+
+		variantCounts := make(map[int64]int32)
+		for variantRows.Next() {
+			var productID int64
+			var count int32
+			if err := variantRows.Scan(&productID, &count); err != nil {
+				variantRows.Close()
+				r.logger.Error().Err(err).Msg("failed to scan variant count")
+				return 0, 0, 0, nil, fmt.Errorf("failed to scan variant count: %w", err)
+			}
+			variantCounts[productID] = count
+		}
+		variantRows.Close()
+
+		if err := variantRows.Err(); err != nil {
+			r.logger.Error().Err(err).Msg("variant rows iteration error")
+			return 0, 0, 0, nil, fmt.Errorf("variant rows iteration error: %w", err)
+		}
+
+		// Step 3: Perform deletion (soft or hard)
+		if hardDelete {
+			// Hard delete: DELETE CASCADE will handle variants automatically
+			deleteQuery := `
+				DELETE FROM b2c_products
+				WHERE id = ANY($1::bigint[]) AND storefront_id = $2
+			`
+			result, err := tx.ExecContext(ctx, deleteQuery, pq.Array(validIDs), storefrontID)
+			if err != nil {
+				r.logger.Error().Err(err).Msg("failed to hard delete products")
+				// Mark all valid IDs as failed
+				for _, id := range validIDs {
+					errors[id] = "products.delete_failed"
+					failedCount++
+				}
+				continue
+			}
+
+			rowsAffected, err := result.RowsAffected()
+			if err != nil {
+				r.logger.Error().Err(err).Msg("failed to get rows affected")
+				return 0, 0, 0, nil, fmt.Errorf("failed to get rows affected: %w", err)
+			}
+
+			successCount += int32(rowsAffected)
+
+			// Sum up variants deleted
+			for _, count := range variantCounts {
+				totalVariantsDeleted += count
+			}
+
+			r.logger.Info().
+				Int("batch_size", len(validIDs)).
+				Int64("rows_affected", rowsAffected).
+				Int32("variants_deleted", totalVariantsDeleted).
+				Msg("products hard deleted in batch")
+		} else {
+			// Soft delete: Set deleted_at timestamp
+			softDeleteQuery := `
+				UPDATE b2c_products
+				SET deleted_at = NOW(), updated_at = NOW()
+				WHERE id = ANY($1::bigint[]) AND storefront_id = $2 AND deleted_at IS NULL
+			`
+			result, err := tx.ExecContext(ctx, softDeleteQuery, pq.Array(validIDs), storefrontID)
+			if err != nil {
+				// Check if column doesn't exist
+				if pqErr, ok := err.(*pq.Error); ok {
+					if pqErr.Code == "42703" { // undefined_column
+						r.logger.Warn().Msg("deleted_at column not found, using is_active=false instead")
+						// Fallback: use is_active = false
+						fallbackQuery := `
+							UPDATE b2c_products
+							SET is_active = false, updated_at = NOW()
+							WHERE id = ANY($1::bigint[]) AND storefront_id = $2
+						`
+						result, err = tx.ExecContext(ctx, fallbackQuery, pq.Array(validIDs), storefrontID)
+						if err != nil {
+							r.logger.Error().Err(err).Msg("failed to deactivate products")
+							// Mark all valid IDs as failed
+							for _, id := range validIDs {
+								errors[id] = "products.delete_failed"
+								failedCount++
+							}
+							continue
+						}
+					} else {
+						r.logger.Error().Err(err).Msg("failed to soft delete products")
+						// Mark all valid IDs as failed
+						for _, id := range validIDs {
+							errors[id] = "products.delete_failed"
+							failedCount++
+						}
+						continue
+					}
+				} else {
+					r.logger.Error().Err(err).Msg("failed to soft delete products")
+					// Mark all valid IDs as failed
+					for _, id := range validIDs {
+						errors[id] = "products.delete_failed"
+						failedCount++
+					}
+					continue
+				}
+			}
+
+			rowsAffected, err := result.RowsAffected()
+			if err != nil {
+				r.logger.Error().Err(err).Msg("failed to get rows affected")
+				return 0, 0, 0, nil, fmt.Errorf("failed to get rows affected: %w", err)
+			}
+
+			successCount += int32(rowsAffected)
+
+			// Sum up variant counts (soft delete doesn't actually delete variants, but we track them)
+			for _, count := range variantCounts {
+				totalVariantsDeleted += count
+			}
+
+			r.logger.Info().
+				Int("batch_size", len(validIDs)).
+				Int64("rows_affected", rowsAffected).
+				Int32("variants_count", totalVariantsDeleted).
+				Msg("products soft deleted in batch")
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		r.logger.Error().Err(err).Msg("failed to commit transaction")
+		return 0, 0, 0, nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	r.logger.Info().
+		Int32("success_count", successCount).
+		Int32("failed_count", failedCount).
+		Int32("variants_deleted", totalVariantsDeleted).
+		Bool("hard_delete", hardDelete).
+		Msg("bulk delete products completed")
+
+	return successCount, failedCount, totalVariantsDeleted, errors, nil
+}

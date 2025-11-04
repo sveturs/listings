@@ -678,10 +678,9 @@ func ProtoToCreateProductInput(req *pb.CreateProductRequest) *domain.CreateProdu
 		input.Attributes = req.Attributes.AsMap()
 	}
 
-	// Location fields
-	if req.HasIndividualLocation != nil {
-		input.HasIndividualLocation = *req.HasIndividualLocation
-	}
+	// Location fields - bool fields are not optional in proto
+	input.HasIndividualLocation = req.HasIndividualLocation
+	input.ShowOnMap = req.ShowOnMap
 
 	if req.IndividualAddress != nil {
 		input.IndividualAddress = req.IndividualAddress
@@ -697,10 +696,6 @@ func ProtoToCreateProductInput(req *pb.CreateProductRequest) *domain.CreateProdu
 
 	if req.LocationPrivacy != nil {
 		input.LocationPrivacy = req.LocationPrivacy
-	}
-
-	if req.ShowOnMap != nil {
-		input.ShowOnMap = *req.ShowOnMap
 	}
 
 	return input
@@ -727,14 +722,6 @@ func ProtoToUpdateProductInput(req *pb.UpdateProductRequest) *domain.UpdateProdu
 		input.Price = req.Price
 	}
 
-	if req.StockQuantity != nil {
-		input.StockQuantity = req.StockQuantity
-	}
-
-	if req.StockStatus != nil {
-		input.StockStatus = req.StockStatus
-	}
-
 	if req.IsActive != nil {
 		input.IsActive = req.IsActive
 	}
@@ -746,7 +733,8 @@ func ProtoToUpdateProductInput(req *pb.UpdateProductRequest) *domain.UpdateProdu
 
 	// Location fields
 	if req.HasIndividualLocation != nil {
-		input.HasIndividualLocation = req.HasIndividualLocation
+		boolValue := *req.HasIndividualLocation
+		input.HasIndividualLocation = &boolValue
 	}
 
 	if req.IndividualAddress != nil {
@@ -766,7 +754,8 @@ func ProtoToUpdateProductInput(req *pb.UpdateProductRequest) *domain.UpdateProdu
 	}
 
 	if req.ShowOnMap != nil {
-		input.ShowOnMap = req.ShowOnMap
+		boolValue := *req.ShowOnMap
+		input.ShowOnMap = &boolValue
 	}
 
 	return input
@@ -836,9 +825,6 @@ func ProtoToUpdateVariantInput(req *pb.UpdateProductVariantRequest) *domain.Upda
 	if req.Barcode != nil {
 		input.Barcode = req.Barcode
 	}
-	if req.StockStatus != nil {
-		input.StockStatus = req.StockStatus
-	}
 
 	// Optional numeric fields
 	if req.Price != nil {
@@ -878,4 +864,193 @@ func ProtoToUpdateVariantInput(req *pb.UpdateProductVariantRequest) *domain.Upda
 	}
 
 	return input
+}
+
+// ProtoToBulkVariantInputs converts slice of pb.ProductVariantInput to slice of domain.CreateVariantInput
+func ProtoToBulkVariantInputs(productID int64, protoInputs []*pb.ProductVariantInput) []*domain.CreateVariantInput {
+	if len(protoInputs) == 0 {
+		return nil
+	}
+
+	inputs := make([]*domain.CreateVariantInput, 0, len(protoInputs))
+
+	for _, protoInput := range protoInputs {
+		if protoInput == nil {
+			continue
+		}
+
+		input := &domain.CreateVariantInput{
+			ProductID:     productID,
+			StockQuantity: protoInput.StockQuantity,
+			IsDefault:     protoInput.IsDefault,
+		}
+
+		// Optional string fields
+		if protoInput.Sku != nil {
+			input.SKU = protoInput.Sku
+		}
+		if protoInput.Barcode != nil {
+			input.Barcode = protoInput.Barcode
+		}
+
+		// Optional numeric fields
+		if protoInput.Price != nil {
+			input.Price = protoInput.Price
+		}
+		if protoInput.CompareAtPrice != nil {
+			input.CompareAtPrice = protoInput.CompareAtPrice
+		}
+		if protoInput.CostPrice != nil {
+			input.CostPrice = protoInput.CostPrice
+		}
+		if protoInput.Weight != nil {
+			input.Weight = protoInput.Weight
+		}
+		if protoInput.LowStockThreshold != nil {
+			input.LowStockThreshold = protoInput.LowStockThreshold
+		}
+
+		// Convert google.protobuf.Struct to map[string]interface{}
+		if protoInput.VariantAttributes != nil {
+			input.VariantAttributes = protoInput.VariantAttributes.AsMap()
+		}
+
+		if protoInput.Dimensions != nil {
+			input.Dimensions = protoInput.Dimensions.AsMap()
+		}
+
+		inputs = append(inputs, input)
+	}
+
+	return inputs
+}
+
+// ProtoToProductInput converts pb.ProductInput to domain.CreateProductInput
+func ProtoToProductInput(p *pb.ProductInput, storefrontID int64) *domain.CreateProductInput {
+	if p == nil {
+		return nil
+	}
+
+	input := &domain.CreateProductInput{
+		StorefrontID:          storefrontID,
+		Name:                  p.Name,
+		Description:           p.Description,
+		Price:                 p.Price,
+		Currency:              p.Currency,
+		CategoryID:            p.CategoryId,
+		StockQuantity:         p.StockQuantity,
+		HasIndividualLocation: p.GetHasIndividualLocation(),
+		ShowOnMap:             p.GetShowOnMap(),
+	}
+
+	// Handle optional fields
+	if p.Sku != nil {
+		input.SKU = p.Sku
+	}
+
+	if p.Barcode != nil {
+		input.Barcode = p.Barcode
+	}
+
+	if p.Attributes != nil {
+		input.Attributes = p.Attributes.AsMap()
+	}
+
+	if p.IndividualAddress != nil {
+		input.IndividualAddress = p.IndividualAddress
+	}
+
+	if p.IndividualLatitude != nil {
+		input.IndividualLatitude = p.IndividualLatitude
+	}
+
+	if p.IndividualLongitude != nil {
+		input.IndividualLongitude = p.IndividualLongitude
+	}
+
+	if p.LocationPrivacy != nil {
+		input.LocationPrivacy = p.LocationPrivacy
+	}
+
+	return input
+}
+
+// ProtoToBulkProductInputs converts repeated pb.ProductInput to domain.CreateProductInput slice
+func ProtoToBulkProductInputs(protoInputs []*pb.ProductInput, storefrontID int64) []*domain.CreateProductInput {
+	if len(protoInputs) == 0 {
+		return nil
+	}
+
+	inputs := make([]*domain.CreateProductInput, 0, len(protoInputs))
+	for _, protoInput := range protoInputs {
+		if protoInput == nil {
+			continue
+		}
+		inputs = append(inputs, ProtoToProductInput(protoInput, storefrontID))
+	}
+
+	return inputs
+}
+
+// ProtoToBulkUpdateInput converts pb.ProductUpdateInput to domain.BulkUpdateProductInput
+func ProtoToBulkUpdateInput(req *pb.ProductUpdateInput) *domain.BulkUpdateProductInput {
+	if req == nil {
+		return nil
+	}
+
+	input := &domain.BulkUpdateProductInput{
+		ProductID: req.ProductId,
+	}
+
+	// Optional fields - only set if provided
+	if req.Name != nil {
+		input.Name = req.Name
+	}
+	if req.Description != nil {
+		input.Description = req.Description
+	}
+	if req.Price != nil {
+		input.Price = req.Price
+	}
+	if req.Sku != nil {
+		input.SKU = req.Sku
+	}
+	if req.Barcode != nil {
+		input.Barcode = req.Barcode
+	}
+	if req.IsActive != nil {
+		input.IsActive = req.IsActive
+	}
+
+	// Convert google.protobuf.Struct to map[string]interface{}
+	if req.Attributes != nil {
+		input.Attributes = req.Attributes.AsMap()
+	}
+
+	// Convert FieldMask to []string
+	if req.UpdateMask != nil && len(req.UpdateMask.Paths) > 0 {
+		input.UpdateMask = req.UpdateMask.Paths
+	}
+
+	return input
+}
+
+// ProtoToBulkUpdateInputs converts repeated pb.ProductUpdateInput to domain.BulkUpdateProductInput slice
+func ProtoToBulkUpdateInputs(protoUpdates []*pb.ProductUpdateInput) []*domain.BulkUpdateProductInput {
+	if len(protoUpdates) == 0 {
+		return nil
+	}
+
+	inputs := make([]*domain.BulkUpdateProductInput, 0, len(protoUpdates))
+	for _, protoUpdate := range protoUpdates {
+		if protoUpdate == nil {
+			continue
+		}
+		input := ProtoToBulkUpdateInput(protoUpdate)
+		if input != nil {
+			inputs = append(inputs, input)
+		}
+	}
+
+	return inputs
 }

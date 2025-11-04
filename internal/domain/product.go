@@ -271,3 +271,45 @@ type SearchProductsQuery struct {
 	Limit        int32    `json:"limit" validate:"required,gte=1,lte=100"`
 	Offset       int32    `json:"offset" validate:"gte=0"`
 }
+
+// BulkProductError represents an error for a single product in bulk operation
+type BulkProductError struct {
+	Index        int32   `json:"index"`
+	ProductID    *int64  `json:"product_id,omitempty"`
+	ErrorCode    string  `json:"error_code"`
+	ErrorMessage string  `json:"error_message"`
+}
+
+// BulkUpdateProductInput represents input for bulk updating a single product
+type BulkUpdateProductInput struct {
+	ProductID             int64                  `json:"product_id" validate:"required,gt=0"`
+	Name                  *string                `json:"name,omitempty" validate:"omitempty,min=3,max=255"`
+	Description           *string                `json:"description,omitempty"`
+	Price                 *float64               `json:"price,omitempty" validate:"omitempty,gte=0"`
+	SKU                   *string                `json:"sku,omitempty"`
+	Barcode               *string                `json:"barcode,omitempty"`
+	StockQuantity         *int32                 `json:"stock_quantity,omitempty" validate:"omitempty,gte=0"`
+	StockStatus           *string                `json:"stock_status,omitempty" validate:"omitempty,oneof=in_stock low_stock out_of_stock pre_order"`
+	IsActive              *bool                  `json:"is_active,omitempty"`
+	Attributes            map[string]interface{} `json:"attributes,omitempty"`
+	HasIndividualLocation *bool                  `json:"has_individual_location,omitempty"`
+	IndividualAddress     *string                `json:"individual_address,omitempty"`
+	IndividualLatitude    *float64               `json:"individual_latitude,omitempty"`
+	IndividualLongitude   *float64               `json:"individual_longitude,omitempty"`
+	LocationPrivacy       *string                `json:"location_privacy,omitempty" validate:"omitempty,oneof=exact approximate hidden"`
+	ShowOnMap             *bool                  `json:"show_on_map,omitempty"`
+	UpdateMask            []string               `json:"update_mask,omitempty"` // Field mask for partial updates
+}
+
+// BulkUpdateProductsResult represents the result of a bulk update operation
+type BulkUpdateProductsResult struct {
+	SuccessfulProducts []*Product
+	FailedUpdates      []BulkUpdateError
+}
+
+// BulkUpdateError represents an error for a single product in bulk operation
+type BulkUpdateError struct {
+	ProductID    int64  `json:"product_id"`
+	ErrorCode    string `json:"error_code"`
+	ErrorMessage string `json:"error_message"`
+}

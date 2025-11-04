@@ -129,15 +129,6 @@ service ListingsService {
   // ListProducts returns a paginated list of products for a storefront
   rpc ListProducts(ListProductsRequest) returns (ProductsResponse);
 
-  // CreateProduct creates a new product
-  rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
-
-  // UpdateProduct updates an existing product
-  rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
-
-  // DeleteProduct deletes a product (soft or hard delete)
-  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
-
   // === Product Variants Management (HIGH PRIORITY) ===
 
   // GetVariant retrieves a single product variant by ID
@@ -145,15 +136,6 @@ service ListingsService {
 
   // GetVariantsByProductID retrieves all variants for a product
   rpc GetVariantsByProductID(GetVariantsByProductIDRequest) returns (ProductVariantsResponse);
-
-  // CreateProductVariant creates a new variant for a product
-  rpc CreateProductVariant(CreateProductVariantRequest) returns (CreateProductVariantResponse);
-
-  // UpdateProductVariant updates an existing variant
-  rpc UpdateProductVariant(UpdateProductVariantRequest) returns (UpdateProductVariantResponse);
-
-  // DeleteProductVariant deletes a variant from a product
-  rpc DeleteProductVariant(DeleteProductVariantRequest) returns (DeleteProductVariantResponse);
 
   // === Stock Management (CRITICAL for Order Processing) ===
 
@@ -168,6 +150,49 @@ service ListingsService {
   // CheckStockAvailability verifies if requested quantities are available
   // Used for validation before order creation
   rpc CheckStockAvailability(CheckStockAvailabilityRequest) returns (CheckStockAvailabilityResponse);
+
+  // === Product CRUD Operations (Phase 9.5.2) ===
+
+  // CreateProduct creates a new B2C product
+  // Transaction: Creates product + initializes stock record
+  rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
+
+  // UpdateProduct updates an existing B2C product (partial update)
+  // Supports field masking for efficient updates
+  rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
+
+  // DeleteProduct removes a product (soft delete by default)
+  // Cascade behavior: Soft-deletes all variants, images, reservations
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
+
+  // BulkCreateProducts creates multiple products in a single transaction
+  // Recommended batch size: 1-1000 items
+  rpc BulkCreateProducts(BulkCreateProductsRequest) returns (BulkCreateProductsResponse);
+
+  // BulkUpdateProducts updates multiple products in a single transaction
+  // Supports partial updates via field mask per product
+  rpc BulkUpdateProducts(BulkUpdateProductsRequest) returns (BulkUpdateProductsResponse);
+
+  // BulkDeleteProducts deletes multiple products in a single transaction
+  // Cascade behavior: Deletes all associated variants, images, reservations
+  rpc BulkDeleteProducts(BulkDeleteProductsRequest) returns (BulkDeleteProductsResponse);
+
+  // === Product Variant CRUD Operations (Phase 9.5.2) ===
+
+  // CreateProductVariant creates a new variant for a product
+  // Transaction: Creates variant + initializes stock record
+  rpc CreateProductVariant(CreateProductVariantRequest) returns (VariantResponse);
+
+  // UpdateProductVariant updates an existing product variant
+  // Supports partial updates via field mask
+  rpc UpdateProductVariant(UpdateProductVariantRequest) returns (VariantResponse);
+
+  // DeleteProductVariant removes a variant from a product
+  rpc DeleteProductVariant(DeleteProductVariantRequest) returns (DeleteProductVariantResponse);
+
+  // BulkCreateProductVariants creates multiple variants for a product
+  // Recommended for product imports with size/color matrices
+  rpc BulkCreateProductVariants(BulkCreateProductVariantsRequest) returns (BulkCreateProductVariantsResponse);
 }
 
 // ============================================================================
@@ -718,62 +743,6 @@ message ListProductsRequest {
   optional bool is_active_only = 4;
 }
 
-// CreateProductRequest creates a new product
-message CreateProductRequest {
-  int64 storefront_id = 1;
-  string name = 2;
-  string description = 3;
-  double price = 4;
-  string currency = 5;
-  int64 category_id = 6;
-  optional string sku = 7;
-  optional string barcode = 8;
-  int32 stock_quantity = 9;
-  optional google.protobuf.Struct attributes = 10;
-  optional bool has_individual_location = 11;
-  optional string individual_address = 12;
-  optional double individual_latitude = 13;
-  optional double individual_longitude = 14;
-  optional string location_privacy = 15;
-  optional bool show_on_map = 16;
-}
-
-// UpdateProductRequest updates an existing product (partial update with field mask)
-message UpdateProductRequest {
-  int64 product_id = 1;
-  int64 storefront_id = 2; // For ownership validation
-  optional string name = 3;
-  optional string description = 4;
-  optional double price = 5;
-  optional string sku = 6;
-  optional string barcode = 7;
-  optional int32 stock_quantity = 8;
-  optional string stock_status = 9;
-  optional bool is_active = 10;
-  optional google.protobuf.Struct attributes = 11;
-  optional bool has_individual_location = 12;
-  optional string individual_address = 13;
-  optional double individual_latitude = 14;
-  optional double individual_longitude = 15;
-  optional string location_privacy = 16;
-  optional bool show_on_map = 17;
-  optional google.protobuf.FieldMask update_mask = 18;
-}
-
-// DeleteProductRequest deletes a product
-message DeleteProductRequest {
-  int64 product_id = 1;
-  int64 storefront_id = 2; // Ownership validation
-  bool hard_delete = 3; // false = soft delete (default)
-}
-
-// DeleteProductResponse confirms product deletion
-message DeleteProductResponse {
-  bool success = 1;
-  optional string message = 2;
-  int32 variants_deleted = 3; // Cascade count
-}
-
 // GetVariantRequest retrieves a single variant by ID
 message GetVariantRequest {
   int64 variant_id = 1;
@@ -794,63 +763,6 @@ message GetVariantsByProductIDRequest {
 // ProductVariantsResponse returns multiple product variants
 message ProductVariantsResponse {
   repeated ProductVariant variants = 1;
-}
-
-// CreateProductVariantRequest creates a new variant for a product
-message CreateProductVariantRequest {
-  int64 product_id = 1;
-  optional string sku = 2;
-  optional string barcode = 3;
-  optional double price = 4;
-  optional double compare_at_price = 5;
-  optional double cost_price = 6;
-  int32 stock_quantity = 7;
-  optional int32 low_stock_threshold = 8;
-  google.protobuf.Struct variant_attributes = 9;
-  optional double weight = 10;
-  optional google.protobuf.Struct dimensions = 11;
-  bool is_active = 12;
-  bool is_default = 13;
-}
-
-// CreateProductVariantResponse returns the created variant
-message CreateProductVariantResponse {
-  ProductVariant variant = 1;
-}
-
-// UpdateProductVariantRequest updates an existing variant
-message UpdateProductVariantRequest {
-  int64 variant_id = 1;
-  int64 product_id = 2; // For validation
-  optional string sku = 3;
-  optional string barcode = 4;
-  optional double price = 5;
-  optional double compare_at_price = 6;
-  optional double cost_price = 7;
-  optional int32 stock_quantity = 8;
-  optional string stock_status = 9;
-  optional int32 low_stock_threshold = 10;
-  optional google.protobuf.Struct variant_attributes = 11;
-  optional double weight = 12;
-  optional google.protobuf.Struct dimensions = 13;
-  optional bool is_active = 14;
-  optional bool is_default = 15;
-}
-
-// UpdateProductVariantResponse returns the updated variant
-message UpdateProductVariantResponse {
-  ProductVariant variant = 1;
-}
-
-// DeleteProductVariantRequest deletes a variant
-message DeleteProductVariantRequest {
-  int64 variant_id = 1;
-  int64 product_id = 2; // For validation
-}
-
-// DeleteProductVariantResponse confirms deletion
-message DeleteProductVariantResponse {
-  bool success = 1;
 }
 
 // ============================================================================
@@ -918,4 +830,253 @@ message StockAvailability {
 message CheckStockAvailabilityResponse {
   bool all_available = 1; // True if ALL items available
   repeated StockAvailability items = 2;
+}
+
+// ============================================================================
+// Request/Response Messages - Product CRUD Operations (Phase 9.5.2)
+// ============================================================================
+
+// CreateProductRequest creates a new product
+message CreateProductRequest {
+  int64 storefront_id = 1; // Required for ownership
+  string name = 2; // Required, 1-500 characters
+  string description = 3; // Optional, up to 5000 characters
+  double price = 4; // Required, must be > 0
+  string currency = 5; // Required, ISO 4217 code (USD, EUR, etc.)
+  int64 category_id = 6; // Required, must exist
+  optional string sku = 7; // Optional, must be unique in storefront
+  optional string barcode = 8; // Optional (EAN, UPC, etc.)
+  int32 stock_quantity = 9; // Initial stock, default 0
+  bool is_active = 10; // Default true
+  google.protobuf.Struct attributes = 11; // Custom attributes (brand, model, etc.)
+
+  // Location fields (optional)
+  bool has_individual_location = 12;
+  optional string individual_address = 13;
+  optional double individual_latitude = 14;
+  optional double individual_longitude = 15;
+  optional string location_privacy = 16; // "public", "approximate", "hidden"
+  bool show_on_map = 17;
+
+  bool has_variants = 18; // If true, create as variant parent
+}
+
+// UpdateProductRequest updates product fields (partial update)
+message UpdateProductRequest {
+  int64 product_id = 1; // Required
+  int64 storefront_id = 2; // Required for ownership validation
+
+  // Fields to update (optional)
+  optional string name = 3;
+  optional string description = 4;
+  optional double price = 5;
+  optional string currency = 6;
+  optional int64 category_id = 7;
+  optional string sku = 8;
+  optional string barcode = 9;
+  optional bool is_active = 10;
+  optional google.protobuf.Struct attributes = 11;
+
+  // Location updates
+  optional bool has_individual_location = 12;
+  optional string individual_address = 13;
+  optional double individual_latitude = 14;
+  optional double individual_longitude = 15;
+  optional string location_privacy = 16;
+  optional bool show_on_map = 17;
+
+  // Field mask for partial updates (recommended)
+  optional google.protobuf.FieldMask update_mask = 18;
+}
+
+// DeleteProductRequest removes a product
+message DeleteProductRequest {
+  int64 product_id = 1; // Required
+  int64 storefront_id = 2; // Required for ownership validation
+  bool hard_delete = 3; // Default false (soft delete)
+}
+
+// DeleteProductResponse confirms deletion
+message DeleteProductResponse {
+  bool success = 1;
+  optional string message = 2; // Error or warning message
+  int32 variants_deleted = 3; // Number of cascaded variant deletions
+}
+
+// ============================================================================
+// Bulk Operations - Products
+// ============================================================================
+
+// ProductInput represents input data for creating a product
+message ProductInput {
+  string name = 1;
+  string description = 2;
+  double price = 3;
+  string currency = 4;
+  int64 category_id = 5;
+  optional string sku = 6;
+  optional string barcode = 7;
+  int32 stock_quantity = 8;
+  bool is_active = 9;
+  google.protobuf.Struct attributes = 10;
+
+  // Location
+  bool has_individual_location = 11;
+  optional string individual_address = 12;
+  optional double individual_latitude = 13;
+  optional double individual_longitude = 14;
+  optional string location_privacy = 15;
+  bool show_on_map = 16;
+
+  bool has_variants = 17;
+}
+
+// BulkCreateProductsRequest creates multiple products
+message BulkCreateProductsRequest {
+  int64 storefront_id = 1;
+  repeated ProductInput products = 2; // Max 1000 items
+}
+
+// BulkCreateProductsResponse returns created products
+message BulkCreateProductsResponse {
+  repeated Product products = 1; // Successfully created products
+  int32 successful_count = 2;
+  int32 failed_count = 3;
+  repeated BulkOperationError errors = 4; // Failed items with reasons
+}
+
+// ProductUpdateInput represents input for bulk update
+message ProductUpdateInput {
+  int64 product_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional double price = 4;
+  optional string currency = 5;
+  optional int64 category_id = 6;
+  optional string sku = 7;
+  optional string barcode = 8;
+  optional bool is_active = 9;
+  optional google.protobuf.Struct attributes = 10;
+  optional google.protobuf.FieldMask update_mask = 11;
+}
+
+// BulkUpdateProductsRequest updates multiple products
+message BulkUpdateProductsRequest {
+  int64 storefront_id = 1;
+  repeated ProductUpdateInput updates = 2; // Max 1000 items
+}
+
+// BulkUpdateProductsResponse returns update results
+message BulkUpdateProductsResponse {
+  repeated Product products = 1; // Successfully updated products
+  int32 successful_count = 2;
+  int32 failed_count = 3;
+  repeated BulkOperationError errors = 4;
+}
+
+// BulkDeleteProductsRequest deletes multiple products
+message BulkDeleteProductsRequest {
+  int64 storefront_id = 1;
+  repeated int64 product_ids = 2; // Max 1000 items
+  bool hard_delete = 3; // Default false
+}
+
+// BulkDeleteProductsResponse returns deletion results
+message BulkDeleteProductsResponse {
+  int32 successful_count = 1;
+  int32 failed_count = 2;
+  int32 variants_deleted = 3; // Total cascaded deletions
+  repeated BulkOperationError errors = 4;
+}
+
+// BulkOperationError represents a failed item in bulk operation
+message BulkOperationError {
+  int32 index = 1; // Index in input array
+  optional int64 product_id = 2; // If applicable
+  string error_code = 3; // "sku_duplicate", "not_found", "validation_failed", etc.
+  string error_message = 4; // Human-readable error
+}
+
+// ============================================================================
+// Product Variant CRUD Operations (Phase 9.5.2)
+// ============================================================================
+
+// CreateProductVariantRequest creates a new variant
+message CreateProductVariantRequest {
+  int64 product_id = 1; // Parent product
+  optional string sku = 2; // Optional, unique within product
+  optional string barcode = 3;
+  optional double price = 4; // If null, inherits from product
+  optional double compare_at_price = 5; // "Was" price for discounts
+  optional double cost_price = 6; // For profit calculations
+  int32 stock_quantity = 7;
+  optional int32 low_stock_threshold = 8;
+  google.protobuf.Struct variant_attributes = 9; // {"color": "red", "size": "XL"}
+  optional double weight = 10; // In grams
+  google.protobuf.Struct dimensions = 11; // {"length": 10, "width": 5, "height": 3}
+  bool is_active = 12; // Default true
+  bool is_default = 13; // Default false
+}
+
+// UpdateProductVariantRequest updates variant fields
+message UpdateProductVariantRequest {
+  int64 variant_id = 1;
+  int64 product_id = 2; // For validation
+
+  optional string sku = 3;
+  optional string barcode = 4;
+  optional double price = 5;
+  optional double compare_at_price = 6;
+  optional double cost_price = 7;
+  optional int32 stock_quantity = 8;
+  optional int32 low_stock_threshold = 9;
+  optional google.protobuf.Struct variant_attributes = 10;
+  optional double weight = 11;
+  optional google.protobuf.Struct dimensions = 12;
+  optional bool is_active = 13;
+  optional bool is_default = 14;
+
+  optional google.protobuf.FieldMask update_mask = 15;
+}
+
+// DeleteProductVariantRequest removes a variant
+message DeleteProductVariantRequest {
+  int64 variant_id = 1;
+  int64 product_id = 2; // For validation
+}
+
+// DeleteProductVariantResponse confirms deletion
+message DeleteProductVariantResponse {
+  bool success = 1;
+  optional string message = 2;
+}
+
+// ProductVariantInput for bulk creation
+message ProductVariantInput {
+  optional string sku = 1;
+  optional string barcode = 2;
+  optional double price = 3;
+  optional double compare_at_price = 4;
+  optional double cost_price = 5;
+  int32 stock_quantity = 6;
+  optional int32 low_stock_threshold = 7;
+  google.protobuf.Struct variant_attributes = 8;
+  optional double weight = 9;
+  google.protobuf.Struct dimensions = 10;
+  bool is_active = 11;
+  bool is_default = 12;
+}
+
+// BulkCreateProductVariantsRequest creates multiple variants
+message BulkCreateProductVariantsRequest {
+  int64 product_id = 1;
+  repeated ProductVariantInput variants = 2; // Max 1000 items
+}
+
+// BulkCreateProductVariantsResponse returns created variants
+message BulkCreateProductVariantsResponse {
+  repeated ProductVariant variants = 1;
+  int32 successful_count = 2;
+  int32 failed_count = 3;
+  repeated BulkOperationError errors = 4;
 }

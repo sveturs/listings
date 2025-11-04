@@ -60,8 +60,11 @@ type Repository interface {
 	GetProductsByIDs(ctx context.Context, productIDs []int64, storefrontID *int64) ([]*domain.Product, error)
 	ListProducts(ctx context.Context, storefrontID int64, page, pageSize int, isActiveOnly bool) ([]*domain.Product, int, error)
 	CreateProduct(ctx context.Context, input *domain.CreateProductInput) (*domain.Product, error)
+	BulkCreateProducts(ctx context.Context, storefrontID int64, inputs []*domain.CreateProductInput) ([]*domain.Product, []domain.BulkProductError, error)
 	UpdateProduct(ctx context.Context, productID int64, storefrontID int64, input *domain.UpdateProductInput) (*domain.Product, error)
 	DeleteProduct(ctx context.Context, productID, storefrontID int64, hardDelete bool) (int32, error)
+	BulkDeleteProducts(ctx context.Context, storefrontID int64, productIDs []int64, hardDelete bool) (int32, int32, int32, map[int64]string, error)
+	BulkUpdateProducts(ctx context.Context, storefrontID int64, updates []*domain.BulkUpdateProductInput) (*domain.BulkUpdateProductsResult, error)
 
 	// Product Variants operations
 	GetVariantByID(ctx context.Context, variantID int64, productID *int64) (*domain.ProductVariant, error)
@@ -69,6 +72,7 @@ type Repository interface {
 	CreateProductVariant(ctx context.Context, input *domain.CreateVariantInput) (*domain.ProductVariant, error)
 	UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error)
 	DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error
+	BulkCreateProductVariants(ctx context.Context, productID int64, inputs []*domain.CreateVariantInput) ([]*domain.ProductVariant, error)
 
 	// Transaction and database operations
 	BeginTx(ctx context.Context) (*sql.Tx, error)
@@ -671,6 +675,56 @@ func (s *Service) CreateProduct(ctx context.Context, input *domain.CreateProduct
 	return product, nil
 }
 
+// BulkCreateProducts creates multiple products in a single atomic transaction
+func (s *Service) BulkCreateProducts(ctx context.Context, storefrontID int64, inputs []*domain.CreateProductInput) ([]*domain.Product, []domain.BulkProductError, error) {
+	s.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int("product_count", len(inputs)).
+		Msg("bulk creating products")
+
+	// Validate storefront_id
+	if storefrontID <= 0 {
+		return nil, nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+
+	// Validate batch size
+	if len(inputs) == 0 {
+		return nil, nil, fmt.Errorf("products.bulk_empty")
+	}
+	if len(inputs) > 1000 {
+		return nil, nil, fmt.Errorf("products.bulk_too_large")
+	}
+
+	// Validate each input
+	for i, input := range inputs {
+		if input == nil {
+			return nil, nil, fmt.Errorf("product at index %d is nil", i)
+		}
+		// Ensure storefront_id matches
+		input.StorefrontID = storefrontID
+
+		// Validate using validator
+		if err := s.validator.Struct(input); err != nil {
+			s.logger.Error().Err(err).Int("index", i).Msg("product validation failed")
+			return nil, nil, fmt.Errorf("validation failed for product at index %d: %w", i, err)
+		}
+	}
+
+	// Create products in repository
+	products, errors, err := s.repo.BulkCreateProducts(ctx, storefrontID, inputs)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to bulk create products")
+		return products, errors, err // Return partial results if available
+	}
+
+	s.logger.Info().
+		Int("successful", len(products)).
+		Int("failed", len(errors)).
+		Msg("bulk product creation completed")
+
+	return products, errors, nil
+}
+
 // UpdateProduct updates an existing product with ownership validation
 func (s *Service) UpdateProduct(ctx context.Context, productID int64, storefrontID int64, input *domain.UpdateProductInput) (*domain.Product, error) {
 	s.logger.Debug().
@@ -701,6 +755,69 @@ func (s *Service) UpdateProduct(ctx context.Context, productID int64, storefront
 
 	s.logger.Info().Int64("product_id", product.ID).Msg("product updated successfully")
 	return product, nil
+}
+
+// BulkUpdateProducts updates multiple products in a single atomic operation
+func (s *Service) BulkUpdateProducts(ctx context.Context, storefrontID int64, updates []*domain.BulkUpdateProductInput) (*domain.BulkUpdateProductsResult, error) {
+	s.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int("update_count", len(updates)).
+		Msg("bulk updating products via service")
+
+	// Validate inputs
+	if storefrontID <= 0 {
+		return nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+
+	if len(updates) == 0 {
+		return &domain.BulkUpdateProductsResult{
+			SuccessfulProducts: []*domain.Product{},
+			FailedUpdates:      []domain.BulkUpdateError{},
+		}, nil
+	}
+
+	if len(updates) > 1000 {
+		return nil, fmt.Errorf("products.bulk_update_limit_exceeded")
+	}
+
+	// Validate each update input
+	for _, update := range updates {
+		if update.ProductID <= 0 {
+			return nil, fmt.Errorf("all product_ids must be greater than 0")
+		}
+
+		// Validate using validator
+		if err := s.validator.Struct(update); err != nil {
+			s.logger.Error().Err(err).Int64("product_id", update.ProductID).Msg("bulk update validation failed")
+			return nil, fmt.Errorf("validation failed for product %d: %w", update.ProductID, err)
+		}
+
+		// Check that at least one field is set for update
+		hasUpdate := update.Name != nil || update.Description != nil || update.Price != nil ||
+			update.SKU != nil || update.Barcode != nil || update.StockQuantity != nil ||
+			update.StockStatus != nil || update.IsActive != nil || update.Attributes != nil ||
+			update.HasIndividualLocation != nil || update.IndividualAddress != nil ||
+			update.IndividualLatitude != nil || update.IndividualLongitude != nil ||
+			update.LocationPrivacy != nil || update.ShowOnMap != nil
+
+		if !hasUpdate {
+			return nil, fmt.Errorf("at least one field must be specified for update for product %d", update.ProductID)
+		}
+	}
+
+	// Call repository bulk update
+	result, err := s.repo.BulkUpdateProducts(ctx, storefrontID, updates)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to bulk update products")
+		return nil, err // Return as-is to preserve error placeholders
+	}
+
+	s.logger.Info().
+		Int("successful_count", len(result.SuccessfulProducts)).
+		Int("failed_count", len(result.FailedUpdates)).
+		Msg("bulk update products completed successfully")
+
+	return result, nil
 }
 
 // DeleteProduct deletes a product (soft or hard) with ownership validation
@@ -738,6 +855,63 @@ func (s *Service) DeleteProduct(ctx context.Context, productID, storefrontID int
 		Msg("product deleted successfully")
 
 	return variantsDeleted, nil
+}
+
+// BulkDeleteProducts deletes multiple products in a single atomic operation
+func (s *Service) BulkDeleteProducts(ctx context.Context, storefrontID int64, productIDs []int64, hardDelete bool) (int32, int32, int32, map[int64]string, error) {
+	s.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int("product_count", len(productIDs)).
+		Bool("hard_delete", hardDelete).
+		Msg("bulk deleting products via service")
+
+	// Validate inputs
+	if storefrontID <= 0 {
+		return 0, 0, 0, nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+
+	if len(productIDs) == 0 {
+		return 0, 0, 0, nil, fmt.Errorf("product_ids list cannot be empty")
+	}
+
+	if len(productIDs) > 1000 {
+		return 0, 0, 0, nil, fmt.Errorf("cannot delete more than 1000 products at once")
+	}
+
+	// Deduplicate product IDs
+	uniqueIDs := make(map[int64]bool)
+	deduplicatedIDs := make([]int64, 0, len(productIDs))
+	for _, id := range productIDs {
+		if id > 0 && !uniqueIDs[id] {
+			uniqueIDs[id] = true
+			deduplicatedIDs = append(deduplicatedIDs, id)
+		}
+	}
+
+	if len(deduplicatedIDs) == 0 {
+		return 0, 0, 0, nil, fmt.Errorf("no valid product IDs provided")
+	}
+
+	// Call repository method
+	successCount, failedCount, variantsDeleted, errors, err := s.repo.BulkDeleteProducts(ctx, storefrontID, deduplicatedIDs, hardDelete)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("storefront_id", storefrontID).Msg("failed to bulk delete products")
+		return 0, 0, 0, nil, err // Return as-is to preserve error details
+	}
+
+	deleteType := "soft deleted"
+	if hardDelete {
+		deleteType = "hard deleted"
+	}
+
+	s.logger.Info().
+		Int32("success_count", successCount).
+		Int32("failed_count", failedCount).
+		Int32("variants_deleted", variantsDeleted).
+		Str("delete_type", deleteType).
+		Msg("bulk delete products completed successfully")
+
+	return successCount, failedCount, variantsDeleted, errors, nil
 }
 
 // Product Variants operations
@@ -830,4 +1004,60 @@ func (s *Service) DeleteProductVariant(ctx context.Context, variantID int64, pro
 
 	s.logger.Info().Int64("variant_id", variantID).Msg("product variant deleted successfully")
 	return nil
+}
+
+// BulkCreateProductVariants creates multiple product variants with validation
+func (s *Service) BulkCreateProductVariants(ctx context.Context, productID int64, inputs []*domain.CreateVariantInput) ([]*domain.ProductVariant, error) {
+	s.logger.Debug().
+		Int64("product_id", productID).
+		Int("count", len(inputs)).
+		Msg("bulk creating product variants")
+
+	// Validate product ID
+	if productID <= 0 {
+		return nil, fmt.Errorf("product_id must be greater than 0")
+	}
+
+	// Validate inputs count
+	if len(inputs) == 0 {
+		return nil, fmt.Errorf("variants list cannot be empty")
+	}
+
+	if len(inputs) > 1000 {
+		return nil, fmt.Errorf("cannot create more than 1000 variants at once")
+	}
+
+	// Validate each input using validator
+	for i, input := range inputs {
+		if err := s.validator.Struct(input); err != nil {
+			s.logger.Error().Err(err).Int("index", i).Msg("variant validation failed")
+			return nil, fmt.Errorf("validation failed for variant at index %d: %w", i, err)
+		}
+	}
+
+	// Business rule: Only one variant can be default
+	defaultCount := 0
+	for _, input := range inputs {
+		if input.IsDefault {
+			defaultCount++
+		}
+	}
+
+	if defaultCount > 1 {
+		return nil, fmt.Errorf("only one variant can be set as default")
+	}
+
+	// Create variants in repository (transaction handled there)
+	variants, err := s.repo.BulkCreateProductVariants(ctx, productID, inputs)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to bulk create variants")
+		return nil, err // Return as-is to preserve error placeholders
+	}
+
+	s.logger.Info().
+		Int("count", len(variants)).
+		Int64("product_id", productID).
+		Msg("product variants bulk created successfully")
+
+	return variants, nil
 }

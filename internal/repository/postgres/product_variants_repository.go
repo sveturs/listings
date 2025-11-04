@@ -629,3 +629,269 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 
 	return nil
 }
+
+// BulkCreateProductVariants creates multiple product variants in one atomic transaction
+func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID int64, inputs []*domain.CreateVariantInput) ([]*domain.ProductVariant, error) {
+	r.logger.Debug().
+		Int64("product_id", productID).
+		Int("count", len(inputs)).
+		Msg("bulk creating product variants")
+
+	// Validate inputs
+	if productID <= 0 {
+		return nil, fmt.Errorf("variants.invalid_product_id")
+	}
+
+	if len(inputs) == 0 {
+		return nil, fmt.Errorf("variants.bulk_empty")
+	}
+
+	if len(inputs) > 1000 {
+		return nil, fmt.Errorf("variants.bulk_too_many")
+	}
+
+	// Start transaction
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to begin transaction")
+		return nil, fmt.Errorf("variants.bulk_create_failed")
+	}
+	defer tx.Rollback()
+
+	// Check if product exists and get has_variants flag
+	var hasVariants bool
+	err = tx.QueryRowContext(ctx, `
+		SELECT has_variants FROM b2c_products WHERE id = $1 AND is_active = true
+	`, productID).Scan(&hasVariants)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("variants.product_not_found")
+		}
+		r.logger.Error().Err(err).Msg("failed to check product")
+		return nil, fmt.Errorf("variants.bulk_create_failed")
+	}
+
+	// Business rule: Product must have has_variants=true
+	if !hasVariants {
+		return nil, fmt.Errorf("variants.product_no_variants")
+	}
+
+	// Count how many inputs have is_default=true
+	defaultCount := 0
+	for _, input := range inputs {
+		if input.IsDefault {
+			defaultCount++
+		}
+	}
+
+	// Business rule: Only one default variant allowed
+	if defaultCount > 1 {
+		return nil, fmt.Errorf("variants.multiple_defaults")
+	}
+
+	// If any variant is marked as default, unset existing defaults
+	if defaultCount == 1 {
+		_, err = tx.ExecContext(ctx, `
+			UPDATE b2c_product_variants
+			SET is_default = false, updated_at = NOW()
+			WHERE product_id = $1 AND is_default = true
+		`, productID)
+
+		if err != nil {
+			r.logger.Error().Err(err).Msg("failed to unset other defaults")
+			return nil, fmt.Errorf("variants.bulk_create_failed")
+		}
+	}
+
+	// Prepare batch insert
+	variants := make([]*domain.ProductVariant, 0, len(inputs))
+
+	// Build values for batch insert
+	valueStrings := make([]string, 0, len(inputs))
+	valueArgs := make([]interface{}, 0, len(inputs)*13)
+	argPos := 1
+
+	for _, input := range inputs {
+		// Marshal JSONB fields
+		var variantAttributesJSON []byte
+		if input.VariantAttributes != nil && len(input.VariantAttributes) > 0 {
+			variantAttributesJSON, err = json.Marshal(input.VariantAttributes)
+			if err != nil {
+				r.logger.Error().Err(err).Msg("failed to marshal variant attributes")
+				return nil, fmt.Errorf("variants.bulk_create_failed")
+			}
+		} else {
+			variantAttributesJSON = []byte("{}")
+		}
+
+		var dimensionsJSON []byte
+		if input.Dimensions != nil && len(input.Dimensions) > 0 {
+			dimensionsJSON, err = json.Marshal(input.Dimensions)
+			if err != nil {
+				r.logger.Error().Err(err).Msg("failed to marshal dimensions")
+				return nil, fmt.Errorf("variants.bulk_create_failed")
+			}
+		} else {
+			dimensionsJSON = []byte("{}")
+		}
+
+		// Determine stock status
+		stockStatus := domain.StockStatusOutOfStock
+		if input.StockQuantity > 0 {
+			if input.LowStockThreshold != nil && input.StockQuantity <= *input.LowStockThreshold {
+				stockStatus = domain.StockStatusLowStock
+			} else {
+				stockStatus = domain.StockStatusInStock
+			}
+		}
+
+		// Build value string for this variant
+		valueStrings = append(valueStrings, fmt.Sprintf(
+			"($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			argPos, argPos+1, argPos+2, argPos+3, argPos+4, argPos+5,
+			argPos+6, argPos+7, argPos+8, argPos+9, argPos+10, argPos+11, argPos+12,
+		))
+
+		// Add arguments
+		valueArgs = append(valueArgs,
+			productID,
+			input.SKU,
+			input.Barcode,
+			input.Price,
+			input.CompareAtPrice,
+			input.CostPrice,
+			input.StockQuantity,
+			stockStatus,
+			input.LowStockThreshold,
+			variantAttributesJSON,
+			input.Weight,
+			dimensionsJSON,
+			input.IsDefault,
+		)
+
+		argPos += 13
+	}
+
+	// Execute batch insert
+	query := fmt.Sprintf(`
+		INSERT INTO b2c_product_variants (
+			product_id, sku, barcode, price, compare_at_price, cost_price,
+			stock_quantity, stock_status, low_stock_threshold,
+			variant_attributes, weight, dimensions, is_default
+		) VALUES %s
+		RETURNING
+			id, product_id, sku, barcode, price, compare_at_price, cost_price,
+			stock_quantity, stock_status, low_stock_threshold,
+			variant_attributes, weight, dimensions,
+			is_active, is_default, view_count, sold_count,
+			created_at, updated_at
+	`, strings.Join(valueStrings, ", "))
+
+	rows, err := tx.QueryContext(ctx, query, valueArgs...)
+	if err != nil {
+		// Check for unique constraint violation (duplicate SKU)
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" { // unique_violation
+				r.logger.Error().Err(err).Msg("duplicate SKU in bulk create")
+				return nil, fmt.Errorf("variants.sku_duplicate")
+			}
+		}
+		r.logger.Error().Err(err).Msg("failed to bulk create variants")
+		return nil, fmt.Errorf("variants.bulk_create_failed")
+	}
+	defer rows.Close()
+
+	// Scan all returned variants
+	for rows.Next() {
+		var variant domain.ProductVariant
+		var sku, barcode sql.NullString
+		var price, compareAtPrice, costPrice, weight sql.NullFloat64
+		var lowStockThreshold sql.NullInt32
+		var variantAttributesJSON, dimensionsJSON []byte
+
+		err = rows.Scan(
+			&variant.ID,
+			&variant.ProductID,
+			&sku,
+			&barcode,
+			&price,
+			&compareAtPrice,
+			&costPrice,
+			&variant.StockQuantity,
+			&variant.StockStatus,
+			&lowStockThreshold,
+			&variantAttributesJSON,
+			&weight,
+			&dimensionsJSON,
+			&variant.IsActive,
+			&variant.IsDefault,
+			&variant.ViewCount,
+			&variant.SoldCount,
+			&variant.CreatedAt,
+			&variant.UpdatedAt,
+		)
+
+		if err != nil {
+			r.logger.Error().Err(err).Msg("failed to scan variant")
+			return nil, fmt.Errorf("variants.bulk_create_failed")
+		}
+
+		// Handle nullable fields
+		if sku.Valid {
+			variant.SKU = &sku.String
+		}
+		if barcode.Valid {
+			variant.Barcode = &barcode.String
+		}
+		if price.Valid {
+			variant.Price = &price.Float64
+		}
+		if compareAtPrice.Valid {
+			variant.CompareAtPrice = &compareAtPrice.Float64
+		}
+		if costPrice.Valid {
+			variant.CostPrice = &costPrice.Float64
+		}
+		if weight.Valid {
+			variant.Weight = &weight.Float64
+		}
+		if lowStockThreshold.Valid {
+			variant.LowStockThreshold = &lowStockThreshold.Int32
+		}
+
+		// Parse JSONB fields
+		if len(variantAttributesJSON) > 0 {
+			if err := json.Unmarshal(variantAttributesJSON, &variant.VariantAttributes); err != nil {
+				r.logger.Error().Err(err).Msg("failed to unmarshal variant attributes")
+				return nil, fmt.Errorf("variants.bulk_create_failed")
+			}
+		}
+		if len(dimensionsJSON) > 0 {
+			if err := json.Unmarshal(dimensionsJSON, &variant.Dimensions); err != nil {
+				r.logger.Error().Err(err).Msg("failed to unmarshal dimensions")
+				return nil, fmt.Errorf("variants.bulk_create_failed")
+			}
+		}
+
+		variants = append(variants, &variant)
+	}
+
+	if err = rows.Err(); err != nil {
+		r.logger.Error().Err(err).Msg("error iterating variants")
+		return nil, fmt.Errorf("variants.bulk_create_failed")
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		r.logger.Error().Err(err).Msg("failed to commit transaction")
+		return nil, fmt.Errorf("variants.bulk_create_failed")
+	}
+
+	r.logger.Info().
+		Int("count", len(variants)).
+		Int64("product_id", productID).
+		Msg("product variants bulk created successfully")
+
+	return variants, nil
+}
