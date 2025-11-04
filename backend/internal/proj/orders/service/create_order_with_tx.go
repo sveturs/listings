@@ -492,8 +492,11 @@ func (s *OrderService) updateProductStocksInSearch(ctx context.Context, orderIte
 	// TODO: OpenSearch integration removed (c2c/b2c deprecated)
 	// ProductSearchRepo was removed - stock updates now go directly to PostgreSQL only
 	s.logger.Info("ProductSearchRepo removed (deprecated), skipping stock update in OpenSearch")
-	return
+	_ = ctx
+	_ = orderItems
+	// Return early - remaining code is disabled
 
+	/* Disabled code - will be restored after OpenSearch refactoring
 	// Обновляем остатки для каждого товара в заказе
 	for _, item := range orderItems {
 		// Получаем актуальную информацию о товаре из БД
@@ -548,4 +551,5 @@ func (s *OrderService) updateProductStocksInSearch(ctx context.Context, orderIte
 				item.ProductID, stockQuantity)
 		}
 	}
+	*/
 }

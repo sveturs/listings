@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	_ "backend/internal/domain/models" // For Swagger documentation
 	"backend/pkg/utils"
 )
 

@@ -27,7 +27,7 @@ func TestCircuitOpensAfterFailureThreshold(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -70,7 +70,7 @@ func TestCircuitRejectsRequestsInOpenState(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -79,7 +79,7 @@ func TestCircuitRejectsRequestsInOpenState(t *testing.T) {
 		req := &pb.GetListingRequest{
 			Id: 777, // Failure
 		}
-		client.GetListing(ctx, req)
+		_, _ = client.GetListing(ctx, req)
 	}
 
 	// Try multiple requests - all should be rejected
@@ -108,7 +108,7 @@ func TestCircuitTransitionsToHalfOpenAfterTimeout(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -117,7 +117,7 @@ func TestCircuitTransitionsToHalfOpenAfterTimeout(t *testing.T) {
 		req := &pb.GetListingRequest{
 			Id: 777, // Failure
 		}
-		client.GetListing(ctx, req)
+		_, _ = client.GetListing(ctx, req)
 	}
 
 	// Verify circuit is open
@@ -131,7 +131,7 @@ func TestCircuitTransitionsToHalfOpenAfterTimeout(t *testing.T) {
 
 	// Next request should go through (HALF_OPEN state)
 	successReq := &pb.GetListingRequest{Id: 1}
-	_, err = client.GetListing(ctx, successReq)
+	_, _ = client.GetListing(ctx, successReq)
 
 	// Should succeed or fail based on microservice, not circuit breaker
 	// The key is it's NOT immediately rejected
@@ -145,14 +145,14 @@ func TestCircuitClosesAfterSuccessThreshold(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
 	// Open circuit
 	for i := 0; i < circuitBreakerThreshold; i++ {
 		req := &pb.GetListingRequest{Id: 777}
-		client.GetListing(ctx, req)
+		_, _ = client.GetListing(ctx, req)
 	}
 
 	// Wait for HALF_OPEN
@@ -184,14 +184,14 @@ func TestCircuitHandlesConcurrentRequestsInHalfOpen(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
 	// Open circuit
 	for i := 0; i < circuitBreakerThreshold; i++ {
 		req := &pb.GetListingRequest{Id: 777}
-		client.GetListing(ctx, req)
+		_, _ = client.GetListing(ctx, req)
 	}
 
 	// Wait for HALF_OPEN
@@ -228,7 +228,7 @@ func TestCircuitMetricsTrackStateTransitions(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -238,7 +238,7 @@ func TestCircuitMetricsTrackStateTransitions(t *testing.T) {
 	// Open circuit
 	for i := 0; i < circuitBreakerThreshold; i++ {
 		req := &pb.GetListingRequest{Id: 777}
-		client.GetListing(ctx, req)
+		_, _ = client.GetListing(ctx, req)
 	}
 
 	// Verify open state
@@ -254,7 +254,7 @@ func TestNoRaceConditionsUnderLoad(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -272,7 +272,7 @@ func TestNoRaceConditionsUnderLoad(t *testing.T) {
 			}
 
 			req := &pb.GetListingRequest{Id: reqID}
-			client.GetListing(ctx, req)
+			_, _ = client.GetListing(ctx, req)
 		}(i)
 	}
 
@@ -287,14 +287,14 @@ func TestCircuitBreakerStateReset(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
 	// Cycle 1: Open circuit
 	for i := 0; i < circuitBreakerThreshold; i++ {
 		req := &pb.GetListingRequest{Id: 777}
-		client.GetListing(ctx, req)
+		_, _ = client.GetListing(ctx, req)
 	}
 
 	// Verify open
@@ -314,13 +314,13 @@ func BenchmarkCircuitBreakerOverhead(b *testing.B) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(b, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	req := &pb.GetListingRequest{Id: 1}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		client.GetListing(ctx, req)
+		_, _ = client.GetListing(ctx, req)
 	}
 }

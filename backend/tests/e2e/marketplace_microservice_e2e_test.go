@@ -1,5 +1,4 @@
 //go:build ignore
-// +build ignore
 
 // backend/tests/e2e/marketplace_microservice_e2e_test.go
 // DEPRECATED: E2E tests for unified architecture that was removed in Phase 7

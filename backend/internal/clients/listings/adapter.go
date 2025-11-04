@@ -143,19 +143,3 @@ func UnifiedToProtoUpdateRequest(unified *models.UnifiedListing) (*pb.UpdateList
 
 	return req, nil
 }
-
-// Helper functions для работы с optional полями
-
-func stringPtrFromOptional(opt *string) *string {
-	if opt == nil {
-		return nil
-	}
-	return opt
-}
-
-func float64PtrFromOptional(opt *float64) *float64 {
-	if opt == nil {
-		return nil
-	}
-	return opt
-}

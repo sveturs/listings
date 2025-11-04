@@ -67,7 +67,7 @@ func TestCanaryE2E_GetListing(t *testing.T) {
 			client := &http.Client{Timeout: testTimeout}
 			resp, err := client.Do(req)
 			require.NoError(t, err)
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 
 			assert.Equal(t, tt.wantStatus, resp.StatusCode,
 				"Response status should match expected")
@@ -124,7 +124,7 @@ func TestCanaryE2E_ListListings(t *testing.T) {
 	client := &http.Client{Timeout: testTimeout}
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode,
 		"List listings should return 200")
@@ -193,7 +193,7 @@ func TestCanaryE2E_SearchListings(t *testing.T) {
 			client := &http.Client{Timeout: testTimeout}
 			resp, err := client.Do(req)
 			require.NoError(t, err)
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 
 			assert.Equal(t, tt.wantStatus, resp.StatusCode,
 				"Search should return expected status")
@@ -249,7 +249,7 @@ func TestCanaryE2E_ConsistentHashing(t *testing.T) {
 		if source != "" {
 			sources = append(sources, source)
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	// All requests from same user should go to same backend
@@ -287,7 +287,7 @@ func TestCanaryE2E_CircuitBreakerRecovery(t *testing.T) {
 	client := &http.Client{Timeout: testTimeout}
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Should succeed (circuit is closed)
 	assert.Equal(t, http.StatusOK, resp.StatusCode,
@@ -329,7 +329,7 @@ func TestCanaryE2E_CanaryUserRouting(t *testing.T) {
 	client := &http.Client{Timeout: testTimeout}
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode,
 		"Canary user request should succeed")
@@ -369,7 +369,7 @@ func TestCanaryE2E_AdminOverride(t *testing.T) {
 	client := &http.Client{Timeout: testTimeout}
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode,
 		"Admin request should succeed")
@@ -395,7 +395,7 @@ func isBackendAvailable() bool {
 	if err != nil {
 		return false
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	return resp.StatusCode == http.StatusOK
 }

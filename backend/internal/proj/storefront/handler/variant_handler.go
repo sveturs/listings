@@ -370,8 +370,8 @@ func (h *VariantHandler) DeleteVariant(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param variant_id path int true "Variant ID"
-// @Param variant body types.UpdateVariantRequest true "Updated variant data"
-// @Success 200 {object} types.ProductVariant
+// @Param variant body interface{} true "Updated variant data"
+// @Success 200 {object} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/variants/{variant_id} [put]
@@ -407,7 +407,7 @@ func (h *VariantHandler) UpdateVariant(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param product_id path int true "Product ID"
-// @Success 200 {object} types.VariantMatrixResponse
+// @Success 200 {object} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/products/{product_id}/variant-matrix [get]
@@ -436,7 +436,7 @@ func (h *VariantHandler) GetVariantMatrix(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param product_id path int true "Product ID"
-// @Param request body types.BulkUpdateStockRequest true "Stock updates"
+// @Param request body interface{} true "Stock updates"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -476,7 +476,7 @@ func (h *VariantHandler) BulkUpdateStock(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param product_id path int true "Product ID"
-// @Success 200 {object} types.VariantAnalyticsResponse
+// @Success 200 {object} interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/storefront/products/{product_id}/variants/analytics [get]

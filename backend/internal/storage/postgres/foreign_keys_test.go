@@ -19,7 +19,7 @@ func TestForeignKeyConstraints(t *testing.T) {
 
 	// Setup test database connection
 	db := setupTestDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	t.Run("CASCADE_DELETE_c2c_images", testCascadeDeleteC2CImages(db))
 	t.Run("CASCADE_DELETE_c2c_attributes", testCascadeDeleteC2CAttributes(db))
@@ -53,7 +53,7 @@ func testCascadeDeleteC2CImages(db *sql.DB) func(*testing.T) {
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Get test data
 		var userID, categoryID int
@@ -102,7 +102,7 @@ func testCascadeDeleteC2CAttributes(db *sql.DB) func(*testing.T) {
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Get test data
 		var userID, categoryID, attributeID int
@@ -154,7 +154,7 @@ func testCascadeDeleteC2CFavorites(db *sql.DB) func(*testing.T) {
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Get test data
 		var userID, categoryID int
@@ -202,7 +202,7 @@ func testCascadeDeleteB2CImages(db *sql.DB) func(*testing.T) {
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Get test data
 		var storefrontID, categoryID int
@@ -255,7 +255,7 @@ func testCascadeDeleteB2CVariants(db *sql.DB) func(*testing.T) {
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Get test data
 		var storefrontID, categoryID int
@@ -308,7 +308,7 @@ func testRestrictCategoryWithListings(db *sql.DB) func(*testing.T) {
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Get test data
 		var userID, categoryID int
@@ -339,7 +339,7 @@ func testRestrictStorefrontWithProducts(db *sql.DB) func(*testing.T) {
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Get test data
 		var userID int
@@ -382,7 +382,7 @@ func testMultiCascadeLayers(db *sql.DB) func(*testing.T) {
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, nil)
 		require.NoError(t, err)
-		defer tx.Rollback()
+		defer func() { _ = tx.Rollback() }()
 
 		// Get test data
 		var userID, categoryID, attributeID int
@@ -427,9 +427,9 @@ func testMultiCascadeLayers(db *sql.DB) func(*testing.T) {
 
 		// Verify all created
 		var imageCount, attrCount, favCount int
-		tx.QueryRow("SELECT COUNT(*) FROM c2c_images WHERE listing_id = $1", listingID).Scan(&imageCount)
-		tx.QueryRow("SELECT COUNT(*) FROM c2c_attributes WHERE listing_id = $1", listingID).Scan(&attrCount)
-		tx.QueryRow("SELECT COUNT(*) FROM c2c_favorites WHERE listing_id = $1", listingID).Scan(&favCount)
+		_ = tx.QueryRow("SELECT COUNT(*) FROM c2c_images WHERE listing_id = $1", listingID).Scan(&imageCount)
+		_ = tx.QueryRow("SELECT COUNT(*) FROM c2c_attributes WHERE listing_id = $1", listingID).Scan(&attrCount)
+		_ = tx.QueryRow("SELECT COUNT(*) FROM c2c_favorites WHERE listing_id = $1", listingID).Scan(&favCount)
 
 		assert.Equal(t, 3, imageCount, "Expected 3 images")
 		assert.Equal(t, 2, attrCount, "Expected 2 attributes")
@@ -440,9 +440,9 @@ func testMultiCascadeLayers(db *sql.DB) func(*testing.T) {
 		require.NoError(t, err)
 
 		// Verify ALL children CASCADE deleted
-		tx.QueryRow("SELECT COUNT(*) FROM c2c_images WHERE listing_id = $1", listingID).Scan(&imageCount)
-		tx.QueryRow("SELECT COUNT(*) FROM c2c_attributes WHERE listing_id = $1", listingID).Scan(&attrCount)
-		tx.QueryRow("SELECT COUNT(*) FROM c2c_favorites WHERE listing_id = $1", listingID).Scan(&favCount)
+		_ = tx.QueryRow("SELECT COUNT(*) FROM c2c_images WHERE listing_id = $1", listingID).Scan(&imageCount)
+		_ = tx.QueryRow("SELECT COUNT(*) FROM c2c_attributes WHERE listing_id = $1", listingID).Scan(&attrCount)
+		_ = tx.QueryRow("SELECT COUNT(*) FROM c2c_favorites WHERE listing_id = $1", listingID).Scan(&favCount)
 
 		assert.Equal(t, 0, imageCount, "All images should be CASCADE deleted")
 		assert.Equal(t, 0, attrCount, "All attributes should be CASCADE deleted")
@@ -457,7 +457,7 @@ func TestFKConstraintMetadata(t *testing.T) {
 	}
 
 	db := setupTestDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	query := `
 		SELECT
@@ -493,7 +493,7 @@ func TestFKConstraintMetadata(t *testing.T) {
 // BenchmarkCascadeDelete benchmarks CASCADE DELETE performance
 func BenchmarkCascadeDelete(b *testing.B) {
 	db := setupTestDB(&testing.T{})
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	ctx := context.Background()
 
@@ -503,23 +503,23 @@ func BenchmarkCascadeDelete(b *testing.B) {
 
 			// Create listing with children
 			var userID, categoryID int
-			tx.QueryRow("SELECT id FROM users LIMIT 1").Scan(&userID)
-			tx.QueryRow("SELECT id FROM c2c_categories LIMIT 1").Scan(&categoryID)
+			_ = tx.QueryRow("SELECT id FROM users LIMIT 1").Scan(&userID)
+			_ = tx.QueryRow("SELECT id FROM c2c_categories LIMIT 1").Scan(&categoryID)
 
 			listingID := 777000 + i
-			tx.Exec(`
+			_, _ = tx.Exec(`
 				INSERT INTO c2c_listings (id, user_id, category_id, title, description, price, status)
 				VALUES ($1, $2, $3, 'Benchmark', 'Test', 100, 'active')
 			`, listingID, userID, categoryID)
 
-			tx.Exec(`INSERT INTO c2c_images (listing_id, image_url, sort_order) VALUES ($1, 'test.jpg', 1)`, listingID)
+			_, _ = tx.Exec(`INSERT INTO c2c_images (listing_id, image_url, sort_order) VALUES ($1, 'test.jpg', 1)`, listingID)
 
 			// Measure CASCADE DELETE
 			b.StartTimer()
-			tx.Exec("DELETE FROM c2c_listings WHERE id = $1", listingID)
+			_, _ = tx.Exec("DELETE FROM c2c_listings WHERE id = $1", listingID)
 			b.StopTimer()
 
-			tx.Rollback()
+			_ = tx.Rollback()
 		}
 	})
 }
@@ -548,13 +548,14 @@ func PrintFKConstraints(t *testing.T, db *sql.DB) {
 
 	rows, err := db.Query(query)
 	require.NoError(t, err)
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	t.Log("FK Constraints:")
 	for rows.Next() {
 		var table, constraint, column, foreignTable, foreignColumn, deleteRule string
-		rows.Scan(&table, &constraint, &column, &foreignTable, &foreignColumn, &deleteRule)
+		_ = rows.Scan(&table, &constraint, &column, &foreignTable, &foreignColumn, &deleteRule)
 		t.Logf("  %s.%s -> %s.%s (ON DELETE %s)",
 			table, column, foreignTable, foreignColumn, deleteRule)
 	}
+	_ = rows.Err()
 }

@@ -10,6 +10,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
+
+	_ "backend/pkg/utils" // For Swagger documentation
 )
 
 // GoogleAuth redirects to Google OAuth

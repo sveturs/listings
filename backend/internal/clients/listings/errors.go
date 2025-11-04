@@ -40,6 +40,7 @@ func MapGRPCError(err error) error {
 		return err
 	}
 
+	//nolint:exhaustive // We handle the most common cases; others return the original error
 	switch st.Code() {
 	case codes.OK:
 		return nil

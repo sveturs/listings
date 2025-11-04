@@ -18,8 +18,8 @@ import (
 // @Accept json
 // @Produce json
 // @Param lang query string false "Язык (ru, en, sr)" default(ru)
-// @Success 200 {object} utils.SuccessResponse{data=[]models.MarketplaceCategory}
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory}
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/categories [get]
 func (h *Handler) GetCategories(c *fiber.Ctx) error {
 	lang := c.Query("lang", "ru")
@@ -48,15 +48,15 @@ func (h *Handler) GetCategories(c *fiber.Ctx) error {
 		categories := make([]models.MarketplaceCategory, 0, len(grpcResp.Categories))
 		for _, protoCategory := range grpcResp.Categories {
 			category := models.MarketplaceCategory{
-				ID:          int(protoCategory.Id),
-				Name:        protoCategory.Name,
-				Slug:        protoCategory.Slug,
-				IsActive:    protoCategory.IsActive,
+				ID:           int(protoCategory.Id),
+				Name:         protoCategory.Name,
+				Slug:         protoCategory.Slug,
+				IsActive:     protoCategory.IsActive,
 				Translations: protoCategory.Translations,
 				ListingCount: int(protoCategory.ListingCount),
-				HasCustomUI: protoCategory.HasCustomUi,
-				SortOrder:   int(protoCategory.SortOrder),
-				Level:       int(protoCategory.Level),
+				HasCustomUI:  protoCategory.HasCustomUi,
+				SortOrder:    int(protoCategory.SortOrder),
+				Level:        int(protoCategory.Level),
 			}
 
 			// Optional fields
@@ -115,8 +115,8 @@ func (h *Handler) GetCategories(c *fiber.Ctx) error {
 // @Produce json
 // @Param lang query string false "Язык (ru, en, sr)" default(ru)
 // @Param limit query int false "Количество категорий" default(8)
-// @Success 200 {object} utils.SuccessResponse{data=[]models.MarketplaceCategory}
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory}
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/popular-categories [get]
 func (h *Handler) GetPopularCategories(c *fiber.Ctx) error {
 	lang := c.Query("lang", "ru")
@@ -141,15 +141,15 @@ func (h *Handler) GetPopularCategories(c *fiber.Ctx) error {
 				}
 
 				category := models.MarketplaceCategory{
-					ID:          int(protoCategory.Id),
-					Name:        protoCategory.Name,
-					Slug:        protoCategory.Slug,
-					IsActive:    protoCategory.IsActive,
+					ID:           int(protoCategory.Id),
+					Name:         protoCategory.Name,
+					Slug:         protoCategory.Slug,
+					IsActive:     protoCategory.IsActive,
 					Translations: protoCategory.Translations,
 					ListingCount: int(protoCategory.ListingCount),
-					HasCustomUI: protoCategory.HasCustomUi,
-					SortOrder:   int(protoCategory.SortOrder),
-					Level:       int(protoCategory.Level),
+					HasCustomUI:  protoCategory.HasCustomUi,
+					SortOrder:    int(protoCategory.SortOrder),
+					Level:        int(protoCategory.Level),
 				}
 
 				// Optional fields
@@ -217,10 +217,10 @@ func (h *Handler) GetPopularCategories(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID категории"
-// @Success 200 {object} utils.SuccessResponse{data=[]models.CategoryAttribute}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttribute}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/categories/{id}/attributes [get]
 func (h *Handler) GetCategoryAttributes(c *fiber.Ctx) error {
 	categoryID, err := c.ParamsInt("id")
@@ -244,9 +244,9 @@ func (h *Handler) GetCategoryAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param slug path string true "Slug категории"
-// @Success 200 {object} utils.SuccessResponse{data=[]models.CategoryVariantAttribute}
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryVariantAttribute}
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/categories/{slug}/variant-attributes [get]
 func (h *Handler) GetVariantAttributes(c *fiber.Ctx) error {
 	slug := c.Params("slug")
@@ -270,9 +270,9 @@ func (h *Handler) GetVariantAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} utils.SuccessResponse{data=[]int}
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]int}
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/favorites [get]
 func (h *Handler) GetFavorites(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
@@ -299,10 +299,10 @@ func (h *Handler) GetFavorites(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "ID объявления"
-// @Success 200 {object} utils.SuccessResponse{data=map[string]bool}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]bool}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/favorites/{id} [post]
 func (h *Handler) AddToFavorites(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
@@ -333,10 +333,10 @@ func (h *Handler) AddToFavorites(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "ID объявления"
-// @Success 200 {object} utils.SuccessResponse{data=map[string]bool}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]bool}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/favorites/{id} [delete]
 func (h *Handler) RemoveFromFavorites(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)

@@ -38,12 +38,13 @@ func TestSlowMicroserviceTimeout(t *testing.T) {
 	// Execute: Request listing (should timeout and fallback)
 	resp, err := httpGet(fmt.Sprintf("%s/api/v1/marketplace/listings/%s", backendURL, testListingID))
 	require.NoError(t, err, "Request failed")
+	defer func() { _ = resp.Body.Close() }()
 
 	// Verify: Response should come from monolith (fallback)
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "Should succeed via fallback")
 
 	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
+	_ = json.NewDecoder(resp.Body).Decode(&result)
 
 	// Check if response indicates fallback (depends on implementation)
 	// For now, just verify we got a response
@@ -68,7 +69,7 @@ func TestFailingMicroserviceCircuitBreaker(t *testing.T) {
 			failureCount++
 		}
 		if resp != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -76,7 +77,7 @@ func TestFailingMicroserviceCircuitBreaker(t *testing.T) {
 	// Circuit should be open now
 	// Next request should be rejected immediately (or fallback to monolith)
 	start := time.Now()
-	resp, err := httpGet(fmt.Sprintf("%s/api/v1/marketplace/listings/%s", backendURL, testListingID))
+	resp, _ := httpGet(fmt.Sprintf("%s/api/v1/marketplace/listings/%s", backendURL, testListingID))
 	elapsed := time.Since(start)
 
 	// Should respond quickly (either circuit breaker rejection or immediate fallback)
@@ -84,7 +85,7 @@ func TestFailingMicroserviceCircuitBreaker(t *testing.T) {
 		"Circuit breaker should reject/fallback quickly")
 
 	if resp != nil {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	t.Logf("✅ Circuit breaker opened after %d failures, subsequent request in %v",
@@ -105,7 +106,10 @@ func TestMicroserviceRecovery(t *testing.T) {
 	require.NoError(t, err, "Failed to configure mock service")
 
 	for i := 0; i < 5; i++ {
-		httpGet(fmt.Sprintf("%s/api/v1/marketplace/listings/%d", backendURL, i))
+		resp, _ := httpGet(fmt.Sprintf("%s/api/v1/marketplace/listings/%d", backendURL, i))
+		if resp != nil {
+			_ = resp.Body.Close()
+		}
 		time.Sleep(100 * time.Millisecond)
 	}
 
@@ -131,7 +135,7 @@ func TestMicroserviceRecovery(t *testing.T) {
 			successCount++
 		}
 		if resp != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -168,7 +172,7 @@ func TestMixedLoadPartialDegradation(t *testing.T) {
 				atomic.AddInt32(&failureCount, 1)
 			}
 			if resp != nil {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}
 		}(i)
 	}
@@ -211,7 +215,7 @@ func TestCascadingFailurePrevention(t *testing.T) {
 			defer wg.Done()
 			resp, _ := httpGet(fmt.Sprintf("%s/api/v1/marketplace/listings/%d", backendURL, id))
 			if resp != nil {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}
 		}(i)
 	}
@@ -250,7 +254,7 @@ func TestEndToEndLatency(t *testing.T) {
 		totalLatency += latency
 
 		if err == nil && resp != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 
 		time.Sleep(100 * time.Millisecond)
@@ -307,7 +311,7 @@ func configureMockService(config map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("mock service config failed: %d", resp.StatusCode)

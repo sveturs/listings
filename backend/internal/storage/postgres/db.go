@@ -133,7 +133,7 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		return nil, fmt.Errorf("LISTINGS_GRPC_URL is required - listings microservice must be running. Backend cannot start without it")
 	}
 
-	grpcClient, err := NewMarketplaceGRPCClient(grpcURL)
+	grpcClient, err := NewMarketplaceGRPCClient(ctx, grpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to listings microservice at %s: %w. Make sure microservice is running on this address", grpcURL, err)
 	}

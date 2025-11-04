@@ -29,6 +29,7 @@ import (
 
 	_ "backend/docs"
 	"backend/internal/cache"
+	"backend/internal/clients/listings"
 	"backend/internal/config"
 	"backend/internal/interfaces"
 	"backend/internal/logger"
@@ -42,7 +43,6 @@ import (
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
 	chat "backend/internal/proj/chat"
-	"backend/internal/clients/listings"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	creditHandler "backend/internal/proj/credit"
@@ -438,7 +438,7 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 	// TEMPORARY: WebSocket /ws/chat (will be moved to chat microservice)
 	// Регистрируем WebSocket роут для чата с JWT аутентификацией
 	if s.chat != nil {
-		s.chat.RegisterRoutes(s.app)
+		_ = s.chat.RegisterRoutes(s.app)
 	}
 
 	// WebSocket для трекинга доставок (публичный, по токену)

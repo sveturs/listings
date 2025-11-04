@@ -30,14 +30,13 @@ func NewClient(cfg Config) (*Client, error) {
 		cfg.ConnectTimeout = 5 * time.Second
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.ConnectTimeout)
+	_, cancel := context.WithTimeout(context.Background(), cfg.ConnectTimeout)
 	defer cancel()
 
 	// Connect to gRPC server
-	conn, err := grpc.DialContext(ctx,
+	conn, err := grpc.NewClient(
 		cfg.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to listings microservice at %s: %w", cfg.Address, err)

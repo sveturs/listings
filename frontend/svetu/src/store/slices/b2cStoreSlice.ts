@@ -254,7 +254,9 @@ export const fetchStorefrontBySlug = createAsyncThunk<
 >('storefronts/fetchStorefrontBySlug', async (slug, { rejectWithValue }) => {
   try {
     // Используем BFF proxy - автоматически добавит cookies для авторизации
-    const response = await apiClient.get(`/marketplace/storefronts/slug/${slug}`);
+    const response = await apiClient.get(
+      `/marketplace/storefronts/slug/${slug}`
+    );
 
     if (!response.data) {
       return rejectWithValue('Failed to fetch storefront');
@@ -309,7 +311,10 @@ export const createStorefront = createAsyncThunk<
   'storefronts/createStorefront',
   async (storefrontData, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post('/marketplace/storefronts', storefrontData);
+      const response = await apiClient.post(
+        '/marketplace/storefronts',
+        storefrontData
+      );
 
       if (!response.data) {
         return rejectWithValue('Failed to create storefront');
@@ -331,7 +336,10 @@ export const updateStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/updateStorefront', async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await apiClient.put(`/marketplace/storefronts/${id}`, data);
+    const response = await apiClient.put(
+      `/marketplace/storefronts/${id}`,
+      data
+    );
 
     if (!response.data) {
       return rejectWithValue('Failed to update storefront');

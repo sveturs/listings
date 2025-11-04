@@ -4,6 +4,7 @@ package handler
 import (
 	"strconv"
 
+	_ "backend/internal/domain/models" // For Swagger documentation
 	"backend/internal/proj/marketplace/storage"
 	"backend/pkg/utils"
 
@@ -21,9 +22,9 @@ import (
 // @Param limit query int false "Items per page (default: 10, max: 100)"
 // @Param sort_by query string false "Sort by field: products_count, rating, created_at, views_count (default: products_count)"
 // @Param sort_order query string false "Sort order: asc, desc (default: desc)"
-// @Success 200 {object} utils.SuccessResponse{data=object{storefronts=[]models.Storefront,total=int,page=int,limit=int}}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{storefronts=[]models.Storefront,total=int,page=int,limit=int}}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/b2c [get]
 func (h *Handler) GetStorefronts(c *fiber.Ctx) error {
 	// Парсим query параметры
@@ -78,9 +79,9 @@ func (h *Handler) GetStorefronts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param slug path string true "Storefront slug"
-// @Success 200 {object} utils.SuccessResponse{data=models.Storefront}
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.Storefront}
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/b2c/{slug} [get]
 func (h *Handler) GetStorefrontBySlug(c *fiber.Ctx) error {
 	slug := c.Params("slug")
@@ -121,9 +122,9 @@ func (h *Handler) GetStorefrontBySlug(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param page query int false "Page number (default: 1)"
 // @Param limit query int false "Items per page (default: 20, max: 100)"
-// @Success 200 {object} utils.SuccessResponse{data=object{products=[]models.Product,total=int}}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{products=[]models.StorefrontProduct,total=int}}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/b2c/{id}/products [get]
 func (h *Handler) GetStorefrontProducts(c *fiber.Ctx) error {
 	idStr := c.Params("id")

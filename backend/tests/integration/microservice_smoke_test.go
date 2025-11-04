@@ -27,12 +27,11 @@ func TestMicroserviceHealthCheck(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), healthTimeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, microserviceAddr,
+	conn, err := grpc.NewClient(microserviceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	require.NoError(t, err, "Should connect to microservice")
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	client := listingsv1.NewListingsServiceClient(conn)
 
@@ -54,12 +53,11 @@ func TestMicroserviceConnectivity(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), healthTimeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, microserviceAddr,
+	conn, err := grpc.NewClient(microserviceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	require.NoError(t, err, "Should connect to microservice")
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	client := listingsv1.NewListingsServiceClient(conn)
 
@@ -81,12 +79,11 @@ func TestMicroserviceResponseTime(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), healthTimeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, microserviceAddr,
+	conn, err := grpc.NewClient(microserviceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	require.NoError(t, err, "Should connect to microservice")
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	client := listingsv1.NewListingsServiceClient(conn)
 
@@ -117,12 +114,11 @@ func TestMicroserviceTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), healthTimeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, microserviceAddr,
+	conn, err := grpc.NewClient(microserviceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	require.NoError(t, err, "Should connect to microservice")
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	client := listingsv1.NewListingsServiceClient(conn)
 
@@ -149,12 +145,11 @@ func TestMicroserviceGetListing(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), healthTimeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, microserviceAddr,
+	conn, err := grpc.NewClient(microserviceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	require.NoError(t, err, "Should connect to microservice")
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	client := listingsv1.NewListingsServiceClient(conn)
 
@@ -189,12 +184,11 @@ func TestMicroserviceSearchListings(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), healthTimeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, microserviceAddr,
+	conn, err := grpc.NewClient(microserviceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	require.NoError(t, err, "Should connect to microservice")
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	client := listingsv1.NewListingsServiceClient(conn)
 

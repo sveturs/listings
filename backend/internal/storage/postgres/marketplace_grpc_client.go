@@ -23,13 +23,12 @@ type MarketplaceGRPCClient struct {
 }
 
 // NewMarketplaceGRPCClient creates new gRPC client
-func NewMarketplaceGRPCClient(address string) (*MarketplaceGRPCClient, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func NewMarketplaceGRPCClient(ctx context.Context, address string) (*MarketplaceGRPCClient, error) {
+	_, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, address,
+	conn, err := grpc.NewClient(address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to listings service at %s: %w", address, err)
@@ -208,17 +207,17 @@ func (c *MarketplaceGRPCClient) GetListings(ctx context.Context, filters map[str
 	// Apply filters
 	if userIDStr, ok := filters["user_id"]; ok {
 		var userID int64
-		fmt.Sscanf(userIDStr, "%d", &userID)
+		_, _ = fmt.Sscanf(userIDStr, "%d", &userID)
 		req.UserId = &userID
 	}
 	if storefrontIDStr, ok := filters["storefront_id"]; ok {
 		var storefrontID int64
-		fmt.Sscanf(storefrontIDStr, "%d", &storefrontID)
+		_, _ = fmt.Sscanf(storefrontIDStr, "%d", &storefrontID)
 		req.StorefrontId = &storefrontID
 	}
 	if categoryIDStr, ok := filters["category_id"]; ok {
 		var categoryID int64
-		fmt.Sscanf(categoryIDStr, "%d", &categoryID)
+		_, _ = fmt.Sscanf(categoryIDStr, "%d", &categoryID)
 		req.CategoryId = &categoryID
 	}
 	if status, ok := filters["status"]; ok {
@@ -226,12 +225,12 @@ func (c *MarketplaceGRPCClient) GetListings(ctx context.Context, filters map[str
 	}
 	if minPriceStr, ok := filters["min_price"]; ok {
 		var minPrice float64
-		fmt.Sscanf(minPriceStr, "%f", &minPrice)
+		_, _ = fmt.Sscanf(minPriceStr, "%f", &minPrice)
 		req.MinPrice = &minPrice
 	}
 	if maxPriceStr, ok := filters["max_price"]; ok {
 		var maxPrice float64
-		fmt.Sscanf(maxPriceStr, "%f", &maxPrice)
+		_, _ = fmt.Sscanf(maxPriceStr, "%f", &maxPrice)
 		req.MaxPrice = &maxPrice
 	}
 

@@ -15,11 +15,11 @@ import (
 )
 
 type Handler struct {
-	storage              storage.MarketplaceStorage
-	services             service.ServicesInterface
-	jwtParserMW          fiber.Handler
-	logger               zerolog.Logger
-	listingsClient       *listings.Client
+	storage                 storage.MarketplaceStorage
+	services                service.ServicesInterface
+	jwtParserMW             fiber.Handler
+	logger                  zerolog.Logger
+	listingsClient          *listings.Client
 	useListingsMicroservice bool
 }
 
@@ -32,11 +32,11 @@ func NewHandler(
 	useListingsMicroservice bool,
 ) *Handler {
 	return &Handler{
-		storage:              storage.NewPostgresMarketplaceStorage(db, logger),
-		services:             services,
-		jwtParserMW:          jwtParserMW,
-		logger:               logger.With().Str("module", "marketplace_handler").Logger(),
-		listingsClient:       listingsClient,
+		storage:                 storage.NewPostgresMarketplaceStorage(db, logger),
+		services:                services,
+		jwtParserMW:             jwtParserMW,
+		logger:                  logger.With().Str("module", "marketplace_handler").Logger(),
+		listingsClient:          listingsClient,
 		useListingsMicroservice: useListingsMicroservice,
 	}
 }

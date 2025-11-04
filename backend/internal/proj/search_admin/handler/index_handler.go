@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	_ "backend/internal/proj/search_admin/service" // For Swagger documentation
 	"backend/pkg/utils"
 )
 

@@ -277,7 +277,10 @@ class StorefrontApiService {
       east: bounds.east,
       west: bounds.west,
     };
-    const endpoint = this.createEndpoint('/marketplace/storefronts/map', params);
+    const endpoint = this.createEndpoint(
+      '/marketplace/storefronts/map',
+      params
+    );
     return this.request<B2CStoreMapData[]>(endpoint);
   }
 
@@ -291,7 +294,10 @@ class StorefrontApiService {
     limit?: number
   ): Promise<B2CStore[]> {
     const params = { latitude, longitude, radius_km: radiusKm, limit };
-    const endpoint = this.createEndpoint('/marketplace/storefronts/nearby', params);
+    const endpoint = this.createEndpoint(
+      '/marketplace/storefronts/nearby',
+      params
+    );
     return this.request<B2CStore[]>(endpoint);
   }
 

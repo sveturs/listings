@@ -50,7 +50,7 @@ func TestCanaryTrafficDistribution(t *testing.T) {
 		userID := string(rune(i + 1000)) // Генерируем разные user IDs
 		decision := router.ShouldUseMicroservice(userID, false)
 
-		if decision.UseМicroservice {
+		if decision.UseMicroservice {
 			microserviceCount++
 		} else {
 			monolithCount++
@@ -161,13 +161,13 @@ func TestCanaryFallbackMechanism(t *testing.T) {
 
 	// Test 1: Feature flag enabled, circuit closed → should use microservice
 	decision := router.ShouldUseMicroservice("user123", false)
-	assert.True(t, decision.UseМicroservice, "Should route to microservice when circuit is closed")
+	assert.True(t, decision.UseMicroservice, "Should route to microservice when circuit is closed")
 	t.Log("✅ Test 1: Routes to microservice when circuit is closed")
 
 	// Test 2: Feature flag disabled → should use monolith
 	cfg.UseMicroservice = false
 	decision = router.ShouldUseMicroservice("user123", false)
-	assert.False(t, decision.UseМicroservice, "Should fallback to monolith when feature flag is disabled")
+	assert.False(t, decision.UseMicroservice, "Should fallback to monolith when feature flag is disabled")
 	t.Log("✅ Test 2: Falls back to monolith when feature flag is disabled")
 
 	// Test 3: Circuit open → should fallback to monolith
@@ -209,7 +209,7 @@ func TestCanaryMetricsExposure(t *testing.T) {
 		t.Skipf("⚠️ Metrics endpoint not accessible (expected in local env): %v", err)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Metrics endpoint should return 200")
 
@@ -290,7 +290,7 @@ func TestCanaryHeaderPropagation(t *testing.T) {
 			}
 
 			decision := router.ShouldUseMicroservice(tt.userID, tt.isAdmin)
-			assert.Equal(t, tt.expected, decision.UseМicroservice,
+			assert.Equal(t, tt.expected, decision.UseMicroservice,
 				"Decision should match expected for %s", tt.name)
 
 			// Verify decision reason
@@ -327,7 +327,7 @@ func TestCanaryUserWhitelisting(t *testing.T) {
 	userList := strings.Split(canaryUsers, ",")
 	for _, userID := range userList {
 		decision := router.ShouldUseMicroservice(userID, false)
-		assert.True(t, decision.UseМicroservice,
+		assert.True(t, decision.UseMicroservice,
 			"Canary user %s should route to microservice", userID)
 		assert.True(t, decision.IsCanary,
 			"Decision should mark user as canary")
@@ -336,7 +336,7 @@ func TestCanaryUserWhitelisting(t *testing.T) {
 
 	// Test non-canary user with 0% rollout
 	decision := router.ShouldUseMicroservice("user999", false)
-	assert.False(t, decision.UseМicroservice,
+	assert.False(t, decision.UseMicroservice,
 		"Non-canary user should route to monolith at 0% rollout")
 
 	t.Logf("✅ Canary user whitelisting verified: %d users", len(userList))
@@ -349,15 +349,15 @@ func TestCanaryEnvironmentVariables(t *testing.T) {
 	}
 
 	// Set test environment variables
-	os.Setenv("USE_MARKETPLACE_MICROSERVICE", "true")
-	os.Setenv("MARKETPLACE_ROLLOUT_PERCENT", "1")
-	os.Setenv("MARKETPLACE_ADMIN_OVERRIDE", "false")
-	os.Setenv("MARKETPLACE_CANARY_USER_IDS", "user1,user2,user3")
+	_ = os.Setenv("USE_MARKETPLACE_MICROSERVICE", "true")
+	_ = os.Setenv("MARKETPLACE_ROLLOUT_PERCENT", "1")
+	_ = os.Setenv("MARKETPLACE_ADMIN_OVERRIDE", "false")
+	_ = os.Setenv("MARKETPLACE_CANARY_USER_IDS", "user1,user2,user3")
 	defer func() {
-		os.Unsetenv("USE_MARKETPLACE_MICROSERVICE")
-		os.Unsetenv("MARKETPLACE_ROLLOUT_PERCENT")
-		os.Unsetenv("MARKETPLACE_ADMIN_OVERRIDE")
-		os.Unsetenv("MARKETPLACE_CANARY_USER_IDS")
+		_ = os.Unsetenv("USE_MARKETPLACE_MICROSERVICE")
+		_ = os.Unsetenv("MARKETPLACE_ROLLOUT_PERCENT")
+		_ = os.Unsetenv("MARKETPLACE_ADMIN_OVERRIDE")
+		_ = os.Unsetenv("MARKETPLACE_CANARY_USER_IDS")
 	}()
 
 	// Parse environment variables manually (no LoadMarketplaceConfig function)
@@ -415,7 +415,7 @@ func TestCanaryRolloutPercentages(t *testing.T) {
 			for i := 0; i < totalRequests; i++ {
 				userID := fmt.Sprintf("user%d", i+1000)
 				decision := router.ShouldUseMicroservice(userID, false)
-				if decision.UseМicroservice {
+				if decision.UseMicroservice {
 					microserviceCount++
 				}
 			}

@@ -33,7 +33,7 @@ func BenchmarkLoadWith10PercentTimeouts(b *testing.B) {
 	log := logger.New("load-test")
 	client, err := listings.NewClient(testGRPCURL, log)
 	require.NoError(b, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	requestCounter := int32(0)
@@ -106,7 +106,7 @@ func BenchmarkLoadWithCircuitBreaker(b *testing.B) {
 	log := logger.New("load-test")
 	client, err := listings.NewClient(testGRPCURL, log)
 	require.NoError(b, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	requestCounter := int32(0)
@@ -191,7 +191,7 @@ func BenchmarkLoadWithMixedSuccessFailure(b *testing.B) {
 	log := logger.New("load-test")
 	client, err := listings.NewClient(testGRPCURL, log)
 	require.NoError(b, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	requestCounter := int32(0)
@@ -298,7 +298,7 @@ func TestMemoryStabilityUnderLoad(t *testing.T) {
 	log := logger.New("memory-test")
 	client, err := listings.NewClient(testGRPCURL, log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -370,7 +370,7 @@ func TestNoGoroutineLeaksUnderLoad(t *testing.T) {
 	log := logger.New("goroutine-test")
 	client, err := listings.NewClient(testGRPCURL, log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 

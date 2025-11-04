@@ -30,10 +30,10 @@ type CreateListingRequest struct {
 // @Produce json
 // @Security Bearer
 // @Param request body CreateListingRequest true "Данные объявления"
-// @Success 201 {object} utils.SuccessResponse{data=interface{}}
-// @Failure 400 {object} utils.ErrorResponse
-// @Failure 401 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 201 {object} utils.SuccessResponseSwag{data=interface{}}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/listings [post]
 func (h *Handler) CreateListing(c *fiber.Ctx) error {
 	// Get authenticated user ID
@@ -102,9 +102,9 @@ func (h *Handler) CreateListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponse{data=interface{}}
-// @Failure 404 {object} utils.ErrorResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=interface{}}
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/listings/{id} [get]
 func (h *Handler) GetListing(c *fiber.Ctx) error {
 	// Parse listing ID

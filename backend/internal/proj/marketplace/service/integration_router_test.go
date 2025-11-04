@@ -29,17 +29,17 @@ func TestTrafficRouter_FeatureFlagDisabled(t *testing.T) {
 
 	// Canary user - должен идти в monolith т.к. feature flag disabled
 	decision := router.ShouldUseMicroservice("user123", false)
-	assert.False(t, decision.UseМicroservice, "Canary user должен идти в monolith при выключенном feature flag")
+	assert.False(t, decision.UseMicroservice, "Canary user должен идти в monolith при выключенном feature flag")
 	assert.Equal(t, "feature_flag_disabled", decision.Reason)
 
 	// Admin user - должен идти в monolith
 	decision = router.ShouldUseMicroservice("admin1", true)
-	assert.False(t, decision.UseМicroservice, "Admin должен идти в monolith при выключенном feature flag")
+	assert.False(t, decision.UseMicroservice, "Admin должен идти в monolith при выключенном feature flag")
 	assert.Equal(t, "feature_flag_disabled", decision.Reason)
 
 	// Regular user - должен идти в monolith
 	decision = router.ShouldUseMicroservice("user999", false)
-	assert.False(t, decision.UseМicroservice, "Regular user должен идти в monolith при выключенном feature flag")
+	assert.False(t, decision.UseMicroservice, "Regular user должен идти в monolith при выключенном feature flag")
 	assert.Equal(t, "feature_flag_disabled", decision.Reason)
 }
 
@@ -60,17 +60,17 @@ func TestTrafficRouter_RolloutZeroPercent(t *testing.T) {
 
 	// Canary user - должен идти в MICROSERVICE т.к. canary имеет приоритет над rollout=0
 	decision := router.ShouldUseMicroservice("user123", false)
-	assert.True(t, decision.UseМicroservice, "Canary user должен идти в microservice даже при rollout=0")
+	assert.True(t, decision.UseMicroservice, "Canary user должен идти в microservice даже при rollout=0")
 	assert.Equal(t, "canary_user", decision.Reason)
 
 	// Admin - должен идти в MICROSERVICE т.к. admin_override имеет приоритет над rollout=0
 	decision = router.ShouldUseMicroservice("admin1", true)
-	assert.True(t, decision.UseМicroservice, "Admin должен идти в microservice при admin_override=true даже при rollout=0")
+	assert.True(t, decision.UseMicroservice, "Admin должен идти в microservice при admin_override=true даже при rollout=0")
 	assert.Equal(t, "admin_override", decision.Reason)
 
 	// Regular user - должен идти в monolith при rollout=0
 	decision = router.ShouldUseMicroservice("user999", false)
-	assert.False(t, decision.UseМicroservice, "Regular user должен идти в monolith при rollout=0")
+	assert.False(t, decision.UseMicroservice, "Regular user должен идти в monolith при rollout=0")
 	assert.Equal(t, "rollout_zero_percent", decision.Reason)
 }
 
@@ -91,7 +91,7 @@ func TestTrafficRouter_AdminOverride(t *testing.T) {
 
 	// Admin user - должен ВСЕГДА идти в microservice
 	decision := router.ShouldUseMicroservice("admin1", true)
-	assert.True(t, decision.UseМicroservice, "Admin должен идти в microservice при admin_override=true")
+	assert.True(t, decision.UseMicroservice, "Admin должен идти в microservice при admin_override=true")
 	assert.Equal(t, "admin_override", decision.Reason)
 	assert.True(t, decision.IsAdmin)
 
@@ -118,7 +118,7 @@ func TestTrafficRouter_AdminOverrideDisabled(t *testing.T) {
 
 	// Admin user - должен идти в monolith т.к. admin_override=false и rollout=0
 	decision := router.ShouldUseMicroservice("admin1", true)
-	assert.False(t, decision.UseМicroservice, "Admin должен идти в monolith при admin_override=false и rollout=0")
+	assert.False(t, decision.UseMicroservice, "Admin должен идти в monolith при admin_override=false и rollout=0")
 	assert.NotEqual(t, "admin_override", decision.Reason)
 }
 
@@ -139,25 +139,25 @@ func TestTrafficRouter_CanaryUsers(t *testing.T) {
 
 	// Canary user #1
 	decision := router.ShouldUseMicroservice("user123", false)
-	assert.True(t, decision.UseМicroservice, "Canary user123 должен идти в microservice")
+	assert.True(t, decision.UseMicroservice, "Canary user123 должен идти в microservice")
 	assert.Equal(t, "canary_user", decision.Reason)
 	assert.True(t, decision.IsCanary)
 
 	// Canary user #2
 	decision = router.ShouldUseMicroservice("user456", false)
-	assert.True(t, decision.UseМicroservice, "Canary user456 должен идти в microservice")
+	assert.True(t, decision.UseMicroservice, "Canary user456 должен идти в microservice")
 	assert.Equal(t, "canary_user", decision.Reason)
 	assert.True(t, decision.IsCanary)
 
 	// Canary user #3
 	decision = router.ShouldUseMicroservice("user789", false)
-	assert.True(t, decision.UseМicroservice, "Canary user789 должен идти в microservice")
+	assert.True(t, decision.UseMicroservice, "Canary user789 должен идти в microservice")
 	assert.Equal(t, "canary_user", decision.Reason)
 	assert.True(t, decision.IsCanary)
 
 	// Regular user - должен идти в monolith (rollout=0)
 	decision = router.ShouldUseMicroservice("user999", false)
-	assert.False(t, decision.UseМicroservice, "Regular user должен идти в monolith при rollout=0")
+	assert.False(t, decision.UseMicroservice, "Regular user должен идти в monolith при rollout=0")
 	assert.False(t, decision.IsCanary)
 	assert.Equal(t, "rollout_zero_percent", decision.Reason)
 }
@@ -185,7 +185,7 @@ func TestTrafficRouter_RolloutPercent_10(t *testing.T) {
 		userID := "user" + string(rune('0'+i))
 		decision := router.ShouldUseMicroservice(userID, false)
 
-		if decision.UseМicroservice {
+		if decision.UseMicroservice {
 			microserviceCount++
 			assert.Equal(t, "rollout_percent", decision.Reason)
 		} else {
@@ -195,7 +195,7 @@ func TestTrafficRouter_RolloutPercent_10(t *testing.T) {
 
 		// Проверяем консистентность - один и тот же user всегда должен идти в один backend
 		decision2 := router.ShouldUseMicroservice(userID, false)
-		assert.Equal(t, decision.UseМicroservice, decision2.UseМicroservice, "Routing должен быть консистентным для одного user")
+		assert.Equal(t, decision.UseMicroservice, decision2.UseMicroservice, "Routing должен быть консистентным для одного user")
 		assert.Equal(t, decision.Hash, decision2.Hash, "Hash должен быть одинаковым для одного user")
 	}
 
@@ -229,7 +229,7 @@ func TestTrafficRouter_RolloutPercent_50(t *testing.T) {
 		userID := "user" + string(rune('0'+i))
 		decision := router.ShouldUseMicroservice(userID, false)
 
-		if decision.UseМicroservice {
+		if decision.UseMicroservice {
 			microserviceCount++
 		} else {
 			monolithCount++
@@ -263,7 +263,7 @@ func TestTrafficRouter_RolloutPercent_100(t *testing.T) {
 		userID := "user" + string(rune('0'+i))
 		decision := router.ShouldUseMicroservice(userID, false)
 
-		assert.True(t, decision.UseМicroservice, "Все пользователи должны идти в microservice при rollout=100%")
+		assert.True(t, decision.UseMicroservice, "Все пользователи должны идти в microservice при rollout=100%")
 		assert.Equal(t, "rollout_full", decision.Reason)
 	}
 }
@@ -294,7 +294,7 @@ func TestTrafficRouter_PriorityOrder(t *testing.T) {
 
 		// Даже admin и canary user должны идти в monolith
 		decision := router.ShouldUseMicroservice("user123", true)
-		assert.False(t, decision.UseМicroservice)
+		assert.False(t, decision.UseMicroservice)
 		assert.Equal(t, "feature_flag_disabled", decision.Reason)
 	})
 
@@ -314,17 +314,17 @@ func TestTrafficRouter_PriorityOrder(t *testing.T) {
 
 		// Admin должен идти в microservice даже при rollout=0
 		decision := router.ShouldUseMicroservice("admin1", true)
-		assert.True(t, decision.UseМicroservice, "Admin должен идти в microservice даже при rollout=0")
+		assert.True(t, decision.UseMicroservice, "Admin должен идти в microservice даже при rollout=0")
 		assert.Equal(t, "admin_override", decision.Reason)
 
 		// Canary user должен идти в microservice даже при rollout=0
 		decision = router.ShouldUseMicroservice("user123", false)
-		assert.True(t, decision.UseМicroservice, "Canary user должен идти в microservice даже при rollout=0")
+		assert.True(t, decision.UseMicroservice, "Canary user должен идти в microservice даже при rollout=0")
 		assert.Equal(t, "canary_user", decision.Reason)
 
 		// Regular user должен идти в monolith при rollout=0
 		decision = router.ShouldUseMicroservice("user999", false)
-		assert.False(t, decision.UseМicroservice, "Regular user должен идти в monolith при rollout=0")
+		assert.False(t, decision.UseMicroservice, "Regular user должен идти в monolith при rollout=0")
 		assert.Equal(t, "rollout_zero_percent", decision.Reason)
 	})
 
@@ -344,7 +344,7 @@ func TestTrafficRouter_PriorityOrder(t *testing.T) {
 
 		// Admin override должен сработать раньше canary check
 		decision := router.ShouldUseMicroservice("admin1", true)
-		assert.True(t, decision.UseМicroservice)
+		assert.True(t, decision.UseMicroservice)
 		assert.Equal(t, "admin_override", decision.Reason) // НЕ canary_user!
 	})
 
@@ -364,7 +364,7 @@ func TestTrafficRouter_PriorityOrder(t *testing.T) {
 
 		// Canary user должен идти в microservice независимо от rollout percent
 		decision := router.ShouldUseMicroservice("user123", false)
-		assert.True(t, decision.UseМicroservice)
+		assert.True(t, decision.UseMicroservice)
 		assert.Equal(t, "canary_user", decision.Reason)
 	})
 }

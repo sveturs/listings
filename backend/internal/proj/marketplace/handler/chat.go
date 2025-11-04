@@ -15,8 +15,8 @@ import (
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} utils.SuccessResponse{data=[]interface{}}
-// @Failure 401 {object} utils.ErrorResponse
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]interface{}}
+// @Failure 401 {object} utils.ErrorResponseSwag
 // @Router /api/v1/marketplace/chat [get]
 func (h *Handler) GetChats(c *fiber.Ctx) error {
 	_, ok := authMiddleware.GetUserID(c)

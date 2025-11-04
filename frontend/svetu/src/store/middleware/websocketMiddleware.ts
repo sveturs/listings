@@ -146,7 +146,10 @@ export const websocketMiddleware: Middleware =
               case 'error':
                 // Обработка ошибок от сервера (например, при отключении функционала)
                 if (process.env.NODE_ENV === 'development') {
-                  console.log('[WebSocket] Server error:', data.message || data.code);
+                  console.log(
+                    '[WebSocket] Server error:',
+                    data.message || data.code
+                  );
                 }
                 // Ошибка CHAT_DISABLED - это нормальное состояние во время миграции
                 // Не показываем пользователю, просто молча игнорируем

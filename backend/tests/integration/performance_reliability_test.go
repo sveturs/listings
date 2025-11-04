@@ -1,5 +1,4 @@
 //go:build ignore
-// +build ignore
 
 // Package integration contains performance and reliability tests
 // DEPRECATED: These tests use outdated proto API structures
@@ -32,7 +31,7 @@ func TestPerformance_LatencyP95(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	iterations := 100
@@ -78,7 +77,7 @@ func TestPerformance_LatencyP99(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	iterations := 200
@@ -113,7 +112,7 @@ func TestCircuitBreaker_OpensAfterFailures(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -152,7 +151,7 @@ func TestCircuitBreaker_ClosesAfterSuccesses(t *testing.T) {
 	log := logger.Get()
 	client, err := listingsClient.NewClient(testMicroserviceAddr, *log)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -196,7 +195,7 @@ func TestRetryMechanism_ThreeAttempts(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -240,7 +239,7 @@ func TestGracefulDegradation_MicroserviceToMonolith(t *testing.T) {
 	if err != nil {
 		t.Log("✅ Microservice connection failed (expected)")
 	} else {
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 	}
 
 	// In real implementation, router would fallback to monolith here
@@ -258,7 +257,7 @@ func TestThroughput_SustainedLoad(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	duration := 10 * time.Second
@@ -330,7 +329,7 @@ func TestMemoryStability_NoLeaks(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -389,7 +388,7 @@ func BenchmarkGRPCCallOverhead(b *testing.B) {
 	if err != nil {
 		b.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -412,7 +411,7 @@ func BenchmarkConcurrentGRPCCalls(b *testing.B) {
 	if err != nil {
 		b.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -438,7 +437,7 @@ func TestErrorRecovery_AfterTimeout(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Short timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)

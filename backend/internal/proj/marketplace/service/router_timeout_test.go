@@ -361,7 +361,7 @@ func TestTimeoutRouter_ExecuteWithTimeoutOrMonolith(t *testing.T) {
 			userID := "user" + string(rune('0'+i))
 			decision := trafficRouter.ShouldUseMicroservice(userID, false)
 
-			if !decision.UseМicroservice {
+			if !decision.UseMicroservice {
 				// Found a user that routes to monolith
 				result, err := timeoutRouter.ExecuteWithTimeoutOrMonolith(
 					context.Background(),
@@ -397,7 +397,7 @@ func TestTimeoutRouter_ExecuteWithTimeoutOrMonolith(t *testing.T) {
 			userID := "user" + string(rune('0'+i))
 			decision := trafficRouter.ShouldUseMicroservice(userID, false)
 
-			if decision.UseМicroservice {
+			if decision.UseMicroservice {
 				// Found a user that routes to microservice
 				result, err := timeoutRouter.ExecuteWithTimeoutOrMonolith(
 					context.Background(),

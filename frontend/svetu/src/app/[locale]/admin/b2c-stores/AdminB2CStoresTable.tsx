@@ -194,7 +194,9 @@ export default function AdminStorefrontsTable() {
   const handleDelete = async (id: number, type: 'soft' | 'hard' = 'soft') => {
     try {
       const url =
-        type === 'hard' ? `/marketplace/storefronts/${id}?hard_delete=true` : `/marketplace/storefronts/${id}`;
+        type === 'hard'
+          ? `/marketplace/storefronts/${id}?hard_delete=true`
+          : `/marketplace/storefronts/${id}`;
 
       const response = await apiClient.delete(url);
 
@@ -212,7 +214,9 @@ export default function AdminStorefrontsTable() {
   // Обработка восстановления
   const handleRestore = async (id: number) => {
     try {
-      const response = await apiClient.post(`/marketplace/storefronts/${id}/restore`);
+      const response = await apiClient.post(
+        `/marketplace/storefronts/${id}/restore`
+      );
 
       if (response.data) {
         fetchStorefronts();
@@ -254,7 +258,9 @@ export default function AdminStorefrontsTable() {
         const isActive = action === 'activate';
 
         for (const id of selectedStorefronts) {
-          await apiClient.put(`/marketplace/storefronts/${id}`, { is_active: isActive });
+          await apiClient.put(`/marketplace/storefronts/${id}`, {
+            is_active: isActive,
+          });
         }
         setSelectedStorefronts(new Set());
         fetchStorefronts();

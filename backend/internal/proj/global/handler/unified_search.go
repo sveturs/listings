@@ -1132,44 +1132,6 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	return location
 }
 
-// TODO: Disabled during OpenSearch refactoring
-func (h *UnifiedSearchHandler) convertStorefrontLocation(product interface{} /* storefrontOpenSearch.ProductSearchItem */) *UnifiedLocationInfo {
-	return nil
-	/*
-		// TODO_DISABLED: 	if product == nil {
-		// TODO_DISABLED: 		return nil
-		// TODO_DISABLED: 	}
-		// TODO_DISABLED:
-		// TODO_DISABLED: 	// Для storefront products адрес берется из индивидуального местоположения или витрины
-		// TODO_DISABLED: 	location := &UnifiedLocationInfo{
-		// TODO_DISABLED: 		City:    product.City,
-		// TODO_DISABLED: 		Country: product.Country,
-		// TODO_DISABLED: 	}
-		// TODO_DISABLED:
-		// TODO_DISABLED: 	// Заполняем мультиязычные адреса из translations (если есть)
-		// TODO_DISABLED: 	// Формат: Translations[locale][field] = value
-		// TODO_DISABLED: 	// Например: Translations["ru"]["address"] = "Адрес на русском"
-		// TODO_DISABLED: 	if len(product.Translations) > 0 {
-		// TODO_DISABLED: 		location.AddressMultilingual = make(map[string]string)
-		// TODO_DISABLED: 		for lang, fields := range product.Translations {
-		// TODO_DISABLED: 			if address, ok := fields["address"]; ok && address != "" {
-		// TODO_DISABLED: 				location.AddressMultilingual[lang] = address
-		// TODO_DISABLED: 			}
-		// TODO_DISABLED: 		}
-		// TODO_DISABLED: 	}
-		// TODO_DISABLED:
-		// TODO_DISABLED: 	// Если мультиязычных адресов нет, но есть основной адрес
-		// TODO_DISABLED: 	if len(location.AddressMultilingual) == 0 && product.Address != "" {
-		// TODO_DISABLED: 		location.AddressMultilingual = map[string]string{
-		// TODO_DISABLED: 			"default": product.Address,
-		// TODO_DISABLED: 		}
-		// TODO_DISABLED: 	}
-		// TODO_DISABLED:
-		// TODO_DISABLED: 	return location
-		// TODO_DISABLED: }
-	*/
-}
-
 // trackingContext содержит все данные из fiber.Ctx для безопасной передачи в горутину
 type trackingContext struct {
 	userID    *int

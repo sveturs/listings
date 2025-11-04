@@ -202,7 +202,10 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         }
       });
 
-      const response = await apiClient.post('/marketplace/search', searchParams);
+      const response = await apiClient.post(
+        '/marketplace/search',
+        searchParams
+      );
 
       // API возвращает массив напрямую в data, не в data.items
       if (response.data?.data) {

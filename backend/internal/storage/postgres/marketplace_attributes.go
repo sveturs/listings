@@ -43,7 +43,7 @@ func (db *Database) GetCategoryAttributesImpl(ctx context.Context, categoryID in
 		logger.Error().Err(err).Int("category_id", categoryID).Msg("Failed to query category attributes")
 		return nil, fmt.Errorf("failed to get category attributes: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var attributes []models.CategoryAttribute
 	for rows.Next() {
@@ -110,7 +110,7 @@ func (db *Database) SaveListingAttributesImpl(ctx context.Context, listingID int
 		logger.Error().Err(err).Msg("Failed to begin transaction")
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Удаляем старые значения атрибутов для listing
 	deleteQuery := `
@@ -193,7 +193,7 @@ func (db *Database) GetListingAttributesImpl(ctx context.Context, listingID int)
 		logger.Error().Err(err).Int("listing_id", listingID).Msg("Failed to query listing attributes")
 		return nil, fmt.Errorf("failed to get listing attributes: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var attributes []models.ListingAttributeValue
 	for rows.Next() {
@@ -295,7 +295,7 @@ func (db *Database) GetAttributeRangesImpl(ctx context.Context, categoryID int) 
 		logger.Error().Err(err).Int("category_id", categoryID).Msg("Failed to query attribute ranges")
 		return nil, fmt.Errorf("failed to get attribute ranges: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	ranges := make(map[string]map[string]interface{})
 	for rows.Next() {

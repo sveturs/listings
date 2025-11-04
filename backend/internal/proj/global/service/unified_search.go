@@ -32,6 +32,8 @@ func (s *UnifiedSearchService) GetSuggestions(ctx context.Context, prefix string
 }
 
 // removeDuplicates удаляет дубликаты из списка строк
+//
+//nolint:unused // Reserved for future use
 func (s *UnifiedSearchService) removeDuplicates(strings []string) []string {
 	seen := make(map[string]bool)
 	result := make([]string, 0, len(strings))

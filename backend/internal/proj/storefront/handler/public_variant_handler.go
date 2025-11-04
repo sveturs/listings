@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	_ "backend/internal/domain/models" // For Swagger documentation
 	"backend/internal/proj/storefront/repository"
 
 	"github.com/gofiber/fiber/v2"

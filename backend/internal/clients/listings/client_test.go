@@ -1,6 +1,7 @@
 package listings
 
 import (
+	"errors"
 	"testing"
 
 	"google.golang.org/grpc/codes"
@@ -64,7 +65,7 @@ func TestMapGRPCError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := MapGRPCError(tt.input)
-			if result != tt.expected {
+			if !errors.Is(result, tt.expected) {
 				t.Errorf("MapGRPCError() = %v, want %v", result, tt.expected)
 			}
 		})

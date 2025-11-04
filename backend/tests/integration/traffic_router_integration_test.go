@@ -1,5 +1,4 @@
 //go:build ignore
-// +build ignore
 
 // Package integration contains traffic router integration tests
 // DEPRECATED: These tests use outdated unified architecture (metrics, domain sources)
@@ -175,7 +174,7 @@ func TestTrafficRouter_FallbackWhenMicroserviceDown(t *testing.T) {
 	if err != nil {
 		t.Log("✅ Cannot connect to microservice (expected)")
 	} else {
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 	}
 
 	// In real router, this should trigger fallback

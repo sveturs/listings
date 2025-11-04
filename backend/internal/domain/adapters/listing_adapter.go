@@ -164,7 +164,7 @@ func B2CToUnified(b2c *models.StorefrontProduct, storefront *models.Storefront) 
 	}
 
 	// Include attributes если есть (JSONB type is already map[string]interface{})
-	if b2c.Attributes != nil && len(b2c.Attributes) > 0 {
+	if len(b2c.Attributes) > 0 {
 		unified.Metadata["attributes"] = b2c.Attributes
 	}
 

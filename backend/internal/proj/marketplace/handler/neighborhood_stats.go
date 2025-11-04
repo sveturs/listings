@@ -3,6 +3,8 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+
+	_ "backend/pkg/utils" // For Swagger documentation
 )
 
 // NeighborhoodStatsResponse структура ответа для статистики окрестностей

@@ -117,7 +117,7 @@ func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int
 	userIDs := make([]int, len(userIDStrs))
 	for i, idStr := range userIDStrs {
 		var id int
-		fmt.Sscanf(idStr, "%d", &id)
+		_, _ = fmt.Sscanf(idStr, "%d", &id)
 		userIDs[i] = id
 	}
 

@@ -40,7 +40,7 @@ func TestSmoke_MicroserviceIsAlive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("❌ Cannot connect to microservice: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	healthClient := grpc_health_v1.NewHealthClient(conn)
 	resp, err := healthClient.Check(ctx, &grpc_health_v1.HealthCheckRequest{})
@@ -60,7 +60,7 @@ func TestSmoke_GRPCPortOpen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("❌ gRPC port not open: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	t.Logf("✅ gRPC port %s is open and accepting connections", microserviceAddr)
 }
@@ -71,7 +71,7 @@ func TestSmoke_MicroserviceDatabaseAccessible(t *testing.T) {
 	if err != nil {
 		t.Fatalf("❌ Cannot open microservice DB connection: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), smokeTimeout)
 	defer cancel()
@@ -105,7 +105,7 @@ func TestSmoke_MonolithDatabaseAccessible(t *testing.T) {
 	if err != nil {
 		t.Fatalf("❌ Cannot open monolith DB connection: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), smokeTimeout)
 	defer cancel()
@@ -141,7 +141,7 @@ func TestSmoke_OpenSearchReachable(t *testing.T) {
 		t.Skipf("⚠️ OpenSearch not reachable (skipping): %v", err)
 		return
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	t.Logf("✅ OpenSearch is reachable on port 9200")
 }
@@ -153,7 +153,7 @@ func TestSmoke_MonolithCanConnectToMicroservice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("❌ Cannot create gRPC client: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	t.Logf("✅ Monolith can connect to microservice via gRPC")
 }
@@ -165,7 +165,7 @@ func TestSmoke_BasicGRPCCall(t *testing.T) {
 	if err != nil {
 		t.Fatalf("❌ Cannot create gRPC client: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), smokeTimeout)
 	defer cancel()
@@ -191,7 +191,7 @@ func TestSmoke_ConnectionPool(t *testing.T) {
 	if err != nil {
 		t.Fatalf("❌ Cannot open DB connection: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	// Set connection pool size
 	db.SetMaxOpenConns(10)
@@ -249,14 +249,14 @@ func BenchmarkSmokeTestDuration(b *testing.B) {
 	if err != nil {
 		b.Skipf("Cannot connect: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		// Quick health check
 		conn, _ := net.DialTimeout("tcp", microserviceAddr, 100*time.Millisecond)
 		if conn != nil {
-			conn.Close()
+			_ = conn.Close()
 		}
 	}
 }

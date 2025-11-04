@@ -1,5 +1,4 @@
 //go:build ignore
-// +build ignore
 
 // Package integration contains data consistency integration tests
 // DEPRECATED: These tests use outdated proto API structures
@@ -39,13 +38,13 @@ func TestListingsSynchronization(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to monolith DB: %v", err)
 	}
-	defer monolithDB.Close()
+	defer func() { _ = monolithDB.Close() }()
 
 	microserviceDB, err := sql.Open("postgres", microserviceDBURL)
 	if err != nil {
 		t.Skipf("Cannot connect to microservice DB: %v", err)
 	}
-	defer microserviceDB.Close()
+	defer func() { _ = microserviceDB.Close() }()
 
 	// Verify connections
 	require.NoError(t, monolithDB.Ping(), "Monolith DB should be accessible")
@@ -55,7 +54,7 @@ func TestListingsSynchronization(t *testing.T) {
 	var monolithIDs []int64
 	rows, err := monolithDB.Query("SELECT id FROM marketplace_listings LIMIT 10")
 	require.NoError(t, err)
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var id int64
@@ -100,13 +99,13 @@ func TestImageMetadataConsistency(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to monolith DB: %v", err)
 	}
-	defer monolithDB.Close()
+	defer func() { _ = monolithDB.Close() }()
 
 	microserviceDB, err := sql.Open("postgres", microserviceDBURL)
 	if err != nil {
 		t.Skipf("Cannot connect to microservice DB: %v", err)
 	}
-	defer microserviceDB.Close()
+	defer func() { _ = microserviceDB.Close() }()
 
 	// Get listing with images from monolith
 	var listingID int64
@@ -161,7 +160,7 @@ func TestOpenSearchIndexActual(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to monolith DB: %v", err)
 	}
-	defer monolithDB.Close()
+	defer func() { _ = monolithDB.Close() }()
 
 	var dbCount int64
 	err = monolithDB.QueryRow("SELECT COUNT(*) FROM marketplace_listings WHERE status = 'active'").Scan(&dbCount)
@@ -232,7 +231,7 @@ func TestReferentialIntegrity(t *testing.T) {
 			if err != nil {
 				t.Skipf("Cannot connect to %s DB: %v", tt.dbName, err)
 			}
-			defer db.Close()
+			defer func() { _ = db.Close() }()
 
 			var orphanCount int
 			err = db.QueryRow(tt.query).Scan(&orphanCount)
@@ -257,7 +256,7 @@ func TestDataConsistency_CreateFlow(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -290,7 +289,7 @@ func TestDataConsistency_CreateFlow(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice DB: %v", err)
 	}
-	defer microserviceDB.Close()
+	defer func() { _ = microserviceDB.Close() }()
 
 	var title string
 	var price float64
@@ -328,7 +327,7 @@ func TestDataConsistency_UpdateFlow(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -377,7 +376,7 @@ func TestDataConsistency_UpdateFlow(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice DB: %v", err)
 	}
-	defer microserviceDB.Close()
+	defer func() { _ = microserviceDB.Close() }()
 
 	var title string
 	var price float64
@@ -405,7 +404,7 @@ func TestDataConsistency_DeleteFlow(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -437,7 +436,7 @@ func TestDataConsistency_DeleteFlow(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice DB: %v", err)
 	}
-	defer microserviceDB.Close()
+	defer func() { _ = microserviceDB.Close() }()
 
 	var count int
 	err = microserviceDB.QueryRow(`
@@ -463,7 +462,7 @@ func TestTimestampConsistency(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -496,7 +495,7 @@ func TestTimestampConsistency(t *testing.T) {
 	if err != nil {
 		t.Skipf("Cannot connect to microservice DB: %v", err)
 	}
-	defer microserviceDB.Close()
+	defer func() { _ = microserviceDB.Close() }()
 
 	var createdAt, updatedAt time.Time
 	err = microserviceDB.QueryRow(`
@@ -526,7 +525,7 @@ func BenchmarkDataConsistencyCheck(b *testing.B) {
 	if err != nil {
 		b.Skipf("Cannot connect to DB: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

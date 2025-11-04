@@ -12,7 +12,7 @@ func TestGetCategoryAttributes(t *testing.T) {
 	}
 
 	sqlDB := setupTestDB(t)
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	// Заглушка - для полноценных тестов нужен Database wrapper
 	t.Skip("Database wrapper setup not implemented yet - see foreign_keys_test.go for pattern")
@@ -25,7 +25,7 @@ func TestSaveListingAttributes(t *testing.T) {
 	}
 
 	sqlDB := setupTestDB(t)
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	t.Skip("Database wrapper setup not implemented yet")
 }
@@ -37,7 +37,7 @@ func TestGetListingAttributes(t *testing.T) {
 	}
 
 	sqlDB := setupTestDB(t)
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	t.Skip("Database wrapper setup not implemented yet")
 }
@@ -49,13 +49,14 @@ func TestGetAttributeRanges(t *testing.T) {
 	}
 
 	sqlDB := setupTestDB(t)
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 
 	t.Skip("Database wrapper setup not implemented yet")
 }
 
 // Вспомогательные функции для будущих интеграционных тестов
 
+//nolint:unused // Reserved for future integration tests
 func slugify(s string) string {
 	// Простая реализация для тестов
 	return strings.ToLower(strings.ReplaceAll(s, " ", "-"))

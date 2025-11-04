@@ -227,7 +227,7 @@ func (tr *TimeoutRouter) ExecuteWithTimeoutOrMonolith(
 	decision := tr.router.ShouldUseMicroservice(userID, isAdmin)
 
 	// If routing to monolith - call monolith directly (no timeout)
-	if !decision.UseМicroservice {
+	if !decision.UseMicroservice {
 		startTime := time.Now()
 		result, err := monolithFunc(ctx)
 		duration := time.Since(startTime)

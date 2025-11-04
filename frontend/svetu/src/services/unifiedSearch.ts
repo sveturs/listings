@@ -319,7 +319,9 @@ export class UnifiedSearchService {
       limit: size.toString(),
     });
 
-    const response = await apiClient.get(`/marketplace/enhanced-suggestions?${params}`);
+    const response = await apiClient.get(
+      `/marketplace/enhanced-suggestions?${params}`
+    );
 
     if (!response.data) {
       console.error('Failed to load suggestions');

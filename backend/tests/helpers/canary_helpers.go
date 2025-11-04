@@ -117,7 +117,7 @@ func metricsAvailable(t *testing.T) bool {
 	if err != nil {
 		return false
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	return resp.StatusCode == http.StatusOK
 }
@@ -160,7 +160,7 @@ func GetCanaryMetrics(t *testing.T) (*CanaryMetrics, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch metrics: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("metrics endpoint returned %d", resp.StatusCode)
@@ -196,7 +196,7 @@ func parseMetricValue(text, metricName string) float64 {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
 				var value float64
-				fmt.Sscanf(parts[1], "%f", &value)
+				_, _ = fmt.Sscanf(parts[1], "%f", &value)
 				return value
 			}
 		}
@@ -243,7 +243,7 @@ func isBackendAvailable(url string) bool {
 	if err != nil {
 		return false
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	return resp.StatusCode == http.StatusOK
 }
@@ -302,7 +302,7 @@ func SimulateTraffic(t *testing.T, url string, numRequests int, opts CanaryReque
 			t.Logf("⚠️ Request %d failed: %v", i, err)
 			continue
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		// Check source header
 		source := resp.Header.Get("X-Source-Microservice")

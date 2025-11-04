@@ -57,7 +57,9 @@ export const fetchSavedSearches = createAsyncThunk(
   'savedSearches/fetch',
   async (searchType?: string) => {
     const params = searchType ? `?search_type=${searchType}` : '';
-    const response = await apiClient.get(`/marketplace/saved-searches${params}`);
+    const response = await apiClient.get(
+      `/marketplace/saved-searches${params}`
+    );
     return response.data;
   }
 );
@@ -95,7 +97,10 @@ export const updateSavedSearch = createAsyncThunk(
       notify_frequency?: string;
     };
   }) => {
-    const response = await apiClient.put(`/marketplace/saved-searches/${id}`, data);
+    const response = await apiClient.put(
+      `/marketplace/saved-searches/${id}`,
+      data
+    );
     return response.data;
   }
 );
@@ -111,7 +116,9 @@ export const deleteSavedSearch = createAsyncThunk(
 export const executeSavedSearch = createAsyncThunk(
   'savedSearches/execute',
   async (id: number) => {
-    const response = await apiClient.get(`/marketplace/saved-searches/${id}/execute`);
+    const response = await apiClient.get(
+      `/marketplace/saved-searches/${id}/execute`
+    );
     return { id, results: response.data };
   }
 );

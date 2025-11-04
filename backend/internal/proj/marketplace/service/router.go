@@ -50,7 +50,7 @@ func NewTrafficRouter(cfg *config.MarketplaceConfig, logger zerolog.Logger) *Tra
 
 // RoutingDecision содержит информацию о решении routing
 type RoutingDecision struct {
-	UseМicroservice bool   // Использовать microservice?
+	UseMicroservice bool   // Использовать microservice?
 	Reason          string // Причина решения (для логирования и метрик)
 	UserID          string // ID пользователя
 	IsAdmin         bool   // Является ли пользователь админом
@@ -71,7 +71,7 @@ type RoutingDecision struct {
 func (r *TrafficRouter) ShouldUseMicroservice(userID string, isAdmin bool) *RoutingDecision {
 	// DEV MODE: Always use microservice
 	decision := &RoutingDecision{
-		UseМicroservice: true, // Always true in dev
+		UseMicroservice: true, // Always true in dev
 		UserID:          userID,
 		IsAdmin:         isAdmin,
 		IsCanary:        false,
@@ -84,6 +84,8 @@ func (r *TrafficRouter) ShouldUseMicroservice(userID string, isAdmin bool) *Rout
 }
 
 // isCanaryUser проверяет, является ли пользователь canary user
+//
+//nolint:unused // Reserved for future canary release implementation
 func (r *TrafficRouter) isCanaryUser(userID string) bool {
 	if r.config.CanaryUserIDs == "" {
 		return false
@@ -106,6 +108,8 @@ func (r *TrafficRouter) isCanaryUser(userID string) bool {
 // - Cryptographically secure (no bias)
 // - Равномерное распределение
 // - Детерминированный (один userID → один hash)
+//
+//nolint:unused // Reserved for future gradual rollout implementation
 func (r *TrafficRouter) consistentHash(userID string) uint32 {
 	h := sha256.New()
 	h.Write([]byte(userID))
@@ -118,7 +122,7 @@ func (r *TrafficRouter) consistentHash(userID string) uint32 {
 // logDecision логирует решение о routing и записывает Prometheus метрику
 func (r *TrafficRouter) logDecision(decision *RoutingDecision) {
 	backend := "monolith"
-	if decision.UseМicroservice {
+	if decision.UseMicroservice {
 		backend = "microservice"
 	}
 

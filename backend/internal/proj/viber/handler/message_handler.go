@@ -284,6 +284,8 @@ func (m *MessageHandler) HandleNearbyProducts(ctx context.Context, viberID strin
 }
 
 // calculateDistance вычисляет расстояние между двумя точками в километрах
+//
+//nolint:unused // Reserved for future location-based features
 func (m *MessageHandler) calculateDistance(lat1, lng1, lat2, lng2 float64) float64 {
 	// Простая формула для приблизительного расчёта расстояния
 	const earthRadius = 6371.0 // km

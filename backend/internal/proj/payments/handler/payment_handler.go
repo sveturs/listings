@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/shopspring/decimal"
 
+	_ "backend/internal/domain/models" // For Swagger documentation
 	"backend/internal/proj/payments/service"
 	"backend/pkg/logger"
 	"backend/pkg/utils"

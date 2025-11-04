@@ -27,7 +27,7 @@ func TestTimeoutTriggersAtConfiguredDuration(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Send request that will take 1s (should timeout at 500ms)
 	ctx := context.Background()
@@ -54,7 +54,7 @@ func TestFallbackToMonolithOnTimeout(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// This test requires integration with router/fallback logic
 	// For now, verify error is returned correctly
@@ -79,7 +79,7 @@ func TestContextCancellationPropagates(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Create cancelable context
 	ctx, cancel := context.WithCancel(context.Background())
@@ -110,7 +110,7 @@ func TestMultipleConcurrentTimeouts(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	const numRequests = 10
 
@@ -148,7 +148,7 @@ func TestNoGoroutineLeaksOnTimeout(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Get baseline goroutine count
 	baselineCount := countGoroutines()
@@ -159,7 +159,7 @@ func TestNoGoroutineLeaksOnTimeout(t *testing.T) {
 		req := &pb.GetListingRequest{
 			Id: 999, // Will timeout
 		}
-		client.GetListing(ctx, req)
+		_, _ = client.GetListing(ctx, req)
 	}
 
 	// Wait for cleanup
@@ -181,7 +181,7 @@ func TestTimeoutWithRetries(t *testing.T) {
 	log := logger.Get()
 	client, err := listings.NewClient(testGRPCURL, *log)
 	require.NoError(t, err, "Failed to create gRPC client")
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	req := &pb.SearchListingsRequest{

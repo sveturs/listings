@@ -1,5 +1,4 @@
 //go:build ignore
-// +build ignore
 
 // Package integration contains integration tests for microservice connectivity
 // DEPRECATED: These tests use outdated proto API structures (ListingId field)
@@ -44,7 +43,7 @@ func TestMicroserviceHealthCheckGRPC(t *testing.T) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	require.NoError(t, err, "Should connect to microservice")
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Create health check client
 	healthClient := grpc_health_v1.NewHealthClient(conn)
@@ -73,7 +72,7 @@ func TestGRPCConnectionEstablished(t *testing.T) {
 	require.NoError(t, err, "Should create gRPC client")
 	require.NotNil(t, client, "Client should not be nil")
 
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	t.Log("✅ gRPC connection established successfully")
 }
@@ -87,7 +86,7 @@ func TestGRPCRequestResponseCycle(t *testing.T) {
 	log := logger.Get()
 	client, err := listingsClient.NewClient(testMicroserviceAddr, *log)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -143,7 +142,7 @@ func TestAuthenticationPassthrough(t *testing.T) {
 	log := logger.Get()
 	client, err := listingsClient.NewClient(testMicroserviceAddr, *log)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -172,7 +171,7 @@ func TestTimeoutHandling(t *testing.T) {
 	log := logger.Get()
 	client, err := listingsClient.NewClient(testMicroserviceAddr, *log)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Create context with very short timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -210,7 +209,7 @@ func TestCircuitBreakerStateTransitions(t *testing.T) {
 	log := logger.Get()
 	client, err := listingsClient.NewClient(testMicroserviceAddr, *log)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -258,7 +257,7 @@ func TestCircuitBreakerRecovery(t *testing.T) {
 	log := logger.Get()
 	client, err := listingsClient.NewClient(testMicroserviceAddr, *log)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 
@@ -296,7 +295,7 @@ func TestConcurrentRequests(t *testing.T) {
 	log := logger.Get()
 	client, err := listingsClient.NewClient(testMicroserviceAddr, *log)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	concurrency := 10
 	done := make(chan bool, concurrency)
@@ -344,7 +343,7 @@ func BenchmarkMicroserviceLatency(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create client: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 

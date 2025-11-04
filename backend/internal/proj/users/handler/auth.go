@@ -8,6 +8,8 @@ import (
 	"github.com/sveturs/auth/pkg/http/entity"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"github.com/sveturs/auth/pkg/http/service"
+
+	_ "backend/pkg/utils" // For Swagger documentation
 )
 
 type AuthHandler struct {
