@@ -12,13 +12,16 @@ import (
 )
 
 func TestGRPCConnectivity(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping gRPC connectivity test in short mode - requires running server")
+	}
+
 	// Connect to the gRPC server
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, "localhost:50053",
+	conn, err := grpc.NewClient("localhost:50053",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	require.NoError(t, err, "Failed to connect to gRPC server")
 	defer conn.Close()

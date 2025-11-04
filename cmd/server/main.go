@@ -128,7 +128,11 @@ func main() {
 		if err := indexWorker.Start(); err != nil {
 			logger.Fatal().Err(err).Msg("failed to start indexing worker")
 		}
-		defer indexWorker.Stop()
+		defer func() {
+			if err := indexWorker.Stop(); err != nil {
+				logger.Error().Err(err).Msg("failed to stop indexing worker")
+			}
+		}()
 	}
 
 	// Initialize gRPC server
@@ -163,7 +167,11 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to start HTTP server")
 	}
-	defer httpApp.Shutdown()
+	defer func() {
+		if err := httpApp.Shutdown(); err != nil {
+			logger.Error().Err(err).Msg("failed to shutdown HTTP server")
+		}
+	}()
 
 	logger.Info().
 		Int("http_port", cfg.Server.HTTPPort).

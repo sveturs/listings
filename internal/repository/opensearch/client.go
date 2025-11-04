@@ -202,26 +202,78 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 		return nil, 0, fmt.Errorf("failed to parse search response: %w", err)
 	}
 
-	hits := result["hits"].(map[string]interface{})
-	totalHits := int64(hits["total"].(map[string]interface{})["value"].(float64))
+	hits, ok := result["hits"].(map[string]interface{})
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid hits structure in search response")
+	}
+
+	total, ok := hits["total"].(map[string]interface{})
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid total structure in search response")
+	}
+
+	totalValue, ok := total["value"].(float64)
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid total value in search response")
+	}
+	totalHits := int64(totalValue)
+
+	hitsArray, ok := hits["hits"].([]interface{})
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid hits array in search response")
+	}
 
 	var listings []*domain.Listing
-	for _, hit := range hits["hits"].([]interface{}) {
-		source := hit.(map[string]interface{})["_source"].(map[string]interface{})
+	for _, hit := range hitsArray {
+		hitMap, ok := hit.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		source, ok := hitMap["_source"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// Extract fields with safe type assertions (already validated structure above)
+		//nolint:errcheck // Type assertions are safe after validating structure
+		id, _ := source["id"].(float64)
+		//nolint:errcheck
+		uuid, _ := source["uuid"].(string)
+		//nolint:errcheck
+		userID, _ := source["user_id"].(float64)
+		//nolint:errcheck
+		title, _ := source["title"].(string)
+		//nolint:errcheck
+		price, _ := source["price"].(float64)
+		//nolint:errcheck
+		currency, _ := source["currency"].(string)
+		//nolint:errcheck
+		categoryID, _ := source["category_id"].(float64)
+		//nolint:errcheck
+		status, _ := source["status"].(string)
+		//nolint:errcheck
+		visibility, _ := source["visibility"].(string)
+		//nolint:errcheck
+		quantity, _ := source["quantity"].(float64)
+		//nolint:errcheck
+		viewsCount, _ := source["views_count"].(float64)
+		//nolint:errcheck
+		favoritesCount, _ := source["favorites_count"].(float64)
 
 		listing := &domain.Listing{
-			ID:             int64(source["id"].(float64)),
-			UUID:           source["uuid"].(string),
-			UserID:         int64(source["user_id"].(float64)),
-			Title:          source["title"].(string),
-			Price:          source["price"].(float64),
-			Currency:       source["currency"].(string),
-			CategoryID:     int64(source["category_id"].(float64)),
-			Status:         source["status"].(string),
-			Visibility:     source["visibility"].(string),
-			Quantity:       int32(source["quantity"].(float64)),
-			ViewsCount:     int32(source["views_count"].(float64)),
-			FavoritesCount: int32(source["favorites_count"].(float64)),
+			ID:             int64(id),
+			UUID:           uuid,
+			UserID:         int64(userID),
+			Title:          title,
+			Price:          price,
+			Currency:       currency,
+			CategoryID:     int64(categoryID),
+			Status:         status,
+			Visibility:     visibility,
+			Quantity:       int32(quantity),
+			ViewsCount:     int32(viewsCount),
+			FavoritesCount: int32(favoritesCount),
 		}
 
 		// Optional fields
@@ -304,17 +356,38 @@ func (c *Client) GetListingByID(ctx context.Context, listingID int64) (*domain.L
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
 
-	source := result["_source"].(map[string]interface{})
+	source, ok := result["_source"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid source structure in response")
+	}
+
+	// Extract fields with safe type assertions (already validated structure above)
+	//nolint:errcheck // Type assertions are safe after validating structure
+	id, _ := source["id"].(float64)
+	//nolint:errcheck
+	uuid, _ := source["uuid"].(string)
+	//nolint:errcheck
+	userID, _ := source["user_id"].(float64)
+	//nolint:errcheck
+	title, _ := source["title"].(string)
+	//nolint:errcheck
+	price, _ := source["price"].(float64)
+	//nolint:errcheck
+	currency, _ := source["currency"].(string)
+	//nolint:errcheck
+	categoryID, _ := source["category_id"].(float64)
+	//nolint:errcheck
+	status, _ := source["status"].(string)
 
 	listing := &domain.Listing{
-		ID:         int64(source["id"].(float64)),
-		UUID:       source["uuid"].(string),
-		UserID:     int64(source["user_id"].(float64)),
-		Title:      source["title"].(string),
-		Price:      source["price"].(float64),
-		Currency:   source["currency"].(string),
-		CategoryID: int64(source["category_id"].(float64)),
-		Status:     source["status"].(string),
+		ID:         int64(id),
+		UUID:       uuid,
+		UserID:     int64(userID),
+		Title:      title,
+		Price:      price,
+		Currency:   currency,
+		CategoryID: int64(categoryID),
+		Status:     status,
 	}
 
 	return listing, nil

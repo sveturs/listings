@@ -64,6 +64,42 @@ func TestListingStructure(t *testing.T) {
 	if listing.Price != 99.99 {
 		t.Errorf("expected price 99.99, got %f", listing.Price)
 	}
+
+	if listing.UUID != "test-uuid" {
+		t.Errorf("expected UUID 'test-uuid', got %s", listing.UUID)
+	}
+
+	if listing.UserID != 100 {
+		t.Errorf("expected UserID 100, got %d", listing.UserID)
+	}
+
+	if listing.Currency != "USD" {
+		t.Errorf("expected Currency 'USD', got %s", listing.Currency)
+	}
+
+	if listing.CategoryID != 1 {
+		t.Errorf("expected CategoryID 1, got %d", listing.CategoryID)
+	}
+
+	if listing.Status != StatusActive {
+		t.Errorf("expected Status '%s', got %s", StatusActive, listing.Status)
+	}
+
+	if listing.Visibility != VisibilityPublic {
+		t.Errorf("expected Visibility '%s', got %s", VisibilityPublic, listing.Visibility)
+	}
+
+	if listing.Quantity != 10 {
+		t.Errorf("expected Quantity 10, got %d", listing.Quantity)
+	}
+
+	if listing.CreatedAt != now {
+		t.Errorf("expected CreatedAt to match")
+	}
+
+	if listing.UpdatedAt != now {
+		t.Errorf("expected UpdatedAt to match")
+	}
 }
 
 func TestCreateListingRequest(t *testing.T) {
@@ -82,6 +118,22 @@ func TestCreateListingRequest(t *testing.T) {
 
 	if req.Title != "Test" {
 		t.Errorf("expected Title 'Test', got %s", req.Title)
+	}
+
+	if req.Price != 10.0 {
+		t.Errorf("expected Price 10.0, got %f", req.Price)
+	}
+
+	if req.Currency != "USD" {
+		t.Errorf("expected Currency 'USD', got %s", req.Currency)
+	}
+
+	if req.CategoryID != 1 {
+		t.Errorf("expected CategoryID 1, got %d", req.CategoryID)
+	}
+
+	if req.Quantity != 5 {
+		t.Errorf("expected Quantity 5, got %d", req.Quantity)
 	}
 }
 
@@ -104,6 +156,14 @@ func TestUpdateListingRequest(t *testing.T) {
 
 	if req.Price == nil || *req.Price != 20.0 {
 		t.Errorf("expected Price 20.0, got %v", req.Price)
+	}
+
+	if req.Quantity == nil || *req.Quantity != 10 {
+		t.Errorf("expected Quantity 10, got %v", req.Quantity)
+	}
+
+	if req.Status == nil || *req.Status != StatusActive {
+		t.Errorf("expected Status '%s', got %v", StatusActive, req.Status)
 	}
 }
 
@@ -128,6 +188,22 @@ func TestSearchListingsRequest(t *testing.T) {
 	if req.CategoryID == nil || *req.CategoryID != 1 {
 		t.Errorf("expected CategoryID 1, got %v", req.CategoryID)
 	}
+
+	if req.MinPrice == nil || *req.MinPrice != 10.0 {
+		t.Errorf("expected MinPrice 10.0, got %v", req.MinPrice)
+	}
+
+	if req.MaxPrice == nil || *req.MaxPrice != 100.0 {
+		t.Errorf("expected MaxPrice 100.0, got %v", req.MaxPrice)
+	}
+
+	if req.Limit != 10 {
+		t.Errorf("expected Limit 10, got %d", req.Limit)
+	}
+
+	if req.Offset != 0 {
+		t.Errorf("expected Offset 0, got %d", req.Offset)
+	}
 }
 
 func TestListListingsRequest(t *testing.T) {
@@ -151,7 +227,15 @@ func TestListListingsRequest(t *testing.T) {
 		t.Errorf("expected StorefrontID 50, got %v", req.StorefrontID)
 	}
 
+	if req.Status == nil || *req.Status != StatusActive {
+		t.Errorf("expected Status '%s', got %v", StatusActive, req.Status)
+	}
+
 	if req.Limit != 20 {
 		t.Errorf("expected Limit 20, got %d", req.Limit)
+	}
+
+	if req.Offset != 0 {
+		t.Errorf("expected Offset 0, got %d", req.Offset)
 	}
 }

@@ -65,7 +65,10 @@ func (h *MinimalHandler) GetListing(c *fiber.Ctx) error {
 	// Add X-Served-By header for traffic distribution measurement (Phase 3)
 	c.Set("X-Served-By", "microservice")
 
-	id, _ := c.ParamsInt("id")
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid id parameter"})
+	}
 	listing, err := h.service.GetListing(c.Context(), int64(id))
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "not found"})

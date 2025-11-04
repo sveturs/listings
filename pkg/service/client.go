@@ -84,10 +84,9 @@ func NewClient(config ClientConfig) (*Client, error) {
 
 	// Establish gRPC connection
 	if config.GRPCAddr != "" {
-		conn, err := grpc.Dial(
+		conn, err := grpc.NewClient(
 			config.GRPCAddr,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithTimeout(config.Timeout),
 		)
 		if err != nil {
 			client.logger.Warn().Err(err).Str("addr", config.GRPCAddr).Msg("Failed to connect to gRPC server")
@@ -113,7 +112,8 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	// Ensure at least one transport is available
-	if client.grpcClient == nil && client.httpClient == nil {
+	// TODO: Change to grpcClient once proto is generated
+	if client.grpcConn == nil && client.httpClient == nil {
 		return nil, errors.New("no transport available: both gRPC and HTTP failed")
 	}
 

@@ -79,9 +79,7 @@ func TestGetListing(t *testing.T) {
 		listing = GetListing(c)
 		if listing == nil {
 			t.Error("expected non-nil listing when set")
-		}
-
-		if listing.ID != 1 {
+		} else if listing.ID != 1 {
 			t.Errorf("expected listing ID 1, got %d", listing.ID)
 		}
 
@@ -149,10 +147,13 @@ func TestRateLimitByUserID(t *testing.T) {
 }
 
 // Mock functions for testing middleware behavior
+//
+//nolint:unused // Used in test logic below
 type mockListingsClient struct {
 	getListing func(ctx context.Context, id int64) (*service.Listing, error)
 }
 
+//nolint:unused // Used in test logic below
 func (m *mockListingsClient) GetListing(ctx context.Context, id int64) (*service.Listing, error) {
 	if m.getListing != nil {
 		return m.getListing(ctx, id)

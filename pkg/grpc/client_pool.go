@@ -63,7 +63,7 @@ func NewPool(config PoolConfig) (*Pool, error) {
 
 	// Establish connections
 	for i := 0; i < config.Size; i++ {
-		conn, err := grpc.Dial(config.Target, config.DialOptions...)
+		conn, err := grpc.NewClient(config.Target, config.DialOptions...)
 		if err != nil {
 			// Close any connections that were successfully created
 			for j := 0; j < i; j++ {
@@ -173,7 +173,7 @@ func (p *Pool) Reconnect(index int, target string, opts ...grpc.DialOption) erro
 	}
 
 	// Create new connection
-	conn, err := grpc.Dial(target, opts...)
+	conn, err := grpc.NewClient(target, opts...)
 	if err != nil {
 		return err
 	}
