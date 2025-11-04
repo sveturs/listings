@@ -30,6 +30,16 @@ func NewRepository(db *sqlx.DB, logger zerolog.Logger) *Repository {
 	}
 }
 
+// BeginTx starts a new database transaction
+func (r *Repository) BeginTx(ctx context.Context) (*sql.Tx, error) {
+	return r.db.BeginTx(ctx, nil)
+}
+
+// GetDB returns the underlying database connection
+func (r *Repository) GetDB() *sqlx.DB {
+	return r.db
+}
+
 // InitDB initializes database connection with proper pool settings
 func InitDB(dsn string, maxOpenConns, maxIdleConns int, connMaxLifetime, connMaxIdleTime time.Duration, logger zerolog.Logger) (*sqlx.DB, error) {
 	db, err := sqlx.Connect("postgres", dsn)

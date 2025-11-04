@@ -3,6 +3,9 @@ syntax = "proto3";
 package listings.v1;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingsv1";
 
@@ -64,6 +67,29 @@ service ListingsService {
   // GetFavoritedUsers retrieves list of user IDs who favorited a listing
   rpc GetFavoritedUsers(ListingIDRequest) returns (UserIDsResponse);
 
+  // AddToFavorites adds a listing to user's favorites
+  rpc AddToFavorites(AddToFavoritesRequest) returns (google.protobuf.Empty);
+
+  // RemoveFromFavorites removes a listing from user's favorites
+  rpc RemoveFromFavorites(RemoveFromFavoritesRequest) returns (google.protobuf.Empty);
+
+  // GetUserFavorites retrieves list of listing IDs favorited by a user
+  rpc GetUserFavorites(GetUserFavoritesRequest) returns (GetUserFavoritesResponse);
+
+  // IsFavorite checks if a listing is in user's favorites
+  rpc IsFavorite(IsFavoriteRequest) returns (IsFavoriteResponse);
+
+  // === Storefronts Management (HIGH PRIORITY) ===
+
+  // GetStorefront retrieves a single storefront by ID
+  rpc GetStorefront(GetStorefrontRequest) returns (StorefrontResponse);
+
+  // GetStorefrontBySlug retrieves a storefront by slug
+  rpc GetStorefrontBySlug(GetStorefrontBySlugRequest) returns (StorefrontResponse);
+
+  // ListStorefronts returns a paginated list of storefronts
+  rpc ListStorefronts(ListStorefrontsRequest) returns (ListStorefrontsResponse);
+
   // === Variants Management (MEDIUM PRIORITY) ===
 
   // CreateVariants creates multiple variants for a listing
@@ -88,6 +114,60 @@ service ListingsService {
 
   // SyncDiscounts synchronizes discount information across listings
   rpc SyncDiscounts(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // === Products Management (HIGH PRIORITY) ===
+
+  // GetProduct retrieves a single product by ID
+  rpc GetProduct(GetProductRequest) returns (ProductResponse);
+
+  // GetProductsBySKUs retrieves multiple products by their SKUs
+  rpc GetProductsBySKUs(GetProductsBySKUsRequest) returns (ProductsResponse);
+
+  // GetProductsByIDs retrieves multiple products by their IDs
+  rpc GetProductsByIDs(GetProductsByIDsRequest) returns (ProductsResponse);
+
+  // ListProducts returns a paginated list of products for a storefront
+  rpc ListProducts(ListProductsRequest) returns (ProductsResponse);
+
+  // CreateProduct creates a new product
+  rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
+
+  // UpdateProduct updates an existing product
+  rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
+
+  // DeleteProduct deletes a product (soft or hard delete)
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
+
+  // === Product Variants Management (HIGH PRIORITY) ===
+
+  // GetVariant retrieves a single product variant by ID
+  rpc GetVariant(GetVariantRequest) returns (VariantResponse);
+
+  // GetVariantsByProductID retrieves all variants for a product
+  rpc GetVariantsByProductID(GetVariantsByProductIDRequest) returns (ProductVariantsResponse);
+
+  // CreateProductVariant creates a new variant for a product
+  rpc CreateProductVariant(CreateProductVariantRequest) returns (CreateProductVariantResponse);
+
+  // UpdateProductVariant updates an existing variant
+  rpc UpdateProductVariant(UpdateProductVariantRequest) returns (UpdateProductVariantResponse);
+
+  // DeleteProductVariant deletes a variant from a product
+  rpc DeleteProductVariant(DeleteProductVariantRequest) returns (DeleteProductVariantResponse);
+
+  // === Stock Management (CRITICAL for Order Processing) ===
+
+  // DecrementStock atomically decrements stock for multiple products/variants
+  // Used during order creation to reserve inventory
+  rpc DecrementStock(DecrementStockRequest) returns (DecrementStockResponse);
+
+  // RollbackStock restores stock if order creation fails
+  // Compensating transaction for failed orders
+  rpc RollbackStock(RollbackStockRequest) returns (RollbackStockResponse);
+
+  // CheckStockAvailability verifies if requested quantities are available
+  // Used for validation before order creation
+  rpc CheckStockAvailability(CheckStockAvailabilityRequest) returns (CheckStockAvailabilityResponse);
 }
 
 // ============================================================================
@@ -214,6 +294,58 @@ message CategoryTreeNode {
   bool has_custom_ui = 12;
   optional string custom_ui_component = 13;
   string created_at = 14;
+}
+
+// Product represents a B2C product
+message Product {
+  int64 id = 1;
+  int64 storefront_id = 2;
+  string name = 3;
+  string description = 4;
+  double price = 5;
+  string currency = 6;
+  int64 category_id = 7;
+  optional string sku = 8;
+  optional string barcode = 9;
+  int32 stock_quantity = 10;
+  string stock_status = 11;
+  bool is_active = 12;
+  google.protobuf.Struct attributes = 13;
+  int32 view_count = 14;
+  int32 sold_count = 15;
+  google.protobuf.Timestamp created_at = 16;
+  google.protobuf.Timestamp updated_at = 17;
+  bool has_individual_location = 18;
+  optional string individual_address = 19;
+  optional double individual_latitude = 20;
+  optional double individual_longitude = 21;
+  optional string location_privacy = 22;
+  bool show_on_map = 23;
+  bool has_variants = 24;
+  repeated ProductVariant variants = 25;
+}
+
+// ProductVariant represents a product variant with specific attributes
+message ProductVariant {
+  int64 id = 1;
+  int64 product_id = 2;
+  optional string sku = 3;
+  optional string barcode = 4;
+  optional double price = 5;
+  optional double compare_at_price = 6;
+  optional double cost_price = 7;
+  int32 stock_quantity = 8;
+  string stock_status = 9;
+  optional int32 low_stock_threshold = 10;
+  google.protobuf.Struct variant_attributes = 11;
+  optional double weight = 12;
+  google.protobuf.Struct dimensions = 13;
+  bool is_active = 14;
+  bool is_default = 15;
+  int32 view_count = 16;
+  int32 sold_count = 17;
+  google.protobuf.Timestamp created_at = 18;
+  google.protobuf.Timestamp updated_at = 19;
 }
 
 // ============================================================================
@@ -379,6 +511,109 @@ message UserIDsResponse {
   repeated int64 user_ids = 1;
 }
 
+// AddToFavoritesRequest adds a listing to favorites
+message AddToFavoritesRequest {
+  int64 user_id = 1;
+  int64 listing_id = 2;
+}
+
+// RemoveFromFavoritesRequest removes a listing from favorites
+message RemoveFromFavoritesRequest {
+  int64 user_id = 1;
+  int64 listing_id = 2;
+}
+
+// GetUserFavoritesRequest retrieves user's favorites
+message GetUserFavoritesRequest {
+  int64 user_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// GetUserFavoritesResponse returns list of favorited listing IDs
+message GetUserFavoritesResponse {
+  repeated int64 listing_ids = 1;
+  int32 total = 2;
+}
+
+// IsFavoriteRequest checks if listing is favorited
+message IsFavoriteRequest {
+  int64 user_id = 1;
+  int64 listing_id = 2;
+}
+
+// IsFavoriteResponse returns favorite status
+message IsFavoriteResponse {
+  bool is_favorite = 1;
+}
+
+// ============================================================================
+// Request/Response Messages - Storefronts Management
+// ============================================================================
+
+// Storefront represents a B2C store
+message Storefront {
+  int64 id = 1;
+  int64 user_id = 2;
+  string slug = 3;
+  string name = 4;
+  optional string description = 5;
+  optional string logo_url = 6;
+  optional string banner_url = 7;
+  optional string phone = 8;
+  optional string email = 9;
+  optional string website = 10;
+  optional string address = 11;
+  optional string city = 12;
+  optional string postal_code = 13;
+  string country = 14;
+  optional double latitude = 15;
+  optional double longitude = 16;
+  bool is_active = 17;
+  bool is_verified = 18;
+  double rating = 19;
+  int32 reviews_count = 20;
+  int32 products_count = 21;
+  int32 sales_count = 22;
+  int32 views_count = 23;
+  int32 followers_count = 24;
+  string created_at = 25;
+  string updated_at = 26;
+}
+
+// GetStorefrontRequest requests a storefront by ID
+message GetStorefrontRequest {
+  int64 id = 1;
+}
+
+// GetStorefrontBySlugRequest requests a storefront by slug
+message GetStorefrontBySlugRequest {
+  string slug = 1;
+}
+
+// StorefrontResponse returns a single storefront
+message StorefrontResponse {
+  Storefront storefront = 1;
+}
+
+// ListStorefrontsRequest requests a list of storefronts
+message ListStorefrontsRequest {
+  optional int64 user_id = 1;
+  optional bool is_active = 2;
+  optional bool is_verified = 3;
+  optional string city = 4;
+  int32 limit = 5;
+  int32 offset = 6;
+  optional string sort_by = 7;
+  optional string sort_order = 8;
+}
+
+// ListStorefrontsResponse returns multiple storefronts
+message ListStorefrontsResponse {
+  repeated Storefront storefronts = 1;
+  int32 total = 2;
+}
+
 // ============================================================================
 // Request/Response Messages - Variants Management
 // ============================================================================
@@ -440,4 +675,247 @@ message ListingsResponse {
 // ResetFlagsRequest resets reindex flags
 message ResetFlagsRequest {
   repeated int64 listing_ids = 1;
+}
+
+// ============================================================================
+// Request/Response Messages - Products Management
+// ============================================================================
+
+// GetProductRequest retrieves a single product by ID
+message GetProductRequest {
+  int64 product_id = 1;
+  optional int64 storefront_id = 2;
+}
+
+// ProductResponse returns a single product
+message ProductResponse {
+  Product product = 1;
+}
+
+// GetProductsBySKUsRequest retrieves products by SKUs
+message GetProductsBySKUsRequest {
+  repeated string skus = 1;
+  optional int64 storefront_id = 2;
+}
+
+// ProductsResponse returns multiple products
+message ProductsResponse {
+  repeated Product products = 1;
+  int32 total_count = 2;
+}
+
+// GetProductsByIDsRequest retrieves products by IDs
+message GetProductsByIDsRequest {
+  repeated int64 product_ids = 1;
+  optional int64 storefront_id = 2;
+}
+
+// ListProductsRequest requests a paginated list of products
+message ListProductsRequest {
+  int64 storefront_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  optional bool is_active_only = 4;
+}
+
+// CreateProductRequest creates a new product
+message CreateProductRequest {
+  int64 storefront_id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  string currency = 5;
+  int64 category_id = 6;
+  optional string sku = 7;
+  optional string barcode = 8;
+  int32 stock_quantity = 9;
+  optional google.protobuf.Struct attributes = 10;
+  optional bool has_individual_location = 11;
+  optional string individual_address = 12;
+  optional double individual_latitude = 13;
+  optional double individual_longitude = 14;
+  optional string location_privacy = 15;
+  optional bool show_on_map = 16;
+}
+
+// UpdateProductRequest updates an existing product (partial update with field mask)
+message UpdateProductRequest {
+  int64 product_id = 1;
+  int64 storefront_id = 2; // For ownership validation
+  optional string name = 3;
+  optional string description = 4;
+  optional double price = 5;
+  optional string sku = 6;
+  optional string barcode = 7;
+  optional int32 stock_quantity = 8;
+  optional string stock_status = 9;
+  optional bool is_active = 10;
+  optional google.protobuf.Struct attributes = 11;
+  optional bool has_individual_location = 12;
+  optional string individual_address = 13;
+  optional double individual_latitude = 14;
+  optional double individual_longitude = 15;
+  optional string location_privacy = 16;
+  optional bool show_on_map = 17;
+  optional google.protobuf.FieldMask update_mask = 18;
+}
+
+// DeleteProductRequest deletes a product
+message DeleteProductRequest {
+  int64 product_id = 1;
+  int64 storefront_id = 2; // Ownership validation
+  bool hard_delete = 3; // false = soft delete (default)
+}
+
+// DeleteProductResponse confirms product deletion
+message DeleteProductResponse {
+  bool success = 1;
+  optional string message = 2;
+  int32 variants_deleted = 3; // Cascade count
+}
+
+// GetVariantRequest retrieves a single variant by ID
+message GetVariantRequest {
+  int64 variant_id = 1;
+  optional int64 product_id = 2;
+}
+
+// VariantResponse returns a single product variant
+message VariantResponse {
+  ProductVariant variant = 1;
+}
+
+// GetVariantsByProductIDRequest retrieves variants by product ID
+message GetVariantsByProductIDRequest {
+  int64 product_id = 1;
+  optional bool is_active_only = 2;
+}
+
+// ProductVariantsResponse returns multiple product variants
+message ProductVariantsResponse {
+  repeated ProductVariant variants = 1;
+}
+
+// CreateProductVariantRequest creates a new variant for a product
+message CreateProductVariantRequest {
+  int64 product_id = 1;
+  optional string sku = 2;
+  optional string barcode = 3;
+  optional double price = 4;
+  optional double compare_at_price = 5;
+  optional double cost_price = 6;
+  int32 stock_quantity = 7;
+  optional int32 low_stock_threshold = 8;
+  google.protobuf.Struct variant_attributes = 9;
+  optional double weight = 10;
+  optional google.protobuf.Struct dimensions = 11;
+  bool is_active = 12;
+  bool is_default = 13;
+}
+
+// CreateProductVariantResponse returns the created variant
+message CreateProductVariantResponse {
+  ProductVariant variant = 1;
+}
+
+// UpdateProductVariantRequest updates an existing variant
+message UpdateProductVariantRequest {
+  int64 variant_id = 1;
+  int64 product_id = 2; // For validation
+  optional string sku = 3;
+  optional string barcode = 4;
+  optional double price = 5;
+  optional double compare_at_price = 6;
+  optional double cost_price = 7;
+  optional int32 stock_quantity = 8;
+  optional string stock_status = 9;
+  optional int32 low_stock_threshold = 10;
+  optional google.protobuf.Struct variant_attributes = 11;
+  optional double weight = 12;
+  optional google.protobuf.Struct dimensions = 13;
+  optional bool is_active = 14;
+  optional bool is_default = 15;
+}
+
+// UpdateProductVariantResponse returns the updated variant
+message UpdateProductVariantResponse {
+  ProductVariant variant = 1;
+}
+
+// DeleteProductVariantRequest deletes a variant
+message DeleteProductVariantRequest {
+  int64 variant_id = 1;
+  int64 product_id = 2; // For validation
+}
+
+// DeleteProductVariantResponse confirms deletion
+message DeleteProductVariantResponse {
+  bool success = 1;
+}
+
+// ============================================================================
+// Request/Response Messages - Stock Management
+// ============================================================================
+
+// StockItem represents a product or variant quantity to decrement
+message StockItem {
+  int64 product_id = 1;
+  optional int64 variant_id = 2; // If null, decrement product stock
+  int32 quantity = 3;
+}
+
+// StockResult represents the result of stock operation for a single item
+message StockResult {
+  int64 product_id = 1;
+  optional int64 variant_id = 2;
+  int32 stock_before = 3;
+  int32 stock_after = 4;
+  bool success = 5;
+  optional string error = 6; // Error message if failed
+}
+
+// DecrementStockRequest decrements stock for multiple items atomically
+message DecrementStockRequest {
+  repeated StockItem items = 1;
+  optional string order_id = 2; // For logging/tracking
+}
+
+// DecrementStockResponse returns results of stock decrement operation
+message DecrementStockResponse {
+  bool success = 1;
+  optional string error = 2; // General error message
+  repeated StockResult results = 3; // Individual item results
+}
+
+// RollbackStockRequest restores stock (compensating transaction)
+message RollbackStockRequest {
+  repeated StockItem items = 1;
+  optional string order_id = 2; // For logging/tracking
+}
+
+// RollbackStockResponse confirms stock restoration
+message RollbackStockResponse {
+  bool success = 1;
+  optional string error = 2;
+  repeated StockResult results = 3;
+}
+
+// CheckStockAvailabilityRequest checks if quantities are available
+message CheckStockAvailabilityRequest {
+  repeated StockItem items = 1;
+}
+
+// StockAvailability represents availability status for a single item
+message StockAvailability {
+  int64 product_id = 1;
+  optional int64 variant_id = 2;
+  int32 requested_quantity = 3;
+  int32 available_quantity = 4;
+  bool is_available = 5;
+}
+
+// CheckStockAvailabilityResponse returns availability for all items
+message CheckStockAvailabilityResponse {
+  bool all_available = 1; // True if ALL items available
+  repeated StockAvailability items = 2;
 }

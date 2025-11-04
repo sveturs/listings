@@ -244,6 +244,99 @@ func (s *Server) GetFavoritedUsers(ctx context.Context, req *pb.ListingIDRequest
 	}, nil
 }
 
+// AddToFavorites adds a listing to user's favorites
+func (s *Server) AddToFavorites(ctx context.Context, req *pb.AddToFavoritesRequest) (*emptypb.Empty, error) {
+	s.logger.Debug().Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("AddToFavorites called")
+
+	if req.UserId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user ID must be greater than 0")
+	}
+
+	if req.ListingId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "listing ID must be greater than 0")
+	}
+
+	// Add to favorites via service
+	err := s.service.AddToFavorites(ctx, req.UserId, req.ListingId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("failed to add to favorites")
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to add to favorites: %v", err))
+	}
+
+	s.logger.Info().Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("added to favorites successfully")
+	return &emptypb.Empty{}, nil
+}
+
+// RemoveFromFavorites removes a listing from user's favorites
+func (s *Server) RemoveFromFavorites(ctx context.Context, req *pb.RemoveFromFavoritesRequest) (*emptypb.Empty, error) {
+	s.logger.Debug().Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("RemoveFromFavorites called")
+
+	if req.UserId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user ID must be greater than 0")
+	}
+
+	if req.ListingId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "listing ID must be greater than 0")
+	}
+
+	// Remove from favorites via service
+	err := s.service.RemoveFromFavorites(ctx, req.UserId, req.ListingId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("failed to remove from favorites")
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to remove from favorites: %v", err))
+	}
+
+	s.logger.Info().Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("removed from favorites successfully")
+	return &emptypb.Empty{}, nil
+}
+
+// GetUserFavorites retrieves list of listing IDs favorited by a user
+func (s *Server) GetUserFavorites(ctx context.Context, req *pb.GetUserFavoritesRequest) (*pb.GetUserFavoritesResponse, error) {
+	s.logger.Debug().Int64("user_id", req.UserId).Msg("GetUserFavorites called")
+
+	if req.UserId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user ID must be greater than 0")
+	}
+
+	// Get user favorites from service
+	listingIDs, err := s.service.GetUserFavorites(ctx, req.UserId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("user_id", req.UserId).Msg("failed to get user favorites")
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get user favorites: %v", err))
+	}
+
+	s.logger.Debug().Int("count", len(listingIDs)).Msg("user favorites retrieved")
+	return &pb.GetUserFavoritesResponse{
+		ListingIds: listingIDs,
+		Total:      int32(len(listingIDs)),
+	}, nil
+}
+
+// IsFavorite checks if a listing is in user's favorites
+func (s *Server) IsFavorite(ctx context.Context, req *pb.IsFavoriteRequest) (*pb.IsFavoriteResponse, error) {
+	s.logger.Debug().Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("IsFavorite called")
+
+	if req.UserId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user ID must be greater than 0")
+	}
+
+	if req.ListingId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "listing ID must be greater than 0")
+	}
+
+	// Check favorite status via service
+	isFavorite, err := s.service.IsFavorite(ctx, req.UserId, req.ListingId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("failed to check favorite status")
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to check favorite status: %v", err))
+	}
+
+	s.logger.Debug().Bool("is_favorite", isFavorite).Msg("favorite status checked")
+	return &pb.IsFavoriteResponse{
+		IsFavorite: isFavorite,
+	}, nil
+}
+
 // CreateVariants creates multiple variants for a listing
 func (s *Server) CreateVariants(ctx context.Context, req *pb.CreateVariantsRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int64("listing_id", req.ListingId).Int("count", len(req.Variants)).Msg("CreateVariants called")

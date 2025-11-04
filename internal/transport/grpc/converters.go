@@ -5,6 +5,8 @@ import (
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // DomainToProtoListing converts domain.Listing to protobuf Listing
@@ -497,4 +499,383 @@ func ProtoToAddImageInput(req *pb.AddImageRequest) *domain.ListingImage {
 	}
 
 	return image
+}
+
+// ProductToProto converts domain.Product to pb.Product
+func ProductToProto(p *domain.Product) *pb.Product {
+	if p == nil {
+		return nil
+	}
+
+	pbProduct := &pb.Product{
+		Id:                    p.ID,
+		StorefrontId:          p.StorefrontID,
+		Name:                  p.Name,
+		Description:           p.Description,
+		Price:                 p.Price,
+		Currency:              p.Currency,
+		CategoryId:            p.CategoryID,
+		StockQuantity:         p.StockQuantity,
+		StockStatus:           p.StockStatus,
+		IsActive:              p.IsActive,
+		ViewCount:             p.ViewCount,
+		SoldCount:             p.SoldCount,
+		HasIndividualLocation: p.HasIndividualLocation,
+		ShowOnMap:             p.ShowOnMap,
+		HasVariants:           p.HasVariants,
+	}
+
+	// Convert optional fields
+	if p.SKU != nil {
+		pbProduct.Sku = p.SKU
+	}
+
+	if p.Barcode != nil {
+		pbProduct.Barcode = p.Barcode
+	}
+
+	if p.IndividualAddress != nil {
+		pbProduct.IndividualAddress = p.IndividualAddress
+	}
+
+	if p.IndividualLatitude != nil {
+		pbProduct.IndividualLatitude = p.IndividualLatitude
+	}
+
+	if p.IndividualLongitude != nil {
+		pbProduct.IndividualLongitude = p.IndividualLongitude
+	}
+
+	if p.LocationPrivacy != nil {
+		pbProduct.LocationPrivacy = p.LocationPrivacy
+	}
+
+	// Convert timestamps
+	if !p.CreatedAt.IsZero() {
+		pbProduct.CreatedAt = timestamppb.New(p.CreatedAt)
+	}
+
+	if !p.UpdatedAt.IsZero() {
+		pbProduct.UpdatedAt = timestamppb.New(p.UpdatedAt)
+	}
+
+	// Convert JSONB attributes to google.protobuf.Struct
+	if p.Attributes != nil {
+		if attrStruct, err := structpb.NewStruct(p.Attributes); err == nil {
+			pbProduct.Attributes = attrStruct
+		}
+	}
+
+	// Convert variants
+	if len(p.Variants) > 0 {
+		pbProduct.Variants = make([]*pb.ProductVariant, len(p.Variants))
+		for i, v := range p.Variants {
+			pbProduct.Variants[i] = ProductVariantToProto(&v)
+		}
+	}
+
+	return pbProduct
+}
+
+// ProductVariantToProto converts domain.ProductVariant to pb.ProductVariant
+func ProductVariantToProto(v *domain.ProductVariant) *pb.ProductVariant {
+	if v == nil {
+		return nil
+	}
+
+	pbVariant := &pb.ProductVariant{
+		Id:            v.ID,
+		ProductId:     v.ProductID,
+		StockQuantity: v.StockQuantity,
+		StockStatus:   v.StockStatus,
+		IsActive:      v.IsActive,
+		IsDefault:     v.IsDefault,
+		ViewCount:     v.ViewCount,
+		SoldCount:     v.SoldCount,
+	}
+
+	// Convert optional fields
+	if v.SKU != nil {
+		pbVariant.Sku = v.SKU
+	}
+
+	if v.Barcode != nil {
+		pbVariant.Barcode = v.Barcode
+	}
+
+	if v.Price != nil {
+		pbVariant.Price = v.Price
+	}
+
+	if v.CompareAtPrice != nil {
+		pbVariant.CompareAtPrice = v.CompareAtPrice
+	}
+
+	if v.CostPrice != nil {
+		pbVariant.CostPrice = v.CostPrice
+	}
+
+	if v.LowStockThreshold != nil {
+		pbVariant.LowStockThreshold = v.LowStockThreshold
+	}
+
+	if v.Weight != nil {
+		pbVariant.Weight = v.Weight
+	}
+
+	// Convert timestamps
+	if !v.CreatedAt.IsZero() {
+		pbVariant.CreatedAt = timestamppb.New(v.CreatedAt)
+	}
+
+	if !v.UpdatedAt.IsZero() {
+		pbVariant.UpdatedAt = timestamppb.New(v.UpdatedAt)
+	}
+
+	// Convert JSONB fields to google.protobuf.Struct
+	if v.VariantAttributes != nil {
+		if attrStruct, err := structpb.NewStruct(v.VariantAttributes); err == nil {
+			pbVariant.VariantAttributes = attrStruct
+		}
+	}
+
+	if v.Dimensions != nil {
+		if dimStruct, err := structpb.NewStruct(v.Dimensions); err == nil {
+			pbVariant.Dimensions = dimStruct
+		}
+	}
+
+	return pbVariant
+}
+
+// ProtoToCreateProductInput converts pb.CreateProductRequest to domain.CreateProductInput
+func ProtoToCreateProductInput(req *pb.CreateProductRequest) *domain.CreateProductInput {
+	if req == nil {
+		return nil
+	}
+
+	input := &domain.CreateProductInput{
+		StorefrontID:  req.StorefrontId,
+		Name:          req.Name,
+		Description:   req.Description,
+		Price:         req.Price,
+		Currency:      req.Currency,
+		CategoryID:    req.CategoryId,
+		StockQuantity: req.StockQuantity,
+	}
+
+	// Optional fields
+	if req.Sku != nil {
+		input.SKU = req.Sku
+	}
+
+	if req.Barcode != nil {
+		input.Barcode = req.Barcode
+	}
+
+	// Convert google.protobuf.Struct to map[string]interface{}
+	if req.Attributes != nil {
+		input.Attributes = req.Attributes.AsMap()
+	}
+
+	// Location fields
+	if req.HasIndividualLocation != nil {
+		input.HasIndividualLocation = *req.HasIndividualLocation
+	}
+
+	if req.IndividualAddress != nil {
+		input.IndividualAddress = req.IndividualAddress
+	}
+
+	if req.IndividualLatitude != nil {
+		input.IndividualLatitude = req.IndividualLatitude
+	}
+
+	if req.IndividualLongitude != nil {
+		input.IndividualLongitude = req.IndividualLongitude
+	}
+
+	if req.LocationPrivacy != nil {
+		input.LocationPrivacy = req.LocationPrivacy
+	}
+
+	if req.ShowOnMap != nil {
+		input.ShowOnMap = *req.ShowOnMap
+	}
+
+	return input
+}
+
+// ProtoToUpdateProductInput converts pb.UpdateProductRequest to domain.UpdateProductInput
+func ProtoToUpdateProductInput(req *pb.UpdateProductRequest) *domain.UpdateProductInput {
+	if req == nil {
+		return nil
+	}
+
+	input := &domain.UpdateProductInput{}
+
+	// Optional fields - only set if provided
+	if req.Name != nil {
+		input.Name = req.Name
+	}
+
+	if req.Description != nil {
+		input.Description = req.Description
+	}
+
+	if req.Price != nil {
+		input.Price = req.Price
+	}
+
+	if req.StockQuantity != nil {
+		input.StockQuantity = req.StockQuantity
+	}
+
+	if req.StockStatus != nil {
+		input.StockStatus = req.StockStatus
+	}
+
+	if req.IsActive != nil {
+		input.IsActive = req.IsActive
+	}
+
+	// Convert google.protobuf.Struct to map[string]interface{}
+	if req.Attributes != nil {
+		input.Attributes = req.Attributes.AsMap()
+	}
+
+	// Location fields
+	if req.HasIndividualLocation != nil {
+		input.HasIndividualLocation = req.HasIndividualLocation
+	}
+
+	if req.IndividualAddress != nil {
+		input.IndividualAddress = req.IndividualAddress
+	}
+
+	if req.IndividualLatitude != nil {
+		input.IndividualLatitude = req.IndividualLatitude
+	}
+
+	if req.IndividualLongitude != nil {
+		input.IndividualLongitude = req.IndividualLongitude
+	}
+
+	if req.LocationPrivacy != nil {
+		input.LocationPrivacy = req.LocationPrivacy
+	}
+
+	if req.ShowOnMap != nil {
+		input.ShowOnMap = req.ShowOnMap
+	}
+
+	return input
+}
+
+// ProtoToCreateVariantInput converts pb.CreateProductVariantRequest to domain.CreateVariantInput
+func ProtoToCreateVariantInput(req *pb.CreateProductVariantRequest) *domain.CreateVariantInput {
+	if req == nil {
+		return nil
+	}
+
+	input := &domain.CreateVariantInput{
+		ProductID:     req.ProductId,
+		StockQuantity: req.StockQuantity,
+		IsDefault:     req.IsDefault,
+	}
+
+	// Optional string fields
+	if req.Sku != nil {
+		input.SKU = req.Sku
+	}
+	if req.Barcode != nil {
+		input.Barcode = req.Barcode
+	}
+
+	// Optional numeric fields
+	if req.Price != nil {
+		input.Price = req.Price
+	}
+	if req.CompareAtPrice != nil {
+		input.CompareAtPrice = req.CompareAtPrice
+	}
+	if req.CostPrice != nil {
+		input.CostPrice = req.CostPrice
+	}
+	if req.Weight != nil {
+		input.Weight = req.Weight
+	}
+	if req.LowStockThreshold != nil {
+		input.LowStockThreshold = req.LowStockThreshold
+	}
+
+	// Convert google.protobuf.Struct to map[string]interface{}
+	if req.VariantAttributes != nil {
+		input.VariantAttributes = req.VariantAttributes.AsMap()
+	}
+
+	if req.Dimensions != nil {
+		input.Dimensions = req.Dimensions.AsMap()
+	}
+
+	return input
+}
+
+// ProtoToUpdateVariantInput converts pb.UpdateProductVariantRequest to domain.UpdateVariantInput
+func ProtoToUpdateVariantInput(req *pb.UpdateProductVariantRequest) *domain.UpdateVariantInput {
+	if req == nil {
+		return nil
+	}
+
+	input := &domain.UpdateVariantInput{}
+
+	// Optional string fields
+	if req.Sku != nil {
+		input.SKU = req.Sku
+	}
+	if req.Barcode != nil {
+		input.Barcode = req.Barcode
+	}
+	if req.StockStatus != nil {
+		input.StockStatus = req.StockStatus
+	}
+
+	// Optional numeric fields
+	if req.Price != nil {
+		input.Price = req.Price
+	}
+	if req.CompareAtPrice != nil {
+		input.CompareAtPrice = req.CompareAtPrice
+	}
+	if req.CostPrice != nil {
+		input.CostPrice = req.CostPrice
+	}
+	if req.Weight != nil {
+		input.Weight = req.Weight
+	}
+	if req.StockQuantity != nil {
+		input.StockQuantity = req.StockQuantity
+	}
+	if req.LowStockThreshold != nil {
+		input.LowStockThreshold = req.LowStockThreshold
+	}
+
+	// Optional boolean fields
+	if req.IsActive != nil {
+		input.IsActive = req.IsActive
+	}
+	if req.IsDefault != nil {
+		input.IsDefault = req.IsDefault
+	}
+
+	// Convert google.protobuf.Struct to map[string]interface{}
+	if req.VariantAttributes != nil {
+		input.VariantAttributes = req.VariantAttributes.AsMap()
+	}
+
+	if req.Dimensions != nil {
+		input.Dimensions = req.Dimensions.AsMap()
+	}
+
+	return input
 }

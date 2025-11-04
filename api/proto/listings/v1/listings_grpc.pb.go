@@ -8,7 +8,6 @@ package listingsv1
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -21,29 +20,51 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ListingsService_GetListing_FullMethodName            = "/listings.v1.ListingsService/GetListing"
-	ListingsService_CreateListing_FullMethodName         = "/listings.v1.ListingsService/CreateListing"
-	ListingsService_UpdateListing_FullMethodName         = "/listings.v1.ListingsService/UpdateListing"
-	ListingsService_DeleteListing_FullMethodName         = "/listings.v1.ListingsService/DeleteListing"
-	ListingsService_SearchListings_FullMethodName        = "/listings.v1.ListingsService/SearchListings"
-	ListingsService_ListListings_FullMethodName          = "/listings.v1.ListingsService/ListListings"
-	ListingsService_GetListingImage_FullMethodName       = "/listings.v1.ListingsService/GetListingImage"
-	ListingsService_DeleteListingImage_FullMethodName    = "/listings.v1.ListingsService/DeleteListingImage"
-	ListingsService_AddListingImage_FullMethodName       = "/listings.v1.ListingsService/AddListingImage"
-	ListingsService_GetListingImages_FullMethodName      = "/listings.v1.ListingsService/GetListingImages"
-	ListingsService_GetRootCategories_FullMethodName     = "/listings.v1.ListingsService/GetRootCategories"
-	ListingsService_GetAllCategories_FullMethodName      = "/listings.v1.ListingsService/GetAllCategories"
-	ListingsService_GetPopularCategories_FullMethodName  = "/listings.v1.ListingsService/GetPopularCategories"
-	ListingsService_GetCategory_FullMethodName           = "/listings.v1.ListingsService/GetCategory"
-	ListingsService_GetCategoryTree_FullMethodName       = "/listings.v1.ListingsService/GetCategoryTree"
-	ListingsService_GetFavoritedUsers_FullMethodName     = "/listings.v1.ListingsService/GetFavoritedUsers"
-	ListingsService_CreateVariants_FullMethodName        = "/listings.v1.ListingsService/CreateVariants"
-	ListingsService_GetVariants_FullMethodName           = "/listings.v1.ListingsService/GetVariants"
-	ListingsService_UpdateVariant_FullMethodName         = "/listings.v1.ListingsService/UpdateVariant"
-	ListingsService_DeleteVariant_FullMethodName         = "/listings.v1.ListingsService/DeleteVariant"
-	ListingsService_GetListingsForReindex_FullMethodName = "/listings.v1.ListingsService/GetListingsForReindex"
-	ListingsService_ResetReindexFlags_FullMethodName     = "/listings.v1.ListingsService/ResetReindexFlags"
-	ListingsService_SyncDiscounts_FullMethodName         = "/listings.v1.ListingsService/SyncDiscounts"
+	ListingsService_GetListing_FullMethodName             = "/listings.v1.ListingsService/GetListing"
+	ListingsService_CreateListing_FullMethodName          = "/listings.v1.ListingsService/CreateListing"
+	ListingsService_UpdateListing_FullMethodName          = "/listings.v1.ListingsService/UpdateListing"
+	ListingsService_DeleteListing_FullMethodName          = "/listings.v1.ListingsService/DeleteListing"
+	ListingsService_SearchListings_FullMethodName         = "/listings.v1.ListingsService/SearchListings"
+	ListingsService_ListListings_FullMethodName           = "/listings.v1.ListingsService/ListListings"
+	ListingsService_GetListingImage_FullMethodName        = "/listings.v1.ListingsService/GetListingImage"
+	ListingsService_DeleteListingImage_FullMethodName     = "/listings.v1.ListingsService/DeleteListingImage"
+	ListingsService_AddListingImage_FullMethodName        = "/listings.v1.ListingsService/AddListingImage"
+	ListingsService_GetListingImages_FullMethodName       = "/listings.v1.ListingsService/GetListingImages"
+	ListingsService_GetRootCategories_FullMethodName      = "/listings.v1.ListingsService/GetRootCategories"
+	ListingsService_GetAllCategories_FullMethodName       = "/listings.v1.ListingsService/GetAllCategories"
+	ListingsService_GetPopularCategories_FullMethodName   = "/listings.v1.ListingsService/GetPopularCategories"
+	ListingsService_GetCategory_FullMethodName            = "/listings.v1.ListingsService/GetCategory"
+	ListingsService_GetCategoryTree_FullMethodName        = "/listings.v1.ListingsService/GetCategoryTree"
+	ListingsService_GetFavoritedUsers_FullMethodName      = "/listings.v1.ListingsService/GetFavoritedUsers"
+	ListingsService_AddToFavorites_FullMethodName         = "/listings.v1.ListingsService/AddToFavorites"
+	ListingsService_RemoveFromFavorites_FullMethodName    = "/listings.v1.ListingsService/RemoveFromFavorites"
+	ListingsService_GetUserFavorites_FullMethodName       = "/listings.v1.ListingsService/GetUserFavorites"
+	ListingsService_IsFavorite_FullMethodName             = "/listings.v1.ListingsService/IsFavorite"
+	ListingsService_GetStorefront_FullMethodName          = "/listings.v1.ListingsService/GetStorefront"
+	ListingsService_GetStorefrontBySlug_FullMethodName    = "/listings.v1.ListingsService/GetStorefrontBySlug"
+	ListingsService_ListStorefronts_FullMethodName        = "/listings.v1.ListingsService/ListStorefronts"
+	ListingsService_CreateVariants_FullMethodName         = "/listings.v1.ListingsService/CreateVariants"
+	ListingsService_GetVariants_FullMethodName            = "/listings.v1.ListingsService/GetVariants"
+	ListingsService_UpdateVariant_FullMethodName          = "/listings.v1.ListingsService/UpdateVariant"
+	ListingsService_DeleteVariant_FullMethodName          = "/listings.v1.ListingsService/DeleteVariant"
+	ListingsService_GetListingsForReindex_FullMethodName  = "/listings.v1.ListingsService/GetListingsForReindex"
+	ListingsService_ResetReindexFlags_FullMethodName      = "/listings.v1.ListingsService/ResetReindexFlags"
+	ListingsService_SyncDiscounts_FullMethodName          = "/listings.v1.ListingsService/SyncDiscounts"
+	ListingsService_GetProduct_FullMethodName             = "/listings.v1.ListingsService/GetProduct"
+	ListingsService_GetProductsBySKUs_FullMethodName      = "/listings.v1.ListingsService/GetProductsBySKUs"
+	ListingsService_GetProductsByIDs_FullMethodName       = "/listings.v1.ListingsService/GetProductsByIDs"
+	ListingsService_ListProducts_FullMethodName           = "/listings.v1.ListingsService/ListProducts"
+	ListingsService_CreateProduct_FullMethodName          = "/listings.v1.ListingsService/CreateProduct"
+	ListingsService_UpdateProduct_FullMethodName          = "/listings.v1.ListingsService/UpdateProduct"
+	ListingsService_DeleteProduct_FullMethodName          = "/listings.v1.ListingsService/DeleteProduct"
+	ListingsService_GetVariant_FullMethodName             = "/listings.v1.ListingsService/GetVariant"
+	ListingsService_GetVariantsByProductID_FullMethodName = "/listings.v1.ListingsService/GetVariantsByProductID"
+	ListingsService_CreateProductVariant_FullMethodName   = "/listings.v1.ListingsService/CreateProductVariant"
+	ListingsService_UpdateProductVariant_FullMethodName   = "/listings.v1.ListingsService/UpdateProductVariant"
+	ListingsService_DeleteProductVariant_FullMethodName   = "/listings.v1.ListingsService/DeleteProductVariant"
+	ListingsService_DecrementStock_FullMethodName         = "/listings.v1.ListingsService/DecrementStock"
+	ListingsService_RollbackStock_FullMethodName          = "/listings.v1.ListingsService/RollbackStock"
+	ListingsService_CheckStockAvailability_FullMethodName = "/listings.v1.ListingsService/CheckStockAvailability"
 )
 
 // ListingsServiceClient is the client API for ListingsService service.
@@ -84,6 +105,20 @@ type ListingsServiceClient interface {
 	GetCategoryTree(ctx context.Context, in *CategoryIDRequest, opts ...grpc.CallOption) (*CategoryTreeResponse, error)
 	// GetFavoritedUsers retrieves list of user IDs who favorited a listing
 	GetFavoritedUsers(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*UserIDsResponse, error)
+	// AddToFavorites adds a listing to user's favorites
+	AddToFavorites(ctx context.Context, in *AddToFavoritesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// RemoveFromFavorites removes a listing from user's favorites
+	RemoveFromFavorites(ctx context.Context, in *RemoveFromFavoritesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// GetUserFavorites retrieves list of listing IDs favorited by a user
+	GetUserFavorites(ctx context.Context, in *GetUserFavoritesRequest, opts ...grpc.CallOption) (*GetUserFavoritesResponse, error)
+	// IsFavorite checks if a listing is in user's favorites
+	IsFavorite(ctx context.Context, in *IsFavoriteRequest, opts ...grpc.CallOption) (*IsFavoriteResponse, error)
+	// GetStorefront retrieves a single storefront by ID
+	GetStorefront(ctx context.Context, in *GetStorefrontRequest, opts ...grpc.CallOption) (*StorefrontResponse, error)
+	// GetStorefrontBySlug retrieves a storefront by slug
+	GetStorefrontBySlug(ctx context.Context, in *GetStorefrontBySlugRequest, opts ...grpc.CallOption) (*StorefrontResponse, error)
+	// ListStorefronts returns a paginated list of storefronts
+	ListStorefronts(ctx context.Context, in *ListStorefrontsRequest, opts ...grpc.CallOption) (*ListStorefrontsResponse, error)
 	// CreateVariants creates multiple variants for a listing
 	CreateVariants(ctx context.Context, in *CreateVariantsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetVariants retrieves all variants for a listing
@@ -98,6 +133,39 @@ type ListingsServiceClient interface {
 	ResetReindexFlags(ctx context.Context, in *ResetFlagsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// SyncDiscounts synchronizes discount information across listings
 	SyncDiscounts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// GetProduct retrieves a single product by ID
+	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*ProductResponse, error)
+	// GetProductsBySKUs retrieves multiple products by their SKUs
+	GetProductsBySKUs(ctx context.Context, in *GetProductsBySKUsRequest, opts ...grpc.CallOption) (*ProductsResponse, error)
+	// GetProductsByIDs retrieves multiple products by their IDs
+	GetProductsByIDs(ctx context.Context, in *GetProductsByIDsRequest, opts ...grpc.CallOption) (*ProductsResponse, error)
+	// ListProducts returns a paginated list of products for a storefront
+	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ProductsResponse, error)
+	// CreateProduct creates a new product
+	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductResponse, error)
+	// UpdateProduct updates an existing product
+	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*ProductResponse, error)
+	// DeleteProduct deletes a product (soft or hard delete)
+	DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*DeleteProductResponse, error)
+	// GetVariant retrieves a single product variant by ID
+	GetVariant(ctx context.Context, in *GetVariantRequest, opts ...grpc.CallOption) (*VariantResponse, error)
+	// GetVariantsByProductID retrieves all variants for a product
+	GetVariantsByProductID(ctx context.Context, in *GetVariantsByProductIDRequest, opts ...grpc.CallOption) (*ProductVariantsResponse, error)
+	// CreateProductVariant creates a new variant for a product
+	CreateProductVariant(ctx context.Context, in *CreateProductVariantRequest, opts ...grpc.CallOption) (*CreateProductVariantResponse, error)
+	// UpdateProductVariant updates an existing variant
+	UpdateProductVariant(ctx context.Context, in *UpdateProductVariantRequest, opts ...grpc.CallOption) (*UpdateProductVariantResponse, error)
+	// DeleteProductVariant deletes a variant from a product
+	DeleteProductVariant(ctx context.Context, in *DeleteProductVariantRequest, opts ...grpc.CallOption) (*DeleteProductVariantResponse, error)
+	// DecrementStock atomically decrements stock for multiple products/variants
+	// Used during order creation to reserve inventory
+	DecrementStock(ctx context.Context, in *DecrementStockRequest, opts ...grpc.CallOption) (*DecrementStockResponse, error)
+	// RollbackStock restores stock if order creation fails
+	// Compensating transaction for failed orders
+	RollbackStock(ctx context.Context, in *RollbackStockRequest, opts ...grpc.CallOption) (*RollbackStockResponse, error)
+	// CheckStockAvailability verifies if requested quantities are available
+	// Used for validation before order creation
+	CheckStockAvailability(ctx context.Context, in *CheckStockAvailabilityRequest, opts ...grpc.CallOption) (*CheckStockAvailabilityResponse, error)
 }
 
 type listingsServiceClient struct {
@@ -268,6 +336,76 @@ func (c *listingsServiceClient) GetFavoritedUsers(ctx context.Context, in *Listi
 	return out, nil
 }
 
+func (c *listingsServiceClient) AddToFavorites(ctx context.Context, in *AddToFavoritesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_AddToFavorites_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) RemoveFromFavorites(ctx context.Context, in *RemoveFromFavoritesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_RemoveFromFavorites_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetUserFavorites(ctx context.Context, in *GetUserFavoritesRequest, opts ...grpc.CallOption) (*GetUserFavoritesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUserFavoritesResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetUserFavorites_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) IsFavorite(ctx context.Context, in *IsFavoriteRequest, opts ...grpc.CallOption) (*IsFavoriteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IsFavoriteResponse)
+	err := c.cc.Invoke(ctx, ListingsService_IsFavorite_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetStorefront(ctx context.Context, in *GetStorefrontRequest, opts ...grpc.CallOption) (*StorefrontResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StorefrontResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetStorefront_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetStorefrontBySlug(ctx context.Context, in *GetStorefrontBySlugRequest, opts ...grpc.CallOption) (*StorefrontResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StorefrontResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetStorefrontBySlug_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) ListStorefronts(ctx context.Context, in *ListStorefrontsRequest, opts ...grpc.CallOption) (*ListStorefrontsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListStorefrontsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_ListStorefronts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *listingsServiceClient) CreateVariants(ctx context.Context, in *CreateVariantsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
@@ -338,6 +476,156 @@ func (c *listingsServiceClient) SyncDiscounts(ctx context.Context, in *emptypb.E
 	return out, nil
 }
 
+func (c *listingsServiceClient) GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*ProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetProductsBySKUs(ctx context.Context, in *GetProductsBySKUsRequest, opts ...grpc.CallOption) (*ProductsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetProductsBySKUs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetProductsByIDs(ctx context.Context, in *GetProductsByIDsRequest, opts ...grpc.CallOption) (*ProductsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetProductsByIDs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ProductsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_ListProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductResponse)
+	err := c.cc.Invoke(ctx, ListingsService_CreateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*ProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductResponse)
+	err := c.cc.Invoke(ctx, ListingsService_UpdateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) DeleteProduct(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*DeleteProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteProductResponse)
+	err := c.cc.Invoke(ctx, ListingsService_DeleteProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetVariant(ctx context.Context, in *GetVariantRequest, opts ...grpc.CallOption) (*VariantResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VariantResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetVariant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetVariantsByProductID(ctx context.Context, in *GetVariantsByProductIDRequest, opts ...grpc.CallOption) (*ProductVariantsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductVariantsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetVariantsByProductID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) CreateProductVariant(ctx context.Context, in *CreateProductVariantRequest, opts ...grpc.CallOption) (*CreateProductVariantResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateProductVariantResponse)
+	err := c.cc.Invoke(ctx, ListingsService_CreateProductVariant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) UpdateProductVariant(ctx context.Context, in *UpdateProductVariantRequest, opts ...grpc.CallOption) (*UpdateProductVariantResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateProductVariantResponse)
+	err := c.cc.Invoke(ctx, ListingsService_UpdateProductVariant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) DeleteProductVariant(ctx context.Context, in *DeleteProductVariantRequest, opts ...grpc.CallOption) (*DeleteProductVariantResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteProductVariantResponse)
+	err := c.cc.Invoke(ctx, ListingsService_DeleteProductVariant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) DecrementStock(ctx context.Context, in *DecrementStockRequest, opts ...grpc.CallOption) (*DecrementStockResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DecrementStockResponse)
+	err := c.cc.Invoke(ctx, ListingsService_DecrementStock_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) RollbackStock(ctx context.Context, in *RollbackStockRequest, opts ...grpc.CallOption) (*RollbackStockResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RollbackStockResponse)
+	err := c.cc.Invoke(ctx, ListingsService_RollbackStock_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) CheckStockAvailability(ctx context.Context, in *CheckStockAvailabilityRequest, opts ...grpc.CallOption) (*CheckStockAvailabilityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckStockAvailabilityResponse)
+	err := c.cc.Invoke(ctx, ListingsService_CheckStockAvailability_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ListingsServiceServer is the server API for ListingsService service.
 // All implementations must embed UnimplementedListingsServiceServer
 // for forward compatibility.
@@ -376,6 +664,20 @@ type ListingsServiceServer interface {
 	GetCategoryTree(context.Context, *CategoryIDRequest) (*CategoryTreeResponse, error)
 	// GetFavoritedUsers retrieves list of user IDs who favorited a listing
 	GetFavoritedUsers(context.Context, *ListingIDRequest) (*UserIDsResponse, error)
+	// AddToFavorites adds a listing to user's favorites
+	AddToFavorites(context.Context, *AddToFavoritesRequest) (*emptypb.Empty, error)
+	// RemoveFromFavorites removes a listing from user's favorites
+	RemoveFromFavorites(context.Context, *RemoveFromFavoritesRequest) (*emptypb.Empty, error)
+	// GetUserFavorites retrieves list of listing IDs favorited by a user
+	GetUserFavorites(context.Context, *GetUserFavoritesRequest) (*GetUserFavoritesResponse, error)
+	// IsFavorite checks if a listing is in user's favorites
+	IsFavorite(context.Context, *IsFavoriteRequest) (*IsFavoriteResponse, error)
+	// GetStorefront retrieves a single storefront by ID
+	GetStorefront(context.Context, *GetStorefrontRequest) (*StorefrontResponse, error)
+	// GetStorefrontBySlug retrieves a storefront by slug
+	GetStorefrontBySlug(context.Context, *GetStorefrontBySlugRequest) (*StorefrontResponse, error)
+	// ListStorefronts returns a paginated list of storefronts
+	ListStorefronts(context.Context, *ListStorefrontsRequest) (*ListStorefrontsResponse, error)
 	// CreateVariants creates multiple variants for a listing
 	CreateVariants(context.Context, *CreateVariantsRequest) (*emptypb.Empty, error)
 	// GetVariants retrieves all variants for a listing
@@ -390,6 +692,39 @@ type ListingsServiceServer interface {
 	ResetReindexFlags(context.Context, *ResetFlagsRequest) (*emptypb.Empty, error)
 	// SyncDiscounts synchronizes discount information across listings
 	SyncDiscounts(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// GetProduct retrieves a single product by ID
+	GetProduct(context.Context, *GetProductRequest) (*ProductResponse, error)
+	// GetProductsBySKUs retrieves multiple products by their SKUs
+	GetProductsBySKUs(context.Context, *GetProductsBySKUsRequest) (*ProductsResponse, error)
+	// GetProductsByIDs retrieves multiple products by their IDs
+	GetProductsByIDs(context.Context, *GetProductsByIDsRequest) (*ProductsResponse, error)
+	// ListProducts returns a paginated list of products for a storefront
+	ListProducts(context.Context, *ListProductsRequest) (*ProductsResponse, error)
+	// CreateProduct creates a new product
+	CreateProduct(context.Context, *CreateProductRequest) (*ProductResponse, error)
+	// UpdateProduct updates an existing product
+	UpdateProduct(context.Context, *UpdateProductRequest) (*ProductResponse, error)
+	// DeleteProduct deletes a product (soft or hard delete)
+	DeleteProduct(context.Context, *DeleteProductRequest) (*DeleteProductResponse, error)
+	// GetVariant retrieves a single product variant by ID
+	GetVariant(context.Context, *GetVariantRequest) (*VariantResponse, error)
+	// GetVariantsByProductID retrieves all variants for a product
+	GetVariantsByProductID(context.Context, *GetVariantsByProductIDRequest) (*ProductVariantsResponse, error)
+	// CreateProductVariant creates a new variant for a product
+	CreateProductVariant(context.Context, *CreateProductVariantRequest) (*CreateProductVariantResponse, error)
+	// UpdateProductVariant updates an existing variant
+	UpdateProductVariant(context.Context, *UpdateProductVariantRequest) (*UpdateProductVariantResponse, error)
+	// DeleteProductVariant deletes a variant from a product
+	DeleteProductVariant(context.Context, *DeleteProductVariantRequest) (*DeleteProductVariantResponse, error)
+	// DecrementStock atomically decrements stock for multiple products/variants
+	// Used during order creation to reserve inventory
+	DecrementStock(context.Context, *DecrementStockRequest) (*DecrementStockResponse, error)
+	// RollbackStock restores stock if order creation fails
+	// Compensating transaction for failed orders
+	RollbackStock(context.Context, *RollbackStockRequest) (*RollbackStockResponse, error)
+	// CheckStockAvailability verifies if requested quantities are available
+	// Used for validation before order creation
+	CheckStockAvailability(context.Context, *CheckStockAvailabilityRequest) (*CheckStockAvailabilityResponse, error)
 	mustEmbedUnimplementedListingsServiceServer()
 }
 
@@ -448,6 +783,27 @@ func (UnimplementedListingsServiceServer) GetCategoryTree(context.Context, *Cate
 func (UnimplementedListingsServiceServer) GetFavoritedUsers(context.Context, *ListingIDRequest) (*UserIDsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFavoritedUsers not implemented")
 }
+func (UnimplementedListingsServiceServer) AddToFavorites(context.Context, *AddToFavoritesRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddToFavorites not implemented")
+}
+func (UnimplementedListingsServiceServer) RemoveFromFavorites(context.Context, *RemoveFromFavoritesRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveFromFavorites not implemented")
+}
+func (UnimplementedListingsServiceServer) GetUserFavorites(context.Context, *GetUserFavoritesRequest) (*GetUserFavoritesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserFavorites not implemented")
+}
+func (UnimplementedListingsServiceServer) IsFavorite(context.Context, *IsFavoriteRequest) (*IsFavoriteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsFavorite not implemented")
+}
+func (UnimplementedListingsServiceServer) GetStorefront(context.Context, *GetStorefrontRequest) (*StorefrontResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStorefront not implemented")
+}
+func (UnimplementedListingsServiceServer) GetStorefrontBySlug(context.Context, *GetStorefrontBySlugRequest) (*StorefrontResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStorefrontBySlug not implemented")
+}
+func (UnimplementedListingsServiceServer) ListStorefronts(context.Context, *ListStorefrontsRequest) (*ListStorefrontsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListStorefronts not implemented")
+}
 func (UnimplementedListingsServiceServer) CreateVariants(context.Context, *CreateVariantsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVariants not implemented")
 }
@@ -468,6 +824,51 @@ func (UnimplementedListingsServiceServer) ResetReindexFlags(context.Context, *Re
 }
 func (UnimplementedListingsServiceServer) SyncDiscounts(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SyncDiscounts not implemented")
+}
+func (UnimplementedListingsServiceServer) GetProduct(context.Context, *GetProductRequest) (*ProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProduct not implemented")
+}
+func (UnimplementedListingsServiceServer) GetProductsBySKUs(context.Context, *GetProductsBySKUsRequest) (*ProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductsBySKUs not implemented")
+}
+func (UnimplementedListingsServiceServer) GetProductsByIDs(context.Context, *GetProductsByIDsRequest) (*ProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductsByIDs not implemented")
+}
+func (UnimplementedListingsServiceServer) ListProducts(context.Context, *ListProductsRequest) (*ProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListProducts not implemented")
+}
+func (UnimplementedListingsServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*ProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProduct not implemented")
+}
+func (UnimplementedListingsServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*ProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProduct not implemented")
+}
+func (UnimplementedListingsServiceServer) DeleteProduct(context.Context, *DeleteProductRequest) (*DeleteProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProduct not implemented")
+}
+func (UnimplementedListingsServiceServer) GetVariant(context.Context, *GetVariantRequest) (*VariantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetVariant not implemented")
+}
+func (UnimplementedListingsServiceServer) GetVariantsByProductID(context.Context, *GetVariantsByProductIDRequest) (*ProductVariantsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetVariantsByProductID not implemented")
+}
+func (UnimplementedListingsServiceServer) CreateProductVariant(context.Context, *CreateProductVariantRequest) (*CreateProductVariantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProductVariant not implemented")
+}
+func (UnimplementedListingsServiceServer) UpdateProductVariant(context.Context, *UpdateProductVariantRequest) (*UpdateProductVariantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProductVariant not implemented")
+}
+func (UnimplementedListingsServiceServer) DeleteProductVariant(context.Context, *DeleteProductVariantRequest) (*DeleteProductVariantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProductVariant not implemented")
+}
+func (UnimplementedListingsServiceServer) DecrementStock(context.Context, *DecrementStockRequest) (*DecrementStockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DecrementStock not implemented")
+}
+func (UnimplementedListingsServiceServer) RollbackStock(context.Context, *RollbackStockRequest) (*RollbackStockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RollbackStock not implemented")
+}
+func (UnimplementedListingsServiceServer) CheckStockAvailability(context.Context, *CheckStockAvailabilityRequest) (*CheckStockAvailabilityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckStockAvailability not implemented")
 }
 func (UnimplementedListingsServiceServer) mustEmbedUnimplementedListingsServiceServer() {}
 func (UnimplementedListingsServiceServer) testEmbeddedByValue()                         {}
@@ -778,6 +1179,132 @@ func _ListingsService_GetFavoritedUsers_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_AddToFavorites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddToFavoritesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).AddToFavorites(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_AddToFavorites_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).AddToFavorites(ctx, req.(*AddToFavoritesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_RemoveFromFavorites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveFromFavoritesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).RemoveFromFavorites(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_RemoveFromFavorites_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).RemoveFromFavorites(ctx, req.(*RemoveFromFavoritesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetUserFavorites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserFavoritesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetUserFavorites(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetUserFavorites_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetUserFavorites(ctx, req.(*GetUserFavoritesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_IsFavorite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsFavoriteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).IsFavorite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_IsFavorite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).IsFavorite(ctx, req.(*IsFavoriteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetStorefront_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStorefrontRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetStorefront(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetStorefront_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetStorefront(ctx, req.(*GetStorefrontRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetStorefrontBySlug_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStorefrontBySlugRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetStorefrontBySlug(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetStorefrontBySlug_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetStorefrontBySlug(ctx, req.(*GetStorefrontBySlugRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_ListStorefronts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListStorefrontsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ListStorefronts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ListStorefronts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ListStorefronts(ctx, req.(*ListStorefrontsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ListingsService_CreateVariants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateVariantsRequest)
 	if err := dec(in); err != nil {
@@ -904,6 +1431,276 @@ func _ListingsService_SyncDiscounts_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_GetProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetProduct(ctx, req.(*GetProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetProductsBySKUs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductsBySKUsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetProductsBySKUs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetProductsBySKUs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetProductsBySKUs(ctx, req.(*GetProductsBySKUsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetProductsByIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductsByIDsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetProductsByIDs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetProductsByIDs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetProductsByIDs(ctx, req.(*GetProductsByIDsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_ListProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ListProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ListProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ListProducts(ctx, req.(*ListProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CreateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CreateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CreateProduct(ctx, req.(*CreateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_UpdateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).UpdateProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_UpdateProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).UpdateProduct(ctx, req.(*UpdateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_DeleteProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).DeleteProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_DeleteProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).DeleteProduct(ctx, req.(*DeleteProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetVariant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetVariantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetVariant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetVariant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetVariant(ctx, req.(*GetVariantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetVariantsByProductID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetVariantsByProductIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetVariantsByProductID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetVariantsByProductID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetVariantsByProductID(ctx, req.(*GetVariantsByProductIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_CreateProductVariant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProductVariantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CreateProductVariant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CreateProductVariant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CreateProductVariant(ctx, req.(*CreateProductVariantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_UpdateProductVariant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProductVariantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).UpdateProductVariant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_UpdateProductVariant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).UpdateProductVariant(ctx, req.(*UpdateProductVariantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_DeleteProductVariant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProductVariantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).DeleteProductVariant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_DeleteProductVariant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).DeleteProductVariant(ctx, req.(*DeleteProductVariantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_DecrementStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DecrementStockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).DecrementStock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_DecrementStock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).DecrementStock(ctx, req.(*DecrementStockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_RollbackStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RollbackStockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).RollbackStock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_RollbackStock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).RollbackStock(ctx, req.(*RollbackStockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_CheckStockAvailability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckStockAvailabilityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CheckStockAvailability(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CheckStockAvailability_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CheckStockAvailability(ctx, req.(*CheckStockAvailabilityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ListingsService_ServiceDesc is the grpc.ServiceDesc for ListingsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -976,6 +1773,34 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ListingsService_GetFavoritedUsers_Handler,
 		},
 		{
+			MethodName: "AddToFavorites",
+			Handler:    _ListingsService_AddToFavorites_Handler,
+		},
+		{
+			MethodName: "RemoveFromFavorites",
+			Handler:    _ListingsService_RemoveFromFavorites_Handler,
+		},
+		{
+			MethodName: "GetUserFavorites",
+			Handler:    _ListingsService_GetUserFavorites_Handler,
+		},
+		{
+			MethodName: "IsFavorite",
+			Handler:    _ListingsService_IsFavorite_Handler,
+		},
+		{
+			MethodName: "GetStorefront",
+			Handler:    _ListingsService_GetStorefront_Handler,
+		},
+		{
+			MethodName: "GetStorefrontBySlug",
+			Handler:    _ListingsService_GetStorefrontBySlug_Handler,
+		},
+		{
+			MethodName: "ListStorefronts",
+			Handler:    _ListingsService_ListStorefronts_Handler,
+		},
+		{
 			MethodName: "CreateVariants",
 			Handler:    _ListingsService_CreateVariants_Handler,
 		},
@@ -1002,6 +1827,66 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SyncDiscounts",
 			Handler:    _ListingsService_SyncDiscounts_Handler,
+		},
+		{
+			MethodName: "GetProduct",
+			Handler:    _ListingsService_GetProduct_Handler,
+		},
+		{
+			MethodName: "GetProductsBySKUs",
+			Handler:    _ListingsService_GetProductsBySKUs_Handler,
+		},
+		{
+			MethodName: "GetProductsByIDs",
+			Handler:    _ListingsService_GetProductsByIDs_Handler,
+		},
+		{
+			MethodName: "ListProducts",
+			Handler:    _ListingsService_ListProducts_Handler,
+		},
+		{
+			MethodName: "CreateProduct",
+			Handler:    _ListingsService_CreateProduct_Handler,
+		},
+		{
+			MethodName: "UpdateProduct",
+			Handler:    _ListingsService_UpdateProduct_Handler,
+		},
+		{
+			MethodName: "DeleteProduct",
+			Handler:    _ListingsService_DeleteProduct_Handler,
+		},
+		{
+			MethodName: "GetVariant",
+			Handler:    _ListingsService_GetVariant_Handler,
+		},
+		{
+			MethodName: "GetVariantsByProductID",
+			Handler:    _ListingsService_GetVariantsByProductID_Handler,
+		},
+		{
+			MethodName: "CreateProductVariant",
+			Handler:    _ListingsService_CreateProductVariant_Handler,
+		},
+		{
+			MethodName: "UpdateProductVariant",
+			Handler:    _ListingsService_UpdateProductVariant_Handler,
+		},
+		{
+			MethodName: "DeleteProductVariant",
+			Handler:    _ListingsService_DeleteProductVariant_Handler,
+		},
+		{
+			MethodName: "DecrementStock",
+			Handler:    _ListingsService_DecrementStock_Handler,
+		},
+		{
+			MethodName: "RollbackStock",
+			Handler:    _ListingsService_RollbackStock_Handler,
+		},
+		{
+			MethodName: "CheckStockAvailability",
+			Handler:    _ListingsService_CheckStockAvailability_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
