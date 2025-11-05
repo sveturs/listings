@@ -74,6 +74,12 @@ type Repository interface {
 	DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error
 	BulkCreateProductVariants(ctx context.Context, productID int64, inputs []*domain.CreateVariantInput) ([]*domain.ProductVariant, error)
 
+	// Inventory Management operations
+	UpdateProductInventory(ctx context.Context, storefrontID, productID, variantID int64, movementType string, quantity int32, reason, notes string, userID int64) (int32, int32, error)
+	GetProductStats(ctx context.Context, storefrontID int64) (*domain.ProductStats, error)
+	IncrementProductViews(ctx context.Context, productID int64) error
+	BatchUpdateStock(ctx context.Context, storefrontID int64, items []domain.StockUpdateItem, reason string, userID int64) (int32, int32, []domain.StockUpdateResult, error)
+
 	// Transaction and database operations
 	BeginTx(ctx context.Context) (*sql.Tx, error)
 	GetDB() *sqlx.DB
@@ -318,7 +324,11 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 	}
 
 	// Try cache for search results
-	cacheKey := fmt.Sprintf("search:%s:%d:%d:%d", query.Query, query.CategoryID, query.Limit, query.Offset)
+	categoryID := int64(0)
+	if query.CategoryID != nil {
+		categoryID = *query.CategoryID
+	}
+	cacheKey := fmt.Sprintf("search:%s:%d:%d:%d", query.Query, categoryID, query.Limit, query.Offset)
 	var cachedResults []*domain.Listing
 	var cachedTotal int32
 
@@ -1060,4 +1070,138 @@ func (s *Service) BulkCreateProductVariants(ctx context.Context, productID int64
 		Msg("product variants bulk created successfully")
 
 	return variants, nil
+}
+
+// UpdateProductInventory updates product inventory with movement tracking
+func (s *Service) UpdateProductInventory(ctx context.Context, storefrontID, productID, variantID int64, movementType string, quantity int32, reason, notes string, userID int64) (int32, int32, error) {
+	s.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int64("product_id", productID).
+		Int64("variant_id", variantID).
+		Str("movement_type", movementType).
+		Int32("quantity", quantity).
+		Msg("updating product inventory")
+
+	// Validate inputs
+	if storefrontID <= 0 {
+		return 0, 0, fmt.Errorf("storefront_id must be greater than 0")
+	}
+	if productID <= 0 {
+		return 0, 0, fmt.Errorf("product_id must be greater than 0")
+	}
+	if movementType != "in" && movementType != "out" && movementType != "adjustment" {
+		return 0, 0, fmt.Errorf("invalid movement_type: must be 'in', 'out', or 'adjustment'")
+	}
+	if quantity < 0 {
+		return 0, 0, fmt.Errorf("quantity cannot be negative")
+	}
+	if userID <= 0 {
+		return 0, 0, fmt.Errorf("user_id must be greater than 0")
+	}
+
+	// Call repository to update inventory
+	stockBefore, stockAfter, err := s.repo.UpdateProductInventory(ctx, storefrontID, productID, variantID, movementType, quantity, reason, notes, userID)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to update product inventory")
+		return 0, 0, err
+	}
+
+	s.logger.Info().
+		Int64("product_id", productID).
+		Int64("variant_id", variantID).
+		Int32("stock_before", stockBefore).
+		Int32("stock_after", stockAfter).
+		Msg("product inventory updated successfully")
+
+	return stockBefore, stockAfter, nil
+}
+
+// GetProductStats retrieves product statistics for a storefront
+func (s *Service) GetProductStats(ctx context.Context, storefrontID int64) (*domain.ProductStats, error) {
+	s.logger.Debug().Int64("storefront_id", storefrontID).Msg("getting product stats")
+
+	// Validate storefront ID
+	if storefrontID <= 0 {
+		return nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+
+	// Fetch stats from repository
+	stats, err := s.repo.GetProductStats(ctx, storefrontID)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to get product stats")
+		return nil, err
+	}
+
+	s.logger.Info().
+		Int32("total_products", stats.TotalProducts).
+		Int32("active_products", stats.ActiveProducts).
+		Float64("total_value", stats.TotalValue).
+		Msg("product stats retrieved successfully")
+
+	return stats, nil
+}
+
+// IncrementProductViews increments the view counter for a product
+func (s *Service) IncrementProductViews(ctx context.Context, productID int64) error {
+	s.logger.Debug().Int64("product_id", productID).Msg("incrementing product views")
+
+	// Validate product ID
+	if productID <= 0 {
+		return fmt.Errorf("product_id must be greater than 0")
+	}
+
+	// Call repository to increment views
+	if err := s.repo.IncrementProductViews(ctx, productID); err != nil {
+		s.logger.Error().Err(err).Msg("failed to increment product views")
+		return err
+	}
+
+	s.logger.Debug().Int64("product_id", productID).Msg("product views incremented successfully")
+	return nil
+}
+
+// BatchUpdateStock updates stock for multiple products/variants with validation
+func (s *Service) BatchUpdateStock(ctx context.Context, storefrontID int64, items []domain.StockUpdateItem, reason string, userID int64) (int32, int32, []domain.StockUpdateResult, error) {
+	s.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int("item_count", len(items)).
+		Msg("batch updating stock")
+
+	// Validate inputs
+	if storefrontID <= 0 {
+		return 0, 0, nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+	if len(items) == 0 {
+		return 0, 0, nil, fmt.Errorf("items list cannot be empty")
+	}
+	if len(items) > 1000 {
+		return 0, 0, nil, fmt.Errorf("cannot update more than 1000 items at once")
+	}
+	if userID <= 0 {
+		return 0, 0, nil, fmt.Errorf("user_id must be greater than 0")
+	}
+
+	// Validate each item
+	for i, item := range items {
+		if item.ProductID <= 0 {
+			return 0, 0, nil, fmt.Errorf("invalid product_id at index %d", i)
+		}
+		if item.Quantity < 0 {
+			return 0, 0, nil, fmt.Errorf("invalid quantity at index %d: cannot be negative", i)
+		}
+	}
+
+	// Call repository to perform batch update
+	successCount, failedCount, results, err := s.repo.BatchUpdateStock(ctx, storefrontID, items, reason, userID)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to batch update stock")
+		return 0, 0, nil, err
+	}
+
+	s.logger.Info().
+		Int32("success_count", successCount).
+		Int32("failed_count", failedCount).
+		Msg("batch stock update completed")
+
+	return successCount, failedCount, results, nil
 }

@@ -221,6 +221,7 @@ func (s *Service) decrementVariantStock(ctx context.Context, tx *sql.Tx, product
 }
 
 // RollbackStock restores stock (compensating transaction for failed orders)
+// IDEMPOTENCY PROTECTION: Multiple calls with same orderID will NOT duplicate rollback
 func (s *Service) RollbackStock(ctx context.Context, items []StockItem, orderID *string) ([]StockResult, error) {
 	logger := s.logger.With().
 		Str("method", "RollbackStock").
@@ -232,6 +233,12 @@ func (s *Service) RollbackStock(ctx context.Context, items []StockItem, orderID 
 	}
 
 	logger.Debug().Msg("Starting stock rollback")
+
+	// Validate: orderID is REQUIRED for idempotency protection
+	if orderID == nil || *orderID == "" {
+		logger.Error().Msg("order_id is required for rollback")
+		return nil, fmt.Errorf("order_id is required for idempotency protection")
+	}
 
 	// Start transaction
 	tx, err := s.repo.BeginTx(ctx)
@@ -245,7 +252,7 @@ func (s *Service) RollbackStock(ctx context.Context, items []StockItem, orderID 
 
 	// Process each item - increment stock back
 	for _, item := range items {
-		result, err := s.rollbackStockItem(ctx, tx, item)
+		result, err := s.rollbackStockItem(ctx, tx, item, *orderID)
 		if err != nil {
 			logger.Error().
 				Err(err).
@@ -275,27 +282,52 @@ func (s *Service) RollbackStock(ctx context.Context, items []StockItem, orderID 
 }
 
 // rollbackStockItem increments stock for a single item (reverse of decrement)
-func (s *Service) rollbackStockItem(ctx context.Context, tx *sql.Tx, item StockItem) (StockResult, error) {
+func (s *Service) rollbackStockItem(ctx context.Context, tx *sql.Tx, item StockItem, orderID string) (StockResult, error) {
 	if item.VariantID != nil {
 		// Rollback variant stock
-		return s.rollbackVariantStock(ctx, tx, item.ProductID, *item.VariantID, item.Quantity)
+		return s.rollbackVariantStock(ctx, tx, item.ProductID, *item.VariantID, item.Quantity, orderID)
 	}
 
 	// Rollback product stock
-	return s.rollbackProductStock(ctx, tx, item.ProductID, item.Quantity)
+	return s.rollbackProductStock(ctx, tx, item.ProductID, item.Quantity, orderID)
 }
 
-// rollbackProductStock increments product stock
-func (s *Service) rollbackProductStock(ctx context.Context, tx *sql.Tx, productID int64, quantity int32) (StockResult, error) {
+// rollbackProductStock increments product stock with idempotency protection
+func (s *Service) rollbackProductStock(ctx context.Context, tx *sql.Tx, productID int64, quantity int32, orderID string) (StockResult, error) {
 	result := StockResult{
 		ProductID: productID,
 		VariantID: nil,
 	}
 
+	// IDEMPOTENCY CHECK: Check if rollback already performed for this order + product
+	exists, err := s.checkRollbackExists(ctx, tx, orderID, productID, nil)
+	if err != nil {
+		return result, fmt.Errorf("failed to check rollback existence: %w", err)
+	}
+
+	if exists {
+		// Rollback already done - return success with current stock (idempotent)
+		var currentStock int32
+		query := `SELECT stock_quantity FROM b2c_products WHERE id = $1`
+		if err := tx.QueryRowContext(ctx, query, productID).Scan(&currentStock); err != nil {
+			return result, fmt.Errorf("failed to get product stock: %w", err)
+		}
+
+		s.logger.Info().
+			Str("order_id", orderID).
+			Int64("product_id", productID).
+			Msg("Rollback already performed (idempotent)")
+
+		result.StockBefore = currentStock
+		result.StockAfter = currentStock // No change
+		result.Success = true
+		return result, nil
+	}
+
 	// Get current stock (no need for lock on rollback)
 	var currentStock int32
 	query := `SELECT stock_quantity FROM b2c_products WHERE id = $1`
-	err := tx.QueryRowContext(ctx, query, productID).Scan(&currentStock)
+	err = tx.QueryRowContext(ctx, query, productID).Scan(&currentStock)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			errMsg := "product not found"
@@ -319,23 +351,54 @@ func (s *Service) rollbackProductStock(ctx context.Context, tx *sql.Tx, productI
 		return result, fmt.Errorf("failed to rollback product stock: %w", err)
 	}
 
+	// Record rollback in audit table for idempotency
+	if err := s.recordRollback(ctx, tx, orderID, productID, nil, quantity); err != nil {
+		return result, fmt.Errorf("failed to record rollback: %w", err)
+	}
+
 	result.StockAfter = currentStock + quantity
 	result.Success = true
 
 	return result, nil
 }
 
-// rollbackVariantStock increments variant stock
-func (s *Service) rollbackVariantStock(ctx context.Context, tx *sql.Tx, productID, variantID int64, quantity int32) (StockResult, error) {
+// rollbackVariantStock increments variant stock with idempotency protection
+func (s *Service) rollbackVariantStock(ctx context.Context, tx *sql.Tx, productID, variantID int64, quantity int32, orderID string) (StockResult, error) {
 	result := StockResult{
 		ProductID: productID,
 		VariantID: &variantID,
 	}
 
+	// IDEMPOTENCY CHECK: Check if rollback already performed for this order + variant
+	exists, err := s.checkRollbackExists(ctx, tx, orderID, productID, &variantID)
+	if err != nil {
+		return result, fmt.Errorf("failed to check rollback existence: %w", err)
+	}
+
+	if exists {
+		// Rollback already done - return success with current stock (idempotent)
+		var currentStock int32
+		query := `SELECT stock_quantity FROM b2c_product_variants WHERE id = $1 AND product_id = $2`
+		if err := tx.QueryRowContext(ctx, query, variantID, productID).Scan(&currentStock); err != nil {
+			return result, fmt.Errorf("failed to get variant stock: %w", err)
+		}
+
+		s.logger.Info().
+			Str("order_id", orderID).
+			Int64("product_id", productID).
+			Int64("variant_id", variantID).
+			Msg("Rollback already performed (idempotent)")
+
+		result.StockBefore = currentStock
+		result.StockAfter = currentStock // No change
+		result.Success = true
+		return result, nil
+	}
+
 	// Get current stock (no need for lock on rollback)
 	var currentStock int32
 	query := `SELECT stock_quantity FROM b2c_product_variants WHERE id = $1 AND product_id = $2`
-	err := tx.QueryRowContext(ctx, query, variantID, productID).Scan(&currentStock)
+	err = tx.QueryRowContext(ctx, query, variantID, productID).Scan(&currentStock)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			errMsg := "variant not found"
@@ -357,6 +420,11 @@ func (s *Service) rollbackVariantStock(ctx context.Context, tx *sql.Tx, productI
 	_, err = tx.ExecContext(ctx, updateQuery, quantity, variantID, productID)
 	if err != nil {
 		return result, fmt.Errorf("failed to rollback variant stock: %w", err)
+	}
+
+	// Record rollback in audit table for idempotency
+	if err := s.recordRollback(ctx, tx, orderID, productID, &variantID, quantity); err != nil {
+		return result, fmt.Errorf("failed to record rollback: %w", err)
 	}
 
 	result.StockAfter = currentStock + quantity
@@ -444,4 +512,100 @@ func (s *Service) checkItemAvailability(ctx context.Context, item StockItem) (St
 	availability.IsAvailable = currentStock >= item.Quantity
 
 	return availability, nil
+}
+
+// ============================================================================
+// IDEMPOTENCY HELPER METHODS
+// ============================================================================
+
+// checkRollbackExists checks if rollback already performed for given order + product/variant
+// Returns true if rollback record exists (idempotency check)
+func (s *Service) checkRollbackExists(ctx context.Context, tx *sql.Tx, orderID string, productID int64, variantID *int64) (bool, error) {
+	var count int
+	var query string
+	var args []interface{}
+
+	if variantID != nil {
+		// Check variant rollback
+		query = `
+			SELECT COUNT(*)
+			FROM b2c_inventory_movements
+			WHERE order_id = $1
+			  AND variant_id = $2
+			  AND movement_type = 'rollback'
+		`
+		args = []interface{}{orderID, *variantID}
+	} else {
+		// Check product rollback
+		query = `
+			SELECT COUNT(*)
+			FROM b2c_inventory_movements
+			WHERE order_id = $1
+			  AND storefront_product_id = $2
+			  AND variant_id IS NULL
+			  AND movement_type = 'rollback'
+		`
+		args = []interface{}{orderID, productID}
+	}
+
+	err := tx.QueryRowContext(ctx, query, args...).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("failed to check rollback existence: %w", err)
+	}
+
+	return count > 0, nil
+}
+
+// recordRollback records rollback operation in audit table for idempotency tracking
+// This ensures duplicate rollbacks can be detected and prevented
+func (s *Service) recordRollback(ctx context.Context, tx *sql.Tx, orderID string, productID int64, variantID *int64, quantity int32) error {
+	// Get user_id from context (default to 0 if not present)
+	// TODO: Extract user_id from context when auth is integrated
+	userID := int64(0)
+
+	query := `
+		INSERT INTO b2c_inventory_movements (
+			storefront_product_id,
+			variant_id,
+			type,
+			quantity,
+			reason,
+			notes,
+			user_id,
+			order_id,
+			movement_type,
+			created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+	`
+
+	notes := fmt.Sprintf("Stock rollback for order %s", orderID)
+
+	_, err := tx.ExecContext(ctx, query,
+		productID,
+		variantID,
+		"in",             // type: stock is coming back IN
+		quantity,         // quantity restored
+		"rollback",       // reason
+		notes,            // notes
+		userID,           // user_id (system operation)
+		orderID,          // order_id for idempotency
+		"rollback",       // movement_type for filtering
+	)
+
+	if err != nil {
+		// Check if it's a unique constraint violation (duplicate rollback attempt)
+		// This can happen in concurrent scenarios - the UNIQUE index will prevent corruption
+		if err.Error() == "pq: duplicate key value violates unique constraint" {
+			return fmt.Errorf("rollback already recorded for order %s (concurrent protection)", orderID)
+		}
+		return fmt.Errorf("failed to record rollback: %w", err)
+	}
+
+	s.logger.Debug().
+		Str("order_id", orderID).
+		Int64("product_id", productID).
+		Int32("quantity", quantity).
+		Msg("Rollback recorded in audit table")
+
+	return nil
 }
