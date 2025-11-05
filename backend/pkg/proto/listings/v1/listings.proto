@@ -193,6 +193,24 @@ service ListingsService {
   // BulkCreateProductVariants creates multiple variants for a product
   // Recommended for product imports with size/color matrices
   rpc BulkCreateProductVariants(BulkCreateProductVariantsRequest) returns (BulkCreateProductVariantsResponse);
+
+  // === Inventory Management (Phase 9.5.2) ===
+
+  // RecordInventoryMovement tracks stock changes (in, out, adjustment)
+  // Creates audit trail in b2c_inventory_movements table
+  rpc RecordInventoryMovement(RecordInventoryMovementRequest) returns (RecordInventoryMovementResponse);
+
+  // BatchUpdateStock updates stock for multiple products/variants atomically
+  // Useful for bulk inventory adjustments
+  rpc BatchUpdateStock(BatchUpdateStockRequest) returns (BatchUpdateStockResponse);
+
+  // GetProductStats retrieves statistics for storefront products
+  // Returns counts, values, and stock status breakdown
+  rpc GetProductStats(GetProductStatsRequest) returns (GetProductStatsResponse);
+
+  // IncrementProductViews increments view counter for analytics
+  // Used when customer views product detail page
+  rpc IncrementProductViews(IncrementProductViewsRequest) returns (google.protobuf.Empty);
 }
 
 // ============================================================================
@@ -1079,4 +1097,86 @@ message BulkCreateProductVariantsResponse {
   int32 successful_count = 2;
   int32 failed_count = 3;
   repeated BulkOperationError errors = 4;
+}
+
+// ============================================================================
+// Inventory Management Operations (Phase 9.5.2)
+// ============================================================================
+
+// RecordInventoryMovementRequest records a stock change
+message RecordInventoryMovementRequest {
+  int64 storefront_id = 1; // Required for ownership validation
+  int64 product_id = 2; // Required
+  optional int64 variant_id = 3; // Optional, if null - update product stock
+  string movement_type = 4; // "in", "out", "adjustment"
+  int32 quantity = 5; // Quantity to add/subtract/set
+  optional string reason = 6; // "sale", "return", "damaged", "restock", "manual_adjustment"
+  optional string notes = 7; // Additional notes for audit trail
+  int64 user_id = 8; // User who performed the operation
+}
+
+// RecordInventoryMovementResponse confirms the movement was recorded
+message RecordInventoryMovementResponse {
+  bool success = 1;
+  int32 stock_before = 2; // Stock quantity before update
+  int32 stock_after = 3; // Stock quantity after update
+  optional string error = 4;
+}
+
+// StockUpdateItem represents a single stock update in batch operation
+message StockUpdateItem {
+  int64 product_id = 1;
+  optional int64 variant_id = 2; // If null, update product stock
+  int32 quantity = 3; // New stock quantity (absolute value)
+  optional string reason = 4; // Reason for the update
+}
+
+// BatchUpdateStockRequest updates stock for multiple items atomically
+message BatchUpdateStockRequest {
+  int64 storefront_id = 1; // Required for ownership validation
+  repeated StockUpdateItem items = 2; // Max 1000 items
+  optional string reason = 3; // Common reason for all updates
+  int64 user_id = 4; // User who performed the operation
+}
+
+// StockUpdateResult represents result of a single stock update
+message StockUpdateResult {
+  int64 product_id = 1;
+  optional int64 variant_id = 2;
+  int32 stock_before = 3;
+  int32 stock_after = 4;
+  bool success = 5;
+  optional string error = 6;
+}
+
+// BatchUpdateStockResponse returns results of batch stock update
+message BatchUpdateStockResponse {
+  int32 successful_count = 1;
+  int32 failed_count = 2;
+  repeated StockUpdateResult results = 3;
+}
+
+// GetProductStatsRequest requests product statistics
+message GetProductStatsRequest {
+  int64 storefront_id = 1; // Required
+}
+
+// ProductStats represents statistics for storefront products
+message ProductStats {
+  int32 total_products = 1;
+  int32 active_products = 2;
+  int32 out_of_stock = 3;
+  int32 low_stock = 4;
+  double total_value = 5; // Sum of (price * stock_quantity) for all products
+  int32 total_sold = 6; // Sum of sold_count for all products
+}
+
+// GetProductStatsResponse returns product statistics
+message GetProductStatsResponse {
+  ProductStats stats = 1;
+}
+
+// IncrementProductViewsRequest increments view counter
+message IncrementProductViewsRequest {
+  int64 product_id = 1; // Required
 }

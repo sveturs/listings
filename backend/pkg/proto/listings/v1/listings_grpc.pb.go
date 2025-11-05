@@ -69,6 +69,10 @@ const (
 	ListingsService_UpdateProductVariant_FullMethodName      = "/listings.v1.ListingsService/UpdateProductVariant"
 	ListingsService_DeleteProductVariant_FullMethodName      = "/listings.v1.ListingsService/DeleteProductVariant"
 	ListingsService_BulkCreateProductVariants_FullMethodName = "/listings.v1.ListingsService/BulkCreateProductVariants"
+	ListingsService_RecordInventoryMovement_FullMethodName   = "/listings.v1.ListingsService/RecordInventoryMovement"
+	ListingsService_BatchUpdateStock_FullMethodName          = "/listings.v1.ListingsService/BatchUpdateStock"
+	ListingsService_GetProductStats_FullMethodName           = "/listings.v1.ListingsService/GetProductStats"
+	ListingsService_IncrementProductViews_FullMethodName     = "/listings.v1.ListingsService/IncrementProductViews"
 )
 
 // ListingsServiceClient is the client API for ListingsService service.
@@ -187,6 +191,18 @@ type ListingsServiceClient interface {
 	// BulkCreateProductVariants creates multiple variants for a product
 	// Recommended for product imports with size/color matrices
 	BulkCreateProductVariants(ctx context.Context, in *BulkCreateProductVariantsRequest, opts ...grpc.CallOption) (*BulkCreateProductVariantsResponse, error)
+	// RecordInventoryMovement tracks stock changes (in, out, adjustment)
+	// Creates audit trail in b2c_inventory_movements table
+	RecordInventoryMovement(ctx context.Context, in *RecordInventoryMovementRequest, opts ...grpc.CallOption) (*RecordInventoryMovementResponse, error)
+	// BatchUpdateStock updates stock for multiple products/variants atomically
+	// Useful for bulk inventory adjustments
+	BatchUpdateStock(ctx context.Context, in *BatchUpdateStockRequest, opts ...grpc.CallOption) (*BatchUpdateStockResponse, error)
+	// GetProductStats retrieves statistics for storefront products
+	// Returns counts, values, and stock status breakdown
+	GetProductStats(ctx context.Context, in *GetProductStatsRequest, opts ...grpc.CallOption) (*GetProductStatsResponse, error)
+	// IncrementProductViews increments view counter for analytics
+	// Used when customer views product detail page
+	IncrementProductViews(ctx context.Context, in *IncrementProductViewsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type listingsServiceClient struct {
@@ -687,6 +703,46 @@ func (c *listingsServiceClient) BulkCreateProductVariants(ctx context.Context, i
 	return out, nil
 }
 
+func (c *listingsServiceClient) RecordInventoryMovement(ctx context.Context, in *RecordInventoryMovementRequest, opts ...grpc.CallOption) (*RecordInventoryMovementResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RecordInventoryMovementResponse)
+	err := c.cc.Invoke(ctx, ListingsService_RecordInventoryMovement_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) BatchUpdateStock(ctx context.Context, in *BatchUpdateStockRequest, opts ...grpc.CallOption) (*BatchUpdateStockResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BatchUpdateStockResponse)
+	err := c.cc.Invoke(ctx, ListingsService_BatchUpdateStock_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetProductStats(ctx context.Context, in *GetProductStatsRequest, opts ...grpc.CallOption) (*GetProductStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProductStatsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetProductStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) IncrementProductViews(ctx context.Context, in *IncrementProductViewsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_IncrementProductViews_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ListingsServiceServer is the server API for ListingsService service.
 // All implementations must embed UnimplementedListingsServiceServer
 // for forward compatibility.
@@ -803,6 +859,18 @@ type ListingsServiceServer interface {
 	// BulkCreateProductVariants creates multiple variants for a product
 	// Recommended for product imports with size/color matrices
 	BulkCreateProductVariants(context.Context, *BulkCreateProductVariantsRequest) (*BulkCreateProductVariantsResponse, error)
+	// RecordInventoryMovement tracks stock changes (in, out, adjustment)
+	// Creates audit trail in b2c_inventory_movements table
+	RecordInventoryMovement(context.Context, *RecordInventoryMovementRequest) (*RecordInventoryMovementResponse, error)
+	// BatchUpdateStock updates stock for multiple products/variants atomically
+	// Useful for bulk inventory adjustments
+	BatchUpdateStock(context.Context, *BatchUpdateStockRequest) (*BatchUpdateStockResponse, error)
+	// GetProductStats retrieves statistics for storefront products
+	// Returns counts, values, and stock status breakdown
+	GetProductStats(context.Context, *GetProductStatsRequest) (*GetProductStatsResponse, error)
+	// IncrementProductViews increments view counter for analytics
+	// Used when customer views product detail page
+	IncrementProductViews(context.Context, *IncrementProductViewsRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedListingsServiceServer()
 }
 
@@ -959,6 +1027,18 @@ func (UnimplementedListingsServiceServer) DeleteProductVariant(context.Context, 
 }
 func (UnimplementedListingsServiceServer) BulkCreateProductVariants(context.Context, *BulkCreateProductVariantsRequest) (*BulkCreateProductVariantsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BulkCreateProductVariants not implemented")
+}
+func (UnimplementedListingsServiceServer) RecordInventoryMovement(context.Context, *RecordInventoryMovementRequest) (*RecordInventoryMovementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecordInventoryMovement not implemented")
+}
+func (UnimplementedListingsServiceServer) BatchUpdateStock(context.Context, *BatchUpdateStockRequest) (*BatchUpdateStockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpdateStock not implemented")
+}
+func (UnimplementedListingsServiceServer) GetProductStats(context.Context, *GetProductStatsRequest) (*GetProductStatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductStats not implemented")
+}
+func (UnimplementedListingsServiceServer) IncrementProductViews(context.Context, *IncrementProductViewsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IncrementProductViews not implemented")
 }
 func (UnimplementedListingsServiceServer) mustEmbedUnimplementedListingsServiceServer() {}
 func (UnimplementedListingsServiceServer) testEmbeddedByValue()                         {}
@@ -1863,6 +1943,78 @@ func _ListingsService_BulkCreateProductVariants_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_RecordInventoryMovement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordInventoryMovementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).RecordInventoryMovement(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_RecordInventoryMovement_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).RecordInventoryMovement(ctx, req.(*RecordInventoryMovementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_BatchUpdateStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpdateStockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).BatchUpdateStock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_BatchUpdateStock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).BatchUpdateStock(ctx, req.(*BatchUpdateStockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetProductStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetProductStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetProductStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetProductStats(ctx, req.(*GetProductStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_IncrementProductViews_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IncrementProductViewsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).IncrementProductViews(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_IncrementProductViews_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).IncrementProductViews(ctx, req.(*IncrementProductViewsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ListingsService_ServiceDesc is the grpc.ServiceDesc for ListingsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -2065,6 +2217,22 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BulkCreateProductVariants",
 			Handler:    _ListingsService_BulkCreateProductVariants_Handler,
+		},
+		{
+			MethodName: "RecordInventoryMovement",
+			Handler:    _ListingsService_RecordInventoryMovement_Handler,
+		},
+		{
+			MethodName: "BatchUpdateStock",
+			Handler:    _ListingsService_BatchUpdateStock_Handler,
+		},
+		{
+			MethodName: "GetProductStats",
+			Handler:    _ListingsService_GetProductStats_Handler,
+		},
+		{
+			MethodName: "IncrementProductViews",
+			Handler:    _ListingsService_IncrementProductViews_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

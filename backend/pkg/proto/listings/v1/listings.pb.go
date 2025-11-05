@@ -7072,6 +7072,680 @@ func (x *BulkCreateProductVariantsResponse) GetErrors() []*BulkOperationError {
 	return nil
 }
 
+// RecordInventoryMovementRequest records a stock change
+type RecordInventoryMovementRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StorefrontId  int64                  `protobuf:"varint,1,opt,name=storefront_id,json=storefrontId,proto3" json:"storefront_id,omitempty"` // Required for ownership validation
+	ProductId     int64                  `protobuf:"varint,2,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`          // Required
+	VariantId     *int64                 `protobuf:"varint,3,opt,name=variant_id,json=variantId,proto3,oneof" json:"variant_id,omitempty"`    // Optional, if null - update product stock
+	MovementType  string                 `protobuf:"bytes,4,opt,name=movement_type,json=movementType,proto3" json:"movement_type,omitempty"`  // "in", "out", "adjustment"
+	Quantity      int32                  `protobuf:"varint,5,opt,name=quantity,proto3" json:"quantity,omitempty"`                             // Quantity to add/subtract/set
+	Reason        *string                `protobuf:"bytes,6,opt,name=reason,proto3,oneof" json:"reason,omitempty"`                            // "sale", "return", "damaged", "restock", "manual_adjustment"
+	Notes         *string                `protobuf:"bytes,7,opt,name=notes,proto3,oneof" json:"notes,omitempty"`                              // Additional notes for audit trail
+	UserId        int64                  `protobuf:"varint,8,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                   // User who performed the operation
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecordInventoryMovementRequest) Reset() {
+	*x = RecordInventoryMovementRequest{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[91]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecordInventoryMovementRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecordInventoryMovementRequest) ProtoMessage() {}
+
+func (x *RecordInventoryMovementRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[91]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecordInventoryMovementRequest.ProtoReflect.Descriptor instead.
+func (*RecordInventoryMovementRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{91}
+}
+
+func (x *RecordInventoryMovementRequest) GetStorefrontId() int64 {
+	if x != nil {
+		return x.StorefrontId
+	}
+	return 0
+}
+
+func (x *RecordInventoryMovementRequest) GetProductId() int64 {
+	if x != nil {
+		return x.ProductId
+	}
+	return 0
+}
+
+func (x *RecordInventoryMovementRequest) GetVariantId() int64 {
+	if x != nil && x.VariantId != nil {
+		return *x.VariantId
+	}
+	return 0
+}
+
+func (x *RecordInventoryMovementRequest) GetMovementType() string {
+	if x != nil {
+		return x.MovementType
+	}
+	return ""
+}
+
+func (x *RecordInventoryMovementRequest) GetQuantity() int32 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+func (x *RecordInventoryMovementRequest) GetReason() string {
+	if x != nil && x.Reason != nil {
+		return *x.Reason
+	}
+	return ""
+}
+
+func (x *RecordInventoryMovementRequest) GetNotes() string {
+	if x != nil && x.Notes != nil {
+		return *x.Notes
+	}
+	return ""
+}
+
+func (x *RecordInventoryMovementRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+// RecordInventoryMovementResponse confirms the movement was recorded
+type RecordInventoryMovementResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	StockBefore   int32                  `protobuf:"varint,2,opt,name=stock_before,json=stockBefore,proto3" json:"stock_before,omitempty"` // Stock quantity before update
+	StockAfter    int32                  `protobuf:"varint,3,opt,name=stock_after,json=stockAfter,proto3" json:"stock_after,omitempty"`    // Stock quantity after update
+	Error         *string                `protobuf:"bytes,4,opt,name=error,proto3,oneof" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecordInventoryMovementResponse) Reset() {
+	*x = RecordInventoryMovementResponse{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[92]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecordInventoryMovementResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecordInventoryMovementResponse) ProtoMessage() {}
+
+func (x *RecordInventoryMovementResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[92]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecordInventoryMovementResponse.ProtoReflect.Descriptor instead.
+func (*RecordInventoryMovementResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{92}
+}
+
+func (x *RecordInventoryMovementResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *RecordInventoryMovementResponse) GetStockBefore() int32 {
+	if x != nil {
+		return x.StockBefore
+	}
+	return 0
+}
+
+func (x *RecordInventoryMovementResponse) GetStockAfter() int32 {
+	if x != nil {
+		return x.StockAfter
+	}
+	return 0
+}
+
+func (x *RecordInventoryMovementResponse) GetError() string {
+	if x != nil && x.Error != nil {
+		return *x.Error
+	}
+	return ""
+}
+
+// StockUpdateItem represents a single stock update in batch operation
+type StockUpdateItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProductId     int64                  `protobuf:"varint,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	VariantId     *int64                 `protobuf:"varint,2,opt,name=variant_id,json=variantId,proto3,oneof" json:"variant_id,omitempty"` // If null, update product stock
+	Quantity      int32                  `protobuf:"varint,3,opt,name=quantity,proto3" json:"quantity,omitempty"`                          // New stock quantity (absolute value)
+	Reason        *string                `protobuf:"bytes,4,opt,name=reason,proto3,oneof" json:"reason,omitempty"`                         // Reason for the update
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StockUpdateItem) Reset() {
+	*x = StockUpdateItem{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[93]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StockUpdateItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StockUpdateItem) ProtoMessage() {}
+
+func (x *StockUpdateItem) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[93]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StockUpdateItem.ProtoReflect.Descriptor instead.
+func (*StockUpdateItem) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{93}
+}
+
+func (x *StockUpdateItem) GetProductId() int64 {
+	if x != nil {
+		return x.ProductId
+	}
+	return 0
+}
+
+func (x *StockUpdateItem) GetVariantId() int64 {
+	if x != nil && x.VariantId != nil {
+		return *x.VariantId
+	}
+	return 0
+}
+
+func (x *StockUpdateItem) GetQuantity() int32 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+func (x *StockUpdateItem) GetReason() string {
+	if x != nil && x.Reason != nil {
+		return *x.Reason
+	}
+	return ""
+}
+
+// BatchUpdateStockRequest updates stock for multiple items atomically
+type BatchUpdateStockRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StorefrontId  int64                  `protobuf:"varint,1,opt,name=storefront_id,json=storefrontId,proto3" json:"storefront_id,omitempty"` // Required for ownership validation
+	Items         []*StockUpdateItem     `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`                                    // Max 1000 items
+	Reason        *string                `protobuf:"bytes,3,opt,name=reason,proto3,oneof" json:"reason,omitempty"`                            // Common reason for all updates
+	UserId        int64                  `protobuf:"varint,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                   // User who performed the operation
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BatchUpdateStockRequest) Reset() {
+	*x = BatchUpdateStockRequest{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[94]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchUpdateStockRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchUpdateStockRequest) ProtoMessage() {}
+
+func (x *BatchUpdateStockRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[94]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchUpdateStockRequest.ProtoReflect.Descriptor instead.
+func (*BatchUpdateStockRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{94}
+}
+
+func (x *BatchUpdateStockRequest) GetStorefrontId() int64 {
+	if x != nil {
+		return x.StorefrontId
+	}
+	return 0
+}
+
+func (x *BatchUpdateStockRequest) GetItems() []*StockUpdateItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *BatchUpdateStockRequest) GetReason() string {
+	if x != nil && x.Reason != nil {
+		return *x.Reason
+	}
+	return ""
+}
+
+func (x *BatchUpdateStockRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+// StockUpdateResult represents result of a single stock update
+type StockUpdateResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProductId     int64                  `protobuf:"varint,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	VariantId     *int64                 `protobuf:"varint,2,opt,name=variant_id,json=variantId,proto3,oneof" json:"variant_id,omitempty"`
+	StockBefore   int32                  `protobuf:"varint,3,opt,name=stock_before,json=stockBefore,proto3" json:"stock_before,omitempty"`
+	StockAfter    int32                  `protobuf:"varint,4,opt,name=stock_after,json=stockAfter,proto3" json:"stock_after,omitempty"`
+	Success       bool                   `protobuf:"varint,5,opt,name=success,proto3" json:"success,omitempty"`
+	Error         *string                `protobuf:"bytes,6,opt,name=error,proto3,oneof" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StockUpdateResult) Reset() {
+	*x = StockUpdateResult{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[95]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StockUpdateResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StockUpdateResult) ProtoMessage() {}
+
+func (x *StockUpdateResult) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[95]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StockUpdateResult.ProtoReflect.Descriptor instead.
+func (*StockUpdateResult) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{95}
+}
+
+func (x *StockUpdateResult) GetProductId() int64 {
+	if x != nil {
+		return x.ProductId
+	}
+	return 0
+}
+
+func (x *StockUpdateResult) GetVariantId() int64 {
+	if x != nil && x.VariantId != nil {
+		return *x.VariantId
+	}
+	return 0
+}
+
+func (x *StockUpdateResult) GetStockBefore() int32 {
+	if x != nil {
+		return x.StockBefore
+	}
+	return 0
+}
+
+func (x *StockUpdateResult) GetStockAfter() int32 {
+	if x != nil {
+		return x.StockAfter
+	}
+	return 0
+}
+
+func (x *StockUpdateResult) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *StockUpdateResult) GetError() string {
+	if x != nil && x.Error != nil {
+		return *x.Error
+	}
+	return ""
+}
+
+// BatchUpdateStockResponse returns results of batch stock update
+type BatchUpdateStockResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	SuccessfulCount int32                  `protobuf:"varint,1,opt,name=successful_count,json=successfulCount,proto3" json:"successful_count,omitempty"`
+	FailedCount     int32                  `protobuf:"varint,2,opt,name=failed_count,json=failedCount,proto3" json:"failed_count,omitempty"`
+	Results         []*StockUpdateResult   `protobuf:"bytes,3,rep,name=results,proto3" json:"results,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *BatchUpdateStockResponse) Reset() {
+	*x = BatchUpdateStockResponse{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[96]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchUpdateStockResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchUpdateStockResponse) ProtoMessage() {}
+
+func (x *BatchUpdateStockResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[96]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchUpdateStockResponse.ProtoReflect.Descriptor instead.
+func (*BatchUpdateStockResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{96}
+}
+
+func (x *BatchUpdateStockResponse) GetSuccessfulCount() int32 {
+	if x != nil {
+		return x.SuccessfulCount
+	}
+	return 0
+}
+
+func (x *BatchUpdateStockResponse) GetFailedCount() int32 {
+	if x != nil {
+		return x.FailedCount
+	}
+	return 0
+}
+
+func (x *BatchUpdateStockResponse) GetResults() []*StockUpdateResult {
+	if x != nil {
+		return x.Results
+	}
+	return nil
+}
+
+// GetProductStatsRequest requests product statistics
+type GetProductStatsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StorefrontId  int64                  `protobuf:"varint,1,opt,name=storefront_id,json=storefrontId,proto3" json:"storefront_id,omitempty"` // Required
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProductStatsRequest) Reset() {
+	*x = GetProductStatsRequest{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[97]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProductStatsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProductStatsRequest) ProtoMessage() {}
+
+func (x *GetProductStatsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[97]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProductStatsRequest.ProtoReflect.Descriptor instead.
+func (*GetProductStatsRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{97}
+}
+
+func (x *GetProductStatsRequest) GetStorefrontId() int64 {
+	if x != nil {
+		return x.StorefrontId
+	}
+	return 0
+}
+
+// ProductStats represents statistics for storefront products
+type ProductStats struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TotalProducts  int32                  `protobuf:"varint,1,opt,name=total_products,json=totalProducts,proto3" json:"total_products,omitempty"`
+	ActiveProducts int32                  `protobuf:"varint,2,opt,name=active_products,json=activeProducts,proto3" json:"active_products,omitempty"`
+	OutOfStock     int32                  `protobuf:"varint,3,opt,name=out_of_stock,json=outOfStock,proto3" json:"out_of_stock,omitempty"`
+	LowStock       int32                  `protobuf:"varint,4,opt,name=low_stock,json=lowStock,proto3" json:"low_stock,omitempty"`
+	TotalValue     float64                `protobuf:"fixed64,5,opt,name=total_value,json=totalValue,proto3" json:"total_value,omitempty"` // Sum of (price * stock_quantity) for all products
+	TotalSold      int32                  `protobuf:"varint,6,opt,name=total_sold,json=totalSold,proto3" json:"total_sold,omitempty"`     // Sum of sold_count for all products
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ProductStats) Reset() {
+	*x = ProductStats{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[98]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProductStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProductStats) ProtoMessage() {}
+
+func (x *ProductStats) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[98]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProductStats.ProtoReflect.Descriptor instead.
+func (*ProductStats) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{98}
+}
+
+func (x *ProductStats) GetTotalProducts() int32 {
+	if x != nil {
+		return x.TotalProducts
+	}
+	return 0
+}
+
+func (x *ProductStats) GetActiveProducts() int32 {
+	if x != nil {
+		return x.ActiveProducts
+	}
+	return 0
+}
+
+func (x *ProductStats) GetOutOfStock() int32 {
+	if x != nil {
+		return x.OutOfStock
+	}
+	return 0
+}
+
+func (x *ProductStats) GetLowStock() int32 {
+	if x != nil {
+		return x.LowStock
+	}
+	return 0
+}
+
+func (x *ProductStats) GetTotalValue() float64 {
+	if x != nil {
+		return x.TotalValue
+	}
+	return 0
+}
+
+func (x *ProductStats) GetTotalSold() int32 {
+	if x != nil {
+		return x.TotalSold
+	}
+	return 0
+}
+
+// GetProductStatsResponse returns product statistics
+type GetProductStatsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Stats         *ProductStats          `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProductStatsResponse) Reset() {
+	*x = GetProductStatsResponse{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[99]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProductStatsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProductStatsResponse) ProtoMessage() {}
+
+func (x *GetProductStatsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[99]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProductStatsResponse.ProtoReflect.Descriptor instead.
+func (*GetProductStatsResponse) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{99}
+}
+
+func (x *GetProductStatsResponse) GetStats() *ProductStats {
+	if x != nil {
+		return x.Stats
+	}
+	return nil
+}
+
+// IncrementProductViewsRequest increments view counter
+type IncrementProductViewsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProductId     int64                  `protobuf:"varint,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"` // Required
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IncrementProductViewsRequest) Reset() {
+	*x = IncrementProductViewsRequest{}
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[100]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IncrementProductViewsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IncrementProductViewsRequest) ProtoMessage() {}
+
+func (x *IncrementProductViewsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_listings_v1_listings_proto_msgTypes[100]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IncrementProductViewsRequest.ProtoReflect.Descriptor instead.
+func (*IncrementProductViewsRequest) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_listings_v1_listings_proto_rawDescGZIP(), []int{100}
+}
+
+func (x *IncrementProductViewsRequest) GetProductId() int64 {
+	if x != nil {
+		return x.ProductId
+	}
+	return 0
+}
+
 var File_pkg_proto_listings_v1_listings_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_listings_v1_listings_proto_rawDesc = "" +
@@ -8010,7 +8684,76 @@ const file_pkg_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\bvariants\x18\x01 \x03(\v2\x1b.listings.v1.ProductVariantR\bvariants\x12)\n" +
 	"\x10successful_count\x18\x02 \x01(\x05R\x0fsuccessfulCount\x12!\n" +
 	"\ffailed_count\x18\x03 \x01(\x05R\vfailedCount\x127\n" +
-	"\x06errors\x18\x04 \x03(\v2\x1f.listings.v1.BulkOperationErrorR\x06errors2\xc2!\n" +
+	"\x06errors\x18\x04 \x03(\v2\x1f.listings.v1.BulkOperationErrorR\x06errors\"\xbe\x02\n" +
+	"\x1eRecordInventoryMovementRequest\x12#\n" +
+	"\rstorefront_id\x18\x01 \x01(\x03R\fstorefrontId\x12\x1d\n" +
+	"\n" +
+	"product_id\x18\x02 \x01(\x03R\tproductId\x12\"\n" +
+	"\n" +
+	"variant_id\x18\x03 \x01(\x03H\x00R\tvariantId\x88\x01\x01\x12#\n" +
+	"\rmovement_type\x18\x04 \x01(\tR\fmovementType\x12\x1a\n" +
+	"\bquantity\x18\x05 \x01(\x05R\bquantity\x12\x1b\n" +
+	"\x06reason\x18\x06 \x01(\tH\x01R\x06reason\x88\x01\x01\x12\x19\n" +
+	"\x05notes\x18\a \x01(\tH\x02R\x05notes\x88\x01\x01\x12\x17\n" +
+	"\auser_id\x18\b \x01(\x03R\x06userIdB\r\n" +
+	"\v_variant_idB\t\n" +
+	"\a_reasonB\b\n" +
+	"\x06_notes\"\xa4\x01\n" +
+	"\x1fRecordInventoryMovementResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
+	"\fstock_before\x18\x02 \x01(\x05R\vstockBefore\x12\x1f\n" +
+	"\vstock_after\x18\x03 \x01(\x05R\n" +
+	"stockAfter\x12\x19\n" +
+	"\x05error\x18\x04 \x01(\tH\x00R\x05error\x88\x01\x01B\b\n" +
+	"\x06_error\"\xa7\x01\n" +
+	"\x0fStockUpdateItem\x12\x1d\n" +
+	"\n" +
+	"product_id\x18\x01 \x01(\x03R\tproductId\x12\"\n" +
+	"\n" +
+	"variant_id\x18\x02 \x01(\x03H\x00R\tvariantId\x88\x01\x01\x12\x1a\n" +
+	"\bquantity\x18\x03 \x01(\x05R\bquantity\x12\x1b\n" +
+	"\x06reason\x18\x04 \x01(\tH\x01R\x06reason\x88\x01\x01B\r\n" +
+	"\v_variant_idB\t\n" +
+	"\a_reason\"\xb3\x01\n" +
+	"\x17BatchUpdateStockRequest\x12#\n" +
+	"\rstorefront_id\x18\x01 \x01(\x03R\fstorefrontId\x122\n" +
+	"\x05items\x18\x02 \x03(\v2\x1c.listings.v1.StockUpdateItemR\x05items\x12\x1b\n" +
+	"\x06reason\x18\x03 \x01(\tH\x00R\x06reason\x88\x01\x01\x12\x17\n" +
+	"\auser_id\x18\x04 \x01(\x03R\x06userIdB\t\n" +
+	"\a_reason\"\xe8\x01\n" +
+	"\x11StockUpdateResult\x12\x1d\n" +
+	"\n" +
+	"product_id\x18\x01 \x01(\x03R\tproductId\x12\"\n" +
+	"\n" +
+	"variant_id\x18\x02 \x01(\x03H\x00R\tvariantId\x88\x01\x01\x12!\n" +
+	"\fstock_before\x18\x03 \x01(\x05R\vstockBefore\x12\x1f\n" +
+	"\vstock_after\x18\x04 \x01(\x05R\n" +
+	"stockAfter\x12\x18\n" +
+	"\asuccess\x18\x05 \x01(\bR\asuccess\x12\x19\n" +
+	"\x05error\x18\x06 \x01(\tH\x01R\x05error\x88\x01\x01B\r\n" +
+	"\v_variant_idB\b\n" +
+	"\x06_error\"\xa2\x01\n" +
+	"\x18BatchUpdateStockResponse\x12)\n" +
+	"\x10successful_count\x18\x01 \x01(\x05R\x0fsuccessfulCount\x12!\n" +
+	"\ffailed_count\x18\x02 \x01(\x05R\vfailedCount\x128\n" +
+	"\aresults\x18\x03 \x03(\v2\x1e.listings.v1.StockUpdateResultR\aresults\"=\n" +
+	"\x16GetProductStatsRequest\x12#\n" +
+	"\rstorefront_id\x18\x01 \x01(\x03R\fstorefrontId\"\xdd\x01\n" +
+	"\fProductStats\x12%\n" +
+	"\x0etotal_products\x18\x01 \x01(\x05R\rtotalProducts\x12'\n" +
+	"\x0factive_products\x18\x02 \x01(\x05R\x0eactiveProducts\x12 \n" +
+	"\fout_of_stock\x18\x03 \x01(\x05R\n" +
+	"outOfStock\x12\x1b\n" +
+	"\tlow_stock\x18\x04 \x01(\x05R\blowStock\x12\x1f\n" +
+	"\vtotal_value\x18\x05 \x01(\x01R\n" +
+	"totalValue\x12\x1d\n" +
+	"\n" +
+	"total_sold\x18\x06 \x01(\x05R\ttotalSold\"J\n" +
+	"\x17GetProductStatsResponse\x12/\n" +
+	"\x05stats\x18\x01 \x01(\v2\x19.listings.v1.ProductStatsR\x05stats\"=\n" +
+	"\x1cIncrementProductViewsRequest\x12\x1d\n" +
+	"\n" +
+	"product_id\x18\x01 \x01(\x03R\tproductId2\xd3$\n" +
 	"\x0fListingsService\x12M\n" +
 	"\n" +
 	"GetListing\x12\x1e.listings.v1.GetListingRequest\x1a\x1f.listings.v1.GetListingResponse\x12V\n" +
@@ -8064,7 +8807,11 @@ const file_pkg_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x14CreateProductVariant\x12(.listings.v1.CreateProductVariantRequest\x1a\x1c.listings.v1.VariantResponse\x12^\n" +
 	"\x14UpdateProductVariant\x12(.listings.v1.UpdateProductVariantRequest\x1a\x1c.listings.v1.VariantResponse\x12k\n" +
 	"\x14DeleteProductVariant\x12(.listings.v1.DeleteProductVariantRequest\x1a).listings.v1.DeleteProductVariantResponse\x12z\n" +
-	"\x19BulkCreateProductVariants\x12-.listings.v1.BulkCreateProductVariantsRequest\x1a..listings.v1.BulkCreateProductVariantsResponseB>Z<github.com/sveturs/listings/api/proto/listings/v1;listingsv1b\x06proto3"
+	"\x19BulkCreateProductVariants\x12-.listings.v1.BulkCreateProductVariantsRequest\x1a..listings.v1.BulkCreateProductVariantsResponse\x12t\n" +
+	"\x17RecordInventoryMovement\x12+.listings.v1.RecordInventoryMovementRequest\x1a,.listings.v1.RecordInventoryMovementResponse\x12_\n" +
+	"\x10BatchUpdateStock\x12$.listings.v1.BatchUpdateStockRequest\x1a%.listings.v1.BatchUpdateStockResponse\x12\\\n" +
+	"\x0fGetProductStats\x12#.listings.v1.GetProductStatsRequest\x1a$.listings.v1.GetProductStatsResponse\x12Z\n" +
+	"\x15IncrementProductViews\x12).listings.v1.IncrementProductViewsRequest\x1a\x16.google.protobuf.EmptyB>Z<github.com/sveturs/listings/api/proto/listings/v1;listingsv1b\x06proto3"
 
 var (
 	file_pkg_proto_listings_v1_listings_proto_rawDescOnce sync.Once
@@ -8078,7 +8825,7 @@ func file_pkg_proto_listings_v1_listings_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_listings_v1_listings_proto_rawDescData
 }
 
-var file_pkg_proto_listings_v1_listings_proto_msgTypes = make([]protoimpl.MessageInfo, 96)
+var file_pkg_proto_listings_v1_listings_proto_msgTypes = make([]protoimpl.MessageInfo, 106)
 var file_pkg_proto_listings_v1_listings_proto_goTypes = []any{
 	(*Listing)(nil),                           // 0: listings.v1.Listing
 	(*ListingImage)(nil),                      // 1: listings.v1.ListingImage
@@ -8171,33 +8918,43 @@ var file_pkg_proto_listings_v1_listings_proto_goTypes = []any{
 	(*ProductVariantInput)(nil),               // 88: listings.v1.ProductVariantInput
 	(*BulkCreateProductVariantsRequest)(nil),  // 89: listings.v1.BulkCreateProductVariantsRequest
 	(*BulkCreateProductVariantsResponse)(nil), // 90: listings.v1.BulkCreateProductVariantsResponse
-	nil,                           // 91: listings.v1.ListingVariant.AttributesEntry
-	nil,                           // 92: listings.v1.Category.TranslationsEntry
-	nil,                           // 93: listings.v1.CategoryTreeNode.TranslationsEntry
-	nil,                           // 94: listings.v1.VariantInput.AttributesEntry
-	nil,                           // 95: listings.v1.UpdateVariantRequest.AttributesEntry
-	(*structpb.Struct)(nil),       // 96: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil), // 97: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil), // 98: google.protobuf.FieldMask
-	(*emptypb.Empty)(nil),         // 99: google.protobuf.Empty
+	(*RecordInventoryMovementRequest)(nil),    // 91: listings.v1.RecordInventoryMovementRequest
+	(*RecordInventoryMovementResponse)(nil),   // 92: listings.v1.RecordInventoryMovementResponse
+	(*StockUpdateItem)(nil),                   // 93: listings.v1.StockUpdateItem
+	(*BatchUpdateStockRequest)(nil),           // 94: listings.v1.BatchUpdateStockRequest
+	(*StockUpdateResult)(nil),                 // 95: listings.v1.StockUpdateResult
+	(*BatchUpdateStockResponse)(nil),          // 96: listings.v1.BatchUpdateStockResponse
+	(*GetProductStatsRequest)(nil),            // 97: listings.v1.GetProductStatsRequest
+	(*ProductStats)(nil),                      // 98: listings.v1.ProductStats
+	(*GetProductStatsResponse)(nil),           // 99: listings.v1.GetProductStatsResponse
+	(*IncrementProductViewsRequest)(nil),      // 100: listings.v1.IncrementProductViewsRequest
+	nil,                                       // 101: listings.v1.ListingVariant.AttributesEntry
+	nil,                                       // 102: listings.v1.Category.TranslationsEntry
+	nil,                                       // 103: listings.v1.CategoryTreeNode.TranslationsEntry
+	nil,                                       // 104: listings.v1.VariantInput.AttributesEntry
+	nil,                                       // 105: listings.v1.UpdateVariantRequest.AttributesEntry
+	(*structpb.Struct)(nil),                   // 106: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),             // 107: google.protobuf.Timestamp
+	(*fieldmaskpb.FieldMask)(nil),             // 108: google.protobuf.FieldMask
+	(*emptypb.Empty)(nil),                     // 109: google.protobuf.Empty
 }
 var file_pkg_proto_listings_v1_listings_proto_depIdxs = []int32{
 	1,   // 0: listings.v1.Listing.images:type_name -> listings.v1.ListingImage
 	2,   // 1: listings.v1.Listing.attributes:type_name -> listings.v1.ListingAttribute
 	3,   // 2: listings.v1.Listing.location:type_name -> listings.v1.ListingLocation
 	4,   // 3: listings.v1.Listing.variants:type_name -> listings.v1.ListingVariant
-	91,  // 4: listings.v1.ListingVariant.attributes:type_name -> listings.v1.ListingVariant.AttributesEntry
-	92,  // 5: listings.v1.Category.translations:type_name -> listings.v1.Category.TranslationsEntry
+	101, // 4: listings.v1.ListingVariant.attributes:type_name -> listings.v1.ListingVariant.AttributesEntry
+	102, // 5: listings.v1.Category.translations:type_name -> listings.v1.Category.TranslationsEntry
 	6,   // 6: listings.v1.CategoryTreeNode.children:type_name -> listings.v1.CategoryTreeNode
-	93,  // 7: listings.v1.CategoryTreeNode.translations:type_name -> listings.v1.CategoryTreeNode.TranslationsEntry
-	96,  // 8: listings.v1.Product.attributes:type_name -> google.protobuf.Struct
-	97,  // 9: listings.v1.Product.created_at:type_name -> google.protobuf.Timestamp
-	97,  // 10: listings.v1.Product.updated_at:type_name -> google.protobuf.Timestamp
+	103, // 7: listings.v1.CategoryTreeNode.translations:type_name -> listings.v1.CategoryTreeNode.TranslationsEntry
+	106, // 8: listings.v1.Product.attributes:type_name -> google.protobuf.Struct
+	107, // 9: listings.v1.Product.created_at:type_name -> google.protobuf.Timestamp
+	107, // 10: listings.v1.Product.updated_at:type_name -> google.protobuf.Timestamp
 	8,   // 11: listings.v1.Product.variants:type_name -> listings.v1.ProductVariant
-	96,  // 12: listings.v1.ProductVariant.variant_attributes:type_name -> google.protobuf.Struct
-	96,  // 13: listings.v1.ProductVariant.dimensions:type_name -> google.protobuf.Struct
-	97,  // 14: listings.v1.ProductVariant.created_at:type_name -> google.protobuf.Timestamp
-	97,  // 15: listings.v1.ProductVariant.updated_at:type_name -> google.protobuf.Timestamp
+	106, // 12: listings.v1.ProductVariant.variant_attributes:type_name -> google.protobuf.Struct
+	106, // 13: listings.v1.ProductVariant.dimensions:type_name -> google.protobuf.Struct
+	107, // 14: listings.v1.ProductVariant.created_at:type_name -> google.protobuf.Timestamp
+	107, // 15: listings.v1.ProductVariant.updated_at:type_name -> google.protobuf.Timestamp
 	0,   // 16: listings.v1.GetListingResponse.listing:type_name -> listings.v1.Listing
 	0,   // 17: listings.v1.CreateListingResponse.listing:type_name -> listings.v1.Listing
 	0,   // 18: listings.v1.UpdateListingResponse.listing:type_name -> listings.v1.Listing
@@ -8211,9 +8968,9 @@ var file_pkg_proto_listings_v1_listings_proto_depIdxs = []int32{
 	38,  // 26: listings.v1.StorefrontResponse.storefront:type_name -> listings.v1.Storefront
 	38,  // 27: listings.v1.ListStorefrontsResponse.storefronts:type_name -> listings.v1.Storefront
 	45,  // 28: listings.v1.CreateVariantsRequest.variants:type_name -> listings.v1.VariantInput
-	94,  // 29: listings.v1.VariantInput.attributes:type_name -> listings.v1.VariantInput.AttributesEntry
+	104, // 29: listings.v1.VariantInput.attributes:type_name -> listings.v1.VariantInput.AttributesEntry
 	4,   // 30: listings.v1.VariantsResponse.variants:type_name -> listings.v1.ListingVariant
-	95,  // 31: listings.v1.UpdateVariantRequest.attributes:type_name -> listings.v1.UpdateVariantRequest.AttributesEntry
+	105, // 31: listings.v1.UpdateVariantRequest.attributes:type_name -> listings.v1.UpdateVariantRequest.AttributesEntry
 	0,   // 32: listings.v1.ListingsResponse.listings:type_name -> listings.v1.Listing
 	7,   // 33: listings.v1.ProductResponse.product:type_name -> listings.v1.Product
 	7,   // 34: listings.v1.ProductsResponse.products:type_name -> listings.v1.Product
@@ -8225,132 +8982,143 @@ var file_pkg_proto_listings_v1_listings_proto_depIdxs = []int32{
 	63,  // 40: listings.v1.RollbackStockResponse.results:type_name -> listings.v1.StockResult
 	62,  // 41: listings.v1.CheckStockAvailabilityRequest.items:type_name -> listings.v1.StockItem
 	69,  // 42: listings.v1.CheckStockAvailabilityResponse.items:type_name -> listings.v1.StockAvailability
-	96,  // 43: listings.v1.CreateProductRequest.attributes:type_name -> google.protobuf.Struct
-	96,  // 44: listings.v1.UpdateProductRequest.attributes:type_name -> google.protobuf.Struct
-	98,  // 45: listings.v1.UpdateProductRequest.update_mask:type_name -> google.protobuf.FieldMask
-	96,  // 46: listings.v1.ProductInput.attributes:type_name -> google.protobuf.Struct
+	106, // 43: listings.v1.CreateProductRequest.attributes:type_name -> google.protobuf.Struct
+	106, // 44: listings.v1.UpdateProductRequest.attributes:type_name -> google.protobuf.Struct
+	108, // 45: listings.v1.UpdateProductRequest.update_mask:type_name -> google.protobuf.FieldMask
+	106, // 46: listings.v1.ProductInput.attributes:type_name -> google.protobuf.Struct
 	75,  // 47: listings.v1.BulkCreateProductsRequest.products:type_name -> listings.v1.ProductInput
 	7,   // 48: listings.v1.BulkCreateProductsResponse.products:type_name -> listings.v1.Product
 	83,  // 49: listings.v1.BulkCreateProductsResponse.errors:type_name -> listings.v1.BulkOperationError
-	96,  // 50: listings.v1.ProductUpdateInput.attributes:type_name -> google.protobuf.Struct
-	98,  // 51: listings.v1.ProductUpdateInput.update_mask:type_name -> google.protobuf.FieldMask
+	106, // 50: listings.v1.ProductUpdateInput.attributes:type_name -> google.protobuf.Struct
+	108, // 51: listings.v1.ProductUpdateInput.update_mask:type_name -> google.protobuf.FieldMask
 	78,  // 52: listings.v1.BulkUpdateProductsRequest.updates:type_name -> listings.v1.ProductUpdateInput
 	7,   // 53: listings.v1.BulkUpdateProductsResponse.products:type_name -> listings.v1.Product
 	83,  // 54: listings.v1.BulkUpdateProductsResponse.errors:type_name -> listings.v1.BulkOperationError
 	83,  // 55: listings.v1.BulkDeleteProductsResponse.errors:type_name -> listings.v1.BulkOperationError
-	96,  // 56: listings.v1.CreateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
-	96,  // 57: listings.v1.CreateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
-	96,  // 58: listings.v1.UpdateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
-	96,  // 59: listings.v1.UpdateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
-	98,  // 60: listings.v1.UpdateProductVariantRequest.update_mask:type_name -> google.protobuf.FieldMask
-	96,  // 61: listings.v1.ProductVariantInput.variant_attributes:type_name -> google.protobuf.Struct
-	96,  // 62: listings.v1.ProductVariantInput.dimensions:type_name -> google.protobuf.Struct
+	106, // 56: listings.v1.CreateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
+	106, // 57: listings.v1.CreateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
+	106, // 58: listings.v1.UpdateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
+	106, // 59: listings.v1.UpdateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
+	108, // 60: listings.v1.UpdateProductVariantRequest.update_mask:type_name -> google.protobuf.FieldMask
+	106, // 61: listings.v1.ProductVariantInput.variant_attributes:type_name -> google.protobuf.Struct
+	106, // 62: listings.v1.ProductVariantInput.dimensions:type_name -> google.protobuf.Struct
 	88,  // 63: listings.v1.BulkCreateProductVariantsRequest.variants:type_name -> listings.v1.ProductVariantInput
 	8,   // 64: listings.v1.BulkCreateProductVariantsResponse.variants:type_name -> listings.v1.ProductVariant
 	83,  // 65: listings.v1.BulkCreateProductVariantsResponse.errors:type_name -> listings.v1.BulkOperationError
-	9,   // 66: listings.v1.ListingsService.GetListing:input_type -> listings.v1.GetListingRequest
-	11,  // 67: listings.v1.ListingsService.CreateListing:input_type -> listings.v1.CreateListingRequest
-	13,  // 68: listings.v1.ListingsService.UpdateListing:input_type -> listings.v1.UpdateListingRequest
-	15,  // 69: listings.v1.ListingsService.DeleteListing:input_type -> listings.v1.DeleteListingRequest
-	17,  // 70: listings.v1.ListingsService.SearchListings:input_type -> listings.v1.SearchListingsRequest
-	19,  // 71: listings.v1.ListingsService.ListListings:input_type -> listings.v1.ListListingsRequest
-	21,  // 72: listings.v1.ListingsService.GetListingImage:input_type -> listings.v1.ImageIDRequest
-	21,  // 73: listings.v1.ListingsService.DeleteListingImage:input_type -> listings.v1.ImageIDRequest
-	23,  // 74: listings.v1.ListingsService.AddListingImage:input_type -> listings.v1.AddImageRequest
-	24,  // 75: listings.v1.ListingsService.GetListingImages:input_type -> listings.v1.ListingIDRequest
-	99,  // 76: listings.v1.ListingsService.GetRootCategories:input_type -> google.protobuf.Empty
-	99,  // 77: listings.v1.ListingsService.GetAllCategories:input_type -> google.protobuf.Empty
-	26,  // 78: listings.v1.ListingsService.GetPopularCategories:input_type -> listings.v1.PopularCategoriesRequest
-	28,  // 79: listings.v1.ListingsService.GetCategory:input_type -> listings.v1.CategoryIDRequest
-	28,  // 80: listings.v1.ListingsService.GetCategoryTree:input_type -> listings.v1.CategoryIDRequest
-	24,  // 81: listings.v1.ListingsService.GetFavoritedUsers:input_type -> listings.v1.ListingIDRequest
-	32,  // 82: listings.v1.ListingsService.AddToFavorites:input_type -> listings.v1.AddToFavoritesRequest
-	33,  // 83: listings.v1.ListingsService.RemoveFromFavorites:input_type -> listings.v1.RemoveFromFavoritesRequest
-	34,  // 84: listings.v1.ListingsService.GetUserFavorites:input_type -> listings.v1.GetUserFavoritesRequest
-	36,  // 85: listings.v1.ListingsService.IsFavorite:input_type -> listings.v1.IsFavoriteRequest
-	39,  // 86: listings.v1.ListingsService.GetStorefront:input_type -> listings.v1.GetStorefrontRequest
-	40,  // 87: listings.v1.ListingsService.GetStorefrontBySlug:input_type -> listings.v1.GetStorefrontBySlugRequest
-	42,  // 88: listings.v1.ListingsService.ListStorefronts:input_type -> listings.v1.ListStorefrontsRequest
-	44,  // 89: listings.v1.ListingsService.CreateVariants:input_type -> listings.v1.CreateVariantsRequest
-	24,  // 90: listings.v1.ListingsService.GetVariants:input_type -> listings.v1.ListingIDRequest
-	47,  // 91: listings.v1.ListingsService.UpdateVariant:input_type -> listings.v1.UpdateVariantRequest
-	48,  // 92: listings.v1.ListingsService.DeleteVariant:input_type -> listings.v1.VariantIDRequest
-	49,  // 93: listings.v1.ListingsService.GetListingsForReindex:input_type -> listings.v1.ReindexRequest
-	51,  // 94: listings.v1.ListingsService.ResetReindexFlags:input_type -> listings.v1.ResetFlagsRequest
-	99,  // 95: listings.v1.ListingsService.SyncDiscounts:input_type -> google.protobuf.Empty
-	52,  // 96: listings.v1.ListingsService.GetProduct:input_type -> listings.v1.GetProductRequest
-	54,  // 97: listings.v1.ListingsService.GetProductsBySKUs:input_type -> listings.v1.GetProductsBySKUsRequest
-	56,  // 98: listings.v1.ListingsService.GetProductsByIDs:input_type -> listings.v1.GetProductsByIDsRequest
-	57,  // 99: listings.v1.ListingsService.ListProducts:input_type -> listings.v1.ListProductsRequest
-	58,  // 100: listings.v1.ListingsService.GetVariant:input_type -> listings.v1.GetVariantRequest
-	60,  // 101: listings.v1.ListingsService.GetVariantsByProductID:input_type -> listings.v1.GetVariantsByProductIDRequest
-	64,  // 102: listings.v1.ListingsService.DecrementStock:input_type -> listings.v1.DecrementStockRequest
-	66,  // 103: listings.v1.ListingsService.RollbackStock:input_type -> listings.v1.RollbackStockRequest
-	68,  // 104: listings.v1.ListingsService.CheckStockAvailability:input_type -> listings.v1.CheckStockAvailabilityRequest
-	71,  // 105: listings.v1.ListingsService.CreateProduct:input_type -> listings.v1.CreateProductRequest
-	72,  // 106: listings.v1.ListingsService.UpdateProduct:input_type -> listings.v1.UpdateProductRequest
-	73,  // 107: listings.v1.ListingsService.DeleteProduct:input_type -> listings.v1.DeleteProductRequest
-	76,  // 108: listings.v1.ListingsService.BulkCreateProducts:input_type -> listings.v1.BulkCreateProductsRequest
-	79,  // 109: listings.v1.ListingsService.BulkUpdateProducts:input_type -> listings.v1.BulkUpdateProductsRequest
-	81,  // 110: listings.v1.ListingsService.BulkDeleteProducts:input_type -> listings.v1.BulkDeleteProductsRequest
-	84,  // 111: listings.v1.ListingsService.CreateProductVariant:input_type -> listings.v1.CreateProductVariantRequest
-	85,  // 112: listings.v1.ListingsService.UpdateProductVariant:input_type -> listings.v1.UpdateProductVariantRequest
-	86,  // 113: listings.v1.ListingsService.DeleteProductVariant:input_type -> listings.v1.DeleteProductVariantRequest
-	89,  // 114: listings.v1.ListingsService.BulkCreateProductVariants:input_type -> listings.v1.BulkCreateProductVariantsRequest
-	10,  // 115: listings.v1.ListingsService.GetListing:output_type -> listings.v1.GetListingResponse
-	12,  // 116: listings.v1.ListingsService.CreateListing:output_type -> listings.v1.CreateListingResponse
-	14,  // 117: listings.v1.ListingsService.UpdateListing:output_type -> listings.v1.UpdateListingResponse
-	16,  // 118: listings.v1.ListingsService.DeleteListing:output_type -> listings.v1.DeleteListingResponse
-	18,  // 119: listings.v1.ListingsService.SearchListings:output_type -> listings.v1.SearchListingsResponse
-	20,  // 120: listings.v1.ListingsService.ListListings:output_type -> listings.v1.ListListingsResponse
-	22,  // 121: listings.v1.ListingsService.GetListingImage:output_type -> listings.v1.ImageResponse
-	99,  // 122: listings.v1.ListingsService.DeleteListingImage:output_type -> google.protobuf.Empty
-	22,  // 123: listings.v1.ListingsService.AddListingImage:output_type -> listings.v1.ImageResponse
-	25,  // 124: listings.v1.ListingsService.GetListingImages:output_type -> listings.v1.ImagesResponse
-	27,  // 125: listings.v1.ListingsService.GetRootCategories:output_type -> listings.v1.CategoriesResponse
-	27,  // 126: listings.v1.ListingsService.GetAllCategories:output_type -> listings.v1.CategoriesResponse
-	27,  // 127: listings.v1.ListingsService.GetPopularCategories:output_type -> listings.v1.CategoriesResponse
-	29,  // 128: listings.v1.ListingsService.GetCategory:output_type -> listings.v1.CategoryResponse
-	30,  // 129: listings.v1.ListingsService.GetCategoryTree:output_type -> listings.v1.CategoryTreeResponse
-	31,  // 130: listings.v1.ListingsService.GetFavoritedUsers:output_type -> listings.v1.UserIDsResponse
-	99,  // 131: listings.v1.ListingsService.AddToFavorites:output_type -> google.protobuf.Empty
-	99,  // 132: listings.v1.ListingsService.RemoveFromFavorites:output_type -> google.protobuf.Empty
-	35,  // 133: listings.v1.ListingsService.GetUserFavorites:output_type -> listings.v1.GetUserFavoritesResponse
-	37,  // 134: listings.v1.ListingsService.IsFavorite:output_type -> listings.v1.IsFavoriteResponse
-	41,  // 135: listings.v1.ListingsService.GetStorefront:output_type -> listings.v1.StorefrontResponse
-	41,  // 136: listings.v1.ListingsService.GetStorefrontBySlug:output_type -> listings.v1.StorefrontResponse
-	43,  // 137: listings.v1.ListingsService.ListStorefronts:output_type -> listings.v1.ListStorefrontsResponse
-	99,  // 138: listings.v1.ListingsService.CreateVariants:output_type -> google.protobuf.Empty
-	46,  // 139: listings.v1.ListingsService.GetVariants:output_type -> listings.v1.VariantsResponse
-	99,  // 140: listings.v1.ListingsService.UpdateVariant:output_type -> google.protobuf.Empty
-	99,  // 141: listings.v1.ListingsService.DeleteVariant:output_type -> google.protobuf.Empty
-	50,  // 142: listings.v1.ListingsService.GetListingsForReindex:output_type -> listings.v1.ListingsResponse
-	99,  // 143: listings.v1.ListingsService.ResetReindexFlags:output_type -> google.protobuf.Empty
-	99,  // 144: listings.v1.ListingsService.SyncDiscounts:output_type -> google.protobuf.Empty
-	53,  // 145: listings.v1.ListingsService.GetProduct:output_type -> listings.v1.ProductResponse
-	55,  // 146: listings.v1.ListingsService.GetProductsBySKUs:output_type -> listings.v1.ProductsResponse
-	55,  // 147: listings.v1.ListingsService.GetProductsByIDs:output_type -> listings.v1.ProductsResponse
-	55,  // 148: listings.v1.ListingsService.ListProducts:output_type -> listings.v1.ProductsResponse
-	59,  // 149: listings.v1.ListingsService.GetVariant:output_type -> listings.v1.VariantResponse
-	61,  // 150: listings.v1.ListingsService.GetVariantsByProductID:output_type -> listings.v1.ProductVariantsResponse
-	65,  // 151: listings.v1.ListingsService.DecrementStock:output_type -> listings.v1.DecrementStockResponse
-	67,  // 152: listings.v1.ListingsService.RollbackStock:output_type -> listings.v1.RollbackStockResponse
-	70,  // 153: listings.v1.ListingsService.CheckStockAvailability:output_type -> listings.v1.CheckStockAvailabilityResponse
-	53,  // 154: listings.v1.ListingsService.CreateProduct:output_type -> listings.v1.ProductResponse
-	53,  // 155: listings.v1.ListingsService.UpdateProduct:output_type -> listings.v1.ProductResponse
-	74,  // 156: listings.v1.ListingsService.DeleteProduct:output_type -> listings.v1.DeleteProductResponse
-	77,  // 157: listings.v1.ListingsService.BulkCreateProducts:output_type -> listings.v1.BulkCreateProductsResponse
-	80,  // 158: listings.v1.ListingsService.BulkUpdateProducts:output_type -> listings.v1.BulkUpdateProductsResponse
-	82,  // 159: listings.v1.ListingsService.BulkDeleteProducts:output_type -> listings.v1.BulkDeleteProductsResponse
-	59,  // 160: listings.v1.ListingsService.CreateProductVariant:output_type -> listings.v1.VariantResponse
-	59,  // 161: listings.v1.ListingsService.UpdateProductVariant:output_type -> listings.v1.VariantResponse
-	87,  // 162: listings.v1.ListingsService.DeleteProductVariant:output_type -> listings.v1.DeleteProductVariantResponse
-	90,  // 163: listings.v1.ListingsService.BulkCreateProductVariants:output_type -> listings.v1.BulkCreateProductVariantsResponse
-	115, // [115:164] is the sub-list for method output_type
-	66,  // [66:115] is the sub-list for method input_type
-	66,  // [66:66] is the sub-list for extension type_name
-	66,  // [66:66] is the sub-list for extension extendee
-	0,   // [0:66] is the sub-list for field type_name
+	93,  // 66: listings.v1.BatchUpdateStockRequest.items:type_name -> listings.v1.StockUpdateItem
+	95,  // 67: listings.v1.BatchUpdateStockResponse.results:type_name -> listings.v1.StockUpdateResult
+	98,  // 68: listings.v1.GetProductStatsResponse.stats:type_name -> listings.v1.ProductStats
+	9,   // 69: listings.v1.ListingsService.GetListing:input_type -> listings.v1.GetListingRequest
+	11,  // 70: listings.v1.ListingsService.CreateListing:input_type -> listings.v1.CreateListingRequest
+	13,  // 71: listings.v1.ListingsService.UpdateListing:input_type -> listings.v1.UpdateListingRequest
+	15,  // 72: listings.v1.ListingsService.DeleteListing:input_type -> listings.v1.DeleteListingRequest
+	17,  // 73: listings.v1.ListingsService.SearchListings:input_type -> listings.v1.SearchListingsRequest
+	19,  // 74: listings.v1.ListingsService.ListListings:input_type -> listings.v1.ListListingsRequest
+	21,  // 75: listings.v1.ListingsService.GetListingImage:input_type -> listings.v1.ImageIDRequest
+	21,  // 76: listings.v1.ListingsService.DeleteListingImage:input_type -> listings.v1.ImageIDRequest
+	23,  // 77: listings.v1.ListingsService.AddListingImage:input_type -> listings.v1.AddImageRequest
+	24,  // 78: listings.v1.ListingsService.GetListingImages:input_type -> listings.v1.ListingIDRequest
+	109, // 79: listings.v1.ListingsService.GetRootCategories:input_type -> google.protobuf.Empty
+	109, // 80: listings.v1.ListingsService.GetAllCategories:input_type -> google.protobuf.Empty
+	26,  // 81: listings.v1.ListingsService.GetPopularCategories:input_type -> listings.v1.PopularCategoriesRequest
+	28,  // 82: listings.v1.ListingsService.GetCategory:input_type -> listings.v1.CategoryIDRequest
+	28,  // 83: listings.v1.ListingsService.GetCategoryTree:input_type -> listings.v1.CategoryIDRequest
+	24,  // 84: listings.v1.ListingsService.GetFavoritedUsers:input_type -> listings.v1.ListingIDRequest
+	32,  // 85: listings.v1.ListingsService.AddToFavorites:input_type -> listings.v1.AddToFavoritesRequest
+	33,  // 86: listings.v1.ListingsService.RemoveFromFavorites:input_type -> listings.v1.RemoveFromFavoritesRequest
+	34,  // 87: listings.v1.ListingsService.GetUserFavorites:input_type -> listings.v1.GetUserFavoritesRequest
+	36,  // 88: listings.v1.ListingsService.IsFavorite:input_type -> listings.v1.IsFavoriteRequest
+	39,  // 89: listings.v1.ListingsService.GetStorefront:input_type -> listings.v1.GetStorefrontRequest
+	40,  // 90: listings.v1.ListingsService.GetStorefrontBySlug:input_type -> listings.v1.GetStorefrontBySlugRequest
+	42,  // 91: listings.v1.ListingsService.ListStorefronts:input_type -> listings.v1.ListStorefrontsRequest
+	44,  // 92: listings.v1.ListingsService.CreateVariants:input_type -> listings.v1.CreateVariantsRequest
+	24,  // 93: listings.v1.ListingsService.GetVariants:input_type -> listings.v1.ListingIDRequest
+	47,  // 94: listings.v1.ListingsService.UpdateVariant:input_type -> listings.v1.UpdateVariantRequest
+	48,  // 95: listings.v1.ListingsService.DeleteVariant:input_type -> listings.v1.VariantIDRequest
+	49,  // 96: listings.v1.ListingsService.GetListingsForReindex:input_type -> listings.v1.ReindexRequest
+	51,  // 97: listings.v1.ListingsService.ResetReindexFlags:input_type -> listings.v1.ResetFlagsRequest
+	109, // 98: listings.v1.ListingsService.SyncDiscounts:input_type -> google.protobuf.Empty
+	52,  // 99: listings.v1.ListingsService.GetProduct:input_type -> listings.v1.GetProductRequest
+	54,  // 100: listings.v1.ListingsService.GetProductsBySKUs:input_type -> listings.v1.GetProductsBySKUsRequest
+	56,  // 101: listings.v1.ListingsService.GetProductsByIDs:input_type -> listings.v1.GetProductsByIDsRequest
+	57,  // 102: listings.v1.ListingsService.ListProducts:input_type -> listings.v1.ListProductsRequest
+	58,  // 103: listings.v1.ListingsService.GetVariant:input_type -> listings.v1.GetVariantRequest
+	60,  // 104: listings.v1.ListingsService.GetVariantsByProductID:input_type -> listings.v1.GetVariantsByProductIDRequest
+	64,  // 105: listings.v1.ListingsService.DecrementStock:input_type -> listings.v1.DecrementStockRequest
+	66,  // 106: listings.v1.ListingsService.RollbackStock:input_type -> listings.v1.RollbackStockRequest
+	68,  // 107: listings.v1.ListingsService.CheckStockAvailability:input_type -> listings.v1.CheckStockAvailabilityRequest
+	71,  // 108: listings.v1.ListingsService.CreateProduct:input_type -> listings.v1.CreateProductRequest
+	72,  // 109: listings.v1.ListingsService.UpdateProduct:input_type -> listings.v1.UpdateProductRequest
+	73,  // 110: listings.v1.ListingsService.DeleteProduct:input_type -> listings.v1.DeleteProductRequest
+	76,  // 111: listings.v1.ListingsService.BulkCreateProducts:input_type -> listings.v1.BulkCreateProductsRequest
+	79,  // 112: listings.v1.ListingsService.BulkUpdateProducts:input_type -> listings.v1.BulkUpdateProductsRequest
+	81,  // 113: listings.v1.ListingsService.BulkDeleteProducts:input_type -> listings.v1.BulkDeleteProductsRequest
+	84,  // 114: listings.v1.ListingsService.CreateProductVariant:input_type -> listings.v1.CreateProductVariantRequest
+	85,  // 115: listings.v1.ListingsService.UpdateProductVariant:input_type -> listings.v1.UpdateProductVariantRequest
+	86,  // 116: listings.v1.ListingsService.DeleteProductVariant:input_type -> listings.v1.DeleteProductVariantRequest
+	89,  // 117: listings.v1.ListingsService.BulkCreateProductVariants:input_type -> listings.v1.BulkCreateProductVariantsRequest
+	91,  // 118: listings.v1.ListingsService.RecordInventoryMovement:input_type -> listings.v1.RecordInventoryMovementRequest
+	94,  // 119: listings.v1.ListingsService.BatchUpdateStock:input_type -> listings.v1.BatchUpdateStockRequest
+	97,  // 120: listings.v1.ListingsService.GetProductStats:input_type -> listings.v1.GetProductStatsRequest
+	100, // 121: listings.v1.ListingsService.IncrementProductViews:input_type -> listings.v1.IncrementProductViewsRequest
+	10,  // 122: listings.v1.ListingsService.GetListing:output_type -> listings.v1.GetListingResponse
+	12,  // 123: listings.v1.ListingsService.CreateListing:output_type -> listings.v1.CreateListingResponse
+	14,  // 124: listings.v1.ListingsService.UpdateListing:output_type -> listings.v1.UpdateListingResponse
+	16,  // 125: listings.v1.ListingsService.DeleteListing:output_type -> listings.v1.DeleteListingResponse
+	18,  // 126: listings.v1.ListingsService.SearchListings:output_type -> listings.v1.SearchListingsResponse
+	20,  // 127: listings.v1.ListingsService.ListListings:output_type -> listings.v1.ListListingsResponse
+	22,  // 128: listings.v1.ListingsService.GetListingImage:output_type -> listings.v1.ImageResponse
+	109, // 129: listings.v1.ListingsService.DeleteListingImage:output_type -> google.protobuf.Empty
+	22,  // 130: listings.v1.ListingsService.AddListingImage:output_type -> listings.v1.ImageResponse
+	25,  // 131: listings.v1.ListingsService.GetListingImages:output_type -> listings.v1.ImagesResponse
+	27,  // 132: listings.v1.ListingsService.GetRootCategories:output_type -> listings.v1.CategoriesResponse
+	27,  // 133: listings.v1.ListingsService.GetAllCategories:output_type -> listings.v1.CategoriesResponse
+	27,  // 134: listings.v1.ListingsService.GetPopularCategories:output_type -> listings.v1.CategoriesResponse
+	29,  // 135: listings.v1.ListingsService.GetCategory:output_type -> listings.v1.CategoryResponse
+	30,  // 136: listings.v1.ListingsService.GetCategoryTree:output_type -> listings.v1.CategoryTreeResponse
+	31,  // 137: listings.v1.ListingsService.GetFavoritedUsers:output_type -> listings.v1.UserIDsResponse
+	109, // 138: listings.v1.ListingsService.AddToFavorites:output_type -> google.protobuf.Empty
+	109, // 139: listings.v1.ListingsService.RemoveFromFavorites:output_type -> google.protobuf.Empty
+	35,  // 140: listings.v1.ListingsService.GetUserFavorites:output_type -> listings.v1.GetUserFavoritesResponse
+	37,  // 141: listings.v1.ListingsService.IsFavorite:output_type -> listings.v1.IsFavoriteResponse
+	41,  // 142: listings.v1.ListingsService.GetStorefront:output_type -> listings.v1.StorefrontResponse
+	41,  // 143: listings.v1.ListingsService.GetStorefrontBySlug:output_type -> listings.v1.StorefrontResponse
+	43,  // 144: listings.v1.ListingsService.ListStorefronts:output_type -> listings.v1.ListStorefrontsResponse
+	109, // 145: listings.v1.ListingsService.CreateVariants:output_type -> google.protobuf.Empty
+	46,  // 146: listings.v1.ListingsService.GetVariants:output_type -> listings.v1.VariantsResponse
+	109, // 147: listings.v1.ListingsService.UpdateVariant:output_type -> google.protobuf.Empty
+	109, // 148: listings.v1.ListingsService.DeleteVariant:output_type -> google.protobuf.Empty
+	50,  // 149: listings.v1.ListingsService.GetListingsForReindex:output_type -> listings.v1.ListingsResponse
+	109, // 150: listings.v1.ListingsService.ResetReindexFlags:output_type -> google.protobuf.Empty
+	109, // 151: listings.v1.ListingsService.SyncDiscounts:output_type -> google.protobuf.Empty
+	53,  // 152: listings.v1.ListingsService.GetProduct:output_type -> listings.v1.ProductResponse
+	55,  // 153: listings.v1.ListingsService.GetProductsBySKUs:output_type -> listings.v1.ProductsResponse
+	55,  // 154: listings.v1.ListingsService.GetProductsByIDs:output_type -> listings.v1.ProductsResponse
+	55,  // 155: listings.v1.ListingsService.ListProducts:output_type -> listings.v1.ProductsResponse
+	59,  // 156: listings.v1.ListingsService.GetVariant:output_type -> listings.v1.VariantResponse
+	61,  // 157: listings.v1.ListingsService.GetVariantsByProductID:output_type -> listings.v1.ProductVariantsResponse
+	65,  // 158: listings.v1.ListingsService.DecrementStock:output_type -> listings.v1.DecrementStockResponse
+	67,  // 159: listings.v1.ListingsService.RollbackStock:output_type -> listings.v1.RollbackStockResponse
+	70,  // 160: listings.v1.ListingsService.CheckStockAvailability:output_type -> listings.v1.CheckStockAvailabilityResponse
+	53,  // 161: listings.v1.ListingsService.CreateProduct:output_type -> listings.v1.ProductResponse
+	53,  // 162: listings.v1.ListingsService.UpdateProduct:output_type -> listings.v1.ProductResponse
+	74,  // 163: listings.v1.ListingsService.DeleteProduct:output_type -> listings.v1.DeleteProductResponse
+	77,  // 164: listings.v1.ListingsService.BulkCreateProducts:output_type -> listings.v1.BulkCreateProductsResponse
+	80,  // 165: listings.v1.ListingsService.BulkUpdateProducts:output_type -> listings.v1.BulkUpdateProductsResponse
+	82,  // 166: listings.v1.ListingsService.BulkDeleteProducts:output_type -> listings.v1.BulkDeleteProductsResponse
+	59,  // 167: listings.v1.ListingsService.CreateProductVariant:output_type -> listings.v1.VariantResponse
+	59,  // 168: listings.v1.ListingsService.UpdateProductVariant:output_type -> listings.v1.VariantResponse
+	87,  // 169: listings.v1.ListingsService.DeleteProductVariant:output_type -> listings.v1.DeleteProductVariantResponse
+	90,  // 170: listings.v1.ListingsService.BulkCreateProductVariants:output_type -> listings.v1.BulkCreateProductVariantsResponse
+	92,  // 171: listings.v1.ListingsService.RecordInventoryMovement:output_type -> listings.v1.RecordInventoryMovementResponse
+	96,  // 172: listings.v1.ListingsService.BatchUpdateStock:output_type -> listings.v1.BatchUpdateStockResponse
+	99,  // 173: listings.v1.ListingsService.GetProductStats:output_type -> listings.v1.GetProductStatsResponse
+	109, // 174: listings.v1.ListingsService.IncrementProductViews:output_type -> google.protobuf.Empty
+	122, // [122:175] is the sub-list for method output_type
+	69,  // [69:122] is the sub-list for method input_type
+	69,  // [69:69] is the sub-list for extension type_name
+	69,  // [69:69] is the sub-list for extension extendee
+	0,   // [0:69] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_listings_v1_listings_proto_init() }
@@ -8400,13 +9168,18 @@ func file_pkg_proto_listings_v1_listings_proto_init() {
 	file_pkg_proto_listings_v1_listings_proto_msgTypes[85].OneofWrappers = []any{}
 	file_pkg_proto_listings_v1_listings_proto_msgTypes[87].OneofWrappers = []any{}
 	file_pkg_proto_listings_v1_listings_proto_msgTypes[88].OneofWrappers = []any{}
+	file_pkg_proto_listings_v1_listings_proto_msgTypes[91].OneofWrappers = []any{}
+	file_pkg_proto_listings_v1_listings_proto_msgTypes[92].OneofWrappers = []any{}
+	file_pkg_proto_listings_v1_listings_proto_msgTypes[93].OneofWrappers = []any{}
+	file_pkg_proto_listings_v1_listings_proto_msgTypes[94].OneofWrappers = []any{}
+	file_pkg_proto_listings_v1_listings_proto_msgTypes[95].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_listings_v1_listings_proto_rawDesc), len(file_pkg_proto_listings_v1_listings_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   96,
+			NumMessages:   106,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
