@@ -19,8 +19,10 @@ import (
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/cache"
 	"github.com/sveturs/listings/internal/config"
+	"github.com/sveturs/listings/internal/health"
 	"github.com/sveturs/listings/internal/metrics"
 	"github.com/sveturs/listings/internal/ratelimit"
+	"github.com/sveturs/listings/internal/repository/minio"
 	"github.com/sveturs/listings/internal/repository/opensearch"
 	"github.com/sveturs/listings/internal/repository/postgres"
 	"github.com/sveturs/listings/internal/service/listings"
@@ -130,8 +132,34 @@ func main() {
 		}
 	}
 
+	// Initialize MinIO (optional)
+	var minioClient *minio.Client
+	if cfg.Storage.Endpoint != "" {
+		minioClient, err = minio.NewClient(
+			cfg.Storage.Endpoint,
+			cfg.Storage.AccessKey,
+			cfg.Storage.SecretKey,
+			cfg.Storage.Bucket,
+			cfg.Storage.UseSSL,
+			logger,
+		)
+		if err != nil {
+			logger.Warn().Err(err).Msg("MinIO not available, continuing without object storage")
+		}
+	}
+
 	// Initialize listings service
 	listingsService := listings.NewService(pgRepo, redisCache, searchClient, logger)
+
+	// Initialize health check service
+	healthConfig := &health.Config{
+		CheckTimeout:     cfg.Health.CheckTimeout,
+		CheckInterval:    cfg.Health.CheckInterval,
+		StartupTimeout:   cfg.Health.StartupTimeout,
+		CacheDuration:    cfg.Health.CacheDuration,
+		EnableDeepChecks: cfg.Health.EnableDeepChecks,
+	}
+	healthChecker := health.NewService(db.DB, redisCache, searchClient, minioClient, healthConfig, logger)
 
 	// Initialize worker (if enabled and search is available)
 	var indexWorker *worker.Worker
@@ -207,17 +235,21 @@ func main() {
 		}
 	}()
 
-	// Initialize HTTP server
+	// Initialize HTTP server with health checks
 	httpHandler := httpTransport.NewMinimalHandler(listingsService, logger)
+	healthHandler := httpTransport.NewHealthHandler(healthChecker, logger)
+
 	httpApp, err := httpTransport.StartMinimalServer(
 		cfg.Server.HTTPHost,
 		cfg.Server.HTTPPort,
 		httpHandler,
+		healthHandler,
 		logger,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to start HTTP server")
 	}
+
 	defer func() {
 		if err := httpApp.Shutdown(); err != nil {
 			logger.Error().Err(err).Msg("failed to shutdown HTTP server")

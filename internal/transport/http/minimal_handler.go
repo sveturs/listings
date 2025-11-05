@@ -38,18 +38,11 @@ func NewMinimalHandler(service MinimalService, logger zerolog.Logger) *MinimalHa
 }
 
 // SetupRoutes sets up minimal routes
+// Note: Health check routes are now handled by HealthHandler
 func (h *MinimalHandler) SetupRoutes(app *fiber.App) {
 	app.Use(recover.New())
 	app.Use(logger.New())
 	app.Use(cors.New())
-
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "healthy", "timestamp": time.Now().Unix()})
-	})
-
-	app.Get("/ready", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "ready", "timestamp": time.Now().Unix()})
-	})
 
 	// Prometheus metrics endpoint
 	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
@@ -109,14 +102,20 @@ func (h *MinimalHandler) ListListings(c *fiber.Ctx) error {
 }
 
 // StartMinimalServer starts minimal HTTP server
-func StartMinimalServer(host string, port int, handler *MinimalHandler, logger zerolog.Logger) (*fiber.App, error) {
+func StartMinimalServer(host string, port int, handler *MinimalHandler, healthHandler *HealthHandler, logger zerolog.Logger) (*fiber.App, error) {
 	app := fiber.New(fiber.Config{
 		AppName:      "Listings Service",
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	})
 
+	// Register API routes first
 	handler.SetupRoutes(app)
+
+	// Register health check routes BEFORE starting server
+	if healthHandler != nil {
+		healthHandler.RegisterRoutes(app)
+	}
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 	go func() {
