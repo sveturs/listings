@@ -4,114 +4,19 @@
 package integration
 
 import (
-	"context"
-	"net"
 	"sync"
+	"sync/atomic"
 	"testing"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/metrics"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service/listings"
-	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
 	"github.com/sveturs/listings/tests"
 )
-
-const bufSize = 1024 * 1024
-
-var (
-	// testMetrics is a singleton instance of metrics for all integration tests
-	// to avoid duplicate Prometheus registration errors
-	testMetrics     *metrics.Metrics
-	testMetricsOnce sync.Once
-)
-
-// getTestMetrics returns a singleton metrics instance for testing
-func getTestMetrics() *metrics.Metrics {
-	testMetricsOnce.Do(func() {
-		testMetrics = metrics.NewMetrics("listings_test")
-	})
-	return testMetrics
-}
-
-// setupGRPCTestServer creates a gRPC server with real database
-func setupGRPCTestServer(t *testing.T) (pb.ListingsServiceClient, *tests.TestDB, func()) {
-	t.Helper()
-
-	tests.SkipIfNoDocker(t)
-
-	// Setup test database
-	testDB := tests.SetupTestPostgres(t)
-
-	// Run migrations
-	tests.RunMigrations(t, testDB.DB, "../../migrations")
-
-	// Load inventory fixtures
-	tests.LoadInventoryFixtures(t, testDB.DB)
-
-	// Create sqlx.DB wrapper
-	db := sqlx.NewDb(testDB.DB, "postgres")
-
-	// Create logger
-	logger := zerolog.New(zerolog.NewTestWriter(t)).With().Timestamp().Logger()
-
-	// Create repository
-	repo := postgres.NewRepository(db, logger)
-
-	// Create service (no Redis and no indexer for integration tests)
-	service := listings.NewService(repo, nil, nil, logger)
-
-	// Get singleton metrics instance
-	m := getTestMetrics()
-
-	// Create gRPC server
-	server := grpchandlers.NewServer(service, m, logger)
-
-	// Setup in-memory gRPC connection
-	lis := bufconn.Listen(bufSize)
-
-	grpcServer := grpc.NewServer()
-	pb.RegisterListingsServiceServer(grpcServer, server)
-
-	go func() {
-		if err := grpcServer.Serve(lis); err != nil {
-			logger.Error().Err(err).Msg("gRPC server failed")
-		}
-	}()
-
-	// Create client connection
-	conn, err := grpc.DialContext(
-		context.Background(),
-		"bufnet",
-		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
-			return lis.Dial()
-		}),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	require.NoError(t, err)
-
-	client := pb.NewListingsServiceClient(conn)
-
-	cleanup := func() {
-		conn.Close()
-		grpcServer.Stop()
-		lis.Close()
-		testDB.TeardownTestPostgres(t)
-	}
-
-	return client, testDB, cleanup
-}
 
 // TestGRPCRecordInventoryMovement_FullCycle tests full gRPC request/response cycle
 func TestGRPCRecordInventoryMovement_FullCycle(t *testing.T) {
@@ -621,4 +526,567 @@ func TestGRPCConcurrentRequests(t *testing.T) {
 			assert.NoError(t, err)
 		}
 	})
+}
+
+// ============================================================================
+// PHASE 9.7.4: ADVANCED INTEGRATION TESTS
+// ============================================================================
+
+// TestGRPCRecordInventoryMovement_BoundaryValues tests boundary value handling
+// This test verifies that the gRPC layer correctly validates and handles
+// boundary values including massive quantities, negative IDs, and edge cases
+func TestGRPCRecordInventoryMovement_BoundaryValues(t *testing.T) {
+	client, _, cleanup := setupGRPCTestServer(t)
+	defer cleanup()
+
+	ctx := tests.TestContext(t)
+
+	productID := int64(5000)
+
+	testCases := []struct {
+		name     string
+		request  *pb.RecordInventoryMovementRequest
+		wantErr  bool
+		wantCode codes.Code
+	}{
+		{
+			name: "Maximum int32 quantity",
+			request: &pb.RecordInventoryMovementRequest{
+				StorefrontId: 1000,
+				ProductId:    productID,
+				MovementType: "adjustment",
+				Quantity:     2147483647, // Max int32
+				Reason:       stringPtr("boundary_test"),
+				UserId:       1000,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Zero quantity (invalid)",
+			request: &pb.RecordInventoryMovementRequest{
+				StorefrontId: 1000,
+				ProductId:    productID,
+				MovementType: "in",
+				Quantity:     0,
+				UserId:       1000,
+			},
+			wantErr:  true,
+			wantCode: codes.InvalidArgument,
+		},
+		{
+			name: "Negative storefront ID",
+			request: &pb.RecordInventoryMovementRequest{
+				StorefrontId: -1,
+				ProductId:    productID,
+				MovementType: "in",
+				Quantity:     10,
+				UserId:       1000,
+			},
+			wantErr:  true,
+			wantCode: codes.InvalidArgument,
+		},
+		{
+			name: "Negative product ID",
+			request: &pb.RecordInventoryMovementRequest{
+				StorefrontId: 1000,
+				ProductId:    -999,
+				MovementType: "in",
+				Quantity:     10,
+				UserId:       1000,
+			},
+			wantErr:  true,
+			wantCode: codes.InvalidArgument,
+		},
+		{
+			name: "Negative user ID",
+			request: &pb.RecordInventoryMovementRequest{
+				StorefrontId: 1000,
+				ProductId:    productID,
+				MovementType: "in",
+				Quantity:     10,
+				UserId:       -5,
+			},
+			wantErr:  true,
+			wantCode: codes.InvalidArgument,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := client.RecordInventoryMovement(ctx, tc.request)
+
+			if tc.wantErr {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				assert.Equal(t, tc.wantCode, st.Code())
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotNil(t, resp)
+			assert.True(t, resp.Success)
+		})
+	}
+}
+
+// TestGRPCRecordInventoryMovement_LongStrings tests handling of very long input strings
+// Validates that reason and notes fields properly handle maximum length constraints
+func TestGRPCRecordInventoryMovement_LongStrings(t *testing.T) {
+	client, _, cleanup := setupGRPCTestServer(t)
+	defer cleanup()
+
+	ctx := tests.TestContext(t)
+
+	productID := int64(5000)
+	storefrontID := int64(1000)
+	userID := int64(1000)
+
+	// Create strings of various lengths
+	normalString := "Normal reason text"
+	longString := stringRepeat("x", 255)        // Typical VARCHAR limit
+	veryLongString := stringRepeat("y", 10000)  // Exceeds typical limit
+	unicodeString := "Тест кирилицы 测试中文 🚀🎉" // Unicode characters
+
+	testCases := []struct {
+		name    string
+		reason  *string
+		notes   *string
+		wantErr bool
+	}{
+		{
+			name:    "Normal length strings",
+			reason:  &normalString,
+			notes:   &normalString,
+			wantErr: false,
+		},
+		{
+			name:    "Long but valid strings (255 chars)",
+			reason:  &longString,
+			notes:   &longString,
+			wantErr: false,
+		},
+		{
+			name:    "Very long strings (10k chars)",
+			reason:  &veryLongString,
+			notes:   &veryLongString,
+			wantErr: false, // Should either accept or truncate gracefully
+		},
+		{
+			name:    "Unicode strings",
+			reason:  &unicodeString,
+			notes:   &unicodeString,
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := &pb.RecordInventoryMovementRequest{
+				StorefrontId: storefrontID,
+				ProductId:    productID,
+				MovementType: "in",
+				Quantity:     1,
+				Reason:       tc.reason,
+				Notes:        tc.notes,
+				UserId:       userID,
+			}
+
+			resp, err := client.RecordInventoryMovement(ctx, req)
+
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.NotNil(t, resp)
+			assert.True(t, resp.Success)
+		})
+	}
+}
+
+// TestGRPCConcurrent_MixedOperations tests concurrent mixed gRPC operations
+// Validates thread safety when multiple different operations run simultaneously:
+// - Inventory movements
+// - View increments
+// - Stats queries
+func TestGRPCConcurrent_MixedOperations(t *testing.T) {
+	client, testDB, cleanup := setupGRPCTestServer(t)
+	defer cleanup()
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	productID := int64(5000)
+	userID := int64(1000)
+	concurrentOps := 20
+
+	var wg sync.WaitGroup
+	errors := make(chan error, concurrentOps*3)
+
+	// Launch concurrent movements
+	for i := 0; i < concurrentOps; i++ {
+		wg.Add(1)
+		go func(iteration int) {
+			defer wg.Done()
+			req := &pb.RecordInventoryMovementRequest{
+				StorefrontId: storefrontID,
+				ProductId:    productID,
+				MovementType: "in",
+				Quantity:     1,
+				Reason:       stringPtr("concurrent_test"),
+				UserId:       userID,
+			}
+			_, err := client.RecordInventoryMovement(ctx, req)
+			errors <- err
+		}(i)
+	}
+
+	// Launch concurrent view increments
+	for i := 0; i < concurrentOps; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			req := &pb.IncrementProductViewsRequest{ProductId: productID}
+			_, err := client.IncrementProductViews(ctx, req)
+			errors <- err
+		}()
+	}
+
+	// Launch concurrent stats queries
+	for i := 0; i < concurrentOps; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			req := &pb.GetProductStatsRequest{StorefrontId: storefrontID}
+			_, err := client.GetProductStats(ctx, req)
+			errors <- err
+		}()
+	}
+
+	// Wait for all operations
+	wg.Wait()
+	close(errors)
+
+	// Check all operations succeeded
+	errorCount := 0
+	for err := range errors {
+		if err != nil {
+			t.Logf("Operation failed: %v", err)
+			errorCount++
+		}
+	}
+
+	assert.Equal(t, 0, errorCount, "All concurrent operations should succeed")
+
+	// Verify final state consistency
+	finalQty := tests.GetProductQuantity(t, testDB.DB, productID)
+	assert.GreaterOrEqual(t, finalQty, int32(100+concurrentOps),
+		"Quantity should reflect all successful movements")
+}
+
+// TestGRPCBatchUpdateStock_LargeScaleBatch tests batch update with large item count
+// Validates performance and correctness when processing 100 items in a single batch
+func TestGRPCBatchUpdateStock_LargeScaleBatch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping large batch test in short mode")
+	}
+
+	client, testDB, cleanup := setupGRPCTestServer(t)
+	defer cleanup()
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	userID := int64(1000)
+	batchSize := 100
+
+	// Create test products for batch update
+	items := make([]*pb.StockUpdateItem, 0, batchSize)
+	for i := 0; i < batchSize; i++ {
+		// Use existing products (5000-5006) and cycle through them
+		productID := int64(5000 + (i % 7))
+		items = append(items, &pb.StockUpdateItem{
+			ProductId: productID,
+			Quantity:  int32(50 + i),
+			Reason:    stringPtr("large_batch_test"),
+		})
+	}
+
+	req := &pb.BatchUpdateStockRequest{
+		StorefrontId: storefrontID,
+		Items:        items,
+		Reason:       stringPtr("performance_test"),
+		UserId:       userID,
+	}
+
+	// Execute batch update
+	resp, err := client.BatchUpdateStock(ctx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	// Most should succeed (some might fail due to constraints)
+	assert.Greater(t, resp.SuccessfulCount, int32(50),
+		"At least 50% of batch should succeed")
+	assert.Len(t, resp.Results, batchSize,
+		"Should return result for each item")
+
+	// Verify successful items updated in database
+	successfulUpdates := 0
+	for _, result := range resp.Results {
+		if result.Success {
+			successfulUpdates++
+			actualQty := tests.GetProductQuantity(t, testDB.DB, result.ProductId)
+			assert.GreaterOrEqual(t, actualQty, int32(0),
+				"Updated product should have valid quantity")
+		}
+	}
+
+	assert.Equal(t, int(resp.SuccessfulCount), successfulUpdates,
+		"Success count should match actual successful updates")
+}
+
+// TestGRPCGetProductStats_LargeDataset tests stats performance with large dataset
+// Validates that stats queries remain performant with substantial data volume
+func TestGRPCGetProductStats_LargeDataset(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping large dataset test in short mode")
+	}
+
+	client, _, cleanup := setupGRPCTestServer(t)
+	defer cleanup()
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+
+	// Add multiple movements to create larger dataset
+	for i := 0; i < 50; i++ {
+		productID := int64(5000 + (i % 7))
+		req := &pb.RecordInventoryMovementRequest{
+			StorefrontId: storefrontID,
+			ProductId:    productID,
+			MovementType: "in",
+			Quantity:     int32(i + 1),
+			Reason:       stringPtr("dataset_creation"),
+			UserId:       1000,
+		}
+		_, err := client.RecordInventoryMovement(ctx, req)
+		require.NoError(t, err)
+	}
+
+	// Query stats multiple times to test performance
+	for i := 0; i < 10; i++ {
+		req := &pb.GetProductStatsRequest{StorefrontId: storefrontID}
+		resp, err := client.GetProductStats(ctx, req)
+
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		require.NotNil(t, resp.Stats)
+
+		// Validate stats structure
+		assert.Greater(t, resp.Stats.TotalProducts, int32(0))
+		assert.GreaterOrEqual(t, resp.Stats.TotalProducts, resp.Stats.ActiveProducts)
+		assert.GreaterOrEqual(t, resp.Stats.TotalValue, float64(0))
+	}
+}
+
+// TestGRPCBatchUpdateStock_EmptyReasonHandling tests batch update with nil/empty reasons
+// Validates that optional reason fields are handled correctly in batch operations
+func TestGRPCBatchUpdateStock_EmptyReasonHandling(t *testing.T) {
+	client, testDB, cleanup := setupGRPCTestServer(t)
+	defer cleanup()
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	userID := int64(1000)
+
+	testCases := []struct {
+		name   string
+		items  []*pb.StockUpdateItem
+		reason *string
+	}{
+		{
+			name: "Item-level reasons provided",
+			items: []*pb.StockUpdateItem{
+				{
+					ProductId: 5003,
+					Quantity:  100,
+					Reason:    stringPtr("item_reason_1"),
+				},
+				{
+					ProductId: 5004,
+					Quantity:  80,
+					Reason:    stringPtr("item_reason_2"),
+				},
+			},
+			reason: stringPtr("batch_reason"),
+		},
+		{
+			name: "No item-level reasons (use batch reason)",
+			items: []*pb.StockUpdateItem{
+				{ProductId: 5003, Quantity: 90},
+				{ProductId: 5004, Quantity: 70},
+			},
+			reason: stringPtr("batch_reason_only"),
+		},
+		{
+			name: "No reasons at all (should still work)",
+			items: []*pb.StockUpdateItem{
+				{ProductId: 5003, Quantity: 85},
+				{ProductId: 5004, Quantity: 75},
+			},
+			reason: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := &pb.BatchUpdateStockRequest{
+				StorefrontId: storefrontID,
+				Items:        tc.items,
+				Reason:       tc.reason,
+				UserId:       userID,
+			}
+
+			resp, err := client.BatchUpdateStock(ctx, req)
+
+			require.NoError(t, err)
+			require.NotNil(t, resp)
+			assert.Equal(t, int32(len(tc.items)), resp.SuccessfulCount)
+			assert.Equal(t, int32(0), resp.FailedCount)
+
+			// Verify all items updated
+			for _, item := range tc.items {
+				actualQty := tests.GetProductQuantity(t, testDB.DB, item.ProductId)
+				assert.Equal(t, item.Quantity, actualQty)
+			}
+		})
+	}
+}
+
+// TestGRPCRecordInventoryMovement_AuditTrail tests audit trail completeness
+// Validates that all inventory movements are properly logged with full context
+func TestGRPCRecordInventoryMovement_AuditTrail(t *testing.T) {
+	client, testDB, cleanup := setupGRPCTestServer(t)
+	defer cleanup()
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	productID := int64(5000)
+	userID := int64(1000)
+
+	// Record multiple movements with different contexts
+	movements := []struct {
+		movementType string
+		quantity     int32
+		reason       string
+		notes        string
+	}{
+		{"in", 50, "purchase", "Supplier ABC - Invoice #12345"},
+		{"out", 10, "sale", "Customer order #67890"},
+		{"adjustment", 100, "inventory_count", "Physical count correction"},
+		{"in", 25, "return", "Customer return - defective item"},
+	}
+
+	for _, mv := range movements {
+		req := &pb.RecordInventoryMovementRequest{
+			StorefrontId: storefrontID,
+			ProductId:    productID,
+			MovementType: mv.movementType,
+			Quantity:     mv.quantity,
+			Reason:       &mv.reason,
+			Notes:        &mv.notes,
+			UserId:       userID,
+		}
+
+		resp, err := client.RecordInventoryMovement(ctx, req)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.True(t, resp.Success)
+	}
+
+	// Verify all movements recorded
+	movementCount := tests.GetInventoryMovementCount(t, testDB.DB, productID)
+	assert.GreaterOrEqual(t, movementCount, len(movements),
+		"All movements should be recorded in audit trail")
+
+	// Verify final quantity matches expected
+	expectedQty := int32(100 + 50 - 10 + (100 - (100 + 50 - 10)) + 25)
+	actualQty := tests.GetProductQuantity(t, testDB.DB, productID)
+	assert.Equal(t, expectedQty, actualQty,
+		"Final quantity should match sum of all movements")
+}
+
+// TestGRPCConcurrent_StressTest tests system behavior under heavy concurrent load
+// Validates stability and correctness with 100 simultaneous operations
+func TestGRPCConcurrent_StressTest(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping stress test in short mode")
+	}
+
+	client, _, cleanup := setupGRPCTestServer(t)
+	defer cleanup()
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	userID := int64(1000)
+	stressOps := 100
+
+	var wg sync.WaitGroup
+	successCount := sync.Map{}
+	errorCount := int32(0)
+
+	// Launch stress operations
+	for i := 0; i < stressOps; i++ {
+		wg.Add(1)
+		go func(iteration int) {
+			defer wg.Done()
+
+			// Distribute operations across different products
+			productID := int64(5000 + (iteration % 7))
+
+			req := &pb.RecordInventoryMovementRequest{
+				StorefrontId: storefrontID,
+				ProductId:    productID,
+				MovementType: "in",
+				Quantity:     1,
+				Reason:       stringPtr("stress_test"),
+				UserId:       userID,
+			}
+
+			resp, err := client.RecordInventoryMovement(ctx, req)
+			if err != nil {
+				atomic.AddInt32(&errorCount, 1)
+				return
+			}
+
+			if resp.Success {
+				// Track successful operations per product
+				count, _ := successCount.LoadOrStore(productID, int32(0))
+				successCount.Store(productID, count.(int32)+1)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Verify results
+	assert.Less(t, int(errorCount), stressOps/10,
+		"Error rate should be less than 10%")
+
+	// Verify database consistency
+	totalSuccessful := int32(0)
+	successCount.Range(func(key, value interface{}) bool {
+		totalSuccessful += value.(int32)
+		return true
+	})
+
+	assert.Greater(t, totalSuccessful, int32(stressOps*9/10),
+		"At least 90% of operations should succeed")
 }

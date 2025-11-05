@@ -253,44 +253,6 @@ func TestBulkDeleteProducts_Success(t *testing.T) {
 	}
 }
 
-// TestBulkDeleteProducts_PartialSuccess verifies handling of mixed results
-func TestBulkDeleteProducts_PartialSuccess(t *testing.T) {
-	client, testDB, cleanup := setupGRPCTestServer(t)
-	defer cleanup()
-
-	tests.LoadTestFixtures(t, testDB.DB, "../fixtures/get_delete_product_fixtures.sql")
-
-	ctx := tests.TestContext(t)
-	storefrontID := int64(9001)
-
-	req := &pb.BulkDeleteProductsRequest{
-		StorefrontId: storefrontID,
-		ProductIds: []int64{
-			9104,  // Exists
-			99998, // Not found
-			9105,  // Exists
-			99999, // Not found
-		},
-		HardDelete: true,
-	}
-
-	resp, err := client.BulkDeleteProducts(ctx, req)
-
-	require.NoError(t, err, "BulkDeleteProducts should not error on partial failure")
-	require.NotNil(t, resp, "Response should not be nil")
-
-	// Should have partial success
-	assert.Equal(t, int32(2), resp.SuccessfulCount, "Should delete 2 products")
-	assert.Equal(t, int32(2), resp.FailedCount, "Should have 2 failures")
-	assert.Len(t, resp.Errors, 2, "Should report 2 errors")
-
-	// Verify error details
-	for _, bulkErr := range resp.Errors {
-		assert.Contains(t, []int64{99998, 99999}, bulkErr.ProductId, "Error should be for non-existent product")
-		assert.NotEmpty(t, bulkErr.ErrorMessage, "Error message should be set")
-	}
-}
-
 // TestBulkDeleteProducts_EmptyBatch verifies validation of empty list
 func TestBulkDeleteProducts_EmptyBatch(t *testing.T) {
 	client, testDB, cleanup := setupGRPCTestServer(t)

@@ -4,6 +4,8 @@
 package integration
 
 import (
+	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/jmoiron/sqlx"
@@ -519,4 +521,380 @@ func TestIncrementProductViews_ConcurrentIncrements(t *testing.T) {
 	finalViews := tests.GetProductViewCount(t, testDB.DB, productID)
 	assert.Equal(t, initialViews+int32(concurrentCalls), finalViews,
 		"All concurrent increments should be recorded")
+}
+
+// ============================================================================
+// PHASE 9.7.4: ADVANCED REPOSITORY TESTS
+// ============================================================================
+
+// TestUpdateProductInventory_TransactionRollback tests transaction rollback on constraint violation
+// Validates that database constraints are enforced and transactions roll back properly
+func TestUpdateProductInventory_TransactionRollback(t *testing.T) {
+	repo, testDB := setupInventoryTestRepo(t)
+	defer testDB.TeardownTestPostgres(t)
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	productID := int64(5001) // Low stock product with quantity 5
+	userID := int64(1000)
+
+	initialQty := tests.GetProductQuantity(t, testDB.DB, productID)
+	require.Equal(t, int32(5), initialQty, "Initial quantity should be 5")
+
+	// Try to remove more stock than available (should fail)
+	_, _, err := repo.UpdateProductInventory(
+		ctx,
+		storefrontID,
+		productID,
+		0,
+		"out",
+		100, // Request 100 but only 5 available
+		"sale",
+		"Should fail due to insufficient stock",
+		userID,
+	)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "products.insufficient_stock")
+
+	// Verify quantity remained unchanged (transaction rolled back)
+	finalQty := tests.GetProductQuantity(t, testDB.DB, productID)
+	assert.Equal(t, initialQty, finalQty,
+		"Quantity should remain unchanged after failed transaction")
+
+	// Verify no inventory movement was recorded (full rollback)
+	initialMovementCount := tests.GetInventoryMovementCount(t, testDB.DB, productID)
+
+	// Try another operation
+	_, _, err = repo.UpdateProductInventory(
+		ctx,
+		storefrontID,
+		productID,
+		0,
+		"in",
+		10,
+		"restock",
+		"Valid operation after rollback",
+		userID,
+	)
+	require.NoError(t, err)
+
+	// This should create one movement
+	finalMovementCount := tests.GetInventoryMovementCount(t, testDB.DB, productID)
+	assert.Equal(t, initialMovementCount+1, finalMovementCount,
+		"Only successful operations should be recorded")
+}
+
+// TestBatchUpdateStock_TransactionAtomicity tests atomicity of batch operations
+// Validates that batch updates maintain transactional integrity
+func TestBatchUpdateStock_TransactionAtomicity(t *testing.T) {
+	repo, testDB := setupInventoryTestRepo(t)
+	defer testDB.TeardownTestPostgres(t)
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	userID := int64(1000)
+
+	// Get initial quantities
+	product5004InitialQty := tests.GetProductQuantity(t, testDB.DB, 5004)
+
+	// Create batch with one valid and one invalid item
+	items := []domain.StockUpdateItem{
+		{
+			ProductID: 5003,
+			Quantity:  120,
+			Reason:    stringPtr("valid_update"),
+		},
+		{
+			ProductID: 99999, // Non-existent product
+			Quantity:  50,
+			Reason:    stringPtr("invalid_update"),
+		},
+	}
+
+	successCount, failedCount, results, err := repo.BatchUpdateStock(
+		ctx,
+		storefrontID,
+		items,
+		"atomicity_test",
+		userID,
+	)
+
+	require.NoError(t, err, "Batch operation itself should not error")
+
+	// Verify counts
+	assert.Equal(t, int32(1), successCount, "One item should succeed")
+	assert.Equal(t, int32(1), failedCount, "One item should fail")
+	assert.Len(t, results, 2, "Should return 2 results")
+
+	// Verify first item succeeded
+	assert.True(t, results[0].Success)
+	assert.Equal(t, int64(5003), results[0].ProductID)
+	product5003NewQty := tests.GetProductQuantity(t, testDB.DB, 5003)
+	assert.Equal(t, int32(120), product5003NewQty, "Valid product should be updated")
+
+	// Verify second item failed
+	assert.False(t, results[1].Success)
+	assert.Equal(t, int64(99999), results[1].ProductID)
+	assert.NotNil(t, results[1].Error)
+
+	// Verify other products unaffected
+	product5004NewQty := tests.GetProductQuantity(t, testDB.DB, 5004)
+	assert.Equal(t, product5004InitialQty, product5004NewQty,
+		"Unrelated products should remain unchanged")
+}
+
+// TestUpdateProductInventory_MaxInt32Quantity tests maximum int32 boundary
+// Validates that the system correctly handles maximum possible quantity values
+func TestUpdateProductInventory_MaxInt32Quantity(t *testing.T) {
+	repo, testDB := setupInventoryTestRepo(t)
+	defer testDB.TeardownTestPostgres(t)
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	productID := int64(5000)
+	userID := int64(1000)
+
+	// Set quantity to maximum int32 value
+	maxInt32 := int32(2147483647)
+
+	stockBefore, stockAfter, err := repo.UpdateProductInventory(
+		ctx,
+		storefrontID,
+		productID,
+		0,
+		"adjustment",
+		maxInt32,
+		"boundary_test",
+		"Testing maximum int32 value",
+		userID,
+	)
+
+	require.NoError(t, err)
+	assert.Equal(t, maxInt32, stockAfter, "Should set to max int32")
+	assert.NotEqual(t, stockBefore, stockAfter, "Stock should change")
+
+	// Verify in database
+	actualQty := tests.GetProductQuantity(t, testDB.DB, productID)
+	assert.Equal(t, maxInt32, actualQty, "Database should store max int32")
+
+	// Try to remove 1 from max
+	stockBefore, stockAfter, err = repo.UpdateProductInventory(
+		ctx,
+		storefrontID,
+		productID,
+		0,
+		"out",
+		1,
+		"boundary_decrement",
+		"Decrement from max",
+		userID,
+	)
+
+	require.NoError(t, err)
+	assert.Equal(t, maxInt32, stockBefore)
+	assert.Equal(t, maxInt32-1, stockAfter)
+
+	// Verify decrement worked
+	actualQty = tests.GetProductQuantity(t, testDB.DB, productID)
+	assert.Equal(t, maxInt32-1, actualQty)
+}
+
+// TestUpdateProductInventory_UnicodeHandling tests Unicode characters in text fields
+// Validates proper handling of international characters, emojis, and special symbols
+func TestUpdateProductInventory_UnicodeHandling(t *testing.T) {
+	repo, testDB := setupInventoryTestRepo(t)
+	defer testDB.TeardownTestPostgres(t)
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	productID := int64(5000)
+	userID := int64(1000)
+
+	testCases := []struct {
+		name   string
+		reason string
+		notes  string
+	}{
+		{
+			name:   "Cyrillic characters",
+			reason: "Поступление товара",
+			notes:  "Получено от поставщика ООО Рога и Копыта",
+		},
+		{
+			name:   "Chinese characters",
+			reason: "库存调整",
+			notes:  "根据实际盘点结果调整库存数量",
+		},
+		{
+			name:   "Arabic characters",
+			reason: "استلام البضائع",
+			notes:  "تم استلام البضائع من المورد",
+		},
+		{
+			name:   "Emoji and special characters",
+			reason: "📦 Restock 🚚",
+			notes:  "New inventory arrived! 🎉 Check quality ✅",
+		},
+		{
+			name:   "Mixed scripts",
+			reason: "Restock товара 产品 📦",
+			notes:  "International supplier delivery - Международная поставка",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			stockBefore, stockAfter, err := repo.UpdateProductInventory(
+				ctx,
+				storefrontID,
+				productID,
+				0,
+				"in",
+				10,
+				tc.reason,
+				tc.notes,
+				userID,
+			)
+
+			require.NoError(t, err, "Should handle Unicode characters")
+			assert.Equal(t, stockBefore+10, stockAfter, "Quantity should increment correctly")
+
+			// Verify movement was recorded with correct text
+			// (This assumes we have a way to query movements by product)
+			movementCount := tests.GetInventoryMovementCount(t, testDB.DB, productID)
+			assert.Greater(t, movementCount, 0, "Movement should be recorded")
+		})
+	}
+}
+
+// TestBatchUpdateStock_ConcurrentBatches tests concurrent batch operations
+// Validates thread safety and race condition handling in batch updates
+func TestBatchUpdateStock_ConcurrentBatches(t *testing.T) {
+	repo, testDB := setupInventoryTestRepo(t)
+	defer testDB.TeardownTestPostgres(t)
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	userID := int64(1000)
+	concurrentBatches := 5
+
+	// Each batch updates different products to avoid conflicts
+	productIDs := []int64{5000, 5003, 5004, 5006}
+
+	var wg sync.WaitGroup
+	errors := make(chan error, concurrentBatches)
+
+	for i := 0; i < concurrentBatches; i++ {
+		wg.Add(1)
+		go func(batchNum int) {
+			defer wg.Done()
+
+			items := make([]domain.StockUpdateItem, len(productIDs))
+			for j, prodID := range productIDs {
+				items[j] = domain.StockUpdateItem{
+					ProductID: prodID,
+					Quantity:  int32(100 + batchNum*10 + j),
+					Reason:    stringPtr("concurrent_batch"),
+				}
+			}
+
+			_, _, _, err := repo.BatchUpdateStock(
+				ctx,
+				storefrontID,
+				items,
+				"concurrency_test",
+				userID,
+			)
+			errors <- err
+		}(i)
+	}
+
+	wg.Wait()
+	close(errors)
+
+	// Verify all batches succeeded
+	for err := range errors {
+		assert.NoError(t, err, "All concurrent batches should succeed")
+	}
+
+	// Verify final state is consistent
+	for _, prodID := range productIDs {
+		qty := tests.GetProductQuantity(t, testDB.DB, prodID)
+		assert.Greater(t, qty, int32(0), "Product should have positive quantity")
+	}
+}
+
+// TestUpdateProductInventory_DeadlockPrevention tests deadlock prevention mechanisms
+// Validates that the repository properly orders operations to prevent deadlocks
+func TestUpdateProductInventory_DeadlockPrevention(t *testing.T) {
+	repo, testDB := setupInventoryTestRepo(t)
+	defer testDB.TeardownTestPostgres(t)
+
+	ctx := tests.TestContext(t)
+
+	storefrontID := int64(1000)
+	userID := int64(1000)
+	concurrentOps := 20
+
+	// Products to update (creates potential for deadlock if not handled properly)
+	productIDs := []int64{5000, 5003, 5004}
+
+	var wg sync.WaitGroup
+	successCount := int32(0)
+	errorCount := int32(0)
+
+	// Launch concurrent operations on same products
+	for i := 0; i < concurrentOps; i++ {
+		wg.Add(1)
+		go func(iteration int) {
+			defer wg.Done()
+
+			// Alternate between products to create contention
+			productID := productIDs[iteration%len(productIDs)]
+
+			_, _, err := repo.UpdateProductInventory(
+				ctx,
+				storefrontID,
+				productID,
+				0,
+				"in",
+				1,
+				"deadlock_test",
+				"Testing concurrent updates",
+				userID,
+			)
+
+			if err != nil {
+				atomic.AddInt32(&errorCount, 1)
+				// Log error for debugging
+				t.Logf("Operation %d failed: %v", iteration, err)
+			} else {
+				atomic.AddInt32(&successCount, 1)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Verify most operations succeeded (some failures acceptable under high contention)
+	successRate := float64(successCount) / float64(concurrentOps)
+	assert.Greater(t, successRate, 0.8,
+		"At least 80%% of concurrent operations should succeed (no deadlocks)")
+
+	t.Logf("Success rate: %.2f%% (%d/%d)", successRate*100, successCount, concurrentOps)
+
+	// Verify database state is consistent
+	for _, prodID := range productIDs {
+		qty := tests.GetProductQuantity(t, testDB.DB, prodID)
+		assert.Greater(t, qty, int32(0), "Product should have valid quantity")
+
+		movementCount := tests.GetInventoryMovementCount(t, testDB.DB, prodID)
+		assert.Greater(t, movementCount, 0, "Should have recorded movements")
+	}
 }

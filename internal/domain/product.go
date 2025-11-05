@@ -182,13 +182,13 @@ func (pv *ProductVariant) GetDiscountPercentage() float64 {
 type CreateProductInput struct {
 	StorefrontID          int64                  `json:"storefront_id" validate:"required"`
 	Name                  string                 `json:"name" validate:"required,min=3,max=255"`
-	Description           string                 `json:"description" validate:"required"`
-	Price                 float64                `json:"price" validate:"required,gte=0"`
+	Description           string                 `json:"description" validate:"omitempty,max=5000"`
+	Price                 float64                `json:"price" validate:"required,gt=0"`
 	Currency              string                 `json:"currency" validate:"required,len=3"`
 	CategoryID            int64                  `json:"category_id" validate:"required"`
 	SKU                   *string                `json:"sku,omitempty"`
 	Barcode               *string                `json:"barcode,omitempty"`
-	StockQuantity         int32                  `json:"stock_quantity" validate:"required,gte=0"`
+	StockQuantity         int32                  `json:"stock_quantity" validate:"gte=0"`
 	Attributes            map[string]interface{} `json:"attributes,omitempty"`
 	HasIndividualLocation bool                   `json:"has_individual_location"`
 	IndividualAddress     *string                `json:"individual_address,omitempty"`

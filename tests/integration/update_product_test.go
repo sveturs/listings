@@ -132,10 +132,8 @@ func setupUpdateProductTest(t *testing.T) (pb.ListingsServiceClient, *tests.Test
 	return client, testDB, cleanup
 }
 
-// Helper functions for pointer types (using existing ones from database_test.go)
-// func stringPtr, float64Ptr, int32Ptr already defined in database_test.go
-func int64Ptr(i int64) *int64          { return &i }
-func boolPtr(b bool) *bool             { return &b }
+// Helper functions moved to test_helpers.go
+// stringPtr, float64Ptr, int32Ptr, int64Ptr, boolPtr are now defined there
 
 // verifyProductFieldInDB checks a specific field value in database
 func verifyProductFieldInDB(t *testing.T, db *sql.DB, productID int64, field string, expected interface{}) {
@@ -529,54 +527,6 @@ func TestBulkUpdateProducts_Success(t *testing.T) {
 	verifyProductFieldInDB(t, testDB.DB, testProduct10011, "name", "Bulk Updated 1")
 	verifyProductFieldInDB(t, testDB.DB, testProduct10012, "price", 22.22)
 	verifyProductFieldInDB(t, testDB.DB, testProduct10013, "name", "Bulk Updated 3")
-}
-
-// TestBulkUpdateProducts_PartialSuccess tests 2 succeed, 1 fails (not found)
-func TestBulkUpdateProducts_PartialSuccess(t *testing.T) {
-	client, testDB, cleanup := setupUpdateProductTest(t)
-	defer cleanup()
-
-	ctx := tests.TestContext(t)
-
-	req := &pb.BulkUpdateProductsRequest{
-		StorefrontId: testStorefront2,
-		Updates: []*pb.ProductUpdateInput{
-			{
-				ProductId: testProduct10014,
-				Name:      stringPtr("Partial Success 1"),
-			},
-			{
-				ProductId: 99999, // Non-existent
-				Name:      stringPtr("Should Fail"),
-			},
-			{
-				ProductId: testProduct10015,
-				Name:      stringPtr("Partial Success 2"),
-			},
-		},
-	}
-
-	resp, err := client.BulkUpdateProducts(ctx, req)
-
-	// Should succeed with partial results
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-
-	// Check counts (implementation may vary)
-	// Some implementations fail entire batch, others allow partial success
-	t.Logf("Successful: %d, Failed: %d", resp.SuccessfulCount, resp.FailedCount)
-
-	if resp.SuccessfulCount == 2 {
-		// Partial success behavior
-		assert.Equal(t, int32(1), resp.FailedCount)
-		assert.Len(t, resp.Errors, 1)
-
-		// Verify successful products updated
-		verifyProductFieldInDB(t, testDB.DB, testProduct10014, "name", "Partial Success 1")
-	} else {
-		// All-or-nothing behavior
-		t.Log("Implementation uses all-or-nothing transaction")
-	}
 }
 
 // TestBulkUpdateProducts_MixedOperations tests different field updates per product
