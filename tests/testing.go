@@ -265,3 +265,13 @@ func SkipIfNoDocker(t *testing.T) {
 		t.Skip("Docker not available, skipping integration test")
 	}
 }
+
+// testClock returns current time for performance measurements
+func testClock() time.Time {
+	return time.Now()
+}
+
+// testClockSince returns duration since start time
+func testClockSince(start time.Time) time.Duration {
+	return time.Since(start)
+}

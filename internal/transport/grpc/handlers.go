@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	"github.com/sveturs/listings/internal/metrics"
 	"github.com/sveturs/listings/internal/service/listings"
 )
 
@@ -16,13 +17,15 @@ import (
 type Server struct {
 	pb.UnimplementedListingsServiceServer
 	service *listings.Service
+	metrics *metrics.Metrics
 	logger  zerolog.Logger
 }
 
 // NewServer creates a new gRPC server instance
-func NewServer(service *listings.Service, logger zerolog.Logger) *Server {
+func NewServer(service *listings.Service, m *metrics.Metrics, logger zerolog.Logger) *Server {
 	return &Server{
 		service: service,
+		metrics: m,
 		logger:  logger.With().Str("component", "grpc_handler").Logger(),
 	}
 }

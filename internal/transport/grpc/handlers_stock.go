@@ -170,8 +170,9 @@ func (s *Server) RollbackStock(ctx context.Context, req *pb.RollbackStockRequest
 		}, nil
 	}
 
-	// Convert results to proto
+	// Convert results to proto and check if all succeeded
 	pbResults := make([]*pb.StockResult, 0, len(results))
+	allSucceeded := true
 	for _, result := range results {
 		pbResults = append(pbResults, &pb.StockResult{
 			ProductId:   result.ProductID,
@@ -181,14 +182,19 @@ func (s *Server) RollbackStock(ctx context.Context, req *pb.RollbackStockRequest
 			Success:     result.Success,
 			Error:       result.Error,
 		})
+
+		if !result.Success {
+			allSucceeded = false
+		}
 	}
 
 	logger.Info().
 		Int("items_processed", len(results)).
+		Bool("all_succeeded", allSucceeded).
 		Msg("Stock rollback completed")
 
 	return &pb.RollbackStockResponse{
-		Success: true,
+		Success: allSucceeded,
 		Results: pbResults,
 	}, nil
 }

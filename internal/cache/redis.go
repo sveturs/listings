@@ -166,6 +166,12 @@ func (c *RedisCache) GetPoolStats() *redis.PoolStats {
 	return c.client.PoolStats()
 }
 
+// GetClient returns the underlying Redis client for advanced usage
+// (e.g., rate limiting)
+func (c *RedisCache) GetClient() *redis.Client {
+	return c.client
+}
+
 // Close closes the Redis client connection
 func (c *RedisCache) Close() error {
 	return c.client.Close()

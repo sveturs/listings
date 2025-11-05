@@ -2,11 +2,13 @@ package grpc
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	"github.com/sveturs/listings/internal/timeout"
 )
 
 // BulkDeleteProducts deletes multiple products in a single atomic operation
@@ -16,6 +18,14 @@ func (s *Server) BulkDeleteProducts(ctx context.Context, req *pb.BulkDeleteProdu
 		Int("product_count", len(req.ProductIds)).
 		Bool("hard_delete", req.HardDelete).
 		Msg("BulkDeleteProducts called")
+
+	// Check remaining time before starting (bulk delete requires at least 5s for cascade operations)
+	if !timeout.HasSufficientTime(ctx, 5*time.Second) {
+		s.logger.Warn().
+			Dur("remaining", timeout.RemainingTime(ctx)).
+			Msg("insufficient time for bulk delete operation")
+		return nil, status.Error(codes.DeadlineExceeded, "insufficient time remaining for bulk delete operation")
+	}
 
 	// Validation
 	if req.StorefrontId <= 0 {
@@ -31,7 +41,15 @@ func (s *Server) BulkDeleteProducts(ctx context.Context, req *pb.BulkDeleteProdu
 	}
 
 	// Validate all product IDs are positive
-	for _, id := range req.ProductIds {
+	for i, id := range req.ProductIds {
+		// Check context periodically during validation
+		if i%100 == 0 {
+			if err := timeout.CheckDeadline(ctx); err != nil {
+				s.logger.Warn().Int("ids_validated", i).Msg("timeout during validation")
+				return nil, status.Error(codes.DeadlineExceeded, "operation cancelled during validation")
+			}
+		}
+
 		if id <= 0 {
 			return nil, status.Error(codes.InvalidArgument, "all product IDs must be greater than 0")
 		}

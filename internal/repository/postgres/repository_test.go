@@ -34,7 +34,37 @@ func setupTestRepo(t *testing.T) (*Repository, *tests.TestDB) {
 	// Create repository
 	repo := NewRepository(db, logger)
 
+	// Create test categories (fixtures)
+	setupTestCategories(t, db)
+
 	return repo, testDB
+}
+
+// setupTestCategories creates test category fixtures
+func setupTestCategories(t *testing.T, db *sqlx.DB) {
+	t.Helper()
+
+	categories := []struct {
+		id          int
+		name        string
+		slug        string
+		description string
+	}{
+		{100, "Test Electronics", "test-electronics", "Test category for electronics"},
+		{200, "Test Fashion", "test-fashion", "Test category for fashion items"},
+		{300, "Test Home & Garden", "test-home-garden", "Test category for home and garden"},
+	}
+
+	for _, cat := range categories {
+		_, err := db.Exec(`
+			INSERT INTO c2c_categories (id, name, slug, description, is_active, level, sort_order)
+			VALUES ($1, $2, $3, $4, true, 0, 0)
+			ON CONFLICT (id) DO NOTHING
+		`, cat.id, cat.name, cat.slug, cat.description)
+		if err != nil {
+			t.Fatalf("failed to create test category: %v", err)
+		}
+	}
 }
 
 func TestNewRepository(t *testing.T) {

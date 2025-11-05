@@ -2,6 +2,8 @@ package grpc
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -9,6 +11,7 @@ import (
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
+	"github.com/sveturs/listings/internal/timeout"
 )
 
 // RecordInventoryMovement records a stock change with movement tracking
@@ -85,9 +88,23 @@ func (s *Server) RecordInventoryMovement(ctx context.Context, req *pb.RecordInve
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to record inventory movement")
 
-		// Check for specific errors with placeholders
+		// Record error metric
 		errMsg := err.Error()
-		if errMsg == "inventory.product_not_found" {
+		if s.metrics != nil {
+			errorReason := "unknown"
+			switch errMsg {
+			case "products.not_found":
+				errorReason = "product_not_found"
+			case "inventory.variant_not_found":
+				errorReason = "variant_not_found"
+			case "inventory.insufficient_stock":
+				errorReason = "insufficient_stock"
+			}
+			s.metrics.RecordInventoryMovementError(errorReason)
+		}
+
+		// Check for specific errors with placeholders
+		if errMsg == "products.not_found" {
 			return nil, status.Error(codes.NotFound, "inventory.product_not_found")
 		}
 		if errMsg == "inventory.variant_not_found" {
@@ -99,6 +116,11 @@ func (s *Server) RecordInventoryMovement(ctx context.Context, req *pb.RecordInve
 
 		// Generic error
 		return nil, status.Error(codes.Internal, "inventory.update_failed")
+	}
+
+	// Record success metric
+	if s.metrics != nil {
+		s.metrics.RecordInventoryMovement(req.MovementType)
 	}
 
 	s.logger.Info().
@@ -123,6 +145,14 @@ func (s *Server) BatchUpdateStock(ctx context.Context, req *pb.BatchUpdateStockR
 		Int("item_count", len(req.Items)).
 		Msg("BatchUpdateStock called")
 
+	// Check remaining time before starting (batch operation requires at least 5s)
+	if !timeout.HasSufficientTime(ctx, 5*time.Second) {
+		s.logger.Warn().
+			Dur("remaining", timeout.RemainingTime(ctx)).
+			Msg("insufficient time for batch update operation")
+		return nil, status.Error(codes.DeadlineExceeded, "insufficient time remaining for batch operation")
+	}
+
 	// Validation
 	if req.StorefrontId <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "storefront ID must be greater than 0")
@@ -142,6 +172,14 @@ func (s *Server) BatchUpdateStock(ctx context.Context, req *pb.BatchUpdateStockR
 
 	// Validate each item
 	for i, item := range req.Items {
+		// Check context periodically during validation
+		if i%100 == 0 {
+			if err := timeout.CheckDeadline(ctx); err != nil {
+				s.logger.Warn().Int("items_validated", i).Msg("timeout during validation")
+				return nil, status.Error(codes.DeadlineExceeded, "operation cancelled during validation")
+			}
+		}
+
 		if item.ProductId <= 0 {
 			return nil, status.Errorf(codes.InvalidArgument, "invalid product_id at index %d", i)
 		}
@@ -185,7 +223,18 @@ func (s *Server) BatchUpdateStock(ctx context.Context, req *pb.BatchUpdateStockR
 	)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to batch update stock")
+
+		// Record error metric
+		if s.metrics != nil {
+			s.metrics.RecordInventoryStockOperation("batch_update", "error")
+		}
+
 		return nil, status.Error(codes.Internal, "inventory.batch_update_failed")
+	}
+
+	// Record success metric
+	if s.metrics != nil {
+		s.metrics.RecordInventoryStockOperation("batch_update", "success")
 	}
 
 	// Convert domain results to proto
@@ -272,7 +321,18 @@ func (s *Server) IncrementProductViews(ctx context.Context, req *pb.IncrementPro
 	// Call service to increment views
 	if err := s.service.IncrementProductViews(ctx, req.ProductId); err != nil {
 		s.logger.Error().Err(err).Int64("product_id", req.ProductId).Msg("failed to increment product views")
+
+		// Record error metric
+		if s.metrics != nil {
+			s.metrics.RecordInventoryProductViewError()
+		}
+
 		return nil, status.Error(codes.Internal, "products.increment_views_failed")
+	}
+
+	// Record success metric
+	if s.metrics != nil {
+		s.metrics.RecordInventoryProductView(fmt.Sprintf("%d", req.ProductId))
 	}
 
 	s.logger.Debug().Int64("product_id", req.ProductId).Msg("product views incremented successfully")

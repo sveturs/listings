@@ -374,23 +374,114 @@ See [OPENSEARCH_SETUP.md](./OPENSEARCH_SETUP.md) for comprehensive guide includi
 
 ### Prometheus Metrics
 
-Exposed on port 9093:
+Metrics are exposed on the HTTP port (8086) at `/metrics` endpoint:
 
 ```bash
-curl http://localhost:9093/metrics
+curl http://localhost:8086/metrics
 ```
 
-Key metrics:
-- Request duration
-- Request count by endpoint
-- Database connection pool stats
-- Cache hit/miss ratio
-- Worker queue length
+#### gRPC Handler Metrics
+
+Automatically tracked for all gRPC calls via interceptor:
+
+- `listings_grpc_requests_total{method, status}` - Total gRPC requests by method and status code
+- `listings_grpc_request_duration_seconds{method}` - Request latency histogram (p50, p95, p99)
+- `listings_grpc_handler_requests_active{method}` - Active requests per handler
+
+#### Inventory-Specific Metrics
+
+Business metrics for inventory operations:
+
+- `listings_inventory_product_views_total{product_id}` - Product view counters
+- `listings_inventory_product_views_errors_total` - View increment errors
+- `listings_inventory_stock_operations_total{operation, status}` - Stock operations (update/batch)
+- `listings_inventory_movements_recorded_total{movement_type}` - Inventory movements (in/out/adjustment)
+- `listings_inventory_movements_errors_total{reason}` - Movement recording errors
+- `listings_inventory_stock_low_threshold_reached_total{product_id, storefront_id}` - Low stock alerts
+- `listings_inventory_stock_value{storefront_id, product_id}` - Current stock value
+- `listings_inventory_out_of_stock_products` - Out-of-stock count
+
+#### Database Metrics
+
+Connection pool stats collected every 15 seconds:
+
+- `listings_db_connections_open` - Open connections
+- `listings_db_connections_idle` - Idle connections
+- `listings_db_query_duration_seconds{operation}` - Query execution time
+
+#### Rate Limiting Metrics
+
+Track rate limit evaluations and enforcement:
+
+- `listings_rate_limit_hits_total{method, identifier_type}` - Total rate limit checks
+- `listings_rate_limit_allowed_total{method, identifier_type}` - Allowed requests
+- `listings_rate_limit_rejected_total{method, identifier_type}` - Rejected requests
+
+#### HTTP Metrics
+
+- `listings_http_requests_total{method, path, status}` - HTTP request counters
+- `listings_http_request_duration_seconds{method, path}` - HTTP latency
+- `listings_http_requests_in_flight` - Active HTTP requests
+
+#### Business Metrics
+
+- `listings_listings_created_total` - Listings created
+- `listings_listings_updated_total` - Listings updated
+- `listings_listings_deleted_total` - Listings deleted
+- `listings_listings_searched_total` - Search queries executed
+
+#### Cache Metrics
+
+- `listings_cache_hits_total{cache_type}` - Cache hits
+- `listings_cache_misses_total{cache_type}` - Cache misses
+
+#### Worker Metrics
+
+- `listings_indexing_queue_size` - Current queue size
+- `listings_indexing_jobs_processed_total{operation, status}` - Jobs processed
+- `listings_indexing_job_duration_seconds` - Job processing time
+
+#### Error Metrics
+
+- `listings_errors_total{component, error_type}` - Errors by component
+
+### Metrics Collection
+
+The DB stats collector runs in background with 15-second interval:
+
+```go
+// Auto-started on service initialization
+dbStatsCollector := metrics.NewDBStatsCollector(db, metricsInstance, logger, 15*time.Second)
+go dbStatsCollector.Start(context.Background())
+```
+
+### Example Queries
+
+**Average gRPC request duration:**
+```promql
+rate(listings_grpc_request_duration_seconds_sum[5m]) / rate(listings_grpc_request_duration_seconds_count[5m])
+```
+
+**P95 gRPC latency:**
+```promql
+histogram_quantile(0.95, rate(listings_grpc_request_duration_seconds_bucket[5m]))
+```
+
+**Database connection usage:**
+```promql
+listings_db_connections_open - listings_db_connections_idle
+```
+
+**Rate limit rejection rate:**
+```promql
+rate(listings_rate_limit_rejected_total[5m]) / rate(listings_rate_limit_hits_total[5m])
+```
 
 ### Health Check
 
 ```bash
 curl http://localhost:8086/health
+curl http://localhost:8086/ready
 ```
 
 ## Performance
@@ -399,6 +490,76 @@ curl http://localhost:8086/health
 - **Redis Caching**: 5-minute TTL for listings, 2-minute for search
 - **Async Indexing**: Non-blocking OpenSearch updates
 - **Worker Concurrency**: 5 concurrent indexing workers
+- **Timeout Enforcement**: Per-endpoint timeout limits (see Timeout Configuration below)
+- **Rate Limiting**: Redis-backed rate limiting per endpoint
+
+### Timeout Configuration
+
+The service enforces timeouts at two levels:
+
+**1. Middleware Level (Automatic)**
+- All gRPC requests have enforced timeouts based on endpoint type
+- Timeouts prevent resource exhaustion from slow operations
+- Metrics tracked: `listings_timeouts_total`, `listings_near_timeouts_total`
+
+**2. Handler Level (Defensive)**
+- Long-running operations check context deadlines periodically
+- Early rejection if insufficient time remains
+- Prevents wasted work on doomed operations
+
+**Timeout Values by Endpoint:**
+
+| Endpoint | Timeout | Reason |
+|----------|---------|--------|
+| GetListing | 5s | Simple DB query |
+| ListListings | 5s | Paginated query |
+| CreateListing | 10s | DB write + validation |
+| UpdateListing | 10s | DB write + cascade |
+| DeleteListing | 15s | Cascade deletes |
+| SearchListings | 8s | OpenSearch query |
+| IncrementProductViews | 3s | Counter update |
+| GetProductStats | 5s | Aggregation query |
+| RecordInventoryMovement | 8s | DB write + audit |
+| UpdateStock | 5s | Single stock update |
+| GetStock | 3s | Simple read |
+| BatchUpdateStock | 20s | Bulk operation |
+| GetInventoryStatus | 5s | Read query |
+
+**Testing Timeouts:**
+
+```bash
+# Run timeout integration tests
+./test_timeout.sh
+
+# Manual timeout test with grpcurl
+grpcurl -plaintext -max-time 0.001 \
+  -d '{"id": 1}' \
+  localhost:50051 \
+  listings.v1.ListingsService/GetListing
+```
+
+**Monitoring Timeouts:**
+
+```bash
+# Check timeout metrics
+curl http://localhost:9090/metrics | grep listings_timeouts_total
+
+# Check near-timeout warnings (>80% usage)
+curl http://localhost:9090/metrics | grep listings_near_timeouts_total
+
+# View timeout duration histogram
+curl http://localhost:9090/metrics | grep listings_timeout_duration_seconds
+```
+
+**Adjusting Timeouts:**
+
+To modify timeout values, edit `internal/timeout/config.go`:
+
+```go
+"/listings.v1.ListingsService/YourEndpoint": {
+    Timeout: 15 * time.Second,
+}
+```
 
 ## Contributing
 

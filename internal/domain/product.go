@@ -313,3 +313,31 @@ type BulkUpdateError struct {
 	ErrorCode    string `json:"error_code"`
 	ErrorMessage string `json:"error_message"`
 }
+
+// ProductStats represents product statistics for a storefront
+type ProductStats struct {
+	TotalProducts  int32   `json:"total_products"`
+	ActiveProducts int32   `json:"active_products"`
+	OutOfStock     int32   `json:"out_of_stock"`
+	LowStock       int32   `json:"low_stock"`
+	TotalValue     float64 `json:"total_value"`
+	TotalSold      int32   `json:"total_sold"`
+}
+
+// StockUpdateItem represents a single stock update in batch operation
+type StockUpdateItem struct {
+	ProductID int64   `json:"product_id"`
+	VariantID *int64  `json:"variant_id,omitempty"`
+	Quantity  int32   `json:"quantity"`
+	Reason    *string `json:"reason,omitempty"`
+}
+
+// StockUpdateResult represents the result of a single stock update
+type StockUpdateResult struct {
+	ProductID   int64   `json:"product_id"`
+	VariantID   *int64  `json:"variant_id,omitempty"`
+	StockBefore int32   `json:"stock_before"`
+	StockAfter  int32   `json:"stock_after"`
+	Success     bool    `json:"success"`
+	Error       *string `json:"error,omitempty"`
+}

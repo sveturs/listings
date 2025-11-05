@@ -27,6 +27,7 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 		FROM b2c_products p
 		WHERE p.id = $1
 		  AND ($2::bigint IS NULL OR p.storefront_id = $2)
+		  AND p.deleted_at IS NULL
 	`
 
 	var product domain.Product
@@ -126,6 +127,7 @@ func (r *Repository) GetProductsBySKUs(ctx context.Context, skus []string, store
 		WHERE p.sku = ANY($1::text[])
 		  AND ($2::bigint IS NULL OR p.storefront_id = $2)
 		  AND p.is_active = true
+		  AND p.deleted_at IS NULL
 	`
 
 	rows, err := r.db.QueryContext(ctx, query, pq.Array(skus), storefrontID)
@@ -237,6 +239,7 @@ func (r *Repository) GetProductsByIDs(ctx context.Context, productIDs []int64, s
 		WHERE p.id = ANY($1::bigint[])
 		  AND ($2::bigint IS NULL OR p.storefront_id = $2)
 		  AND p.is_active = true
+		  AND p.deleted_at IS NULL
 	`
 
 	rows, err := r.db.QueryContext(ctx, query, pq.Array(productIDs), storefrontID)
@@ -676,12 +679,15 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 	// Marshal attributes to JSON
 	var attributesJSON []byte
 	var err error
-	if input.Attributes != nil && len(input.Attributes) > 0 {
+	if input.Attributes != nil {
 		attributesJSON, err = json.Marshal(input.Attributes)
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to marshal product attributes")
 			return nil, fmt.Errorf("failed to marshal product attributes: %w", err)
 		}
+	} else {
+		// Default to empty JSON object if nil
+		attributesJSON = []byte("{}")
 	}
 
 	// Determine stock_status based on quantity
@@ -1293,7 +1299,7 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 
 		// Marshal attributes
 		var attributesJSON []byte
-		if input.Attributes != nil && len(input.Attributes) > 0 {
+		if input.Attributes != nil {
 			attributesJSON, err = json.Marshal(input.Attributes)
 			if err != nil {
 				errors = append(errors, domain.BulkProductError{
@@ -1303,6 +1309,9 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 				})
 				continue
 			}
+		} else {
+			// Default to empty JSON object if nil
+			attributesJSON = []byte("{}")
 		}
 
 		// Determine stock_status
@@ -1710,4 +1719,373 @@ func (r *Repository) BulkDeleteProducts(ctx context.Context, storefrontID int64,
 		Msg("bulk delete products completed")
 
 	return successCount, failedCount, totalVariantsDeleted, errors, nil
+}
+
+
+// UpdateProductInventory updates product stock with inventory movement tracking
+// NOTE: Requires b2c_inventory_movements table (create via migration if not exists)
+func (r *Repository) UpdateProductInventory(ctx context.Context, storefrontID, productID, variantID int64, movementType string, quantity int32, reason, notes string, userID int64) (int32, int32, error) {
+	r.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int64("product_id", productID).
+		Int64("variant_id", variantID).
+		Str("movement_type", movementType).
+		Int32("quantity", quantity).
+		Msg("updating product inventory")
+
+	// Validate inputs
+	if storefrontID <= 0 {
+		return 0, 0, fmt.Errorf("storefront_id must be greater than 0")
+	}
+	if productID <= 0 {
+		return 0, 0, fmt.Errorf("product_id must be greater than 0")
+	}
+	if movementType != "in" && movementType != "out" && movementType != "adjustment" {
+		return 0, 0, fmt.Errorf("invalid movement_type: must be 'in', 'out', or 'adjustment'")
+	}
+	if quantity < 0 {
+		return 0, 0, fmt.Errorf("quantity cannot be negative")
+	}
+
+	// Start transaction
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to begin transaction")
+		return 0, 0, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	var currentQuantity, newQuantity int32
+	var tableName, idColumn string
+
+	// Determine target table and column
+	if variantID > 0 {
+		tableName = "b2c_product_variants"
+		idColumn = "id"
+	} else {
+		tableName = "b2c_products"
+		idColumn = "id"
+	}
+
+	// Get current stock quantity
+	var query string
+	var queryArgs []interface{}
+	if variantID > 0 {
+		query = fmt.Sprintf("SELECT stock_quantity FROM %s WHERE %s = $1 AND product_id = $2", tableName, idColumn)
+		queryArgs = []interface{}{variantID, productID}
+	} else {
+		query = fmt.Sprintf("SELECT stock_quantity FROM %s WHERE %s = $1 AND storefront_id = $2", tableName, idColumn)
+		queryArgs = []interface{}{productID, storefrontID}
+	}
+
+	err = tx.QueryRowContext(ctx, query, queryArgs...).Scan(&currentQuantity)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, 0, fmt.Errorf("products.not_found")
+		}
+		r.logger.Error().Err(err).Msg("failed to get current stock")
+		return 0, 0, fmt.Errorf("failed to get current stock: %w", err)
+	}
+
+	// Calculate new quantity based on movement type
+	switch movementType {
+	case "in":
+		newQuantity = currentQuantity + quantity
+	case "out":
+		newQuantity = currentQuantity - quantity
+		if newQuantity < 0 {
+			return currentQuantity, newQuantity, fmt.Errorf("products.insufficient_stock")
+		}
+	case "adjustment":
+		newQuantity = quantity // Direct set
+	default:
+		return 0, 0, fmt.Errorf("invalid movement_type: %s", movementType)
+	}
+
+	// Update stock quantity
+	var updateQuery string
+	if variantID > 0 {
+		updateQuery = fmt.Sprintf("UPDATE %s SET stock_quantity = $1, updated_at = NOW() WHERE %s = $2 AND product_id = $3", tableName, idColumn)
+		_, err = tx.ExecContext(ctx, updateQuery, newQuantity, variantID, productID)
+	} else {
+		updateQuery = fmt.Sprintf("UPDATE %s SET stock_quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3", tableName, idColumn)
+		_, err = tx.ExecContext(ctx, updateQuery, newQuantity, productID, storefrontID)
+	}
+
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to update stock quantity")
+		return currentQuantity, newQuantity, fmt.Errorf("failed to update stock quantity: %w", err)
+	}
+
+	// Record inventory movement in audit trail table
+	// Note: This table might not exist yet, so we'll use INSERT with error handling
+	movementQuery := `
+		INSERT INTO b2c_inventory_movements (
+			storefront_product_id, variant_id, type, quantity, reason, notes, user_id, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+	`
+	var variantIDPtr *int64
+	if variantID > 0 {
+		variantIDPtr = &variantID
+	}
+
+	_, err = tx.ExecContext(ctx, movementQuery, productID, variantIDPtr, movementType, quantity, reason, notes, userID)
+	if err != nil {
+		// Check if table doesn't exist
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "42P01" { // undefined_table
+				r.logger.Warn().Msg("b2c_inventory_movements table not found, skipping movement recording")
+				// Continue without failing - movement tracking is optional for now
+			} else {
+				r.logger.Error().Err(err).Msg("failed to record inventory movement")
+				return currentQuantity, newQuantity, fmt.Errorf("failed to record inventory movement: %w", err)
+			}
+		} else {
+			r.logger.Error().Err(err).Msg("failed to record inventory movement")
+			return currentQuantity, newQuantity, fmt.Errorf("failed to record inventory movement: %w", err)
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		r.logger.Error().Err(err).Msg("failed to commit transaction")
+		return currentQuantity, newQuantity, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	r.logger.Info().
+		Int64("product_id", productID).
+		Int64("variant_id", variantID).
+		Int32("stock_before", currentQuantity).
+		Int32("stock_after", newQuantity).
+		Msg("inventory updated successfully")
+
+	return currentQuantity, newQuantity, nil
+}
+
+// GetProductStats retrieves statistics for storefront products
+func (r *Repository) GetProductStats(ctx context.Context, storefrontID int64) (*domain.ProductStats, error) {
+	r.logger.Debug().Int64("storefront_id", storefrontID).Msg("getting product stats")
+
+	if storefrontID <= 0 {
+		return nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+
+	query := `
+		SELECT
+			COUNT(*) as total_products,
+			COUNT(*) FILTER (WHERE is_active = true) as active_products,
+			COUNT(*) FILTER (WHERE stock_status = 'out_of_stock') as out_of_stock,
+			COUNT(*) FILTER (WHERE stock_status = 'low_stock') as low_stock,
+			COALESCE(SUM(price * stock_quantity), 0) as total_value,
+			COALESCE(SUM(sold_count), 0) as total_sold
+		FROM b2c_products
+		WHERE storefront_id = $1
+	`
+
+	var stats domain.ProductStats
+	var totalValue sql.NullFloat64
+	var totalSold sql.NullInt32
+
+	err := r.db.QueryRowContext(ctx, query, storefrontID).Scan(
+		&stats.TotalProducts,
+		&stats.ActiveProducts,
+		&stats.OutOfStock,
+		&stats.LowStock,
+		&totalValue,
+		&totalSold,
+	)
+
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to get product stats")
+		return nil, fmt.Errorf("failed to get product stats: %w", err)
+	}
+
+	// Handle nullable fields
+	if totalValue.Valid {
+		stats.TotalValue = totalValue.Float64
+	}
+	if totalSold.Valid {
+		stats.TotalSold = totalSold.Int32
+	}
+
+	r.logger.Info().
+		Int32("total_products", stats.TotalProducts).
+		Int32("active_products", stats.ActiveProducts).
+		Float64("total_value", stats.TotalValue).
+		Msg("product stats retrieved")
+
+	return &stats, nil
+}
+
+// IncrementProductViews increments the view counter for a product
+func (r *Repository) IncrementProductViews(ctx context.Context, productID int64) error {
+	r.logger.Debug().Int64("product_id", productID).Msg("incrementing product views")
+
+	if productID <= 0 {
+		return fmt.Errorf("product_id must be greater than 0")
+	}
+
+	query := `
+		UPDATE b2c_products
+		SET view_count = view_count + 1, updated_at = NOW()
+		WHERE id = $1
+	`
+
+	result, err := r.db.ExecContext(ctx, query, productID)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("product_id", productID).Msg("failed to increment product views")
+		return fmt.Errorf("failed to increment product views: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("products.not_found")
+	}
+
+	r.logger.Debug().Int64("product_id", productID).Msg("product views incremented")
+	return nil
+}
+
+// BatchUpdateStock updates stock for multiple products/variants atomically
+func (r *Repository) BatchUpdateStock(ctx context.Context, storefrontID int64, items []domain.StockUpdateItem, reason string, userID int64) (int32, int32, []domain.StockUpdateResult, error) {
+	r.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int("item_count", len(items)).
+		Msg("batch updating stock")
+
+	// Validate inputs
+	if storefrontID <= 0 {
+		return 0, 0, nil, fmt.Errorf("storefront_id must be greater than 0")
+	}
+	if len(items) == 0 {
+		return 0, 0, nil, fmt.Errorf("items list cannot be empty")
+	}
+	if len(items) > 1000 {
+		return 0, 0, nil, fmt.Errorf("cannot update more than 1000 items at once")
+	}
+
+	// Start transaction
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to begin transaction")
+		return 0, 0, nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	var successCount, failedCount int32
+	var results []domain.StockUpdateResult
+
+	// Process each item
+	for _, item := range items {
+		result := domain.StockUpdateResult{
+			ProductID: item.ProductID,
+			VariantID: item.VariantID,
+		}
+
+		var currentQuantity int32
+		var tableName, idColumn string
+		var query string
+		var queryArgs []interface{}
+
+		// Determine target table
+		if item.VariantID != nil && *item.VariantID > 0 {
+			tableName = "b2c_product_variants"
+			idColumn = "id"
+			query = fmt.Sprintf("SELECT stock_quantity FROM %s WHERE %s = $1 AND product_id = $2", tableName, idColumn)
+			queryArgs = []interface{}{*item.VariantID, item.ProductID}
+			result.VariantID = item.VariantID
+		} else {
+			tableName = "b2c_products"
+			idColumn = "id"
+			query = fmt.Sprintf("SELECT stock_quantity FROM %s WHERE %s = $1 AND storefront_id = $2", tableName, idColumn)
+			queryArgs = []interface{}{item.ProductID, storefrontID}
+		}
+
+		// Get current stock
+		err := tx.QueryRowContext(ctx, query, queryArgs...).Scan(&currentQuantity)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				result.Success = false
+				result.Error = strPtr("not found")
+				failedCount++
+				results = append(results, result)
+				continue
+			}
+			r.logger.Error().Err(err).Msg("failed to get current stock")
+			result.Success = false
+			result.Error = strPtr(fmt.Sprintf("failed to get stock: %v", err))
+			failedCount++
+			results = append(results, result)
+			continue
+		}
+
+		result.StockBefore = currentQuantity
+
+		// Update stock quantity (absolute set)
+		var updateQuery string
+		if item.VariantID != nil && *item.VariantID > 0 {
+			updateQuery = fmt.Sprintf("UPDATE %s SET stock_quantity = $1, updated_at = NOW() WHERE %s = $2 AND product_id = $3", tableName, idColumn)
+			_, err = tx.ExecContext(ctx, updateQuery, item.Quantity, *item.VariantID, item.ProductID)
+		} else {
+			updateQuery = fmt.Sprintf("UPDATE %s SET stock_quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3", tableName, idColumn)
+			_, err = tx.ExecContext(ctx, updateQuery, item.Quantity, item.ProductID, storefrontID)
+		}
+
+		if err != nil {
+			r.logger.Error().Err(err).Msg("failed to update stock")
+			result.Success = false
+			result.Error = strPtr(fmt.Sprintf("failed to update: %v", err))
+			failedCount++
+			results = append(results, result)
+			continue
+		}
+
+		result.StockAfter = item.Quantity
+		result.Success = true
+		successCount++
+		results = append(results, result)
+
+		// Record movement (optional, don't fail if table doesn't exist)
+		movementReason := reason
+		if item.Reason != nil && *item.Reason != "" {
+			movementReason = *item.Reason
+		}
+
+		movementQuery := `
+			INSERT INTO b2c_inventory_movements (
+				storefront_product_id, variant_id, type, quantity, reason, notes, user_id, created_at
+			) VALUES ($1, $2, 'adjustment', $3, $4, '', $5, NOW())
+		`
+		_, movErr := tx.ExecContext(ctx, movementQuery, item.ProductID, item.VariantID, item.Quantity, movementReason, userID)
+		if movErr != nil {
+			// Log warning but don't fail - movement tracking is optional
+			if pqErr, ok := movErr.(*pq.Error); ok {
+				if pqErr.Code != "42P01" { // Only warn if not "table doesn't exist"
+					r.logger.Warn().Err(movErr).Msg("failed to record inventory movement, continuing")
+				}
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		r.logger.Error().Err(err).Msg("failed to commit transaction")
+		return 0, 0, nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	r.logger.Info().
+		Int32("success_count", successCount).
+		Int32("failed_count", failedCount).
+		Msg("batch stock update completed")
+
+	return successCount, failedCount, results, nil
+}
+
+// Helper function to create string pointer
+func strPtr(s string) *string {
+	return &s
 }
