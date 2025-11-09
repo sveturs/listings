@@ -25,7 +25,7 @@ type Listing struct {
 	SourceType     string     `json:"source_type" db:"source_type"`             // c2c or b2c
 	StockStatus    *string    `json:"stock_status,omitempty" db:"stock_status"` // in_stock, out_of_stock, low_stock, discontinued (enum from DB)
 	AttributesJSON *string    `json:"attributes,omitempty" db:"attributes"`     // JSONB column stored as string for flexibility
-	ViewsCount     int32      `json:"views_count" db:"views_count"`
+	ViewsCount     int32      `json:"views_count" db:"view_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
 	ExpiresAt      *time.Time `json:"expires_at,omitempty" db:"expires_at"`
 	CreatedAt      time.Time  `json:"created_at" db:"created_at"`
@@ -85,7 +85,7 @@ type ListingLocation struct {
 // ListingStats represents cached statistics for a listing
 type ListingStats struct {
 	ListingID      int64      `json:"listing_id" db:"listing_id"`
-	ViewsCount     int32      `json:"views_count" db:"views_count"`
+	ViewsCount     int32      `json:"views_count" db:"view_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
 	InquiriesCount int32      `json:"inquiries_count" db:"inquiries_count"`
 	LastViewedAt   *time.Time `json:"last_viewed_at,omitempty" db:"last_viewed_at"`

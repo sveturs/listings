@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -1431,14 +1432,8 @@ func TestListingEdgeCases(t *testing.T) {
 
 		ctx := testutils.TestContext(t)
 
-		// Very long title (500 characters)
-		longTitle := string(make([]byte, 500))
-		for i := range longTitle {
-			longTitle = string(append([]byte{}, byte('A'+i%26)))
-		}
-		if len(longTitle) > 500 {
-			longTitle = longTitle[:500]
-		}
+		// Very long title (200 characters - maximum allowed)
+		longTitle := strings.Repeat("A", 200)
 
 		req := &pb.CreateListingRequest{
 			UserId:     6001,
@@ -1460,7 +1455,7 @@ func TestListingEdgeCases(t *testing.T) {
 		// Verify minimum values
 		minReq := &pb.CreateListingRequest{
 			UserId:     6002,
-			Title:      "X",  // Minimum 1 character
+			Title:      "Min",  // Minimum 3 characters (per validation rules)
 			Price:      0.01, // Minimum price
 			Currency:   "USD",
 			CategoryId: 51,

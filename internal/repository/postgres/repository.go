@@ -121,16 +121,23 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
+	// Generate unique slug from title
+	slug, err := r.GenerateUniqueSlug(ctx, input.Title)
+	if err != nil {
+		r.logger.Error().Err(err).Str("title", input.Title).Msg("failed to generate slug")
+		return nil, fmt.Errorf("failed to generate slug: %w", err)
+	}
+
 	query := `
-		INSERT INTO listings (user_id, storefront_id, title, description, price, currency, category_id, quantity, sku, source_type)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		RETURNING id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
+		INSERT INTO listings (user_id, storefront_id, title, description, price, currency, category_id, quantity, sku, source_type, slug)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		RETURNING id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		          status, visibility, quantity, sku, source_type, view_count, favorites_count,
 		          created_at, updated_at, published_at, deleted_at, is_deleted
 	`
 
 	var listing domain.Listing
-	err := r.db.QueryRowxContext(
+	err = r.db.QueryRowxContext(
 		ctx,
 		query,
 		input.UserID,
@@ -143,6 +150,7 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		input.Quantity,
 		input.SKU,
 		input.SourceType,
+		slug,
 	).StructScan(&listing)
 
 	if err != nil {
@@ -150,16 +158,16 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		return nil, fmt.Errorf("failed to create listing: %w", err)
 	}
 
-	r.logger.Info().Int64("listing_id", listing.ID).Str("title", listing.Title).Msg("listing created")
+	r.logger.Info().Int64("listing_id", listing.ID).Str("title", listing.Title).Str("slug", slug).Msg("listing created")
 	return &listing, nil
 }
 
 // GetListingByID retrieves a listing by its ID
 func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.Listing, error) {
 	query := `
-		SELECT id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
+		SELECT id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
-		       created_at, updated_at, published_at, deleted_at, is_deleted
+		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE id = $1 AND is_deleted = false
 	`
@@ -180,9 +188,9 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 // GetListingByUUID retrieves a listing by its UUID
 func (r *Repository) GetListingByUUID(ctx context.Context, uuid string) (*domain.Listing, error) {
 	query := `
-		SELECT id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
+		SELECT id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
-		       created_at, updated_at, published_at, deleted_at, is_deleted
+		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE uuid = $1::uuid AND is_deleted = false
 	`
@@ -322,9 +330,9 @@ func (r *Repository) UpdateListing(ctx context.Context, id int64, input *domain.
 		UPDATE listings
 		SET %s, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $%d AND is_deleted = false
-		RETURNING id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
-		          status, visibility, quantity, sku, view_count, favorites_count,
-		          created_at, updated_at, published_at, deleted_at, is_deleted
+		RETURNING id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
+		          status, visibility, quantity, sku, source_type, view_count, favorites_count,
+		          expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
 	`, strings.Join(updates, ", "), argPos)
 
 	var listing domain.Listing
@@ -431,9 +439,9 @@ func (r *Repository) ListListings(ctx context.Context, filter *domain.ListListin
 	// Get listings with pagination
 	args = append(args, filter.Limit, filter.Offset)
 	query := fmt.Sprintf(`
-		SELECT id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
+		SELECT id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
-		       created_at, updated_at, published_at, deleted_at, is_deleted
+		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE %s
 		ORDER BY created_at DESC
@@ -498,10 +506,10 @@ func (r *Repository) SearchListings(ctx context.Context, query *domain.SearchLis
 	// Get listings with pagination
 	args = append(args, query.Limit, query.Offset)
 	searchQuery := fmt.Sprintf(`
-		SELECT id, gen_random_uuid() as uuid, user_id, storefront_id, title, description, price,
-		       'RSD' as currency, category_id, status, 'public' as visibility,
-		       1 as quantity, NULL as sku, 'c2c' as source_type, view_count, 0 as favorites_count,
-		       created_at, updated_at, NULL as published_at, NULL as deleted_at, false as is_deleted
+		SELECT id, uuid, slug, user_id, storefront_id, title, description, price,
+		       currency, category_id, status, visibility,
+		       quantity, sku, source_type, view_count, favorites_count,
+		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE %s
 		ORDER BY created_at DESC
@@ -654,12 +662,12 @@ func (r *Repository) WithTransaction(ctx context.Context, fn func(*sqlx.Tx) erro
 // GetListingsForReindex retrieves listings that need reindexing
 func (r *Repository) GetListingsForReindex(ctx context.Context, limit int) ([]*domain.Listing, error) {
 	query := `
-		SELECT id, gen_random_uuid() as uuid, user_id, storefront_id, title, description, price,
-		       'RSD' as currency, category_id, status, 'public' as visibility,
-		       1 as quantity, NULL as sku, view_count, 0 as favorites_count,
-		       created_at, updated_at, NULL as published_at, NULL as deleted_at, false as is_deleted
+		SELECT id, uuid, slug, user_id, storefront_id, title, description, price,
+		       currency, category_id, status, visibility,
+		       quantity, sku, source_type, view_count, favorites_count,
+		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
-		WHERE status = 'active'
+		WHERE status = 'active' AND is_deleted = false
 		ORDER BY id ASC
 		LIMIT $1
 	`
