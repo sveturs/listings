@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
 
+	"backend/internal/clients/listings"
 	"backend/internal/domain/models"
 	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/storage/postgres"
@@ -24,6 +26,8 @@ type OrderService struct {
 	storefrontRepo StorefrontRepositoryInterface
 	inventoryMgr   InventoryManagerInterface
 	deliveryClient *grpcclient.Client // gRPC клиент для delivery микросервиса
+	listingsClient *listings.Client   // gRPC клиент для listings микросервиса
+	redisClient    *redis.Client      // Redis для distributed locks
 	logger         logger.Logger
 }
 
@@ -55,6 +59,8 @@ func NewOrderService(
 	storefrontRepo StorefrontRepositoryInterface,
 	inventoryMgr InventoryManagerInterface,
 	deliveryClient *grpcclient.Client,
+	listingsClient *listings.Client,
+	redisClient *redis.Client,
 	logger logger.Logger,
 ) *OrderService {
 	return &OrderService{
@@ -64,6 +70,8 @@ func NewOrderService(
 		storefrontRepo: storefrontRepo,
 		inventoryMgr:   inventoryMgr,
 		deliveryClient: deliveryClient,
+		listingsClient: listingsClient,
+		redisClient:    redisClient,
 		logger:         logger,
 	}
 }

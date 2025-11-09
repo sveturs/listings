@@ -213,23 +213,178 @@ func (r *ImageRepository) deleteStorefrontProductImage(ctx context.Context, imag
 	return nil
 }
 
-// Методы для работы с marketplace_images (заглушки - нужно будет реализовать)
+// Методы для работы с marketplace_images
 func (r *ImageRepository) createMarketplaceImage(ctx context.Context, img *models.MarketplaceImage) (models.ImageInterface, error) {
-	// TODO: Реализовать создание marketplace изображения
-	return nil, fmt.Errorf("marketplace image creation not implemented yet")
+	query := `
+		INSERT INTO c2c_images (
+			id, listing_id, file_path, file_name, file_size, content_type,
+			is_main, storage_type, storage_bucket, public_url
+		)
+		VALUES (nextval('c2c_images_id_seq'), $1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id, created_at`
+
+	err := r.db.QueryRowContext(
+		ctx, query,
+		img.ListingID,
+		img.FilePath,
+		img.FileName,
+		img.FileSize,
+		img.ContentType,
+		img.IsMain,
+		img.StorageType,
+		img.StorageBucket,
+		img.PublicURL,
+	).Scan(&img.ID, &img.CreatedAt)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create marketplace image: %w", err)
+	}
+
+	// Устанавливаем URL'ы из PublicURL
+	if img.ImageURL == "" {
+		img.ImageURL = img.PublicURL
+	}
+
+	return img, nil
 }
 
 func (r *ImageRepository) getMarketplaceImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
-	// TODO: Реализовать получение marketplace изображения
-	return nil, fmt.Errorf("marketplace image retrieval not implemented yet")
+	query := `
+		SELECT id, listing_id, file_path, file_name, file_size, content_type,
+		       is_main, storage_type, storage_bucket, public_url, created_at
+		FROM c2c_images
+		WHERE id = $1`
+
+	var img models.MarketplaceImage
+	err := r.db.QueryRowContext(ctx, query, imageID).Scan(
+		&img.ID,
+		&img.ListingID,
+		&img.FilePath,
+		&img.FileName,
+		&img.FileSize,
+		&img.ContentType,
+		&img.IsMain,
+		&img.StorageType,
+		&img.StorageBucket,
+		&img.PublicURL,
+		&img.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get marketplace image: %w", err)
+	}
+
+	// Устанавливаем URL'ы
+	img.ImageURL = img.PublicURL
+	// DisplayOrder не хранится в таблице c2c_images
+	img.DisplayOrder = 0
+
+	return &img, nil
 }
 
 func (r *ImageRepository) getMarketplaceImages(ctx context.Context, listingID int) ([]models.ImageInterface, error) {
-	// TODO: Реализовать получение marketplace изображений
-	return nil, fmt.Errorf("marketplace images retrieval not implemented yet")
+	query := `
+		SELECT id, listing_id, file_path, file_name, file_size, content_type,
+		       is_main, storage_type, storage_bucket, public_url, created_at
+		FROM c2c_images
+		WHERE listing_id = $1
+		ORDER BY is_main DESC, created_at ASC`
+
+	rows, err := r.db.QueryContext(ctx, query, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query marketplace images: %w", err)
+	}
+	defer rows.Close()
+
+	var images []models.MarketplaceImage
+	for rows.Next() {
+		var img models.MarketplaceImage
+		err := rows.Scan(
+			&img.ID,
+			&img.ListingID,
+			&img.FilePath,
+			&img.FileName,
+			&img.FileSize,
+			&img.ContentType,
+			&img.IsMain,
+			&img.StorageType,
+			&img.StorageBucket,
+			&img.PublicURL,
+			&img.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan marketplace image: %w", err)
+		}
+
+		// Устанавливаем URL'ы
+		img.ImageURL = img.PublicURL
+		// DisplayOrder не хранится в таблице c2c_images
+		img.DisplayOrder = 0
+
+		images = append(images, img)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	// Конвертируем в интерфейс
+	result := make([]models.ImageInterface, len(images))
+	for i := range images {
+		result[i] = &images[i]
+	}
+
+	return result, nil
 }
 
 func (r *ImageRepository) deleteMarketplaceImage(ctx context.Context, imageID int) error {
-	// TODO: Реализовать удаление marketplace изображения
-	return fmt.Errorf("marketplace image deletion not implemented yet")
+	query := `DELETE FROM c2c_images WHERE id = $1`
+	result, err := r.db.ExecContext(ctx, query, imageID)
+	if err != nil {
+		return fmt.Errorf("failed to delete marketplace image: %w", err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("no marketplace image found with ID: %d", imageID)
+	}
+
+	return nil
+}
+
+// GetFirstImageByListingID получает первое изображение для listing по дате создания
+// Используется для автоматического назначения нового главного изображения
+func (r *ImageRepository) GetFirstImageByListingID(ctx context.Context, listingID int) (*models.MarketplaceImage, error) {
+	query := `
+		SELECT id, listing_id, file_path, file_name, file_size, content_type,
+		       is_main, storage_type, storage_bucket, public_url, created_at
+		FROM c2c_images
+		WHERE listing_id = $1
+		ORDER BY created_at ASC
+		LIMIT 1`
+
+	var img models.MarketplaceImage
+	err := r.db.QueryRowContext(ctx, query, listingID).Scan(
+		&img.ID,
+		&img.ListingID,
+		&img.FilePath,
+		&img.FileName,
+		&img.FileSize,
+		&img.ContentType,
+		&img.IsMain,
+		&img.StorageType,
+		&img.StorageBucket,
+		&img.PublicURL,
+		&img.CreatedAt,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get first image: %w", err)
+	}
+
+	// Устанавливаем URL'ы
+	img.ImageURL = img.PublicURL
+	img.DisplayOrder = 0
+
+	return &img, nil
 }

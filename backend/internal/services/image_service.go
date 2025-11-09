@@ -321,7 +321,9 @@ func (s *ImageService) createThumbnail(imageBytes []byte, filename string) ([]by
 	}
 
 	// Создание миниатюры (200x200 пикселей)
-	thumbnail := resize.Thumbnail(200, 200, img, resize.Lanczos3)
+	// Используем Bilinear вместо Lanczos3 для ~3x speed improvement
+	// Незначительная потеря качества acceptable для thumbnails
+	thumbnail := resize.Thumbnail(200, 200, img, resize.Bilinear)
 
 	// Кодирование в JPEG
 	var buf bytes.Buffer

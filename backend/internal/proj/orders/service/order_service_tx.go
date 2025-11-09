@@ -284,7 +284,8 @@ func (s *OrderServiceTx) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, ite
 
 // createOrderInTx создает заказ в рамках транзакции
 func (s *OrderServiceTx) createOrderInTx(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) (*models.StorefrontOrder, error) {
-	return s.createOrderInTransaction(ctx, tx, order)
+	// TODO: Deprecated - OrderServiceTx is deprecated, use OrderService.CreateOrderWithTx instead
+	return nil, fmt.Errorf("OrderServiceTx.createOrderInTx is deprecated")
 }
 
 // updateOrderInTx обновляет заказ в рамках транзакции
@@ -298,6 +299,7 @@ func (s *OrderServiceTx) clearCartInTx(ctx context.Context, tx *sqlx.Tx, cartID 
 }
 
 // reserveStockInTx резервирует товар в рамках транзакции
+// Deprecated: Stock management moved to Listings gRPC Service
 func (s *OrderServiceTx) reserveStockInTx(ctx context.Context, tx *sqlx.Tx, productID int64, variantID *int64, quantity int, orderID int64) (*models.InventoryReservation, error) {
-	return s.createReservationTx(ctx, tx, productID, variantID, quantity, orderID)
+	return nil, fmt.Errorf("reserveStockInTx is deprecated - stock managed by Listings Service")
 }

@@ -21,6 +21,7 @@ type Handler struct {
 	logger                  zerolog.Logger
 	listingsClient          *listings.Client
 	useListingsMicroservice bool
+	db                      *sqlx.DB // Добавлено для создания ImageRepository
 }
 
 func NewHandler(
@@ -38,5 +39,6 @@ func NewHandler(
 		logger:                  logger.With().Str("module", "marketplace_handler").Logger(),
 		listingsClient:          listingsClient,
 		useListingsMicroservice: useListingsMicroservice,
+		db:                      db, // Сохраняем DB для ImageRepository
 	}
 }

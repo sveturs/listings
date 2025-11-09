@@ -60,6 +60,7 @@ type Database struct {
 	productSearchRepo    ProductSearchRepositoryStub           // Заглушка для поиска товаров витрин (TODO: восстановить после рефакторинга OpenSearch)
 	marketplaceStorage   marketplaceStorage.MarketplaceStorage // Marketplace storage
 	grpcClient           *MarketplaceGRPCClient                // gRPC клиент для listings микросервиса
+	config               *config.Config                        // Конфигурация приложения (для feature flags)
 }
 
 // NewDatabase создает новый экземпляр Database
@@ -94,13 +95,15 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		storefrontIndex:  "b2c_stores", // Индекс для витрин
 		fsStorage:        fileStorage,  // Используем переданный параметр
 		attributeGroups:  NewAttributeGroupStorage(pool),
+		config:           cfg, // Сохраняем конфигурацию для feature flags
 	}
 
 	// Инициализируем репозиторий витрин
 	db.storefrontRepo = NewStorefrontRepository(db)
 
-	// Инициализируем репозиторий корзин
-	db.cartRepo = NewCartRepository(pool)
+	// Инициализируем репозиторий корзин (с логгером и listingsClient будет передан позже)
+	cartLogger := zerolog.New(log.Writer()).With().Timestamp().Str("component", "cart_repository").Logger()
+	db.cartRepo = NewCartRepository(pool, nil, cartLogger)
 
 	// Инициализируем репозиторий заказов
 	db.orderRepo = NewOrderRepository(pool)
@@ -122,7 +125,7 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 	// Сохраняем search weights
 	db.searchWeights = searchWeights
 
-	// Инициализируем marketplace storage
+	// Инициализируем marketplace storage (без listings client здесь - будет передан из server.go)
 	logger := zerolog.New(log.Writer()).With().Timestamp().Str("component", "marketplace_storage").Logger()
 	db.marketplaceStorage = marketplaceStorage.NewPostgresMarketplaceStorage(sqlxDB, logger)
 

@@ -2,6 +2,8 @@
 package handler
 
 import (
+	"time"
+
 	"backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
@@ -32,6 +34,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Listings CRUD (TEMPORARY: direct DB until microservice migration complete)
 	app.Post("/api/v1/marketplace/listings", h.jwtParserMW, authMiddleware.RequireAuth(), h.CreateListing)
 	app.Get("/api/v1/marketplace/listings/:id", h.GetListing)
+	app.Post("/api/v1/marketplace/listings/:id/images", h.jwtParserMW, authMiddleware.RequireAuth(), mw.RateLimitByUser(10, time.Minute), h.UploadListingImages)
+	app.Delete("/api/v1/marketplace/listings/:id/images/:imageId", h.jwtParserMW, authMiddleware.RequireAuth(), h.DeleteListingImage)
+	app.Patch("/api/v1/marketplace/listings/:id/images/reorder", h.jwtParserMW, authMiddleware.RequireAuth(), h.ReorderListingImages)
 
 	return nil
 }

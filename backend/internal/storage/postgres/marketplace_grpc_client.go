@@ -927,3 +927,405 @@ func convertProtoToVariant(pb *listingsv1.ListingVariant) *models.MarketplaceLis
 
 	return variant
 }
+
+// ============================================================================
+// Product CRUD Operations (Phase 9.5.2)
+// ============================================================================
+
+// CreateProduct creates a new B2C product via microservice
+func (c *MarketplaceGRPCClient) CreateProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
+	// Apply timeout for single operation
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	// Convert request to protobuf
+	pbReq := &listingsv1.CreateProductRequest{
+		StorefrontId:          int64(storefrontID),
+		Name:                  req.Name,
+		Description:           req.Description,
+		Price:                 req.Price,
+		Currency:              req.Currency,
+		CategoryId:            int64(req.CategoryID),
+		StockQuantity:         int32(req.StockQuantity),
+		IsActive:              req.IsActive,
+		HasIndividualLocation: req.HasIndividualLocation != nil && *req.HasIndividualLocation,
+		ShowOnMap:             req.ShowOnMap == nil || *req.ShowOnMap,
+		HasVariants:           req.HasVariants,
+	}
+
+	// Optional fields
+	if req.SKU != nil {
+		pbReq.Sku = req.SKU
+	}
+	if req.Barcode != nil {
+		pbReq.Barcode = req.Barcode
+	}
+	if req.IndividualAddress != nil {
+		pbReq.IndividualAddress = req.IndividualAddress
+	}
+	if req.IndividualLatitude != nil {
+		pbReq.IndividualLatitude = req.IndividualLatitude
+	}
+	if req.IndividualLongitude != nil {
+		pbReq.IndividualLongitude = req.IndividualLongitude
+	}
+	if req.LocationPrivacy != nil {
+		pbReq.LocationPrivacy = req.LocationPrivacy
+	}
+
+	// Call gRPC
+	resp, err := c.client.CreateProduct(ctx, pbReq)
+	if err != nil {
+		logger.Error().Err(err).
+			Int("storefront_id", storefrontID).
+			Str("name", req.Name).
+			Msg("Failed to create product via gRPC")
+		return nil, fmt.Errorf("failed to create product via gRPC: %w", err)
+	}
+
+	// Convert proto to model
+	product := convertProtoToProduct(resp.Product)
+	logger.Debug().
+		Int64("product_id", resp.Product.Id).
+		Int("storefront_id", storefrontID).
+		Msg("Product created successfully via gRPC")
+
+	return product, nil
+}
+
+// UpdateProduct updates an existing product via microservice
+func (c *MarketplaceGRPCClient) UpdateProduct(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	pbReq := &listingsv1.UpdateProductRequest{
+		ProductId:    int64(productID),
+		StorefrontId: int64(storefrontID),
+	}
+
+	// Set optional fields
+	if req.Name != nil {
+		pbReq.Name = req.Name
+	}
+	if req.Description != nil {
+		pbReq.Description = req.Description
+	}
+	if req.Price != nil {
+		pbReq.Price = req.Price
+	}
+	if req.CategoryID != nil {
+		categoryID := int64(*req.CategoryID)
+		pbReq.CategoryId = &categoryID
+	}
+	if req.SKU != nil {
+		pbReq.Sku = req.SKU
+	}
+	if req.Barcode != nil {
+		pbReq.Barcode = req.Barcode
+	}
+	if req.IsActive != nil {
+		pbReq.IsActive = req.IsActive
+	}
+	if req.HasIndividualLocation != nil {
+		pbReq.HasIndividualLocation = req.HasIndividualLocation
+	}
+	if req.IndividualAddress != nil {
+		pbReq.IndividualAddress = req.IndividualAddress
+	}
+	if req.IndividualLatitude != nil {
+		pbReq.IndividualLatitude = req.IndividualLatitude
+	}
+	if req.IndividualLongitude != nil {
+		pbReq.IndividualLongitude = req.IndividualLongitude
+	}
+	if req.LocationPrivacy != nil {
+		pbReq.LocationPrivacy = req.LocationPrivacy
+	}
+	if req.ShowOnMap != nil {
+		pbReq.ShowOnMap = req.ShowOnMap
+	}
+
+	_, err := c.client.UpdateProduct(ctx, pbReq)
+	if err != nil {
+		logger.Error().Err(err).
+			Int("product_id", productID).
+			Int("storefront_id", storefrontID).
+			Msg("Failed to update product via gRPC")
+		return fmt.Errorf("failed to update product via gRPC: %w", err)
+	}
+
+	logger.Debug().
+		Int("product_id", productID).
+		Int("storefront_id", storefrontID).
+		Msg("Product updated successfully via gRPC")
+
+	return nil
+}
+
+// DeleteProduct removes a product via microservice
+func (c *MarketplaceGRPCClient) DeleteProduct(ctx context.Context, storefrontID, productID int, hardDelete bool) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	req := &listingsv1.DeleteProductRequest{
+		ProductId:    int64(productID),
+		StorefrontId: int64(storefrontID),
+		HardDelete:   hardDelete,
+	}
+
+	_, err := c.client.DeleteProduct(ctx, req)
+	if err != nil {
+		logger.Error().Err(err).
+			Int("product_id", productID).
+			Int("storefront_id", storefrontID).
+			Bool("hard_delete", hardDelete).
+			Msg("Failed to delete product via gRPC")
+		return fmt.Errorf("failed to delete product via gRPC: %w", err)
+	}
+
+	logger.Debug().
+		Int("product_id", productID).
+		Int("storefront_id", storefrontID).
+		Bool("hard_delete", hardDelete).
+		Msg("Product deleted successfully via gRPC")
+
+	return nil
+}
+
+// BulkUpdateProducts updates multiple products via microservice
+func (c *MarketplaceGRPCClient) BulkUpdateProducts(ctx context.Context, storefrontID int, updates []models.BulkUpdateItem) ([]int, []error) {
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	// Convert to protobuf
+	pbUpdates := make([]*listingsv1.ProductUpdateInput, len(updates))
+	for i, update := range updates {
+		pbUpdates[i] = &listingsv1.ProductUpdateInput{
+			ProductId: int64(update.ProductID),
+		}
+
+		// Set fields from UpdateProductRequest
+		if update.Updates.Name != nil {
+			pbUpdates[i].Name = update.Updates.Name
+		}
+		if update.Updates.Description != nil {
+			pbUpdates[i].Description = update.Updates.Description
+		}
+		if update.Updates.Price != nil {
+			pbUpdates[i].Price = update.Updates.Price
+		}
+		if update.Updates.CategoryID != nil {
+			categoryID := int64(*update.Updates.CategoryID)
+			pbUpdates[i].CategoryId = &categoryID
+		}
+		if update.Updates.SKU != nil {
+			pbUpdates[i].Sku = update.Updates.SKU
+		}
+		if update.Updates.Barcode != nil {
+			pbUpdates[i].Barcode = update.Updates.Barcode
+		}
+		if update.Updates.IsActive != nil {
+			pbUpdates[i].IsActive = update.Updates.IsActive
+		}
+	}
+
+	req := &listingsv1.BulkUpdateProductsRequest{
+		StorefrontId: int64(storefrontID),
+		Updates:      pbUpdates,
+	}
+
+	resp, err := c.client.BulkUpdateProducts(ctx, req)
+	if err != nil {
+		logger.Error().Err(err).
+			Int("storefront_id", storefrontID).
+			Int("count", len(updates)).
+			Msg("Failed to bulk update products via gRPC")
+		return nil, []error{fmt.Errorf("failed to bulk update products via gRPC: %w", err)}
+	}
+
+	// Extract successful IDs
+	successIDs := make([]int, len(resp.Products))
+	for i, product := range resp.Products {
+		successIDs[i] = int(product.Id)
+	}
+
+	// Convert errors
+	var errors []error
+	for _, protoErr := range resp.Errors {
+		errors = append(errors, fmt.Errorf("product %d: %s", protoErr.ProductId, protoErr.ErrorMessage))
+	}
+
+	logger.Debug().
+		Int("storefront_id", storefrontID).
+		Int("successful", int(resp.SuccessfulCount)).
+		Int("failed", int(resp.FailedCount)).
+		Msg("Bulk update products completed via gRPC")
+
+	return successIDs, errors
+}
+
+// RecordInventoryMovement records inventory movement via microservice
+// Note: This is a stub - listings microservice doesn't have dedicated inventory endpoint yet
+// We handle inventory through UpdateProduct with stock_quantity field
+func (c *MarketplaceGRPCClient) RecordInventoryMovement(ctx context.Context, productID int, variantID *int, quantity int, reason, notes string, userID int) error {
+	// For now, this is a no-op - inventory is handled through stock quantity updates
+	logger.Warn().
+		Int("product_id", productID).
+		Interface("variant_id", variantID).
+		Int("quantity", quantity).
+		Str("reason", reason).
+		Msg("RecordInventoryMovement called but not implemented in listings microservice - using local DB")
+
+	return fmt.Errorf("RecordInventoryMovement not implemented in listings microservice")
+}
+
+// BatchUpdateStock updates stock for multiple products via microservice
+// Note: Currently not implemented in proto - will use BulkUpdateProducts instead
+func (c *MarketplaceGRPCClient) BatchUpdateStock(ctx context.Context, updates []struct {
+	ProductID int
+	VariantID *int
+	Quantity  int
+}) ([]int, []error) {
+	logger.Warn().
+		Int("count", len(updates)).
+		Msg("BatchUpdateStock called but not implemented - falling back to local DB")
+
+	return nil, []error{fmt.Errorf("BatchUpdateStock not implemented in listings microservice")}
+}
+
+// IncrementProductViews increments view count for a product via microservice
+// Note: Currently not implemented in proto
+func (c *MarketplaceGRPCClient) IncrementProductViews(ctx context.Context, productID int) error {
+	logger.Debug().
+		Int("product_id", productID).
+		Msg("IncrementProductViews called but not implemented - using local DB")
+
+	return fmt.Errorf("IncrementProductViews not implemented in listings microservice")
+}
+
+// GetProductStats retrieves product statistics via microservice
+// Note: Currently not implemented in proto
+func (c *MarketplaceGRPCClient) GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error) {
+	logger.Debug().
+		Int("storefront_id", storefrontID).
+		Msg("GetProductStats called but not implemented - using local DB")
+
+	return nil, fmt.Errorf("GetProductStats not implemented in listings microservice")
+}
+
+// ============================================================================
+// Helper Functions - Product Conversion
+// ============================================================================
+
+// convertProtoToProduct converts protobuf Product to domain StorefrontProduct
+func convertProtoToProduct(pb *listingsv1.Product) *models.StorefrontProduct {
+	product := &models.StorefrontProduct{
+		ID:                     int(pb.Id),
+		StorefrontID:           int(pb.StorefrontId),
+		Name:                   pb.Name,
+		Description:            pb.Description,
+		Price:                  pb.Price,
+		Currency:               pb.Currency,
+		CategoryID:             int(pb.CategoryId),
+		StockQuantity:          int(pb.StockQuantity),
+		StockStatus:            pb.StockStatus,
+		IsActive:               pb.IsActive,
+		ViewCount:              int(pb.ViewCount),
+		SoldCount:              int(pb.SoldCount),
+		HasIndividualLocation:  pb.HasIndividualLocation,
+		ShowOnMap:              pb.ShowOnMap,
+		HasVariants:            pb.HasVariants,
+		Images:                 []models.StorefrontProductImage{},
+		Variants:               []models.StorefrontProductVariant{},
+	}
+
+	// Optional fields
+	if pb.Sku != nil {
+		product.SKU = pb.Sku
+	}
+	if pb.Barcode != nil {
+		product.Barcode = pb.Barcode
+	}
+	if pb.IndividualAddress != nil {
+		product.IndividualAddress = pb.IndividualAddress
+	}
+	if pb.IndividualLatitude != nil {
+		product.IndividualLatitude = pb.IndividualLatitude
+	}
+	if pb.IndividualLongitude != nil {
+		product.IndividualLongitude = pb.IndividualLongitude
+	}
+	if pb.LocationPrivacy != nil {
+		product.LocationPrivacy = pb.LocationPrivacy
+	}
+
+	// Parse timestamps
+	if pb.CreatedAt != nil {
+		product.CreatedAt = pb.CreatedAt.AsTime()
+	}
+	if pb.UpdatedAt != nil {
+		product.UpdatedAt = pb.UpdatedAt.AsTime()
+	}
+
+	// Convert variants if present
+	if len(pb.Variants) > 0 {
+		product.Variants = make([]models.StorefrontProductVariant, len(pb.Variants))
+		for i, pbVariant := range pb.Variants {
+			product.Variants[i] = *convertProtoToProductVariant(pbVariant)
+		}
+	}
+
+	return product
+}
+
+// convertProtoToProductVariant converts protobuf ProductVariant to domain StorefrontProductVariant
+func convertProtoToProductVariant(pb *listingsv1.ProductVariant) *models.StorefrontProductVariant {
+	variant := &models.StorefrontProductVariant{
+		ID:            int(pb.Id),
+		ProductID:     int(pb.ProductId),
+		StockQuantity: int(pb.StockQuantity),
+		StockStatus:   pb.StockStatus,
+		IsActive:      pb.IsActive,
+		IsDefault:     pb.IsDefault,
+		ViewCount:     int(pb.ViewCount),
+		SoldCount:     int(pb.SoldCount),
+	}
+
+	// Optional fields
+	if pb.Sku != nil {
+		variant.SKU = pb.Sku
+	}
+	if pb.Barcode != nil {
+		variant.Barcode = pb.Barcode
+	}
+	if pb.Price != nil {
+		price := *pb.Price
+		variant.Price = &price
+	}
+	if pb.CompareAtPrice != nil {
+		compareAtPrice := *pb.CompareAtPrice
+		variant.CompareAtPrice = &compareAtPrice
+	}
+	if pb.CostPrice != nil {
+		costPrice := *pb.CostPrice
+		variant.CostPrice = &costPrice
+	}
+	if pb.LowStockThreshold != nil {
+		threshold := int(*pb.LowStockThreshold)
+		variant.LowStockThreshold = &threshold
+	}
+	if pb.Weight != nil {
+		weight := *pb.Weight
+		variant.Weight = &weight
+	}
+
+	// Parse timestamps
+	if pb.CreatedAt != nil {
+		variant.CreatedAt = pb.CreatedAt.AsTime()
+	}
+	if pb.UpdatedAt != nil {
+		variant.UpdatedAt = pb.UpdatedAt.AsTime()
+	}
+
+	return variant
+}

@@ -8,8 +8,11 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog"
 	"github.com/shopspring/decimal"
+	pb "github.com/sveturs/listings/api/proto/listings/v1"
 
+	listingsClient "backend/internal/clients/listings"
 	"backend/internal/domain/models"
 )
 
@@ -31,16 +34,35 @@ type CartRepositoryInterface interface {
 
 	CleanupExpiredCarts(ctx context.Context, olderThanDays int) error
 	GetAllUserCarts(ctx context.Context, userID int) ([]*models.ShoppingCart, error)
+
+	// SetListingsClient injects listings gRPC client (called after initialization)
+	SetListingsClient(client interface{})
 }
 
 // cartRepository реализует интерфейс для работы с корзинами
 type cartRepository struct {
-	pool *pgxpool.Pool
+	pool           *pgxpool.Pool
+	listingsClient *listingsClient.Client
+	logger         zerolog.Logger
 }
 
 // NewCartRepository создает новый репозиторий корзин
-func NewCartRepository(pool *pgxpool.Pool) CartRepositoryInterface {
-	return &cartRepository{pool: pool}
+func NewCartRepository(pool *pgxpool.Pool, listingsClient *listingsClient.Client, logger zerolog.Logger) CartRepositoryInterface {
+	return &cartRepository{
+		pool:           pool,
+		listingsClient: listingsClient,
+		logger:         logger,
+	}
+}
+
+// SetListingsClient injects listings gRPC client after initialization
+func (r *cartRepository) SetListingsClient(client interface{}) {
+	if c, ok := client.(*listingsClient.Client); ok {
+		r.listingsClient = c
+		r.logger.Info().Msg("Listings gRPC client injected into cart repository")
+	} else {
+		r.logger.Warn().Msg("Failed to inject listings client: invalid type")
+	}
 }
 
 // GetByID получает корзину по ID
@@ -415,41 +437,29 @@ func (r *cartRepository) RemoveItem(ctx context.Context, cartID int64, productID
 
 // GetItems получает все позиции корзины с полной информацией о товарах
 func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.ShoppingCartItem, error) {
+	// Step 1: Get cart items WITHOUT products join
 	query := `
-		SELECT 
+		SELECT
 			ci.id, ci.cart_id, ci.product_id, ci.variant_id, ci.quantity,
-			ci.price_per_unit, ci.total_price, ci.created_at, ci.updated_at,
-			p.name, p.description, p.price, p.sku, p.stock_quantity,
-			p.category_id, p.is_active,
-			v.variant_attributes, v.sku, v.price, v.stock_quantity
+			ci.price_per_unit, ci.total_price, ci.created_at, ci.updated_at
 		FROM shopping_cart_items ci
-		LEFT JOIN b2c_products p ON ci.product_id = p.id
-		LEFT JOIN b2c_product_variants v ON ci.variant_id = v.id
 		WHERE ci.cart_id = $1
 		ORDER BY ci.created_at ASC`
 
 	rows, err := r.pool.Query(ctx, query, cartID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get cart items: %w", err)
+		r.logger.Error().Err(err).Int64("cart_id", cartID).Msg("Failed to query cart items")
+		return nil, fmt.Errorf("failed to query cart items: %w", err)
 	}
 	defer rows.Close()
 
 	var items []models.ShoppingCartItem
+	var productIDs []int64
+
 	for rows.Next() {
 		var item models.ShoppingCartItem
 		var variantID sql.NullInt64
 		var pricePerUnit, totalPrice float64
-
-		// Product fields
-		var productName, productDesc, productSKU sql.NullString
-		var productPrice sql.NullFloat64
-		var productStock, productCategoryID sql.NullInt64
-		var productActive sql.NullBool
-
-		// Variant fields
-		var variantAttributes, variantSKU sql.NullString
-		var variantPrice sql.NullFloat64
-		var variantStock sql.NullInt64
 
 		err := rows.Scan(
 			&item.ID,
@@ -461,21 +471,9 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 			&totalPrice,
 			&item.CreatedAt,
 			&item.UpdatedAt,
-			// Product fields
-			&productName,
-			&productDesc,
-			&productPrice,
-			&productSKU,
-			&productStock,
-			&productCategoryID,
-			&productActive,
-			// Variant fields
-			&variantAttributes,
-			&variantSKU,
-			&variantPrice,
-			&variantStock,
 		)
 		if err != nil {
+			r.logger.Error().Err(err).Msg("Failed to scan cart item")
 			return nil, fmt.Errorf("failed to scan cart item: %w", err)
 		}
 
@@ -488,89 +486,158 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 		item.PricePerUnit = decimal.NewFromFloat(pricePerUnit)
 		item.TotalPrice = decimal.NewFromFloat(totalPrice)
 
-		// Заполняем информацию о продукте
-		if productName.Valid {
-			var productSKUPtr *string
-			if productSKU.Valid {
-				productSKUPtr = &productSKU.String
-			}
-
-			item.Product = &models.StorefrontProduct{
-				ID:          int(item.ProductID),
-				Name:        productName.String,
-				Description: productDesc.String,
-				SKU:         productSKUPtr,
-				IsActive:    productActive.Bool,
-			}
-
-			if productPrice.Valid {
-				item.Product.Price = productPrice.Float64
-			}
-			if productStock.Valid {
-				item.Product.StockQuantity = int(productStock.Int64)
-			}
-			if productCategoryID.Valid {
-				item.Product.CategoryID = int(productCategoryID.Int64)
-			}
-
-			// Получаем изображения товара
-			imagesQuery := `
-				SELECT id, image_url, display_order
-				FROM b2c_product_images
-				WHERE storefront_product_id = $1
-				ORDER BY display_order ASC, id ASC
-				`
-
-			var imageID int
-			var imageURL string
-			var displayOrder int
-
-			imageRows, imgErr := r.pool.Query(ctx, imagesQuery, item.ProductID)
-			if imgErr == nil {
-				defer imageRows.Close()
-				item.Product.Images = []models.StorefrontProductImage{}
-				for imageRows.Next() {
-					if scanErr := imageRows.Scan(&imageID, &imageURL, &displayOrder); scanErr == nil {
-						item.Product.Images = append(item.Product.Images, models.StorefrontProductImage{
-							ID:                  imageID,
-							StorefrontProductID: int(item.ProductID),
-							ImageURL:            imageURL,
-							DisplayOrder:        displayOrder,
-						})
-					}
-				}
-			}
-		}
-
-		// Заполняем информацию о варианте
-		if variantID.Valid {
-			var variantSKUPtr *string
-			if variantSKU.Valid {
-				variantSKUPtr = &variantSKU.String
-			}
-
-			item.Variant = &models.StorefrontProductVariant{
-				ID:        int(*item.VariantID),
-				ProductID: int(item.ProductID),
-				SKU:       variantSKUPtr,
-			}
-
-			if variantPrice.Valid {
-				item.Variant.Price = &variantPrice.Float64
-			}
-			if variantStock.Valid {
-				item.Variant.StockQuantity = int(variantStock.Int64)
-			}
-		}
-
 		items = append(items, item)
+		productIDs = append(productIDs, item.ProductID)
 	}
 
 	if err = rows.Err(); err != nil {
+		r.logger.Error().Err(err).Msg("Error iterating cart items")
 		return nil, fmt.Errorf("error iterating cart items: %w", err)
 	}
 
+	if len(items) == 0 {
+		return items, nil
+	}
+
+	// Step 2: Get products from microservice via gRPC
+	if r.listingsClient == nil {
+		r.logger.Warn().Msg("Listings client is nil, returning items without product details")
+		return items, nil
+	}
+
+	products, err := r.listingsClient.GetProductsByIDs(ctx, productIDs, nil)
+	if err != nil {
+		r.logger.Warn().Err(err).Msg("Failed to get products from microservice, returning items without product details")
+		// Graceful degradation: return items without product details
+		return items, nil
+	}
+
+	// Step 3: Create product map for fast lookup
+	productMap := make(map[int64]*pb.Product)
+	for _, p := range products {
+		productMap[p.Id] = p
+	}
+
+	// Step 4: Merge products data with cart items
+	for i := range items {
+		if product, ok := productMap[items[i].ProductID]; ok {
+			items[i].Product = convertProtoProductToModel(product)
+
+			// Get variant if needed
+			if items[i].VariantID != nil {
+				variant, err := r.listingsClient.GetVariant(ctx, *items[i].VariantID, &items[i].ProductID)
+				if err != nil {
+					r.logger.Warn().Err(err).Int64("variant_id", *items[i].VariantID).Msg("Failed to get variant")
+				} else {
+					items[i].Variant = convertProtoVariantToModel(variant)
+				}
+			}
+		}
+	}
+
 	return items, nil
+}
+
+// Helper: convert proto Product to domain model
+func convertProtoProductToModel(p *pb.Product) *models.StorefrontProduct {
+	if p == nil {
+		return nil
+	}
+
+	product := &models.StorefrontProduct{
+		ID:            int(p.Id),
+		StorefrontID:  int(p.StorefrontId),
+		Name:          p.Name,
+		Description:   p.Description,
+		Price:         p.Price,
+		Currency:      p.Currency,
+		StockQuantity: int(p.StockQuantity),
+		StockStatus:   p.StockStatus,
+		IsActive:      p.IsActive,
+		CategoryID:    int(p.CategoryId),
+		ViewCount:     int(p.ViewCount),
+		SoldCount:     int(p.SoldCount),
+	}
+
+	if p.Sku != nil {
+		product.SKU = p.Sku
+	}
+
+	if p.Barcode != nil {
+		product.Barcode = p.Barcode
+	}
+
+	// Convert timestamps
+	if p.CreatedAt != nil {
+		createdAt := p.CreatedAt.AsTime()
+		product.CreatedAt = createdAt
+	}
+	if p.UpdatedAt != nil {
+		updatedAt := p.UpdatedAt.AsTime()
+		product.UpdatedAt = updatedAt
+	}
+
+	return product
+}
+
+// Helper: convert proto Variant to domain model
+func convertProtoVariantToModel(v *pb.ProductVariant) *models.StorefrontProductVariant {
+	if v == nil {
+		return nil
+	}
+
+	variant := &models.StorefrontProductVariant{
+		ID:            int(v.Id),
+		ProductID:     int(v.ProductId),
+		StockQuantity: int(v.StockQuantity),
+		StockStatus:   v.StockStatus,
+		IsActive:      v.IsActive,
+	}
+
+	if v.Sku != nil {
+		variant.SKU = v.Sku
+	}
+
+	if v.Barcode != nil {
+		variant.Barcode = v.Barcode
+	}
+
+	if v.Price != nil {
+		price := *v.Price
+		variant.Price = &price
+	}
+
+	if v.CompareAtPrice != nil {
+		compareAtPrice := *v.CompareAtPrice
+		variant.CompareAtPrice = &compareAtPrice
+	}
+
+	if v.CostPrice != nil {
+		costPrice := *v.CostPrice
+		variant.CostPrice = &costPrice
+	}
+
+	if v.LowStockThreshold != nil {
+		threshold := int(*v.LowStockThreshold)
+		variant.LowStockThreshold = &threshold
+	}
+
+	if v.Weight != nil {
+		weight := *v.Weight
+		variant.Weight = &weight
+	}
+
+	// Convert timestamps
+	if v.CreatedAt != nil {
+		createdAt := v.CreatedAt.AsTime()
+		variant.CreatedAt = createdAt
+	}
+	if v.UpdatedAt != nil {
+		updatedAt := v.UpdatedAt.AsTime()
+		variant.UpdatedAt = updatedAt
+	}
+
+	return variant
 }
 
 // CleanupExpiredCarts удаляет старые корзины

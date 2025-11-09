@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage"
 	"backend/internal/storage"
@@ -14,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
 )
 
 // Close закрывает все соединения с базой данных
@@ -194,7 +196,9 @@ func (db *Database) Cart() interface{} {
 		return db.cartRepo
 	}
 	// Возвращаем новый репозиторий используя пул соединений
-	return NewCartRepository(db.pool)
+	// (logger будет создан внутри NewCartRepository)
+	logger := zerolog.New(os.Stderr).With().Timestamp().Str("component", "cart_repository").Logger()
+	return NewCartRepository(db.pool, nil, logger)
 }
 
 // Order возвращает репозиторий заказов
@@ -232,4 +236,12 @@ func (db *Database) StorefrontProductSearch() interface{} {
 	}
 	// OpenSearch disabled after removing b2c
 	return nil
+}
+
+// SetListingsClientToCart инжектирует listings gRPC client в cart repository
+// Принимает интерфейс для совместимости с разными типами клиентов
+func (db *Database) SetListingsClientToCart(client interface{}) {
+	if db.cartRepo != nil {
+		db.cartRepo.SetListingsClient(client)
+	}
 }

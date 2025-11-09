@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 
+	"backend/internal/clients/listings"
 	"backend/internal/middleware"
 	"backend/internal/proj/delivery/grpcclient"
 	"backend/internal/proj/orders/adapters"
@@ -21,7 +23,7 @@ type Module struct {
 }
 
 // NewModule создает новый модуль заказов со всеми зависимостями
-func NewModule(db storage.Storage, deliveryClient *grpcclient.Client) (*Module, error) {
+func NewModule(db storage.Storage, deliveryClient *grpcclient.Client, listingsClient *listings.Client, redisClient *redis.Client) (*Module, error) {
 	// Получаем репозитории из storage
 	orderRepo := db.Order().(postgres.OrderRepositoryInterface)
 	cartRepo := db.Cart().(postgres.CartRepositoryInterface)
@@ -41,8 +43,18 @@ func NewModule(db storage.Storage, deliveryClient *grpcclient.Client) (*Module, 
 	log := logger.New()
 	inventoryManager := service.NewInventoryManager(inventoryRepo, nil, *log)
 
-	// Создаем OrderService с deliveryClient для создания shipments
-	orderService := service.NewOrderService(orderRepo, cartRepo, productRepo, storefrontRepo, inventoryManager, deliveryClient, *log)
+	// Создаем OrderService с deliveryClient, listingsClient и redisClient
+	orderService := service.NewOrderService(
+		orderRepo,
+		cartRepo,
+		productRepo,
+		storefrontRepo,
+		inventoryManager,
+		deliveryClient,
+		listingsClient,
+		redisClient,
+		*log,
+	)
 	sqlxDB := postgresDB.GetSQLXDB()
 
 	// Создаем handler с поддержкой транзакций

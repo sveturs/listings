@@ -198,16 +198,6 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		logger.Info().Msg("Notification service integrated with delivery module")
 	}
 
-	// Orders модуль инициализация (ПОСЛЕ delivery модуля для получения deliveryClient)
-	var deliveryClient *delivery_grpcclient.Client
-	if deliveryModule != nil {
-		deliveryClient = deliveryModule.GetGRPCClient()
-	}
-	// OpenSearch integration removed (c2c/b2c deprecated)
-	ordersModule, err := orders.NewModule(db, deliveryClient)
-	if err != nil {
-		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
-	}
 	contactsHandler := contactsHandler.NewHandler(services)
 	paymentsHandler := paymentHandler.NewHandler(services, jwtParserMW)
 
@@ -283,9 +273,22 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 			listingsClient = nil // Fallback to monolith
 		} else {
 			logger.Info().Str("url", cfg.ListingsGRPCURL).Msg("Listings gRPC client initialized successfully")
+			// Inject listings client into cart repository for product data
+			db.SetListingsClientToCart(listingsClient)
 		}
 	} else {
 		logger.Info().Bool("use_microservice", cfg.UseListingsMicroservice).Str("grpc_url", cfg.ListingsGRPCURL).Msg("Listings microservice disabled, using monolith")
+	}
+
+	// Orders модуль инициализация (ПОСЛЕ delivery и listings модулей)
+	var deliveryClient *delivery_grpcclient.Client
+	if deliveryModule != nil {
+		deliveryClient = deliveryModule.GetGRPCClient()
+	}
+	// OpenSearch integration removed (c2c/b2c deprecated)
+	ordersModule, err := orders.NewModule(db, deliveryClient, listingsClient, redisClient)
+	if err != nil {
+		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}
 
 	// TEMPORARY: Marketplace handler (minimal functionality until microservice migration)
