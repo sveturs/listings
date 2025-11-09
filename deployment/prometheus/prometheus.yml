@@ -37,8 +37,8 @@ scrape_configs:
 
     static_configs:
       - targets:
-          - 'listings:9093' # Docker internal
-          - 'localhost:9093' # Development
+          - 'listings_app:8086' # Docker internal (from docker-compose)
+          - 'host.docker.internal:8086' # Host machine access
 
     # Service identification labels
     relabel_configs:
@@ -208,10 +208,4 @@ scrape_configs:
 #       min_backoff: 30ms
 #       max_backoff: 100ms
 
-# Storage configuration
-storage:
-  tsdb:
-    # Retention period (15 days for production)
-    retention.time: 15d
-    # Maximum retention size (100GB)
-    retention.size: 100GB
+# Storage configuration moved to docker-compose.yml command arguments

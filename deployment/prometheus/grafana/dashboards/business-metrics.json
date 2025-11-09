@@ -1,0 +1,577 @@
+{
+  "dashboard": {
+    "title": "Listings Service - Business Metrics",
+    "uid": "listings-business-metrics",
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "tags": ["listings", "microservice", "business"],
+    "editable": true,
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Listings Created (24h)",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(listings_listings_created_total[24h])",
+            "legendFormat": "Created",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Listings Updated (24h)",
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(listings_listings_updated_total[24h])",
+            "legendFormat": "Updated",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Listings Deleted (24h)",
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(listings_listings_deleted_total[24h])",
+            "legendFormat": "Deleted",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "timeseries",
+        "title": "Listing Operations Rate",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "rate(listings_listings_created_total[5m])",
+            "legendFormat": "Created/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(listings_listings_updated_total[5m])",
+            "legendFormat": "Updated/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(listings_listings_deleted_total[5m])",
+            "legendFormat": "Deleted/sec",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 20,
+              "showPoints": "never",
+              "stacking": {"mode": "none"}
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Created/sec"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Updated/sec"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Deleted/sec"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+            }
+          ]
+        }
+      },
+      {
+        "id": 5,
+        "type": "stat",
+        "title": "Total Stock Operations (24h)",
+        "gridPos": {"h": 4, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "sum(increase(listings_inventory_stock_operations_total[24h]))",
+            "legendFormat": "Operations",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "stat",
+        "title": "Out of Stock Products",
+        "gridPos": {"h": 4, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "listings_inventory_out_of_stock_products",
+            "legendFormat": "Products",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 50, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "piechart",
+        "title": "Inventory Movements by Type",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(increase(listings_inventory_movements_recorded_total[24h])) by (movement_type)",
+            "legendFormat": "{{movement_type}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          },
+          "pieType": "pie"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": "bargauge",
+        "title": "Low Stock Alerts by Product",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "topk(10, sum(increase(listings_inventory_stock_low_threshold_reached_total[24h])) by (product_id))",
+            "legendFormat": "Product {{product_id}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "type": "stat",
+        "title": "Total Product Views (24h)",
+        "gridPos": {"h": 4, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(increase(listings_inventory_product_views_total[24h]))",
+            "legendFormat": "Views",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "type": "table",
+        "title": "Top 10 Most Viewed Products",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "topk(10, sum(increase(listings_inventory_product_views_total[24h])) by (product_id))",
+            "legendFormat": "{{product_id}}",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true},
+              "indexByName": {"product_id": 0, "Value": 1},
+              "renameByName": {"product_id": "Product ID", "Value": "Views (24h)"}
+            }
+          }
+        ],
+        "options": {
+          "sortBy": [
+            {
+              "displayName": "Views (24h)",
+              "desc": true
+            }
+          ]
+        }
+      },
+      {
+        "id": 11,
+        "type": "stat",
+        "title": "Search Queries (24h)",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "increase(listings_listings_searched_total[24h])",
+            "legendFormat": "Searches",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "purple"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": "timeseries",
+        "title": "Search Rate",
+        "gridPos": {"h": 8, "w": 16, "x": 8, "y": 28},
+        "targets": [
+          {
+            "expr": "rate(listings_listings_searched_total[5m])",
+            "legendFormat": "Searches/sec",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 20,
+              "showPoints": "auto"
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "type": "gauge",
+        "title": "Cache Hit Ratio",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 32},
+        "targets": [
+          {
+            "expr": "(sum(rate(listings_cache_hits_total[5m])) / (sum(rate(listings_cache_hits_total[5m])) + sum(rate(listings_cache_misses_total[5m])))) * 100",
+            "legendFormat": "Hit Ratio",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            },
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 14,
+        "type": "timeseries",
+        "title": "Cache Hits vs Misses",
+        "gridPos": {"h": 6, "w": 16, "x": 8, "y": 32},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_cache_hits_total[5m])) by (cache_type)",
+            "legendFormat": "Hits - {{cache_type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(listings_cache_misses_total[5m])) by (cache_type)",
+            "legendFormat": "Misses - {{cache_type}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byRegexp", "options": "Hits.*"},
+              "properties": [{"id": "color", "value": {"mode": "palette-classic"}}]
+            }
+          ]
+        }
+      },
+      {
+        "id": 15,
+        "type": "stat",
+        "title": "Indexing Queue Size",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 38},
+        "targets": [
+          {
+            "expr": "listings_indexing_queue_size",
+            "legendFormat": "Queue Size",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 100, "color": "yellow"},
+                {"value": 500, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 16,
+        "type": "timeseries",
+        "title": "Indexing Jobs Processed",
+        "gridPos": {"h": 8, "w": 16, "x": 8, "y": 38},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_indexing_jobs_processed_total{status=\"success\"}[5m])) by (operation)",
+            "legendFormat": "Success - {{operation}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(listings_indexing_jobs_processed_total{status=\"error\"}[5m])) by (operation)",
+            "legendFormat": "Failed - {{operation}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byRegexp", "options": "Failed.*"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+            }
+          ]
+        }
+      },
+      {
+        "id": 17,
+        "type": "histogram",
+        "title": "Indexing Job Duration Distribution",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 42},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_indexing_job_duration_seconds_bucket[5m])) by (le)",
+            "legendFormat": "{{le}}",
+            "refId": "A",
+            "format": "heatmap"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "datasource",
+          "type": "datasource",
+          "query": "prometheus",
+          "current": {
+            "text": "Prometheus",
+            "value": "Prometheus"
+          }
+        },
+        {
+          "name": "interval",
+          "type": "interval",
+          "query": "1m,5m,10m,30m,1h",
+          "auto": true,
+          "auto_count": 30,
+          "auto_min": "10s"
+        }
+      ]
+    }
+  }
+}

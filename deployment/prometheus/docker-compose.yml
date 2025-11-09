@@ -37,7 +37,8 @@ services:
 
     networks:
       - monitoring
-      - listings-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     labels:
       com.svetu.service: "prometheus"
@@ -82,8 +83,8 @@ services:
       # Metrics
       - GF_METRICS_ENABLED=true
 
-      # Alerting
-      - GF_ALERTING_ENABLED=true
+      # Alerting (unified only - disable legacy)
+      - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=true
 
     ports:
@@ -253,7 +254,8 @@ services:
 
     networks:
       - monitoring
-      - listings-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     labels:
       com.svetu.service: "blackbox-exporter"
@@ -266,11 +268,6 @@ networks:
   monitoring:
     name: monitoring-network
     driver: bridge
-
-  listings-network:
-    name: listings-network
-    driver: bridge
-    external: true # Connect to existing listings service network
 
 # ===================================================================
 # VOLUMES
