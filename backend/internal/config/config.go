@@ -50,10 +50,11 @@ type Config struct {
 	ReindexOnAPI             string            `yaml:"reindex_on_api"`    // on
 	FeatureFlags             *FeatureFlags     `yaml:"feature_flags"`
 	Currency                 CurrencyConfig    `yaml:"currency"`
-	DeliveryGRPCURL          string            `yaml:"delivery_grpc_url"`         // URL для delivery микросервиса через gRPC
-	ListingsGRPCURL          string            `yaml:"listings_grpc_url"`         // URL для listings микросервиса через gRPC
-	UseListingsMicroservice  bool              `yaml:"use_listings_microservice"` // Feature flag для включения listings микросервиса
-	Marketplace              MarketplaceConfig `yaml:"marketplace"`               // Marketplace microservice migration config
+	DeliveryGRPCURL           string            `yaml:"delivery_grpc_url"`            // URL для delivery микросервиса через gRPC
+	ListingsGRPCURL           string            `yaml:"listings_grpc_url"`            // URL для listings микросервиса через gRPC
+	UseListingsMicroservice   bool              `yaml:"use_listings_microservice"`    // Feature flag для включения listings микросервиса
+	EnableListingsProductCRUD bool              `yaml:"enable_listings_product_crud"` // Feature flag для Product CRUD через listings microservice
+	Marketplace               MarketplaceConfig `yaml:"marketplace"`                  // Marketplace microservice migration config
 }
 
 type FileStorageConfig struct {
@@ -279,6 +280,9 @@ func NewConfig() (*Config, error) {
 
 	// Feature flag для использования listings микросервиса (по умолчанию false - используем local DB)
 	config.UseListingsMicroservice = os.Getenv("USE_LISTINGS_MICROSERVICE") == envValueTrue
+
+	// Feature flag для Product CRUD через listings microservice (по умолчанию false - безопасный rollout)
+	config.EnableListingsProductCRUD = os.Getenv("ENABLE_LISTINGS_PRODUCT_CRUD") == envValueTrue
 
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
@@ -606,11 +610,12 @@ func NewConfig() (*Config, error) {
 		AuthServiceURL:           config.AuthServiceURL,
 		AuthServicePublicKeyPath: config.AuthServicePublicKeyPath,
 		BackendURL:               config.BackendURL,
-		MinIOPublicURL:           config.MinIOPublicURL,
-		DeliveryGRPCURL:          config.DeliveryGRPCURL,
-		ListingsGRPCURL:          config.ListingsGRPCURL,
-		UseListingsMicroservice:  config.UseListingsMicroservice,
-		OpenSearch:               config.OpenSearch,
+		MinIOPublicURL:            config.MinIOPublicURL,
+		DeliveryGRPCURL:           config.DeliveryGRPCURL,
+		ListingsGRPCURL:           config.ListingsGRPCURL,
+		UseListingsMicroservice:   config.UseListingsMicroservice,
+		EnableListingsProductCRUD: config.EnableListingsProductCRUD,
+		OpenSearch:                config.OpenSearch,
 		FileStorage:              config.FileStorage,
 		FileUpload:               fileUploadConfig,
 		Docs:                     docsConfig,

@@ -396,6 +396,225 @@ func (c *Client) GetAllCategories(ctx context.Context) (*pb.CategoriesResponse, 
 	return nil, fmt.Errorf("failed to get all categories after %d attempts: %w", maxRetries, MapGRPCError(err))
 }
 
+// AddToFavorites добавляет listing в избранное пользователя
+func (c *Client) AddToFavorites(ctx context.Context, userID, listingID int) error {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting AddToFavorites request")
+		return ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.AddToFavoritesRequest{
+		UserId:    int64(userID),
+		ListingId: int64(listingID),
+	}
+
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying AddToFavorites")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		_, err = c.client.AddToFavorites(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().
+				Int("user_id", userID).
+				Int("listing_id", listingID).
+				Msg("AddToFavorites successful")
+			return nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in AddToFavorites")
+			return MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in AddToFavorites")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("AddToFavorites failed after all retries")
+	return fmt.Errorf("failed to add to favorites after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// RemoveFromFavorites удаляет listing из избранного пользователя
+func (c *Client) RemoveFromFavorites(ctx context.Context, userID, listingID int) error {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting RemoveFromFavorites request")
+		return ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.RemoveFromFavoritesRequest{
+		UserId:    int64(userID),
+		ListingId: int64(listingID),
+	}
+
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying RemoveFromFavorites")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		_, err = c.client.RemoveFromFavorites(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().
+				Int("user_id", userID).
+				Int("listing_id", listingID).
+				Msg("RemoveFromFavorites successful")
+			return nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in RemoveFromFavorites")
+			return MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in RemoveFromFavorites")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("RemoveFromFavorites failed after all retries")
+	return fmt.Errorf("failed to remove from favorites after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// GetUserFavorites получает список ID избранных listings пользователя
+func (c *Client) GetUserFavorites(ctx context.Context, userID int) ([]int, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting GetUserFavorites request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.GetUserFavoritesRequest{
+		UserId: int64(userID),
+		Limit:  0, // 0 = без лимита
+		Offset: 0,
+	}
+
+	var resp *pb.GetUserFavoritesResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying GetUserFavorites")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetUserFavorites(ctx, req)
+		if err == nil {
+			c.onSuccess()
+
+			// Конвертируем int64 в int
+			listingIDs := make([]int, len(resp.ListingIds))
+			for i, id := range resp.ListingIds {
+				listingIDs[i] = int(id)
+			}
+
+			c.logger.Debug().
+				Int("user_id", userID).
+				Int("count", len(listingIDs)).
+				Msg("GetUserFavorites successful")
+			return listingIDs, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in GetUserFavorites")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in GetUserFavorites")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("GetUserFavorites failed after all retries")
+	return nil, fmt.Errorf("failed to get user favorites after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// IsFavorite проверяет, находится ли listing в избранном пользователя
+func (c *Client) IsFavorite(ctx context.Context, userID, listingID int) (bool, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting IsFavorite request")
+		return false, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.IsFavoriteRequest{
+		UserId:    int64(userID),
+		ListingId: int64(listingID),
+	}
+
+	var resp *pb.IsFavoriteResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying IsFavorite")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.IsFavorite(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().
+				Int("user_id", userID).
+				Int("listing_id", listingID).
+				Bool("is_favorite", resp.IsFavorite).
+				Msg("IsFavorite successful")
+			return resp.IsFavorite, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in IsFavorite")
+			return false, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in IsFavorite")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("IsFavorite failed after all retries")
+	return false, fmt.Errorf("failed to check favorite after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
 // shouldRetry определяет, нужно ли повторять запрос при данной ошибке
 func (c *Client) shouldRetry(err error) bool {
 	st, ok := status.FromError(err)
@@ -460,4 +679,495 @@ func (c *Client) onFailure() {
 			Int("failure_count", c.failureCount).
 			Msg("Circuit breaker opened due to consecutive failures")
 	}
+}
+
+// ========== Products API Methods ==========
+
+// GetProduct retrieves a single product by ID
+func (c *Client) GetProduct(ctx context.Context, productID int64, storefrontID *int64) (*pb.Product, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting GetProduct request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	req := &pb.GetProductRequest{
+		ProductId: productID,
+	}
+	if storefrontID != nil {
+		req.StorefrontId = storefrontID
+	}
+
+	var resp *pb.ProductResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying GetProduct")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetProduct(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().Int64("product_id", productID).Msg("GetProduct successful")
+			return resp.Product, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in GetProduct")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in GetProduct")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("GetProduct failed after all retries")
+	return nil, fmt.Errorf("failed to get product after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// GetProductsBySKUs retrieves products by list of SKUs (для корзины)
+func (c *Client) GetProductsBySKUs(ctx context.Context, skus []string, storefrontID *int64) ([]*pb.Product, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting GetProductsBySKUs request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second) // Больший timeout для batch операции
+	defer cancel()
+
+	req := &pb.GetProductsBySKUsRequest{
+		Skus: skus,
+	}
+	if storefrontID != nil {
+		req.StorefrontId = storefrontID
+	}
+
+	var resp *pb.ProductsResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying GetProductsBySKUs")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetProductsBySKUs(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().
+				Int("count", len(resp.Products)).
+				Int("requested_skus", len(skus)).
+				Msg("GetProductsBySKUs successful")
+			return resp.Products, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in GetProductsBySKUs")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in GetProductsBySKUs")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("GetProductsBySKUs failed after all retries")
+	return nil, fmt.Errorf("failed to get products by SKUs after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// GetProductsByIDs retrieves products by list of IDs (для корзины)
+func (c *Client) GetProductsByIDs(ctx context.Context, productIDs []int64, storefrontID *int64) ([]*pb.Product, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting GetProductsByIDs request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second) // Больший timeout для batch операции
+	defer cancel()
+
+	req := &pb.GetProductsByIDsRequest{
+		ProductIds: productIDs,
+	}
+	if storefrontID != nil {
+		req.StorefrontId = storefrontID
+	}
+
+	var resp *pb.ProductsResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying GetProductsByIDs")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetProductsByIDs(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().
+				Int("count", len(resp.Products)).
+				Int("requested_ids", len(productIDs)).
+				Msg("GetProductsByIDs successful")
+			return resp.Products, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in GetProductsByIDs")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in GetProductsByIDs")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("GetProductsByIDs failed after all retries")
+	return nil, fmt.Errorf("failed to get products by IDs after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// ListProducts retrieves paginated list of products
+func (c *Client) ListProducts(ctx context.Context, storefrontID int64, page, pageSize int, isActiveOnly bool) ([]*pb.Product, int32, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting ListProducts request")
+		return nil, 0, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	isActiveOnlyPtr := &isActiveOnly
+	req := &pb.ListProductsRequest{
+		StorefrontId: storefrontID,
+		Page:         int32(page),
+		PageSize:     int32(pageSize),
+		IsActiveOnly: isActiveOnlyPtr,
+	}
+
+	var resp *pb.ProductsResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying ListProducts")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.ListProducts(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().
+				Int64("storefront_id", storefrontID).
+				Int("count", len(resp.Products)).
+				Int32("total", resp.TotalCount).
+				Msg("ListProducts successful")
+			return resp.Products, resp.TotalCount, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in ListProducts")
+			return nil, 0, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in ListProducts")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("ListProducts failed after all retries")
+	return nil, 0, fmt.Errorf("failed to list products after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// GetVariant retrieves a single variant by ID
+func (c *Client) GetVariant(ctx context.Context, variantID int64, productID *int64) (*pb.ProductVariant, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting GetVariant request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	req := &pb.GetVariantRequest{
+		VariantId: variantID,
+	}
+	if productID != nil {
+		req.ProductId = productID
+	}
+
+	var resp *pb.VariantResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying GetVariant")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetVariant(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().Int64("variant_id", variantID).Msg("GetVariant successful")
+			return resp.Variant, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in GetVariant")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in GetVariant")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("GetVariant failed after all retries")
+	return nil, fmt.Errorf("failed to get variant after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// GetVariantsByProductID retrieves all variants for a product
+func (c *Client) GetVariantsByProductID(ctx context.Context, productID int64, isActiveOnly bool) ([]*pb.ProductVariant, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting GetVariantsByProductID request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	isActiveOnlyPtr := &isActiveOnly
+	req := &pb.GetVariantsByProductIDRequest{
+		ProductId:    productID,
+		IsActiveOnly: isActiveOnlyPtr,
+	}
+
+	var resp *pb.ProductVariantsResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying GetVariantsByProductID")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.GetVariantsByProductID(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().
+				Int64("product_id", productID).
+				Int("count", len(resp.Variants)).
+				Msg("GetVariantsByProductID successful")
+			return resp.Variants, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in GetVariantsByProductID")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in GetVariantsByProductID")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("GetVariantsByProductID failed after all retries")
+	return nil, fmt.Errorf("failed to get variants by product ID after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// ========================================
+// Stock Management Methods (for Orders Service)
+// ========================================
+
+// CheckStockAvailability проверяет доступность товаров перед созданием заказа
+func (c *Client) CheckStockAvailability(ctx context.Context, items []*pb.StockItem) (*pb.CheckStockAvailabilityResponse, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting CheckStockAvailability request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.CheckStockAvailabilityRequest{
+		Items: items,
+	}
+
+	var resp *pb.CheckStockAvailabilityResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying CheckStockAvailability")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.CheckStockAvailability(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Debug().
+				Int("items_count", len(items)).
+				Bool("all_available", resp.AllAvailable).
+				Msg("CheckStockAvailability successful")
+			return resp, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in CheckStockAvailability")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in CheckStockAvailability")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("CheckStockAvailability failed after all retries")
+	return nil, fmt.Errorf("failed to check stock availability after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// DecrementStock атомарно уменьшает количество товаров при создании заказа
+func (c *Client) DecrementStock(ctx context.Context, items []*pb.StockItem, orderID string) (*pb.DecrementStockResponse, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting DecrementStock request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.DecrementStockRequest{
+		Items:   items,
+		OrderId: &orderID,
+	}
+
+	var resp *pb.DecrementStockResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying DecrementStock")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.DecrementStock(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Info().
+				Str("order_id", orderID).
+				Int("items_count", len(items)).
+				Bool("success", resp.Success).
+				Msg("DecrementStock successful")
+			return resp, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in DecrementStock")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in DecrementStock")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("DecrementStock failed after all retries")
+	return nil, fmt.Errorf("failed to decrement stock after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// RollbackStock восстанавливает количество товаров при откате заказа (compensating transaction)
+func (c *Client) RollbackStock(ctx context.Context, items []*pb.StockItem, orderID string) error {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting RollbackStock request")
+		return ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.RollbackStockRequest{
+		Items:   items,
+		OrderId: &orderID,
+	}
+
+	var resp *pb.RollbackStockResponse
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying RollbackStock")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.RollbackStock(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Info().
+				Str("order_id", orderID).
+				Int("items_count", len(items)).
+				Bool("success", resp.Success).
+				Msg("RollbackStock successful")
+			return nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in RollbackStock")
+			return MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in RollbackStock")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("RollbackStock failed after all retries")
+	return fmt.Errorf("failed to rollback stock after %d attempts: %w", maxRetries, MapGRPCError(err))
 }
