@@ -299,7 +299,7 @@ export class ListingsService {
     const formData = new FormData();
 
     files.forEach((file) => {
-      formData.append('file', file);
+      formData.append('images', file);
     });
 
     if (mainImageIndex >= 0 && mainImageIndex < files.length) {

@@ -161,6 +161,12 @@
 📋 ЧТО НУЖНО СДЕЛАТЬ ТЕБЕ (ВРУЧНУЮ) - ОБНОВЛЕНО
 ───────────────────────────────────────────────────────────────
 
+✅ HOTFIX 2025-11-05 (18:09 UTC): Image Upload Endpoint Fixed
+   - Проблема: POST /api/v1/marketplace/listings/:id/images возвращал 404
+   - Решение: Реализован endpoint для загрузки изображений
+   - Статус: ✅ Протестировано и работает корректно
+   - Файлы: listings.go, routes.go, image_repository.go
+
 Документ: docs/migration/VALIDATION_CHECKLIST.md (v2.0)
 
 ✅ РАЗДЕЛ 1: ПОДГОТОВКА - ЗАВЕРШЕНО
