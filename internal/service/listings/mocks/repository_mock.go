@@ -43,6 +43,15 @@ func (m *MockRepository) GetListingByUUID(ctx context.Context, uuid string) (*do
 	return args.Get(0).(*domain.Listing), args.Error(1)
 }
 
+// GetListingBySlug mocks getting a listing by slug
+func (m *MockRepository) GetListingBySlug(ctx context.Context, slug string) (*domain.Listing, error) {
+	args := m.Called(ctx, slug)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Listing), args.Error(1)
+}
+
 // UpdateListing mocks updating a listing
 func (m *MockRepository) UpdateListing(ctx context.Context, id int64, input *domain.UpdateListingInput) (*domain.Listing, error) {
 	args := m.Called(ctx, id, input)
@@ -459,4 +468,33 @@ func (m *MockRepository) GetDB() *sqlx.DB {
 		return nil
 	}
 	return args.Get(0).(*sqlx.DB)
+}
+
+// Storefront operations
+
+// GetStorefront mocks getting a storefront by ID
+func (m *MockRepository) GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error) {
+	args := m.Called(ctx, storefrontID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Storefront), args.Error(1)
+}
+
+// GetStorefrontBySlug mocks getting a storefront by slug
+func (m *MockRepository) GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error) {
+	args := m.Called(ctx, slug)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Storefront), args.Error(1)
+}
+
+// ListStorefronts mocks listing storefronts
+func (m *MockRepository) ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error) {
+	args := m.Called(ctx, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*domain.Storefront), args.Get(1).(int64), args.Error(2)
 }

@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	authclient "github.com/sveturs/auth/pkg/http/client"
+	authservice "github.com/sveturs/auth/pkg/service"
+	liblogger "github.com/sveturs/lib/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -21,6 +24,7 @@ import (
 	"github.com/sveturs/listings/internal/config"
 	"github.com/sveturs/listings/internal/health"
 	"github.com/sveturs/listings/internal/metrics"
+	"github.com/sveturs/listings/internal/middleware"
 	"github.com/sveturs/listings/internal/ratelimit"
 	"github.com/sveturs/listings/internal/repository/minio"
 	"github.com/sveturs/listings/internal/repository/opensearch"
@@ -60,12 +64,16 @@ func main() {
 		log.Fatalf("Invalid configuration: %v", err)
 	}
 
-	// Initialize logger
-	logger := initLogger(cfg.App.LogLevel, cfg.App.LogFormat)
-	logger.Info().
+	// Initialize zerolog logger (for HTTP/gRPC transports)
+	zerologLogger := initLogger(cfg.App.LogLevel, cfg.App.LogFormat)
+	zerologLogger.Info().
 		Str("version", Version).
 		Str("env", cfg.App.Env).
 		Msg("Starting Listings Service")
+
+	// Create lib/logger adapter for auth service integration
+	liblogger.Init(cfg.App.Env, cfg.App.LogLevel, Version, true, false)
+	logger := liblogger.Get()
 
 	// Initialize metrics
 	metricsInstance := metrics.NewMetrics("listings")
@@ -86,17 +94,17 @@ func main() {
 		cfg.DB.MaxIdleConns,
 		cfg.DB.ConnMaxLifetime,
 		cfg.DB.ConnMaxIdleTime,
-		logger,
+		zerologLogger,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to initialize database")
 	}
 	defer db.Close()
 
-	pgRepo := postgres.NewRepository(db, logger)
+	pgRepo := postgres.NewRepository(db, zerologLogger)
 
 	// Start DB stats collector
-	dbStatsCollector := metrics.NewDBStatsCollector(db, metricsInstance, logger, 15*time.Second)
+	dbStatsCollector := metrics.NewDBStatsCollector(db, metricsInstance, zerologLogger, 15*time.Second)
 	go dbStatsCollector.Start(context.Background())
 	defer dbStatsCollector.Stop()
 
@@ -108,7 +116,7 @@ func main() {
 		cfg.Redis.PoolSize,
 		cfg.Redis.MinIdleConns,
 		cfg.Redis.ListingTTL,
-		logger,
+		zerologLogger,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to initialize Redis cache")
@@ -123,7 +131,7 @@ func main() {
 			cfg.Search.Username,
 			cfg.Search.Password,
 			cfg.Search.Index,
-			logger,
+			zerologLogger,
 		)
 		if err != nil {
 			logger.Warn().Err(err).Msg("OpenSearch not available, continuing without search")
@@ -141,15 +149,41 @@ func main() {
 			cfg.Storage.SecretKey,
 			cfg.Storage.Bucket,
 			cfg.Storage.UseSSL,
-			logger,
+			zerologLogger,
 		)
 		if err != nil {
 			logger.Warn().Err(err).Msg("MinIO not available, continuing without object storage")
 		}
 	}
 
+	// Initialize Auth Service client (if enabled)
+	var authInterceptor *middleware.AuthInterceptor
+	if cfg.Auth.Enabled {
+		authHTTPClient, err := authclient.NewClientWithResponses(
+			cfg.Auth.ServiceURL,
+			authclient.WithHTTPClient(&http.Client{
+				Timeout: cfg.Auth.Timeout,
+			}),
+		)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("failed to create auth service client")
+		}
+
+		// Auth service expects github.com/sveturs/lib/logger.Logger interface
+		// We already initialized it above with liblogger.Init() and liblogger.Get()
+		authSvc := authservice.NewAuthServiceWithLocalValidation(authHTTPClient, logger)
+		logger.Info().
+			Str("url", cfg.Auth.ServiceURL).
+			Str("public_key", cfg.Auth.PublicKeyPath).
+			Msg("Auth service initialized with local JWT validation")
+
+		authInterceptor = middleware.NewAuthInterceptor(*authSvc, zerologLogger)
+	} else {
+		logger.Warn().Msg("Auth service DISABLED - all requests will be unauthenticated")
+	}
+
 	// Initialize listings service
-	listingsService := listings.NewService(pgRepo, redisCache, searchClient, logger)
+	listingsService := listings.NewService(pgRepo, redisCache, searchClient, zerologLogger)
 
 	// Initialize health check service
 	healthConfig := &health.Config{
@@ -159,7 +193,7 @@ func main() {
 		CacheDuration:    cfg.Health.CacheDuration,
 		EnableDeepChecks: cfg.Health.EnableDeepChecks,
 	}
-	healthChecker := health.NewService(db.DB, redisCache, searchClient, minioClient, healthConfig, logger)
+	healthChecker := health.NewService(db.DB, redisCache, searchClient, minioClient, healthConfig, zerologLogger)
 
 	// Initialize worker (if enabled and search is available)
 	var indexWorker *worker.Worker
@@ -169,7 +203,7 @@ func main() {
 			searchClient,
 			metricsInstance,
 			cfg.Worker.Concurrency,
-			logger,
+			zerologLogger,
 		)
 		if err := indexWorker.Start(); err != nil {
 			logger.Fatal().Err(err).Msg("failed to start indexing worker")
@@ -185,7 +219,7 @@ func main() {
 	var rateLimiterInterceptor grpc.UnaryServerInterceptor
 	if cfg.Features.RateLimitEnabled {
 		rateLimiterConfig := ratelimit.NewDefaultConfig()
-		rateLimiterInstance := ratelimit.NewRedisLimiter(redisCache.GetClient(), logger)
+		rateLimiterInstance := ratelimit.NewRedisLimiter(redisCache.GetClient(), zerologLogger)
 		logger.Info().Msg("Rate limiter initialized with Redis backend")
 
 		// Create rate limiter interceptor with metrics
@@ -193,30 +227,34 @@ func main() {
 			rateLimiterInstance,
 			rateLimiterConfig,
 			metricsInstance,
-			logger,
+			zerologLogger,
 		)
 	} else {
 		logger.Warn().Msg("Rate limiting DISABLED - not recommended for production")
 	}
 
 	// Create timeout interceptor
-	timeoutInterceptor := timeout.UnaryServerInterceptor(metricsInstance, logger)
+	timeoutInterceptor := timeout.UnaryServerInterceptor(metricsInstance, zerologLogger)
 
-	// Build interceptor chain (conditionally include rate limiter)
+	// Build interceptor chain (conditionally include rate limiter and auth)
+	// Order: timeout (outermost) → auth → rate limiting → metrics (innermost)
 	interceptors := []grpc.UnaryServerInterceptor{
 		timeoutInterceptor,
+	}
+	if cfg.Auth.Enabled && authInterceptor != nil {
+		interceptors = append(interceptors, authInterceptor.Unary())
 	}
 	if cfg.Features.RateLimitEnabled {
 		interceptors = append(interceptors, rateLimiterInterceptor)
 	}
 	interceptors = append(interceptors, metricsInstance.UnaryServerInterceptor())
 
-	// Initialize gRPC server with interceptors (timeout + optional rate limiting + metrics)
-	// Order: timeout (outermost) → rate limiting (if enabled) → metrics (innermost)
+	// Initialize gRPC server with interceptors
+	// Order: timeout → auth (if enabled) → rate limiting (if enabled) → metrics
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, metricsInstance, logger)
+	grpcHandler := grpcTransport.NewServer(listingsService, metricsInstance, zerologLogger)
 	pb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 
 	// Enable gRPC reflection for tools like grpcurl
@@ -236,15 +274,15 @@ func main() {
 	}()
 
 	// Initialize HTTP server with health checks
-	httpHandler := httpTransport.NewMinimalHandler(listingsService, logger)
-	healthHandler := httpTransport.NewHealthHandler(healthChecker, logger)
+	httpHandler := httpTransport.NewMinimalHandler(listingsService, zerologLogger)
+	healthHandler := httpTransport.NewHealthHandler(healthChecker, zerologLogger)
 
 	httpApp, err := httpTransport.StartMinimalServer(
 		cfg.Server.HTTPHost,
 		cfg.Server.HTTPPort,
 		httpHandler,
 		healthHandler,
-		logger,
+		zerologLogger,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to start HTTP server")

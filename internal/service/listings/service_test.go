@@ -1,6 +1,7 @@
 package listings
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -876,6 +877,14 @@ func TestCreateListing_Success_MinimalFields(t *testing.T) {
 
 	expectedListing := NewTestListing(1, userID, "Test Listing")
 
+	// Mock category validation - category must be active
+	mockRepo.On("GetCategoryByID", ctx, int64(1)).
+		Return(&domain.Category{ID: 1, Name: "Test Category", IsActive: true}, nil)
+
+	// Mock slug uniqueness check - slug doesn't exist yet
+	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
+		Return(nil, errors.New("not found"))
+
 	mockRepo.On("CreateListing", ctx, input).
 		Return(expectedListing, nil)
 	mockRepo.On("EnqueueIndexing", ctx, expectedListing.ID, domain.IndexOpIndex).
@@ -904,6 +913,13 @@ func TestCreateListing_Success_WithStorefront(t *testing.T) {
 	expectedListing := NewTestListing(1, userID, "Test Listing")
 	expectedListing.StorefrontID = &storefrontID
 
+	// Mock category validation
+	mockRepo.On("GetCategoryByID", ctx, int64(1)).
+		Return(&domain.Category{ID: 1, Name: "Test Category", IsActive: true}, nil)
+	// Mock slug uniqueness
+	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
+		Return(nil, errors.New("not found"))
+
 	mockRepo.On("CreateListing", ctx, input).
 		Return(expectedListing, nil)
 	mockRepo.On("EnqueueIndexing", ctx, expectedListing.ID, domain.IndexOpIndex).
@@ -920,6 +936,12 @@ func TestCreateListing_Success_WithStorefront(t *testing.T) {
 func TestCreateListing_Success_WithAllFields(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
+
+	// Mock category validation and slug uniqueness (common for all create tests)
+	mockRepo.On("GetCategoryByID", ctx, mock.AnythingOfType("int64")).
+		Return(&domain.Category{ID: 1, Name: "Test Category", IsActive: true}, nil)
+	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
+		Return(nil, errors.New("not found"))
 
 	userID := int64(100)
 	input := NewCreateListingInput(userID, "Complete Test Listing")
@@ -943,8 +965,9 @@ func TestCreateListing_Success_WithAllFields(t *testing.T) {
 }
 
 func TestCreateListing_Error_NegativePrice(t *testing.T) {
-	service, _, _, _ := SetupServiceTest(t)
+	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
+	SetupDefaultCreateListingMocks(mockRepo, ctx)
 
 	userID := int64(100)
 	input := NewCreateListingInput(userID, "Test Listing")
@@ -959,8 +982,9 @@ func TestCreateListing_Error_NegativePrice(t *testing.T) {
 }
 
 func TestCreateListing_Error_NegativeQuantity(t *testing.T) {
-	service, _, _, _ := SetupServiceTest(t)
+	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
+	SetupDefaultCreateListingMocks(mockRepo, ctx)
 
 	userID := int64(100)
 	input := NewCreateListingInput(userID, "Test Listing")
@@ -975,8 +999,9 @@ func TestCreateListing_Error_NegativeQuantity(t *testing.T) {
 }
 
 func TestCreateListing_Error_MissingTitle(t *testing.T) {
-	service, _, _, _ := SetupServiceTest(t)
+	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
+	SetupDefaultCreateListingMocks(mockRepo, ctx)
 
 	userID := int64(100)
 	input := NewCreateListingInput(userID, "")
@@ -990,8 +1015,9 @@ func TestCreateListing_Error_MissingTitle(t *testing.T) {
 }
 
 func TestCreateListing_Error_ShortTitle(t *testing.T) {
-	service, _, _, _ := SetupServiceTest(t)
+	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
+	SetupDefaultCreateListingMocks(mockRepo, ctx)
 
 	userID := int64(100)
 	input := NewCreateListingInput(userID, "AB") // Title too short (< 3 chars)
@@ -1004,8 +1030,9 @@ func TestCreateListing_Error_ShortTitle(t *testing.T) {
 }
 
 func TestCreateListing_Error_InvalidCurrency(t *testing.T) {
-	service, _, _, _ := SetupServiceTest(t)
+	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
+	SetupDefaultCreateListingMocks(mockRepo, ctx)
 
 	userID := int64(100)
 	input := NewCreateListingInput(userID, "Test Listing")
@@ -1027,6 +1054,12 @@ func TestCreateListing_Success_EnqueueIndexing_Success(t *testing.T) {
 
 	expectedListing := NewTestListing(1, userID, "Test Listing")
 
+	// Mock validation
+	mockRepo.On("GetCategoryByID", ctx, int64(1)).
+		Return(&domain.Category{ID: 1, Name: "Test", IsActive: true}, nil)
+	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
+		Return(nil, errors.New("not found"))
+
 	mockRepo.On("CreateListing", ctx, input).
 		Return(expectedListing, nil)
 	mockRepo.On("EnqueueIndexing", ctx, expectedListing.ID, domain.IndexOpIndex).
@@ -1047,6 +1080,12 @@ func TestCreateListing_Success_EnqueueIndexing_Failure_NonCritical(t *testing.T)
 	input := NewCreateListingInput(userID, "Test Listing")
 
 	expectedListing := NewTestListing(1, userID, "Test Listing")
+
+	// Mock validation
+	mockRepo.On("GetCategoryByID", ctx, int64(1)).
+		Return(&domain.Category{ID: 1, Name: "Test", IsActive: true}, nil)
+	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
+		Return(nil, errors.New("not found"))
 
 	mockRepo.On("CreateListing", ctx, input).
 		Return(expectedListing, nil)

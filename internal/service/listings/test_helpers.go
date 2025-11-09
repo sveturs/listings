@@ -2,10 +2,12 @@ package listings
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/sveturs/listings/internal/domain"
 	"github.com/sveturs/listings/internal/service/listings/mocks"
@@ -32,6 +34,20 @@ func SetupServiceTest(t *testing.T) (*Service, *mocks.MockRepository, *mocks.Moc
 	service := NewService(mockRepo, mockCache, mockIndexer, logger)
 
 	return service, mockRepo, mockCache, mockIndexer
+}
+
+// SetupDefaultCreateListingMocks sets up common mocks needed for CreateListing tests
+// This includes category validation and slug uniqueness checks
+func SetupDefaultCreateListingMocks(mockRepo *mocks.MockRepository, ctx context.Context) {
+	// Mock category validation - returns active category
+	mockRepo.On("GetCategoryByID", ctx, mock.AnythingOfType("int64")).
+		Return(&domain.Category{ID: 1, Name: "Test Category", IsActive: true}, nil).
+		Maybe() // Allow but don't require this call
+
+	// Mock slug uniqueness check - slug doesn't exist yet
+	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
+		Return(nil, errors.New("not found")).
+		Maybe() // Allow but don't require this call
 }
 
 // Helper functions for creating test data

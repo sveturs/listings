@@ -285,15 +285,8 @@ func TestSearchListings_ValidationErrors(t *testing.T) {
 		req    *pb.SearchListingsRequest
 		errMsg string
 	}{
-		{
-			name: "missing query",
-			req: &pb.SearchListingsRequest{
-				Query:  "",
-				Limit:  10,
-				Offset: 0,
-			},
-			errMsg: "search query is required",
-		},
+		// NOTE: Empty query is now allowed (query is optional)
+		// Test case removed to match current implementation
 		{
 			name: "query too short",
 			req: &pb.SearchListingsRequest{

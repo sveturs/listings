@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
@@ -17,6 +18,7 @@ type Repository interface {
 	CreateListing(ctx context.Context, input *domain.CreateListingInput) (*domain.Listing, error)
 	GetListingByID(ctx context.Context, id int64) (*domain.Listing, error)
 	GetListingByUUID(ctx context.Context, uuid string) (*domain.Listing, error)
+	GetListingBySlug(ctx context.Context, slug string) (*domain.Listing, error)
 	UpdateListing(ctx context.Context, id int64, input *domain.UpdateListingInput) (*domain.Listing, error)
 	DeleteListing(ctx context.Context, id int64) error
 	ListListings(ctx context.Context, filter *domain.ListListingsFilter) ([]*domain.Listing, int32, error)
@@ -80,6 +82,11 @@ type Repository interface {
 	IncrementProductViews(ctx context.Context, productID int64) error
 	BatchUpdateStock(ctx context.Context, storefrontID int64, items []domain.StockUpdateItem, reason string, userID int64) (int32, int32, []domain.StockUpdateResult, error)
 
+	// Storefront operations
+	GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error)
+	GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error)
+	ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error)
+
 	// Transaction and database operations
 	BeginTx(ctx context.Context) (*sql.Tx, error)
 	GetDB() *sqlx.DB
@@ -101,55 +108,93 @@ type IndexingService interface {
 
 // Service implements business logic for listings
 type Service struct {
-	repo      Repository
-	cache     CacheRepository
-	indexer   IndexingService
-	validator *validator.Validate
-	logger    zerolog.Logger
+	repo          Repository
+	cache         CacheRepository
+	indexer       IndexingService
+	validator     *Validator
+	slugGenerator *SlugGenerator
+	stdValidator  *validator.Validate
+	logger        zerolog.Logger
 }
 
 // NewService creates a new listings service
 func NewService(repo Repository, cache CacheRepository, indexer IndexingService, logger zerolog.Logger) *Service {
 	return &Service{
-		repo:      repo,
-		cache:     cache,
-		indexer:   indexer,
-		validator: validator.New(),
-		logger:    logger.With().Str("component", "listings_service").Logger(),
+		repo:          repo,
+		cache:         cache,
+		indexer:       indexer,
+		validator:     NewValidator(repo),
+		slugGenerator: NewSlugGenerator(repo),
+		stdValidator:  validator.New(),
+		logger:        logger.With().Str("component", "listings_service").Logger(),
 	}
 }
 
 // CreateListing creates a new listing with validation
 func (s *Service) CreateListing(ctx context.Context, input *domain.CreateListingInput) (*domain.Listing, error) {
-	// Validate input
-	if err := s.validator.Struct(input); err != nil {
-		s.logger.Warn().Err(err).Msg("invalid create listing input")
+	// 1. Comprehensive validation using custom validator
+	if err := s.validator.ValidateCreateInput(ctx, input); err != nil {
+		s.logger.Warn().Err(err).Msg("validation failed for create listing")
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	// Business validation
-	if input.Price < 0 {
-		return nil, fmt.Errorf("price cannot be negative")
+	// 2. Generate unique slug from title
+	slug, err := s.slugGenerator.Generate(ctx, input.Title)
+	if err != nil {
+		s.logger.Error().Err(err).Str("title", input.Title).Msg("failed to generate slug")
+		return nil, fmt.Errorf("failed to generate slug: %w", err)
 	}
 
-	if input.Quantity < 0 {
-		return nil, fmt.Errorf("quantity cannot be negative")
+	// 3. Create listing entity
+	listing := &domain.Listing{
+		UserID:       input.UserID,
+		StorefrontID: input.StorefrontID,
+		Title:        input.Title,
+		Description:  input.Description,
+		Price:        input.Price,
+		Currency:     input.Currency,
+		CategoryID:   input.CategoryID,
+		Slug:         slug,
+		Quantity:     input.Quantity,
+		SKU:          input.SKU,
+		SourceType:   input.SourceType,
+		Status:       domain.StatusDraft, // Default status
+		Visibility:   domain.VisibilityPublic,
 	}
 
-	// Create listing in database
-	listing, err := s.repo.CreateListing(ctx, input)
+	// 4. Set expiration date for C2C listings (30 days)
+	if input.SourceType == domain.SourceTypeC2C {
+		expiresAt := time.Now().AddDate(0, 0, 30) // 30 days from now
+		listing.ExpiresAt = &expiresAt
+	}
+
+	// 5. Create in database (using CreateListingInput)
+	created, err := s.repo.CreateListing(ctx, input)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to create listing in repository")
 		return nil, fmt.Errorf("failed to create listing: %w", err)
 	}
 
-	// Enqueue for async indexing
-	if err := s.repo.EnqueueIndexing(ctx, listing.ID, domain.IndexOpIndex); err != nil {
-		s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to enqueue indexing (non-critical)")
+	// Note: We need to set the slug on the created listing since repo doesn't know about it yet
+	// This is a temporary workaround until we update the repository layer
+	created.Slug = slug
+	if listing.ExpiresAt != nil {
+		created.ExpiresAt = listing.ExpiresAt
 	}
 
-	s.logger.Info().Int64("listing_id", listing.ID).Int64("user_id", listing.UserID).Msg("listing created successfully")
-	return listing, nil
+	// 6. Enqueue for async indexing
+	if err := s.repo.EnqueueIndexing(ctx, created.ID, domain.IndexOpIndex); err != nil {
+		s.logger.Warn().Err(err).Int64("listing_id", created.ID).Msg("failed to enqueue indexing (non-critical)")
+	}
+
+	s.logger.Info().
+		Int64("listing_id", created.ID).
+		Int64("user_id", created.UserID).
+		Str("slug", slug).
+		Str("source_type", created.SourceType).
+		Msg("listing created successfully")
+
+	return created, nil
 }
 
 // GetListing retrieves a listing by ID with caching
@@ -204,40 +249,53 @@ func (s *Service) GetListingByUUID(ctx context.Context, uuid string) (*domain.Li
 
 // UpdateListing updates an existing listing with validation
 func (s *Service) UpdateListing(ctx context.Context, id int64, userID int64, input *domain.UpdateListingInput) (*domain.Listing, error) {
-	// Validate input
-	if err := s.validator.Struct(input); err != nil {
-		s.logger.Warn().Err(err).Msg("invalid update listing input")
+	// 1. Validate input using custom validator
+	if err := s.validator.ValidateUpdateInput(input); err != nil {
+		s.logger.Warn().Err(err).Msg("validation failed for update listing")
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	// Check ownership
+	// 2. Get existing listing
 	existing, err := s.repo.GetListingByID(ctx, id)
 	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to get existing listing")
 		return nil, fmt.Errorf("listing not found: %w", err)
 	}
 
+	if existing == nil {
+		return nil, fmt.Errorf("listing not found")
+	}
+
+	// 3. Verify ownership
 	if existing.UserID != userID {
-		s.logger.Warn().Int64("listing_id", id).Int64("user_id", userID).Int64("owner_id", existing.UserID).Msg("unauthorized update attempt")
+		s.logger.Warn().
+			Int64("listing_id", id).
+			Int64("user_id", userID).
+			Int64("owner_id", existing.UserID).
+			Msg("unauthorized update attempt")
 		return nil, fmt.Errorf("unauthorized: user does not own this listing")
 	}
 
-	// Business validation
-	if input.Price != nil && *input.Price < 0 {
-		return nil, fmt.Errorf("price cannot be negative")
+	// 4. Validate status transition if status is being updated
+	if input.Status != nil {
+		if err := s.validator.ValidateStatusTransition(existing.Status, *input.Status); err != nil {
+			s.logger.Warn().
+				Err(err).
+				Str("from_status", existing.Status).
+				Str("to_status", *input.Status).
+				Msg("invalid status transition")
+			return nil, fmt.Errorf("invalid status transition: %w", err)
+		}
 	}
 
-	if input.Quantity != nil && *input.Quantity < 0 {
-		return nil, fmt.Errorf("quantity cannot be negative")
-	}
-
-	// Update listing
-	listing, err := s.repo.UpdateListing(ctx, id, input)
+	// 5. Update listing in database
+	updated, err := s.repo.UpdateListing(ctx, id, input)
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to update listing")
 		return nil, fmt.Errorf("failed to update listing: %w", err)
 	}
 
-	// Invalidate cache (if available)
+	// 6. Invalidate cache (if available)
 	if s.cache != nil {
 		cacheKey := fmt.Sprintf("listing:%d", id)
 		if err := s.cache.Delete(ctx, cacheKey); err != nil {
@@ -245,55 +303,104 @@ func (s *Service) UpdateListing(ctx context.Context, id int64, userID int64, inp
 		}
 	}
 
-	// Enqueue for async re-indexing
-	if err := s.repo.EnqueueIndexing(ctx, listing.ID, domain.IndexOpUpdate); err != nil {
-		s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to enqueue indexing (non-critical)")
+	// 7. Enqueue for async re-indexing
+	if err := s.repo.EnqueueIndexing(ctx, updated.ID, domain.IndexOpUpdate); err != nil {
+		s.logger.Warn().Err(err).Int64("listing_id", updated.ID).Msg("failed to enqueue indexing (non-critical)")
 	}
 
-	s.logger.Info().Int64("listing_id", listing.ID).Msg("listing updated successfully")
-	return listing, nil
+	s.logger.Info().
+		Int64("listing_id", updated.ID).
+		Int64("user_id", userID).
+		Msg("listing updated successfully")
+
+	return updated, nil
 }
 
-// DeleteListing soft-deletes a listing with ownership check
+// DeleteListing soft-deletes a listing with ownership check and cascade cleanup
 func (s *Service) DeleteListing(ctx context.Context, id int64, userID int64) error {
-	// Check ownership
+	// 1. Get existing listing and verify ownership
 	existing, err := s.repo.GetListingByID(ctx, id)
 	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to get listing for deletion")
 		return fmt.Errorf("listing not found: %w", err)
 	}
 
+	if existing == nil {
+		return fmt.Errorf("listing not found")
+	}
+
 	if existing.UserID != userID {
-		s.logger.Warn().Int64("listing_id", id).Int64("user_id", userID).Int64("owner_id", existing.UserID).Msg("unauthorized delete attempt")
+		s.logger.Warn().
+			Int64("listing_id", id).
+			Int64("user_id", userID).
+			Int64("owner_id", existing.UserID).
+			Msg("unauthorized delete attempt")
 		return fmt.Errorf("unauthorized: user does not own this listing")
 	}
 
-	// Delete listing
+	// 2. Soft delete the listing
 	if err := s.repo.DeleteListing(ctx, id); err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to delete listing")
 		return fmt.Errorf("failed to delete listing: %w", err)
 	}
 
-	// Invalidate cache (if available)
+	// 3. Cascade delete: Remove associated images
+	// Note: This is best-effort - we log errors but don't fail the operation
+	images, err := s.repo.GetImages(ctx, id)
+	if err == nil && len(images) > 0 {
+		for _, img := range images {
+			if err := s.repo.DeleteImage(ctx, img.ID); err != nil {
+				s.logger.Warn().
+					Err(err).
+					Int64("listing_id", id).
+					Int64("image_id", img.ID).
+					Msg("failed to delete associated image")
+			}
+		}
+		s.logger.Info().
+			Int64("listing_id", id).
+			Int("images_count", len(images)).
+			Msg("cascade deleted associated images")
+	}
+
+	// 4. Invalidate all related caches
 	if s.cache != nil {
+		// Invalidate listing cache
 		cacheKey := fmt.Sprintf("listing:%d", id)
 		if err := s.cache.Delete(ctx, cacheKey); err != nil {
-			s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+			s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate listing cache")
+		}
+
+		// Invalidate favorites count cache
+		favCountKey := fmt.Sprintf("favorites:listing:%d:count", id)
+		if err := s.cache.Delete(ctx, favCountKey); err != nil {
+			s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate favorites count cache")
+		}
+
+		// Invalidate user's listings cache (if we cached user listings)
+		userListingsKey := fmt.Sprintf("user:%d:listings", existing.UserID)
+		if err := s.cache.Delete(ctx, userListingsKey); err != nil {
+			s.logger.Warn().Err(err).Int64("user_id", existing.UserID).Msg("failed to invalidate user listings cache")
 		}
 	}
 
-	// Enqueue for async index deletion
+	// 5. Enqueue for async index deletion
 	if err := s.repo.EnqueueIndexing(ctx, id, domain.IndexOpDelete); err != nil {
 		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to enqueue indexing deletion (non-critical)")
 	}
 
-	s.logger.Info().Int64("listing_id", id).Msg("listing deleted successfully")
+	s.logger.Info().
+		Int64("listing_id", id).
+		Int64("user_id", userID).
+		Msg("listing deleted successfully with cascade cleanup")
+
 	return nil
 }
 
 // ListListings returns a filtered list of listings
 func (s *Service) ListListings(ctx context.Context, filter *domain.ListListingsFilter) ([]*domain.Listing, int32, error) {
 	// Validate filter
-	if err := s.validator.Struct(filter); err != nil {
+	if err := s.stdValidator.Struct(filter); err != nil {
 		s.logger.Warn().Err(err).Msg("invalid list filter")
 		return nil, 0, fmt.Errorf("validation failed: %w", err)
 	}
@@ -320,7 +427,7 @@ func (s *Service) ListListings(ctx context.Context, filter *domain.ListListingsF
 // SearchListings performs full-text search on listings
 func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListingsQuery) ([]*domain.Listing, int32, error) {
 	// Validate query
-	if err := s.validator.Struct(query); err != nil {
+	if err := s.stdValidator.Struct(query); err != nil {
 		s.logger.Warn().Err(err).Msg("invalid search query")
 		return nil, 0, fmt.Errorf("validation failed: %w", err)
 	}
@@ -391,7 +498,7 @@ func (s *Service) AdminGetListing(ctx context.Context, id int64) (*domain.Listin
 // AdminUpdateListing updates any listing (admin operation)
 func (s *Service) AdminUpdateListing(ctx context.Context, id int64, input *domain.UpdateListingInput) (*domain.Listing, error) {
 	// Validate input
-	if err := s.validator.Struct(input); err != nil {
+	if err := s.stdValidator.Struct(input); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
@@ -511,6 +618,21 @@ func (s *Service) AddToFavorites(ctx context.Context, userID, listingID int64) e
 		return fmt.Errorf("failed to add to favorites: %w", err)
 	}
 
+	// Invalidate related caches
+	if s.cache != nil {
+		// Invalidate user's favorites list cache
+		userFavKey := fmt.Sprintf("favorites:user:%d", userID)
+		if err := s.cache.Delete(ctx, userFavKey); err != nil {
+			s.logger.Warn().Err(err).Int64("user_id", userID).Msg("failed to invalidate user favorites cache")
+		}
+
+		// Invalidate favorites count cache for this listing
+		countKey := fmt.Sprintf("favorites:listing:%d:count", listingID)
+		if err := s.cache.Delete(ctx, countKey); err != nil {
+			s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to invalidate favorites count cache")
+		}
+	}
+
 	s.logger.Info().Int64("user_id", userID).Int64("listing_id", listingID).Msg("added to favorites")
 	return nil
 }
@@ -529,6 +651,21 @@ func (s *Service) RemoveFromFavorites(ctx context.Context, userID, listingID int
 	if err != nil {
 		s.logger.Error().Err(err).Int64("user_id", userID).Int64("listing_id", listingID).Msg("failed to remove from favorites")
 		return fmt.Errorf("failed to remove from favorites: %w", err)
+	}
+
+	// Invalidate related caches
+	if s.cache != nil {
+		// Invalidate user's favorites list cache
+		userFavKey := fmt.Sprintf("favorites:user:%d", userID)
+		if err := s.cache.Delete(ctx, userFavKey); err != nil {
+			s.logger.Warn().Err(err).Int64("user_id", userID).Msg("failed to invalidate user favorites cache")
+		}
+
+		// Invalidate favorites count cache for this listing
+		countKey := fmt.Sprintf("favorites:listing:%d:count", listingID)
+		if err := s.cache.Delete(ctx, countKey); err != nil {
+			s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to invalidate favorites count cache")
+		}
 	}
 
 	s.logger.Info().Int64("user_id", userID).Int64("listing_id", listingID).Msg("removed from favorites")
@@ -567,6 +704,45 @@ func (s *Service) IsFavorite(ctx context.Context, userID, listingID int64) (bool
 	}
 
 	return isFavorite, nil
+}
+
+// GetFavoritesCount returns the number of times a listing has been favorited with caching
+func (s *Service) GetFavoritesCount(ctx context.Context, listingID int64) (int64, error) {
+	// Validate listing ID
+	if listingID <= 0 {
+		return 0, fmt.Errorf("invalid listing ID")
+	}
+
+	cacheKey := fmt.Sprintf("favorites:listing:%d:count", listingID)
+
+	// 1. Try to get from cache
+	if s.cache != nil {
+		var cachedCount int64
+		if err := s.cache.Get(ctx, cacheKey, &cachedCount); err == nil {
+			s.logger.Debug().Int64("listing_id", listingID).Int64("count", cachedCount).Msg("favorites count from cache")
+			return cachedCount, nil
+		}
+	}
+
+	// 2. Cache miss - get favorited users from repository
+	users, err := s.repo.GetFavoritedUsers(ctx, listingID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to get favorited users")
+		return 0, fmt.Errorf("failed to get favorites count: %w", err)
+	}
+
+	count := int64(len(users))
+
+	// 3. Cache the result for 5 minutes
+	if s.cache != nil {
+		if err := s.cache.Set(ctx, cacheKey, count); err != nil {
+			s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to cache favorites count")
+			// Don't fail the request if caching fails
+		}
+	}
+
+	s.logger.Debug().Int64("listing_id", listingID).Int64("count", count).Msg("favorites count from database")
+	return count, nil
 }
 
 // Variant operations
@@ -692,7 +868,7 @@ func (s *Service) CreateProduct(ctx context.Context, input *domain.CreateProduct
 		Msg("creating product")
 
 	// Validate input using validator
-	if err := s.validator.Struct(input); err != nil {
+	if err := s.stdValidator.Struct(input); err != nil {
 		s.logger.Error().Err(err).Msg("product validation failed")
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
@@ -737,7 +913,7 @@ func (s *Service) BulkCreateProducts(ctx context.Context, storefrontID int64, in
 		input.StorefrontID = storefrontID
 
 		// Validate using validator
-		if err := s.validator.Struct(input); err != nil {
+		if err := s.stdValidator.Struct(input); err != nil {
 			s.logger.Error().Err(err).Int("index", i).Msg("product validation failed")
 			return nil, nil, fmt.Errorf("validation failed for product at index %d: %w", i, err)
 		}
@@ -774,7 +950,7 @@ func (s *Service) UpdateProduct(ctx context.Context, productID int64, storefront
 	}
 
 	// Validate input using validator
-	if err := s.validator.Struct(input); err != nil {
+	if err := s.stdValidator.Struct(input); err != nil {
 		s.logger.Error().Err(err).Msg("product update validation failed")
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
@@ -820,7 +996,7 @@ func (s *Service) BulkUpdateProducts(ctx context.Context, storefrontID int64, up
 		}
 
 		// Validate using validator
-		if err := s.validator.Struct(update); err != nil {
+		if err := s.stdValidator.Struct(update); err != nil {
 			s.logger.Error().Err(err).Int64("product_id", update.ProductID).Msg("bulk update validation failed")
 			return nil, fmt.Errorf("validation failed for product %d: %w", update.ProductID, err)
 		}
@@ -981,7 +1157,7 @@ func (s *Service) CreateProductVariant(ctx context.Context, input *domain.Create
 		Msg("creating product variant")
 
 	// Validate input using validator
-	if err := s.validator.Struct(input); err != nil {
+	if err := s.stdValidator.Struct(input); err != nil {
 		s.logger.Error().Err(err).Msg("variant validation failed")
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
@@ -1005,7 +1181,7 @@ func (s *Service) UpdateProductVariant(ctx context.Context, variantID int64, pro
 		Msg("updating product variant")
 
 	// Validate input using validator
-	if err := s.validator.Struct(input); err != nil {
+	if err := s.stdValidator.Struct(input); err != nil {
 		s.logger.Error().Err(err).Msg("variant validation failed")
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
@@ -1062,7 +1238,7 @@ func (s *Service) BulkCreateProductVariants(ctx context.Context, productID int64
 
 	// Validate each input using validator
 	for i, input := range inputs {
-		if err := s.validator.Struct(input); err != nil {
+		if err := s.stdValidator.Struct(input); err != nil {
 			s.logger.Error().Err(err).Int("index", i).Msg("variant validation failed")
 			return nil, fmt.Errorf("validation failed for variant at index %d: %w", i, err)
 		}
@@ -1227,4 +1403,34 @@ func (s *Service) BatchUpdateStock(ctx context.Context, storefrontID int64, item
 		Msg("batch stock update completed")
 
 	return successCount, failedCount, results, nil
+}
+
+// GetStorefront retrieves a storefront by ID
+func (s *Service) GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error) {
+	sf, err := s.repo.GetStorefront(ctx, storefrontID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("storefront_id", storefrontID).Msg("failed to get storefront")
+		return nil, fmt.Errorf("failed to get storefront: %w", err)
+	}
+	return sf, nil
+}
+
+// GetStorefrontBySlug retrieves a storefront by slug
+func (s *Service) GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error) {
+	sf, err := s.repo.GetStorefrontBySlug(ctx, slug)
+	if err != nil {
+		s.logger.Error().Err(err).Str("slug", slug).Msg("failed to get storefront by slug")
+		return nil, fmt.Errorf("failed to get storefront by slug: %w", err)
+	}
+	return sf, nil
+}
+
+// ListStorefronts returns a paginated list of storefronts
+func (s *Service) ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error) {
+	storefronts, total, err := s.repo.ListStorefronts(ctx, limit, offset)
+	if err != nil {
+		s.logger.Error().Err(err).Int("limit", limit).Int("offset", offset).Msg("failed to list storefronts")
+		return nil, 0, fmt.Errorf("failed to list storefronts: %w", err)
+	}
+	return storefronts, total, nil
 }

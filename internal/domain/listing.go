@@ -10,6 +10,7 @@ import (
 type Listing struct {
 	ID             int64      `json:"id" db:"id"`
 	UUID           string     `json:"uuid" db:"uuid"`
+	Slug           string     `json:"slug" db:"slug"`
 	UserID         int64      `json:"user_id" db:"user_id"`
 	StorefrontID   *int64     `json:"storefront_id,omitempty" db:"storefront_id"`
 	Title          string     `json:"title" db:"title"`
@@ -26,6 +27,7 @@ type Listing struct {
 	AttributesJSON *string    `json:"attributes,omitempty" db:"attributes"`     // JSONB column stored as string for flexibility
 	ViewsCount     int32      `json:"views_count" db:"views_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
+	ExpiresAt      *time.Time `json:"expires_at,omitempty" db:"expires_at"`
 	CreatedAt      time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at" db:"updated_at"`
 	PublishedAt    *time.Time `json:"published_at,omitempty" db:"published_at"`

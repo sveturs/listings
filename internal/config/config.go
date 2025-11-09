@@ -104,8 +104,10 @@ type StorageConfig struct {
 
 // AuthConfig contains Auth Service integration settings
 type AuthConfig struct {
-	ServiceURL    string `envconfig:"SVETULISTINGS_AUTH_SERVICE_URL" default:"http://localhost:8081"`
-	PublicKeyPath string `envconfig:"SVETULISTINGS_AUTH_PUBLIC_KEY_PATH" default:"/keys/public.pem"`
+	ServiceURL    string        `envconfig:"SVETULISTINGS_AUTH_SERVICE_URL" default:"http://localhost:8081"`
+	PublicKeyPath string        `envconfig:"SVETULISTINGS_AUTH_PUBLIC_KEY_PATH" default:"/keys/public.pem"`
+	Timeout       time.Duration `envconfig:"SVETULISTINGS_AUTH_TIMEOUT" default:"10s"`
+	Enabled       bool          `envconfig:"SVETULISTINGS_AUTH_ENABLED" default:"false"` // Disabled for Phase 13.1.15.8 until logger adapter is fixed
 }
 
 // WorkerConfig contains async worker settings

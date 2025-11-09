@@ -125,3 +125,74 @@ func (r *Repository) IsFavorite(ctx context.Context, userID, listingID int64) (b
 
 	return exists, nil
 }
+
+// GetCountByListing returns the total count of users who favorited a listing
+func (r *Repository) GetCountByListing(ctx context.Context, listingID int64) (int64, error) {
+	query := `SELECT COUNT(*) FROM c2c_favorites WHERE listing_id = $1`
+
+	var count int64
+	err := r.db.QueryRowxContext(ctx, query, listingID).Scan(&count)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to get favorite count by listing")
+		return 0, fmt.Errorf("failed to get favorite count by listing: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetCountByUser returns the total count of listings favorited by a user
+func (r *Repository) GetCountByUser(ctx context.Context, userID int64) (int64, error) {
+	query := `SELECT COUNT(*) FROM c2c_favorites WHERE user_id = $1`
+
+	var count int64
+	err := r.db.QueryRowxContext(ctx, query, userID).Scan(&count)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("user_id", userID).Msg("failed to get favorite count by user")
+		return 0, fmt.Errorf("failed to get favorite count by user: %w", err)
+	}
+
+	return count, nil
+}
+
+// BatchCheckFavorites checks favorite status for multiple listings at once
+// Returns a map of listingID -> isFavorited (true/false)
+func (r *Repository) BatchCheckFavorites(ctx context.Context, userID int64, listingIDs []int64) (map[int64]bool, error) {
+	if len(listingIDs) == 0 {
+		return make(map[int64]bool), nil
+	}
+
+	query := `
+		SELECT listing_id
+		FROM c2c_favorites
+		WHERE user_id = $1 AND listing_id = ANY($2::bigint[])
+	`
+
+	rows, err := r.db.QueryxContext(ctx, query, userID, listingIDs)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("user_id", userID).Msg("failed to batch check favorites")
+		return nil, fmt.Errorf("failed to batch check favorites: %w", err)
+	}
+	defer rows.Close()
+
+	// Initialize map with all false
+	result := make(map[int64]bool, len(listingIDs))
+	for _, id := range listingIDs {
+		result[id] = false
+	}
+
+	// Mark favorited ones as true
+	for rows.Next() {
+		var listingID int64
+		if err := rows.Scan(&listingID); err != nil {
+			r.logger.Error().Err(err).Msg("failed to scan listing ID")
+			return nil, fmt.Errorf("failed to scan listing ID: %w", err)
+		}
+		result[listingID] = true
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	return result, nil
+}

@@ -1058,3 +1058,82 @@ func ProtoToBulkUpdateInputs(protoUpdates []*pb.ProductUpdateInput) []*domain.Bu
 
 	return inputs
 }
+
+// StorefrontToProto converts domain.Storefront to pb.Storefront
+func StorefrontToProto(sf *domain.Storefront) *pb.Storefront {
+	if sf == nil {
+		return nil
+	}
+
+	protoSF := &pb.Storefront{
+		Id:             sf.ID,
+		UserId:         sf.UserID,
+		Slug:           sf.Slug,
+		Name:           sf.Name,
+		Country:        sf.Country,
+		IsActive:       sf.IsActive,
+		IsVerified:     sf.IsVerified,
+		Rating:         sf.Rating,
+		ReviewsCount:   sf.ReviewsCount,
+		ProductsCount:  sf.ProductsCount,
+		SalesCount:     sf.SalesCount,
+		ViewsCount:     sf.ViewsCount,
+		FollowersCount: sf.FollowersCount,
+	}
+
+	// Optional fields
+	if sf.Description != nil {
+		protoSF.Description = sf.Description
+	}
+
+	if sf.LogoURL != nil {
+		protoSF.LogoUrl = sf.LogoURL
+	}
+
+	if sf.BannerURL != nil {
+		protoSF.BannerUrl = sf.BannerURL
+	}
+
+	if sf.Phone != nil {
+		protoSF.Phone = sf.Phone
+	}
+
+	if sf.Email != nil {
+		protoSF.Email = sf.Email
+	}
+
+	if sf.Website != nil {
+		protoSF.Website = sf.Website
+	}
+
+	if sf.Address != nil {
+		protoSF.Address = sf.Address
+	}
+
+	if sf.City != nil {
+		protoSF.City = sf.City
+	}
+
+	if sf.PostalCode != nil {
+		protoSF.PostalCode = sf.PostalCode
+	}
+
+	if sf.Latitude != nil {
+		protoSF.Latitude = sf.Latitude
+	}
+
+	if sf.Longitude != nil {
+		protoSF.Longitude = sf.Longitude
+	}
+
+	// Timestamps
+	if !sf.CreatedAt.IsZero() {
+		protoSF.CreatedAt = sf.CreatedAt.Format(time.RFC3339)
+	}
+
+	if !sf.UpdatedAt.IsZero() {
+		protoSF.UpdatedAt = sf.UpdatedAt.Format(time.RFC3339)
+	}
+
+	return protoSF
+}

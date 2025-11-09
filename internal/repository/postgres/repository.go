@@ -200,6 +200,29 @@ func (r *Repository) GetListingByUUID(ctx context.Context, uuid string) (*domain
 	return &listing, nil
 }
 
+// GetListingBySlug retrieves a listing by its slug
+func (r *Repository) GetListingBySlug(ctx context.Context, slug string) (*domain.Listing, error) {
+	query := `
+		SELECT id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
+		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
+		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
+		FROM listings
+		WHERE slug = $1 AND is_deleted = false
+	`
+
+	var listing domain.Listing
+	err := r.db.GetContext(ctx, &listing, query, slug)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("listing not found: %w", err)
+		}
+		r.logger.Error().Err(err).Str("slug", slug).Msg("failed to get listing by slug")
+		return nil, fmt.Errorf("failed to get listing: %w", err)
+	}
+
+	return &listing, nil
+}
+
 // validateUpdateListingInput validates input before updating a listing
 func validateUpdateListingInput(input *domain.UpdateListingInput) error {
 	if input == nil {
