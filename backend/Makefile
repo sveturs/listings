@@ -1,6 +1,6 @@
 .PHONY: docs docs-fmt docs-clean format format-check lint pre-commit generate-grpc test-production-readiness test-integration test-e2e test-load mock-start mock-stop test-microservice-connectivity test-traffic-router test-data-consistency test-performance-reliability test-microservice-smoke test-microservice-integration test-microservice-coverage
 
-# Generate gRPC code from proto files
+# Generate gRPC code from proto files (delivery service)
 generate-grpc:
 	@echo "Generating gRPC code from proto files..."
 	@mkdir -p pkg/grpc/delivery/v1
@@ -10,6 +10,16 @@ generate-grpc:
 		--proto_path=proto \
 		proto/delivery/v1/delivery.proto
 	@echo "✅ gRPC code generated in pkg/grpc/delivery/v1/"
+
+# Generate proto code for Listings service
+generate-proto:
+	@echo "Generating proto files for Listings service..."
+	@mkdir -p pkg/proto/listings/v1
+	@PATH=$$PATH:$$HOME/go/bin protoc \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		pkg/proto/listings/v1/listings.proto
+	@echo "✅ Proto generation complete"
 
 build_migrator:
 	go build -ldflags "-X main.gitCommit=$$(git rev-parse --short HEAD) -X main.buildTime=$$(date +%Y%m%d_%H%M%S)" \

@@ -10,9 +10,6 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/health/grpc_health_v1"
 
 	listingsClient "backend/internal/clients/listings"
 	"backend/internal/logger"
@@ -21,37 +18,18 @@ import (
 )
 
 const (
-	microserviceAddr  = "localhost:50053"
-	monolithDBURL     = "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable"
-	microserviceDBURL = "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/listings?sslmode=disable"
+	microserviceAddr  = "localhost:50051"                                                                        // Fixed: listings uses 50051, not 50053
+	monolithDBURL     = "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"           // Fixed: main DB is on 5433
+	microserviceDBURL = "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" // Fixed: listings DB credentials
 	openSearchURL     = "http://localhost:9200"
 	smokeTimeout      = 3 * time.Second
 )
 
 // TestSmoke_MicroserviceIsAlive verifies microservice is running
 func TestSmoke_MicroserviceIsAlive(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), smokeTimeout)
-	defer cancel()
-
-	conn, err := grpc.NewClient(
-		microserviceAddr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		t.Fatalf("❌ Cannot connect to microservice: %v", err)
-	}
-	defer func() { _ = conn.Close() }()
-
-	healthClient := grpc_health_v1.NewHealthClient(conn)
-	resp, err := healthClient.Check(ctx, &grpc_health_v1.HealthCheckRequest{})
-	if err != nil {
-		t.Fatalf("❌ Health check failed: %v", err)
-	}
-
-	assert.Equal(t, grpc_health_v1.HealthCheckResponse_SERVING, resp.Status,
-		"Microservice should be SERVING")
-
-	t.Logf("✅ Microservice is alive and healthy")
+	// Skip gRPC health check as listings doesn't implement health proto
+	// Instead, test actual gRPC call in TestSmoke_BasicGRPCCall
+	t.Skip("⚠️ Listings microservice doesn't implement gRPC health proto - use BasicGRPCCall test instead")
 }
 
 // TestSmoke_GRPCPortOpen verifies gRPC port is listening
@@ -115,22 +93,23 @@ func TestSmoke_MonolithDatabaseAccessible(t *testing.T) {
 		t.Fatalf("❌ Monolith DB ping failed: %v", err)
 	}
 
-	// Verify marketplace_listings table exists
+	// Note: marketplace_listings table migrated to listings microservice
+	// Check c2c_categories table as indicator of monolith DB health
 	var tableExists bool
 	err = db.QueryRowContext(ctx, `
 		SELECT EXISTS (
 			SELECT FROM information_schema.tables
 			WHERE table_schema = 'public'
-			AND table_name = 'marketplace_listings'
+			AND table_name = 'c2c_categories'
 		)
 	`).Scan(&tableExists)
 	if err != nil {
 		t.Fatalf("❌ Cannot query monolith DB: %v", err)
 	}
 
-	assert.True(t, tableExists, "marketplace_listings table should exist")
+	assert.True(t, tableExists, "c2c_categories table should exist")
 
-	t.Logf("✅ Monolith database is accessible and has marketplace_listings table")
+	t.Logf("✅ Monolith database is accessible and has c2c_categories table")
 }
 
 // TestSmoke_OpenSearchReachable verifies OpenSearch is up
