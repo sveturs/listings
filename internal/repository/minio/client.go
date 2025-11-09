@@ -112,6 +112,15 @@ func (c *Client) GetPresignedURL(ctx context.Context, objectName string, expiry 
 	return url.String(), nil
 }
 
+// BucketExists checks if the bucket exists
+func (c *Client) BucketExists(ctx context.Context) (bool, error) {
+	exists, err := c.client.BucketExists(ctx, c.bucket)
+	if err != nil {
+		return false, fmt.Errorf("failed to check bucket existence: %w", err)
+	}
+	return exists, nil
+}
+
 // HealthCheck performs a health check on MinIO
 func (c *Client) HealthCheck(ctx context.Context) error {
 	_, err := c.client.BucketExists(ctx, c.bucket)

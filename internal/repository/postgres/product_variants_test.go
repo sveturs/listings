@@ -37,7 +37,7 @@ func createTestProductWithVariants(t *testing.T, repo *Repository, storefrontID 
 
 	// Enable variants
 	_, err = repo.db.ExecContext(ctx, `
-		UPDATE b2c_products SET has_variants = true WHERE id = $1
+		UPDATE listings SET has_variants = true WHERE id = $1
 	`, product.ID)
 	require.NoError(t, err, "Failed to enable variants")
 
@@ -165,9 +165,11 @@ func TestCreateProductVariant_MissingProductID(t *testing.T) {
 
 	variant, err := repo.CreateProductVariant(ctx, input)
 
-	assert.Error(t, err)
+	// Nil-safe assertions
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "variants.invalid_product_id")
+	}
 	assert.Nil(t, variant)
-	assert.Contains(t, err.Error(), "variants.invalid_product_id")
 }
 
 func TestCreateProductVariant_InvalidProductID(t *testing.T) {
@@ -329,7 +331,7 @@ func TestUpdateProductVariant_PartialUpdate(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, newPrice, *updatedVariant.Price)
-	assert.Equal(t, originalSKU, *updatedVariant.SKU) // SKU unchanged
+	assert.Equal(t, originalSKU, *updatedVariant.SKU)        // SKU unchanged
 	assert.Equal(t, int32(10), updatedVariant.StockQuantity) // Quantity unchanged
 }
 

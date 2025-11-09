@@ -199,8 +199,12 @@ func ProtoToCreateListingInput(req *pb.CreateListingRequest) *domain.CreateListi
 		Quantity:   req.Quantity,
 	}
 
+	// Automatically determine SourceType based on StorefrontID presence
 	if req.StorefrontId != nil {
 		input.StorefrontID = req.StorefrontId
+		input.SourceType = "b2c"
+	} else {
+		input.SourceType = "c2c"
 	}
 
 	if req.Description != nil {

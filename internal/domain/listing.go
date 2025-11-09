@@ -21,6 +21,9 @@ type Listing struct {
 	Visibility     string     `json:"visibility" db:"visibility"`
 	Quantity       int32      `json:"quantity" db:"quantity"`
 	SKU            *string    `json:"sku,omitempty" db:"sku"`
+	SourceType     string     `json:"source_type" db:"source_type"`             // c2c or b2c
+	StockStatus    *string    `json:"stock_status,omitempty" db:"stock_status"` // in_stock, out_of_stock, low_stock, discontinued (enum from DB)
+	AttributesJSON *string    `json:"attributes,omitempty" db:"attributes"`     // JSONB column stored as string for flexibility
 	ViewsCount     int32      `json:"views_count" db:"views_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
 	CreatedAt      time.Time  `json:"created_at" db:"created_at"`
@@ -112,6 +115,7 @@ type CreateListingInput struct {
 	CategoryID   int64   `json:"category_id" validate:"required"`
 	Quantity     int32   `json:"quantity" validate:"required,gte=0"`
 	SKU          *string `json:"sku,omitempty"`
+	SourceType   string  `json:"source_type" validate:"required,oneof=c2c b2c"`
 }
 
 // UpdateListingInput represents input for updating an existing listing
@@ -129,6 +133,7 @@ type ListListingsFilter struct {
 	StorefrontID *int64   `json:"storefront_id,omitempty"`
 	CategoryID   *int64   `json:"category_id,omitempty"`
 	Status       *string  `json:"status,omitempty"`
+	SourceType   *string  `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"`
 	MinPrice     *float64 `json:"min_price,omitempty"`
 	MaxPrice     *float64 `json:"max_price,omitempty"`
 	Limit        int32    `json:"limit" validate:"required,gte=1,lte=100"`
@@ -139,6 +144,7 @@ type ListListingsFilter struct {
 type SearchListingsQuery struct {
 	Query      string   `json:"query" validate:"required,min=2"`
 	CategoryID *int64   `json:"category_id,omitempty"`
+	SourceType *string  `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"` // Filter by c2c or b2c listings
 	MinPrice   *float64 `json:"min_price,omitempty"`
 	MaxPrice   *float64 `json:"max_price,omitempty"`
 	Limit      int32    `json:"limit" validate:"required,gte=1,lte=100"`
@@ -159,6 +165,12 @@ const (
 	VisibilityPublic   = "public"
 	VisibilityPrivate  = "private"
 	VisibilityUnlisted = "unlisted"
+)
+
+// Constants for listing source type
+const (
+	SourceTypeC2C = "c2c" // Consumer-to-Consumer
+	SourceTypeB2C = "b2c" // Business-to-Consumer
 )
 
 // Constants for indexing operations

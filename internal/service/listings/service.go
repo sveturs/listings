@@ -154,13 +154,15 @@ func (s *Service) CreateListing(ctx context.Context, input *domain.CreateListing
 
 // GetListing retrieves a listing by ID with caching
 func (s *Service) GetListing(ctx context.Context, id int64) (*domain.Listing, error) {
-	// Try cache first
-	cacheKey := fmt.Sprintf("listing:%d", id)
-	var cachedListing domain.Listing
+	// Try cache first (if available)
+	if s.cache != nil {
+		cacheKey := fmt.Sprintf("listing:%d", id)
+		var cachedListing domain.Listing
 
-	if err := s.cache.Get(ctx, cacheKey, &cachedListing); err == nil {
-		s.logger.Debug().Int64("listing_id", id).Msg("listing found in cache")
-		return &cachedListing, nil
+		if err := s.cache.Get(ctx, cacheKey, &cachedListing); err == nil {
+			s.logger.Debug().Int64("listing_id", id).Msg("listing found in cache")
+			return &cachedListing, nil
+		}
 	}
 
 	// Cache miss - fetch from database
@@ -170,12 +172,21 @@ func (s *Service) GetListing(ctx context.Context, id int64) (*domain.Listing, er
 		return nil, fmt.Errorf("failed to get listing: %w", err)
 	}
 
-	// Store in cache (non-blocking, ignore errors)
-	go func() {
-		if err := s.cache.Set(context.Background(), cacheKey, listing); err != nil {
-			s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to cache listing")
-		}
-	}()
+	// Check for nil listing (defensive programming)
+	if listing == nil {
+		s.logger.Warn().Int64("listing_id", id).Msg("listing not found")
+		return nil, fmt.Errorf("listing not found")
+	}
+
+	// Store in cache (non-blocking, ignore errors, if cache available)
+	if s.cache != nil {
+		go func() {
+			cacheKey := fmt.Sprintf("listing:%d", id)
+			if err := s.cache.Set(context.Background(), cacheKey, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to cache listing")
+			}
+		}()
+	}
 
 	return listing, nil
 }
@@ -226,10 +237,12 @@ func (s *Service) UpdateListing(ctx context.Context, id int64, userID int64, inp
 		return nil, fmt.Errorf("failed to update listing: %w", err)
 	}
 
-	// Invalidate cache
-	cacheKey := fmt.Sprintf("listing:%d", id)
-	if err := s.cache.Delete(ctx, cacheKey); err != nil {
-		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+	// Invalidate cache (if available)
+	if s.cache != nil {
+		cacheKey := fmt.Sprintf("listing:%d", id)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
+			s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+		}
 	}
 
 	// Enqueue for async re-indexing
@@ -260,10 +273,12 @@ func (s *Service) DeleteListing(ctx context.Context, id int64, userID int64) err
 		return fmt.Errorf("failed to delete listing: %w", err)
 	}
 
-	// Invalidate cache
-	cacheKey := fmt.Sprintf("listing:%d", id)
-	if err := s.cache.Delete(ctx, cacheKey); err != nil {
-		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+	// Invalidate cache (if available)
+	if s.cache != nil {
+		cacheKey := fmt.Sprintf("listing:%d", id)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
+			s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+		}
 	}
 
 	// Enqueue for async index deletion
@@ -323,7 +338,7 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 		return nil, 0, fmt.Errorf("search query must be at least 2 characters")
 	}
 
-	// Try cache for search results
+	// Try cache for search results (if cache is available)
 	categoryID := int64(0)
 	if query.CategoryID != nil {
 		categoryID = *query.CategoryID
@@ -332,9 +347,11 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 	var cachedResults []*domain.Listing
 	var cachedTotal int32
 
-	if err := s.cache.Get(ctx, cacheKey, &cachedResults); err == nil {
-		s.logger.Debug().Str("query", query.Query).Msg("search results found in cache")
-		return cachedResults, cachedTotal, nil
+	if s.cache != nil {
+		if err := s.cache.Get(ctx, cacheKey, &cachedResults); err == nil {
+			s.logger.Debug().Str("query", query.Query).Msg("search results found in cache")
+			return cachedResults, cachedTotal, nil
+		}
 	}
 
 	// Cache miss - search in database
@@ -344,12 +361,14 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 		return nil, 0, fmt.Errorf("failed to search listings: %w", err)
 	}
 
-	// Cache search results (non-blocking)
-	go func() {
-		if err := s.cache.Set(context.Background(), cacheKey, listings); err != nil {
-			s.logger.Warn().Err(err).Str("query", query.Query).Msg("failed to cache search results")
-		}
-	}()
+	// Cache search results (non-blocking, if cache is available)
+	if s.cache != nil {
+		go func() {
+			if err := s.cache.Set(context.Background(), cacheKey, listings); err != nil {
+				s.logger.Warn().Err(err).Str("query", query.Query).Msg("failed to cache search results")
+			}
+		}()
+	}
 
 	s.logger.Debug().Str("query", query.Query).Int("count", len(listings)).Int32("total", total).Msg("search completed")
 	return listings, total, nil
@@ -382,10 +401,12 @@ func (s *Service) AdminUpdateListing(ctx context.Context, id int64, input *domai
 		return nil, fmt.Errorf("failed to update listing: %w", err)
 	}
 
-	// Invalidate cache
-	cacheKey := fmt.Sprintf("listing:%d", id)
-	if err := s.cache.Delete(ctx, cacheKey); err != nil {
-		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+	// Invalidate cache (if available)
+	if s.cache != nil {
+		cacheKey := fmt.Sprintf("listing:%d", id)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
+			s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+		}
 	}
 
 	// Enqueue for async re-indexing
@@ -404,10 +425,12 @@ func (s *Service) AdminDeleteListing(ctx context.Context, id int64) error {
 		return fmt.Errorf("failed to delete listing: %w", err)
 	}
 
-	// Invalidate cache
-	cacheKey := fmt.Sprintf("listing:%d", id)
-	if err := s.cache.Delete(ctx, cacheKey); err != nil {
-		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+	// Invalidate cache (if available)
+	if s.cache != nil {
+		cacheKey := fmt.Sprintf("listing:%d", id)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
+			s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to invalidate cache")
+		}
 	}
 
 	// Enqueue for async index deletion

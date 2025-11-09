@@ -1,0 +1,289 @@
+# Docker Compose for Prometheus + Grafana Monitoring Stack
+# Production-ready configuration for Listings Microservice
+
+version: '3.8'
+
+services:
+  # ===================================================================
+  # PROMETHEUS - Metrics storage and alerting
+  # ===================================================================
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: listings-prometheus
+    restart: unless-stopped
+
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--storage.tsdb.retention.size=100GB'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle' # Allow reload via HTTP POST
+      - '--web.enable-admin-api' # Enable admin API for snapshots
+      - '--log.level=info'
+
+    ports:
+      - "9090:9090"
+
+    volumes:
+      # Configuration files
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
+
+      # Data persistence
+      - prometheus-data:/prometheus
+
+    networks:
+      - monitoring
+      - listings-network
+
+    labels:
+      com.svetu.service: "prometheus"
+      com.svetu.monitoring: "true"
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ===================================================================
+  # GRAFANA - Visualization and dashboards
+  # ===================================================================
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: listings-grafana
+    restart: unless-stopped
+
+    environment:
+      # Admin credentials (CHANGE IN PRODUCTION!)
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+
+      # Server settings
+      - GF_SERVER_ROOT_URL=http://localhost:3030
+      - GF_SERVER_DOMAIN=localhost
+
+      # Anonymous access (disable in production)
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+
+      # Data source provisioning
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+
+      # Plugins
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+
+      # Logging
+      - GF_LOG_LEVEL=info
+
+      # Metrics
+      - GF_METRICS_ENABLED=true
+
+      # Alerting
+      - GF_ALERTING_ENABLED=true
+      - GF_UNIFIED_ALERTING_ENABLED=true
+
+    ports:
+      - "3030:3000"
+
+    volumes:
+      # Data persistence
+      - grafana-data:/var/lib/grafana
+
+      # Provisioning (datasources and dashboards)
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+    networks:
+      - monitoring
+
+    depends_on:
+      - prometheus
+
+    labels:
+      com.svetu.service: "grafana"
+      com.svetu.monitoring: "true"
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ===================================================================
+  # ALERTMANAGER - Alert routing and notifications
+  # ===================================================================
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: listings-alertmanager
+    restart: unless-stopped
+
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--log.level=info'
+
+    ports:
+      - "9093:9093"
+
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+
+    networks:
+      - monitoring
+
+    labels:
+      com.svetu.service: "alertmanager"
+      com.svetu.monitoring: "true"
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===================================================================
+  # NODE EXPORTER - System metrics (CPU, Memory, Disk, Network)
+  # ===================================================================
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: listings-node-exporter
+    restart: unless-stopped
+
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.netclass.ignored-devices=^(veth.*|br.*|docker.*|virbr.*|lo)$$'
+      - '--collector.netdev.device-exclude=^(veth.*|br.*|docker.*|virbr.*|lo)$$'
+
+    ports:
+      - "9100:9100"
+
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+
+    networks:
+      - monitoring
+
+    labels:
+      com.svetu.service: "node-exporter"
+      com.svetu.monitoring: "true"
+
+    pid: host
+
+  # ===================================================================
+  # POSTGRES EXPORTER - Database metrics (optional - configure separately)
+  # ===================================================================
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: listings-postgres-exporter
+    restart: unless-stopped
+
+    environment:
+      # CHANGE THIS to your actual PostgreSQL connection string
+      - DATA_SOURCE_NAME=postgresql://postgres:mX3g1XGhMRUZEX3l@host.docker.internal:5432/svetubd?sslmode=disable
+      - PG_EXPORTER_EXTEND_QUERY_PATH=/etc/postgres_exporter/queries.yml
+
+    ports:
+      - "9187:9187"
+
+    volumes:
+      - ./postgres-exporter-queries.yml:/etc/postgres_exporter/queries.yml:ro
+
+    networks:
+      - monitoring
+
+    labels:
+      com.svetu.service: "postgres-exporter"
+      com.svetu.monitoring: "true"
+
+    # Uncomment if PostgreSQL is in Docker too
+    # depends_on:
+    #   - postgres
+
+  # ===================================================================
+  # REDIS EXPORTER - Cache metrics (optional)
+  # ===================================================================
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.55.0
+    container_name: listings-redis-exporter
+    restart: unless-stopped
+
+    environment:
+      # CHANGE THIS to your actual Redis connection
+      - REDIS_ADDR=host.docker.internal:6379
+      - REDIS_PASSWORD=
+
+    ports:
+      - "9121:9121"
+
+    networks:
+      - monitoring
+
+    labels:
+      com.svetu.service: "redis-exporter"
+      com.svetu.monitoring: "true"
+
+  # ===================================================================
+  # BLACKBOX EXPORTER - HTTP probing and uptime monitoring
+  # ===================================================================
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.24.0
+    container_name: listings-blackbox-exporter
+    restart: unless-stopped
+
+    command:
+      - '--config.file=/etc/blackbox_exporter/blackbox.yml'
+
+    ports:
+      - "9115:9115"
+
+    volumes:
+      - ./blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+
+    networks:
+      - monitoring
+      - listings-network
+
+    labels:
+      com.svetu.service: "blackbox-exporter"
+      com.svetu.monitoring: "true"
+
+# ===================================================================
+# NETWORKS
+# ===================================================================
+networks:
+  monitoring:
+    name: monitoring-network
+    driver: bridge
+
+  listings-network:
+    name: listings-network
+    driver: bridge
+    external: true # Connect to existing listings service network
+
+# ===================================================================
+# VOLUMES
+# ===================================================================
+volumes:
+  prometheus-data:
+    name: listings-prometheus-data
+    driver: local
+
+  grafana-data:
+    name: listings-grafana-data
+    driver: local
+
+  alertmanager-data:
+    name: listings-alertmanager-data
+    driver: local

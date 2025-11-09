@@ -104,9 +104,9 @@ func (s *Service) decrementProductStock(ctx context.Context, tx *sql.Tx, product
 	// Lock row and get current stock
 	var currentStock int32
 	query := `
-		SELECT stock_quantity
-		FROM b2c_products
-		WHERE id = $1
+		SELECT quantity
+		FROM listings
+		WHERE id = $1 AND source_type = 'b2c'
 		FOR UPDATE
 	`
 	err := tx.QueryRowContext(ctx, query, productID).Scan(&currentStock)
@@ -130,10 +130,10 @@ func (s *Service) decrementProductStock(ctx context.Context, tx *sql.Tx, product
 
 	// Decrement stock
 	updateQuery := `
-		UPDATE b2c_products
-		SET stock_quantity = stock_quantity - $1,
+		UPDATE listings
+		SET quantity = quantity - $1,
 		    updated_at = NOW()
-		WHERE id = $2 AND stock_quantity >= $1
+		WHERE id = $2 AND source_type = 'b2c' AND quantity >= $1
 	`
 	execResult, err := tx.ExecContext(ctx, updateQuery, quantity, productID)
 	if err != nil {
@@ -167,9 +167,9 @@ func (s *Service) decrementVariantStock(ctx context.Context, tx *sql.Tx, product
 	// Lock row and get current stock
 	var currentStock int32
 	query := `
-		SELECT stock_quantity
-		FROM b2c_product_variants
-		WHERE id = $1 AND product_id = $2
+		SELECT quantity
+		FROM product_variants
+		WHERE id = $1 AND listing_id = $2
 		FOR UPDATE
 	`
 	err := tx.QueryRowContext(ctx, query, variantID, productID).Scan(&currentStock)
@@ -193,10 +193,10 @@ func (s *Service) decrementVariantStock(ctx context.Context, tx *sql.Tx, product
 
 	// Decrement stock
 	updateQuery := `
-		UPDATE b2c_product_variants
-		SET stock_quantity = stock_quantity - $1,
+		UPDATE product_variants
+		SET quantity = quantity - $1,
 		    updated_at = NOW()
-		WHERE id = $2 AND product_id = $3 AND stock_quantity >= $1
+		WHERE id = $2 AND listing_id = $3 AND quantity >= $1
 	`
 	execResult, err := tx.ExecContext(ctx, updateQuery, quantity, variantID, productID)
 	if err != nil {
@@ -308,7 +308,7 @@ func (s *Service) rollbackProductStock(ctx context.Context, tx *sql.Tx, productI
 	if exists {
 		// Rollback already done - return success with current stock (idempotent)
 		var currentStock int32
-		query := `SELECT stock_quantity FROM b2c_products WHERE id = $1`
+		query := `SELECT quantity FROM listings WHERE id = $1 AND source_type = 'b2c'`
 		if err := tx.QueryRowContext(ctx, query, productID).Scan(&currentStock); err != nil {
 			return result, fmt.Errorf("failed to get product stock: %w", err)
 		}
@@ -326,7 +326,7 @@ func (s *Service) rollbackProductStock(ctx context.Context, tx *sql.Tx, productI
 
 	// Get current stock (no need for lock on rollback)
 	var currentStock int32
-	query := `SELECT stock_quantity FROM b2c_products WHERE id = $1`
+	query := `SELECT quantity FROM listings WHERE id = $1 AND source_type = 'b2c'`
 	err = tx.QueryRowContext(ctx, query, productID).Scan(&currentStock)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -341,10 +341,10 @@ func (s *Service) rollbackProductStock(ctx context.Context, tx *sql.Tx, productI
 
 	// Increment stock back
 	updateQuery := `
-		UPDATE b2c_products
-		SET stock_quantity = stock_quantity + $1,
+		UPDATE listings
+		SET quantity = quantity + $1,
 		    updated_at = NOW()
-		WHERE id = $2
+		WHERE id = $2 AND source_type = 'b2c'
 	`
 	_, err = tx.ExecContext(ctx, updateQuery, quantity, productID)
 	if err != nil {
@@ -378,7 +378,7 @@ func (s *Service) rollbackVariantStock(ctx context.Context, tx *sql.Tx, productI
 	if exists {
 		// Rollback already done - return success with current stock (idempotent)
 		var currentStock int32
-		query := `SELECT stock_quantity FROM b2c_product_variants WHERE id = $1 AND product_id = $2`
+		query := `SELECT quantity FROM product_variants WHERE id = $1 AND listing_id = $2`
 		if err := tx.QueryRowContext(ctx, query, variantID, productID).Scan(&currentStock); err != nil {
 			return result, fmt.Errorf("failed to get variant stock: %w", err)
 		}
@@ -397,7 +397,7 @@ func (s *Service) rollbackVariantStock(ctx context.Context, tx *sql.Tx, productI
 
 	// Get current stock (no need for lock on rollback)
 	var currentStock int32
-	query := `SELECT stock_quantity FROM b2c_product_variants WHERE id = $1 AND product_id = $2`
+	query := `SELECT quantity FROM product_variants WHERE id = $1 AND listing_id = $2`
 	err = tx.QueryRowContext(ctx, query, variantID, productID).Scan(&currentStock)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -412,10 +412,10 @@ func (s *Service) rollbackVariantStock(ctx context.Context, tx *sql.Tx, productI
 
 	// Increment stock back
 	updateQuery := `
-		UPDATE b2c_product_variants
-		SET stock_quantity = stock_quantity + $1,
+		UPDATE product_variants
+		SET quantity = quantity + $1,
 		    updated_at = NOW()
-		WHERE id = $2 AND product_id = $3
+		WHERE id = $2 AND listing_id = $3
 	`
 	_, err = tx.ExecContext(ctx, updateQuery, quantity, variantID, productID)
 	if err != nil {
@@ -491,11 +491,11 @@ func (s *Service) checkItemAvailability(ctx context.Context, item StockItem) (St
 
 	if item.VariantID != nil {
 		// Check variant stock
-		query := `SELECT stock_quantity FROM b2c_product_variants WHERE id = $1 AND product_id = $2`
+		query := `SELECT quantity FROM product_variants WHERE id = $1 AND listing_id = $2`
 		err = s.repo.GetDB().QueryRowContext(ctx, query, *item.VariantID, item.ProductID).Scan(&currentStock)
 	} else {
 		// Check product stock
-		query := `SELECT stock_quantity FROM b2c_products WHERE id = $1`
+		query := `SELECT quantity FROM listings WHERE id = $1 AND source_type = 'b2c'`
 		err = s.repo.GetDB().QueryRowContext(ctx, query, item.ProductID).Scan(&currentStock)
 	}
 
@@ -529,7 +529,7 @@ func (s *Service) checkRollbackExists(ctx context.Context, tx *sql.Tx, orderID s
 		// Check variant rollback
 		query = `
 			SELECT COUNT(*)
-			FROM b2c_inventory_movements
+			FROM inventory_movements
 			WHERE order_id = $1
 			  AND variant_id = $2
 			  AND movement_type = 'rollback'
@@ -539,9 +539,9 @@ func (s *Service) checkRollbackExists(ctx context.Context, tx *sql.Tx, orderID s
 		// Check product rollback
 		query = `
 			SELECT COUNT(*)
-			FROM b2c_inventory_movements
+			FROM inventory_movements
 			WHERE order_id = $1
-			  AND storefront_product_id = $2
+			  AND listing_id = $2
 			  AND variant_id IS NULL
 			  AND movement_type = 'rollback'
 		`
@@ -564,18 +564,17 @@ func (s *Service) recordRollback(ctx context.Context, tx *sql.Tx, orderID string
 	userID := int64(0)
 
 	query := `
-		INSERT INTO b2c_inventory_movements (
-			storefront_product_id,
+		INSERT INTO inventory_movements (
+			listing_id,
 			variant_id,
-			type,
+			movement_type,
 			quantity,
 			reason,
 			notes,
 			user_id,
 			order_id,
-			movement_type,
 			created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
 	`
 
 	notes := fmt.Sprintf("Stock rollback for order %s", orderID)
@@ -583,13 +582,12 @@ func (s *Service) recordRollback(ctx context.Context, tx *sql.Tx, orderID string
 	_, err := tx.ExecContext(ctx, query,
 		productID,
 		variantID,
-		"in",             // type: stock is coming back IN
-		quantity,         // quantity restored
-		"rollback",       // reason
-		notes,            // notes
-		userID,           // user_id (system operation)
-		orderID,          // order_id for idempotency
-		"rollback",       // movement_type for filtering
+		"rollback", // movement_type (was "in" + "rollback")
+		quantity,   // quantity restored
+		"rollback", // reason
+		notes,      // notes
+		userID,     // user_id (system operation)
+		orderID,    // order_id for idempotency
 	)
 
 	if err != nil {

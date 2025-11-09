@@ -1,0 +1,505 @@
+# Prometheus Alerting Rules for Listings Microservice
+# Production-ready alerts with proper severity levels and runbooks
+
+groups:
+  # ===================================================================
+  # CRITICAL ALERTS - PagerDuty (immediate action required)
+  # ===================================================================
+  - name: critical_alerts
+    interval: 30s
+    rules:
+      # Service Down - Health check failing
+      - alert: ServiceDown
+        expr: up{job="listings-microservice"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+        annotations:
+          summary: "Listings service is DOWN"
+          description: "Listings microservice {{ $labels.instance }} has been down for more than 1 minute."
+          impact: "All listings operations unavailable. Users cannot view, create, or update listings."
+          runbook_url: "https://wiki.svetu.rs/runbooks/listings-service-down"
+          dashboard_url: "http://grafana:3000/d/listings-overview"
+
+      # High Error Rate - Critical threshold
+      - alert: HighErrorRateCritical
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[5m]))
+          ) * 100 > 1
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+        annotations:
+          summary: "Critical error rate: {{ $value | humanizePercentage }}"
+          description: "Error rate above 1% for 5 minutes on {{ $labels.instance }}"
+          impact: "High number of user requests failing. Service degradation."
+          current_value: "{{ $value | humanizePercentage }}"
+          runbook_url: "https://wiki.svetu.rs/runbooks/high-error-rate"
+
+      # High Latency P99 - Critical threshold
+      - alert: HighLatencyP99Critical
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m])) by (le, method)
+          ) > 2
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+        annotations:
+          summary: "P99 latency critical: {{ $value | humanizeDuration }}"
+          description: "99th percentile latency above 2s for {{ $labels.method }} on {{ $labels.instance }}"
+          impact: "Severe performance degradation. User experience significantly impacted."
+          current_value: "{{ $value | humanizeDuration }}"
+          runbook_url: "https://wiki.svetu.rs/runbooks/high-latency"
+
+      # Database Connection Pool Exhaustion
+      - alert: DatabaseConnectionsHigh
+        expr: |
+          (
+            listings_db_connections_open / listings_db_connections_max
+          ) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+        annotations:
+          summary: "Database connections critical: {{ $value | humanize }}%"
+          description: "Database connection pool usage above 90% on {{ $labels.instance }}"
+          impact: "New requests may fail due to connection exhaustion. Database operations blocked."
+          current_value: "{{ $value | humanize }}%"
+          runbook_url: "https://wiki.svetu.rs/runbooks/db-connections-high"
+
+      # Disk Space Critical
+      - alert: DiskSpaceCritical
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/",fstype!="tmpfs"}
+            /
+            node_filesystem_size_bytes{mountpoint="/",fstype!="tmpfs"}
+          ) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+        annotations:
+          summary: "Disk space critical: {{ $value | humanize }}% free"
+          description: "Disk space below 15% on {{ $labels.instance }}"
+          impact: "Service may crash or fail to write logs/data. Immediate action required."
+          current_value: "{{ $value | humanize }}% free"
+          runbook_url: "https://wiki.svetu.rs/runbooks/disk-space-critical"
+
+      # Memory Usage Critical
+      - alert: MemoryUsageCritical
+        expr: |
+          (
+            1 - (
+              node_memory_MemAvailable_bytes
+              /
+              node_memory_MemTotal_bytes
+            )
+          ) * 100 > 95
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+        annotations:
+          summary: "Memory usage critical: {{ $value | humanize }}%"
+          description: "Memory usage above 95% on {{ $labels.instance }}"
+          impact: "Service at risk of OOM killer. Performance severely degraded."
+          current_value: "{{ $value | humanize }}%"
+          runbook_url: "https://wiki.svetu.rs/runbooks/memory-critical"
+
+  # ===================================================================
+  # WARNING ALERTS - Slack (proactive monitoring)
+  # ===================================================================
+  - name: warning_alerts
+    interval: 1m
+    rules:
+      # Error Rate Warning
+      - alert: HighErrorRateWarning
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status=~"5.."}[10m]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[10m]))
+          ) * 100 > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "Elevated error rate: {{ $value | humanizePercentage }}"
+          description: "Error rate above 0.5% for 10 minutes on {{ $labels.instance }}"
+          current_value: "{{ $value | humanizePercentage }}"
+          dashboard_url: "http://grafana:3000/d/listings-overview"
+
+      # High Latency P95 Warning
+      - alert: HighLatencyP95Warning
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[10m])) by (le, method)
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "P95 latency elevated: {{ $value | humanizeDuration }}"
+          description: "95th percentile latency above 500ms for {{ $labels.method }}"
+          current_value: "{{ $value | humanizeDuration }}"
+          dashboard_url: "http://grafana:3000/d/listings-performance"
+
+      # Cache Hit Ratio Low
+      - alert: CacheHitRatioLow
+        expr: |
+          (
+            rate(listings_cache_hits_total[15m])
+            /
+            (rate(listings_cache_hits_total[15m]) + rate(listings_cache_misses_total[15m]))
+          ) * 100 < 70
+        for: 15m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "Cache hit ratio low: {{ $value | humanize }}%"
+          description: "Cache hit ratio below 70% for 15 minutes on {{ $labels.instance }}"
+          impact: "Increased database load and slower response times"
+          current_value: "{{ $value | humanize }}%"
+          dashboard_url: "http://grafana:3000/d/listings-cache"
+
+      # CPU Usage High
+      - alert: CPUUsageHigh
+        expr: |
+          (
+            100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+          ) > 70
+        for: 15m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "CPU usage high: {{ $value | humanize }}%"
+          description: "CPU usage above 70% for 15 minutes on {{ $labels.instance }}"
+          current_value: "{{ $value | humanize }}%"
+          dashboard_url: "http://grafana:3000/d/node-exporter-full"
+
+      # Memory Usage High
+      - alert: MemoryUsageHigh
+        expr: |
+          (
+            1 - (
+              node_memory_MemAvailable_bytes
+              /
+              node_memory_MemTotal_bytes
+            )
+          ) * 100 > 80
+        for: 15m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "Memory usage high: {{ $value | humanize }}%"
+          description: "Memory usage above 80% for 15 minutes on {{ $labels.instance }}"
+          current_value: "{{ $value | humanize }}%"
+          dashboard_url: "http://grafana:3000/d/node-exporter-full"
+
+      # Rate Limit Rejections High
+      - alert: RateLimitRejectionsHigh
+        expr: rate(listings_rate_limit_rejections_total[5m]) > 10
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "High rate limit rejections: {{ $value | humanize }}/s"
+          description: "More than 10 rate limit rejections per second on {{ $labels.instance }}"
+          impact: "Users may be experiencing service unavailability"
+          current_value: "{{ $value | humanize }}/s"
+          dashboard_url: "http://grafana:3000/d/listings-overview"
+
+      # Database Query Duration High
+      - alert: DatabaseQueryDurationHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_db_query_duration_seconds_bucket[10m])) by (le, operation)
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "Database query slow: {{ $value | humanizeDuration }}"
+          description: "P95 database query duration above 1s for {{ $labels.operation }}"
+          current_value: "{{ $value | humanizeDuration }}"
+          dashboard_url: "http://grafana:3000/d/listings-database"
+
+      # Goroutines Count High
+      - alert: GoroutinesHigh
+        expr: go_goroutines{job="listings-microservice"} > 1000
+        for: 15m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "High goroutine count: {{ $value | humanize }}"
+          description: "More than 1000 goroutines on {{ $labels.instance }}"
+          impact: "Possible goroutine leak or high concurrent load"
+          current_value: "{{ $value | humanize }}"
+          dashboard_url: "http://grafana:3000/d/listings-overview"
+
+  # ===================================================================
+  # SLO ALERTS - Service Level Objectives
+  # ===================================================================
+  - name: slo_alerts
+    interval: 1m
+    rules:
+      # Error Budget Burn Rate - Fast burn (5x)
+      - alert: ErrorBudgetBurnRateFast
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status=~"5.."}[1h]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[1h]))
+          ) > (0.005 * 5)  # 5x burn rate (SLO: 99.5% success = 0.5% error budget)
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+          slo: 'true'
+        annotations:
+          summary: "Fast error budget burn detected"
+          description: "Error budget burning 5x faster than sustainable rate"
+          impact: "At this rate, monthly error budget will be exhausted in {{ $value | humanize }} hours"
+          runbook_url: "https://wiki.svetu.rs/runbooks/error-budget-burn"
+
+      # Error Budget Burn Rate - Slow burn (2x)
+      - alert: ErrorBudgetBurnRateSlow
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status=~"5.."}[6h]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[6h]))
+          ) > (0.005 * 2)  # 2x burn rate
+        for: 30m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+          slo: 'true'
+        annotations:
+          summary: "Slow error budget burn detected"
+          description: "Error budget burning 2x faster than sustainable rate over 6h window"
+          current_value: "{{ $value | humanizePercentage }}"
+
+      # Availability SLO Breach (99.9%)
+      - alert: AvailabilitySLOBreach
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status!~"5.."}[1h]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[1h]))
+          ) * 100 < 99.9
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+          slo: 'true'
+        annotations:
+          summary: "Availability SLO breached: {{ $value | humanize }}%"
+          description: "Service availability below 99.9% SLO target"
+          impact: "SLO breach will be reported to stakeholders"
+          current_value: "{{ $value | humanize }}%"
+          slo_target: "99.9%"
+          runbook_url: "https://wiki.svetu.rs/runbooks/slo-breach"
+
+      # Success Rate SLO Breach (99.5%)
+      - alert: SuccessRateSLOBreach
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status=~"2.."}[1h]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[1h]))
+          ) * 100 < 99.5
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+          slo: 'true'
+        annotations:
+          summary: "Success rate SLO breached: {{ $value | humanize }}%"
+          description: "Request success rate below 99.5% SLO target"
+          current_value: "{{ $value | humanize }}%"
+          slo_target: "99.5%"
+          runbook_url: "https://wiki.svetu.rs/runbooks/slo-breach"
+
+      # Latency SLO Breach P95 (200ms)
+      - alert: LatencyP95SLOBreach
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m])) by (le)
+          ) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+          slo: 'true'
+        annotations:
+          summary: "P95 latency SLO breached: {{ $value | humanizeDuration }}"
+          description: "P95 request latency above 200ms SLO target"
+          current_value: "{{ $value | humanizeDuration }}"
+          slo_target: "200ms"
+          dashboard_url: "http://grafana:3000/d/listings-performance"
+
+      # Latency SLO Breach P99 (1s)
+      - alert: LatencyP99SLOBreach
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m])) by (le)
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+          slo: 'true'
+        annotations:
+          summary: "P99 latency SLO breached: {{ $value | humanizeDuration }}"
+          description: "P99 request latency above 1s SLO target"
+          current_value: "{{ $value | humanizeDuration }}"
+          slo_target: "1s"
+          dashboard_url: "http://grafana:3000/d/listings-performance"
+
+  # ===================================================================
+  # DATABASE ALERTS
+  # ===================================================================
+  - name: database_alerts
+    interval: 1m
+    rules:
+      # Database Connection Errors
+      - alert: DatabaseConnectionErrors
+        expr: rate(listings_db_connection_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: listings
+          team: platform
+          page: 'true'
+        annotations:
+          summary: "Database connection errors detected"
+          description: "{{ $value | humanize }} connection errors per second on {{ $labels.instance }}"
+          impact: "Database operations failing. Service degradation."
+          runbook_url: "https://wiki.svetu.rs/runbooks/db-connection-errors"
+
+      # Database Connection Wait Time High
+      - alert: DatabaseConnectionWaitTimeHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_db_connection_wait_duration_seconds_bucket[5m])) by (le)
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "High database connection wait time: {{ $value | humanizeDuration }}"
+          description: "P95 connection wait time above 500ms"
+          impact: "Database pool contention. Performance degraded."
+          current_value: "{{ $value | humanizeDuration }}"
+
+      # Database Idle Connections Low
+      - alert: DatabaseIdleConnectionsLow
+        expr: listings_db_connections_idle < 5
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "Low idle database connections: {{ $value | humanize }}"
+          description: "Less than 5 idle connections available on {{ $labels.instance }}"
+          impact: "Connection pool may be undersized for current load"
+          current_value: "{{ $value | humanize }}"
+
+  # ===================================================================
+  # CACHE ALERTS
+  # ===================================================================
+  - name: cache_alerts
+    interval: 1m
+    rules:
+      # Cache Errors
+      - alert: CacheErrors
+        expr: rate(listings_cache_errors_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "Cache errors detected: {{ $value | humanize }}/s"
+          description: "More than 1 cache error per second on {{ $labels.instance }}"
+          impact: "Cache unavailable. Increased database load."
+          current_value: "{{ $value | humanize }}/s"
+
+      # Cache Eviction Rate High
+      - alert: CacheEvictionRateHigh
+        expr: rate(listings_cache_evictions_total[10m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: listings
+          team: platform
+          slack: 'true'
+        annotations:
+          summary: "High cache eviction rate: {{ $value | humanize }}/s"
+          description: "More than 100 cache evictions per second"
+          impact: "Cache may be undersized. Increased cache misses expected."
+          current_value: "{{ $value | humanize }}/s"

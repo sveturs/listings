@@ -89,11 +89,11 @@ ON CONFLICT (id) DO NOTHING;
 -- Existing Products for SKU Uniqueness Tests
 -- ============================================================================
 -- These products are created to test duplicate SKU validation
-INSERT INTO b2c_products (
-    id, storefront_id, name, description,
+INSERT INTO listings (
+    id, user_id, storefront_id, title, description,
     price, currency, category_id,
-    sku, barcode, stock_quantity, stock_status,
-    is_active, view_count, sold_count,
+    sku, quantity, status,
+    source_type,
     created_at, updated_at
 )
 VALUES
@@ -101,18 +101,16 @@ VALUES
     (
         7000,
         1100,
+        1100,
         'Existing Product 1',
         'Product with SKU TEST-SKU-001 already in database',
         50.00,
         'USD',
         2110,
         'TEST-SKU-001', -- This SKU will be used in duplicate test
-        '1234567890001',
         100,
-        'in_stock',
-        true,
-        0,
-        0,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     ),
@@ -120,18 +118,16 @@ VALUES
     (
         7001,
         1100,
+        1100,
         'Existing Product 2',
         'Product with SKU TEST-SKU-002 already in database',
         75.00,
         'USD',
         2111,
         'TEST-SKU-002', -- This SKU will be used in duplicate test
-        '1234567890002',
         50,
-        'in_stock',
-        true,
-        0,
-        0,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     ),
@@ -139,18 +135,16 @@ VALUES
     (
         7002,
         1101,
+        1101,
         'Different Storefront Product',
         'Product in different storefront (SKU must be globally unique)',
         60.00,
         'USD',
         2110,
         'TEST-SKU-003', -- Changed to unique SKU (global constraint)
-        '1234567890003',
         25,
-        'in_stock',
-        true,
-        0,
-        0,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     )
@@ -167,8 +161,8 @@ COMMENT ON TABLE storefronts IS 'Test storefronts with capacity for bulk product
 -- Cleanup Helper Comments
 -- ============================================================================
 -- To clean up test data, run:
--- DELETE FROM b2c_product_variants WHERE product_id >= 7000 AND product_id < 8000;
--- DELETE FROM b2c_products WHERE id >= 7000 AND id < 8000;
+-- DELETE FROM listing_variants WHERE listing_id >= 7000 AND listing_id < 8000;
+-- DELETE FROM listings WHERE id >= 7000 AND id < 8000;
 -- DELETE FROM categories WHERE id >= 2100 AND id < 2200;
 -- DELETE FROM storefronts WHERE id >= 1100 AND id < 1200;
 -- DELETE FROM users WHERE id >= 1100 AND id < 1200;
@@ -178,5 +172,5 @@ COMMENT ON TABLE storefronts IS 'Test storefronts with capacity for bulk product
 -- ============================================================================
 -- SELECT COUNT(*) FROM storefronts WHERE id >= 1100 AND id < 1200; -- Should return 3
 -- SELECT COUNT(*) FROM categories WHERE id >= 2100 AND id < 2200; -- Should return 8
--- SELECT COUNT(*) FROM b2c_products WHERE id >= 7000 AND id < 8000; -- Should return 3
--- SELECT sku, COUNT(*) FROM b2c_products WHERE id >= 7000 GROUP BY sku HAVING COUNT(*) > 1; -- Should return 0 (no duplicates within storefront)
+-- SELECT COUNT(*) FROM listings WHERE id >= 7000 AND id < 8000; -- Should return 3
+-- SELECT sku, COUNT(*) FROM listings WHERE id >= 7000 GROUP BY sku HAVING COUNT(*) > 1; -- Should return 0 (no duplicates within storefront)

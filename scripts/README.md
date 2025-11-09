@@ -1,36 +1,36 @@
-# Memory Profiling Scripts
+# Listings Microservice Scripts
 
-This directory contains tools for detecting and analyzing memory leaks in the listings microservice.
-
----
-
-## Quick Start
-
-### 1. Start the service with pprof enabled
-
-```bash
-cd /p/github.com/sveturs/listings
-go run ./cmd/server/main.go
-```
-
-pprof is available at: `http://localhost:6060/debug/pprof/`
-
-### 2. Run memory leak detection
-
-```bash
-# Option A: Full automated profiling (recommended)
-./scripts/profile_memory.sh
-
-# Option B: Long-term monitoring
-./scripts/monitor_memory.sh
-# ... wait 30+ minutes under load ...
-# Ctrl+C to stop
-python3 ./scripts/detect_leaks.py /tmp/memory_monitoring_*.csv
-```
+Comprehensive automation tools for the Listings microservice, including production deployment, monitoring, and profiling.
 
 ---
 
-## Scripts Overview
+## Table of Contents
+
+1. [Production Deployment](#production-deployment)
+2. [Memory Profiling](#memory-profiling)
+3. [Monitoring & Testing](#monitoring--testing)
+
+---
+
+# Production Deployment
+
+Production-ready deployment automation using Blue-Green strategy with zero downtime.
+
+## Quick Start - Deployment
+
+```bash
+# 1. Configure deployment
+cp .env.deploy.example .env.deploy
+nano .env.deploy
+
+# 2. Validate environment
+./validate-deployment.sh
+
+# 3. Deploy to production
+./deploy-to-prod.sh
+```
+
+## Deployment Scripts
 
 ### 📊 `profile_memory.sh`
 

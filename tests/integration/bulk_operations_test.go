@@ -199,6 +199,7 @@ func TestBulkCreateProducts_Success_Multiple(t *testing.T) {
 			Name:        fmt.Sprintf("Bulk Product %d", i+1),
 			Description: fmt.Sprintf("Description for product %d", i+1),
 			Price:       float64(100 + i*10),
+			Currency:    "RSD",
 			StockQuantity: int32(10 + i),
 			CategoryId:  testCategory1301,
 			Sku: stringPtr(fmt.Sprintf("BULK-MULTI-%03d", i+1)),
@@ -289,6 +290,7 @@ func TestBulkCreateProducts_Success_LargeBatch(t *testing.T) {
 			Name:        fmt.Sprintf("Large Batch Product %d", i+1),
 			Description: fmt.Sprintf("Product %d in large batch", i+1),
 			Price:       float64(50 + (i % 50)),
+			Currency:    "RSD",
 			StockQuantity:    int32(10 + (i % 20)),
 			CategoryId:  testCategory1301,
 			Sku: stringPtr(fmt.Sprintf("BULK-LARGE-%04d", i+1)),
@@ -544,6 +546,7 @@ func TestBulkCreateProducts_PartialSuccess(t *testing.T) {
 			{
 				Name:        "Valid Product 2",
 				Price:       200.0,
+				Currency:    "RSD",
 				StockQuantity: 20,
 				CategoryId:  testCategory1302,
 				Sku: stringPtr("PARTIAL-VALID-002"),
@@ -1373,6 +1376,7 @@ func BenchmarkBulkCreateProducts_100Items(b *testing.B) {
 			products[j] = &pb.ProductInput{
 				Name:        fmt.Sprintf("Bench Product %d-%d", i, j),
 				Price:       float64(100 + j),
+				Currency:    "RSD",
 				StockQuantity: int32(10),
 				CategoryId:  testCategory1301,
 				Sku: stringPtr(fmt.Sprintf("BENCH-%d-%d", i, j)),
@@ -1466,7 +1470,7 @@ func BenchmarkBulkDeleteProducts_100Items(b *testing.B) {
 			products[j] = &pb.ProductInput{
 				Name:        fmt.Sprintf("Delete Bench Product %d-%d", i, j),
 				Price:       100.0,
-				Currency: "USD",
+				Currency:    "RSD",
 				StockQuantity: 10,
 				CategoryId:  testCategory1301,
 				Sku: stringPtr(fmt.Sprintf("DEL-BENCH-%d-%d", i, j)),

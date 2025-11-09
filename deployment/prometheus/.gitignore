@@ -1,0 +1,33 @@
+# Environment variables
+.env
+
+# Data directories (managed by Docker volumes)
+data/
+prometheus-data/
+grafana-data/
+alertmanager-data/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Backups
+*.backup
+*.bak
+snapshots/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Custom dashboards (keep only templates)
+# grafana/dashboards/*.json

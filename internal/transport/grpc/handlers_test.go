@@ -335,8 +335,10 @@ func TestSearchListings_ValidationErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := server.validateSearchListingsRequest(tt.req)
-			assert.Error(t, err)
-			assert.Contains(t, err.Error(), tt.errMsg)
+			// Nil-safe assertions: check error exists before accessing its message
+			if assert.Error(t, err, "expected validation error for: "+tt.name) {
+				assert.Contains(t, err.Error(), tt.errMsg)
+			}
 		})
 	}
 }

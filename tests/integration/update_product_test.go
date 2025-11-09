@@ -139,7 +139,7 @@ func setupUpdateProductTest(t *testing.T) (pb.ListingsServiceClient, *tests.Test
 func verifyProductFieldInDB(t *testing.T, db *sql.DB, productID int64, field string, expected interface{}) {
 	t.Helper()
 
-	query := fmt.Sprintf("SELECT %s FROM b2c_products WHERE id = $1", field)
+	query := fmt.Sprintf("SELECT %s FROM listings WHERE id = $1 AND source_type = 'b2c'", field)
 	var actual interface{}
 	err := db.QueryRow(query, productID).Scan(&actual)
 	require.NoError(t, err, "Failed to query product field: %s", field)
@@ -151,7 +151,7 @@ func getProductUpdatedAt(t *testing.T, db *sql.DB, productID int64) time.Time {
 	t.Helper()
 
 	var updatedAt time.Time
-	err := db.QueryRow("SELECT updated_at FROM b2c_products WHERE id = $1", productID).Scan(&updatedAt)
+	err := db.QueryRow("SELECT updated_at FROM listings WHERE id = $1 AND source_type = 'b2c'", productID).Scan(&updatedAt)
 	require.NoError(t, err)
 	return updatedAt
 }
@@ -229,7 +229,7 @@ func TestUpdateProduct_Success(t *testing.T) {
 	assert.Equal(t, "TestBrand", attrs["brand"])
 
 	// Verify in database
-	verifyProductFieldInDB(t, testDB.DB, testProduct10001, "name", "Updated Product Name")
+	verifyProductFieldInDB(t, testDB.DB, testProduct10001, "title", "Updated Product Name")
 	verifyProductFieldInDB(t, testDB.DB, testProduct10001, "price", 149.99)
 
 	// Verify updated_at changed
@@ -277,7 +277,7 @@ func TestUpdateProduct_PartialUpdate(t *testing.T) {
 	assert.Equal(t, originalDescription, product.Description, "Description should NOT change")
 
 	// Verify in database
-	verifyProductFieldInDB(t, testDB.DB, testProduct10002, "name", "New Name Only")
+	verifyProductFieldInDB(t, testDB.DB, testProduct10002, "title", "New Name Only")
 	verifyProductFieldInDB(t, testDB.DB, testProduct10002, "price", originalPrice)
 }
 
@@ -422,7 +422,7 @@ func TestUpdateProduct_DuplicateSKU(t *testing.T) {
 
 	// Verify product 10005 has SKU-DUPLICATE
 	var existingSKU string
-	err := testDB.DB.QueryRow("SELECT sku FROM b2c_products WHERE id = $1", testProduct10005).Scan(&existingSKU)
+	err := testDB.DB.QueryRow("SELECT sku FROM listings WHERE id = $1 AND source_type = 'b2c'", testProduct10005).Scan(&existingSKU)
 	require.NoError(t, err)
 	assert.Equal(t, "SKU-DUPLICATE", existingSKU)
 
@@ -448,7 +448,7 @@ func TestUpdateProduct_DuplicateSKU(t *testing.T) {
 
 	// CRITICAL: Verify original SKU NOT changed
 	var currentSKU string
-	err = testDB.DB.QueryRow("SELECT sku FROM b2c_products WHERE id = $1", testProduct10006).Scan(&currentSKU)
+	err = testDB.DB.QueryRow("SELECT sku FROM listings WHERE id = $1 AND source_type = 'b2c'", testProduct10006).Scan(&currentSKU)
 	require.NoError(t, err)
 	assert.Equal(t, "SKU-10006", currentSKU, "Original SKU should remain unchanged after failed update")
 }
@@ -524,9 +524,9 @@ func TestBulkUpdateProducts_Success(t *testing.T) {
 	assert.Equal(t, 11.11, resp.Products[0].Price)
 
 	// Verify in database
-	verifyProductFieldInDB(t, testDB.DB, testProduct10011, "name", "Bulk Updated 1")
+	verifyProductFieldInDB(t, testDB.DB, testProduct10011, "title", "Bulk Updated 1")
 	verifyProductFieldInDB(t, testDB.DB, testProduct10012, "price", 22.22)
-	verifyProductFieldInDB(t, testDB.DB, testProduct10013, "name", "Bulk Updated 3")
+	verifyProductFieldInDB(t, testDB.DB, testProduct10013, "title", "Bulk Updated 3")
 }
 
 // TestBulkUpdateProducts_MixedOperations tests different field updates per product
@@ -567,7 +567,7 @@ func TestBulkUpdateProducts_MixedOperations(t *testing.T) {
 
 	// Verify mixed updates
 	verifyProductFieldInDB(t, testDB.DB, testProduct10016, "price", 66.66)
-	verifyProductFieldInDB(t, testDB.DB, testProduct10017, "name", "New Name")
+	verifyProductFieldInDB(t, testDB.DB, testProduct10017, "title", "New Name")
 
 	// Verify product 10018 attributes updated (check in response)
 	for _, p := range resp.Products {
@@ -614,9 +614,9 @@ func TestBulkUpdateProducts_TransactionRollback(t *testing.T) {
 	// Get original values
 	var original10019 string
 	var original10020 string
-	err := testDB.DB.QueryRow("SELECT sku FROM b2c_products WHERE id = $1", testProduct10019).Scan(&original10019)
+	err := testDB.DB.QueryRow("SELECT sku FROM listings WHERE id = $1 AND source_type = 'b2c'", testProduct10019).Scan(&original10019)
 	require.NoError(t, err)
-	err = testDB.DB.QueryRow("SELECT sku FROM b2c_products WHERE id = $1", testProduct10020).Scan(&original10020)
+	err = testDB.DB.QueryRow("SELECT sku FROM listings WHERE id = $1 AND source_type = 'b2c'", testProduct10020).Scan(&original10020)
 	require.NoError(t, err)
 
 	// Try to update: 10019 -> "SKU-ROLLBACK-TARGET" (duplicate of 10020)
@@ -644,13 +644,13 @@ func TestBulkUpdateProducts_TransactionRollback(t *testing.T) {
 
 	// CRITICAL: Verify NO changes occurred (transaction rolled back)
 	var current10019 string
-	err = testDB.DB.QueryRow("SELECT sku FROM b2c_products WHERE id = $1", testProduct10019).Scan(&current10019)
+	err = testDB.DB.QueryRow("SELECT sku FROM listings WHERE id = $1 AND source_type = 'b2c'", testProduct10019).Scan(&current10019)
 	require.NoError(t, err)
 	assert.Equal(t, original10019, current10019, "Product 10019 SKU should NOT change on duplicate error")
 
 	// Also verify 10020 unchanged
 	var current10020 string
-	err = testDB.DB.QueryRow("SELECT sku FROM b2c_products WHERE id = $1", testProduct10020).Scan(&current10020)
+	err = testDB.DB.QueryRow("SELECT sku FROM listings WHERE id = $1 AND source_type = 'b2c'", testProduct10020).Scan(&current10020)
 	require.NoError(t, err)
 	assert.Equal(t, original10020, current10020, "Product 10020 SKU should remain unchanged")
 
@@ -747,7 +747,7 @@ func TestUpdateProduct_Concurrent(t *testing.T) {
 	// Check product exists and has valid data
 	var finalName string
 	var finalPrice float64
-	err := testDB.DB.QueryRow("SELECT name, price FROM b2c_products WHERE id = $1", testProduct10021).Scan(&finalName, &finalPrice)
+	err := testDB.DB.QueryRow("SELECT title, price FROM listings WHERE id = $1 AND source_type = 'b2c'", testProduct10021).Scan(&finalName, &finalPrice)
 	require.NoError(t, err, "Product should exist and be queryable")
 
 	// Final values should be from ONE of the updates
@@ -798,7 +798,7 @@ func TestUpdateProduct_OptimisticLocking(t *testing.T) {
 
 	// Verify final state: last write should win
 	var finalName string
-	err = testDB.DB.QueryRow("SELECT name FROM b2c_products WHERE id = $1", testProduct10022).Scan(&finalName)
+	err = testDB.DB.QueryRow("SELECT title FROM listings WHERE id = $1 AND source_type = 'b2c'", testProduct10022).Scan(&finalName)
 	require.NoError(t, err)
 
 	assert.Equal(t, "Third Update", finalName, "Last write should win (no optimistic locking)")

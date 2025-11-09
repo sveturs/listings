@@ -375,7 +375,7 @@ func TestRecordInventoryMovement_ValidRequest_Success(t *testing.T) {
 		int64(789), // variantID
 		req.MovementType,
 		req.Quantity,
-		"sale",   // reason
+		"sale",         // reason
 		"Order #12345", // notes
 		req.UserId,
 	).Return(int32(100), int32(95), nil)
@@ -594,8 +594,8 @@ func TestRecordInventoryMovement_ProductNotFound_NotFoundError(t *testing.T) {
 		int64(0), // variantID
 		req.MovementType,
 		req.Quantity,
-		"",   // reason
-		"",   // notes
+		"", // reason
+		"", // notes
 		req.UserId,
 	).Return(int32(0), int32(0), errors.New("inventory.product_not_found"))
 
@@ -633,8 +633,8 @@ func TestRecordInventoryMovement_InsufficientStock_PreconditionFailedError(t *te
 		int64(0), // variantID
 		req.MovementType,
 		req.Quantity,
-		"",   // reason
-		"",   // notes
+		"", // reason
+		"", // notes
 		req.UserId,
 	).Return(int32(10), int32(-90), errors.New("inventory.insufficient_stock"))
 
@@ -1139,8 +1139,8 @@ func TestRecordInventoryMovement_AllMovementTypes(t *testing.T) {
 				int64(0), // variantID
 				req.MovementType,
 				req.Quantity,
-				"",   // reason
-				"",   // notes
+				"", // reason
+				"", // notes
 				req.UserId,
 			).Return(tc.stockBefore, tc.stockAfter, nil).Once()
 
@@ -1181,8 +1181,8 @@ func TestRecordInventoryMovement_WithoutVariantID_Success(t *testing.T) {
 		int64(0), // variantID = 0 for product-level stock
 		req.MovementType,
 		req.Quantity,
-		"",   // reason
-		"",   // notes
+		"", // reason
+		"", // notes
 		req.UserId,
 	).Return(int32(50), int32(150), nil)
 

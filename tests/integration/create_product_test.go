@@ -105,11 +105,11 @@ func getProductByID(t *testing.T, db *sqlx.DB, productID int64) *productRecord {
 
 	var p productRecord
 	err := db.Get(&p, `
-		SELECT id, storefront_id, name, description, price, currency, category_id,
-		       sku, barcode, stock_quantity, stock_status, is_active, has_variants,
+		SELECT id, storefront_id, title, description, price, currency, category_id,
+		       sku, quantity, stock_status, is_active, has_variants,
 		       attributes, view_count, sold_count, created_at, updated_at
-		FROM b2c_products
-		WHERE id = $1 AND deleted_at IS NULL
+		FROM listings
+		WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL
 	`, productID)
 
 	if err != nil {
@@ -122,24 +122,23 @@ func getProductByID(t *testing.T, db *sqlx.DB, productID int64) *productRecord {
 
 // productRecord represents a product record from database
 type productRecord struct {
-	ID            int64     `db:"id"`
-	StorefrontID  int64     `db:"storefront_id"`
-	Name          string    `db:"name"`
-	Description   *string   `db:"description"`
-	Price         float64   `db:"price"`
-	Currency      string    `db:"currency"`
-	CategoryID    int64     `db:"category_id"`
-	SKU           *string   `db:"sku"`
-	Barcode       *string   `db:"barcode"`
-	StockQuantity int32     `db:"stock_quantity"`
-	StockStatus   string    `db:"stock_status"`
-	IsActive      bool      `db:"is_active"`
-	HasVariants   bool      `db:"has_variants"`
-	Attributes    *string   `db:"attributes"` // JSONB stored as string
-	ViewCount     int32     `db:"view_count"`
-	SoldCount     int32     `db:"sold_count"`
-	CreatedAt     time.Time `db:"created_at"`
-	UpdatedAt     time.Time `db:"updated_at"`
+	ID           int64     `db:"id"`
+	StorefrontID int64     `db:"storefront_id"`
+	Title        string    `db:"title"`
+	Description  *string   `db:"description"`
+	Price        float64   `db:"price"`
+	Currency     string    `db:"currency"`
+	CategoryID   int64     `db:"category_id"`
+	SKU          *string   `db:"sku"`
+	Quantity     int32     `db:"quantity"`
+	StockStatus  string    `db:"stock_status"`
+	IsActive     bool      `db:"is_active"`
+	HasVariants  bool      `db:"has_variants"`
+	Attributes   *string   `db:"attributes"` // JSONB stored as string
+	ViewCount    int32     `db:"view_count"`
+	SoldCount    int32     `db:"sold_count"`
+	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }
 
 // Note: Helper functions stringPtr, float64Ptr, int32Ptr are defined in database_test.go
@@ -195,7 +194,7 @@ func TestCreateProduct_Success(t *testing.T) {
 	// Verify product exists in database
 	dbProduct := getProductByID(t, db, product.Id)
 	require.NotNil(t, dbProduct, "Product should exist in database")
-	assert.Equal(t, req.Name, dbProduct.Name)
+	assert.Equal(t, req.Name, dbProduct.Title)
 	assert.Equal(t, req.Price, dbProduct.Price)
 	assert.Equal(t, "in_stock", dbProduct.StockStatus)
 }
@@ -238,7 +237,7 @@ func TestCreateProduct_MinimalFields(t *testing.T) {
 	// Verify in database
 	dbProduct := getProductByID(t, db, product.Id)
 	require.NotNil(t, dbProduct)
-	assert.Equal(t, int32(0), dbProduct.StockQuantity)
+	assert.Equal(t, int32(0), dbProduct.Quantity)
 	assert.Equal(t, "out_of_stock", dbProduct.StockStatus)
 }
 
@@ -363,7 +362,7 @@ func TestCreateProduct_WithImages(t *testing.T) {
 	// Verify product can accept images (has no images yet)
 	var imageCount int
 	err = db.Get(&imageCount, `
-		SELECT COUNT(*) FROM b2c_product_images WHERE product_id = $1
+		SELECT COUNT(*) FROM listing_images WHERE listing_id = $1
 	`, productID)
 	require.NoError(t, err)
 	assert.Equal(t, 0, imageCount, "Newly created product should have no images")
@@ -653,7 +652,7 @@ func TestBulkCreateProducts_Success(t *testing.T) {
 		// Verify in database
 		dbProduct := getProductByID(t, db, product.Id)
 		require.NotNil(t, dbProduct, "Product %d should exist in DB", i)
-		assert.Equal(t, products[i].Name, dbProduct.Name)
+		assert.Equal(t, products[i].Name, dbProduct.Title)
 	}
 }
 
@@ -709,7 +708,7 @@ func TestBulkCreateProducts_LargeBatch(t *testing.T) {
 		idx := i * 10 // Check products 0, 10, 20, 30, 40
 		dbProduct := getProductByID(t, db, resp.Products[idx].Id)
 		require.NotNil(t, dbProduct)
-		assert.Equal(t, products[idx].Name, dbProduct.Name)
+		assert.Equal(t, products[idx].Name, dbProduct.Title)
 	}
 }
 

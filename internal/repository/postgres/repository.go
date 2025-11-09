@@ -106,6 +106,10 @@ func validateCreateListingInput(input *domain.CreateListingInput) error {
 		return fmt.Errorf("currency must be 3 characters (ISO 4217)")
 	}
 
+	if input.SourceType != "c2c" && input.SourceType != "b2c" {
+		return fmt.Errorf("source_type must be either 'c2c' or 'b2c'")
+	}
+
 	return nil
 }
 
@@ -118,10 +122,10 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 	}
 
 	query := `
-		INSERT INTO listings (user_id, storefront_id, title, description, price, currency, category_id, quantity, sku)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO listings (user_id, storefront_id, title, description, price, currency, category_id, quantity, sku, source_type)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
-		          status, visibility, quantity, sku, views_count, favorites_count,
+		          status, visibility, quantity, sku, source_type, view_count, favorites_count,
 		          created_at, updated_at, published_at, deleted_at, is_deleted
 	`
 
@@ -138,6 +142,7 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		input.CategoryID,
 		input.Quantity,
 		input.SKU,
+		input.SourceType,
 	).StructScan(&listing)
 
 	if err != nil {
@@ -153,7 +158,7 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.Listing, error) {
 	query := `
 		SELECT id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
-		       status, visibility, quantity, sku, views_count, favorites_count,
+		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
 		       created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE id = $1 AND is_deleted = false
@@ -176,7 +181,7 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 func (r *Repository) GetListingByUUID(ctx context.Context, uuid string) (*domain.Listing, error) {
 	query := `
 		SELECT id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
-		       status, visibility, quantity, sku, views_count, favorites_count,
+		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
 		       created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE uuid = $1::uuid AND is_deleted = false
@@ -295,7 +300,7 @@ func (r *Repository) UpdateListing(ctx context.Context, id int64, input *domain.
 		SET %s, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $%d AND is_deleted = false
 		RETURNING id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
-		          status, visibility, quantity, sku, views_count, favorites_count,
+		          status, visibility, quantity, sku, view_count, favorites_count,
 		          created_at, updated_at, published_at, deleted_at, is_deleted
 	`, strings.Join(updates, ", "), argPos)
 
@@ -371,6 +376,12 @@ func (r *Repository) ListListings(ctx context.Context, filter *domain.ListListin
 		argPos++
 	}
 
+	if filter.SourceType != nil {
+		whereConditions = append(whereConditions, fmt.Sprintf("source_type = $%d", argPos))
+		args = append(args, *filter.SourceType)
+		argPos++
+	}
+
 	if filter.MinPrice != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("price >= $%d", argPos))
 		args = append(args, *filter.MinPrice)
@@ -398,7 +409,7 @@ func (r *Repository) ListListings(ctx context.Context, filter *domain.ListListin
 	args = append(args, filter.Limit, filter.Offset)
 	query := fmt.Sprintf(`
 		SELECT id, uuid, user_id, storefront_id, title, description, price, currency, category_id,
-		       status, visibility, quantity, sku, views_count, favorites_count,
+		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
 		       created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE %s
@@ -453,7 +464,7 @@ func (r *Repository) SearchListings(ctx context.Context, query *domain.SearchLis
 	whereClause := strings.Join(whereConditions, " AND ")
 
 	// Get total count
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM c2c_listings WHERE %s", whereClause)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM listings WHERE %s", whereClause)
 	var total int32
 	err := r.db.GetContext(ctx, &total, countQuery, args...)
 	if err != nil {
@@ -466,9 +477,9 @@ func (r *Repository) SearchListings(ctx context.Context, query *domain.SearchLis
 	searchQuery := fmt.Sprintf(`
 		SELECT id, gen_random_uuid() as uuid, user_id, storefront_id, title, description, price,
 		       'RSD' as currency, category_id, status, 'public' as visibility,
-		       1 as quantity, NULL as sku, views_count, 0 as favorites_count,
+		       1 as quantity, NULL as sku, 'c2c' as source_type, view_count, 0 as favorites_count,
 		       created_at, updated_at, NULL as published_at, NULL as deleted_at, false as is_deleted
-		FROM c2c_listings
+		FROM listings
 		WHERE %s
 		ORDER BY created_at DESC
 		LIMIT $%d OFFSET $%d
@@ -622,9 +633,9 @@ func (r *Repository) GetListingsForReindex(ctx context.Context, limit int) ([]*d
 	query := `
 		SELECT id, gen_random_uuid() as uuid, user_id, storefront_id, title, description, price,
 		       'RSD' as currency, category_id, status, 'public' as visibility,
-		       1 as quantity, NULL as sku, views_count, 0 as favorites_count,
+		       1 as quantity, NULL as sku, view_count, 0 as favorites_count,
 		       created_at, updated_at, NULL as published_at, NULL as deleted_at, false as is_deleted
-		FROM c2c_listings
+		FROM listings
 		WHERE status = 'active'
 		ORDER BY id ASC
 		LIMIT $1
@@ -646,7 +657,7 @@ func (r *Repository) ResetReindexFlags(ctx context.Context, listingIDs []int64) 
 		return nil
 	}
 
-	// Currently c2c_listings doesn't have needs_reindex flag
+	// Currently listings table doesn't have needs_reindex flag
 	// This is a placeholder for future implementation when we add the flag
 	r.logger.Info().Int("count", len(listingIDs)).Msg("reset reindex flags (noop - flag not implemented)")
 	return nil

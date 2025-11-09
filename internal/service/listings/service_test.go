@@ -884,9 +884,11 @@ func TestCreateListing_Success_MinimalFields(t *testing.T) {
 	listing, err := service.CreateListing(ctx, input)
 
 	assert.NoError(t, err)
-	assert.NotNil(t, listing)
-	assert.Equal(t, expectedListing.ID, listing.ID)
-	assert.Equal(t, userID, listing.UserID)
+	// Nil-safe assertions: check listing is not nil before accessing fields
+	if assert.NotNil(t, listing, "listing should be created") {
+		assert.Equal(t, expectedListing.ID, listing.ID)
+		assert.Equal(t, userID, listing.UserID)
+	}
 	mockRepo.AssertExpectations(t)
 }
 

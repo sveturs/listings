@@ -48,8 +48,8 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 
 	ownershipQuery := `
 		SELECT id
-		FROM b2c_products
-		WHERE id = ANY($1::bigint[]) AND storefront_id = $2
+		FROM listings
+		WHERE id = ANY($1::bigint[]) AND storefront_id = $2 AND source_type = 'b2c'
 	`
 
 	var ownedIDs []int64
@@ -112,8 +112,8 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 			}
 
 			// Add fields based on update_mask
-			if shouldUpdate("name") && update.Name != nil {
-				setClauses = append(setClauses, fmt.Sprintf("name = $%d", argIndex))
+			if shouldUpdate("title") && update.Name != nil {
+				setClauses = append(setClauses, fmt.Sprintf("title = $%d", argIndex))
 				args = append(args, *update.Name)
 				argIndex++
 			}
@@ -136,14 +136,8 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 				argIndex++
 			}
 
-			if shouldUpdate("barcode") && update.Barcode != nil {
-				setClauses = append(setClauses, fmt.Sprintf("barcode = $%d", argIndex))
-				args = append(args, *update.Barcode)
-				argIndex++
-			}
-
-			if shouldUpdate("stock_quantity") && update.StockQuantity != nil {
-				setClauses = append(setClauses, fmt.Sprintf("stock_quantity = $%d", argIndex))
+			if shouldUpdate("quantity") && update.StockQuantity != nil {
+				setClauses = append(setClauses, fmt.Sprintf("quantity = $%d", argIndex))
 				args = append(args, *update.StockQuantity)
 				argIndex++
 
@@ -161,9 +155,15 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 				argIndex++
 			}
 
-			if shouldUpdate("is_active") && update.IsActive != nil {
-				setClauses = append(setClauses, fmt.Sprintf("is_active = $%d", argIndex))
-				args = append(args, *update.IsActive)
+			if shouldUpdate("status") && update.IsActive != nil {
+				var status string
+				if *update.IsActive {
+					status = "active"
+				} else {
+					status = "inactive"
+				}
+				setClauses = append(setClauses, fmt.Sprintf("status = $%d", argIndex))
+				args = append(args, status)
 				argIndex++
 			}
 
@@ -235,13 +235,13 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 
 			// Build final query with RETURNING
 			query := fmt.Sprintf(`
-				UPDATE b2c_products
+				UPDATE listings
 				SET %s
-				WHERE id = $%d AND storefront_id = $%d
+				WHERE id = $%d AND storefront_id = $%d AND source_type = 'b2c'
 				RETURNING
-					id, storefront_id, name, description, price, currency,
-					category_id, sku, barcode, stock_quantity, stock_status,
-					is_active, attributes, view_count, sold_count,
+					id, storefront_id, title, description, price, currency,
+					category_id, sku, quantity, stock_status,
+					status, attributes, view_count, sold_count,
 					created_at, updated_at,
 					has_individual_location, individual_address,
 					individual_latitude, individual_longitude,
@@ -251,10 +251,11 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 			// Execute update and scan result
 			var product domain.Product
 			var description sql.NullString
-			var sku, barcode sql.NullString
+			var sku sql.NullString
 			var individualAddress, locationPrivacy sql.NullString
 			var individualLatitude, individualLongitude sql.NullFloat64
 			var returnedAttributesJSON []byte
+			var status string
 
 			err = tx.QueryRowContext(ctx, query, args...).Scan(
 				&product.ID,
@@ -265,10 +266,9 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 				&product.Currency,
 				&product.CategoryID,
 				&sku,
-				&barcode,
 				&product.StockQuantity,
 				&product.StockStatus,
-				&product.IsActive,
+				&status,
 				&returnedAttributesJSON,
 				&product.ViewCount,
 				&product.SoldCount,
@@ -313,16 +313,15 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 				continue
 			}
 
-			// Handle nullable fields
+			// Handle nullable fields and status conversion
 			if description.Valid {
 				product.Description = description.String
 			}
 			if sku.Valid {
 				product.SKU = &sku.String
 			}
-			if barcode.Valid {
-				product.Barcode = &barcode.String
-			}
+			// Convert status to is_active for domain model
+			product.IsActive = (status == "active")
 			if individualAddress.Valid {
 				product.IndividualAddress = &individualAddress.String
 			}

@@ -40,14 +40,14 @@ type Metrics struct {
 	ErrorsTotal *prometheus.CounterVec
 
 	// Inventory-specific metrics
-	InventoryProductViews          *prometheus.CounterVec
-	InventoryProductViewsErrors    prometheus.Counter
-	InventoryStockOperations       *prometheus.CounterVec
-	InventoryStockLowThreshold     *prometheus.CounterVec
-	InventoryMovementsRecorded     *prometheus.CounterVec
-	InventoryMovementsErrors       *prometheus.CounterVec
-	InventoryStockValue            *prometheus.GaugeVec
-	InventoryOutOfStockProducts    prometheus.Gauge
+	InventoryProductViews       *prometheus.CounterVec
+	InventoryProductViewsErrors prometheus.Counter
+	InventoryStockOperations    *prometheus.CounterVec
+	InventoryStockLowThreshold  *prometheus.CounterVec
+	InventoryMovementsRecorded  *prometheus.CounterVec
+	InventoryMovementsErrors    *prometheus.CounterVec
+	InventoryStockValue         *prometheus.GaugeVec
+	InventoryOutOfStockProducts prometheus.Gauge
 
 	// gRPC handler metrics (granular)
 	GRPCHandlerRequestsActive *prometheus.GaugeVec

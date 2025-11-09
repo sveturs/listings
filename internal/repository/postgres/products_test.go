@@ -280,9 +280,11 @@ func TestCreateProduct_DuplicateSKU(t *testing.T) {
 
 	createdProduct, err := repo.CreateProduct(ctx, product2)
 
-	assert.Error(t, err)
+	// Nil-safe assertions: check error exists before accessing its message
+	if assert.Error(t, err, "expected duplicate SKU error") {
+		assert.Contains(t, err.Error(), "products.sku_duplicate")
+	}
 	assert.Nil(t, createdProduct)
-	assert.Contains(t, err.Error(), "products.sku_duplicate")
 }
 
 func TestCreateProduct_InvalidStorefrontID(t *testing.T) {
@@ -531,9 +533,11 @@ func TestUpdateProduct_NonExistentProduct(t *testing.T) {
 
 	updatedProduct, err := repo.UpdateProduct(ctx, 99999, storefrontID, updateInput)
 
-	assert.Error(t, err)
+	// Nil-safe assertions
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "products.not_found")
+	}
 	assert.Nil(t, updatedProduct)
-	assert.Contains(t, err.Error(), "products.not_found")
 }
 
 func TestUpdateProduct_DuplicateSKU(t *testing.T) {
@@ -561,8 +565,10 @@ func TestUpdateProduct_DuplicateSKU(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Len(t, result.SuccessfulProducts, 0)
-	assert.Len(t, result.FailedUpdates, 1)
-	assert.Contains(t, result.FailedUpdates[0].ErrorCode, "products.sku_duplicate")
+	// Nil-safe array access: check length before accessing index
+	if assert.Len(t, result.FailedUpdates, 1, "expected 1 failed update for duplicate SKU") {
+		assert.Contains(t, result.FailedUpdates[0].ErrorCode, "products.sku_duplicate")
+	}
 }
 
 func TestUpdateProduct_InvalidData(t *testing.T) {
@@ -751,7 +757,7 @@ func TestBulkCreateProducts_Success(t *testing.T) {
 			Currency:      "USD",
 			SKU:           stringPtr("BULK-001"),
 			StockQuantity: 100,
-		Attributes:    map[string]interface{}{},
+			Attributes:    map[string]interface{}{},
 		},
 		{
 			StorefrontID:  storefrontID,
@@ -762,7 +768,7 @@ func TestBulkCreateProducts_Success(t *testing.T) {
 			Currency:      "USD",
 			SKU:           stringPtr("BULK-002"),
 			StockQuantity: 50,
-		Attributes:    map[string]interface{}{},
+			Attributes:    map[string]interface{}{},
 		},
 		{
 			StorefrontID:  storefrontID,
@@ -773,7 +779,7 @@ func TestBulkCreateProducts_Success(t *testing.T) {
 			Currency:      "USD",
 			SKU:           stringPtr("BULK-003"),
 			StockQuantity: 75,
-		Attributes:    map[string]interface{}{},
+			Attributes:    map[string]interface{}{},
 		},
 	}
 
@@ -808,7 +814,7 @@ func TestBulkCreateProducts_PartialFailure(t *testing.T) {
 			Currency:      "USD",
 			SKU:           stringPtr("VALID-001"),
 			StockQuantity: 100,
-		Attributes:    map[string]interface{}{},
+			Attributes:    map[string]interface{}{},
 		},
 		{
 			StorefrontID:  storefrontID,
@@ -819,7 +825,7 @@ func TestBulkCreateProducts_PartialFailure(t *testing.T) {
 			Currency:      "USD",
 			SKU:           stringPtr("INVALID-001"),
 			StockQuantity: 50,
-		Attributes:    map[string]interface{}{},
+			Attributes:    map[string]interface{}{},
 		},
 		{
 			StorefrontID:  storefrontID,
@@ -830,15 +836,15 @@ func TestBulkCreateProducts_PartialFailure(t *testing.T) {
 			Currency:      "USD",
 			SKU:           stringPtr("VALID-002"),
 			StockQuantity: 75,
-		Attributes:    map[string]interface{}{},
+			Attributes:    map[string]interface{}{},
 		},
 	}
 
 	products, errors, err := repo.BulkCreateProducts(ctx, storefrontID, inputs)
 
 	require.NoError(t, err)
-	assert.Len(t, products, 2)    // 2 valid products
-	assert.Len(t, errors, 1)      // 1 error
+	assert.Len(t, products, 2) // 2 valid products
+	assert.Len(t, errors, 1)   // 1 error
 	assert.Equal(t, int32(1), errors[0].Index)
 	assert.Contains(t, errors[0].ErrorMessage, "name cannot be empty")
 }
@@ -914,7 +920,7 @@ func TestBulkCreateProducts_TransactionRollback(t *testing.T) {
 			Currency:      "USD",
 			SKU:           stringPtr("NEW-001"),
 			StockQuantity: 100,
-		Attributes:    map[string]interface{}{},
+			Attributes:    map[string]interface{}{},
 		},
 		{
 			StorefrontID:  storefrontID,
@@ -925,7 +931,7 @@ func TestBulkCreateProducts_TransactionRollback(t *testing.T) {
 			Currency:      "USD",
 			SKU:           stringPtr("EXISTING-SKU"), // Duplicate
 			StockQuantity: 50,
-		Attributes:    map[string]interface{}{},
+			Attributes:    map[string]interface{}{},
 		},
 	}
 
@@ -1010,9 +1016,11 @@ func TestBulkUpdateProducts_PartialSuccess(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Len(t, result.SuccessfulProducts, 1)
-	assert.Len(t, result.FailedUpdates, 1)
-	assert.Equal(t, int64(99999), result.FailedUpdates[0].ProductID)
-	assert.Contains(t, result.FailedUpdates[0].ErrorCode, "products.not_found")
+	// Nil-safe array access
+	if assert.Len(t, result.FailedUpdates, 1, "expected 1 failed update") {
+		assert.Equal(t, int64(99999), result.FailedUpdates[0].ProductID)
+		assert.Contains(t, result.FailedUpdates[0].ErrorCode, "products.not_found")
+	}
 }
 
 func TestBulkUpdateProducts_EmptyBatch(t *testing.T) {
@@ -1089,8 +1097,10 @@ func TestBulkUpdateProducts_TransactionRollback(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Len(t, result.SuccessfulProducts, 0)
-	assert.Len(t, result.FailedUpdates, 1)
-	assert.Contains(t, result.FailedUpdates[0].ErrorCode, "products.sku_duplicate")
+	// Nil-safe array access
+	if assert.Len(t, result.FailedUpdates, 1, "expected 1 failed update for duplicate SKU in bulk") {
+		assert.Contains(t, result.FailedUpdates[0].ErrorCode, "products.sku_duplicate")
+	}
 }
 
 // ============================================================================

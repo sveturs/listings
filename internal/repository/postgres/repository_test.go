@@ -99,6 +99,7 @@ func TestCreateListing(t *testing.T) {
 				CategoryID:   100,
 				Quantity:     10,
 				SKU:          stringPtr("TEST-SKU-001"),
+				SourceType:   "c2c",
 			},
 			wantErr: false,
 		},
@@ -114,6 +115,7 @@ func TestCreateListing(t *testing.T) {
 				CategoryID:   200,
 				Quantity:     5,
 				SKU:          stringPtr("STORE-SKU-001"),
+				SourceType:   "b2c",
 			},
 			wantErr: false,
 		},
@@ -173,6 +175,7 @@ func TestGetListingByID(t *testing.T) {
 		CategoryID:  100,
 		Quantity:    1,
 		SKU:         stringPtr("TEST-001"),
+		SourceType:  "c2c",
 	}
 	created, err := repo.CreateListing(ctx, input)
 	require.NoError(t, err)
@@ -228,6 +231,7 @@ func TestUpdateListing(t *testing.T) {
 		CategoryID:  100,
 		Quantity:    5,
 		SKU:         stringPtr("ORIG-001"),
+		SourceType:  "c2c",
 	}
 	created, err := repo.CreateListing(ctx, input)
 	require.NoError(t, err)
@@ -300,6 +304,7 @@ func TestDeleteListing(t *testing.T) {
 		CategoryID:  100,
 		Quantity:    3,
 		SKU:         stringPtr("DEL-001"),
+		SourceType:  "c2c",
 	}
 	created, err := repo.CreateListing(ctx, input)
 	require.NoError(t, err)
@@ -359,6 +364,7 @@ func TestListListings(t *testing.T) {
 			CategoryID:  100,
 			Quantity:    int32(i + 1),
 			SKU:         sku,
+			SourceType:  "c2c",
 		}
 		_, err := repo.CreateListing(ctx, input)
 		require.NoError(t, err)

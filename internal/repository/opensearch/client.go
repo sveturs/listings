@@ -68,6 +68,9 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		"visibility":      listing.Visibility,
 		"quantity":        listing.Quantity,
 		"sku":             listing.SKU,
+		"source_type":     listing.SourceType,     // c2c or b2c
+		"stock_status":    listing.StockStatus,    // in_stock, out_of_stock, etc
+		"attributes":      listing.AttributesJSON, // JSONB attributes as string
 		"views_count":     listing.ViewsCount,
 		"favorites_count": listing.FavoritesCount,
 		"created_at":      listing.CreatedAt,
@@ -257,6 +260,8 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 		//nolint:errcheck
 		quantity, _ := source["quantity"].(float64)
 		//nolint:errcheck
+		sourceType, _ := source["source_type"].(string)
+		//nolint:errcheck
 		viewsCount, _ := source["views_count"].(float64)
 		//nolint:errcheck
 		favoritesCount, _ := source["favorites_count"].(float64)
@@ -272,6 +277,7 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 			Status:         status,
 			Visibility:     visibility,
 			Quantity:       int32(quantity),
+			SourceType:     sourceType,
 			ViewsCount:     int32(viewsCount),
 			FavoritesCount: int32(favoritesCount),
 		}
@@ -286,6 +292,12 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 		}
 		if sku, ok := source["sku"].(string); ok {
 			listing.SKU = &sku
+		}
+		if stockStatus, ok := source["stock_status"].(string); ok {
+			listing.StockStatus = &stockStatus
+		}
+		if attributes, ok := source["attributes"].(string); ok {
+			listing.AttributesJSON = &attributes
 		}
 
 		listings = append(listings, listing)
@@ -306,6 +318,13 @@ func buildFilters(query *domain.SearchListingsQuery) []interface{} {
 		// Only active, visible listings
 		map[string]interface{}{"term": map[string]interface{}{"status": "active"}},
 		map[string]interface{}{"term": map[string]interface{}{"visibility": "public"}},
+	}
+
+	// Filter by source_type (c2c vs b2c) if specified
+	if query.SourceType != nil && *query.SourceType != "" {
+		filters = append(filters, map[string]interface{}{
+			"term": map[string]interface{}{"source_type": *query.SourceType},
+		})
 	}
 
 	if query.CategoryID != nil {
@@ -378,6 +397,8 @@ func (c *Client) GetListingByID(ctx context.Context, listingID int64) (*domain.L
 	categoryID, _ := source["category_id"].(float64)
 	//nolint:errcheck
 	status, _ := source["status"].(string)
+	//nolint:errcheck
+	sourceType, _ := source["source_type"].(string)
 
 	listing := &domain.Listing{
 		ID:         int64(id),
@@ -388,9 +409,23 @@ func (c *Client) GetListingByID(ctx context.Context, listingID int64) (*domain.L
 		Currency:   currency,
 		CategoryID: int64(categoryID),
 		Status:     status,
+		SourceType: sourceType,
+	}
+
+	// Optional fields
+	if stockStatus, ok := source["stock_status"].(string); ok {
+		listing.StockStatus = &stockStatus
+	}
+	if attributes, ok := source["attributes"].(string); ok {
+		listing.AttributesJSON = &attributes
 	}
 
 	return listing, nil
+}
+
+// GetClient returns the underlying OpenSearch client for advanced usage
+func (c *Client) GetClient() *opensearch.Client {
+	return c.client
 }
 
 // Close closes the OpenSearch client (no-op for opensearch-go client)

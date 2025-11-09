@@ -85,10 +85,11 @@ type ProductImage struct {
 
 // Constants for stock status
 const (
-	StockStatusInStock    = "in_stock"
-	StockStatusLowStock   = "low_stock"
-	StockStatusOutOfStock = "out_of_stock"
-	StockStatusPreOrder   = "pre_order"
+	StockStatusInStock      = "in_stock"
+	StockStatusLowStock     = "low_stock"
+	StockStatusOutOfStock   = "out_of_stock"
+	StockStatusPreOrder     = "pre_order"
+	StockStatusDiscontinued = "discontinued"
 )
 
 // Constants for location privacy
@@ -200,19 +201,19 @@ type CreateProductInput struct {
 
 // UpdateProductInput represents input for updating an existing product
 type UpdateProductInput struct {
-	Name                  *string                 `json:"name,omitempty" validate:"omitempty,min=3,max=255"`
-	Description           *string                 `json:"description,omitempty"`
-	Price                 *float64                `json:"price,omitempty" validate:"omitempty,gte=0"`
-	StockQuantity         *int32                  `json:"stock_quantity,omitempty" validate:"omitempty,gte=0"`
-	StockStatus           *string                 `json:"stock_status,omitempty" validate:"omitempty,oneof=in_stock low_stock out_of_stock pre_order"`
-	IsActive              *bool                   `json:"is_active,omitempty"`
-	Attributes            map[string]interface{}  `json:"attributes,omitempty"`
-	HasIndividualLocation *bool                   `json:"has_individual_location,omitempty"`
-	IndividualAddress     *string                 `json:"individual_address,omitempty"`
-	IndividualLatitude    *float64                `json:"individual_latitude,omitempty"`
-	IndividualLongitude   *float64                `json:"individual_longitude,omitempty"`
-	LocationPrivacy       *string                 `json:"location_privacy,omitempty" validate:"omitempty,oneof=exact approximate hidden"`
-	ShowOnMap             *bool                   `json:"show_on_map,omitempty"`
+	Name                  *string                `json:"name,omitempty" validate:"omitempty,min=3,max=255"`
+	Description           *string                `json:"description,omitempty"`
+	Price                 *float64               `json:"price,omitempty" validate:"omitempty,gte=0"`
+	StockQuantity         *int32                 `json:"stock_quantity,omitempty" validate:"omitempty,gte=0"`
+	StockStatus           *string                `json:"stock_status,omitempty" validate:"omitempty,oneof=in_stock low_stock out_of_stock pre_order"`
+	IsActive              *bool                  `json:"is_active,omitempty"`
+	Attributes            map[string]interface{} `json:"attributes,omitempty"`
+	HasIndividualLocation *bool                  `json:"has_individual_location,omitempty"`
+	IndividualAddress     *string                `json:"individual_address,omitempty"`
+	IndividualLatitude    *float64               `json:"individual_latitude,omitempty"`
+	IndividualLongitude   *float64               `json:"individual_longitude,omitempty"`
+	LocationPrivacy       *string                `json:"location_privacy,omitempty" validate:"omitempty,oneof=exact approximate hidden"`
+	ShowOnMap             *bool                  `json:"show_on_map,omitempty"`
 }
 
 // CreateVariantInput represents input for creating a new product variant
@@ -274,10 +275,10 @@ type SearchProductsQuery struct {
 
 // BulkProductError represents an error for a single product in bulk operation
 type BulkProductError struct {
-	Index        int32   `json:"index"`
-	ProductID    *int64  `json:"product_id,omitempty"`
-	ErrorCode    string  `json:"error_code"`
-	ErrorMessage string  `json:"error_message"`
+	Index        int32  `json:"index"`
+	ProductID    *int64 `json:"product_id,omitempty"`
+	ErrorCode    string `json:"error_code"`
+	ErrorMessage string `json:"error_message"`
 }
 
 // BulkUpdateProductInput represents input for bulk updating a single product

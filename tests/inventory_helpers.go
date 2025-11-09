@@ -28,7 +28,7 @@ func CleanupInventoryTestData(t *testing.T, db *sql.DB) {
 	tables := []string{
 		"b2c_inventory_movements",
 		"b2c_product_variants",
-		"b2c_products",
+		"listings",
 		"storefronts",
 	}
 
@@ -41,8 +41,8 @@ func CleanupInventoryTestData(t *testing.T, db *sql.DB) {
 			query = "DELETE FROM b2c_inventory_movements WHERE id >= 7000"
 		case "b2c_product_variants":
 			query = "DELETE FROM b2c_product_variants WHERE id >= 6000"
-		case "b2c_products":
-			query = "DELETE FROM b2c_products WHERE id >= 5000"
+		case "listings":
+			query = "DELETE FROM listings WHERE id >= 5000 AND source_type = 'b2c'"
 		case "storefronts":
 			query = "DELETE FROM storefronts WHERE id >= 1000"
 		default:
@@ -73,7 +73,7 @@ func GetProductQuantity(t *testing.T, db *sql.DB, productID int64) int32 {
 	t.Helper()
 
 	var quantity int32
-	err := db.QueryRow("SELECT stock_quantity FROM b2c_products WHERE id = $1", productID).Scan(&quantity)
+	err := db.QueryRow("SELECT quantity FROM listings WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL", productID).Scan(&quantity)
 	require.NoError(t, err, "Could not get product quantity")
 
 	return quantity
@@ -106,7 +106,7 @@ func GetProductViewCount(t *testing.T, db *sql.DB, productID int64) int32 {
 	t.Helper()
 
 	var views int32
-	err := db.QueryRow("SELECT COALESCE(view_count, 0) FROM b2c_products WHERE id = $1", productID).Scan(&views)
+	err := db.QueryRow("SELECT COALESCE(view_count, 0) FROM listings WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL", productID).Scan(&views)
 	if err == sql.ErrNoRows {
 		return 0
 	}
@@ -122,8 +122,8 @@ func CountProductsByStorefront(t *testing.T, db *sql.DB, storefrontID int64) int
 	var count int32
 	err := db.QueryRow(`
 		SELECT COUNT(*)
-		FROM b2c_products
-		WHERE storefront_id = $1 AND deleted_at IS NULL
+		FROM listings
+		WHERE storefront_id = $1 AND source_type = 'b2c' AND deleted_at IS NULL
 	`, storefrontID).Scan(&count)
 	require.NoError(t, err, "Could not count products")
 
@@ -137,8 +137,8 @@ func CountActiveProductsByStorefront(t *testing.T, db *sql.DB, storefrontID int6
 	var count int32
 	err := db.QueryRow(`
 		SELECT COUNT(*)
-		FROM b2c_products
-		WHERE storefront_id = $1 AND is_active = true AND deleted_at IS NULL
+		FROM listings
+		WHERE storefront_id = $1 AND status = 'active' AND source_type = 'b2c' AND deleted_at IS NULL
 	`, storefrontID).Scan(&count)
 	require.NoError(t, err, "Could not count active products")
 
@@ -152,8 +152,8 @@ func CountOutOfStockProducts(t *testing.T, db *sql.DB, storefrontID int64) int32
 	var count int32
 	err := db.QueryRow(`
 		SELECT COUNT(*)
-		FROM b2c_products
-		WHERE storefront_id = $1 AND stock_status = 'out_of_stock' AND deleted_at IS NULL
+		FROM listings
+		WHERE storefront_id = $1 AND stock_status = 'out_of_stock' AND source_type = 'b2c' AND deleted_at IS NULL
 	`, storefrontID).Scan(&count)
 	require.NoError(t, err, "Could not count out-of-stock products")
 
@@ -167,8 +167,8 @@ func CountLowStockProducts(t *testing.T, db *sql.DB, storefrontID int64) int32 {
 	var count int32
 	err := db.QueryRow(`
 		SELECT COUNT(*)
-		FROM b2c_products
-		WHERE storefront_id = $1 AND stock_status = 'low_stock' AND deleted_at IS NULL
+		FROM listings
+		WHERE storefront_id = $1 AND stock_status = 'low_stock' AND source_type = 'b2c' AND deleted_at IS NULL
 	`, storefrontID).Scan(&count)
 	require.NoError(t, err, "Could not count low-stock products")
 
@@ -181,9 +181,9 @@ func GetTotalInventoryValue(t *testing.T, db *sql.DB, storefrontID int64) float6
 
 	var total float64
 	err := db.QueryRow(`
-		SELECT COALESCE(SUM(price * stock_quantity), 0)
-		FROM b2c_products
-		WHERE storefront_id = $1 AND deleted_at IS NULL
+		SELECT COALESCE(SUM(price * quantity), 0)
+		FROM listings
+		WHERE storefront_id = $1 AND source_type = 'b2c' AND deleted_at IS NULL
 	`, storefrontID).Scan(&total)
 	require.NoError(t, err, "Could not calculate total inventory value")
 
@@ -196,7 +196,7 @@ func ProductExists(t *testing.T, db *sql.DB, productID int64) bool {
 
 	var exists bool
 	err := db.QueryRow(`
-		SELECT EXISTS(SELECT 1 FROM b2c_products WHERE id = $1 AND deleted_at IS NULL)
+		SELECT EXISTS(SELECT 1 FROM listings WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL)
 	`, productID).Scan(&exists)
 	require.NoError(t, err, "Could not check product existence")
 

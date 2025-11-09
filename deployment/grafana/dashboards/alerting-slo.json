@@ -1,0 +1,650 @@
+{
+  "dashboard": {
+    "title": "Listings Service - Alerting & SLO",
+    "uid": "listings-alerting-slo",
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "tags": ["listings", "microservice", "slo", "alerting"],
+    "editable": true,
+    "panels": [
+      {
+        "id": 1,
+        "type": "table",
+        "title": "Active Alerts",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "ALERTS{job=\"listings\", alertstate=\"firing\"}",
+            "legendFormat": "",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true, "job": true, "instance": true},
+              "indexByName": {"alertname": 0, "severity": 1, "alertstate": 2, "__name__": 3},
+              "renameByName": {
+                "alertname": "Alert",
+                "severity": "Severity",
+                "alertstate": "State",
+                "__name__": "Description"
+              }
+            }
+          }
+        ],
+        "options": {
+          "sortBy": [
+            {
+              "displayName": "Severity",
+              "desc": false
+            }
+          ]
+        },
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Severity"},
+              "properties": [
+                {
+                  "id": "custom.cellOptions",
+                  "value": {
+                    "type": "color-text"
+                  }
+                },
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "critical": {
+                          "color": "red",
+                          "text": "CRITICAL"
+                        },
+                        "warning": {
+                          "color": "yellow",
+                          "text": "WARNING"
+                        },
+                        "info": {
+                          "color": "blue",
+                          "text": "INFO"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "type": "gauge",
+        "title": "Service Availability (30d SLO Target: 99.9%)",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "(1 - (sum(increase(listings_grpc_requests_total{status!=\"OK\"}[30d])) / sum(increase(listings_grpc_requests_total[30d])))) * 100",
+            "legendFormat": "Availability %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 3,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 99, "color": "yellow"},
+                {"value": 99.9, "color": "green"}
+              ]
+            },
+            "min": 99,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "gauge",
+        "title": "Success Rate (7d SLO Target: 99.5%)",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 8},
+        "targets": [
+          {
+            "expr": "(sum(increase(listings_grpc_requests_total{status=\"OK\"}[7d])) / sum(increase(listings_grpc_requests_total[7d]))) * 100",
+            "legendFormat": "Success Rate %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 2,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 98, "color": "yellow"},
+                {"value": 99.5, "color": "green"}
+              ]
+            },
+            "min": 98,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Error Budget Remaining (30d)",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 8},
+        "targets": [
+          {
+            "expr": "(0.001 * sum(increase(listings_grpc_requests_total[30d])) - sum(increase(listings_grpc_requests_total{status!=\"OK\"}[30d]))) / (0.001 * sum(increase(listings_grpc_requests_total[30d]))) * 100",
+            "legendFormat": "Budget %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 20, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": "gauge",
+        "title": "P95 Latency SLO (Target: <200ms)",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 14},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(listings_grpc_request_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P95 Latency (ms)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 200, "color": "yellow"},
+                {"value": 500, "color": "red"}
+              ]
+            },
+            "max": 1000
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "gauge",
+        "title": "P99 Latency SLO (Target: <1000ms)",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 14},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(listings_grpc_request_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P99 Latency (ms)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1000, "color": "yellow"},
+                {"value": 2000, "color": "red"}
+              ]
+            },
+            "max": 3000
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "timeseries",
+        "title": "SLO Compliance Over Time (P95 < 200ms)",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "(histogram_quantile(0.95, sum(rate(listings_grpc_request_duration_seconds_bucket[5m])) by (le)) < 0.2) * 100",
+            "legendFormat": "P95 Compliance %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "stepAfter",
+              "fillOpacity": 30,
+              "showPoints": "never"
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": "timeseries",
+        "title": "SLO Compliance Over Time (P99 < 1000ms)",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "(histogram_quantile(0.99, sum(rate(listings_grpc_request_duration_seconds_bucket[5m])) by (le)) < 1) * 100",
+            "legendFormat": "P99 Compliance %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "stepAfter",
+              "fillOpacity": 30,
+              "showPoints": "never"
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "type": "timeseries",
+        "title": "Alert History Timeline",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "changes(ALERTS{job=\"listings\"}[5m])",
+            "legendFormat": "{{alertname}} - {{severity}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "bars",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "fillOpacity": 100,
+              "showPoints": "never"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "type": "timeseries",
+        "title": "Error Budget Burn Rate",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_grpc_requests_total{status!=\"OK\"}[1h])) / (0.001 * sum(rate(listings_grpc_requests_total[1h])))",
+            "legendFormat": "Current Burn Rate (1h)",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(listings_grpc_requests_total{status!=\"OK\"}[1d])) / (0.001 * sum(rate(listings_grpc_requests_total[1d])))",
+            "legendFormat": "Avg Burn Rate (24h)",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(listings_grpc_requests_total{status!=\"OK\"}[7d])) / (0.001 * sum(rate(listings_grpc_requests_total[7d])))",
+            "legendFormat": "Avg Burn Rate (7d)",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Current Burn Rate (1h)"},
+              "properties": [
+                {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}},
+                {"id": "custom.lineWidth", "value": 2}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 11,
+        "type": "stat",
+        "title": "Total Errors (24h)",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 36},
+        "targets": [
+          {
+            "expr": "sum(increase(listings_errors_total[24h]))",
+            "legendFormat": "Errors",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 100, "color": "yellow"},
+                {"value": 1000, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": "stat",
+        "title": "Timeouts (24h)",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 36},
+        "targets": [
+          {
+            "expr": "sum(increase(listings_timeouts_total[24h]))",
+            "legendFormat": "Timeouts",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 50, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "type": "table",
+        "title": "Errors by Component and Type",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 40},
+        "targets": [
+          {
+            "expr": "sum(increase(listings_errors_total[1h])) by (component, error_type)",
+            "legendFormat": "{{component}}: {{error_type}}",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true},
+              "indexByName": {"component": 0, "error_type": 1, "Value": 2},
+              "renameByName": {
+                "component": "Component",
+                "error_type": "Error Type",
+                "Value": "Count (1h)"
+              }
+            }
+          }
+        ],
+        "options": {
+          "sortBy": [
+            {
+              "displayName": "Count (1h)",
+              "desc": true
+            }
+          ]
+        }
+      },
+      {
+        "id": 14,
+        "type": "stat",
+        "title": "On-Call Status",
+        "gridPos": {"h": 4, "w": 12, "x": 0, "y": 44},
+        "targets": [
+          {
+            "expr": "1",
+            "legendFormat": "On-Call: Check PagerDuty",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "textMode": "name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"}
+              ]
+            }
+          }
+        },
+        "links": [
+          {
+            "title": "PagerDuty Dashboard",
+            "url": "https://your-org.pagerduty.com"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "type": "stat",
+        "title": "Incidents (7d)",
+        "gridPos": {"h": 4, "w": 12, "x": 12, "y": 44},
+        "targets": [
+          {
+            "expr": "count(changes(ALERTS{job=\"listings\", severity=\"critical\"}[7d]) > 0)",
+            "legendFormat": "Critical Incidents",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 16,
+        "type": "timeseries",
+        "title": "Rate Limit Rejections",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 48},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_rate_limit_rejected_total[5m])) by (method)",
+            "legendFormat": "{{method}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 20,
+              "showPoints": "auto"
+            }
+          }
+        },
+        "alert": {
+          "name": "High Rate Limit Rejections",
+          "message": "Rate limit rejections exceeding threshold",
+          "frequency": "1m",
+          "handler": 1,
+          "severity": "warning",
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [10],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ]
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "datasource",
+          "type": "datasource",
+          "query": "prometheus",
+          "current": {
+            "text": "Prometheus",
+            "value": "Prometheus"
+          }
+        },
+        {
+          "name": "interval",
+          "type": "interval",
+          "query": "1m,5m,10m,30m,1h",
+          "auto": true,
+          "auto_count": 30,
+          "auto_min": "10s"
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Incidents",
+          "datasource": "Prometheus",
+          "enable": true,
+          "iconColor": "red",
+          "expr": "changes(ALERTS{job=\"listings\", severity=\"critical\"}[5m]) > 0",
+          "step": "60s",
+          "tagKeys": "alertname",
+          "textFormat": "Incident: {{alertname}}"
+        },
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "enable": true,
+          "iconColor": "blue",
+          "expr": "changes(process_start_time_seconds{job=\"listings\"}[5m]) > 0",
+          "step": "60s",
+          "tagKeys": "deployment",
+          "textFormat": "Deployment"
+        }
+      ]
+    }
+  }
+}

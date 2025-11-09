@@ -80,6 +80,7 @@ func NewCreateListingInput(userID int64, title string) *domain.CreateListingInpu
 		CategoryID:  1,
 		Quantity:    10,
 		SKU:         &sku,
+		SourceType:  domain.SourceTypeC2C, // Required field added
 	}
 }
 

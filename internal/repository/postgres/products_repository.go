@@ -17,22 +17,24 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 
 	query := `
 		SELECT
-			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
-			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
-			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.id, p.storefront_id, p.title, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.quantity, p.stock_status,
+			p.status, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address,
 			p.individual_latitude, p.individual_longitude,
 			p.location_privacy, p.show_on_map, p.has_variants
-		FROM b2c_products p
+		FROM listings p
 		WHERE p.id = $1
+		  AND p.source_type = 'b2c'
 		  AND ($2::bigint IS NULL OR p.storefront_id = $2)
 		  AND p.deleted_at IS NULL
 	`
 
 	var product domain.Product
 	var description sql.NullString
-	var sku, barcode sql.NullString
+	var sku sql.NullString
+	var status string
 	var individualAddress, locationPrivacy sql.NullString
 	var individualLatitude, individualLongitude sql.NullFloat64
 	var attributesJSON []byte
@@ -46,10 +48,9 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 		&product.Currency,
 		&product.CategoryID,
 		&sku,
-		&barcode,
 		&product.StockQuantity,
 		&product.StockStatus,
-		&product.IsActive,
+		&status,
 		&attributesJSON,
 		&product.ViewCount,
 		&product.SoldCount,
@@ -79,9 +80,6 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 	if sku.Valid {
 		product.SKU = &sku.String
 	}
-	if barcode.Valid {
-		product.Barcode = &barcode.String
-	}
 	if individualAddress.Valid {
 		product.IndividualAddress = &individualAddress.String
 	}
@@ -94,6 +92,9 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 	if locationPrivacy.Valid {
 		product.LocationPrivacy = &locationPrivacy.String
 	}
+
+	// Convert status to IsActive (status = 'active' → true, else → false)
+	product.IsActive = (status == "active")
 
 	// Parse JSONB attributes
 	if len(attributesJSON) > 0 {
@@ -116,17 +117,18 @@ func (r *Repository) GetProductsBySKUs(ctx context.Context, skus []string, store
 
 	query := `
 		SELECT
-			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
-			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
-			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.id, p.storefront_id, p.title, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.quantity, p.stock_status,
+			p.status, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address,
 			p.individual_latitude, p.individual_longitude,
 			p.location_privacy, p.show_on_map, p.has_variants
-		FROM b2c_products p
+		FROM listings p
 		WHERE p.sku = ANY($1::text[])
+		  AND p.source_type = 'b2c'
 		  AND ($2::bigint IS NULL OR p.storefront_id = $2)
-		  AND p.is_active = true
+		  AND p.status = 'active'
 		  AND p.deleted_at IS NULL
 	`
 
@@ -141,7 +143,8 @@ func (r *Repository) GetProductsBySKUs(ctx context.Context, skus []string, store
 	for rows.Next() {
 		var product domain.Product
 		var description sql.NullString
-		var sku, barcode sql.NullString
+		var sku sql.NullString
+		var status string
 		var individualAddress, locationPrivacy sql.NullString
 		var individualLatitude, individualLongitude sql.NullFloat64
 		var attributesJSON []byte
@@ -155,10 +158,9 @@ func (r *Repository) GetProductsBySKUs(ctx context.Context, skus []string, store
 			&product.Currency,
 			&product.CategoryID,
 			&sku,
-			&barcode,
 			&product.StockQuantity,
 			&product.StockStatus,
-			&product.IsActive,
+			&status,
 			&attributesJSON,
 			&product.ViewCount,
 			&product.SoldCount,
@@ -184,9 +186,6 @@ func (r *Repository) GetProductsBySKUs(ctx context.Context, skus []string, store
 		if sku.Valid {
 			product.SKU = &sku.String
 		}
-		if barcode.Valid {
-			product.Barcode = &barcode.String
-		}
 		if individualAddress.Valid {
 			product.IndividualAddress = &individualAddress.String
 		}
@@ -199,6 +198,9 @@ func (r *Repository) GetProductsBySKUs(ctx context.Context, skus []string, store
 		if locationPrivacy.Valid {
 			product.LocationPrivacy = &locationPrivacy.String
 		}
+
+		// Convert status to IsActive
+		product.IsActive = (status == "active")
 
 		// Parse JSONB attributes
 		if len(attributesJSON) > 0 {
@@ -228,17 +230,18 @@ func (r *Repository) GetProductsByIDs(ctx context.Context, productIDs []int64, s
 
 	query := `
 		SELECT
-			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
-			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
-			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.id, p.storefront_id, p.title, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.quantity, p.stock_status,
+			p.status, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address,
 			p.individual_latitude, p.individual_longitude,
 			p.location_privacy, p.show_on_map, p.has_variants
-		FROM b2c_products p
+		FROM listings p
 		WHERE p.id = ANY($1::bigint[])
+		  AND p.source_type = 'b2c'
 		  AND ($2::bigint IS NULL OR p.storefront_id = $2)
-		  AND p.is_active = true
+		  AND p.status = 'active'
 		  AND p.deleted_at IS NULL
 	`
 
@@ -253,7 +256,8 @@ func (r *Repository) GetProductsByIDs(ctx context.Context, productIDs []int64, s
 	for rows.Next() {
 		var product domain.Product
 		var description sql.NullString
-		var sku, barcode sql.NullString
+		var sku sql.NullString
+		var status string
 		var individualAddress, locationPrivacy sql.NullString
 		var individualLatitude, individualLongitude sql.NullFloat64
 		var attributesJSON []byte
@@ -267,10 +271,9 @@ func (r *Repository) GetProductsByIDs(ctx context.Context, productIDs []int64, s
 			&product.Currency,
 			&product.CategoryID,
 			&sku,
-			&barcode,
 			&product.StockQuantity,
 			&product.StockStatus,
-			&product.IsActive,
+			&status,
 			&attributesJSON,
 			&product.ViewCount,
 			&product.SoldCount,
@@ -296,9 +299,6 @@ func (r *Repository) GetProductsByIDs(ctx context.Context, productIDs []int64, s
 		if sku.Valid {
 			product.SKU = &sku.String
 		}
-		if barcode.Valid {
-			product.Barcode = &barcode.String
-		}
 		if individualAddress.Valid {
 			product.IndividualAddress = &individualAddress.String
 		}
@@ -311,6 +311,9 @@ func (r *Repository) GetProductsByIDs(ctx context.Context, productIDs []int64, s
 		if locationPrivacy.Valid {
 			product.LocationPrivacy = &locationPrivacy.String
 		}
+
+		// Convert status to IsActive
+		product.IsActive = (status == "active")
 
 		// Parse JSONB attributes
 		if len(attributesJSON) > 0 {
@@ -339,9 +342,11 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 	// Get total count
 	countQuery := `
 		SELECT COUNT(*)
-		FROM b2c_products p
+		FROM listings p
 		WHERE p.storefront_id = $1
-		  AND ($2 = false OR p.is_active = true)
+		  AND p.source_type = 'b2c'
+		  AND p.deleted_at IS NULL
+		  AND ($2 = false OR p.status = 'active')
 	`
 
 	var total int
@@ -354,16 +359,18 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 	// Get products with pagination
 	query := `
 		SELECT
-			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
-			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
-			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.id, p.storefront_id, p.title, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.quantity, p.stock_status,
+			p.status, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address,
 			p.individual_latitude, p.individual_longitude,
 			p.location_privacy, p.show_on_map, p.has_variants
-		FROM b2c_products p
+		FROM listings p
 		WHERE p.storefront_id = $1
-		  AND ($2 = false OR p.is_active = true)
+		  AND p.source_type = 'b2c'
+		  AND p.deleted_at IS NULL
+		  AND ($2 = false OR p.status = 'active')
 		ORDER BY p.created_at DESC
 		LIMIT $3 OFFSET $4
 	`
@@ -379,7 +386,8 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 	for rows.Next() {
 		var product domain.Product
 		var description sql.NullString
-		var sku, barcode sql.NullString
+		var sku sql.NullString
+		var status string
 		var individualAddress, locationPrivacy sql.NullString
 		var individualLatitude, individualLongitude sql.NullFloat64
 		var attributesJSON []byte
@@ -393,10 +401,9 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 			&product.Currency,
 			&product.CategoryID,
 			&sku,
-			&barcode,
 			&product.StockQuantity,
 			&product.StockStatus,
-			&product.IsActive,
+			&status,
 			&attributesJSON,
 			&product.ViewCount,
 			&product.SoldCount,
@@ -422,9 +429,6 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 		if sku.Valid {
 			product.SKU = &sku.String
 		}
-		if barcode.Valid {
-			product.Barcode = &barcode.String
-		}
 		if individualAddress.Valid {
 			product.IndividualAddress = &individualAddress.String
 		}
@@ -437,6 +441,9 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 		if locationPrivacy.Valid {
 			product.LocationPrivacy = &locationPrivacy.String
 		}
+
+		// Convert status to IsActive
+		product.IsActive = (status == "active")
 
 		// Parse JSONB attributes
 		if len(attributesJSON) > 0 {
@@ -458,8 +465,6 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 
 // GetVariantByID retrieves a single variant by ID
 func (r *Repository) GetVariantByID(ctx context.Context, variantID int64, productID *int64) (*domain.ProductVariant, error) {
-	r.logger.Debug().Int64("variant_id", variantID).Interface("product_id", productID).Msg("getting variant by ID")
-
 	query := `
 		SELECT
 			v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price,
@@ -672,13 +677,26 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 		return nil, fmt.Errorf("stock_quantity must be non-negative")
 	}
 
-	// Check if storefront exists (basic validation)
-	// Note: In production, this should be a foreign key constraint in DB
-	// For now, we'll rely on DB constraint
+	// Get storefront owner user_id (required for listings.user_id NOT NULL constraint)
+	var storefrontOwnerID int64
+	err := r.db.QueryRowContext(ctx, `
+		SELECT user_id FROM storefronts WHERE id = $1
+	`, input.StorefrontID).Scan(&storefrontOwnerID)
+
+	if err != nil {
+		r.logger.Error().Err(err).
+			Int64("storefront_id", input.StorefrontID).
+			Msg("failed to get storefront owner user_id")
+		return nil, fmt.Errorf("failed to get storefront owner for user_id: %w", err)
+	}
+
+	r.logger.Debug().
+		Int64("storefront_id", input.StorefrontID).
+		Int64("owner_user_id", storefrontOwnerID).
+		Msg("retrieved storefront owner for product creation")
 
 	// Marshal attributes to JSON
 	var attributesJSON []byte
-	var err error
 	if input.Attributes != nil {
 		attributesJSON, err = json.Marshal(input.Attributes)
 		if err != nil {
@@ -701,25 +719,33 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 	showOnMap := input.ShowOnMap
 	hasIndividualLocation := input.HasIndividualLocation
 
+	// Determine status based on isActive
+	var status string
+	if isActive {
+		status = "active"
+	} else {
+		status = "inactive"
+	}
+
 	// Insert product
 	query := `
-		INSERT INTO b2c_products (
-			storefront_id, name, description, price, currency, category_id,
-			sku, barcode, stock_quantity, stock_status, is_active,
+		INSERT INTO listings (
+			user_id, storefront_id, title, description, price, currency, category_id,
+			sku, quantity, stock_status, status, source_type,
 			attributes, view_count, sold_count,
 			has_individual_location, individual_address,
 			individual_latitude, individual_longitude,
 			location_privacy, show_on_map, has_variants
 		) VALUES (
-			$1, $2, $3, $4, $5, $6,
-			$7, $8, $9, $10, $11,
+			$1, $2, $3, $4, $5, $6, $7,
+			$8, $9, $10, $11, 'b2c',
 			$12, 0, 0,
 			$13, $14, $15, $16, $17, $18, false
 		)
 		RETURNING
-			id, storefront_id, name, description, price, currency,
-			category_id, sku, barcode, stock_quantity, stock_status,
-			is_active, attributes, view_count, sold_count,
+			id, storefront_id, title, description, price, currency,
+			category_id, sku, quantity, stock_status,
+			status, attributes, view_count, sold_count,
 			created_at, updated_at,
 			has_individual_location, individual_address,
 			individual_latitude, individual_longitude,
@@ -728,7 +754,8 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 
 	var product domain.Product
 	var description sql.NullString
-	var sku, barcode sql.NullString
+	var sku sql.NullString
+	var returnedStatus string
 	var individualAddress, locationPrivacy sql.NullString
 	var individualLatitude, individualLongitude sql.NullFloat64
 	var returnedAttributesJSON []byte
@@ -736,24 +763,24 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 	err = r.db.QueryRowContext(
 		ctx,
 		query,
-		input.StorefrontID,
-		input.Name,
-		input.Description,
-		input.Price,
-		input.Currency,
-		input.CategoryID,
-		input.SKU,
-		input.Barcode,
-		input.StockQuantity,
-		stockStatus,
-		isActive,
-		attributesJSON,
-		hasIndividualLocation,
-		input.IndividualAddress,
-		input.IndividualLatitude,
-		input.IndividualLongitude,
-		input.LocationPrivacy,
-		showOnMap,
+		storefrontOwnerID,         // $1 - user_id (from storefront owner)
+		input.StorefrontID,        // $2 - storefront_id
+		input.Name,                // $3 - title
+		input.Description,         // $4 - description
+		input.Price,               // $5 - price
+		input.Currency,            // $6 - currency
+		input.CategoryID,          // $7 - category_id
+		input.SKU,                 // $8 - sku
+		input.StockQuantity,       // $9 - quantity
+		stockStatus,               // $10 - stock_status
+		status,                    // $11 - status
+		attributesJSON,            // $12 - attributes
+		hasIndividualLocation,     // $13 - has_individual_location
+		input.IndividualAddress,   // $14 - individual_address
+		input.IndividualLatitude,  // $15 - individual_latitude
+		input.IndividualLongitude, // $16 - individual_longitude
+		input.LocationPrivacy,     // $17 - location_privacy
+		showOnMap,                 // $18 - show_on_map
 	).Scan(
 		&product.ID,
 		&product.StorefrontID,
@@ -763,10 +790,9 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 		&product.Currency,
 		&product.CategoryID,
 		&sku,
-		&barcode,
 		&product.StockQuantity,
 		&product.StockStatus,
-		&product.IsActive,
+		&returnedStatus,
 		&returnedAttributesJSON,
 		&product.ViewCount,
 		&product.SoldCount,
@@ -800,9 +826,6 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 	if sku.Valid {
 		product.SKU = &sku.String
 	}
-	if barcode.Valid {
-		product.Barcode = &barcode.String
-	}
 	if individualAddress.Valid {
 		product.IndividualAddress = &individualAddress.String
 	}
@@ -815,6 +838,9 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 	if locationPrivacy.Valid {
 		product.LocationPrivacy = &locationPrivacy.String
 	}
+
+	// Convert returned status to IsActive
+	product.IsActive = (returnedStatus == "active")
 
 	// Parse returned JSONB attributes
 	if len(returnedAttributesJSON) > 0 {
@@ -850,7 +876,7 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 
 	// Add fields to update
 	if input.Name != nil {
-		setClauses = append(setClauses, fmt.Sprintf("name = $%d", argIndex))
+		setClauses = append(setClauses, fmt.Sprintf("title = $%d", argIndex))
 		args = append(args, *input.Name)
 		argIndex++
 	}
@@ -887,8 +913,14 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 	}
 
 	if input.IsActive != nil {
-		setClauses = append(setClauses, fmt.Sprintf("is_active = $%d", argIndex))
-		args = append(args, *input.IsActive)
+		var status string
+		if *input.IsActive {
+			status = "active"
+		} else {
+			status = "inactive"
+		}
+		setClauses = append(setClauses, fmt.Sprintf("status = $%d", argIndex))
+		args = append(args, status)
 		argIndex++
 	}
 
@@ -951,13 +983,13 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 
 	// Build final query
 	query := fmt.Sprintf(`
-		UPDATE b2c_products
+		UPDATE listings
 		SET %s
-		WHERE id = $%d AND storefront_id = $%d
+		WHERE id = $%d AND storefront_id = $%d AND source_type = 'b2c'
 		RETURNING
-			id, storefront_id, name, description, price, currency,
-			category_id, sku, barcode, stock_quantity, stock_status,
-			is_active, attributes, view_count, sold_count,
+			id, storefront_id, title, description, price, currency,
+			category_id, sku, quantity, stock_status,
+			status, attributes, view_count, sold_count,
 			created_at, updated_at,
 			has_individual_location, individual_address,
 			individual_latitude, individual_longitude,
@@ -966,7 +998,8 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 
 	var product domain.Product
 	var description sql.NullString
-	var sku, barcode sql.NullString
+	var sku sql.NullString
+	var returnedStatus string
 	var individualAddress, locationPrivacy sql.NullString
 	var individualLatitude, individualLongitude sql.NullFloat64
 	var returnedAttributesJSON []byte
@@ -980,10 +1013,9 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 		&product.Currency,
 		&product.CategoryID,
 		&sku,
-		&barcode,
 		&product.StockQuantity,
 		&product.StockStatus,
-		&product.IsActive,
+		&returnedStatus,
 		&returnedAttributesJSON,
 		&product.ViewCount,
 		&product.SoldCount,
@@ -1021,9 +1053,6 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 	if sku.Valid {
 		product.SKU = &sku.String
 	}
-	if barcode.Valid {
-		product.Barcode = &barcode.String
-	}
 	if individualAddress.Valid {
 		product.IndividualAddress = &individualAddress.String
 	}
@@ -1036,6 +1065,9 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 	if locationPrivacy.Valid {
 		product.LocationPrivacy = &locationPrivacy.String
 	}
+
+	// Convert returned status to IsActive
+	product.IsActive = (returnedStatus == "active")
 
 	// Parse returned JSONB attributes
 	if len(returnedAttributesJSON) > 0 {
@@ -1077,8 +1109,8 @@ func (r *Repository) DeleteProduct(ctx context.Context, productID, storefrontID 
 	var exists bool
 	ownershipQuery := `
 		SELECT EXISTS(
-			SELECT 1 FROM b2c_products
-			WHERE id = $1 AND storefront_id = $2
+			SELECT 1 FROM listings
+			WHERE id = $1 AND storefront_id = $2 AND source_type = 'b2c'
 		)
 	`
 	err = tx.QueryRowContext(ctx, ownershipQuery, productID, storefrontID).Scan(&exists)
@@ -1095,23 +1127,14 @@ func (r *Repository) DeleteProduct(ctx context.Context, productID, storefrontID 
 	// TODO: Add check for active orders once orders table/microservice is available
 	// For now, we skip this check
 
-	// Step 3: Count variants before deletion
-	var variantsCount int32
-	countQuery := `
-		SELECT COUNT(*) FROM b2c_product_variants
-		WHERE product_id = $1
-	`
-	err = tx.QueryRowContext(ctx, countQuery, productID).Scan(&variantsCount)
-	if err != nil {
-		r.logger.Error().Err(err).Msg("failed to count variants")
-		return 0, fmt.Errorf("failed to count variants: %w", err)
-	}
+	// Step 3: Count variants before deletion (variants table removed in Phase 11.5)
+	var variantsCount int32 = 0
 
 	if hardDelete {
 		// Hard delete: DELETE CASCADE will handle variants automatically
 		deleteQuery := `
-			DELETE FROM b2c_products
-			WHERE id = $1 AND storefront_id = $2
+			DELETE FROM listings
+			WHERE id = $1 AND storefront_id = $2 AND source_type = 'b2c'
 		`
 		result, err := tx.ExecContext(ctx, deleteQuery, productID, storefrontID)
 		if err != nil {
@@ -1135,37 +1158,15 @@ func (r *Repository) DeleteProduct(ctx context.Context, productID, storefrontID 
 			Msg("product hard deleted successfully")
 	} else {
 		// Soft delete: Set deleted_at timestamp
-		// Note: If deleted_at column doesn't exist, we'll need to add it via migration
 		softDeleteQuery := `
-			UPDATE b2c_products
+			UPDATE listings
 			SET deleted_at = NOW(), updated_at = NOW()
-			WHERE id = $1 AND storefront_id = $2 AND deleted_at IS NULL
+			WHERE id = $1 AND storefront_id = $2 AND source_type = 'b2c' AND deleted_at IS NULL
 		`
 		result, err := tx.ExecContext(ctx, softDeleteQuery, productID, storefrontID)
 		if err != nil {
-			// Check if column doesn't exist
-			if pqErr, ok := err.(*pq.Error); ok {
-				if pqErr.Code == "42703" { // undefined_column
-					r.logger.Warn().Msg("deleted_at column not found, using is_active=false instead")
-					// Fallback: use is_active = false
-					fallbackQuery := `
-						UPDATE b2c_products
-						SET is_active = false, updated_at = NOW()
-						WHERE id = $1 AND storefront_id = $2
-					`
-					result, err = tx.ExecContext(ctx, fallbackQuery, productID, storefrontID)
-					if err != nil {
-						r.logger.Error().Err(err).Msg("failed to deactivate product")
-						return 0, fmt.Errorf("failed to deactivate product: %w", err)
-					}
-				} else {
-					r.logger.Error().Err(err).Msg("failed to soft delete product")
-					return 0, fmt.Errorf("failed to soft delete product: %w", err)
-				}
-			} else {
-				r.logger.Error().Err(err).Msg("failed to soft delete product")
-				return 0, fmt.Errorf("failed to soft delete product: %w", err)
-			}
+			r.logger.Error().Err(err).Msg("failed to soft delete product")
+			return 0, fmt.Errorf("failed to soft delete product: %w", err)
 		}
 
 		rowsAffected, err := result.RowsAffected()
@@ -1219,6 +1220,24 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 	}
 	defer tx.Rollback()
 
+	// Get storefront owner user_id (required for listings.user_id NOT NULL constraint)
+	var storefrontOwnerID int64
+	err = tx.QueryRowContext(ctx, `
+		SELECT user_id FROM storefronts WHERE id = $1
+	`, storefrontID).Scan(&storefrontOwnerID)
+
+	if err != nil {
+		r.logger.Error().Err(err).
+			Int64("storefront_id", storefrontID).
+			Msg("failed to get storefront owner user_id")
+		return nil, nil, fmt.Errorf("failed to get storefront owner for user_id: %w", err)
+	}
+
+	r.logger.Debug().
+		Int64("storefront_id", storefrontID).
+		Int64("owner_user_id", storefrontOwnerID).
+		Msg("retrieved storefront owner for product creation")
+
 	// Collect all SKUs for uniqueness validation
 	var skusToCheck []string
 	for _, input := range inputs {
@@ -1230,8 +1249,8 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 	// Check for duplicate SKUs within storefront
 	if len(skusToCheck) > 0 {
 		duplicateQuery := `
-			SELECT sku FROM b2c_products
-			WHERE storefront_id = $1 AND sku = ANY($2::text[])
+			SELECT sku FROM listings
+			WHERE storefront_id = $1 AND source_type = 'b2c' AND sku = ANY($2::text[])
 		`
 		rows, err := tx.QueryContext(ctx, duplicateQuery, storefrontID, pq.Array(skusToCheck))
 		if err != nil {
@@ -1322,23 +1341,23 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 
 		// Insert product
 		query := `
-			INSERT INTO b2c_products (
-				storefront_id, name, description, price, currency, category_id,
-				sku, barcode, stock_quantity, stock_status, is_active,
+			INSERT INTO listings (
+				user_id, storefront_id, title, description, price, currency, category_id,
+				sku, quantity, stock_status, status, source_type,
 				attributes, view_count, sold_count,
 				has_individual_location, individual_address,
 				individual_latitude, individual_longitude,
 				location_privacy, show_on_map, has_variants
 			) VALUES (
-				$1, $2, $3, $4, $5, $6,
-				$7, $8, $9, $10, true,
+				$1, $2, $3, $4, $5, $6, $7,
+				$8, $9, $10, 'active', 'b2c',
 				$11, 0, 0,
 				$12, $13, $14, $15, $16, $17, false
 			)
 			RETURNING
-				id, storefront_id, name, description, price, currency,
-				category_id, sku, barcode, stock_quantity, stock_status,
-				is_active, attributes, view_count, sold_count,
+				id, storefront_id, title, description, price, currency,
+				category_id, sku, quantity, stock_status,
+				status, attributes, view_count, sold_count,
 				created_at, updated_at,
 				has_individual_location, individual_address,
 				individual_latitude, individual_longitude,
@@ -1347,31 +1366,66 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 
 		var product domain.Product
 		var description sql.NullString
-		var sku, barcode sql.NullString
+		var sku sql.NullString
+		var returnedStatus string
 		var individualAddress, locationPrivacy sql.NullString
 		var individualLatitude, individualLongitude sql.NullFloat64
 		var returnedAttributesJSON []byte
 
+		// DEBUG: Log before attempting INSERT
+		logEvent := r.logger.Debug().
+			Int("index", idx).
+			Int64("user_id", storefrontOwnerID).
+			Int64("storefront_id", storefrontID).
+			Str("title", input.Name).
+			Str("description", input.Description).
+			Float64("price", input.Price).
+			Str("currency", input.Currency).
+			Int32("stock_quantity", input.StockQuantity).
+			Str("stock_status", string(stockStatus)).
+			Int64("category_id", input.CategoryID).
+			Bool("has_individual_location", input.HasIndividualLocation).
+			Bool("show_on_map", input.ShowOnMap).
+			Int("attributes_json_len", len(attributesJSON))
+
+		if input.SKU != nil {
+			logEvent = logEvent.Str("sku", *input.SKU)
+		}
+		if input.IndividualAddress != nil {
+			logEvent = logEvent.Str("individual_address", *input.IndividualAddress)
+		}
+		if input.IndividualLatitude != nil {
+			logEvent = logEvent.Float64("individual_latitude", *input.IndividualLatitude)
+		}
+		if input.IndividualLongitude != nil {
+			logEvent = logEvent.Float64("individual_longitude", *input.IndividualLongitude)
+		}
+		if input.LocationPrivacy != nil {
+			logEvent = logEvent.Str("location_privacy", *input.LocationPrivacy)
+		}
+
+		logEvent.Msg("attempting to INSERT product in transaction")
+
 		err = tx.QueryRowContext(
 			ctx,
 			query,
-			storefrontID,
-			input.Name,
-			input.Description,
-			input.Price,
-			input.Currency,
-			input.CategoryID,
-			input.SKU,
-			input.Barcode,
-			input.StockQuantity,
-			stockStatus,
-			attributesJSON,
-			input.HasIndividualLocation,
-			input.IndividualAddress,
-			input.IndividualLatitude,
-			input.IndividualLongitude,
-			input.LocationPrivacy,
-			input.ShowOnMap,
+			storefrontOwnerID,           // $1 - user_id (from storefront owner)
+			storefrontID,                // $2 - storefront_id
+			input.Name,                  // $3 - title
+			input.Description,           // $4 - description
+			input.Price,                 // $5 - price
+			input.Currency,              // $6 - currency
+			input.CategoryID,            // $7 - category_id
+			input.SKU,                   // $8 - sku
+			input.StockQuantity,         // $9 - quantity
+			stockStatus,                 // $10 - stock_status
+			attributesJSON,              // $11 - attributes
+			input.HasIndividualLocation, // $12 - has_individual_location
+			input.IndividualAddress,     // $13 - individual_address
+			input.IndividualLatitude,    // $14 - individual_latitude
+			input.IndividualLongitude,   // $15 - individual_longitude
+			input.LocationPrivacy,       // $16 - location_privacy
+			input.ShowOnMap,             // $17 - show_on_map
 		).Scan(
 			&product.ID,
 			&product.StorefrontID,
@@ -1381,10 +1435,9 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 			&product.Currency,
 			&product.CategoryID,
 			&sku,
-			&barcode,
 			&product.StockQuantity,
 			&product.StockStatus,
-			&product.IsActive,
+			&returnedStatus,
 			&returnedAttributesJSON,
 			&product.ViewCount,
 			&product.SoldCount,
@@ -1400,6 +1453,30 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 		)
 
 		if err != nil {
+			// ERROR: Log detailed error information
+			r.logger.Error().Err(err).
+				Int("index", idx).
+				Str("title", input.Name).
+				Int64("category_id", input.CategoryID).
+				Int64("storefront_id", storefrontID).
+				Str("sql_error", err.Error()).
+				Str("error_type", fmt.Sprintf("%T", err)).
+				Interface("pq_error", func() interface{} {
+					if pqErr, ok := err.(*pq.Error); ok {
+						return map[string]interface{}{
+							"code":       pqErr.Code,
+							"message":    pqErr.Message,
+							"detail":     pqErr.Detail,
+							"hint":       pqErr.Hint,
+							"column":     pqErr.Column,
+							"table":      pqErr.Table,
+							"constraint": pqErr.Constraint,
+						}
+					}
+					return nil
+				}()).
+				Msg("FAILED to INSERT product - transaction will fail")
+
 			// Check for unique constraint violation
 			if pqErr, ok := err.(*pq.Error); ok {
 				if pqErr.Code == "23505" { // unique_violation
@@ -1426,9 +1503,6 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 		if sku.Valid {
 			product.SKU = &sku.String
 		}
-		if barcode.Valid {
-			product.Barcode = &barcode.String
-		}
 		if individualAddress.Valid {
 			product.IndividualAddress = &individualAddress.String
 		}
@@ -1442,6 +1516,9 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 			product.LocationPrivacy = &locationPrivacy.String
 		}
 
+		// Convert returned status to IsActive
+		product.IsActive = (returnedStatus == "active")
+
 		// Parse returned JSONB attributes
 		if len(returnedAttributesJSON) > 0 {
 			if err := json.Unmarshal(returnedAttributesJSON, &product.Attributes); err != nil {
@@ -1450,14 +1527,53 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 			}
 		}
 
+		// DEBUG: Log successful INSERT
+		r.logger.Debug().
+			Int("index", idx).
+			Int64("product_id", product.ID).
+			Str("title", product.Name).
+			Int64("storefront_id", product.StorefrontID).
+			Int64("category_id", product.CategoryID).
+			Float64("price", product.Price).
+			Str("currency", product.Currency).
+			Int32("stock_quantity", product.StockQuantity).
+			Str("stock_status", string(product.StockStatus)).
+			Bool("is_active", product.IsActive).
+			Msg("product INSERT successful in transaction")
+
 		createdProducts = append(createdProducts, &product)
 	}
 
 	// Commit transaction
+	r.logger.Debug().
+		Int("products_to_commit", len(createdProducts)).
+		Int("errors_count", len(errors)).
+		Msg("attempting to COMMIT transaction")
+
 	if err := tx.Commit(); err != nil {
-		r.logger.Error().Err(err).Msg("failed to commit transaction")
+		r.logger.Error().Err(err).
+			Int("products_created", len(createdProducts)).
+			Int("errors_count", len(errors)).
+			Str("commit_error", err.Error()).
+			Str("error_type", fmt.Sprintf("%T", err)).
+			Interface("pq_error", func() interface{} {
+				if pqErr, ok := err.(*pq.Error); ok {
+					return map[string]interface{}{
+						"code":    pqErr.Code,
+						"message": pqErr.Message,
+						"detail":  pqErr.Detail,
+						"hint":    pqErr.Hint,
+					}
+				}
+				return nil
+			}()).
+			Msg("FAILED to COMMIT transaction - this is likely due to earlier INSERT failure")
 		return nil, nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
+
+	r.logger.Debug().
+		Int("products_committed", len(createdProducts)).
+		Msg("transaction COMMIT successful")
 
 	r.logger.Info().
 		Int("successful", len(createdProducts)).
@@ -1527,8 +1643,8 @@ func (r *Repository) BulkDeleteProducts(ctx context.Context, storefrontID int64,
 		// Step 1: Validate ownership for batch
 		ownershipQuery := `
 			SELECT id
-			FROM b2c_products
-			WHERE id = ANY($1::bigint[]) AND storefront_id = $2
+			FROM listings
+			WHERE id = ANY($1::bigint[]) AND storefront_id = $2 AND source_type = 'b2c'
 		`
 		rows, err := tx.QueryContext(ctx, ownershipQuery, pq.Array(batchIDs), storefrontID)
 		if err != nil {
@@ -1568,43 +1684,19 @@ func (r *Repository) BulkDeleteProducts(ctx context.Context, storefrontID int64,
 			continue
 		}
 
-		// Step 2: Count variants before deletion for valid IDs
-		countQuery := `
-			SELECT product_id, COUNT(*)
-			FROM b2c_product_variants
-			WHERE product_id = ANY($1::bigint[])
-			GROUP BY product_id
-		`
-		variantRows, err := tx.QueryContext(ctx, countQuery, pq.Array(validIDs))
-		if err != nil {
-			r.logger.Error().Err(err).Msg("failed to count variants")
-			return 0, 0, 0, nil, fmt.Errorf("failed to count variants: %w", err)
-		}
-
+		// Step 2: Count variants before deletion (variants table removed in Phase 11.5)
+		// No variants to count anymore, set to 0
 		variantCounts := make(map[int64]int32)
-		for variantRows.Next() {
-			var productID int64
-			var count int32
-			if err := variantRows.Scan(&productID, &count); err != nil {
-				variantRows.Close()
-				r.logger.Error().Err(err).Msg("failed to scan variant count")
-				return 0, 0, 0, nil, fmt.Errorf("failed to scan variant count: %w", err)
-			}
-			variantCounts[productID] = count
-		}
-		variantRows.Close()
-
-		if err := variantRows.Err(); err != nil {
-			r.logger.Error().Err(err).Msg("variant rows iteration error")
-			return 0, 0, 0, nil, fmt.Errorf("variant rows iteration error: %w", err)
+		for _, id := range validIDs {
+			variantCounts[id] = 0
 		}
 
 		// Step 3: Perform deletion (soft or hard)
 		if hardDelete {
 			// Hard delete: DELETE CASCADE will handle variants automatically
 			deleteQuery := `
-				DELETE FROM b2c_products
-				WHERE id = ANY($1::bigint[]) AND storefront_id = $2
+				DELETE FROM listings
+				WHERE id = ANY($1::bigint[]) AND storefront_id = $2 AND source_type = 'b2c'
 			`
 			result, err := tx.ExecContext(ctx, deleteQuery, pq.Array(validIDs), storefrontID)
 			if err != nil {
@@ -1638,50 +1730,19 @@ func (r *Repository) BulkDeleteProducts(ctx context.Context, storefrontID int64,
 		} else {
 			// Soft delete: Set deleted_at timestamp
 			softDeleteQuery := `
-				UPDATE b2c_products
+				UPDATE listings
 				SET deleted_at = NOW(), updated_at = NOW()
-				WHERE id = ANY($1::bigint[]) AND storefront_id = $2 AND deleted_at IS NULL
+				WHERE id = ANY($1::bigint[]) AND storefront_id = $2 AND source_type = 'b2c' AND deleted_at IS NULL
 			`
 			result, err := tx.ExecContext(ctx, softDeleteQuery, pq.Array(validIDs), storefrontID)
 			if err != nil {
-				// Check if column doesn't exist
-				if pqErr, ok := err.(*pq.Error); ok {
-					if pqErr.Code == "42703" { // undefined_column
-						r.logger.Warn().Msg("deleted_at column not found, using is_active=false instead")
-						// Fallback: use is_active = false
-						fallbackQuery := `
-							UPDATE b2c_products
-							SET is_active = false, updated_at = NOW()
-							WHERE id = ANY($1::bigint[]) AND storefront_id = $2
-						`
-						result, err = tx.ExecContext(ctx, fallbackQuery, pq.Array(validIDs), storefrontID)
-						if err != nil {
-							r.logger.Error().Err(err).Msg("failed to deactivate products")
-							// Mark all valid IDs as failed
-							for _, id := range validIDs {
-								errors[id] = "products.delete_failed"
-								failedCount++
-							}
-							continue
-						}
-					} else {
-						r.logger.Error().Err(err).Msg("failed to soft delete products")
-						// Mark all valid IDs as failed
-						for _, id := range validIDs {
-							errors[id] = "products.delete_failed"
-							failedCount++
-						}
-						continue
-					}
-				} else {
-					r.logger.Error().Err(err).Msg("failed to soft delete products")
-					// Mark all valid IDs as failed
-					for _, id := range validIDs {
-						errors[id] = "products.delete_failed"
-						failedCount++
-					}
-					continue
+				r.logger.Error().Err(err).Msg("failed to soft delete products")
+				// Mark all valid IDs as failed
+				for _, id := range validIDs {
+					errors[id] = "products.delete_failed"
+					failedCount++
 				}
+				continue
 			}
 
 			rowsAffected, err := result.RowsAffected()
@@ -1721,7 +1782,6 @@ func (r *Repository) BulkDeleteProducts(ctx context.Context, storefrontID int64,
 	return successCount, failedCount, totalVariantsDeleted, errors, nil
 }
 
-
 // UpdateProductInventory updates product stock with inventory movement tracking
 // NOTE: Requires b2c_inventory_movements table (create via migration if not exists)
 func (r *Repository) UpdateProductInventory(ctx context.Context, storefrontID, productID, variantID int64, movementType string, quantity int32, reason, notes string, userID int64) (int32, int32, error) {
@@ -1759,24 +1819,20 @@ func (r *Repository) UpdateProductInventory(ctx context.Context, storefrontID, p
 	var tableName, idColumn string
 
 	// Determine target table and column
+	// NOTE: Variants table was removed in Phase 11.5
 	if variantID > 0 {
-		tableName = "b2c_product_variants"
-		idColumn = "id"
-	} else {
-		tableName = "b2c_products"
-		idColumn = "id"
+		r.logger.Warn().Int64("variant_id", variantID).Msg("UpdateProductInventory called with variant_id but variants are deprecated")
+		return 0, 0, fmt.Errorf("product variants are not supported: table removed in Phase 11.5 migration")
 	}
+
+	tableName = "listings"
+	idColumn = "id"
 
 	// Get current stock quantity
 	var query string
 	var queryArgs []interface{}
-	if variantID > 0 {
-		query = fmt.Sprintf("SELECT stock_quantity FROM %s WHERE %s = $1 AND product_id = $2", tableName, idColumn)
-		queryArgs = []interface{}{variantID, productID}
-	} else {
-		query = fmt.Sprintf("SELECT stock_quantity FROM %s WHERE %s = $1 AND storefront_id = $2", tableName, idColumn)
-		queryArgs = []interface{}{productID, storefrontID}
-	}
+	query = fmt.Sprintf("SELECT quantity FROM %s WHERE %s = $1 AND storefront_id = $2 AND source_type = 'b2c'", tableName, idColumn)
+	queryArgs = []interface{}{productID, storefrontID}
 
 	err = tx.QueryRowContext(ctx, query, queryArgs...).Scan(&currentQuantity)
 	if err != nil {
@@ -1804,24 +1860,18 @@ func (r *Repository) UpdateProductInventory(ctx context.Context, storefrontID, p
 
 	// Update stock quantity
 	var updateQuery string
-	if variantID > 0 {
-		updateQuery = fmt.Sprintf("UPDATE %s SET stock_quantity = $1, updated_at = NOW() WHERE %s = $2 AND product_id = $3", tableName, idColumn)
-		_, err = tx.ExecContext(ctx, updateQuery, newQuantity, variantID, productID)
-	} else {
-		updateQuery = fmt.Sprintf("UPDATE %s SET stock_quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3", tableName, idColumn)
-		_, err = tx.ExecContext(ctx, updateQuery, newQuantity, productID, storefrontID)
-	}
+	updateQuery = fmt.Sprintf("UPDATE %s SET quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3 AND source_type = 'b2c'", tableName, idColumn)
+	_, err = tx.ExecContext(ctx, updateQuery, newQuantity, productID, storefrontID)
 
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to update stock quantity")
 		return currentQuantity, newQuantity, fmt.Errorf("failed to update stock quantity: %w", err)
 	}
 
-	// Record inventory movement in audit trail table
-	// Note: This table might not exist yet, so we'll use INSERT with error handling
+	// Record inventory movement in audit trail table (migrated to inventory_movements)
 	movementQuery := `
-		INSERT INTO b2c_inventory_movements (
-			storefront_product_id, variant_id, type, quantity, reason, notes, user_id, created_at
+		INSERT INTO inventory_movements (
+			listing_id, variant_id, movement_type, quantity, reason, notes, user_id, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
 	`
 	var variantIDPtr *int64
@@ -1831,19 +1881,8 @@ func (r *Repository) UpdateProductInventory(ctx context.Context, storefrontID, p
 
 	_, err = tx.ExecContext(ctx, movementQuery, productID, variantIDPtr, movementType, quantity, reason, notes, userID)
 	if err != nil {
-		// Check if table doesn't exist
-		if pqErr, ok := err.(*pq.Error); ok {
-			if pqErr.Code == "42P01" { // undefined_table
-				r.logger.Warn().Msg("b2c_inventory_movements table not found, skipping movement recording")
-				// Continue without failing - movement tracking is optional for now
-			} else {
-				r.logger.Error().Err(err).Msg("failed to record inventory movement")
-				return currentQuantity, newQuantity, fmt.Errorf("failed to record inventory movement: %w", err)
-			}
-		} else {
-			r.logger.Error().Err(err).Msg("failed to record inventory movement")
-			return currentQuantity, newQuantity, fmt.Errorf("failed to record inventory movement: %w", err)
-		}
+		r.logger.Error().Err(err).Msg("failed to record inventory movement")
+		return currentQuantity, newQuantity, fmt.Errorf("failed to record inventory movement: %w", err)
 	}
 
 	// Commit transaction
@@ -1873,13 +1912,13 @@ func (r *Repository) GetProductStats(ctx context.Context, storefrontID int64) (*
 	query := `
 		SELECT
 			COUNT(*) as total_products,
-			COUNT(*) FILTER (WHERE is_active = true) as active_products,
+			COUNT(*) FILTER (WHERE status = 'active') as active_products,
 			COUNT(*) FILTER (WHERE stock_status = 'out_of_stock') as out_of_stock,
 			COUNT(*) FILTER (WHERE stock_status = 'low_stock') as low_stock,
-			COALESCE(SUM(price * stock_quantity), 0) as total_value,
+			COALESCE(SUM(price * quantity), 0) as total_value,
 			COALESCE(SUM(sold_count), 0) as total_sold
-		FROM b2c_products
-		WHERE storefront_id = $1
+		FROM listings
+		WHERE storefront_id = $1 AND source_type = 'b2c'
 	`
 
 	var stats domain.ProductStats
@@ -1926,9 +1965,9 @@ func (r *Repository) IncrementProductViews(ctx context.Context, productID int64)
 	}
 
 	query := `
-		UPDATE b2c_products
+		UPDATE listings
 		SET view_count = view_count + 1, updated_at = NOW()
-		WHERE id = $1
+		WHERE id = $1 AND source_type = 'b2c'
 	`
 
 	result, err := r.db.ExecContext(ctx, query, productID)
@@ -1992,18 +2031,19 @@ func (r *Repository) BatchUpdateStock(ctx context.Context, storefrontID int64, i
 		var queryArgs []interface{}
 
 		// Determine target table
+		// NOTE: Variants table was removed in Phase 11.5
 		if item.VariantID != nil && *item.VariantID > 0 {
-			tableName = "b2c_product_variants"
-			idColumn = "id"
-			query = fmt.Sprintf("SELECT stock_quantity FROM %s WHERE %s = $1 AND product_id = $2", tableName, idColumn)
-			queryArgs = []interface{}{*item.VariantID, item.ProductID}
-			result.VariantID = item.VariantID
-		} else {
-			tableName = "b2c_products"
-			idColumn = "id"
-			query = fmt.Sprintf("SELECT stock_quantity FROM %s WHERE %s = $1 AND storefront_id = $2", tableName, idColumn)
-			queryArgs = []interface{}{item.ProductID, storefrontID}
+			result.Success = false
+			result.Error = strPtr("variants not supported")
+			failedCount++
+			results = append(results, result)
+			continue
 		}
+
+		tableName = "listings"
+		idColumn = "id"
+		query = fmt.Sprintf("SELECT quantity FROM %s WHERE %s = $1 AND storefront_id = $2 AND source_type = 'b2c'", tableName, idColumn)
+		queryArgs = []interface{}{item.ProductID, storefrontID}
 
 		// Get current stock
 		err := tx.QueryRowContext(ctx, query, queryArgs...).Scan(&currentQuantity)
@@ -2027,13 +2067,8 @@ func (r *Repository) BatchUpdateStock(ctx context.Context, storefrontID int64, i
 
 		// Update stock quantity (absolute set)
 		var updateQuery string
-		if item.VariantID != nil && *item.VariantID > 0 {
-			updateQuery = fmt.Sprintf("UPDATE %s SET stock_quantity = $1, updated_at = NOW() WHERE %s = $2 AND product_id = $3", tableName, idColumn)
-			_, err = tx.ExecContext(ctx, updateQuery, item.Quantity, *item.VariantID, item.ProductID)
-		} else {
-			updateQuery = fmt.Sprintf("UPDATE %s SET stock_quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3", tableName, idColumn)
-			_, err = tx.ExecContext(ctx, updateQuery, item.Quantity, item.ProductID, storefrontID)
-		}
+		updateQuery = fmt.Sprintf("UPDATE %s SET quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3 AND source_type = 'b2c'", tableName, idColumn)
+		_, err = tx.ExecContext(ctx, updateQuery, item.Quantity, item.ProductID, storefrontID)
 
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to update stock")
@@ -2056,18 +2091,14 @@ func (r *Repository) BatchUpdateStock(ctx context.Context, storefrontID int64, i
 		}
 
 		movementQuery := `
-			INSERT INTO b2c_inventory_movements (
-				storefront_product_id, variant_id, type, quantity, reason, notes, user_id, created_at
+			INSERT INTO inventory_movements (
+				listing_id, variant_id, movement_type, quantity, reason, notes, user_id, created_at
 			) VALUES ($1, $2, 'adjustment', $3, $4, '', $5, NOW())
 		`
 		_, movErr := tx.ExecContext(ctx, movementQuery, item.ProductID, item.VariantID, item.Quantity, movementReason, userID)
 		if movErr != nil {
-			// Log warning but don't fail - movement tracking is optional
-			if pqErr, ok := movErr.(*pq.Error); ok {
-				if pqErr.Code != "42P01" { // Only warn if not "table doesn't exist"
-					r.logger.Warn().Err(movErr).Msg("failed to record inventory movement, continuing")
-				}
-			}
+			// Log warning but don't fail - movement tracking errors are non-fatal
+			r.logger.Warn().Err(movErr).Msg("failed to record inventory movement, continuing")
 		}
 	}
 

@@ -20,6 +20,7 @@ type Config struct {
 	Features FeatureFlags
 	Tracing  TracingConfig
 	CORS     CORSConfig
+	Health   HealthConfig
 }
 
 // AppConfig contains general application settings
@@ -135,6 +136,15 @@ type CORSConfig struct {
 	AllowedOrigins []string `envconfig:"SVETULISTINGS_CORS_ALLOWED_ORIGINS" default:"http://localhost:3001,http://localhost:3000"`
 	AllowedMethods []string `envconfig:"SVETULISTINGS_CORS_ALLOWED_METHODS" default:"GET,POST,PUT,DELETE,OPTIONS"`
 	AllowedHeaders []string `envconfig:"SVETULISTINGS_CORS_ALLOWED_HEADERS" default:"Content-Type,Authorization"`
+}
+
+// HealthConfig contains health check configuration
+type HealthConfig struct {
+	CheckTimeout     time.Duration `envconfig:"SVETULISTINGS_HEALTH_CHECK_TIMEOUT" default:"5s"`
+	CheckInterval    time.Duration `envconfig:"SVETULISTINGS_HEALTH_CHECK_INTERVAL" default:"30s"`
+	StartupTimeout   time.Duration `envconfig:"SVETULISTINGS_HEALTH_STARTUP_TIMEOUT" default:"60s"`
+	CacheDuration    time.Duration `envconfig:"SVETULISTINGS_HEALTH_CACHE_DURATION" default:"10s"`
+	EnableDeepChecks bool          `envconfig:"SVETULISTINGS_HEALTH_ENABLE_DEEP_CHECKS" default:"true"`
 }
 
 // Load reads configuration from environment variables

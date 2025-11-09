@@ -217,7 +217,7 @@ func TestProductCRUD_E2E_SoftDeleteWorkflow(t *testing.T) {
 
 	// Verify database state
 	var deletedAt *string
-	err = testDB.DB.QueryRow("SELECT deleted_at FROM b2c_products WHERE id = $1", productID).Scan(&deletedAt)
+	err = testDB.DB.QueryRow("SELECT deleted_at FROM listings WHERE id = $1 AND source_type = 'b2c'", productID).Scan(&deletedAt)
 	require.NoError(t, err, "Should query deleted_at")
 	assert.NotNil(t, deletedAt, "deleted_at should be set")
 	assert.NotEmpty(t, *deletedAt, "deleted_at should not be empty")
@@ -225,10 +225,10 @@ func TestProductCRUD_E2E_SoftDeleteWorkflow(t *testing.T) {
 	t.Log("  ✓ Database confirms soft delete (deleted_at is set)")
 
 	// Verify data is NOT physically deleted
-	var name string
-	err = testDB.DB.QueryRow("SELECT name FROM b2c_products WHERE id = $1", productID).Scan(&name)
+	var title string
+	err = testDB.DB.QueryRow("SELECT title FROM listings WHERE id = $1 AND source_type = 'b2c'", productID).Scan(&title)
 	require.NoError(t, err, "Data should still exist in database")
-	assert.Equal(t, "Soft Delete Test Product", name, "Data should be intact")
+	assert.Equal(t, "Soft Delete Test Product", title, "Data should be intact")
 
 	t.Log("  ✓ Data is intact (soft delete preserves data)")
 	t.Log("========== SOFT DELETE WORKFLOW COMPLETED ==========")
@@ -368,7 +368,7 @@ func TestProductCRUD_E2E_WithVariantsWorkflow(t *testing.T) {
 
 	// ===== Verify all deleted =====
 	var variantCount int
-	err = testDB.DB.QueryRow("SELECT COUNT(*) FROM b2c_product_variants WHERE product_id = $1", productID).Scan(&variantCount)
+	err = testDB.DB.QueryRow("SELECT COUNT(*) FROM product_variants WHERE listing_id = $1", productID).Scan(&variantCount)
 	require.NoError(t, err)
 	assert.Equal(t, 0, variantCount, "All variants should be deleted")
 

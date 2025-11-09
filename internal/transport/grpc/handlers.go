@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
@@ -12,6 +13,11 @@ import (
 	"github.com/sveturs/listings/internal/metrics"
 	"github.com/sveturs/listings/internal/service/listings"
 )
+
+// contains checks if substring is in string (case-insensitive helper)
+func contains(s, substr string) bool {
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
+}
 
 // Server implements gRPC ListingsServiceServer
 type Server struct {
@@ -46,6 +52,12 @@ func (s *Server) GetListing(ctx context.Context, req *pb.GetListingRequest) (*pb
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("listing not found: %v", err))
 	}
 
+	// Check for nil listing (defensive programming)
+	if listing == nil {
+		s.logger.Error().Int64("listing_id", req.Id).Msg("listing returned nil without error")
+		return nil, status.Error(codes.NotFound, "listing not found")
+	}
+
 	// Convert to proto
 	pbListing := DomainToProtoListing(listing)
 
@@ -70,6 +82,16 @@ func (s *Server) CreateListing(ctx context.Context, req *pb.CreateListingRequest
 	listing, err := s.service.CreateListing(ctx, input)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to create listing")
+
+		// Map errors to appropriate gRPC codes (use contains for wrapped errors)
+		errMsg := err.Error()
+		if contains(errMsg, "category not found") || contains(errMsg, "fk_listings_category_id") {
+			return nil, status.Error(codes.InvalidArgument, "category not found")
+		}
+		if contains(errMsg, "validation failed") {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create listing: %v", err))
 	}
 
@@ -99,9 +121,13 @@ func (s *Server) UpdateListing(ctx context.Context, req *pb.UpdateListingRequest
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", req.Id).Msg("failed to update listing")
 
-		// Check if it's an authorization error
-		if err.Error() == "unauthorized: user does not own this listing" {
+		// Map errors to appropriate gRPC codes (use contains for wrapped errors)
+		errMsg := err.Error()
+		if errMsg == "unauthorized: user does not own this listing" {
 			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		if contains(errMsg, "listing not found") || contains(errMsg, "sql: no rows in result set") {
+			return nil, status.Error(codes.NotFound, "listing not found")
 		}
 
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to update listing: %v", err))
@@ -134,9 +160,13 @@ func (s *Server) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", req.Id).Msg("failed to delete listing")
 
-		// Check if it's an authorization error
-		if err.Error() == "unauthorized: user does not own this listing" {
+		// Map errors to appropriate gRPC codes (use contains for wrapped errors)
+		errMsg := err.Error()
+		if errMsg == "unauthorized: user does not own this listing" {
 			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		if contains(errMsg, "listing not found") || contains(errMsg, "sql: no rows in result set") {
+			return nil, status.Error(codes.NotFound, "listing not found")
 		}
 
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to delete listing: %v", err))
@@ -308,11 +338,8 @@ func (s *Server) validateUpdateListingRequest(req *pb.UpdateListingRequest) erro
 }
 
 func (s *Server) validateSearchListingsRequest(req *pb.SearchListingsRequest) error {
-	if req.Query == "" {
-		return fmt.Errorf("search query is required")
-	}
-
-	if len(req.Query) < 2 {
+	// Query is optional - if provided, validate it
+	if req.Query != "" && len(req.Query) < 2 {
 		return fmt.Errorf("search query must be at least 2 characters")
 	}
 

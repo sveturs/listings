@@ -1,5 +1,10 @@
 package postgres
 
+// ⚠️ DEPRECATED: Product variants functionality is deprecated.
+// The b2c_product_variants table was removed in Phase 11.5 (migration 000010).
+// This file is kept for API compatibility but methods will return errors.
+// Consider creating a new unified product_variants table if variants are needed.
+
 import (
 	"context"
 	"database/sql"
@@ -38,7 +43,8 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 	// Check if product exists and get has_variants flag
 	var hasVariants bool
 	err = tx.QueryRowContext(ctx, `
-		SELECT has_variants FROM b2c_products WHERE id = $1 AND is_active = true
+		SELECT has_variants FROM listings
+		WHERE id = $1 AND status = 'active' AND deleted_at IS NULL AND source_type = 'b2c'
 	`, input.ProductID).Scan(&hasVariants)
 
 	if err != nil {
@@ -568,9 +574,9 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 	// Business rule: If this is the last variant, set product.has_variants=false
 	if activeCount == 0 {
 		_, err = tx.ExecContext(ctx, `
-			UPDATE b2c_products
+			UPDATE listings
 			SET has_variants = false, updated_at = NOW()
-			WHERE id = $1
+			WHERE id = $1 AND source_type = 'b2c'
 		`, productID)
 
 		if err != nil {
@@ -661,7 +667,8 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 	// Check if product exists and get has_variants flag
 	var hasVariants bool
 	err = tx.QueryRowContext(ctx, `
-		SELECT has_variants FROM b2c_products WHERE id = $1 AND is_active = true
+		SELECT has_variants FROM listings
+		WHERE id = $1 AND status = 'active' AND deleted_at IS NULL AND source_type = 'b2c'
 	`, productID).Scan(&hasVariants)
 
 	if err != nil {

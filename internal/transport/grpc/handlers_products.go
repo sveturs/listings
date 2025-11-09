@@ -746,7 +746,7 @@ func (s *Server) BulkCreateProductVariants(ctx context.Context, req *pb.BulkCrea
 		Msg("variants bulk created successfully")
 
 	return &pb.BulkCreateProductVariantsResponse{
-		Variants:         protoVariants,
+		Variants:        protoVariants,
 		SuccessfulCount: int32(len(variants)),
 		FailedCount:     0,
 		Errors:          nil,
@@ -767,10 +767,10 @@ func (s *Server) BulkUpdateProducts(ctx context.Context, req *pb.BulkUpdateProdu
 
 	if len(req.Updates) == 0 {
 		return &pb.BulkUpdateProductsResponse{
-			Products:         []*pb.Product{},
-			SuccessfulCount:  0,
-			FailedCount:      0,
-			Errors:           []*pb.BulkOperationError{},
+			Products:        []*pb.Product{},
+			SuccessfulCount: 0,
+			FailedCount:     0,
+			Errors:          []*pb.BulkOperationError{},
 		}, nil
 	}
 

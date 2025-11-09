@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -143,8 +145,27 @@ func (tr *TestRedis) TeardownTestRedis(t *testing.T) {
 }
 
 // LoadTestFixtures loads test data from SQL file
+// Automatically loads categories fixture first if needed
 func LoadTestFixtures(t *testing.T, db *sql.DB, fixtureFile string) {
 	t.Helper()
+
+	// Auto-load categories fixture if not already loaded and not loading categories itself
+	if !strings.Contains(fixtureFile, "00_categories_fixtures.sql") {
+		categoriesFile := filepath.Join(filepath.Dir(fixtureFile), "00_categories_fixtures.sql")
+		if _, err := os.Stat(categoriesFile); err == nil {
+			// Check if categories already loaded (avoid duplicate load)
+			var count int
+			err := db.QueryRow("SELECT COUNT(*) FROM c2c_categories WHERE id = 1301").Scan(&count)
+			if err != nil || count == 0 {
+				// Load categories fixture
+				catData, err := os.ReadFile(categoriesFile)
+				if err == nil {
+					_, _ = db.Exec(string(catData))
+					t.Logf("Auto-loaded categories fixture: %s", categoriesFile)
+				}
+			}
+		}
+	}
 
 	data, err := os.ReadFile(fixtureFile)
 	require.NoError(t, err, "Could not read fixture file: %s", fixtureFile)

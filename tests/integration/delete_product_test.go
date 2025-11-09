@@ -80,7 +80,7 @@ func TestDeleteProduct_SoftDelete(t *testing.T) {
 
 	// Verify deleted_at is set in database
 	var deletedAt *string
-	err = testDB.DB.QueryRow("SELECT deleted_at FROM b2c_products WHERE id = $1", 9101).Scan(&deletedAt)
+	err = testDB.DB.QueryRow("SELECT deleted_at FROM listings WHERE id = $1 AND source_type = 'b2c'", 9101).Scan(&deletedAt)
 	require.NoError(t, err, "Should query deleted_at")
 	assert.NotNil(t, deletedAt, "deleted_at should be set")
 	assert.NotEmpty(t, *deletedAt, "deleted_at should not be empty")
@@ -111,7 +111,7 @@ func TestDeleteProduct_WithVariants(t *testing.T) {
 
 	// Verify variants are also deleted
 	var variantCount int
-	err = testDB.DB.QueryRow("SELECT COUNT(*) FROM b2c_product_variants WHERE product_id = $1", 9102).Scan(&variantCount)
+	err = testDB.DB.QueryRow("SELECT COUNT(*) FROM product_variants WHERE listing_id = $1", 9102).Scan(&variantCount)
 	require.NoError(t, err, "Should query variant count")
 	assert.Equal(t, 0, variantCount, "All variants should be deleted (CASCADE)")
 }
@@ -247,7 +247,7 @@ func TestBulkDeleteProducts_Success(t *testing.T) {
 	// Verify all products are deleted
 	for _, id := range req.ProductIds {
 		var count int
-		err := testDB.DB.QueryRow("SELECT COUNT(*) FROM b2c_products WHERE id = $1", id).Scan(&count)
+		err := testDB.DB.QueryRow("SELECT COUNT(*) FROM listings WHERE id = $1 AND source_type = 'b2c'", id).Scan(&count)
 		require.NoError(t, err)
 		assert.Equal(t, 0, count, "Product %d should be deleted", id)
 	}
@@ -314,7 +314,7 @@ func TestBulkDeleteProducts_LargeBatch(t *testing.T) {
 
 	// Verify products are deleted
 	var remainingCount int
-	err = testDB.DB.QueryRow("SELECT COUNT(*) FROM b2c_products WHERE id BETWEEN 9150 AND 9249").Scan(&remainingCount)
+	err = testDB.DB.QueryRow("SELECT COUNT(*) FROM listings WHERE id BETWEEN 9150 AND 9249 AND source_type = 'b2c'").Scan(&remainingCount)
 	require.NoError(t, err)
 	assert.Equal(t, 0, remainingCount, "All 100 products should be deleted")
 }
