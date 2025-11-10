@@ -212,6 +212,45 @@ ON CONFLICT (id) DO NOTHING;
 -- Product Variants for Variant-Level Tests
 -- ============================================================================
 
+-- Variants for Product 8004 (Product with variants)
+INSERT INTO b2c_product_variants (
+    id, product_id, sku, barcode,
+    price, compare_at_price, cost_price,
+    stock_quantity, stock_status, low_stock_threshold,
+    variant_attributes, weight, dimensions,
+    is_active, is_default, view_count, sold_count,
+    created_at, updated_at
+)
+VALUES
+    -- Size S (ID 9000)
+    (
+        9000, 8004, 'TEST-VARIANT-S', 'BAR-9000',
+        15.00, 20.00, 10.00,
+        50, 'in_stock', 5,
+        '{"size": "S", "color": "blue"}'::jsonb, 0.5, '{"length": 10, "width": 10, "height": 5}'::jsonb,
+        true, false, 0, 0,
+        NOW(), NOW()
+    ),
+    -- Size M (ID 9001)
+    (
+        9001, 8004, 'TEST-VARIANT-M', 'BAR-9001',
+        15.00, 20.00, 10.00,
+        75, 'in_stock', 5,
+        '{"size": "M", "color": "blue"}'::jsonb, 0.5, '{"length": 10, "width": 10, "height": 5}'::jsonb,
+        true, true, 0, 0,
+        NOW(), NOW()
+    ),
+    -- Size L (ID 9002)
+    (
+        9002, 8004, 'TEST-VARIANT-L', 'BAR-9002',
+        15.00, 20.00, 10.00,
+        100, 'in_stock', 5,
+        '{"size": "L", "color": "blue"}'::jsonb, 0.5, '{"length": 10, "width": 10, "height": 5}'::jsonb,
+        true, false, 0, 0,
+        NOW(), NOW()
+    )
+ON CONFLICT (id) DO NOTHING;
+
 -- ============================================================================
 -- Cleanup old test data (in case of re-runs)
 -- ============================================================================

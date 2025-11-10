@@ -5,26 +5,14 @@
 -- ============================================================================
 -- Minimal Dependencies (Foreign Key References)
 -- ============================================================================
--- These tables don't exist in microservice migrations but are referenced by FKs
+-- IMPORTANT: Use c2c_categories table (created by migrations), NOT custom categories table
+-- The listings table has FK constraint to c2c_categories (not to categories)
 
 -- Create minimal users table (if not exists)
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(255),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Create minimal categories table (if not exists)
-CREATE TABLE IF NOT EXISTS categories (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) UNIQUE NOT NULL,
-    parent_id BIGINT REFERENCES categories(id),
-    level INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT true,
-    sort_order INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -40,18 +28,8 @@ VALUES
     (1102, 'edge-test@example.com', 'edge_test_user', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
--- Insert test categories (only if not exist)
-INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order, created_at, updated_at)
-VALUES
-    (1, 'Electronics', 'electronics', NULL, 0, true, 1, NOW(), NOW()),
-    (2, 'Laptops', 'laptops', 1, 1, true, 1, NOW(), NOW()),
-    (3, 'Phones', 'phones', 1, 1, true, 2, NOW(), NOW()),
-    (4, 'Clothing', 'clothing', NULL, 0, true, 2, NOW(), NOW()),
-    (5, 'Shoes', 'shoes', 4, 1, true, 1, NOW(), NOW()),
-    (1301, 'Test Category 1301', 'test-category-1301', NULL, 0, true, 1, NOW(), NOW()),
-    (1302, 'Test Category 1302', 'test-category-1302', NULL, 0, true, 2, NOW(), NOW()),
-    (1303, 'Test Category 1303', 'test-category-1303', NULL, 0, true, 3, NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+-- NOTE: Basic categories (1300+) are loaded from 00_categories_fixtures.sql
+-- We only add CreateProduct-specific categories here (2100+)
 
 -- ============================================================================
 -- Test Storefronts
@@ -67,22 +45,22 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================================================
 -- Additional Test Categories (CreateProduct specific)
 -- ============================================================================
--- Top-level categories
-INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order, created_at, updated_at)
+-- Top-level categories (inserted into c2c_categories)
+INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES
-    (2100, 'Electronics Test', 'electronics-test', NULL, 0, true, 1, NOW(), NOW()),
-    (2101, 'Clothing Test', 'clothing-test', NULL, 0, true, 2, NOW(), NOW()),
-    (2102, 'Books Test', 'books-test', NULL, 0, true, 3, NOW(), NOW())
+    (2100, 'Electronics Test', 'electronics-test', NULL, 0, true, 1),
+    (2101, 'Clothing Test', 'clothing-test', NULL, 0, true, 2),
+    (2102, 'Books Test', 'books-test', NULL, 0, true, 3)
 ON CONFLICT (id) DO NOTHING;
 
--- Sub-categories
-INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order, created_at, updated_at)
+-- Sub-categories (inserted into c2c_categories)
+INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES
-    (2110, 'Smartphones', 'smartphones-test', 2100, 1, true, 1, NOW(), NOW()),
-    (2111, 'Laptops', 'laptops-test', 2100, 1, true, 2, NOW(), NOW()),
-    (2120, 'T-Shirts', 'tshirts-test', 2101, 1, true, 1, NOW(), NOW()),
-    (2121, 'Jeans', 'jeans-test', 2101, 1, true, 2, NOW(), NOW()),
-    (2130, 'Fiction', 'fiction-test', 2102, 1, true, 1, NOW(), NOW())
+    (2110, 'Smartphones', 'smartphones-test', 2100, 1, true, 1),
+    (2111, 'Laptops', 'laptops-test', 2100, 1, true, 2),
+    (2120, 'T-Shirts', 'tshirts-test', 2101, 1, true, 1),
+    (2121, 'Jeans', 'jeans-test', 2101, 1, true, 2),
+    (2130, 'Fiction', 'fiction-test', 2102, 1, true, 1)
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================================
@@ -163,7 +141,7 @@ COMMENT ON TABLE storefronts IS 'Test storefronts with capacity for bulk product
 -- To clean up test data, run:
 -- DELETE FROM listing_variants WHERE listing_id >= 7000 AND listing_id < 8000;
 -- DELETE FROM listings WHERE id >= 7000 AND id < 8000;
--- DELETE FROM categories WHERE id >= 2100 AND id < 2200;
+-- DELETE FROM c2c_categories WHERE id >= 2100 AND id < 2200;
 -- DELETE FROM storefronts WHERE id >= 1100 AND id < 1200;
 -- DELETE FROM users WHERE id >= 1100 AND id < 1200;
 
@@ -171,6 +149,6 @@ COMMENT ON TABLE storefronts IS 'Test storefronts with capacity for bulk product
 -- Verification Queries (for debugging)
 -- ============================================================================
 -- SELECT COUNT(*) FROM storefronts WHERE id >= 1100 AND id < 1200; -- Should return 3
--- SELECT COUNT(*) FROM categories WHERE id >= 2100 AND id < 2200; -- Should return 8
+-- SELECT COUNT(*) FROM c2c_categories WHERE id >= 2100 AND id < 2200; -- Should return 8
 -- SELECT COUNT(*) FROM listings WHERE id >= 7000 AND id < 8000; -- Should return 3
--- SELECT sku, COUNT(*) FROM listings WHERE id >= 7000 GROUP BY sku HAVING COUNT(*) > 1; -- Should return 0 (no duplicates within storefront)
+-- SELECT sku, COUNT(*) FROM listings WHERE id >= 7000 GROUP BY sku HAVING COUNT(*) > 1; -- Should return 0 (no duplicates)

@@ -1,0 +1,52 @@
+# Git (keep .git for version info in build)
+# .git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Go workspace (local development only)
+go.work
+go.work.sum
+
+# Test and coverage files
+*.test
+coverage.txt
+coverage.html
+*.cover
+
+# Temporary files
+tmp/
+*.tmp
+*.log
+
+# Environment files
+.env.local
+.env.*.local
+
+# Build artifacts (we build inside Docker)
+bin/
+dist/
+build/
+
+# Docker related
+docker-compose.yml
+.dockerignore
+Dockerfile*
+
+# Documentation
+README.md
+*.md
+docs/
+
+# CI/CD
+.github/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3

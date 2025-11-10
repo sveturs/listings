@@ -685,6 +685,7 @@ func ProtoToCreateProductInput(req *pb.CreateProductRequest) *domain.CreateProdu
 	// Location fields - bool fields are not optional in proto
 	input.HasIndividualLocation = req.HasIndividualLocation
 	input.ShowOnMap = req.ShowOnMap
+	input.HasVariants = req.HasVariants
 
 	if req.IndividualAddress != nil {
 		input.IndividualAddress = req.IndividualAddress

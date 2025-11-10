@@ -191,6 +191,7 @@ type CreateProductInput struct {
 	Barcode               *string                `json:"barcode,omitempty"`
 	StockQuantity         int32                  `json:"stock_quantity" validate:"gte=0"`
 	Attributes            map[string]interface{} `json:"attributes,omitempty"`
+	HasVariants           bool                   `json:"has_variants"`
 	HasIndividualLocation bool                   `json:"has_individual_location"`
 	IndividualAddress     *string                `json:"individual_address,omitempty"`
 	IndividualLatitude    *float64               `json:"individual_latitude,omitempty"`

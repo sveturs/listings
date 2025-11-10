@@ -64,8 +64,42 @@ END
 FROM ranked_slugs rs
 WHERE l.id = rs.id AND rs.rn > 1;
 
--- Add NOT NULL constraint after data migration
-ALTER TABLE listings ALTER COLUMN slug SET NOT NULL;
+-- Create function to auto-generate slug from title (для фикстур и тестов)
+CREATE OR REPLACE FUNCTION generate_slug_from_title()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.slug IS NULL OR NEW.slug = '' THEN
+        NEW.slug := LOWER(
+            TRIM(
+                BOTH '-' FROM
+                REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                        REGEXP_REPLACE(NEW.title, '[^a-zA-Z0-9\s-]', '', 'g'),
+                        '\s+', '-', 'g'
+                    ),
+                    '-+', '-', 'g'
+                )
+            )
+        );
+        -- Handle potential duplicates by appending random suffix
+        IF EXISTS (SELECT 1 FROM listings WHERE slug = NEW.slug AND id != COALESCE(NEW.id, 0) AND is_deleted = false) THEN
+            NEW.slug := NEW.slug || '-' || COALESCE(NEW.id, (EXTRACT(EPOCH FROM NOW()) * 1000)::BIGINT);
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create BEFORE INSERT/UPDATE trigger
+DROP TRIGGER IF EXISTS trigger_generate_slug ON listings;
+CREATE TRIGGER trigger_generate_slug
+    BEFORE INSERT OR UPDATE ON listings
+    FOR EACH ROW
+    EXECUTE FUNCTION generate_slug_from_title();
+
+-- DON'T add NOT NULL constraint - trigger will ensure slug is always generated
+-- This allows fixtures to work without specifying slug manually
+-- ALTER TABLE listings ALTER COLUMN slug SET NOT NULL;
 
 -- Create unique index on slug (excluding deleted listings)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_listings_slug

@@ -1387,7 +1387,13 @@ func TestDeleteListing_Success_SoftDelete(t *testing.T) {
 		Return(existingListing, nil)
 	mockRepo.On("DeleteListing", ctx, listingID).
 		Return(nil)
+	mockRepo.On("GetImages", ctx, listingID).
+		Return([]*domain.ListingImage{}, nil) // No images to delete
 	mockCache.On("Delete", ctx, "listing:1").
+		Return(nil)
+	mockCache.On("Delete", ctx, "favorites:listing:1:count").
+		Return(nil)
+	mockCache.On("Delete", ctx, "user:100:listings").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpDelete).
 		Return(nil)

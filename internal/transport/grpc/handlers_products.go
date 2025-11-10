@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -251,8 +252,8 @@ func (s *Server) CreateProduct(ctx context.Context, req *pb.CreateProductRequest
 		return nil, status.Error(codes.InvalidArgument, "product name cannot be empty")
 	}
 
-	if req.Price < 0 {
-		return nil, status.Error(codes.InvalidArgument, "price must be non-negative")
+	if req.Price <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "price must be greater than zero")
 	}
 
 	if req.Currency == "" {
@@ -279,6 +280,11 @@ func (s *Server) CreateProduct(ctx context.Context, req *pb.CreateProductRequest
 		errMsg := err.Error()
 		if errMsg == "products.sku_duplicate" {
 			return nil, status.Error(codes.AlreadyExists, "products.sku_duplicate")
+		}
+
+		// Check for FK constraint violations
+		if strings.Contains(errMsg, "fk_listings_category_id") {
+			return nil, status.Error(codes.NotFound, "products.invalid_category_id")
 		}
 
 		// Generic error
@@ -312,25 +318,10 @@ func (s *Server) BulkCreateProducts(ctx context.Context, req *pb.BulkCreateProdu
 		return nil, status.Error(codes.InvalidArgument, "products.bulk_too_large")
 	}
 
-	// Validate each product input
+	// Basic nil check only - detailed validation is done gracefully in repository
 	for i, productInput := range req.Products {
 		if productInput == nil {
 			return nil, status.Errorf(codes.InvalidArgument, "product at index %d is nil", i)
-		}
-		if productInput.Name == "" {
-			return nil, status.Errorf(codes.InvalidArgument, "product name at index %d cannot be empty", i)
-		}
-		if productInput.Price < 0 {
-			return nil, status.Errorf(codes.InvalidArgument, "price at index %d must be non-negative", i)
-		}
-		if productInput.Currency == "" {
-			return nil, status.Errorf(codes.InvalidArgument, "currency at index %d cannot be empty", i)
-		}
-		if productInput.CategoryId <= 0 {
-			return nil, status.Errorf(codes.InvalidArgument, "category ID at index %d must be greater than 0", i)
-		}
-		if productInput.StockQuantity < 0 {
-			return nil, status.Errorf(codes.InvalidArgument, "stock quantity at index %d must be non-negative", i)
 		}
 	}
 

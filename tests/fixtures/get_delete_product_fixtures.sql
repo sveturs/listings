@@ -272,6 +272,49 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================================
+-- Product Variants for GetProduct/DeleteProduct Tests
+-- ============================================================================
+
+-- Variants for Product 9001 (Test T-Shirt with sizes)
+INSERT INTO b2c_product_variants (
+    id, product_id, sku, barcode,
+    price, compare_at_price, cost_price,
+    stock_quantity, stock_status, low_stock_threshold,
+    variant_attributes, weight, dimensions,
+    is_active, is_default, view_count, sold_count,
+    created_at, updated_at
+)
+VALUES
+    -- Size S
+    (
+        9101, 9001, 'TEST-TSHIRT-S', 'BAR-TSHIRT-S',
+        29.99, 35.00, 15.00,
+        30, 'in_stock', 5,
+        '{"size": "S", "color": "white"}'::jsonb, 0.2, '{"length": 30, "width": 20, "height": 2}'::jsonb,
+        true, false, 0, 0,
+        NOW(), NOW()
+    ),
+    -- Size M
+    (
+        9102, 9001, 'TEST-TSHIRT-M', 'BAR-TSHIRT-M',
+        29.99, 35.00, 15.00,
+        40, 'in_stock', 5,
+        '{"size": "M", "color": "white"}'::jsonb, 0.2, '{"length": 30, "width": 20, "height": 2}'::jsonb,
+        true, true, 0, 0,
+        NOW(), NOW()
+    ),
+    -- Size L
+    (
+        9103, 9001, 'TEST-TSHIRT-L', 'BAR-TSHIRT-L',
+        29.99, 35.00, 15.00,
+        30, 'in_stock', 5,
+        '{"size": "L", "color": "white"}'::jsonb, 0.2, '{"length": 30, "width": 20, "height": 2}'::jsonb,
+        true, false, 0, 0,
+        NOW(), NOW()
+    )
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
 -- Verification Queries (for manual testing - commented out)
 -- ============================================================================
 

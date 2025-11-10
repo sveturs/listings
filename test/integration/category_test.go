@@ -228,14 +228,41 @@ func TestListCategories(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert categories with different listing counts
+		// Setup: Insert categories
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active)
 			VALUES
-				(30, 'Popular 1', 'popular-1', NULL, 1, 0, true, 100),
-				(31, 'Popular 2', 'popular-2', NULL, 2, 0, true, 80),
-				(32, 'Popular 3', 'popular-3', NULL, 3, 0, true, 60),
-				(33, 'Less Popular', 'less-popular', NULL, 4, 0, true, 5)
+				(30, 'Popular 1', 'popular-1', NULL, 1, 0, true),
+				(31, 'Popular 2', 'popular-2', NULL, 2, 0, true),
+				(32, 'Popular 3', 'popular-3', NULL, 3, 0, true),
+				(33, 'Less Popular', 'less-popular', NULL, 4, 0, true)
+		`)
+
+		// Create listings for each category to simulate popularity
+		// Popular 1: 10 listings, Popular 2: 8 listings, Popular 3: 6 listings, Less Popular: 1 listing
+		ExecuteSQL(t, server, `
+			-- Create storefront
+			INSERT INTO storefronts (id, name, slug, user_id, is_active, created_at, updated_at)
+			VALUES (1, 'Test Store', 'test-store', 1, true, NOW(), NOW());
+
+			-- Popular 1: 10 listings
+			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
+			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 30, 1, 1, 'c2c', NOW(), NOW()
+			FROM generate_series(1, 10) AS i;
+
+			-- Popular 2: 8 listings
+			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
+			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 31, 1, 1, 'c2c', NOW(), NOW()
+			FROM generate_series(1, 8) AS i;
+
+			-- Popular 3: 6 listings
+			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
+			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 32, 1, 1, 'c2c', NOW(), NOW()
+			FROM generate_series(1, 6) AS i;
+
+			-- Less Popular: 1 listing
+			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
+			VALUES ('Listing 1', 'Description', 100.00, 'RSD', 'active', 33, 1, 1, 'c2c', NOW(), NOW());
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -259,8 +286,19 @@ func TestListCategories(t *testing.T) {
 
 		// Verify most popular categories included
 		if len(resp.Categories) > 0 {
-			assert.Contains(t, []string{"Popular 1", "Popular 2", "Popular 3"},
-				resp.Categories[0].Name)
+			// Extract category names from response
+			names := make([]string, len(resp.Categories))
+			for i, cat := range resp.Categories {
+				names[i] = cat.Name
+			}
+			// Verify all returned categories are from the popular ones
+			for _, name := range names {
+				assert.Contains(t, []string{"Popular 1", "Popular 2", "Popular 3"}, name,
+					"Returned categories should be the most popular ones")
+			}
+			// Verify "Less Popular" is NOT in the results (limit is 3)
+			assert.NotContains(t, names, "Less Popular",
+				"Less popular category should not be in top 3 results")
 		}
 	})
 

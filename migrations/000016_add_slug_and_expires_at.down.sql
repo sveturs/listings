@@ -7,6 +7,10 @@ DROP INDEX IF EXISTS idx_listings_expires_at;
 DROP INDEX IF EXISTS idx_listings_slug_all;
 DROP INDEX IF EXISTS idx_listings_slug;
 
+-- Drop trigger and function
+DROP TRIGGER IF EXISTS trigger_generate_slug ON listings;
+DROP FUNCTION IF EXISTS generate_slug_from_title();
+
 -- Remove columns
 ALTER TABLE listings DROP COLUMN IF EXISTS expires_at;
 ALTER TABLE listings DROP COLUMN IF EXISTS slug;

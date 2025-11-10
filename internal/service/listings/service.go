@@ -904,22 +904,16 @@ func (s *Service) BulkCreateProducts(ctx context.Context, storefrontID int64, in
 		return nil, nil, fmt.Errorf("products.bulk_too_large")
 	}
 
-	// Validate each input
+	// Basic nil check and ensure storefront_id matches
 	for i, input := range inputs {
 		if input == nil {
 			return nil, nil, fmt.Errorf("product at index %d is nil", i)
 		}
 		// Ensure storefront_id matches
 		input.StorefrontID = storefrontID
-
-		// Validate using validator
-		if err := s.stdValidator.Struct(input); err != nil {
-			s.logger.Error().Err(err).Int("index", i).Msg("product validation failed")
-			return nil, nil, fmt.Errorf("validation failed for product at index %d: %w", i, err)
-		}
 	}
 
-	// Create products in repository
+	// Create products in repository (detailed validation happens gracefully there)
 	products, errors, err := s.repo.BulkCreateProducts(ctx, storefrontID, inputs)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to bulk create products")

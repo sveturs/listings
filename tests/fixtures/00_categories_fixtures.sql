@@ -38,6 +38,12 @@ VALUES (1500, 'Automotive', 'automotive', NULL, 0, TRUE, 3);
 INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES (1501, 'Car Parts', 'car-parts', 1500, 1, TRUE, 1);
 
+-- Additional test categories for inventory/stock tests
+INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+VALUES
+    (2000, 'Test Category 2000', 'test-category-2000', NULL, 0, TRUE, 10),
+    (2001, 'Test Category 2001', 'test-category-2001', NULL, 0, TRUE, 11);
+
 COMMIT;
 
 -- Verification query (for manual testing):

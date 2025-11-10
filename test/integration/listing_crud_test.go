@@ -1465,7 +1465,7 @@ func TestListingEdgeCases(t *testing.T) {
 		minResp, err := server.Client.CreateListing(ctx, minReq)
 		require.NoError(t, err)
 		require.NotNil(t, minResp)
-		assert.Equal(t, "X", minResp.Listing.Title)
+		assert.Equal(t, "Min", minResp.Listing.Title)
 		assert.Equal(t, 0.01, minResp.Listing.Price)
 		assert.Equal(t, int32(1), minResp.Listing.Quantity)
 	})

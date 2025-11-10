@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	authclient "github.com/sveturs/auth/pkg/http/client"
 	authservice "github.com/sveturs/auth/pkg/service"
 	liblogger "github.com/sveturs/lib/logger"
 	"google.golang.org/grpc"
@@ -71,8 +70,8 @@ func main() {
 		Str("env", cfg.App.Env).
 		Msg("Starting Listings Service")
 
-	// Create lib/logger adapter for auth service integration
-	liblogger.Init(cfg.App.Env, cfg.App.LogLevel, Version, true, false)
+	// Initialize lib/logger for auth service integration
+	liblogger.Init(cfg.App.Env, cfg.App.LogLevel, Version, false, false)
 	logger := liblogger.Get()
 
 	// Initialize metrics
@@ -159,23 +158,19 @@ func main() {
 	// Initialize Auth Service client (if enabled)
 	var authInterceptor *middleware.AuthInterceptor
 	if cfg.Auth.Enabled {
-		authHTTPClient, err := authclient.NewClientWithResponses(
-			cfg.Auth.ServiceURL,
-			authclient.WithHTTPClient(&http.Client{
-				Timeout: cfg.Auth.Timeout,
-			}),
-		)
-		if err != nil {
-			logger.Fatal().Err(err).Msg("failed to create auth service client")
+		authServiceConfig := &authservice.Config{
+			HTTPURL: cfg.Auth.ServiceURL,
+			Timeout: cfg.Auth.Timeout,
 		}
 
-		// Auth service expects github.com/sveturs/lib/logger.Logger interface
-		// We already initialized it above with liblogger.Init() and liblogger.Get()
-		authSvc := authservice.NewAuthServiceWithLocalValidation(authHTTPClient, logger)
+		authSvc, err := authservice.NewAuthService(authServiceConfig)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("failed to create auth service")
+		}
+
 		logger.Info().
 			Str("url", cfg.Auth.ServiceURL).
-			Str("public_key", cfg.Auth.PublicKeyPath).
-			Msg("Auth service initialized with local JWT validation")
+			Msg("Auth service initialized")
 
 		authInterceptor = middleware.NewAuthInterceptor(*authSvc, zerologLogger)
 	} else {

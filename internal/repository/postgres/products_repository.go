@@ -718,6 +718,7 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 	isActive := true
 	showOnMap := input.ShowOnMap
 	hasIndividualLocation := input.HasIndividualLocation
+	hasVariants := input.HasVariants
 
 	// Determine status based on isActive
 	var status string
@@ -740,7 +741,7 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 			$1, $2, $3, $4, $5, $6, $7,
 			$8, $9, $10, $11, 'b2c',
 			$12, 0, 0,
-			$13, $14, $15, $16, $17, $18, false
+			$13, $14, $15, $16, $17, $18, $19
 		)
 		RETURNING
 			id, storefront_id, title, description, price, currency,
@@ -781,6 +782,7 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 		input.IndividualLongitude, // $16 - individual_longitude
 		input.LocationPrivacy,     // $17 - location_privacy
 		showOnMap,                 // $18 - show_on_map
+		hasVariants,               // $19 - has_variants
 	).Scan(
 		&product.ID,
 		&product.StorefrontID,
@@ -1240,13 +1242,25 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 
 	// Collect all SKUs for uniqueness validation
 	var skusToCheck []string
-	for _, input := range inputs {
+	skuToIndices := make(map[string][]int) // Track which indices have each SKU
+	for i, input := range inputs {
 		if input.SKU != nil && *input.SKU != "" {
 			skusToCheck = append(skusToCheck, *input.SKU)
+			skuToIndices[*input.SKU] = append(skuToIndices[*input.SKU], i)
+		}
+	}
+
+	// Check for duplicate SKUs WITHIN the batch (first occurrence succeeds, rest fail)
+	var batchDuplicateSKUs []string
+	for sku, indices := range skuToIndices {
+		if len(indices) > 1 {
+			// This SKU appears multiple times in the batch
+			batchDuplicateSKUs = append(batchDuplicateSKUs, sku)
 		}
 	}
 
 	// Check for duplicate SKUs within storefront
+	var dbDuplicateSKUs map[string]bool
 	if len(skusToCheck) > 0 {
 		duplicateQuery := `
 			SELECT sku FROM listings
@@ -1259,37 +1273,75 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 		}
 		defer rows.Close()
 
-		duplicateSKUs := make(map[string]bool)
+		dbDuplicateSKUs = make(map[string]bool)
 		for rows.Next() {
 			var sku string
 			if err := rows.Scan(&sku); err != nil {
 				return nil, nil, fmt.Errorf("failed to scan duplicate SKU: %w", err)
 			}
-			duplicateSKUs[sku] = true
+			dbDuplicateSKUs[sku] = true
 		}
+	}
 
-		// If duplicates found, return errors for all items with duplicate SKUs
-		if len(duplicateSKUs) > 0 {
-			var errors []domain.BulkProductError
-			for idx, input := range inputs {
-				if input.SKU != nil && duplicateSKUs[*input.SKU] {
-					errors = append(errors, domain.BulkProductError{
-						Index:        int32(idx),
-						ErrorCode:    "products.sku_duplicate",
-						ErrorMessage: fmt.Sprintf("SKU %s already exists in storefront", *input.SKU),
-					})
-				}
+	// Track which indices should be rejected due to duplicates
+	rejectedIndices := make(map[int]bool)
+
+	// Mark batch duplicates (all but first) as rejected
+	for _, sku := range batchDuplicateSKUs {
+		indices := skuToIndices[sku]
+		for i := 1; i < len(indices); i++ { // Skip first occurrence
+			rejectedIndices[indices[i]] = true
+		}
+	}
+
+	// Check if first occurrences of batch-duplicated SKUs also exist in DB
+	var errors []domain.BulkProductError
+	for _, sku := range batchDuplicateSKUs {
+		if len(skuToIndices[sku]) > 0 && dbDuplicateSKUs[sku] {
+			// Even the first occurrence is a duplicate in DB
+			rejectedIndices[skuToIndices[sku][0]] = true
+		}
+	}
+
+	// Also check for SKUs that exist in DB (but not duplicate in batch)
+	if dbDuplicateSKUs != nil {
+		for idx, input := range inputs {
+			if input.SKU != nil && dbDuplicateSKUs[*input.SKU] && !rejectedIndices[idx] {
+				rejectedIndices[idx] = true
 			}
-			return nil, errors, fmt.Errorf("products.sku_duplicate")
 		}
 	}
 
 	// Prepare batch insert using VALUES clause
 	var createdProducts []*domain.Product
-	var errors []domain.BulkProductError
+	errors = nil // Initialize errors slice
+
+	// Build error entries for rejected indices
+	for idx, input := range inputs {
+		if rejectedIndices[idx] {
+			if input.SKU != nil && dbDuplicateSKUs[*input.SKU] {
+				errors = append(errors, domain.BulkProductError{
+					Index:        int32(idx),
+					ErrorCode:    "products.sku_duplicate",
+					ErrorMessage: fmt.Sprintf("SKU %s already exists in storefront", *input.SKU),
+				})
+			} else if input.SKU != nil {
+				errors = append(errors, domain.BulkProductError{
+					Index:        int32(idx),
+					ErrorCode:    "products.sku_duplicate",
+					ErrorMessage: fmt.Sprintf("Duplicate SKU %s within batch", *input.SKU),
+				})
+			}
+		}
+	}
 
 	// Insert products one by one (can be optimized later with true batch INSERT)
 	for idx, input := range inputs {
+		// Skip rejected indices
+		if rejectedIndices[idx] {
+			continue
+		}
+
 		// Validate individual input
 		if input.Name == "" {
 			errors = append(errors, domain.BulkProductError{

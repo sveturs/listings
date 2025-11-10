@@ -9,17 +9,18 @@ VALUES
     (1001, 1001, 'Test Inventory Storefront 2', 'test-inventory-store-2', 'Another test storefront', true, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
--- Test products (b2b listings) for inventory operations
+-- Test products (b2c listings) for inventory operations
 INSERT INTO listings (
-    id, uuid, user_id, storefront_id, title, description,
-    price, currency, category_id, status,
-    quantity, sku, is_b2c, created_at, updated_at
+    id, user_id, storefront_id, title, description,
+    price, currency, category_id,
+    sku, quantity, status,
+    source_type,
+    created_at, updated_at
 )
 VALUES
     -- Product with sufficient stock
     (
         5000,
-        gen_random_uuid(),
         1000,
         1000,
         'Test Product - Sufficient Stock',
@@ -27,17 +28,16 @@ VALUES
         100.00,
         'USD',
         2000,
-        'active',
-        100,
         'TEST-STOCK-001',
-        false, -- B2B listing
+        100,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     ),
     -- Product with low stock
     (
         5001,
-        gen_random_uuid(),
         1000,
         1000,
         'Test Product - Low Stock',
@@ -45,17 +45,16 @@ VALUES
         50.00,
         'USD',
         2000,
-        'active',
-        5,
         'TEST-STOCK-002',
-        false,
+        5,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     ),
     -- Product out of stock
     (
         5002,
-        gen_random_uuid(),
         1000,
         1000,
         'Test Product - Out of Stock',
@@ -63,17 +62,16 @@ VALUES
         75.00,
         'USD',
         2000,
-        'active',
-        0,
         'TEST-STOCK-003',
-        false,
+        0,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     ),
     -- Product for batch update test
     (
         5003,
-        gen_random_uuid(),
         1000,
         1000,
         'Test Product - Batch Update 1',
@@ -81,16 +79,15 @@ VALUES
         25.00,
         'USD',
         2001,
-        'active',
-        50,
         'TEST-BATCH-001',
-        false,
+        50,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     ),
     (
         5004,
-        gen_random_uuid(),
         1000,
         1000,
         'Test Product - Batch Update 2',
@@ -98,17 +95,16 @@ VALUES
         30.00,
         'USD',
         2001,
-        'active',
-        75,
         'TEST-BATCH-002',
-        false,
+        75,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     ),
     -- Product for stats testing (inactive)
     (
         5005,
-        gen_random_uuid(),
         1000,
         1000,
         'Test Product - Inactive',
@@ -116,17 +112,16 @@ VALUES
         40.00,
         'USD',
         2000,
-        'inactive',
-        20,
         'TEST-INACTIVE-001',
-        false,
+        20,
+        'inactive',
+        'b2c',
         NOW(),
         NOW()
     ),
     -- Product for view count testing
     (
         5006,
-        gen_random_uuid(),
         1000,
         1000,
         'Test Product - View Counter',
@@ -134,17 +129,16 @@ VALUES
         60.00,
         'USD',
         2000,
-        'active',
-        30,
         'TEST-VIEW-001',
-        false,
+        30,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     ),
     -- Product in second storefront
     (
         5007,
-        gen_random_uuid(),
         1001,
         1001,
         'Test Product - Storefront 2',
@@ -152,10 +146,10 @@ VALUES
         80.00,
         'EUR',
         2000,
-        'active',
-        40,
         'TEST-STORE2-001',
-        false,
+        40,
+        'active',
+        'b2c',
         NOW(),
         NOW()
     )
