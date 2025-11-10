@@ -12,12 +12,12 @@ import (
 
 // TestGetAllProviders tests retrieving all providers for admin
 func (suite *StorageTestSuite) TestGetAllProviders() {
-	// Добавляем еще провайдеров
+	// Добавляем еще провайдеров с явным указанием id > 1 (т.к. id=1 уже занят в insertTestData)
 	_, err := suite.db.ExecContext(suite.ctx, `
-		INSERT INTO delivery_providers (code, name, is_active)
+		INSERT INTO delivery_providers (id, code, name, is_active)
 		VALUES
-			('bex_express', 'BEX Express', true),
-			('aks_express', 'AKS Express', false)
+			(2, 'bex_express', 'BEX Express', true),
+			(3, 'aks_express', 'AKS Express', false)
 	`)
 	require.NoError(suite.T(), err)
 

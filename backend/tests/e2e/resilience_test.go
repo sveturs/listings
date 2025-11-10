@@ -26,8 +26,22 @@ const (
 	testJWTToken   = "" // Set from /tmp/token if needed
 )
 
+// checkMockServiceAvailable checks if mock service is running
+func checkMockServiceAvailable(t *testing.T) {
+	client := &http.Client{Timeout: 1 * time.Second}
+	resp, err := client.Get(mockServiceURL + "/health")
+	if err != nil || (resp != nil && resp.StatusCode != http.StatusOK) {
+		t.Skip("Skipping test: mock service not available at " + mockServiceURL)
+	}
+	if resp != nil {
+		_ = resp.Body.Close()
+	}
+}
+
 // TestSlowMicroserviceTimeout verifies timeout fallback to monolith
 func TestSlowMicroserviceTimeout(t *testing.T) {
+	checkMockServiceAvailable(t)
+
 	// Setup: Configure mock service to respond slowly (1s delay)
 	err := configureMockService(map[string]interface{}{
 		"mode":  "slow",
@@ -55,6 +69,8 @@ func TestSlowMicroserviceTimeout(t *testing.T) {
 
 // TestFailingMicroserviceCircuitBreaker verifies circuit breaker opens
 func TestFailingMicroserviceCircuitBreaker(t *testing.T) {
+	checkMockServiceAvailable(t)
+
 	// Setup: Configure mock service to return errors
 	err := configureMockService(map[string]interface{}{
 		"mode": "error",
@@ -94,6 +110,8 @@ func TestFailingMicroserviceCircuitBreaker(t *testing.T) {
 
 // TestMicroserviceRecovery verifies circuit breaker recovery
 func TestMicroserviceRecovery(t *testing.T) {
+	checkMockServiceAvailable(t)
+
 	// Skip if not running full e2e suite
 	if testing.Short() {
 		t.Skip("Skipping recovery test in short mode")
@@ -148,6 +166,8 @@ func TestMicroserviceRecovery(t *testing.T) {
 
 // TestMixedLoadPartialDegradation verifies partial traffic handling
 func TestMixedLoadPartialDegradation(t *testing.T) {
+	checkMockServiceAvailable(t)
+
 	// Setup: Configure mock to fail 50% of requests
 	err := configureMockService(map[string]interface{}{
 		"mode":         "partial",
@@ -195,6 +215,8 @@ func TestMixedLoadPartialDegradation(t *testing.T) {
 
 // TestCascadingFailurePrevention verifies circuit breakers prevent cascade
 func TestCascadingFailurePrevention(t *testing.T) {
+	checkMockServiceAvailable(t)
+
 	// Setup: Multiple failing services
 	// (For this test, we only have one microservice, but concept is same)
 
@@ -237,6 +259,8 @@ func TestCascadingFailurePrevention(t *testing.T) {
 
 // TestEndToEndLatency verifies overall system latency with resilience
 func TestEndToEndLatency(t *testing.T) {
+	checkMockServiceAvailable(t)
+
 	// Setup: Normal mode
 	err := configureMockService(map[string]interface{}{
 		"mode": "normal",

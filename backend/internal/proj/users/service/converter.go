@@ -4,7 +4,7 @@ package service
 import (
 	"backend/internal/domain/models"
 
-	"github.com/sveturs/auth/pkg/http/entity"
+	"github.com/sveturs/auth/pkg/entity"
 )
 
 // ToEntityUpdateProfile converts models.UserProfileUpdate to entity.UpdateProfileRequest

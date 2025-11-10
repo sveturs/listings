@@ -269,7 +269,7 @@ func (s *Storage) AssignProblem(ctx context.Context, problemID, adminID int) err
 		SET provider_response = jsonb_set(
 			COALESCE(provider_response, '{}'::jsonb),
 			'{assigned_to}',
-			to_jsonb($2::text)
+			to_jsonb($2)
 		),
 		updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1
@@ -286,7 +286,7 @@ func (s *Storage) ResolveProblem(ctx context.Context, problemID int, resolution 
 		    provider_response = jsonb_set(
 			    COALESCE(provider_response, '{}'::jsonb),
 			    '{resolution}',
-			    to_jsonb($2::text)
+			    to_jsonb($2)
 		    ),
 		    updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1

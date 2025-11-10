@@ -60,23 +60,73 @@ type RoutingDecision struct {
 
 // ShouldUseMicroservice определяет, должен ли запрос идти на microservice
 //
-// DEV MODE: Always returns UseMicroservice=true
-// In production, this would contain canary release logic with:
-// - Feature flags
-// - Admin override
-// - Canary users
-// - Consistent hashing for gradual rollout
-//
-// Current implementation: 100% microservice traffic for dev environment
+// Реализует canary release логику с приоритетами:
+// 1. Feature flag (UseMicroservice) - главный выключатель
+// 2. Admin override - админы всегда идут на microservice (если включено)
+// 3. Canary users - специальные пользователи для тестирования
+// 4. Consistent hashing - постепенный rollout по проценту
 func (r *TrafficRouter) ShouldUseMicroservice(userID string, isAdmin bool) *RoutingDecision {
-	// DEV MODE: Always use microservice
 	decision := &RoutingDecision{
-		UseMicroservice: true, // Always true in dev
+		UseMicroservice: false,
 		UserID:          userID,
 		IsAdmin:         isAdmin,
 		IsCanary:        false,
 		Hash:            0,
-		Reason:          "dev_mode_always_microservice",
+		Reason:          "",
+	}
+
+	// 1. Проверка feature flag
+	if !r.config.UseMicroservice {
+		decision.Reason = "feature_flag_disabled"
+		r.logDecision(decision)
+		return decision
+	}
+
+	// 2. Admin override (высший приоритет после feature flag)
+	if isAdmin && r.config.AdminOverride {
+		decision.UseMicroservice = true
+		decision.Reason = "admin_override"
+		r.logDecision(decision)
+		return decision
+	}
+
+	// 3. Canary users (приоритет над rollout percent)
+	if r.isCanaryUser(userID) {
+		decision.UseMicroservice = true
+		decision.IsCanary = true
+		decision.Reason = "canary_user"
+		r.logDecision(decision)
+		return decision
+	}
+
+	// 4. Rollout percent = 0 - никто не идет на microservice
+	if r.config.RolloutPercent == 0 {
+		decision.Reason = "rollout_zero_percent"
+		r.logDecision(decision)
+		return decision
+	}
+
+	// 5. Rollout percent = 100 - все идут на microservice
+	if r.config.RolloutPercent == 100 {
+		decision.UseMicroservice = true
+		decision.Reason = "rollout_100_percent"
+		r.logDecision(decision)
+		return decision
+	}
+
+	// 6. Consistent hashing для градуального rollout
+	hash := r.consistentHash(userID)
+	decision.Hash = hash
+
+	// Проверяем попадает ли пользователь в rollout percent
+	// hash % 100 дает равномерное распределение 0-99
+	// Если rollout_percent = 10, то попадают пользователи с hash % 100 < 10
+	hashPercent := hash % 100
+	if int(hashPercent) < r.config.RolloutPercent {
+		decision.UseMicroservice = true
+		decision.Reason = "rollout_percent"
+	} else {
+		decision.Reason = "rollout_not_in_percent"
 	}
 
 	r.logDecision(decision)
@@ -84,8 +134,6 @@ func (r *TrafficRouter) ShouldUseMicroservice(userID string, isAdmin bool) *Rout
 }
 
 // isCanaryUser проверяет, является ли пользователь canary user
-//
-//nolint:unused // Reserved for future canary release implementation
 func (r *TrafficRouter) isCanaryUser(userID string) bool {
 	if r.config.CanaryUserIDs == "" {
 		return false
@@ -108,8 +156,6 @@ func (r *TrafficRouter) isCanaryUser(userID string) bool {
 // - Cryptographically secure (no bias)
 // - Равномерное распределение
 // - Детерминированный (один userID → один hash)
-//
-//nolint:unused // Reserved for future gradual rollout implementation
 func (r *TrafficRouter) consistentHash(userID string) uint32 {
 	h := sha256.New()
 	h.Write([]byte(userID))

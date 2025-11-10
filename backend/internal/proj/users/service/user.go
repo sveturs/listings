@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sveturs/auth/pkg/http/entity"
-	authService "github.com/sveturs/auth/pkg/http/service"
+	"github.com/sveturs/auth/pkg/entity"
+	authService "github.com/sveturs/auth/pkg/service"
 
 	"backend/internal/domain/models"
 	"backend/internal/storage"

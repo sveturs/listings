@@ -11,8 +11,8 @@ import (
 
 	"github.com/rs/zerolog"
 	authClient "github.com/sveturs/auth/pkg/http/client"
-	authEntity "github.com/sveturs/auth/pkg/http/entity"
-	authService "github.com/sveturs/auth/pkg/http/service"
+	authEntity "github.com/sveturs/auth/pkg/entity"
+	authService "github.com/sveturs/auth/pkg/service"
 )
 
 func main() {
@@ -61,7 +61,7 @@ func main() {
 		log.Fatalf("❌ Не удалось создать Auth Service клиент: %v", err)
 	}
 
-	authSvc := authService.NewAuthService(client, logger)
+	authSvc := authService.NewAuthServiceWithLocalValidation(client, &logger)
 
 	// Выполняем логин
 	ctx := context.Background()

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	pb "backend/pkg/proto/listings/v1"
+	pb "github.com/sveturs/listings/api/proto/listings/v1"
 
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"

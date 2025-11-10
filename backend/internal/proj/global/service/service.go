@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	authService "github.com/sveturs/auth/pkg/http/service"
+	authService "github.com/sveturs/auth/pkg/service"
 
 	"backend/internal/config"
 	balance "backend/internal/proj/balance/service"

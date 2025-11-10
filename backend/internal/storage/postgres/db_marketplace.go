@@ -12,7 +12,7 @@ import (
 	"backend/internal/domain/search"
 
 	"github.com/jackc/pgx/v5"
-	authservice "github.com/sveturs/auth/pkg/http/service"
+	authservice "github.com/sveturs/auth/pkg/service"
 )
 
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {

@@ -148,9 +148,14 @@ func (s *Service) BatchUpdateProductAttributes(ctx context.Context, updates []Pr
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
+	// Флаг успешного коммита
+	committed := false
 	defer func() {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Error().Err(rollbackErr).Msg("Failed to rollback transaction")
+		if !committed {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				log.Error().Err(rollbackErr).Msg("Failed to rollback transaction")
+			}
 		}
 	}()
 
@@ -164,6 +169,7 @@ func (s *Service) BatchUpdateProductAttributes(ctx context.Context, updates []Pr
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	committed = true
 	return nil
 }
 

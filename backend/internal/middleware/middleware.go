@@ -13,7 +13,7 @@ import (
 	pkglogger "backend/pkg/logger"
 	"backend/pkg/utils"
 
-	authService "github.com/sveturs/auth/pkg/http/service"
+	authService "github.com/sveturs/auth/pkg/service"
 )
 
 type Middleware struct {

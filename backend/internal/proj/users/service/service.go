@@ -2,7 +2,7 @@
 package service
 
 import (
-	authService "github.com/sveturs/auth/pkg/http/service"
+	authService "github.com/sveturs/auth/pkg/service"
 
 	"backend/internal/storage"
 )

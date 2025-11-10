@@ -4,7 +4,7 @@ package service
 import (
 	"context"
 
-	authService "github.com/sveturs/auth/pkg/http/service"
+	authService "github.com/sveturs/auth/pkg/service"
 
 	"backend/internal/config"
 	balanceService "backend/internal/proj/balance/service"

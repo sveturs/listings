@@ -5,9 +5,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
-	"github.com/sveturs/auth/pkg/http/entity"
+	"github.com/sveturs/auth/pkg/entity"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
-	"github.com/sveturs/auth/pkg/http/service"
+	"github.com/sveturs/auth/pkg/service"
 
 	_ "backend/pkg/utils" // For Swagger documentation
 )

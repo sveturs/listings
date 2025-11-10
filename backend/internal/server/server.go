@@ -25,7 +25,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	authclient "github.com/sveturs/auth/pkg/http/client"
-	authService "github.com/sveturs/auth/pkg/http/service"
+	authService "github.com/sveturs/auth/pkg/service"
 
 	_ "backend/docs"
 	"backend/internal/cache"
@@ -163,7 +163,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	// Create auth service with local JWT validation (automatically fetches public key from auth service)
-	zerologLogger := *logger.Get()
+	zerologLogger := logger.Get()
 	authServiceInstance := authService.NewAuthServiceWithLocalValidation(authClient, zerologLogger)
 	logger.Info().
 		Str("auth_service_url", cfg.AuthServiceURL).
@@ -178,7 +178,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	configModule := configHandler.NewModule(cfg)
 	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
 
-	authHandler := userHandler.NewAuthHandler(authServiceInstance, oauthServiceInstance, cfg.BackendURL, cfg.FrontendURL, zerologLogger)
+	authHandler := userHandler.NewAuthHandler(authServiceInstance, oauthServiceInstance, cfg.BackendURL, cfg.FrontendURL, *zerologLogger)
 	jwtParserMW := authMiddleware.JWTParser(authServiceInstance)
 	usersHandler := userHandler.NewHandler(services, authHandler, jwtParserMW)
 
@@ -213,10 +213,10 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	testAdminEmail := os.Getenv("TEST_ADMIN_EMAIL")
 	testAdminPassword := os.Getenv("TEST_ADMIN_PASSWORD")
 	if testAdminEmail != "" && testAdminPassword != "" {
-		testStorage := testingStorage.NewStorage(db.GetSQLXDB(), zerologLogger)
-		testAuthMgr := testingService.NewTestAuthManager(cfg.BackendURL, testAdminEmail, testAdminPassword, zerologLogger)
-		testRunner := testingService.NewTestRunner(testStorage, testAuthMgr, cfg.BackendURL, zerologLogger)
-		adminTestingHandler = testingHandler.NewHandler(testRunner, jwtParserMW, zerologLogger)
+		testStorage := testingStorage.NewStorage(db.GetSQLXDB(), *zerologLogger)
+		testAuthMgr := testingService.NewTestAuthManager(cfg.BackendURL, testAdminEmail, testAdminPassword, *zerologLogger)
+		testRunner := testingService.NewTestRunner(testStorage, testAuthMgr, cfg.BackendURL, *zerologLogger)
+		adminTestingHandler = testingHandler.NewHandler(testRunner, jwtParserMW, *zerologLogger)
 		logger.Info().
 			Str("admin_email", testAdminEmail).
 			Str("backend_url", cfg.BackendURL).
@@ -267,7 +267,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	var listingsClient *listings.Client
 	if cfg.UseListingsMicroservice && cfg.ListingsGRPCURL != "" {
 		var err error
-		listingsClient, err = listings.NewClient(cfg.ListingsGRPCURL, zerologLogger)
+		listingsClient, err = listings.NewClient(cfg.ListingsGRPCURL, *zerologLogger)
 		if err != nil {
 			logger.Error().Err(err).Str("url", cfg.ListingsGRPCURL).Msg("Failed to create listings gRPC client, falling back to monolith")
 			listingsClient = nil // Fallback to monolith
@@ -292,7 +292,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	// TEMPORARY: Marketplace handler (minimal functionality until microservice migration)
-	marketplaceHandlerInstance := marketplaceHandler.NewHandler(db.GetSQLXDB(), services, jwtParserMW, zerologLogger, listingsClient, cfg.UseListingsMicroservice)
+	marketplaceHandlerInstance := marketplaceHandler.NewHandler(db.GetSQLXDB(), services, jwtParserMW, *zerologLogger, listingsClient, cfg.UseListingsMicroservice)
 
 	// Инициализация универсальных handlers
 	creditHandlerInstance := creditHandler.NewHandler()
