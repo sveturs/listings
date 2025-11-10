@@ -121,17 +121,17 @@ type MarketplaceCategory struct {
 type MarketplaceImage struct {
 	ID            int       `json:"id" db:"id"`
 	ListingID     int       `json:"listing_id" db:"listing_id"`
-	FilePath      string    `json:"file_path" db:"file_path"`                         // Путь к файлу в хранилище
-	FileName      string    `json:"file_name" db:"file_name"`                         // Оригинальное имя файла
-	FileSize      int       `json:"file_size" db:"file_size"`                         // Размер файла в байтах
-	ContentType   string    `json:"content_type" db:"content_type"`                   // MIME-тип файла
-	IsMain        bool      `json:"is_main" db:"is_main"`                             // Является ли изображение основным
-	StorageType   string    `json:"storage_type" db:"storage_type"`                   // Тип хранилища: "local" или "minio"
-	StorageBucket string    `json:"storage_bucket,omitempty" db:"storage_bucket"`     // Имя бакета для MinIO
-	PublicURL     string    `json:"public_url,omitempty" db:"public_url"`             // Публичный URL для доступа к файлу
-	ImageURL      string    `json:"image_url,omitempty" db:"-"`                       // URL изображения для API
-	ThumbnailURL  string    `json:"thumbnail_url,omitempty" db:"-"`                   // URL миниатюры для API
-	DisplayOrder  int       `json:"display_order" db:"-"`                             // Порядок отображения
+	FilePath      string    `json:"file_path" db:"file_path"`                     // Путь к файлу в хранилище
+	FileName      string    `json:"file_name" db:"file_name"`                     // Оригинальное имя файла
+	FileSize      int       `json:"file_size" db:"file_size"`                     // Размер файла в байтах
+	ContentType   string    `json:"content_type" db:"content_type"`               // MIME-тип файла
+	IsMain        bool      `json:"is_main" db:"is_main"`                         // Является ли изображение основным
+	StorageType   string    `json:"storage_type" db:"storage_type"`               // Тип хранилища: "local" или "minio"
+	StorageBucket string    `json:"storage_bucket,omitempty" db:"storage_bucket"` // Имя бакета для MinIO
+	PublicURL     string    `json:"public_url,omitempty" db:"public_url"`         // Публичный URL для доступа к файлу
+	ImageURL      string    `json:"image_url,omitempty" db:"-"`                   // URL изображения для API
+	ThumbnailURL  string    `json:"thumbnail_url,omitempty" db:"-"`               // URL миниатюры для API
+	DisplayOrder  int       `json:"display_order" db:"-"`                         // Порядок отображения
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 }
 

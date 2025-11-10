@@ -25,6 +25,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Get("/api/v1/b2c/:id/products", h.GetStorefrontProducts)
 
 	// Storefronts CRUD (защищенные)
+	// ВАЖНО: /storefronts/my должен быть ПЕРЕД /storefronts/:id чтобы не матчился как параметр
+	app.Get("/api/v1/marketplace/storefronts/my", h.jwtParserMW, authMiddleware.RequireAuth(), h.GetMyStorefronts)
 	app.Post("/api/v1/marketplace/storefronts", h.jwtParserMW, authMiddleware.RequireAuth(), h.CreateStorefront)
 
 	// Защищенные эндпоинты (требуют аутентификацию)

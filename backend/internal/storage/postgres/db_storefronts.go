@@ -22,12 +22,22 @@ func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *model
 		slug = generateSlug(dto.Name)
 	}
 
-	// Проверяем уникальность slug
-	var existingID int
-	err := db.pool.QueryRow(ctx, "SELECT id FROM b2c_stores WHERE slug = $1 LIMIT 1", slug).Scan(&existingID)
-	if err == nil {
-		// Slug уже существует, добавляем суффикс
-		slug = fmt.Sprintf("%s-%d", slug, time.Now().Unix()%10000)
+	// Если slug пустой после генерации (только кириллица), используем fallback
+	if slug == "" {
+		slug = fmt.Sprintf("store-%d", time.Now().Unix()%10000)
+	}
+
+	// Проверяем уникальность slug и добавляем суффикс если занят
+	originalSlug := slug
+	for attempt := 0; attempt < 5; attempt++ {
+		var existingID int
+		err := db.pool.QueryRow(ctx, "SELECT id FROM b2c_stores WHERE slug = $1 LIMIT 1", slug).Scan(&existingID)
+		if err != nil {
+			// Slug свободен
+			break
+		}
+		// Slug занят, пробуем с суффиксом
+		slug = fmt.Sprintf("%s-%d", originalSlug, time.Now().UnixNano()%10000+int64(attempt))
 	}
 
 	// Начинаем транзакцию
@@ -137,6 +147,10 @@ func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *model
 		settingsJSON, seoMetaJSON, themeJSON,
 	).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
 	if err != nil {
+		// Проверяем constraint violation (duplicate slug)
+		if strings.Contains(err.Error(), "b2c_stores_slug_unique") {
+			return nil, fmt.Errorf("storefront with this slug already exists, please try again")
+		}
 		return nil, fmt.Errorf("failed to insert storefront: %w", err)
 	}
 
@@ -222,7 +236,63 @@ func (db *Database) GetStorefrontOwnerByProductID(ctx context.Context, productID
 }
 
 func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]models.Storefront, error) {
-	return nil, fmt.Errorf("disabled")
+	query := `
+		SELECT
+			id, user_id, slug, name, description,
+			logo_url, banner_url, theme,
+			phone, email, website,
+			address, city, postal_code, country,
+			latitude, longitude,
+			settings, seo_meta,
+			is_active, is_verified, verification_date,
+			rating, reviews_count, products_count, sales_count, views_count,
+			subscription_plan, subscription_expires_at, commission_rate,
+			ai_agent_enabled, ai_agent_config,
+			live_shopping_enabled, group_buying_enabled,
+			created_at, updated_at,
+			formatted_address, geo_strategy, default_privacy_level, address_verified,
+			subscription_id, is_subscription_active, followers_count
+		FROM b2c_stores
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+	`
+
+	rows, err := db.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user storefronts: %w", err)
+	}
+	defer rows.Close()
+
+	var storefronts []models.Storefront
+	for rows.Next() {
+		var s models.Storefront
+		err := rows.Scan(
+			&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description,
+			&s.LogoURL, &s.BannerURL, &s.Theme,
+			&s.Phone, &s.Email, &s.Website,
+			&s.Address, &s.City, &s.PostalCode, &s.Country,
+			&s.Latitude, &s.Longitude,
+			&s.Settings, &s.SEOMeta,
+			&s.IsActive, &s.IsVerified, &s.VerificationDate,
+			&s.Rating, &s.ReviewsCount, &s.ProductsCount, &s.SalesCount, &s.ViewsCount,
+			&s.SubscriptionPlan, &s.SubscriptionExpiresAt, &s.CommissionRate,
+			&s.AIAgentEnabled, &s.AIAgentConfig,
+			&s.LiveShoppingEnabled, &s.GroupBuyingEnabled,
+			&s.CreatedAt, &s.UpdatedAt,
+			&s.FormattedAddress, &s.GeoStrategy, &s.DefaultPrivacyLevel, &s.AddressVerified,
+			&s.SubscriptionID, &s.IsSubscriptionActive, &s.FollowersCount,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan storefront: %w", err)
+		}
+		storefronts = append(storefronts, s)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating storefronts: %w", err)
+	}
+
+	return storefronts, nil
 }
 func (db *Database) IncrementViewsCount(ctx context.Context, id int) error               { return nil }
 func (db *Database) IndexStorefront(ctx context.Context, store *models.Storefront) error { return nil }

@@ -187,7 +187,38 @@ func (h *Handler) CreateStorefront(c *fiber.Ctx) error {
 
 	h.logger.Info().Int("storefront_id", storefront.ID).Int("user_id", userID).Msg("Storefront created successfully")
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"storefront": storefront,
-	})
+	return c.Status(fiber.StatusCreated).JSON(storefront)
+}
+
+// GetMyStorefronts возвращает витрины текущего пользователя
+// @Summary Get my storefronts
+// @Description Get list of storefronts owned by current user
+// @Tags marketplace
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Storefront}
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Security BearerAuth
+// @Router /api/v1/marketplace/storefronts/my [get]
+func (h *Handler) GetMyStorefronts(c *fiber.Ctx) error {
+	// Получаем user_id из контекста (установлен JWT middleware)
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok || userID <= 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.error.unauthorized")
+	}
+
+	// Получаем витрины пользователя через Database.GetUserStorefronts
+	storefronts, err := h.services.Storage().GetUserStorefronts(c.Context(), userID)
+	if err != nil {
+		h.logger.Error().Err(err).Int("user_id", userID).Msg("Failed to get user storefronts")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.fetch_failed")
+	}
+
+	// Если нет витрин, возвращаем пустой массив
+	if storefronts == nil {
+		storefronts = []models.Storefront{}
+	}
+
+	return c.JSON(storefronts)
 }
