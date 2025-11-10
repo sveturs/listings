@@ -11,6 +11,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const (
+	testBenchResult   = "result"
+	testBenchFallback = "fallback"
+)
+
 // BenchmarkTimeoutRouter_NoTimeout проверяет overhead без timeout
 func BenchmarkTimeoutRouter_NoTimeout(b *testing.B) {
 	cfg := &config.MarketplaceConfig{
@@ -31,11 +36,11 @@ func BenchmarkTimeoutRouter_NoTimeout(b *testing.B) {
 	// Fast microservice (1ms)
 	fastMicroservice := func(ctx context.Context) (interface{}, error) {
 		time.Sleep(1 * time.Millisecond)
-		return "result", nil
+		return testBenchResult, nil
 	}
 
 	fallback := func(ctx context.Context) (interface{}, error) {
-		return "fallback", nil
+		return testBenchFallback, nil
 	}
 
 	b.ResetTimer()
@@ -74,7 +79,7 @@ func BenchmarkTimeoutRouter_WithTimeout(b *testing.B) {
 
 	// Fast fallback
 	fallback := func(ctx context.Context) (interface{}, error) {
-		return "fallback", nil
+		return testBenchFallback, nil
 	}
 
 	b.ResetTimer()
@@ -93,7 +98,7 @@ func BenchmarkTimeoutRouter_DirectCall(b *testing.B) {
 	// Direct call without timeout router (baseline)
 	fastFunc := func(ctx context.Context) (interface{}, error) {
 		time.Sleep(1 * time.Millisecond)
-		return "result", nil
+		return testBenchResult, nil
 	}
 
 	b.ResetTimer()
@@ -144,11 +149,11 @@ func BenchmarkTimeoutRouter_Parallel(b *testing.B) {
 
 	fastMicroservice := func(ctx context.Context) (interface{}, error) {
 		time.Sleep(1 * time.Millisecond)
-		return "result", nil
+		return testBenchResult, nil
 	}
 
 	fallback := func(ctx context.Context) (interface{}, error) {
-		return "fallback", nil
+		return testBenchFallback, nil
 	}
 
 	b.ResetTimer()

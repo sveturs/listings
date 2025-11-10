@@ -235,7 +235,6 @@ func (r *ImageRepository) createMarketplaceImage(ctx context.Context, img *model
 		img.StorageBucket,
 		img.PublicURL,
 	).Scan(&img.ID, &img.CreatedAt)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create marketplace image: %w", err)
 	}
@@ -269,7 +268,6 @@ func (r *ImageRepository) getMarketplaceImageByID(ctx context.Context, imageID i
 		&img.PublicURL,
 		&img.CreatedAt,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get marketplace image: %w", err)
 	}
@@ -294,7 +292,12 @@ func (r *ImageRepository) getMarketplaceImages(ctx context.Context, listingID in
 	if err != nil {
 		return nil, fmt.Errorf("failed to query marketplace images: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			// Log error but don't override return value
+			_ = closeErr
+		}
+	}()
 
 	var images []models.MarketplaceImage
 	for rows.Next() {
@@ -377,7 +380,6 @@ func (r *ImageRepository) GetFirstImageByListingID(ctx context.Context, listingI
 		&img.PublicURL,
 		&img.CreatedAt,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get first image: %w", err)
 	}

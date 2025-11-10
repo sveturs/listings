@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	microserviceAddr  = "localhost:50051"                                                                        // Fixed: listings uses 50051, not 50053
-	monolithDBURL     = "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"           // Fixed: main DB is on 5433
+	microserviceAddr  = "localhost:50051"                                                                          // Fixed: listings uses 50051, not 50053
+	monolithDBURL     = "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"              // Fixed: main DB is on 5433
 	microserviceDBURL = "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" // Fixed: listings DB credentials
 	openSearchURL     = "http://localhost:9200"
 	smokeTimeout      = 3 * time.Second

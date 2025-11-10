@@ -463,5 +463,32 @@ func (s *postgresMarketplaceStorage) GetListing(ctx context.Context, listingID i
 		listing.Condition = dbCondition.String
 	}
 
+	// Load images for the listing
+	imagesQuery := `
+		SELECT
+			id, listing_id, file_path, file_name, file_size,
+			content_type, is_main, storage_type,
+			COALESCE(storage_bucket, '') as storage_bucket,
+			COALESCE(public_url, '') as public_url
+		FROM c2c_images
+		WHERE listing_id = $1
+		ORDER BY is_main DESC, id ASC
+	`
+
+	var images []models.MarketplaceImage
+	err = s.db.SelectContext(ctx, &images, imagesQuery, listingID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		s.logger.Error().Err(err).Int("listing_id", listingID).Msg("Failed to load images for listing")
+		// Don't fail the whole request if images fail to load
+	}
+	listing.Images = images
+
 	return &listing, nil
+}
+
+// CreateStorefront создает новую витрину (проксирует к Database)
+func (s *postgresMarketplaceStorage) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
+	// Этот метод должен быть реализован через Database, который имеет доступ к pool
+	// Пока возвращаем ошибку, так как нужен доступ к pgx pool, а у нас только sqlx
+	return nil, fmt.Errorf("CreateStorefront should be called through Database.CreateStorefront, not through marketplace storage")
 }

@@ -3,7 +3,6 @@ package listings
 import (
 	"context"
 	"fmt"
-	"time"
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 
@@ -21,17 +20,12 @@ type Client struct {
 
 // NewClient creates a new Listings gRPC client
 func NewClient(address string, logger zerolog.Logger) (*Client, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(
-		ctx,
+	conn, err := grpc.NewClient(
 		address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to listings service at %s: %w", address, err)
+		return nil, fmt.Errorf("failed to create listings client for %s: %w", address, err)
 	}
 
 	return &Client{

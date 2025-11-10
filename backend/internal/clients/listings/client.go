@@ -852,14 +852,22 @@ func (c *Client) ListProducts(ctx context.Context, storefrontID int64, page, pag
 		return nil, 0, ErrServiceUnavailable
 	}
 
+	// Validate pagination parameters
+	if page < 1 || page > 100000 {
+		return nil, 0, fmt.Errorf("invalid page parameter: %d", page)
+	}
+	if pageSize < 1 || pageSize > 1000 {
+		return nil, 0, fmt.Errorf("invalid pageSize parameter: %d", pageSize)
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	isActiveOnlyPtr := &isActiveOnly
 	req := &pb.ListProductsRequest{
 		StorefrontId: storefrontID,
-		Page:         int32(page),
-		PageSize:     int32(pageSize),
+		Page:         int32(page),     // #nosec G115 - validated above
+		PageSize:     int32(pageSize), // #nosec G115 - validated above
 		IsActiveOnly: isActiveOnlyPtr,
 	}
 

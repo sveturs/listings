@@ -1,15 +1,20 @@
 package listings
 
 import (
+	"errors"
+
 	"backend/internal/domain/models"
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 
+// ErrNilProtoListing indicates that proto listing is nil
+var ErrNilProtoListing = errors.New("proto listing is nil")
+
 // ProtoToUnifiedListing конвертирует proto Listing в UnifiedListing
 func ProtoToUnifiedListing(protoListing *pb.Listing) (*models.UnifiedListing, error) {
 	if protoListing == nil {
-		return nil, nil
+		return nil, ErrNilProtoListing
 	}
 
 	// Базовая информация
@@ -84,7 +89,7 @@ func ProtoToUnifiedListing(protoListing *pb.Listing) (*models.UnifiedListing, er
 // UnifiedToProtoCreateRequest конвертирует UnifiedListing в CreateListingRequest
 func UnifiedToProtoCreateRequest(unified *models.UnifiedListing) (*pb.CreateListingRequest, error) {
 	if unified == nil {
-		return nil, nil
+		return nil, ErrNilProtoListing
 	}
 
 	req := &pb.CreateListingRequest{
@@ -114,7 +119,7 @@ func UnifiedToProtoCreateRequest(unified *models.UnifiedListing) (*pb.CreateList
 // UnifiedToProtoUpdateRequest конвертирует UnifiedListing в UpdateListingRequest
 func UnifiedToProtoUpdateRequest(unified *models.UnifiedListing) (*pb.UpdateListingRequest, error) {
 	if unified == nil {
-		return nil, nil
+		return nil, ErrNilProtoListing
 	}
 
 	req := &pb.UpdateListingRequest{

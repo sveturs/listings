@@ -132,6 +132,41 @@ func (h *Handler) GetListing(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, listing)
 }
 
+// GetSimilarListings godoc
+// @Summary Получить похожие объявления
+// @Description Получить список похожих объявлений для данного листинга
+// @Tags marketplace
+// @Accept json
+// @Produce json
+// @Param id path int true "Listing ID"
+// @Param limit query int false "Лимит результатов" default(20)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing}
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/marketplace/listings/{id}/similar [get]
+func (h *Handler) GetSimilarListings(c *fiber.Ctx) error {
+	// Parse listing ID
+	idParam := c.Params("id")
+	listingID, err := strconv.Atoi(idParam)
+	if err != nil {
+		h.logger.Error().Err(err).Str("id", idParam).Msg("GetSimilarListings: invalid listing ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_id")
+	}
+
+	// Check if listing exists
+	_, err = h.storage.GetListing(c.Context(), listingID)
+	if err != nil {
+		h.logger.Error().Err(err).Int("listing_id", listingID).Msg("GetSimilarListings: failed to get listing")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+	}
+
+	// TODO: Implement actual similar listings logic (using OpenSearch, category, price range, etc.)
+	// For now, return an empty array
+	h.logger.Debug().Int("listing_id", listingID).Msg("GetSimilarListings: returning empty array (not implemented)")
+
+	return utils.SuccessResponse(c, []models.MarketplaceListing{})
+}
+
 // UploadListingImages godoc
 // @Summary Загрузить изображения для объявления
 // @Description Загружает одно или несколько изображений для объявления
@@ -267,7 +302,11 @@ func (h *Handler) UploadListingImages(c *fiber.Ctx) error {
 				results <- uploadResult{nil, err, idx}
 				return
 			}
-			defer file.Close()
+			defer func() {
+				if closeErr := file.Close(); closeErr != nil {
+					h.logger.Error().Err(closeErr).Str("filename", fh.Filename).Msg("Failed to close file")
+				}
+			}()
 
 			// Upload image
 			uploadReq := &services.UploadImageRequest{

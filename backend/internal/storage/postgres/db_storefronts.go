@@ -3,16 +3,173 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
+	"time"
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 )
 
-// Storefront methods - TODO: temporarily disabled during refactoring
+// Storefront methods
 
 func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
-	return nil, fmt.Errorf("storefront service temporarily disabled")
+	// Генерируем slug если не указан
+	slug := dto.Slug
+	if slug == "" {
+		slug = generateSlug(dto.Name)
+	}
+
+	// Проверяем уникальность slug
+	var existingID int
+	err := db.pool.QueryRow(ctx, "SELECT id FROM b2c_stores WHERE slug = $1 LIMIT 1", slug).Scan(&existingID)
+	if err == nil {
+		// Slug уже существует, добавляем суффикс
+		slug = fmt.Sprintf("%s-%d", slug, time.Now().Unix()%10000)
+	}
+
+	// Начинаем транзакцию
+	tx, err := db.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx) // Rollback is safe to call even after commit
+	}()
+
+	// Вставляем витрину
+	query := `
+		INSERT INTO b2c_stores (
+			user_id, slug, name, description,
+			phone, email, website,
+			address, city, postal_code, country,
+			latitude, longitude,
+			settings, seo_meta, theme,
+			is_active, created_at, updated_at
+		) VALUES (
+			$1, $2, $3, $4,
+			$5, $6, $7,
+			$8, $9, $10, $11,
+			$12, $13,
+			$14, $15, $16,
+			true, NOW(), NOW()
+		) RETURNING id, created_at, updated_at
+	`
+
+	var storefront models.Storefront
+	storefront.UserID = userID
+	storefront.Slug = slug
+	storefront.Name = dto.Name
+
+	// Подготавливаем значения
+	description := &dto.Description
+	if dto.Description == "" {
+		description = nil
+	}
+
+	phone := &dto.Phone
+	if dto.Phone == "" {
+		phone = nil
+	}
+
+	email := &dto.Email
+	if dto.Email == "" {
+		email = nil
+	}
+
+	website := &dto.Website
+	if dto.Website == "" {
+		website = nil
+	}
+
+	// Обрабатываем локацию
+	var address, city, postalCode, country *string
+	var lat, lng *float64
+
+	if dto.Location.FullAddress != "" {
+		address = &dto.Location.FullAddress
+	}
+	if dto.Location.City != "" {
+		city = &dto.Location.City
+	}
+	if dto.Location.PostalCode != "" {
+		postalCode = &dto.Location.PostalCode
+	}
+	if dto.Location.Country != "" {
+		country = &dto.Location.Country
+	}
+	if dto.Location.UserLat != 0 {
+		lat = &dto.Location.UserLat
+	}
+	if dto.Location.UserLng != 0 {
+		lng = &dto.Location.UserLng
+	}
+
+	// Конвертируем settings и seo_meta в JSON
+	settingsJSON := []byte("{}")
+	if len(dto.Settings) > 0 {
+		if jsonBytes, err := json.Marshal(dto.Settings); err == nil {
+			settingsJSON = jsonBytes
+		}
+	}
+
+	seoMetaJSON := []byte("{}")
+	if len(dto.SEOMeta) > 0 {
+		if jsonBytes, err := json.Marshal(dto.SEOMeta); err == nil {
+			seoMetaJSON = jsonBytes
+		}
+	}
+
+	themeJSON := []byte(`{"layout": "grid", "primaryColor": "#1976d2"}`)
+	if len(dto.Theme) > 0 {
+		if jsonBytes, err := json.Marshal(dto.Theme); err == nil {
+			themeJSON = jsonBytes
+		}
+	}
+
+	err = tx.QueryRow(ctx, query,
+		userID, slug, dto.Name, description,
+		phone, email, website,
+		address, city, postalCode, country,
+		lat, lng,
+		settingsJSON, seoMetaJSON, themeJSON,
+	).Scan(&storefront.ID, &storefront.CreatedAt, &storefront.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert storefront: %w", err)
+	}
+
+	// Копируем остальные поля
+	storefront.Description = description
+	storefront.Phone = phone
+	storefront.Email = email
+	storefront.Website = website
+	storefront.Address = address
+	storefront.City = city
+	storefront.PostalCode = postalCode
+	storefront.Country = country
+	storefront.Latitude = lat
+	storefront.Longitude = lng
+
+	// Коммитим транзакцию
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return &storefront, nil
+}
+
+// generateSlug генерирует slug из строки
+func generateSlug(s string) string {
+	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, " ", "-")
+	reg := regexp.MustCompile("[^a-zA-Z0-9-]+")
+	s = reg.ReplaceAllString(s, "")
+	reg = regexp.MustCompile("-+")
+	s = reg.ReplaceAllString(s, "-")
+	s = strings.Trim(s, "-")
+	return s
 }
 
 func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {

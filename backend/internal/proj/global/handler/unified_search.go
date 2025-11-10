@@ -79,6 +79,7 @@ type UnifiedSearchItem struct {
 	ID                 string                       `json:"id"`           // Уникальный ID (ml_123 или sp_456)
 	ProductType        string                       `json:"product_type"` // "marketplace" или "storefront"
 	ProductID          int                          `json:"product_id"`
+	UserID             *int                         `json:"user_id,omitempty"`   // ID владельца объявления
 	Name               string                       `json:"name"`
 	Description        string                       `json:"description"`
 	Price              float64                      `json:"price"`
@@ -538,10 +539,17 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		// Конвертируем изображения
 		convertedImages := h.convertMarketplaceImages(listing.Images)
 
+		// UserID для marketplace листингов
+		var userIDPtr *int
+		if listing.UserID > 0 {
+			userIDPtr = &listing.UserID
+		}
+
 		item := UnifiedSearchItem{
 			ID:                 itemID,
 			ProductType:        productType,
 			ProductID:          listing.ID,
+			UserID:             userIDPtr,
 			Name:               listing.Title,
 			Description:        listing.Description,
 			Price:              listing.Price,

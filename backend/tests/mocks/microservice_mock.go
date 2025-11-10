@@ -343,6 +343,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Start gRPC server
 	go func() {
+		// #nosec G102 - test mock server needs to bind to all interfaces
 		lis, err := net.Listen("tcp", grpcPort)
 		if err != nil {
 			log.Fatalf("Failed to listen: %v", err)
@@ -367,6 +368,7 @@ func main() {
 	log.Printf("Control endpoint: POST http://localhost%s/control/config", controlPort)
 	log.Printf("\nExample: curl -X POST http://localhost%s/control/config -d '{\"mode\":\"slow\",\"delay\":\"1s\"}'", controlPort)
 
+	// #nosec G114 - test mock server doesn't need timeouts
 	if err := http.ListenAndServe(controlPort, nil); err != nil {
 		log.Fatalf("Failed to start HTTP server: %v", err)
 	}

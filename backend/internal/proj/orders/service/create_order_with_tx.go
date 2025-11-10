@@ -36,12 +36,15 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 		if item.Quantity <= 0 {
 			return nil, fmt.Errorf("orders.invalid_quantity")
 		}
+		if item.Quantity > 100000 {
+			return nil, fmt.Errorf("orders.quantity_too_large")
+		}
 
 		productIDs = append(productIDs, fmt.Sprintf("%d", item.ProductID))
 
 		stockItem := &pb.StockItem{
 			ProductId: int64(item.ProductID),
-			Quantity:  int32(item.Quantity),
+			Quantity:  int32(item.Quantity), // Safe after validation
 		}
 
 		if item.VariantID != nil {
@@ -326,77 +329,14 @@ func (s *OrderService) getStorefrontTx(ctx context.Context, tx *sqlx.Tx, storefr
 	return &storefront, nil
 }
 
-func (s *OrderService) getOrderItemsTx(ctx context.Context, tx *sqlx.Tx, req *models.CreateOrderRequest, userID int) ([]models.OrderItemRequest, error) {
-	var items []models.OrderItemRequest
-
-	if req.CartID != nil {
-		// Блокируем корзину для чтения
-		var cart models.ShoppingCart
-		query := `SELECT * FROM b2c_carts WHERE id = $1 FOR UPDATE`
-		err := tx.GetContext(ctx, &cart, query, *req.CartID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get cart: %w", err)
-		}
-
-		if cart.UserID == nil || *cart.UserID != userID {
-			return nil, fmt.Errorf("cart does not belong to user")
-		}
-
-		if cart.StorefrontID != req.StorefrontID {
-			return nil, fmt.Errorf("cart belongs to different storefront")
-		}
-
-		// Получаем позиции корзины
-		var cartItems []models.ShoppingCartItem
-		itemsQuery := `SELECT * FROM b2c_cart_items WHERE cart_id = $1`
-		err = tx.SelectContext(ctx, &cartItems, itemsQuery, cart.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get cart items: %w", err)
-		}
-
-		for _, cartItem := range cartItems {
-			items = append(items, models.OrderItemRequest{
-				ProductID: cartItem.ProductID,
-				VariantID: cartItem.VariantID,
-				Quantity:  cartItem.Quantity,
-			})
-		}
-	} else {
-		items = req.Items
-	}
-
-	return items, nil
-}
-
 // NOTE: Removed deprecated methods that are now handled by Listings gRPC Service:
 // - lockProductForUpdate (stock locking now via distributed Redis lock + gRPC)
 // - createOrderInTransaction (replaced by createOrderRecordWithUUID)
 // - createReservationTx (inventory reservations removed - stock managed by Listings Service)
 // - updateProductStockTx (stock updates now via gRPC DecrementStock/RollbackStock)
-
-func (s *OrderService) createOrderItemTx(ctx context.Context, tx *sqlx.Tx, item *models.StorefrontOrderItem) error {
-	query := `
-		INSERT INTO b2c_order_items (
-			order_id, product_id, variant_id, product_name, variant_name,
-			product_sku, quantity, unit_price, total_price
-		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9
-		)`
-
-	_, err := tx.ExecContext(ctx, query,
-		item.OrderID,
-		item.ProductID,
-		item.VariantID,
-		item.ProductName,
-		item.VariantName,
-		item.ProductSKU,
-		item.Quantity,
-		item.PricePerUnit,
-		item.TotalPrice,
-	)
-
-	return err
-}
+// - getOrderItemsTx (items now passed directly in request)
+// - createOrderItemTx (order items creation moved to separate service)
+// - updateProductStocksInSearch (OpenSearch stock updates deprecated)
 
 func (s *OrderService) updateOrderTx(ctx context.Context, tx *sqlx.Tx, order *models.StorefrontOrder) error {
 	query := `
@@ -437,71 +377,4 @@ func (s *OrderService) clearCartTx(ctx context.Context, tx *sqlx.Tx, cartID int6
 	updateCartQuery := `UPDATE b2c_carts SET updated_at = NOW() WHERE id = $1`
 	_, err = tx.ExecContext(ctx, updateCartQuery, cartID)
 	return err
-}
-
-// updateProductStocksInSearch обновляет остатки товаров в OpenSearch после создания заказа
-func (s *OrderService) updateProductStocksInSearch(ctx context.Context, orderItems []models.StorefrontOrderItem) {
-	// TODO: OpenSearch integration removed (c2c/b2c deprecated)
-	// ProductSearchRepo was removed - stock updates now go directly to PostgreSQL only
-	s.logger.Info("ProductSearchRepo removed (deprecated), skipping stock update in OpenSearch")
-	_ = ctx
-	_ = orderItems
-	// Return early - remaining code is disabled
-
-	/* Disabled code - will be restored after OpenSearch refactoring
-	// Обновляем остатки для каждого товара в заказе
-	for _, item := range orderItems {
-		// Получаем актуальную информацию о товаре из БД
-		product, err := s.productRepo.GetByID(ctx, item.ProductID)
-		if err != nil {
-			s.logger.Error("Failed to get product %d for OpenSearch update: %v", item.ProductID, err)
-			continue
-		}
-
-		// Определяем актуальное количество на складе
-		stockQuantity := 0
-		if product != nil {
-			stockQuantity = product.StockQuantity
-		}
-
-		// Если есть вариант, получаем его остатки
-		if item.VariantID != nil {
-			variant, err := s.productRepo.GetVariantByID(ctx, *item.VariantID)
-			if err != nil {
-				s.logger.Error("Failed to get variant %d for OpenSearch update: %v", *item.VariantID, err)
-			} else if variant != nil {
-				stockQuantity = variant.StockQuantity
-			}
-		}
-
-		// Подготавливаем данные для обновления в OpenSearch
-		stockData := map[string]interface{}{
-			"stock_quantity": stockQuantity,
-			"inventory": map[string]interface{}{
-				"quantity":  stockQuantity,
-				"in_stock":  stockQuantity > 0,
-				"available": stockQuantity,
-				"low_stock": stockQuantity > 0 && stockQuantity <= 5,
-			},
-			"status": "active", // Добавляем статус для совместимости с фильтром поиска
-		}
-
-		// Определяем статус наличия
-		stockStatus := "in_stock"
-		if stockQuantity <= 0 {
-			stockStatus = "out_of_stock"
-		} else if stockQuantity <= 5 {
-			stockStatus = "low_stock"
-		}
-		stockData["stock_status"] = stockStatus
-
-		// Обновляем данные в OpenSearch
-		// TODO: OpenSearch update removed - this code is unreachable (return above)
-		// err = s.productSearchRepo.UpdateProductStock(ctx, int(item.ProductID), stockData)
-		if false { // Unreachable code - kept for reference
-			s.logger.Info("Successfully updated stock for product %d in OpenSearch (new quantity: %d)",
-				item.ProductID, stockQuantity)
-		}
-	}
-	*/
 }

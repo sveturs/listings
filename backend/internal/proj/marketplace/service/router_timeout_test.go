@@ -4,6 +4,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -12,6 +13,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	testMicroserviceResult = "microservice_result"
+	testFallbackResult     = "fallback_result"
 )
 
 // TestTimeoutRouter_TimeoutTriggersCorrectly проверяет что timeout срабатывает в нужное время
@@ -36,7 +42,7 @@ func TestTimeoutRouter_TimeoutTriggersCorrectly(t *testing.T) {
 		slowMicroservice := func(ctx context.Context) (interface{}, error) {
 			select {
 			case <-time.After(200 * time.Millisecond):
-				return "microservice_result", nil
+				return testMicroserviceResult, nil
 			case <-ctx.Done():
 				return nil, ctx.Err()
 			}
@@ -44,7 +50,7 @@ func TestTimeoutRouter_TimeoutTriggersCorrectly(t *testing.T) {
 
 		// Fast fallback (10ms)
 		fastFallback := func(ctx context.Context) (interface{}, error) {
-			return "fallback_result", nil
+			return testFallbackResult, nil
 		}
 
 		startTime := time.Now()
@@ -60,19 +66,18 @@ func TestTimeoutRouter_TimeoutTriggersCorrectly(t *testing.T) {
 		assert.InDelta(t, 100, duration.Milliseconds(), 50, "Timeout should trigger at ~100ms")
 		assert.NoError(t, err, "Should succeed with fallback")
 		assert.True(t, usedFallback, "Should use fallback")
-		assert.Equal(t, "fallback_result", result, "Should return fallback result")
+		assert.Equal(t, testFallbackResult, result, "Should return fallback result")
 	})
 
 	t.Run("Fast microservice completes before timeout", func(t *testing.T) {
 		// Fast microservice (10ms) - НЕ должен timeout
 		fastMicroservice := func(ctx context.Context) (interface{}, error) {
 			time.Sleep(10 * time.Millisecond)
-			return "microservice_result", nil
+			return testMicroserviceResult, nil
 		}
 
 		fallback := func(ctx context.Context) (interface{}, error) {
-			t.Fatal("Fallback should not be called")
-			return nil, nil
+			return nil, fmt.Errorf("fallback should not be called")
 		}
 
 		startTime := time.Now()
@@ -87,7 +92,7 @@ func TestTimeoutRouter_TimeoutTriggersCorrectly(t *testing.T) {
 		assert.Less(t, duration.Milliseconds(), int64(100), "Should complete before timeout")
 		assert.NoError(t, err)
 		assert.False(t, usedFallback, "Should NOT use fallback")
-		assert.Equal(t, "microservice_result", result)
+		assert.Equal(t, testMicroserviceResult, result)
 	})
 }
 
@@ -116,7 +121,7 @@ func TestTimeoutRouter_FallbackWorks(t *testing.T) {
 		}
 
 		fallback := func(ctx context.Context) (interface{}, error) {
-			return "fallback_result", nil
+			return testFallbackResult, nil
 		}
 
 		result, err, usedFallback := timeoutRouter.ExecuteWithTimeout(
@@ -128,7 +133,7 @@ func TestTimeoutRouter_FallbackWorks(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.True(t, usedFallback)
-		assert.Equal(t, "fallback_result", result)
+		assert.Equal(t, testFallbackResult, result)
 	})
 
 	t.Run("Fallback fails - return error", func(t *testing.T) {
@@ -217,7 +222,7 @@ func TestTimeoutRouter_ContextCancellation(t *testing.T) {
 		}
 
 		fallback := func(ctx context.Context) (interface{}, error) {
-			return "fallback_result", nil
+			return testFallbackResult, nil
 		}
 
 		// Cancel context after 50ms
@@ -235,11 +240,11 @@ func TestTimeoutRouter_ContextCancellation(t *testing.T) {
 		)
 		duration := time.Since(startTime)
 
-		// Context should be cancelled before timeout (50ms < 500ms)
+		// Context should be canceled before timeout (50ms < 500ms)
 		assert.Less(t, duration.Milliseconds(), int64(500))
 		assert.NoError(t, err)
 		assert.True(t, usedFallback)
-		assert.Equal(t, "fallback_result", result)
+		assert.Equal(t, testFallbackResult, result)
 	})
 
 	t.Run("Timeout context does not affect fallback", func(t *testing.T) {
@@ -251,7 +256,7 @@ func TestTimeoutRouter_ContextCancellation(t *testing.T) {
 		// Fallback также долгий (400ms), но должен успеть т.к. использует parent context
 		slowFallback := func(ctx context.Context) (interface{}, error) {
 			time.Sleep(400 * time.Millisecond)
-			return "fallback_result", nil
+			return testFallbackResult, nil
 		}
 
 		result, err, usedFallback := timeoutRouter.ExecuteWithTimeout(
@@ -263,7 +268,7 @@ func TestTimeoutRouter_ContextCancellation(t *testing.T) {
 
 		assert.NoError(t, err, "Fallback should succeed with parent context")
 		assert.True(t, usedFallback)
-		assert.Equal(t, "fallback_result", result)
+		assert.Equal(t, testFallbackResult, result)
 	})
 }
 
@@ -290,7 +295,7 @@ func TestTimeoutRouter_NonTimeoutErrors(t *testing.T) {
 		}
 
 		fallback := func(ctx context.Context) (interface{}, error) {
-			return "fallback_result", nil
+			return testFallbackResult, nil
 		}
 
 		result, err, usedFallback := timeoutRouter.ExecuteWithTimeout(
@@ -302,7 +307,7 @@ func TestTimeoutRouter_NonTimeoutErrors(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.True(t, usedFallback)
-		assert.Equal(t, "fallback_result", result)
+		assert.Equal(t, testFallbackResult, result)
 	})
 
 	t.Run("Internal error triggers fallback", func(t *testing.T) {
@@ -311,7 +316,7 @@ func TestTimeoutRouter_NonTimeoutErrors(t *testing.T) {
 		}
 
 		fallback := func(ctx context.Context) (interface{}, error) {
-			return "fallback_result", nil
+			return testFallbackResult, nil
 		}
 
 		result, err, usedFallback := timeoutRouter.ExecuteWithTimeout(
@@ -323,7 +328,7 @@ func TestTimeoutRouter_NonTimeoutErrors(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.True(t, usedFallback)
-		assert.Equal(t, "fallback_result", result)
+		assert.Equal(t, testFallbackResult, result)
 	})
 }
 
@@ -348,7 +353,7 @@ func TestTimeoutRouter_ExecuteWithTimeoutOrMonolith(t *testing.T) {
 		microserviceCalled := false
 		microservice := func(ctx context.Context) (interface{}, error) {
 			microserviceCalled = true
-			return "microservice_result", nil
+			return testMicroserviceResult, nil
 		}
 
 		monolith := func(ctx context.Context) (interface{}, error) {

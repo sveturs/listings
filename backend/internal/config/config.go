@@ -16,40 +16,40 @@ const (
 )
 
 type Config struct {
-	Port                     string
-	DatabaseURL              string
-	GoogleClientID           string
-	GoogleClientSecret       string
-	GoogleRedirectURL        string
-	FrontendURL              string
-	AuthServiceURL           string
-	AuthServicePublicKeyPath string // Path to auth service public key for JWT validation
-	BackendURL               string
-	Environment              string
-	LogLevel                 string `yaml:"log_level"`
-	OpenAIAPIKey             string
-	GoogleTranslateAPIKey    string
-	ClaudeAPIKey             string
-	DeepLAPIKey              string
-	DeepLUseFreeAPI          bool `yaml:"deepl_use_free_api"`
-	StripeAPIKey             string
-	StripeWebhookSecret      string
-	OpenSearch               OpenSearchConfig  `yaml:"opensearch"`
-	FileStorage              FileStorageConfig `yaml:"file_storage"`
-	FileUpload               FileUploadConfig  `yaml:"file_upload"`
-	MinIOPublicURL           string
-	Docs                     DocsConfig        `yaml:"docs"`
-	AllSecure                AllSecureConfig   `yaml:"allsecure"`
-	PostExpress              PostExpressConfig `yaml:"postexpress"`
-	BEXAuthToken             string            `yaml:"bex_auth_token"`
-	BEXClientID              string            `yaml:"bex_client_id"`
-	BEXAPIURL                string            `yaml:"bex_api_url"`
-	SearchWeights            *SearchWeights    `yaml:"search_weights"`
-	Redis                    RedisConfig       `yaml:"redis"`
-	MigrationsOnAPI          string            `yaml:"migrations_on_api"` // off, schema, full
-	ReindexOnAPI             string            `yaml:"reindex_on_api"`    // on
-	FeatureFlags             *FeatureFlags     `yaml:"feature_flags"`
-	Currency                 CurrencyConfig    `yaml:"currency"`
+	Port                      string
+	DatabaseURL               string
+	GoogleClientID            string
+	GoogleClientSecret        string
+	GoogleRedirectURL         string
+	FrontendURL               string
+	AuthServiceURL            string
+	AuthServicePublicKeyPath  string // Path to auth service public key for JWT validation
+	BackendURL                string
+	Environment               string
+	LogLevel                  string `yaml:"log_level"`
+	OpenAIAPIKey              string
+	GoogleTranslateAPIKey     string
+	ClaudeAPIKey              string
+	DeepLAPIKey               string
+	DeepLUseFreeAPI           bool `yaml:"deepl_use_free_api"`
+	StripeAPIKey              string
+	StripeWebhookSecret       string
+	OpenSearch                OpenSearchConfig  `yaml:"opensearch"`
+	FileStorage               FileStorageConfig `yaml:"file_storage"`
+	FileUpload                FileUploadConfig  `yaml:"file_upload"`
+	MinIOPublicURL            string
+	Docs                      DocsConfig        `yaml:"docs"`
+	AllSecure                 AllSecureConfig   `yaml:"allsecure"`
+	PostExpress               PostExpressConfig `yaml:"postexpress"`
+	BEXAuthToken              string            `yaml:"bex_auth_token"`
+	BEXClientID               string            `yaml:"bex_client_id"`
+	BEXAPIURL                 string            `yaml:"bex_api_url"`
+	SearchWeights             *SearchWeights    `yaml:"search_weights"`
+	Redis                     RedisConfig       `yaml:"redis"`
+	MigrationsOnAPI           string            `yaml:"migrations_on_api"` // off, schema, full
+	ReindexOnAPI              string            `yaml:"reindex_on_api"`    // on
+	FeatureFlags              *FeatureFlags     `yaml:"feature_flags"`
+	Currency                  CurrencyConfig    `yaml:"currency"`
 	DeliveryGRPCURL           string            `yaml:"delivery_grpc_url"`            // URL для delivery микросервиса через gRPC
 	ListingsGRPCURL           string            `yaml:"listings_grpc_url"`            // URL для listings микросервиса через gRPC
 	UseListingsMicroservice   bool              `yaml:"use_listings_microservice"`    // Feature flag для включения listings микросервиса
@@ -592,45 +592,45 @@ func NewConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port:                     port,
-		DatabaseURL:              dbURL,
-		GoogleClientID:           googleClientID,
-		GoogleClientSecret:       googleClientSecret,
-		GoogleRedirectURL:        googleRedirectURL,
-		FrontendURL:              frontendURL,
-		Environment:              environment,
-		LogLevel:                 logLevel,
-		OpenAIAPIKey:             openAIAPIKey,
-		GoogleTranslateAPIKey:    config.GoogleTranslateAPIKey,
-		ClaudeAPIKey:             config.ClaudeAPIKey,
-		DeepLAPIKey:              config.DeepLAPIKey,
-		DeepLUseFreeAPI:          config.DeepLUseFreeAPI,
-		StripeAPIKey:             config.StripeAPIKey,
-		StripeWebhookSecret:      config.StripeWebhookSecret,
-		AuthServiceURL:           config.AuthServiceURL,
-		AuthServicePublicKeyPath: config.AuthServicePublicKeyPath,
-		BackendURL:               config.BackendURL,
+		Port:                      port,
+		DatabaseURL:               dbURL,
+		GoogleClientID:            googleClientID,
+		GoogleClientSecret:        googleClientSecret,
+		GoogleRedirectURL:         googleRedirectURL,
+		FrontendURL:               frontendURL,
+		Environment:               environment,
+		LogLevel:                  logLevel,
+		OpenAIAPIKey:              openAIAPIKey,
+		GoogleTranslateAPIKey:     config.GoogleTranslateAPIKey,
+		ClaudeAPIKey:              config.ClaudeAPIKey,
+		DeepLAPIKey:               config.DeepLAPIKey,
+		DeepLUseFreeAPI:           config.DeepLUseFreeAPI,
+		StripeAPIKey:              config.StripeAPIKey,
+		StripeWebhookSecret:       config.StripeWebhookSecret,
+		AuthServiceURL:            config.AuthServiceURL,
+		AuthServicePublicKeyPath:  config.AuthServicePublicKeyPath,
+		BackendURL:                config.BackendURL,
 		MinIOPublicURL:            config.MinIOPublicURL,
 		DeliveryGRPCURL:           config.DeliveryGRPCURL,
 		ListingsGRPCURL:           config.ListingsGRPCURL,
 		UseListingsMicroservice:   config.UseListingsMicroservice,
 		EnableListingsProductCRUD: config.EnableListingsProductCRUD,
 		OpenSearch:                config.OpenSearch,
-		FileStorage:              config.FileStorage,
-		FileUpload:               fileUploadConfig,
-		Docs:                     docsConfig,
-		AllSecure:                allSecureConfig,
-		PostExpress:              postExpressConfig,
-		BEXAuthToken:             config.BEXAuthToken,
-		BEXClientID:              config.BEXClientID,
-		BEXAPIURL:                config.BEXAPIURL,
-		SearchWeights:            searchWeights,
-		Redis:                    redisConfig,
-		MigrationsOnAPI:          migrationsOnAPI,
-		ReindexOnAPI:             reindexOnAPI,
-		FeatureFlags:             LoadFeatureFlags(),
-		Currency:                 currencyConfig,
-		Marketplace:              marketplaceConfig,
+		FileStorage:               config.FileStorage,
+		FileUpload:                fileUploadConfig,
+		Docs:                      docsConfig,
+		AllSecure:                 allSecureConfig,
+		PostExpress:               postExpressConfig,
+		BEXAuthToken:              config.BEXAuthToken,
+		BEXClientID:               config.BEXClientID,
+		BEXAPIURL:                 config.BEXAPIURL,
+		SearchWeights:             searchWeights,
+		Redis:                     redisConfig,
+		MigrationsOnAPI:           migrationsOnAPI,
+		ReindexOnAPI:              reindexOnAPI,
+		FeatureFlags:              LoadFeatureFlags(),
+		Currency:                  currencyConfig,
+		Marketplace:               marketplaceConfig,
 	}, nil
 }
 

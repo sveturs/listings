@@ -4,11 +4,12 @@ package handler
 import (
 	"strconv"
 
-	_ "backend/internal/domain/models" // For Swagger documentation
+	"backend/internal/domain/models"
 	"backend/internal/proj/marketplace/storage"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // GetStorefronts возвращает список витрин (B2C stores)
@@ -142,5 +143,51 @@ func (h *Handler) GetStorefrontProducts(c *fiber.Ctx) error {
 		"total":    0,
 		"page":     c.QueryInt("page", 1),
 		"limit":    c.QueryInt("limit", 20),
+	})
+}
+
+// CreateStorefront создает новую витрину
+// @Summary Create storefront
+// @Description Create new B2C storefront
+// @Tags marketplace
+// @Accept json
+// @Produce json
+// @Param storefront body models.StorefrontCreateDTO true "Storefront data"
+// @Success 201 {object} utils.SuccessResponseSwag{data=models.Storefront}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Security BearerAuth
+// @Router /api/v1/marketplace/storefronts [post]
+func (h *Handler) CreateStorefront(c *fiber.Ctx) error {
+	// Получаем user_id из контекста (установлен JWT middleware)
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok || userID <= 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.error.unauthorized")
+	}
+
+	// Парсим тело запроса
+	var dto models.StorefrontCreateDTO
+	if err := c.BodyParser(&dto); err != nil {
+		h.logger.Error().Err(err).Msg("Failed to parse storefront create request")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_request")
+	}
+
+	// Валидация
+	if dto.Name == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.name_required")
+	}
+
+	// Создаем витрину через services.Storage() (Database interface)
+	storefront, err := h.services.Storage().CreateStorefront(c.Context(), userID, &dto)
+	if err != nil {
+		h.logger.Error().Err(err).Int("user_id", userID).Msg("Failed to create storefront")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.create_failed")
+	}
+
+	h.logger.Info().Int("storefront_id", storefront.ID).Int("user_id", userID).Msg("Storefront created successfully")
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"storefront": storefront,
 	})
 }

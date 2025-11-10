@@ -16,6 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testSuccessResult = "success"
+)
+
 // TestNewCircuitBreaker проверяет создание circuit breaker
 func TestNewCircuitBreaker(t *testing.T) {
 	logger := zerolog.Nop()
@@ -136,7 +140,7 @@ func TestCircuitBreakerTransitionToHalfOpen(t *testing.T) {
 
 	// Следующий запрос должен перевести circuit в HALF_OPEN
 	_, err := cb.Execute(ctx, "test", func() (interface{}, error) {
-		return "success", nil
+		return testSuccessResult, nil
 	})
 
 	require.NoError(t, err)
@@ -223,7 +227,7 @@ func TestCircuitBreakerHalfOpenFailure(t *testing.T) {
 
 	// 3. Первый успешный запрос в HALF_OPEN
 	_, err := cb.Execute(ctx, "test", func() (interface{}, error) {
-		return "success", nil
+		return testSuccessResult, nil
 	})
 	require.NoError(t, err)
 
@@ -319,7 +323,7 @@ func TestCircuitBreakerConcurrency(t *testing.T) {
 				_, err := cb.Execute(ctx, "concurrent_test", func() (interface{}, error) {
 					// Половина запросов успешна
 					if (id+j)%2 == 0 {
-						return "success", nil
+						return testSuccessResult, nil
 					}
 					return nil, errors.New("test error")
 				})
@@ -360,7 +364,7 @@ func TestCircuitBreakerStats(t *testing.T) {
 	// Делаем несколько успешных и неуспешных запросов
 	for i := 0; i < 5; i++ {
 		_, _ = cb.Execute(ctx, "test", func() (interface{}, error) {
-			return "success", nil
+			return testSuccessResult, nil
 		})
 	}
 
@@ -412,7 +416,7 @@ func BenchmarkCircuitBreakerSuccess(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = cb.Execute(ctx, "benchmark", func() (interface{}, error) {
-			return "success", nil
+			return testSuccessResult, nil
 		})
 	}
 }
@@ -428,7 +432,7 @@ func BenchmarkCircuitBreakerDisabled(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = cb.Execute(ctx, "benchmark", func() (interface{}, error) {
-			return "success", nil
+			return testSuccessResult, nil
 		})
 	}
 }
@@ -444,7 +448,7 @@ func BenchmarkCircuitBreakerConcurrent(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			_, _ = cb.Execute(ctx, "benchmark", func() (interface{}, error) {
-				return "success", nil
+				return testSuccessResult, nil
 			})
 		}
 	})

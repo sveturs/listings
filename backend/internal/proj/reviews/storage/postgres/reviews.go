@@ -916,12 +916,13 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
 	// Graceful degradation: use default name if b2c_stores table doesn't exist
 	var storefrontName sql.NullString
 	err := s.pool.QueryRow(ctx, `SELECT name FROM b2c_stores WHERE id = $1`, storefrontID).Scan(&storefrontName)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+	switch {
+	case err != nil && !errors.Is(err, pgx.ErrNoRows):
 		log.Printf("Warning: could not get storefront name (legacy table may be dropped): %v", err)
 		summary.Name = "Unknown Store"
-	} else if storefrontName.Valid {
+	case storefrontName.Valid:
 		summary.Name = storefrontName.String
-	} else {
+	default:
 		summary.Name = "Unknown Store"
 	}
 

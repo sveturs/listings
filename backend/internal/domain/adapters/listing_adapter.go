@@ -3,15 +3,19 @@ package adapters
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"backend/internal/domain/models"
 )
 
+// ErrInvalidInput indicates that input data is invalid
+var ErrInvalidInput = fmt.Errorf("invalid input")
+
 // C2CToUnified конвертирует C2C listing в унифицированную модель
 func C2CToUnified(c2c *models.MarketplaceListing) (*models.UnifiedListing, error) {
 	if c2c == nil {
-		return nil, nil
+		return nil, ErrInvalidInput
 	}
 
 	unified := &models.UnifiedListing{
@@ -80,7 +84,7 @@ func C2CToUnified(c2c *models.MarketplaceListing) (*models.UnifiedListing, error
 // B2CToUnified конвертирует B2C product (StorefrontProduct) в унифицированную модель
 func B2CToUnified(b2c *models.StorefrontProduct, storefront *models.Storefront) (*models.UnifiedListing, error) {
 	if b2c == nil {
-		return nil, nil
+		return nil, ErrInvalidInput
 	}
 
 	// Определяем location из product или storefront
@@ -198,7 +202,7 @@ func B2CToUnified(b2c *models.StorefrontProduct, storefront *models.Storefront) 
 // Используется для обратной совместимости и миграции данных
 func UnifiedToC2C(unified *models.UnifiedListing) (*models.MarketplaceListing, error) {
 	if unified == nil || unified.SourceType != "c2c" {
-		return nil, nil
+		return nil, ErrInvalidInput
 	}
 
 	c2c := &models.MarketplaceListing{
@@ -255,12 +259,12 @@ func UnifiedToC2C(unified *models.UnifiedListing) (*models.MarketplaceListing, e
 // Используется для обратной совместимости и миграции данных
 func UnifiedToB2C(unified *models.UnifiedListing) (*models.StorefrontProduct, error) {
 	if unified == nil || unified.SourceType != "b2c" {
-		return nil, nil
+		return nil, ErrInvalidInput
 	}
 
 	if unified.StorefrontID == nil {
 		// B2C должен иметь storefront_id
-		return nil, nil
+		return nil, ErrInvalidInput
 	}
 
 	// Determine if location is individual or from storefront

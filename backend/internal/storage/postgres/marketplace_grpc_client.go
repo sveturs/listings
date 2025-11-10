@@ -106,10 +106,18 @@ func (c *MarketplaceGRPCClient) DeleteListingIndex(ctx context.Context, id strin
 
 // SearchListings performs search via microservice
 func (c *MarketplaceGRPCClient) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
+	// Validate size and page to prevent overflow
+	if params.Size < 0 || params.Size > 10000 {
+		return nil, fmt.Errorf("invalid size parameter: %d", params.Size)
+	}
+	if params.Page < 1 || params.Page > 100000 {
+		return nil, fmt.Errorf("invalid page parameter: %d", params.Page)
+	}
+
 	req := &listingsv1.SearchListingsRequest{
 		Query:  params.Query,
-		Limit:  int32(params.Size),
-		Offset: int32((params.Page - 1) * params.Size),
+		Limit:  int32(params.Size),                     // #nosec G115 - validated above
+		Offset: int32((params.Page - 1) * params.Size), // #nosec G115 - validated above
 	}
 
 	// Add category filter if present
@@ -150,10 +158,15 @@ func (c *MarketplaceGRPCClient) SearchListings(ctx context.Context, params *sear
 
 // SuggestListings provides autocomplete via microservice
 func (c *MarketplaceGRPCClient) SuggestListings(ctx context.Context, prefix string, size int) ([]string, error) {
+	// Validate size to prevent overflow
+	if size < 0 || size > 100 {
+		return nil, fmt.Errorf("invalid size parameter: %d", size)
+	}
+
 	// For now, use search with prefix query
 	req := &listingsv1.SearchListingsRequest{
 		Query:  prefix,
-		Limit:  int32(size),
+		Limit:  int32(size), // Safe after validation
 		Offset: 0,
 	}
 
@@ -199,9 +212,17 @@ func (c *MarketplaceGRPCClient) CreateListing(ctx context.Context, listing *mode
 
 // GetListings retrieves listings with filters via microservice
 func (c *MarketplaceGRPCClient) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
+	// Validate pagination parameters
+	if limit < 0 || limit > 10000 {
+		return nil, 0, fmt.Errorf("invalid limit parameter: %d", limit)
+	}
+	if offset < 0 {
+		return nil, 0, fmt.Errorf("invalid offset parameter: %d", offset)
+	}
+
 	req := &listingsv1.ListListingsRequest{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		Limit:  int32(limit),  // #nosec G115 - validated above
+		Offset: int32(offset), // #nosec G115 - validated above
 	}
 
 	// Apply filters
@@ -377,10 +398,15 @@ func (c *MarketplaceGRPCClient) DeleteListingImage(ctx context.Context, imageID 
 
 // AddListingImage adds a new image to a listing via microservice
 func (c *MarketplaceGRPCClient) AddListingImage(ctx context.Context, image *models.MarketplaceImage) (*models.MarketplaceImage, error) {
+	// Validate display order
+	if image.DisplayOrder < 0 || image.DisplayOrder > 100 {
+		return nil, fmt.Errorf("invalid display order: %d", image.DisplayOrder)
+	}
+
 	req := &listingsv1.AddImageRequest{
 		ListingId:    int64(image.ListingID),
 		Url:          image.PublicURL,
-		DisplayOrder: int32(image.DisplayOrder),
+		DisplayOrder: int32(image.DisplayOrder), // #nosec G115 - validated above
 		IsPrimary:    image.IsMain,
 	}
 
@@ -459,8 +485,13 @@ func (c *MarketplaceGRPCClient) GetAllCategories(ctx context.Context) ([]*models
 
 // GetPopularCategories retrieves popular categories by listing count via microservice
 func (c *MarketplaceGRPCClient) GetPopularCategories(ctx context.Context, limit int) ([]*models.MarketplaceCategory, error) {
+	// Validate limit
+	if limit < 0 || limit > 1000 {
+		return nil, fmt.Errorf("invalid limit parameter: %d", limit)
+	}
+
 	req := &listingsv1.PopularCategoriesRequest{
-		Limit: int32(limit),
+		Limit: int32(limit), // #nosec G115 - validated above
 	}
 
 	resp, err := c.client.GetPopularCategories(ctx, req)
@@ -538,7 +569,11 @@ func (c *MarketplaceGRPCClient) CreateListingVariants(ctx context.Context, listi
 			variantInputs[i].Price = v.Price
 		}
 		if v.Stock != nil {
-			stock := int32(*v.Stock)
+			// Validate stock value
+			if *v.Stock < 0 || *v.Stock > 1000000 {
+				return fmt.Errorf("invalid stock value for variant %s: %d", v.SKU, *v.Stock)
+			}
+			stock := int32(*v.Stock) // #nosec G115 - validated above
 			variantInputs[i].Stock = &stock
 		}
 		if v.ImageURL != nil && *v.ImageURL != "" {
@@ -600,7 +635,11 @@ func (c *MarketplaceGRPCClient) UpdateListingVariant(ctx context.Context, varian
 		req.Price = variant.Price
 	}
 	if variant.Stock != nil {
-		stock := int32(*variant.Stock)
+		// Validate stock value
+		if *variant.Stock < 0 || *variant.Stock > 1000000 {
+			return fmt.Errorf("invalid stock value for variant %d: %d", variant.ID, *variant.Stock)
+		}
+		stock := int32(*variant.Stock) // #nosec G115 - validated above
 		req.Stock = &stock
 	}
 	if variant.ImageURL != nil && *variant.ImageURL != "" {
@@ -643,8 +682,13 @@ func (c *MarketplaceGRPCClient) DeleteListingVariant(ctx context.Context, varian
 
 // GetMarketplaceListingsForReindex retrieves listings that need reindexing via microservice
 func (c *MarketplaceGRPCClient) GetMarketplaceListingsForReindex(ctx context.Context, limit int) ([]*models.MarketplaceListing, error) {
+	// Validate limit
+	if limit < 0 || limit > 10000 {
+		return nil, fmt.Errorf("invalid limit parameter: %d", limit)
+	}
+
 	req := &listingsv1.ReindexRequest{
-		BatchSize: int32(limit),
+		BatchSize: int32(limit), // #nosec G115 - validated above
 	}
 
 	resp, err := c.client.GetListingsForReindex(ctx, req)
@@ -938,6 +982,11 @@ func (c *MarketplaceGRPCClient) CreateProduct(ctx context.Context, storefrontID 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
+	// Validate stock quantity
+	if req.StockQuantity < 0 || req.StockQuantity > 1000000 {
+		return nil, fmt.Errorf("invalid stock quantity: %d", req.StockQuantity)
+	}
+
 	// Convert request to protobuf
 	pbReq := &listingsv1.CreateProductRequest{
 		StorefrontId:          int64(storefrontID),
@@ -946,7 +995,7 @@ func (c *MarketplaceGRPCClient) CreateProduct(ctx context.Context, storefrontID 
 		Price:                 req.Price,
 		Currency:              req.Currency,
 		CategoryId:            int64(req.CategoryID),
-		StockQuantity:         int32(req.StockQuantity),
+		StockQuantity:         int32(req.StockQuantity), // #nosec G115 - validated above
 		IsActive:              req.IsActive,
 		HasIndividualLocation: req.HasIndividualLocation != nil && *req.HasIndividualLocation,
 		ShowOnMap:             req.ShowOnMap == nil || *req.ShowOnMap,
@@ -1185,7 +1234,8 @@ func (c *MarketplaceGRPCClient) BatchUpdateStock(ctx context.Context, updates []
 	ProductID int
 	VariantID *int
 	Quantity  int
-}) ([]int, []error) {
+},
+) ([]int, []error) {
 	logger.Warn().
 		Int("count", len(updates)).
 		Msg("BatchUpdateStock called but not implemented - falling back to local DB")
@@ -1220,23 +1270,23 @@ func (c *MarketplaceGRPCClient) GetProductStats(ctx context.Context, storefrontI
 // convertProtoToProduct converts protobuf Product to domain StorefrontProduct
 func convertProtoToProduct(pb *listingsv1.Product) *models.StorefrontProduct {
 	product := &models.StorefrontProduct{
-		ID:                     int(pb.Id),
-		StorefrontID:           int(pb.StorefrontId),
-		Name:                   pb.Name,
-		Description:            pb.Description,
-		Price:                  pb.Price,
-		Currency:               pb.Currency,
-		CategoryID:             int(pb.CategoryId),
-		StockQuantity:          int(pb.StockQuantity),
-		StockStatus:            pb.StockStatus,
-		IsActive:               pb.IsActive,
-		ViewCount:              int(pb.ViewCount),
-		SoldCount:              int(pb.SoldCount),
-		HasIndividualLocation:  pb.HasIndividualLocation,
-		ShowOnMap:              pb.ShowOnMap,
-		HasVariants:            pb.HasVariants,
-		Images:                 []models.StorefrontProductImage{},
-		Variants:               []models.StorefrontProductVariant{},
+		ID:                    int(pb.Id),
+		StorefrontID:          int(pb.StorefrontId),
+		Name:                  pb.Name,
+		Description:           pb.Description,
+		Price:                 pb.Price,
+		Currency:              pb.Currency,
+		CategoryID:            int(pb.CategoryId),
+		StockQuantity:         int(pb.StockQuantity),
+		StockStatus:           pb.StockStatus,
+		IsActive:              pb.IsActive,
+		ViewCount:             int(pb.ViewCount),
+		SoldCount:             int(pb.SoldCount),
+		HasIndividualLocation: pb.HasIndividualLocation,
+		ShowOnMap:             pb.ShowOnMap,
+		HasVariants:           pb.HasVariants,
+		Images:                []models.StorefrontProductImage{},
+		Variants:              []models.StorefrontProductVariant{},
 	}
 
 	// Optional fields

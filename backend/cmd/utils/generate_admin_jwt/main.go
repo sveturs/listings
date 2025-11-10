@@ -10,8 +10,8 @@ import (
 	"backend/internal/config"
 
 	"github.com/rs/zerolog"
-	authClient "github.com/sveturs/auth/pkg/http/client"
 	authEntity "github.com/sveturs/auth/pkg/entity"
+	authClient "github.com/sveturs/auth/pkg/http/client"
 	authService "github.com/sveturs/auth/pkg/service"
 )
 

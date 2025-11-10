@@ -52,7 +52,7 @@ require (
 	github.com/minio/crc64nvme v1.0.2 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
-	github.com/sveturs/lib v1.2.0 // indirect
+	github.com/sveturs/lib v1.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
