@@ -328,3 +328,226 @@ func (c *HTTPClient) checkHTTPError(resp *http.Response) error {
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, errorMsg)
 	}
 }
+
+// ============================================================================
+// Favorites HTTP Methods
+// ============================================================================
+
+// AddToFavorites adds a listing to user's favorites via HTTP.
+func (c *HTTPClient) AddToFavorites(ctx context.Context, userID, listingID int64) error {
+	url := fmt.Sprintf("%s/api/v1/favorites/%d", c.baseURL, listingID)
+
+	// Body contains user_id for the request
+	body, err := json.Marshal(map[string]int64{"user_id": userID})
+	if err != nil {
+		return fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	c.addAuthHeaders(req)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if err := c.checkHTTPError(resp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// RemoveFromFavorites removes a listing from user's favorites via HTTP.
+func (c *HTTPClient) RemoveFromFavorites(ctx context.Context, userID, listingID int64) error {
+	url := fmt.Sprintf("%s/api/v1/favorites/%d?user_id=%d", c.baseURL, listingID, userID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	c.addAuthHeaders(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if err := c.checkHTTPError(resp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetUserFavorites retrieves list of listing IDs favorited by a user via HTTP.
+func (c *HTTPClient) GetUserFavorites(ctx context.Context, userID int64) ([]int64, int, error) {
+	url := fmt.Sprintf("%s/api/v1/users/%d/favorites", c.baseURL, userID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	c.addAuthHeaders(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if err := c.checkHTTPError(resp); err != nil {
+		return nil, 0, err
+	}
+
+	var result struct {
+		Data struct {
+			ListingIDs []int64 `json:"listing_ids"`
+			Total      int     `json:"total"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return result.Data.ListingIDs, result.Data.Total, nil
+}
+
+// IsFavorite checks if a listing is in user's favorites via HTTP.
+func (c *HTTPClient) IsFavorite(ctx context.Context, userID, listingID int64) (bool, error) {
+	url := fmt.Sprintf("%s/api/v1/favorites/%d/is-favorite?user_id=%d", c.baseURL, listingID, userID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	c.addAuthHeaders(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if err := c.checkHTTPError(resp); err != nil {
+		return false, err
+	}
+
+	var result struct {
+		Data struct {
+			IsFavorite bool `json:"is_favorite"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return false, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return result.Data.IsFavorite, nil
+}
+
+// GetFavoritedUsers retrieves list of user IDs who favorited a listing via HTTP.
+func (c *HTTPClient) GetFavoritedUsers(ctx context.Context, listingID int64) ([]int64, error) {
+	url := fmt.Sprintf("%s/api/v1/favorites/%d/users", c.baseURL, listingID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	c.addAuthHeaders(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if err := c.checkHTTPError(resp); err != nil {
+		return nil, err
+	}
+
+	var result struct {
+		Data struct {
+			UserIDs []int64 `json:"user_ids"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return result.Data.UserIDs, nil
+}
+
+// ============================================================================
+// Image Management HTTP Methods
+// ============================================================================
+
+// DeleteListingImage removes an image from a listing via HTTP.
+func (c *HTTPClient) DeleteListingImage(ctx context.Context, imageID int64) error {
+	url := fmt.Sprintf("%s/api/v1/images/%d", c.baseURL, imageID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	c.addAuthHeaders(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if err := c.checkHTTPError(resp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ReorderListingImages updates display order for multiple images via HTTP.
+func (c *HTTPClient) ReorderListingImages(ctx context.Context, listingID int64, imageOrders []ImageOrder) error {
+	url := fmt.Sprintf("%s/api/v1/listings/%d/images/reorder", c.baseURL, listingID)
+
+	// Marshal request body
+	body, err := json.Marshal(map[string]interface{}{
+		"image_orders": imageOrders,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	c.addAuthHeaders(req)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if err := c.checkHTTPError(resp); err != nil {
+		return err
+	}
+
+	return nil
+}

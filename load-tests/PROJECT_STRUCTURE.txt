@@ -1,0 +1,121 @@
+========================================
+Load Testing Suite - Project Structure
+========================================
+
+listings/
+└── load-tests/
+    ├── Core Test Scripts
+    │   ├── k6-http.js                    # HTTP load test (k6)
+    │   ├── ghz-grpc.sh                   # gRPC load test (ghz)
+    │   ├── run-all-tests.sh              # Orchestration script
+    │   └── analyze-results.sh            # Result analysis tool
+    │
+    ├── Documentation
+    │   ├── README.md                     # Comprehensive guide (11KB)
+    │   ├── QUICKSTART.md                 # Quick start guide (5KB)
+    │   └── IMPLEMENTATION_SUMMARY.md     # Implementation details (10KB)
+    │
+    ├── Infrastructure
+    │   ├── docker-compose.load-test.yml  # Docker stack
+    │   ├── prometheus.yml                # Prometheus config
+    │   └── grafana-datasources.yml       # Grafana config
+    │
+    ├── Results (gitignored)
+    │   └── results/                      # Generated test results
+    │
+    └── Configuration
+        └── .gitignore                    # Git ignore rules
+
+========================================
+Integration Points
+========================================
+
+Makefile Targets:
+  - make load-test              # Run all tests
+  - make load-test-http         # HTTP only
+  - make load-test-grpc         # gRPC only
+  - make load-test-analyze      # Analyze results
+  - make load-test-setup        # Docker environment
+  - make load-test-teardown     # Stop environment
+  - make load-test-clean        # Clean results
+
+========================================
+Test Coverage
+========================================
+
+HTTP Endpoints (5):
+  ✓ GET /health
+  ✓ GET /api/v1/storefronts
+  ✓ GET /api/v1/storefronts/{id}
+  ✓ GET /api/v1/listings
+  ✓ GET /api/v1/listings/{id}
+
+gRPC Methods (4 scenarios):
+  ✓ GetAllCategories (cached)
+  ✓ ListStorefronts (paginated)
+  ✓ GetListing (single item)
+  ✓ Mixed Workload (stress)
+
+========================================
+Success Criteria
+========================================
+
+✓ p95 latency < 100ms
+✓ Error rate < 1%
+✓ 100 RPS sustained throughput
+✓ No memory leaks
+✓ CPU usage < 80%
+
+========================================
+Features
+========================================
+
+✓ Automated testing (one command)
+✓ Pre-flight validation
+✓ System monitoring
+✓ Result analysis
+✓ Docker compose setup
+✓ Prometheus metrics
+✓ Grafana dashboards
+✓ CI/CD ready
+✓ Comprehensive documentation
+✓ Makefile integration
+
+========================================
+Quick Commands
+========================================
+
+# Install dependencies
+sudo snap install k6
+go install github.com/bojand/ghz/cmd/ghz@latest
+
+# Run tests
+cd /p/github.com/sveturs/listings
+make load-test
+
+# View results
+make load-test-analyze
+
+# Docker setup
+make load-test-setup
+# Visit http://localhost:3000 (Grafana)
+# Visit http://localhost:9090 (Prometheus)
+
+========================================
+File Sizes
+========================================
+
+k6-http.js                    9.7 KB
+ghz-grpc.sh                   13 KB
+run-all-tests.sh              13 KB
+analyze-results.sh            10 KB
+README.md                     11 KB
+QUICKSTART.md                 5.0 KB
+IMPLEMENTATION_SUMMARY.md     10 KB
+docker-compose.load-test.yml  3.1 KB
+
+Total: ~75 KB of production-ready code
+
+========================================
+Status: ✅ Production Ready
+========================================

@@ -43,7 +43,7 @@ type ServerConfig struct {
 // DBConfig contains PostgreSQL database configuration
 type DBConfig struct {
 	Host     string `envconfig:"SVETULISTINGS_DB_HOST" default:"localhost"`
-	Port     int    `envconfig:"SVETULISTINGS_DB_PORT" default:"35433"`
+	Port     int    `envconfig:"SVETULISTINGS_DB_PORT" default:"35434"`
 	User     string `envconfig:"SVETULISTINGS_DB_USER" default:"listings_user"`
 	Password string `envconfig:"SVETULISTINGS_DB_PASSWORD" default:"listings_password"`
 	Name     string `envconfig:"SVETULISTINGS_DB_NAME" default:"listings_db"`

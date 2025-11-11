@@ -1455,8 +1455,8 @@ func TestListingEdgeCases(t *testing.T) {
 		// Verify minimum values
 		minReq := &pb.CreateListingRequest{
 			UserId:     6002,
-			Title:      "Min",  // Minimum 3 characters (per validation rules)
-			Price:      0.01, // Minimum price
+			Title:      "Min", // Minimum 3 characters (per validation rules)
+			Price:      0.01,  // Minimum price
 			Currency:   "USD",
 			CategoryId: 51,
 			Quantity:   1, // Minimum quantity

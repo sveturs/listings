@@ -69,6 +69,7 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		"quantity":        listing.Quantity,
 		"sku":             listing.SKU,
 		"source_type":     listing.SourceType,     // c2c or b2c
+		"document_type":   "listing",              // Required for unified search filtering
 		"stock_status":    listing.StockStatus,    // in_stock, out_of_stock, etc
 		"attributes":      listing.AttributesJSON, // JSONB attributes as string
 		"views_count":     listing.ViewsCount,

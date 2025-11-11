@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/sveturs/listings/internal/domain"
+	"github.com/sveturs/listings/internal/service/listings/mocks"
 )
 
 func TestSlugGenerator_Generate(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	generator := NewSlugGenerator(mockRepo)
 	ctx := context.Background()
 
@@ -89,17 +90,17 @@ func TestSlugGenerator_Generate(t *testing.T) {
 }
 
 func TestSlugGenerator_GenerateWithExclusion(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	generator := NewSlugGenerator(mockRepo)
 	ctx := context.Background()
 
 	tests := []struct {
-		name              string
-		title             string
-		excludeListingID  int64
-		setupMock         func()
-		wantSlug          string
-		wantErr           bool
+		name             string
+		title            string
+		excludeListingID int64
+		setupMock        func()
+		wantSlug         string
+		wantErr          bool
 	}{
 		{
 			name:             "slug belongs to excluded listing - can reuse",
@@ -161,7 +162,7 @@ func TestSlugGenerator_GenerateWithExclusion(t *testing.T) {
 }
 
 func TestSlugGenerator_ValidateSlug(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	generator := NewSlugGenerator(mockRepo)
 	ctx := context.Background()
 

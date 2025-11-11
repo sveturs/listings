@@ -144,7 +144,11 @@ func (s *Server) UpdateListing(ctx context.Context, req *pb.UpdateListingRequest
 
 // DeleteListing soft-deletes a listing
 func (s *Server) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest) (*pb.DeleteListingResponse, error) {
-	s.logger.Debug().Int64("listing_id", req.Id).Int64("user_id", req.UserId).Msg("DeleteListing called")
+	s.logger.Debug().
+		Int64("listing_id", req.Id).
+		Int64("user_id", req.UserId).
+		Bool("is_admin", req.IsAdmin).
+		Msg("DeleteListing called")
 
 	// Validate request
 	if req.Id <= 0 {
@@ -153,6 +157,43 @@ func (s *Server) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest
 
 	if req.UserId <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "user ID must be greater than 0")
+	}
+
+	// If admin is requesting deletion, bypass ownership check
+	if req.IsAdmin {
+		s.logger.Info().
+			Int64("listing_id", req.Id).
+			Int64("admin_user_id", req.UserId).
+			Msg("Admin bypass: deleting listing without ownership check")
+
+		// Get listing first to verify it exists
+		listing, err := s.service.GetListing(ctx, req.Id)
+		if err != nil {
+			s.logger.Error().Err(err).Int64("listing_id", req.Id).Msg("failed to get listing for admin deletion")
+			return nil, status.Error(codes.NotFound, "listing not found")
+		}
+
+		// Delete listing via service using listing owner's ID
+		err = s.service.DeleteListing(ctx, req.Id, listing.UserID)
+		if err != nil {
+			s.logger.Error().
+				Err(err).
+				Int64("listing_id", req.Id).
+				Int64("admin_user_id", req.UserId).
+				Int64("listing_owner_id", listing.UserID).
+				Msg("failed to delete listing as admin")
+			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to delete listing: %v", err))
+		}
+
+		s.logger.Info().
+			Int64("listing_id", req.Id).
+			Int64("admin_user_id", req.UserId).
+			Int64("listing_owner_id", listing.UserID).
+			Msg("Listing deleted successfully by admin")
+
+		return &pb.DeleteListingResponse{
+			Success: true,
+		}, nil
 	}
 
 	// Delete listing via service (with ownership check)

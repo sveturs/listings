@@ -1,0 +1,125 @@
+═══════════════════════════════════════════════════════════════════════════
+  CATEGORY TRANSLATIONS - QUICK COMMANDS REFERENCE
+═══════════════════════════════════════════════════════════════════════════
+
+📋 QUICK START (ONE COMMAND)
+═══════════════════════════════════════════════════════════════════════════
+
+cd /p/github.com/sveturs/listings/scripts && ./apply_all_translations.sh
+
+
+📊 VERIFICATION COMMANDS
+═══════════════════════════════════════════════════════════════════════════
+
+# Check translation coverage
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "SELECT COUNT(*) as total, COUNT(title_en) as en, COUNT(title_ru) as ru, COUNT(title_sr) as sr FROM c2c_categories;"
+
+# View root categories
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "SELECT id, name, title_en, title_ru, title_sr FROM c2c_categories WHERE parent_id IS NULL ORDER BY id LIMIT 10;"
+
+# Check for missing translations
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "SELECT id, name, slug FROM c2c_categories WHERE title_en IS NULL OR title_ru IS NULL OR title_sr IS NULL;"
+
+
+🔧 INDIVIDUAL SCRIPT EXECUTION
+═══════════════════════════════════════════════════════════════════════════
+
+DB="postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable"
+
+# Step 1: Add columns
+psql "$DB" -f /p/github.com/sveturs/listings/scripts/01_add_translation_columns.sql
+
+# Step 2: Create backup
+psql "$DB" -f /p/github.com/sveturs/listings/scripts/02_backup_categories_before_translation.sql
+
+# Step 3: Apply translations
+psql "$DB" -f /p/github.com/sveturs/listings/scripts/03_add_category_translations.sql
+
+# Step 4: Rollback (if needed - edit file first!)
+psql "$DB" -f /p/github.com/sveturs/listings/scripts/04_rollback_category_translations.sql
+
+
+🔄 ROLLBACK COMMANDS
+═══════════════════════════════════════════════════════════════════════════
+
+# Option 1: Restore from backup
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "UPDATE c2c_categories c SET title_en = b.title_en, title_ru = b.title_ru, title_sr = b.title_sr FROM c2c_categories_backup_20251110 b WHERE c.id = b.id;"
+
+# Option 2: Clear all translations
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "UPDATE c2c_categories SET title_en = NULL, title_ru = NULL, title_sr = NULL;"
+
+# Option 3: Drop columns (WARNING: irreversible!)
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "ALTER TABLE c2c_categories DROP COLUMN title_en, DROP COLUMN title_ru, DROP COLUMN title_sr;"
+
+
+🗑️ CLEANUP COMMANDS
+═══════════════════════════════════════════════════════════════════════════
+
+# Drop backup table (after verification)
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "DROP TABLE IF EXISTS c2c_categories_backup_20251110;"
+
+
+📈 STATISTICS QUERIES
+═══════════════════════════════════════════════════════════════════════════
+
+# Count categories by level
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "SELECT level, COUNT(*) as count FROM c2c_categories GROUP BY level ORDER BY level;"
+
+# Show automotive subcategories
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "SELECT id, title_en, title_ru, title_sr FROM c2c_categories WHERE parent_id = 1003 ORDER BY id;"
+
+# List all root categories
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "SELECT id, name, title_en FROM c2c_categories WHERE parent_id IS NULL ORDER BY id;"
+
+
+🔍 TESTING QUERIES
+═══════════════════════════════════════════════════════════════════════════
+
+# Test a specific category
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "SELECT * FROM c2c_categories WHERE slug = 'electronics';"
+
+# View category with all its children
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" -c "SELECT id, name, title_en, parent_id FROM c2c_categories WHERE parent_id = 1001 OR id = 1001 ORDER BY parent_id NULLS FIRST, id;"
+
+
+🎯 PRODUCTION DEPLOYMENT
+═══════════════════════════════════════════════════════════════════════════
+
+# 1. Update connection string
+PROD_DB="postgres://[USER]:[PASSWORD]@[HOST]:[PORT]/[DATABASE]?sslmode=disable"
+
+# 2. Run scripts
+psql "$PROD_DB" -f /p/github.com/sveturs/listings/scripts/01_add_translation_columns.sql
+psql "$PROD_DB" -f /p/github.com/sveturs/listings/scripts/02_backup_categories_before_translation.sql
+psql "$PROD_DB" -f /p/github.com/sveturs/listings/scripts/03_add_category_translations.sql
+
+# 3. Verify
+psql "$PROD_DB" -c "SELECT COUNT(*) as total, COUNT(title_en) as en, COUNT(title_ru) as ru, COUNT(title_sr) as sr FROM c2c_categories;"
+
+
+📁 FILE LOCATIONS
+═══════════════════════════════════════════════════════════════════════════
+
+All scripts: /p/github.com/sveturs/listings/scripts/
+
+SQL:
+  • 01_add_translation_columns.sql
+  • 02_backup_categories_before_translation.sql
+  • 03_add_category_translations.sql
+  • 04_rollback_category_translations.sql
+
+Shell:
+  • apply_all_translations.sh
+
+Documentation:
+  • TRANSLATIONS_INDEX.md
+  • TRANSLATIONS_QUICKSTART.md
+  • README_CATEGORY_TRANSLATIONS.md
+  • TRANSLATIONS_SUMMARY.md
+  • COMMANDS_REFERENCE.txt (this file)
+
+
+═══════════════════════════════════════════════════════════════════════════
+  Last Updated: 2025-11-10
+  Status: ✅ Production Ready
+═══════════════════════════════════════════════════════════════════════════

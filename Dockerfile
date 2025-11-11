@@ -50,6 +50,9 @@ COPY --from=builder /build/bin/listings-service /app/listings-service
 # Copy migrations (if needed for embedded migrations)
 COPY --from=builder /build/migrations /app/migrations
 
+# Copy auth service public key
+COPY --from=builder /build/keys /app/keys
+
 # Change ownership
 RUN chown -R listings:listings /app
 

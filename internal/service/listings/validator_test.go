@@ -2,202 +2,16 @@ package listings
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/sveturs/listings/internal/domain"
+	"github.com/sveturs/listings/internal/service/listings/mocks"
 )
 
-// MockRepository is a mock implementation of Repository for testing
-type MockRepository struct {
-	mock.Mock
-}
-
-func (m *MockRepository) GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error) {
-	args := m.Called(ctx, categoryID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.Category), args.Error(1)
-}
-
-func (m *MockRepository) GetListingBySlug(ctx context.Context, slug string) (*domain.Listing, error) {
-	args := m.Called(ctx, slug)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.Listing), args.Error(1)
-}
-
-// Implement other required Repository methods as no-ops for testing
-func (m *MockRepository) CreateListing(ctx context.Context, input *domain.CreateListingInput) (*domain.Listing, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetListingByID(ctx context.Context, id int64) (*domain.Listing, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetListingByUUID(ctx context.Context, uuid string) (*domain.Listing, error) {
-	return nil, nil
-}
-func (m *MockRepository) UpdateListing(ctx context.Context, id int64, input *domain.UpdateListingInput) (*domain.Listing, error) {
-	return nil, nil
-}
-func (m *MockRepository) DeleteListing(ctx context.Context, id int64) error { return nil }
-func (m *MockRepository) ListListings(ctx context.Context, filter *domain.ListListingsFilter) ([]*domain.Listing, int32, error) {
-	return nil, 0, nil
-}
-func (m *MockRepository) SearchListings(ctx context.Context, query *domain.SearchListingsQuery) ([]*domain.Listing, int32, error) {
-	return nil, 0, nil
-}
-func (m *MockRepository) EnqueueIndexing(ctx context.Context, listingID int64, operation string) error {
-	return nil
-}
-func (m *MockRepository) GetImageByID(ctx context.Context, imageID int64) (*domain.ListingImage, error) {
-	return nil, nil
-}
-func (m *MockRepository) DeleteImage(ctx context.Context, imageID int64) error { return nil }
-func (m *MockRepository) AddImage(ctx context.Context, image *domain.ListingImage) (*domain.ListingImage, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetImages(ctx context.Context, listingID int64) ([]*domain.ListingImage, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetRootCategories(ctx context.Context) ([]*domain.Category, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetAllCategories(ctx context.Context) ([]*domain.Category, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetPopularCategories(ctx context.Context, limit int) ([]*domain.Category, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetFavoritedUsers(ctx context.Context, listingID int64) ([]int64, error) {
-	return nil, nil
-}
-func (m *MockRepository) AddToFavorites(ctx context.Context, userID, listingID int64) error {
-	return nil
-}
-func (m *MockRepository) RemoveFromFavorites(ctx context.Context, userID, listingID int64) error {
-	return nil
-}
-func (m *MockRepository) GetUserFavorites(ctx context.Context, userID int64) ([]int64, error) {
-	return nil, nil
-}
-func (m *MockRepository) IsFavorite(ctx context.Context, userID, listingID int64) (bool, error) {
-	return false, nil
-}
-func (m *MockRepository) CreateVariants(ctx context.Context, variants []*domain.ListingVariant) error {
-	return nil
-}
-func (m *MockRepository) GetVariants(ctx context.Context, listingID int64) ([]*domain.ListingVariant, error) {
-	return nil, nil
-}
-func (m *MockRepository) UpdateVariant(ctx context.Context, variant *domain.ListingVariant) error {
-	return nil
-}
-func (m *MockRepository) DeleteVariant(ctx context.Context, variantID int64) error { return nil }
-func (m *MockRepository) GetListingsForReindex(ctx context.Context, limit int) ([]*domain.Listing, error) {
-	return nil, nil
-}
-func (m *MockRepository) ResetReindexFlags(ctx context.Context, listingIDs []int64) error {
-	return nil
-}
-func (m *MockRepository) SyncDiscounts(ctx context.Context) error { return nil }
-
-// Products operations
-func (m *MockRepository) GetProductByID(ctx context.Context, productID int64, storefrontID *int64) (*domain.Product, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetProductsBySKUs(ctx context.Context, skus []string, storefrontID *int64) ([]*domain.Product, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetProductsByIDs(ctx context.Context, productIDs []int64, storefrontID *int64) ([]*domain.Product, error) {
-	return nil, nil
-}
-func (m *MockRepository) ListProducts(ctx context.Context, storefrontID int64, page, pageSize int, isActiveOnly bool) ([]*domain.Product, int, error) {
-	return nil, 0, nil
-}
-func (m *MockRepository) CreateProduct(ctx context.Context, input *domain.CreateProductInput) (*domain.Product, error) {
-	return nil, nil
-}
-func (m *MockRepository) BulkCreateProducts(ctx context.Context, storefrontID int64, inputs []*domain.CreateProductInput) ([]*domain.Product, []domain.BulkProductError, error) {
-	return nil, nil, nil
-}
-func (m *MockRepository) UpdateProduct(ctx context.Context, productID int64, storefrontID int64, input *domain.UpdateProductInput) (*domain.Product, error) {
-	return nil, nil
-}
-func (m *MockRepository) DeleteProduct(ctx context.Context, productID, storefrontID int64, hardDelete bool) (int32, error) {
-	return 0, nil
-}
-func (m *MockRepository) BulkDeleteProducts(ctx context.Context, storefrontID int64, productIDs []int64, hardDelete bool) (int32, int32, int32, map[int64]string, error) {
-	return 0, 0, 0, nil, nil
-}
-func (m *MockRepository) BulkUpdateProducts(ctx context.Context, storefrontID int64, updates []*domain.BulkUpdateProductInput) (*domain.BulkUpdateProductsResult, error) {
-	return nil, nil
-}
-
-// Product Variants operations
-func (m *MockRepository) GetVariantByID(ctx context.Context, variantID int64, productID *int64) (*domain.ProductVariant, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetVariantsByProductID(ctx context.Context, productID int64, isActiveOnly bool) ([]*domain.ProductVariant, error) {
-	return nil, nil
-}
-func (m *MockRepository) CreateProductVariant(ctx context.Context, input *domain.CreateVariantInput) (*domain.ProductVariant, error) {
-	return nil, nil
-}
-func (m *MockRepository) UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
-	return nil, nil
-}
-func (m *MockRepository) DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error {
-	return nil
-}
-func (m *MockRepository) BulkCreateProductVariants(ctx context.Context, productID int64, inputs []*domain.CreateVariantInput) ([]*domain.ProductVariant, error) {
-	return nil, nil
-}
-
-// Inventory Management operations
-func (m *MockRepository) UpdateProductInventory(ctx context.Context, storefrontID, productID, variantID int64, movementType string, quantity int32, reason, notes string, userID int64) (int32, int32, error) {
-	return 0, 0, nil
-}
-func (m *MockRepository) GetProductStats(ctx context.Context, storefrontID int64) (*domain.ProductStats, error) {
-	return nil, nil
-}
-func (m *MockRepository) IncrementProductViews(ctx context.Context, productID int64) error {
-	return nil
-}
-func (m *MockRepository) BatchUpdateStock(ctx context.Context, storefrontID int64, items []domain.StockUpdateItem, reason string, userID int64) (int32, int32, []domain.StockUpdateResult, error) {
-	return 0, 0, nil, nil
-}
-
-// Storefront operations
-func (m *MockRepository) GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error) {
-	return nil, nil
-}
-func (m *MockRepository) ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error) {
-	return nil, 0, nil
-}
-
-// Transaction and database operations
-func (m *MockRepository) BeginTx(ctx context.Context) (*sql.Tx, error) {
-	return nil, nil
-}
-func (m *MockRepository) GetDB() *sqlx.DB {
-	return nil
-}
-
 func TestValidator_ValidatePrice(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	validator := NewValidator(mockRepo)
 
 	tests := []struct {
@@ -225,7 +39,7 @@ func TestValidator_ValidatePrice(t *testing.T) {
 }
 
 func TestValidator_ValidateTitle(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	validator := NewValidator(mockRepo)
 
 	tests := []struct {
@@ -255,7 +69,7 @@ func TestValidator_ValidateTitle(t *testing.T) {
 }
 
 func TestValidator_ValidateDescription(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	validator := NewValidator(mockRepo)
 
 	validDesc := "This is a valid description"
@@ -284,7 +98,7 @@ func TestValidator_ValidateDescription(t *testing.T) {
 }
 
 func TestValidator_ValidateQuantity(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	validator := NewValidator(mockRepo)
 
 	tests := []struct {
@@ -310,7 +124,7 @@ func TestValidator_ValidateQuantity(t *testing.T) {
 }
 
 func TestValidator_ValidateCurrency(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	validator := NewValidator(mockRepo)
 
 	tests := []struct {
@@ -340,7 +154,7 @@ func TestValidator_ValidateCurrency(t *testing.T) {
 }
 
 func TestValidator_ValidateCategory(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	validator := NewValidator(mockRepo)
 
 	ctx := context.Background()
@@ -385,7 +199,7 @@ func TestValidator_ValidateCategory(t *testing.T) {
 }
 
 func TestValidator_ValidateStatusTransition(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	validator := NewValidator(mockRepo)
 
 	tests := []struct {
@@ -417,7 +231,7 @@ func TestValidator_ValidateStatusTransition(t *testing.T) {
 }
 
 func TestValidator_ValidateImages(t *testing.T) {
-	mockRepo := new(MockRepository)
+	mockRepo := new(mocks.MockRepository)
 	validator := NewValidator(mockRepo)
 
 	validFileSize := int64(1024 * 1024) // 1MB
@@ -442,8 +256,8 @@ func TestValidator_ValidateImages(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "too many images",
-			images: make([]*domain.ListingImage, MaxImagesPerListing+1),
+			name:    "too many images",
+			images:  make([]*domain.ListingImage, MaxImagesPerListing+1),
 			wantErr: true,
 		},
 		{

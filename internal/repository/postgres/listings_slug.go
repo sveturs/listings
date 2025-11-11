@@ -66,8 +66,49 @@ func (r *Repository) GenerateUniqueSlug(ctx context.Context, title string, exclu
 	return "", fmt.Errorf("failed to generate unique slug after 100 attempts")
 }
 
+// transliterationMap contains mappings for Cyrillic to Latin transliteration
+// Supports Russian and Serbian Cyrillic characters
+var transliterationMap = map[rune]string{
+	// Russian Cyrillic (lowercase)
+	'а': "a", 'б': "b", 'в': "v", 'г': "g", 'д': "d", 'е': "e", 'ё': "yo",
+	'ж': "zh", 'з': "z", 'и': "i", 'й': "j", 'к': "k", 'л': "l", 'м': "m",
+	'н': "n", 'о': "o", 'п': "p", 'р': "r", 'с': "s", 'т': "t", 'у': "u",
+	'ф': "f", 'х': "h", 'ц': "c", 'ч': "ch", 'ш': "sh", 'щ': "shch", 'ъ': "",
+	'ы': "y", 'ь': "", 'э': "e", 'ю': "yu", 'я': "ya",
+
+	// Russian Cyrillic (uppercase)
+	'А': "a", 'Б': "b", 'В': "v", 'Г': "g", 'Д': "d", 'Е': "e", 'Ё': "yo",
+	'Ж': "zh", 'З': "z", 'И': "i", 'Й': "j", 'К': "k", 'Л': "l", 'М': "m",
+	'Н': "n", 'О': "o", 'П': "p", 'Р': "r", 'С': "s", 'Т': "t", 'У': "u",
+	'Ф': "f", 'Х': "h", 'Ц': "c", 'Ч': "ch", 'Ш': "sh", 'Щ': "shch", 'Ъ': "",
+	'Ы': "y", 'Ь': "", 'Э': "e", 'Ю': "yu", 'Я': "ya",
+
+	// Serbian Cyrillic specific (lowercase)
+	'ђ': "dj", 'ј': "j", 'љ': "lj", 'њ': "nj", 'ћ': "c", 'џ': "dz",
+
+	// Serbian Cyrillic specific (uppercase)
+	'Ђ': "dj", 'Ј': "j", 'Љ': "lj", 'Њ': "nj", 'Ћ': "c", 'Џ': "dz",
+}
+
+// transliterate converts Cyrillic characters to Latin equivalents
+func transliterate(s string) string {
+	var result strings.Builder
+	result.Grow(len(s) * 2) // Pre-allocate approximately needed capacity
+
+	for _, r := range s {
+		if replacement, ok := transliterationMap[r]; ok {
+			result.WriteString(replacement)
+		} else {
+			result.WriteRune(r)
+		}
+	}
+
+	return result.String()
+}
+
 // slugify converts a string to a URL-friendly slug
 // Rules:
+// - Transliterate Cyrillic characters to Latin
 // - Convert to lowercase
 // - Replace spaces with hyphens
 // - Remove all non-alphanumeric characters except hyphens
@@ -77,6 +118,9 @@ func slugify(s string) string {
 	if s == "" {
 		return ""
 	}
+
+	// Transliterate Cyrillic to Latin FIRST
+	s = transliterate(s)
 
 	// Convert to lowercase
 	s = strings.ToLower(s)

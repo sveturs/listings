@@ -45,6 +45,9 @@ service ListingsService {
   // GetListingImages retrieves all images for a listing
   rpc GetListingImages(ListingIDRequest) returns (ImagesResponse);
 
+  // ReorderListingImages updates display order for multiple images
+  rpc ReorderListingImages(ReorderImagesRequest) returns (google.protobuf.Empty);
+
   // === Category Management (HIGH PRIORITY) ===
 
   // GetRootCategories retrieves all top-level categories (no parent)
@@ -440,6 +443,7 @@ message UpdateListingResponse {
 message DeleteListingRequest {
   int64 id = 1;
   int64 user_id = 2; // Required for ownership check
+  bool is_admin = 3; // If true, bypass ownership check (admin privilege)
 }
 
 message DeleteListingResponse {
@@ -514,6 +518,18 @@ message ListingIDRequest {
 // ImagesResponse returns multiple images
 message ImagesResponse {
   repeated ListingImage images = 1;
+}
+
+// ReorderImagesRequest updates display order for multiple images
+message ReorderImagesRequest {
+  int64 listing_id = 1;
+  repeated ImageOrder image_orders = 2;
+}
+
+// ImageOrder represents display order for a single image
+message ImageOrder {
+  int64 image_id = 1;
+  int32 display_order = 2;
 }
 
 // ============================================================================

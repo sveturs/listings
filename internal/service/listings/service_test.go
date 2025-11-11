@@ -175,7 +175,7 @@ func TestBulkCreateProducts_Error_NilInput(t *testing.T) {
 }
 
 func TestBulkCreateProducts_Error_ValidationFailed_Index0(t *testing.T) {
-	service, _, _, _ := SetupServiceTest(t)
+	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	storefrontID := int64(1)
@@ -190,12 +190,25 @@ func TestBulkCreateProducts_Error_ValidationFailed_Index0(t *testing.T) {
 		},
 	}
 
+	// Mock repository to return validation error through BulkProductError
+	expectedErrors := []domain.BulkProductError{
+		{
+			Index:        0,
+			ErrorCode:    "products.invalid_name",
+			ErrorMessage: "validation failed for product at index 0",
+		},
+	}
+
+	mockRepo.On("BulkCreateProducts", ctx, storefrontID, inputs).
+		Return([]*domain.Product{}, expectedErrors, nil)
+
 	products, errors, err := service.BulkCreateProducts(ctx, storefrontID, inputs)
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "validation failed for product at index 0")
-	assert.Nil(t, products)
-	assert.Nil(t, errors)
+	assert.NoError(t, err)
+	assert.Len(t, products, 0)
+	assert.Len(t, errors, 1)
+	assert.Equal(t, int32(0), errors[0].Index)
+	mockRepo.AssertExpectations(t)
 }
 
 func TestBulkCreateProducts_Error_StorefrontIDMismatch(t *testing.T) {
@@ -227,7 +240,7 @@ func TestBulkCreateProducts_Error_StorefrontIDMismatch(t *testing.T) {
 }
 
 func TestBulkCreateProducts_Error_NegativePrice(t *testing.T) {
-	service, _, _, _ := SetupServiceTest(t)
+	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	storefrontID := int64(1)
@@ -243,16 +256,29 @@ func TestBulkCreateProducts_Error_NegativePrice(t *testing.T) {
 		},
 	}
 
+	// Mock repository to return validation error through BulkProductError
+	expectedErrors := []domain.BulkProductError{
+		{
+			Index:        0,
+			ErrorCode:    "products.invalid_price",
+			ErrorMessage: "validation failed for product at index 0",
+		},
+	}
+
+	mockRepo.On("BulkCreateProducts", ctx, storefrontID, inputs).
+		Return([]*domain.Product{}, expectedErrors, nil)
+
 	products, errors, err := service.BulkCreateProducts(ctx, storefrontID, inputs)
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "validation failed for product at index 0")
-	assert.Nil(t, products)
-	assert.Nil(t, errors)
+	assert.NoError(t, err)
+	assert.Len(t, products, 0)
+	assert.Len(t, errors, 1)
+	assert.Equal(t, int32(0), errors[0].Index)
+	mockRepo.AssertExpectations(t)
 }
 
 func TestBulkCreateProducts_Error_MissingName(t *testing.T) {
-	service, _, _, _ := SetupServiceTest(t)
+	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	storefrontID := int64(1)
@@ -268,12 +294,25 @@ func TestBulkCreateProducts_Error_MissingName(t *testing.T) {
 		},
 	}
 
+	// Mock repository to return validation error through BulkProductError
+	expectedErrors := []domain.BulkProductError{
+		{
+			Index:        0,
+			ErrorCode:    "products.invalid_name",
+			ErrorMessage: "validation failed for product at index 0",
+		},
+	}
+
+	mockRepo.On("BulkCreateProducts", ctx, storefrontID, inputs).
+		Return([]*domain.Product{}, expectedErrors, nil)
+
 	products, errors, err := service.BulkCreateProducts(ctx, storefrontID, inputs)
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "validation failed for product at index 0")
-	assert.Nil(t, products)
-	assert.Nil(t, errors)
+	assert.NoError(t, err)
+	assert.Len(t, products, 0)
+	assert.Len(t, errors, 1)
+	assert.Equal(t, int32(0), errors[0].Index)
+	mockRepo.AssertExpectations(t)
 }
 
 func TestBulkCreateProducts_PartialSuccess_SomeFailSomeSucceed(t *testing.T) {
@@ -1455,8 +1494,14 @@ func TestDeleteListing_Success_CacheInvalidation_Success(t *testing.T) {
 		Return(existingListing, nil)
 	mockRepo.On("DeleteListing", ctx, listingID).
 		Return(nil)
+	mockRepo.On("GetImages", ctx, listingID).
+		Return([]*domain.ListingImage{}, nil)
 	mockCache.On("Delete", ctx, "listing:1").
 		Return(nil) // Cache invalidation succeeds
+	mockCache.On("Delete", ctx, "favorites:listing:1:count").
+		Return(nil)
+	mockCache.On("Delete", ctx, "user:100:listings").
+		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpDelete).
 		Return(nil)
 
@@ -1480,7 +1525,13 @@ func TestDeleteListing_Success_EnqueueIndexing_Success(t *testing.T) {
 		Return(existingListing, nil)
 	mockRepo.On("DeleteListing", ctx, listingID).
 		Return(nil)
+	mockRepo.On("GetImages", ctx, listingID).
+		Return([]*domain.ListingImage{}, nil)
 	mockCache.On("Delete", ctx, "listing:1").
+		Return(nil)
+	mockCache.On("Delete", ctx, "favorites:listing:1:count").
+		Return(nil)
+	mockCache.On("Delete", ctx, "user:100:listings").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpDelete).
 		Return(nil) // Indexing succeeds
@@ -2113,6 +2164,10 @@ func TestGetListing_Success_CacheMiss(t *testing.T) {
 	mockRepo.On("GetListingByID", ctx, listingID).
 		Return(expectedListing, nil)
 
+	// Load images
+	mockRepo.On("GetImages", ctx, listingID).
+		Return([]*domain.ListingImage{}, nil)
+
 	// Non-blocking cache set (may or may not be called)
 	mockCache.On("Set", mock.Anything, mock.Anything, mock.Anything).
 		Return(nil).Maybe()
@@ -2166,6 +2221,10 @@ func TestGetListing_Success_NonBlockingCache_SetFailure(t *testing.T) {
 	mockRepo.On("GetListingByID", ctx, listingID).
 		Return(expectedListing, nil)
 
+	// Load images
+	mockRepo.On("GetImages", ctx, listingID).
+		Return([]*domain.ListingImage{}, nil)
+
 	// Non-blocking cache set - may fail but doesn't affect response
 	mockCache.On("Set", mock.Anything, mock.Anything, mock.Anything).
 		Return(assert.AnError).Maybe()
@@ -2185,7 +2244,7 @@ func TestGetListing_Success_NonBlockingCache_SetFailure(t *testing.T) {
 // ===================================
 
 func TestAddToFavorites_Success_AddFavorite(t *testing.T) {
-	service, mockRepo, _, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	userID := int64(100)
@@ -2198,10 +2257,16 @@ func TestAddToFavorites_Success_AddFavorite(t *testing.T) {
 	mockRepo.On("AddToFavorites", ctx, userID, listingID).
 		Return(nil)
 
+	// Mock cache invalidation - three separate calls
+	mockCache.On("Delete", ctx, "favorites:user:100").Return(nil).Once()
+	mockCache.On("Delete", ctx, "favorites:listing:1:count").Return(nil).Once()
+	mockCache.On("Delete", ctx, "favorites:user:100:listing:1").Return(nil).Once()
+
 	err := service.AddToFavorites(ctx, userID, listingID)
 
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestAddToFavorites_Error_InvalidUserID(t *testing.T) {
@@ -2248,7 +2313,7 @@ func TestAddToFavorites_Error_ListingNotFound(t *testing.T) {
 }
 
 func TestRemoveFromFavorites_Success_RemoveFavorite(t *testing.T) {
-	service, mockRepo, _, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	userID := int64(100)
@@ -2257,10 +2322,16 @@ func TestRemoveFromFavorites_Success_RemoveFavorite(t *testing.T) {
 	mockRepo.On("RemoveFromFavorites", ctx, userID, listingID).
 		Return(nil)
 
+	// Mock cache invalidation - three separate calls
+	mockCache.On("Delete", ctx, "favorites:user:100").Return(nil).Once()
+	mockCache.On("Delete", ctx, "favorites:listing:1:count").Return(nil).Once()
+	mockCache.On("Delete", ctx, "favorites:user:100:listing:1").Return(nil).Once()
+
 	err := service.RemoveFromFavorites(ctx, userID, listingID)
 
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestRemoveFromFavorites_Error_InvalidUserID(t *testing.T) {
@@ -2290,14 +2361,20 @@ func TestRemoveFromFavorites_Error_InvalidListingID(t *testing.T) {
 }
 
 func TestGetUserFavorites_Success_MultipleFavorites(t *testing.T) {
-	service, mockRepo, _, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	userID := int64(100)
 	expectedIDs := []int64{1, 2, 3}
 
+	// Cache miss
+	mockCache.On("Get", ctx, "favorites:user:100", mock.Anything).Return(assert.AnError).Once()
+
 	mockRepo.On("GetUserFavorites", ctx, userID).
 		Return(expectedIDs, nil)
+
+	// Cache set
+	mockCache.On("Set", ctx, "favorites:user:100", expectedIDs).Return(nil).Once()
 
 	listingIDs, err := service.GetUserFavorites(ctx, userID)
 
@@ -2305,23 +2382,31 @@ func TestGetUserFavorites_Success_MultipleFavorites(t *testing.T) {
 	assert.Len(t, listingIDs, 3)
 	assert.Equal(t, expectedIDs, listingIDs)
 	mockRepo.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestGetUserFavorites_Success_EmptyFavorites(t *testing.T) {
-	service, mockRepo, _, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	userID := int64(100)
 	expectedIDs := []int64{}
 
+	// Cache miss
+	mockCache.On("Get", ctx, "favorites:user:100", mock.Anything).Return(assert.AnError).Once()
+
 	mockRepo.On("GetUserFavorites", ctx, userID).
 		Return(expectedIDs, nil)
+
+	// Cache set
+	mockCache.On("Set", ctx, "favorites:user:100", expectedIDs).Return(nil).Once()
 
 	listingIDs, err := service.GetUserFavorites(ctx, userID)
 
 	assert.NoError(t, err)
 	assert.Len(t, listingIDs, 0)
 	mockRepo.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestGetUserFavorites_Error_InvalidUserID(t *testing.T) {
@@ -2338,37 +2423,51 @@ func TestGetUserFavorites_Error_InvalidUserID(t *testing.T) {
 }
 
 func TestIsFavorite_True_IsFavorite(t *testing.T) {
-	service, mockRepo, _, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	userID := int64(100)
 	listingID := int64(1)
 
+	// Cache miss
+	mockCache.On("Get", ctx, "favorites:user:100:listing:1", mock.Anything).Return(assert.AnError).Once()
+
 	mockRepo.On("IsFavorite", ctx, userID, listingID).
 		Return(true, nil)
+
+	// Cache set
+	mockCache.On("Set", ctx, "favorites:user:100:listing:1", true).Return(nil).Once()
 
 	isFavorite, err := service.IsFavorite(ctx, userID, listingID)
 
 	assert.NoError(t, err)
 	assert.True(t, isFavorite)
 	mockRepo.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestIsFavorite_False_NotFavorite(t *testing.T) {
-	service, mockRepo, _, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
 	userID := int64(100)
 	listingID := int64(1)
 
+	// Cache miss
+	mockCache.On("Get", ctx, "favorites:user:100:listing:1", mock.Anything).Return(assert.AnError).Once()
+
 	mockRepo.On("IsFavorite", ctx, userID, listingID).
 		Return(false, nil)
+
+	// Cache set
+	mockCache.On("Set", ctx, "favorites:user:100:listing:1", false).Return(nil).Once()
 
 	isFavorite, err := service.IsFavorite(ctx, userID, listingID)
 
 	assert.NoError(t, err)
 	assert.False(t, isFavorite)
 	mockRepo.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }
 
 func TestIsFavorite_Error_InvalidUserID(t *testing.T) {

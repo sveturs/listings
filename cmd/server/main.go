@@ -14,7 +14,6 @@ import (
 
 	"github.com/rs/zerolog"
 	authservice "github.com/sveturs/auth/pkg/service"
-	liblogger "github.com/sveturs/lib/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -70,9 +69,17 @@ func main() {
 		Str("env", cfg.App.Env).
 		Msg("Starting Listings Service")
 
-	// Initialize lib/logger for auth service integration
-	liblogger.Init(cfg.App.Env, cfg.App.LogLevel, Version, false, false)
-	logger := liblogger.Get()
+	// Initialize zerolog logger
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	logLevel := zerolog.InfoLevel
+	if cfg.App.LogLevel == "debug" {
+		logLevel = zerolog.DebugLevel
+	}
+	logger := zerolog.New(os.Stdout).Level(logLevel).With().
+		Timestamp().
+		Str("service", "listings").
+		Str("version", Version).
+		Logger()
 
 	// Initialize metrics
 	metricsInstance := metrics.NewMetrics("listings")

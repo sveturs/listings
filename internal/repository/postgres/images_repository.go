@@ -11,11 +11,11 @@ import (
 // GetImageByID retrieves a single image by ID
 func (r *Repository) GetImageByID(ctx context.Context, imageID int64) (*domain.ListingImage, error) {
 	query := `
-		SELECT id, listing_id, public_url as url, file_path as storage_path,
-		       NULL as thumbnail_url, 1 as display_order, is_main as is_primary,
-		       NULL::integer as width, NULL::integer as height, file_size,
-		       content_type as mime_type, created_at, created_at as updated_at
-		FROM c2c_images
+		SELECT id, listing_id, url, storage_path,
+		       thumbnail_url, display_order, is_primary,
+		       width, height, file_size,
+		       mime_type, created_at, updated_at
+		FROM listing_images
 		WHERE id = $1
 	`
 
@@ -73,7 +73,7 @@ func (r *Repository) GetImageByID(ctx context.Context, imageID int64) (*domain.L
 // DeleteImage removes an image from the database
 func (r *Repository) DeleteImage(ctx context.Context, imageID int64) error {
 	query := `
-		DELETE FROM c2c_images
+		DELETE FROM listing_images
 		WHERE id = $1
 	`
 
@@ -98,57 +98,28 @@ func (r *Repository) DeleteImage(ctx context.Context, imageID int64) error {
 
 // AddImage adds a new image to a listing
 func (r *Repository) AddImage(ctx context.Context, image *domain.ListingImage) (*domain.ListingImage, error) {
-	// Convert domain image to c2c_images schema
 	query := `
-		INSERT INTO c2c_images (
-			listing_id, file_path, file_name, file_size, content_type,
-			is_main, storage_type, storage_bucket, public_url
+		INSERT INTO listing_images (
+			listing_id, url, storage_path, thumbnail_url, display_order,
+			is_primary, width, height, file_size, mime_type
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id, created_at
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		RETURNING id, created_at, updated_at
 	`
-
-	// Extract filename from storage_path or use default
-	fileName := "image.jpg"
-	if image.StoragePath != nil && *image.StoragePath != "" {
-		// Simple filename extraction
-		fileName = *image.StoragePath
-	}
-
-	// Default storage type to minio
-	storageType := "minio"
-	storageBucket := sql.NullString{String: "listings", Valid: true}
-	publicURL := sql.NullString{String: image.URL, Valid: image.URL != ""}
-
-	var fileSize sql.NullInt64
-	if image.FileSize != nil {
-		fileSize = sql.NullInt64{Int64: *image.FileSize, Valid: true}
-	}
-
-	var mimeType sql.NullString
-	if image.MimeType != nil {
-		mimeType = sql.NullString{String: *image.MimeType, Valid: true}
-	}
-
-	var storagePath string
-	if image.StoragePath != nil {
-		storagePath = *image.StoragePath
-	} else {
-		storagePath = ""
-	}
 
 	var newImage domain.ListingImage
 	err := r.db.QueryRowxContext(ctx, query,
 		image.ListingID,
-		storagePath,
-		fileName,
-		fileSize,
-		mimeType,
+		image.URL,
+		image.StoragePath,
+		image.ThumbnailURL,
+		image.DisplayOrder,
 		image.IsPrimary,
-		storageType,
-		storageBucket,
-		publicURL,
-	).Scan(&newImage.ID, &newImage.CreatedAt)
+		image.Width,
+		image.Height,
+		image.FileSize,
+		image.MimeType,
+	).Scan(&newImage.ID, &newImage.CreatedAt, &newImage.UpdatedAt)
 
 	if err != nil {
 		r.logger.Error().Err(err).Int64("listing_id", image.ListingID).Msg("failed to add image")
@@ -175,13 +146,13 @@ func (r *Repository) AddImage(ctx context.Context, image *domain.ListingImage) (
 // GetImages retrieves all images for a listing
 func (r *Repository) GetImages(ctx context.Context, listingID int64) ([]*domain.ListingImage, error) {
 	query := `
-		SELECT id, listing_id, public_url as url, file_path as storage_path,
-		       NULL as thumbnail_url, 1 as display_order, is_main as is_primary,
-		       NULL::integer as width, NULL::integer as height, file_size,
-		       content_type as mime_type, created_at, created_at as updated_at
-		FROM c2c_images
+		SELECT id, listing_id, url, storage_path,
+		       thumbnail_url, display_order, is_primary,
+		       width, height, file_size,
+		       mime_type, created_at, updated_at
+		FROM listing_images
 		WHERE listing_id = $1
-		ORDER BY is_main DESC, id ASC
+		ORDER BY is_primary DESC, display_order ASC, id ASC
 	`
 
 	rows, err := r.db.QueryxContext(ctx, query, listingID)
@@ -246,4 +217,94 @@ func (r *Repository) GetImages(ctx context.Context, listingID int64) ([]*domain.
 	}
 
 	return images, nil
+}
+
+// ImageOrder represents display order update for a single image
+type ImageOrder struct {
+	ImageID      int64
+	DisplayOrder int32
+}
+
+// ReorderImages updates display order for multiple images in a single transaction
+func (r *Repository) ReorderImages(ctx context.Context, listingID int64, orders []ImageOrder) error {
+	if len(orders) == 0 {
+		return nil
+	}
+
+	// Start transaction
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to start transaction")
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Build CASE statement for batch update
+	// UPDATE listing_images SET display_order = CASE
+	//   WHEN id = $1 THEN $2
+	//   WHEN id = $3 THEN $4
+	//   ...
+	// END
+	// WHERE listing_id = $N AND id IN ($1, $3, ...)
+
+	query := `UPDATE listing_images SET display_order = CASE `
+	args := make([]interface{}, 0, len(orders)*2+1)
+	imageIDs := make([]interface{}, 0, len(orders))
+
+	argIdx := 1
+	for _, order := range orders {
+		query += fmt.Sprintf("WHEN id = $%d THEN $%d ", argIdx, argIdx+1)
+		args = append(args, order.ImageID, order.DisplayOrder)
+		imageIDs = append(imageIDs, order.ImageID)
+		argIdx += 2
+	}
+
+	query += fmt.Sprintf("END WHERE listing_id = $%d AND id IN (", argIdx)
+	args = append(args, listingID)
+
+	// Add placeholders for IN clause
+	for i := range imageIDs {
+		if i > 0 {
+			query += ", "
+		}
+		query += fmt.Sprintf("$%d", argIdx+1+i)
+		args = append(args, imageIDs[i])
+	}
+	query += ")"
+
+	result, err := tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to reorder images")
+		return fmt.Errorf("failed to reorder images: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no images updated, check listing_id and image_ids")
+	}
+
+	if int64(rowsAffected) != int64(len(orders)) {
+		r.logger.Warn().
+			Int64("listing_id", listingID).
+			Int64("expected", int64(len(orders))).
+			Int64("actual", rowsAffected).
+			Msg("not all images were updated")
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		r.logger.Error().Err(err).Msg("failed to commit transaction")
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	r.logger.Info().
+		Int64("listing_id", listingID).
+		Int("count", len(orders)).
+		Msg("images reordered")
+
+	return nil
 }

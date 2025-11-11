@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/sveturs/listings/internal/domain"
+	"github.com/sveturs/listings/internal/repository/postgres"
 )
 
 // MockRepository is a mock implementation of listings.Repository interface
@@ -124,6 +125,12 @@ func (m *MockRepository) GetImages(ctx context.Context, listingID int64) ([]*dom
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*domain.ListingImage), args.Error(1)
+}
+
+// ReorderImages mocks reordering images
+func (m *MockRepository) ReorderImages(ctx context.Context, listingID int64, orders []postgres.ImageOrder) error {
+	args := m.Called(ctx, listingID, orders)
+	return args.Error(0)
 }
 
 // Category operations

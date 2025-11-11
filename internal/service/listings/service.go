@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/sveturs/listings/internal/domain"
+	"github.com/sveturs/listings/internal/repository/postgres"
 )
 
 // Repository defines the interface for listing data access
@@ -30,6 +31,7 @@ type Repository interface {
 	DeleteImage(ctx context.Context, imageID int64) error
 	AddImage(ctx context.Context, image *domain.ListingImage) (*domain.ListingImage, error)
 	GetImages(ctx context.Context, listingID int64) ([]*domain.ListingImage, error)
+	ReorderImages(ctx context.Context, listingID int64, orders []postgres.ImageOrder) error
 
 	// Category operations
 	GetRootCategories(ctx context.Context) ([]*domain.Category, error)
@@ -223,6 +225,15 @@ func (s *Service) GetListing(ctx context.Context, id int64) (*domain.Listing, er
 		return nil, fmt.Errorf("listing not found")
 	}
 
+	// Load images
+	images, err := s.repo.GetImages(ctx, id)
+	if err != nil {
+		// Log error but don't fail the request
+		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to load images")
+	} else {
+		listing.Images = images
+	}
+
 	// Store in cache (non-blocking, ignore errors, if cache available)
 	if s.cache != nil {
 		go func() {
@@ -242,6 +253,15 @@ func (s *Service) GetListingByUUID(ctx context.Context, uuid string) (*domain.Li
 	if err != nil {
 		s.logger.Error().Err(err).Str("uuid", uuid).Msg("failed to get listing by UUID")
 		return nil, fmt.Errorf("failed to get listing: %w", err)
+	}
+
+	// Load images
+	images, err := s.repo.GetImages(ctx, listing.ID)
+	if err != nil {
+		// Log error but don't fail the request
+		s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to load images")
+	} else {
+		listing.Images = images
 	}
 
 	return listing, nil
@@ -295,7 +315,16 @@ func (s *Service) UpdateListing(ctx context.Context, id int64, userID int64, inp
 		return nil, fmt.Errorf("failed to update listing: %w", err)
 	}
 
-	// 6. Invalidate cache (if available)
+	// 6. Load images
+	images, err := s.repo.GetImages(ctx, id)
+	if err != nil {
+		// Log error but don't fail the request
+		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to load images")
+	} else {
+		updated.Images = images
+	}
+
+	// 7. Invalidate cache (if available)
 	if s.cache != nil {
 		cacheKey := fmt.Sprintf("listing:%d", id)
 		if err := s.cache.Delete(ctx, cacheKey); err != nil {
@@ -303,7 +332,7 @@ func (s *Service) UpdateListing(ctx context.Context, id int64, userID int64, inp
 		}
 	}
 
-	// 7. Enqueue for async re-indexing
+	// 8. Enqueue for async re-indexing
 	if err := s.repo.EnqueueIndexing(ctx, updated.ID, domain.IndexOpUpdate); err != nil {
 		s.logger.Warn().Err(err).Int64("listing_id", updated.ID).Msg("failed to enqueue indexing (non-critical)")
 	}
@@ -420,6 +449,17 @@ func (s *Service) ListListings(ctx context.Context, filter *domain.ListListingsF
 		return nil, 0, fmt.Errorf("failed to list listings: %w", err)
 	}
 
+	// Load images for each listing (eager loading)
+	for _, listing := range listings {
+		images, err := s.repo.GetImages(ctx, listing.ID)
+		if err != nil {
+			// Log error but don't fail the request
+			s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to load images for listing")
+		} else {
+			listing.Images = images
+		}
+	}
+
 	s.logger.Debug().Int("count", len(listings)).Int32("total", total).Msg("listings retrieved")
 	return listings, total, nil
 }
@@ -468,6 +508,17 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 		return nil, 0, fmt.Errorf("failed to search listings: %w", err)
 	}
 
+	// Load images for each listing (eager loading)
+	for _, listing := range listings {
+		images, err := s.repo.GetImages(ctx, listing.ID)
+		if err != nil {
+			// Log error but don't fail the request
+			s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to load images for listing")
+		} else {
+			listing.Images = images
+		}
+	}
+
 	// Cache search results (non-blocking, if cache is available)
 	if s.cache != nil {
 		go func() {
@@ -491,6 +542,15 @@ func (s *Service) AdminGetListing(ctx context.Context, id int64) (*domain.Listin
 		return nil, fmt.Errorf("failed to get listing: %w", err)
 	}
 
+	// Load images
+	images, err := s.repo.GetImages(ctx, id)
+	if err != nil {
+		// Log error but don't fail the request
+		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to load images")
+	} else {
+		listing.Images = images
+	}
+
 	s.logger.Info().Int64("listing_id", id).Msg("admin retrieved listing")
 	return listing, nil
 }
@@ -506,6 +566,15 @@ func (s *Service) AdminUpdateListing(ctx context.Context, id int64, input *domai
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", id).Msg("admin failed to update listing")
 		return nil, fmt.Errorf("failed to update listing: %w", err)
+	}
+
+	// Load images
+	images, err := s.repo.GetImages(ctx, id)
+	if err != nil {
+		// Log error but don't fail the request
+		s.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to load images")
+	} else {
+		listing.Images = images
 	}
 
 	// Invalidate cache (if available)
@@ -565,6 +634,35 @@ func (s *Service) AddImage(ctx context.Context, image *domain.ListingImage) (*do
 
 func (s *Service) GetImages(ctx context.Context, listingID int64) ([]*domain.ListingImage, error) {
 	return s.repo.GetImages(ctx, listingID)
+}
+
+func (s *Service) ReorderImages(ctx context.Context, listingID int64, orders []postgres.ImageOrder) error {
+	// Validate listing_id
+	if listingID <= 0 {
+		return fmt.Errorf("invalid listing_id: %d", listingID)
+	}
+
+	// Validate orders
+	if len(orders) == 0 {
+		return fmt.Errorf("no image orders provided")
+	}
+
+	// Validate each order
+	for i, order := range orders {
+		if order.ImageID <= 0 {
+			return fmt.Errorf("invalid image_id at index %d: %d", i, order.ImageID)
+		}
+		if order.DisplayOrder < 0 {
+			return fmt.Errorf("invalid display_order at index %d: %d", i, order.DisplayOrder)
+		}
+	}
+
+	s.logger.Debug().
+		Int64("listing_id", listingID).
+		Int("count", len(orders)).
+		Msg("reordering images")
+
+	return s.repo.ReorderImages(ctx, listingID, orders)
 }
 
 // Category operations
@@ -631,6 +729,12 @@ func (s *Service) AddToFavorites(ctx context.Context, userID, listingID int64) e
 		if err := s.cache.Delete(ctx, countKey); err != nil {
 			s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to invalidate favorites count cache")
 		}
+
+		// Invalidate IsFavorite cache for this user-listing pair
+		isFavKey := fmt.Sprintf("favorites:user:%d:listing:%d", userID, listingID)
+		if err := s.cache.Delete(ctx, isFavKey); err != nil {
+			s.logger.Warn().Err(err).Int64("user_id", userID).Int64("listing_id", listingID).Msg("failed to invalidate IsFavorite cache")
+		}
 	}
 
 	s.logger.Info().Int64("user_id", userID).Int64("listing_id", listingID).Msg("added to favorites")
@@ -666,6 +770,12 @@ func (s *Service) RemoveFromFavorites(ctx context.Context, userID, listingID int
 		if err := s.cache.Delete(ctx, countKey); err != nil {
 			s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to invalidate favorites count cache")
 		}
+
+		// Invalidate IsFavorite cache for this user-listing pair
+		isFavKey := fmt.Sprintf("favorites:user:%d:listing:%d", userID, listingID)
+		if err := s.cache.Delete(ctx, isFavKey); err != nil {
+			s.logger.Warn().Err(err).Int64("user_id", userID).Int64("listing_id", listingID).Msg("failed to invalidate IsFavorite cache")
+		}
 	}
 
 	s.logger.Info().Int64("user_id", userID).Int64("listing_id", listingID).Msg("removed from favorites")
@@ -678,13 +788,33 @@ func (s *Service) GetUserFavorites(ctx context.Context, userID int64) ([]int64, 
 		return nil, fmt.Errorf("invalid user ID")
 	}
 
+	cacheKey := fmt.Sprintf("favorites:user:%d", userID)
+
+	// 1. Try to get from cache
+	if s.cache != nil {
+		var cachedIDs []int64
+		if err := s.cache.Get(ctx, cacheKey, &cachedIDs); err == nil {
+			s.logger.Debug().Int64("user_id", userID).Int("count", len(cachedIDs)).Msg("user favorites from cache")
+			return cachedIDs, nil
+		}
+	}
+
+	// 2. Cache miss - get from repository
 	listingIDs, err := s.repo.GetUserFavorites(ctx, userID)
 	if err != nil {
 		s.logger.Error().Err(err).Int64("user_id", userID).Msg("failed to get user favorites")
 		return nil, fmt.Errorf("failed to get user favorites: %w", err)
 	}
 
-	s.logger.Debug().Int64("user_id", userID).Int("count", len(listingIDs)).Msg("user favorites retrieved")
+	// 3. Cache the result for 5 minutes
+	if s.cache != nil {
+		if err := s.cache.Set(ctx, cacheKey, listingIDs); err != nil {
+			s.logger.Warn().Err(err).Int64("user_id", userID).Msg("failed to cache user favorites")
+			// Don't fail the request if caching fails
+		}
+	}
+
+	s.logger.Debug().Int64("user_id", userID).Int("count", len(listingIDs)).Msg("user favorites retrieved from database")
 	return listingIDs, nil
 }
 
@@ -697,12 +827,33 @@ func (s *Service) IsFavorite(ctx context.Context, userID, listingID int64) (bool
 		return false, fmt.Errorf("invalid listing ID")
 	}
 
+	cacheKey := fmt.Sprintf("favorites:user:%d:listing:%d", userID, listingID)
+
+	// 1. Try to get from cache
+	if s.cache != nil {
+		var cachedStatus bool
+		if err := s.cache.Get(ctx, cacheKey, &cachedStatus); err == nil {
+			s.logger.Debug().Int64("user_id", userID).Int64("listing_id", listingID).Bool("is_favorite", cachedStatus).Msg("favorite status from cache")
+			return cachedStatus, nil
+		}
+	}
+
+	// 2. Cache miss - get from repository
 	isFavorite, err := s.repo.IsFavorite(ctx, userID, listingID)
 	if err != nil {
 		s.logger.Error().Err(err).Int64("user_id", userID).Int64("listing_id", listingID).Msg("failed to check favorite status")
 		return false, fmt.Errorf("failed to check favorite status: %w", err)
 	}
 
+	// 3. Cache the result for 5 minutes
+	if s.cache != nil {
+		if err := s.cache.Set(ctx, cacheKey, isFavorite); err != nil {
+			s.logger.Warn().Err(err).Int64("user_id", userID).Int64("listing_id", listingID).Msg("failed to cache favorite status")
+			// Don't fail the request if caching fails
+		}
+	}
+
+	s.logger.Debug().Int64("user_id", userID).Int64("listing_id", listingID).Bool("is_favorite", isFavorite).Msg("favorite status from database")
 	return isFavorite, nil
 }
 
@@ -783,7 +934,23 @@ func (s *Service) DeleteVariant(ctx context.Context, variantID int64) error {
 // Reindexing operations
 
 func (s *Service) GetListingsForReindex(ctx context.Context, limit int) ([]*domain.Listing, error) {
-	return s.repo.GetListingsForReindex(ctx, limit)
+	listings, err := s.repo.GetListingsForReindex(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load images for each listing (eager loading)
+	for _, listing := range listings {
+		images, err := s.repo.GetImages(ctx, listing.ID)
+		if err != nil {
+			// Log error but don't fail the request
+			s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to load images for listing")
+		} else {
+			listing.Images = images
+		}
+	}
+
+	return listings, nil
 }
 
 func (s *Service) ResetReindexFlags(ctx context.Context, listingIDs []int64) error {

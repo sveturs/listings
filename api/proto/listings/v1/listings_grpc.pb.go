@@ -30,6 +30,7 @@ const (
 	ListingsService_DeleteListingImage_FullMethodName        = "/listings.v1.ListingsService/DeleteListingImage"
 	ListingsService_AddListingImage_FullMethodName           = "/listings.v1.ListingsService/AddListingImage"
 	ListingsService_GetListingImages_FullMethodName          = "/listings.v1.ListingsService/GetListingImages"
+	ListingsService_ReorderListingImages_FullMethodName      = "/listings.v1.ListingsService/ReorderListingImages"
 	ListingsService_GetRootCategories_FullMethodName         = "/listings.v1.ListingsService/GetRootCategories"
 	ListingsService_GetAllCategories_FullMethodName          = "/listings.v1.ListingsService/GetAllCategories"
 	ListingsService_GetPopularCategories_FullMethodName      = "/listings.v1.ListingsService/GetPopularCategories"
@@ -101,6 +102,8 @@ type ListingsServiceClient interface {
 	AddListingImage(ctx context.Context, in *AddImageRequest, opts ...grpc.CallOption) (*ImageResponse, error)
 	// GetListingImages retrieves all images for a listing
 	GetListingImages(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*ImagesResponse, error)
+	// ReorderListingImages updates display order for multiple images
+	ReorderListingImages(ctx context.Context, in *ReorderImagesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GetRootCategories retrieves all top-level categories (no parent)
 	GetRootCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CategoriesResponse, error)
 	// GetAllCategories retrieves all categories in the system
@@ -307,6 +310,16 @@ func (c *listingsServiceClient) GetListingImages(ctx context.Context, in *Listin
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ImagesResponse)
 	err := c.cc.Invoke(ctx, ListingsService_GetListingImages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) ReorderListingImages(ctx context.Context, in *ReorderImagesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_ReorderListingImages_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -769,6 +782,8 @@ type ListingsServiceServer interface {
 	AddListingImage(context.Context, *AddImageRequest) (*ImageResponse, error)
 	// GetListingImages retrieves all images for a listing
 	GetListingImages(context.Context, *ListingIDRequest) (*ImagesResponse, error)
+	// ReorderListingImages updates display order for multiple images
+	ReorderListingImages(context.Context, *ReorderImagesRequest) (*emptypb.Empty, error)
 	// GetRootCategories retrieves all top-level categories (no parent)
 	GetRootCategories(context.Context, *emptypb.Empty) (*CategoriesResponse, error)
 	// GetAllCategories retrieves all categories in the system
@@ -910,6 +925,9 @@ func (UnimplementedListingsServiceServer) AddListingImage(context.Context, *AddI
 }
 func (UnimplementedListingsServiceServer) GetListingImages(context.Context, *ListingIDRequest) (*ImagesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetListingImages not implemented")
+}
+func (UnimplementedListingsServiceServer) ReorderListingImages(context.Context, *ReorderImagesRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReorderListingImages not implemented")
 }
 func (UnimplementedListingsServiceServer) GetRootCategories(context.Context, *emptypb.Empty) (*CategoriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRootCategories not implemented")
@@ -1237,6 +1255,24 @@ func _ListingsService_GetListingImages_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ListingsServiceServer).GetListingImages(ctx, req.(*ListingIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_ReorderListingImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReorderImagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ReorderListingImages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ReorderListingImages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ReorderListingImages(ctx, req.(*ReorderImagesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2061,6 +2097,10 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetListingImages",
 			Handler:    _ListingsService_GetListingImages_Handler,
+		},
+		{
+			MethodName: "ReorderListingImages",
+			Handler:    _ListingsService_ReorderListingImages_Handler,
 		},
 		{
 			MethodName: "GetRootCategories",

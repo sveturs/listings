@@ -6,9 +6,201 @@ Comprehensive automation tools for the Listings microservice, including producti
 
 ## Table of Contents
 
-1. [Production Deployment](#production-deployment)
-2. [Memory Profiling](#memory-profiling)
-3. [Monitoring & Testing](#monitoring--testing)
+1. [Data Migration](#data-migration)
+2. [Production Deployment](#production-deployment)
+3. [Memory Profiling](#memory-profiling)
+4. [Monitoring & Testing](#monitoring--testing)
+
+---
+
+# Data Migration
+
+Production-ready data migration from old monolith database (svetubd) to new microservice database (listings_dev_db).
+
+## Quick Start - Migration
+
+```bash
+# 1. Run migration
+python3 scripts/migrate_data.py
+
+# 2. Verify migration
+bash scripts/verify_migration.sh
+
+# 3. Rollback if needed
+bash scripts/rollback_migration.sh
+```
+
+## Migration Scripts
+
+### 🔄 `migrate_data.py`
+
+**Purpose:** Migrate production data from old database to new microservice database
+
+**What it migrates:**
+- C2C Listings (5 records) → `listings` table with `source_type='c2c'`
+- B2C Stores (1 record) → `storefronts` table
+- Images (37 records) → `listing_images` table
+
+**Features:**
+- ✅ Pre-flight checks (connectivity, schema, conflicts)
+- ✅ Automatic backup before migration
+- ✅ Transaction support (rollback on error)
+- ✅ ID mapping for foreign keys
+- ✅ Detailed logging to `/tmp/migrate_data.log`
+- ✅ Error resilience (continues on individual failures)
+- ✅ Progress tracking in real-time
+
+**Usage:**
+```bash
+python3 scripts/migrate_data.py
+```
+
+**Output:**
+- Migration log: `/tmp/migrate_data.log`
+- Backup: `/tmp/listings_dev_db_backup_YYYYMMDD_HHMMSS.sql`
+
+### ✅ `verify_migration.sh`
+
+**Purpose:** Verify migration completed successfully
+
+**What it checks:**
+- Database connectivity
+- Record counts (old vs new)
+- Sample data integrity
+- Foreign key relationships
+- Data quality (NULL values, price ranges)
+- Image distribution
+- Status mapping correctness
+- Attributes migration
+- Location data
+
+**Usage:**
+```bash
+bash scripts/verify_migration.sh
+```
+
+**Example output:**
+```
+✓ C2C Listings: 5 (old) = 5 (new)
+✓ B2C Stores: 1 (old) = 1 (new)
+✓ Images: 37 (old) = 37 (new)
+✓ All images reference existing listings
+✓ All listings have valid titles
+```
+
+### ⏪ `rollback_migration.sh`
+
+**Purpose:** Rollback migration (delete migrated data)
+
+**What it does:**
+1. Creates backup before rollback
+2. Deletes all C2C listings (`source_type='c2c'`)
+3. Deletes related images
+4. Deletes related attributes/locations/tags
+5. Shows before/after counts
+
+**Safety:**
+- ⚠️ Requires explicit confirmation (type 'YES')
+- ✅ Creates backup before deletion
+- ⚠️ Does NOT delete B2C storefronts (manual cleanup)
+
+**Usage:**
+```bash
+bash scripts/rollback_migration.sh
+```
+
+## Data Transformations
+
+### C2C Listings → Listings Table
+
+**Direct mappings:**
+- `user_id`, `title`, `description`, `price`, `category_id`
+- `status` (validated: active/sold/inactive/archived/draft)
+- `views_count` → `view_count`
+
+**New fields:**
+- `source_type` = `'c2c'` (identifies source)
+- `currency` = `'RSD'` (default)
+- `visibility` = `'public'` (default)
+- `quantity` = `1` (default)
+
+**Location fields:**
+- `show_on_map` → `has_individual_location` + `show_on_map`
+- `location` → `individual_address`
+- `latitude`, `longitude` → `individual_latitude`, `individual_longitude`
+- `location_privacy` = `'exact'` (default)
+
+**Attributes (JSONB):**
+- Old fields → JSON: `condition`, `address_city`, `address_country`, `original_language`, `metadata`, `address_multilingual`
+
+### B2C Stores → Storefronts Table
+
+**Direct 1:1 mapping** of all fields with JSONB conversion:
+- `theme`, `settings`, `seo_meta`, `ai_agent_config` (dict → JSON string)
+
+### C2C Images → Listing Images
+
+**Mappings:**
+- `file_path` → `storage_path`
+- `public_url` or `file_path` → `url`
+- `is_main` → `is_primary`
+- `content_type` → `mime_type`
+- `display_order` (preserved)
+
+## Database Credentials
+
+**Old DB (port 5433):**
+```
+postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd
+```
+
+**New DB (port 35434):**
+```
+postgres://listings_user:listings_secret@localhost:35434/listings_dev_db
+```
+
+## Post-Migration Steps
+
+1. **Verify migration:**
+   ```bash
+   bash scripts/verify_migration.sh
+   ```
+
+2. **Update OpenSearch indices:**
+   ```bash
+   python3 scripts/reindex_listings.py
+   ```
+
+3. **Test application:**
+   - Start services
+   - Test API endpoints
+   - Verify frontend displays data correctly
+
+## Troubleshooting
+
+**Connection errors:**
+```bash
+# Check database running
+docker ps | grep listings
+
+# Test connection
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db"
+```
+
+**Python dependencies:**
+```bash
+pip3 install psycopg2-binary
+```
+
+**View logs:**
+```bash
+tail -f /tmp/migrate_data.log
+```
+
+## Documentation
+
+- **Quick Start:** `/p/github.com/sveturs/listings/DATA_MIGRATION.md`
+- **Full Guide:** `/p/github.com/sveturs/listings/scripts/MIGRATION_GUIDE.md`
 
 ---
 

@@ -10,6 +10,7 @@ import (
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
+	"github.com/sveturs/listings/internal/repository/postgres"
 )
 
 // GetListingImage retrieves a single image by ID
@@ -104,6 +105,38 @@ func (s *Server) GetListingImages(ctx context.Context, req *pb.ListingIDRequest)
 	return &pb.ImagesResponse{
 		Images: pbImages,
 	}, nil
+}
+
+// ReorderListingImages updates display order for multiple images
+func (s *Server) ReorderListingImages(ctx context.Context, req *pb.ReorderImagesRequest) (*emptypb.Empty, error) {
+	s.logger.Debug().Int64("listing_id", req.ListingId).Int("count", len(req.ImageOrders)).Msg("ReorderListingImages called")
+
+	if req.ListingId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "listing ID must be greater than 0")
+	}
+
+	if len(req.ImageOrders) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "image orders cannot be empty")
+	}
+
+	// Convert proto orders to repository orders
+	orders := make([]postgres.ImageOrder, len(req.ImageOrders))
+	for i, pbOrder := range req.ImageOrders {
+		orders[i] = postgres.ImageOrder{
+			ImageID:      pbOrder.ImageId,
+			DisplayOrder: pbOrder.DisplayOrder,
+		}
+	}
+
+	// Reorder images via service
+	err := s.service.ReorderImages(ctx, req.ListingId, orders)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", req.ListingId).Msg("failed to reorder images")
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to reorder images: %v", err))
+	}
+
+	s.logger.Info().Int64("listing_id", req.ListingId).Int("count", len(orders)).Msg("images reordered successfully")
+	return &emptypb.Empty{}, nil
 }
 
 // GetRootCategories retrieves all top-level categories
