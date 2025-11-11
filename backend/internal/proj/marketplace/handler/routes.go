@@ -37,6 +37,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Get("/api/v1/marketplace/chat", h.jwtParserMW, authMiddleware.RequireAuth(), h.GetChats)
 
 	// Listings CRUD (TEMPORARY: direct DB until microservice migration complete)
+	app.Get("/api/v1/marketplace/listings", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), h.GetListings)
 	app.Post("/api/v1/marketplace/listings", h.jwtParserMW, authMiddleware.RequireAuth(), h.CreateListing)
 	app.Get("/api/v1/marketplace/listings/:id", h.GetListing)
 	app.Get("/api/v1/marketplace/listings/:id/similar", h.GetSimilarListings)
@@ -46,6 +47,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	// Admin endpoints (требуют admin роль)
 	app.Get("/api/v1/admin/b2c", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), h.GetAllStorefrontsAdmin)
+	app.Get("/api/v1/admin/listings/statistics", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), h.GetListingsStatistics)
 	app.Delete("/api/v1/marketplace/storefronts/:id", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), h.DeleteStorefront)
 
 	return nil

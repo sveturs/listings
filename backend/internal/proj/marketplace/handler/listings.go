@@ -706,3 +706,55 @@ func (h *Handler) ReorderListingImages(c *fiber.Ctx) error {
 		"updated_at":   time.Now(),
 	})
 }
+
+// GetListings godoc
+// @Summary Get listings list (admin)
+// @Description Get paginated list of listings for admin panel
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param limit query int false "Items per page (default: 20)"
+// @Param offset query int false "Offset for pagination (default: 0)"
+// @Param sort_by query string false "Sort by (date_desc, date_asc, price_asc, price_desc)"
+// @Param exclude_storefronts query boolean false "Exclude storefront listings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{data=[]models.MarketplaceListing,meta=object{total=int}}}
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Security BearerAuth
+// @Router /api/v1/marketplace/listings [get]
+func (h *Handler) GetListings(c *fiber.Ctx) error {
+	// TODO: Implement via microservice when fully migrated
+	// For now, return empty list with proper structure
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"data": []interface{}{},
+		"meta": fiber.Map{
+			"total":  0,
+			"limit":  c.QueryInt("limit", 20),
+			"offset": c.QueryInt("offset", 0),
+		},
+	})
+}
+
+// GetListingsStatistics godoc
+// @Summary Get listings statistics (admin)
+// @Description Get statistics for listings in admin panel
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{total=int,active=int,pending=int,views=int}}
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Security BearerAuth
+// @Router /api/v1/admin/listings/statistics [get]
+func (h *Handler) GetListingsStatistics(c *fiber.Ctx) error {
+	// TODO: Implement via microservice when fully migrated
+	// For now, return stub data
+
+	return utils.SuccessResponse(c, fiber.Map{
+		"total":   0,
+		"active":  0,
+		"pending": 0,
+		"views":   0,
+	})
+}
