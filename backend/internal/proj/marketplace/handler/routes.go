@@ -46,6 +46,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	// Admin endpoints (требуют admin роль)
 	app.Get("/api/v1/admin/b2c", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), h.GetAllStorefrontsAdmin)
+	app.Delete("/api/v1/marketplace/storefronts/:id", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), h.DeleteStorefront)
 
 	return nil
 }

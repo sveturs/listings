@@ -226,9 +226,21 @@ func (db *Database) GetUserStorefrontFavorites(ctx context.Context, userID int) 
 	return []models.MarketplaceListing{}, nil
 }
 
-// DeleteStorefront - TODO: disabled during refactoring
+// DeleteStorefront удаляет витрину по ID (hard delete)
 func (db *Database) DeleteStorefront(ctx context.Context, id int) error {
-	return fmt.Errorf("storefront delete temporarily disabled")
+	query := `DELETE FROM b2c_stores WHERE id = $1`
+
+	result, err := db.pool.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete storefront: %w", err)
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("storefront not found")
+	}
+
+	return nil
 }
 func (db *Database) DeleteStorefrontIndex(ctx context.Context, id int) error { return nil }
 func (db *Database) GetStorefrontOwnerByProductID(ctx context.Context, productID int) (int, error) {

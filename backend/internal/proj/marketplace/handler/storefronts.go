@@ -3,6 +3,7 @@ package handler
 
 import (
 	"strconv"
+	"strings"
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/marketplace/storage"
@@ -286,5 +287,45 @@ func (h *Handler) GetAllStorefrontsAdmin(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"b2c_stores": storefronts,
 		"total":      total,
+	})
+}
+
+// DeleteStorefront удаляет витрину (только для админа)
+// @Summary Delete storefront (admin)
+// @Description Delete B2C storefront by ID (hard delete)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param id path int true "Storefront ID"
+// @Param hard_delete query boolean false "Hard delete (default: true)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string}}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 403 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Security BearerAuth
+// @Router /api/v1/marketplace/storefronts/{id} [delete]
+func (h *Handler) DeleteStorefront(c *fiber.Ctx) error {
+	// Парсим ID из параметров
+	id, err := c.ParamsInt("id")
+	if err != nil || id <= 0 {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
+	}
+
+	// Удаляем витрину через Database.DeleteStorefront
+	err = h.services.Storage().DeleteStorefront(c.Context(), id)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
+		}
+		h.logger.Error().Err(err).Int("storefront_id", id).Msg("Failed to delete storefront")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.delete_failed")
+	}
+
+	h.logger.Info().Int("storefront_id", id).Msg("Storefront deleted successfully")
+
+	return c.JSON(fiber.Map{
+		"message": "Storefront deleted successfully",
 	})
 }
