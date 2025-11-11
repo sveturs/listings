@@ -2,20 +2,48 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"mime/multipart"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	"google.golang.org/grpc/metadata"
 
 	"backend/internal/domain/models"
 	"backend/internal/services"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
 )
+
+// contextWithAuth creates gRPC context with JWT token from Fiber context
+func contextWithAuth(c *fiber.Ctx, baseCtx context.Context) context.Context {
+	// Extract Authorization header from Fiber request
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		// Try lowercase (some clients send it this way)
+		authHeader = c.Get("authorization")
+	}
+
+	if authHeader == "" {
+		// No token - return base context
+		return baseCtx
+	}
+
+	// Ensure it starts with "Bearer "
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		authHeader = "Bearer " + authHeader
+	}
+
+	// Add to gRPC metadata
+	md := metadata.Pairs("authorization", authHeader)
+	return metadata.NewOutgoingContext(baseCtx, md)
+}
 
 // CreateListingRequest represents the request body for creating a listing
 type CreateListingRequest struct {
@@ -81,8 +109,119 @@ func (h *Handler) CreateListing(c *fiber.Ctx) error {
 		req.Quantity = 1
 	}
 
-	// Call the storage layer (direct DB insert for now)
-	// TEMPORARY: Direct DB insert until microservice fully migrated
+	// Route to microservice if enabled, otherwise use monolith storage (fallback)
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		// Use microservice via gRPC
+		h.logger.Info().
+			Int("user_id", int(userID)).
+			Msg("Routing CreateListing to microservice")
+
+		// Prepare gRPC request
+		grpcReq := &pb.CreateListingRequest{
+			UserId:     int64(userID),
+			Title:      req.Title,
+			Price:      req.Price,
+			Currency:   req.Currency,
+			CategoryId: int64(req.CategoryID),
+			Quantity:   req.Quantity,
+		}
+
+		// Optional fields
+		if req.Description != nil {
+			grpcReq.Description = req.Description
+		}
+		if req.SKU != nil {
+			grpcReq.Sku = req.SKU
+		}
+		if req.StorefrontID != nil {
+			storefrontID := int64(*req.StorefrontID)
+			grpcReq.StorefrontId = &storefrontID
+		}
+
+		// Call microservice with auth context
+		grpcCtx := contextWithAuth(c, c.Context())
+		grpcResp, err := h.listingsClient.CreateListing(grpcCtx, grpcReq)
+		if err != nil {
+			h.logger.Error().Err(err).
+				Int("user_id", int(userID)).
+				Int("category_id", req.CategoryID).
+				Msg("CreateListing: failed to create listing via microservice")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.create_failed")
+		}
+
+		// Auto-publish: Set status to 'active' immediately after creation
+		publishStatus := "active"
+		updateReq := &pb.UpdateListingRequest{
+			Id:     grpcResp.Listing.Id,
+			UserId: int64(userID),
+			Status: &publishStatus,
+		}
+		updateResp, err := h.listingsClient.UpdateListing(grpcCtx, updateReq)
+		if err != nil {
+			h.logger.Warn().Err(err).
+				Int64("listing_id", grpcResp.Listing.Id).
+				Msg("CreateListing: failed to auto-publish listing, but listing was created")
+			// Don't return error - listing is created, just not published
+			// Continue with original status (draft)
+		} else {
+			// Update response with published listing
+			grpcResp.Listing = updateResp.Listing
+			h.logger.Info().
+				Int64("listing_id", grpcResp.Listing.Id).
+				Str("status", grpcResp.Listing.Status).
+				Msg("Listing auto-published successfully")
+		}
+
+		h.logger.Info().
+			Int64("listing_id", grpcResp.Listing.Id).
+			Int("user_id", int(userID)).
+			Str("title", req.Title).
+			Str("final_status", grpcResp.Listing.Status).
+			Msg("Listing created successfully via microservice")
+
+		// Convert gRPC response to domain model
+		listing := &models.MarketplaceListing{
+			ID:         int(grpcResp.Listing.Id),
+			UserID:     int(grpcResp.Listing.UserId),
+			CategoryID: int(grpcResp.Listing.CategoryId),
+			Title:      grpcResp.Listing.Title,
+			Price:      grpcResp.Listing.Price,
+			Status:     grpcResp.Listing.Status,
+		}
+		if grpcResp.Listing.Description != nil {
+			listing.Description = *grpcResp.Listing.Description
+		}
+		if grpcResp.Listing.Sku != nil {
+			listing.ExternalID = *grpcResp.Listing.Sku
+		}
+		if grpcResp.Listing.StorefrontId != nil {
+			storefrontID := int(*grpcResp.Listing.StorefrontId)
+			listing.StorefrontID = &storefrontID
+		}
+		// Stock quantity from microservice
+		if grpcResp.Listing.Quantity > 0 {
+			qty := int(grpcResp.Listing.Quantity)
+			listing.StockQuantity = &qty
+		}
+		// Published timestamp from microservice
+		if grpcResp.Listing.PublishedAt != nil && *grpcResp.Listing.PublishedAt != "" {
+			publishedAt, err := time.Parse(time.RFC3339, *grpcResp.Listing.PublishedAt)
+			if err == nil {
+				listing.PublishedAt = &publishedAt
+			}
+		}
+
+		c.Status(fiber.StatusCreated)
+		return utils.SuccessResponse(c, listing)
+	}
+
+	// Fallback to monolith storage
+	h.logger.Info().
+		Int("user_id", int(userID)).
+		Bool("microservice_enabled", h.useListingsMicroservice).
+		Bool("client_available", h.listingsClient != nil).
+		Msg("Using monolith storage for CreateListing (fallback)")
+
 	listing, err := h.storage.CreateListing(c.Context(), int(userID), req.CategoryID, req.Title, req.Description, req.Price, req.Currency, req.Quantity, req.SKU, req.StorefrontID)
 	if err != nil {
 		h.logger.Error().Err(err).
@@ -96,7 +235,7 @@ func (h *Handler) CreateListing(c *fiber.Ctx) error {
 		Int("listing_id", listing.ID).
 		Int("user_id", int(userID)).
 		Str("title", req.Title).
-		Msg("Listing created successfully")
+		Msg("Listing created successfully via monolith")
 
 	c.Status(fiber.StatusCreated)
 	return utils.SuccessResponse(c, listing)
@@ -122,7 +261,88 @@ func (h *Handler) GetListing(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_id")
 	}
 
-	// Get listing from storage
+	// Route to microservice if enabled, otherwise use monolith storage (fallback)
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		// Use microservice via gRPC
+		h.logger.Debug().
+			Int("listing_id", listingID).
+			Msg("Routing GetListing to microservice")
+
+		grpcReq := &pb.GetListingRequest{
+			Id: int64(listingID),
+		}
+
+		// Call microservice with auth context (optional for public methods)
+		grpcCtx := contextWithAuth(c, c.Context())
+		grpcResp, err := h.listingsClient.GetListing(grpcCtx, grpcReq)
+		if err != nil {
+			h.logger.Error().Err(err).Int("listing_id", listingID).Msg("GetListing: failed to get listing from microservice")
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+		}
+
+		// Convert gRPC response to domain model
+		listing := &models.MarketplaceListing{
+			ID:         int(grpcResp.Listing.Id),
+			UserID:     int(grpcResp.Listing.UserId),
+			CategoryID: int(grpcResp.Listing.CategoryId),
+			Title:      grpcResp.Listing.Title,
+			Price:      grpcResp.Listing.Price,
+			Status:     grpcResp.Listing.Status,
+		}
+		if grpcResp.Listing.Description != nil {
+			listing.Description = *grpcResp.Listing.Description
+		}
+		if grpcResp.Listing.Sku != nil {
+			listing.ExternalID = *grpcResp.Listing.Sku
+		}
+		if grpcResp.Listing.StorefrontId != nil {
+			storefrontID := int(*grpcResp.Listing.StorefrontId)
+			listing.StorefrontID = &storefrontID
+		}
+		// Stock quantity from microservice
+		if grpcResp.Listing.Quantity > 0 {
+			qty := int(grpcResp.Listing.Quantity)
+			listing.StockQuantity = &qty
+		}
+		// Published timestamp from microservice
+		if grpcResp.Listing.PublishedAt != nil && *grpcResp.Listing.PublishedAt != "" {
+			publishedAt, err := time.Parse(time.RFC3339, *grpcResp.Listing.PublishedAt)
+			if err == nil {
+				listing.PublishedAt = &publishedAt
+			}
+		}
+
+		// Convert images from gRPC response (always initialize array)
+		if len(grpcResp.Listing.Images) > 0 {
+			listing.Images = make([]models.MarketplaceImage, len(grpcResp.Listing.Images))
+			for i, pbImg := range grpcResp.Listing.Images {
+				listing.Images[i] = models.MarketplaceImage{
+					ID:           int(pbImg.Id),
+					ListingID:    int(pbImg.ListingId),
+					PublicURL:    pbImg.Url,
+					IsMain:       pbImg.IsPrimary,
+					DisplayOrder: int(pbImg.DisplayOrder),
+				}
+
+				if pbImg.ThumbnailUrl != nil {
+					listing.Images[i].ThumbnailURL = *pbImg.ThumbnailUrl
+				}
+			}
+		} else {
+			// Initialize empty array instead of nil for consistency
+			listing.Images = []models.MarketplaceImage{}
+		}
+
+		return utils.SuccessResponse(c, listing)
+	}
+
+	// Fallback to monolith storage
+	h.logger.Debug().
+		Int("listing_id", listingID).
+		Bool("microservice_enabled", h.useListingsMicroservice).
+		Bool("client_available", h.listingsClient != nil).
+		Msg("Using monolith storage for GetListing (fallback)")
+
 	listing, err := h.storage.GetListing(c.Context(), listingID)
 	if err != nil {
 		h.logger.Error().Err(err).Int("listing_id", listingID).Msg("GetListing: failed to get listing")
@@ -153,11 +373,23 @@ func (h *Handler) GetSimilarListings(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_id")
 	}
 
-	// Check if listing exists
-	_, err = h.storage.GetListing(c.Context(), listingID)
-	if err != nil {
-		h.logger.Error().Err(err).Int("listing_id", listingID).Msg("GetSimilarListings: failed to get listing")
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+	// Check if listing exists (route to microservice if enabled)
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		// Use microservice
+		grpcCtx := contextWithAuth(c, c.Context())
+		grpcReq := &pb.GetListingRequest{Id: int64(listingID)}
+		_, err = h.listingsClient.GetListing(grpcCtx, grpcReq)
+		if err != nil {
+			h.logger.Error().Err(err).Int("listing_id", listingID).Msg("GetSimilarListings: failed to get listing from microservice")
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+		}
+	} else {
+		// Use monolith
+		_, err = h.storage.GetListing(c.Context(), listingID)
+		if err != nil {
+			h.logger.Error().Err(err).Int("listing_id", listingID).Msg("GetSimilarListings: failed to get listing")
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+		}
 	}
 
 	// TODO: Implement actual similar listings logic (using OpenSearch, category, price range, etc.)
@@ -199,11 +431,30 @@ func (h *Handler) UploadListingImages(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_id")
 	}
 
-	// Check if listing exists and belongs to user
-	listing, err := h.storage.GetListing(c.Context(), listingID)
-	if err != nil {
-		h.logger.Error().Err(err).Int("listing_id", listingID).Msg("UploadListingImages: failed to get listing")
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+	// Check if listing exists and belongs to user (route to microservice if enabled)
+	var listing *models.MarketplaceListing
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		// Use microservice
+		grpcCtx := contextWithAuth(c, c.Context())
+		grpcReq := &pb.GetListingRequest{Id: int64(listingID)}
+		grpcResp, err := h.listingsClient.GetListing(grpcCtx, grpcReq)
+		if err != nil {
+			h.logger.Error().Err(err).Int("listing_id", listingID).Msg("UploadListingImages: failed to get listing from microservice")
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+		}
+		// Convert to domain model (we only need ID and UserID for ownership check)
+		listing = &models.MarketplaceListing{
+			ID:     int(grpcResp.Listing.Id),
+			UserID: int(grpcResp.Listing.UserId),
+		}
+	} else {
+		// Use monolith
+		var err error
+		listing, err = h.storage.GetListing(c.Context(), listingID)
+		if err != nil {
+			h.logger.Error().Err(err).Int("listing_id", listingID).Msg("UploadListingImages: failed to get listing")
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+		}
 	}
 
 	// Verify ownership
@@ -258,10 +509,8 @@ func (h *Handler) UploadListingImages(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.total_size_exceeds_limit")
 	}
 
-	// Create ImageRepository
+	// Create ImageRepository and Service (will be used differently based on routing)
 	imageRepo := postgres.NewImageRepository(h.db)
-
-	// Create ImageService
 	imageService := h.services.NewImageService(
 		h.services.FileStorage(),
 		imageRepo,
@@ -355,6 +604,62 @@ func (h *Handler) UploadListingImages(c *fiber.Ctx) error {
 		}
 	}
 
+	// If using microservice, migrate image metadata from monolith to microservice
+	if h.useListingsMicroservice && h.listingsClient != nil && len(uploadedImages) > 0 {
+		h.logger.Info().
+			Int("listing_id", listingID).
+			Int("images_count", len(uploadedImages)).
+			Msg("Migrating image metadata to microservice")
+
+		// Migrate each uploaded image to microservice
+		for _, img := range uploadedImages {
+			uploadedImg, ok := img.(*services.UploadImageResponse)
+			if !ok {
+				h.logger.Error().Msg("Failed to cast image response")
+				continue
+			}
+
+			// Call microservice to add image metadata
+			grpcCtx := contextWithAuth(c, c.Context())
+			addImageReq := &pb.AddImageRequest{
+				ListingId:    int64(listingID),
+				Url:          uploadedImg.ImageURL,
+				ThumbnailUrl: &uploadedImg.ThumbnailURL,
+				DisplayOrder: int32(uploadedImg.DisplayOrder), // #nosec G115 - display order is limited to reasonable values (0-10)
+				IsPrimary:    uploadedImg.IsMain,
+			}
+
+			grpcResp, err := h.listingsClient.AddListingImage(grpcCtx, addImageReq)
+			if err != nil {
+				h.logger.Error().
+					Err(err).
+					Int("image_id", uploadedImg.ID).
+					Int("listing_id", listingID).
+					Msg("Failed to add image to microservice")
+				// Don't fail the whole upload, just log
+				continue
+			}
+
+			h.logger.Info().
+				Int64("microservice_image_id", grpcResp.Image.Id).
+				Int("monolith_image_id", uploadedImg.ID).
+				Int("listing_id", listingID).
+				Msg("Image metadata added to microservice")
+
+			// Delete from monolith DB (cleanup)
+			if err := imageRepo.DeleteImage(c.Context(), uploadedImg.ID); err != nil {
+				h.logger.Warn().
+					Err(err).
+					Int("image_id", uploadedImg.ID).
+					Msg("Failed to delete image from monolith after migration")
+				// Non-critical, continue
+			}
+
+			// Update response to use microservice ID
+			uploadedImg.ID = int(grpcResp.Image.Id)
+		}
+	}
+
 	// Prepare response with partial success info
 	successCount := len(uploadedImages)
 	failedCount := len(failedUploads)
@@ -427,6 +732,66 @@ func (h *Handler) DeleteListingImage(c *fiber.Ctx) error {
 		h.logger.Error().Err(err).Str("imageId", imageIDParam).Msg("DeleteListingImage: invalid image ID")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_image_id")
 	}
+
+	// Route to microservice if enabled, otherwise use monolith storage (fallback)
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		// Use microservice via gRPC
+		h.logger.Info().
+			Int("user_id", int(userID)).
+			Int("listing_id", listingID).
+			Int("image_id", imageID).
+			Msg("Routing DeleteListingImage to microservice")
+
+		// Verify ownership by getting listing first
+		grpcCtx := contextWithAuth(c, c.Context())
+		grpcReq := &pb.GetListingRequest{Id: int64(listingID)}
+		grpcResp, err := h.listingsClient.GetListing(grpcCtx, grpcReq)
+		if err != nil {
+			h.logger.Error().Err(err).Int("listing_id", listingID).Msg("DeleteListingImage: failed to get listing from microservice")
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+		}
+
+		// Verify ownership
+		if grpcResp.Listing.UserId != int64(userID) {
+			h.logger.Warn().
+				Int("user_id", int(userID)).
+				Int64("listing_user_id", grpcResp.Listing.UserId).
+				Int("listing_id", listingID).
+				Msg("DeleteListingImage: user is not the owner")
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.not_owner")
+		}
+
+		// Call microservice to delete image
+		if err := h.listingsClient.DeleteListingImage(grpcCtx, int64(imageID)); err != nil {
+			h.logger.Error().
+				Err(err).
+				Int("image_id", imageID).
+				Int("listing_id", listingID).
+				Msg("DeleteListingImage: failed to delete image via microservice")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.delete_image_failed")
+		}
+
+		h.logger.Info().
+			Int("image_id", imageID).
+			Int("listing_id", listingID).
+			Msg("Image deleted successfully via microservice")
+
+		return utils.SuccessResponse(c, fiber.Map{
+			"message":    "marketplace.image_deleted",
+			"image_id":   imageID,
+			"listing_id": listingID,
+			"deleted_at": time.Now(),
+		})
+	}
+
+	// Fallback to monolith storage
+	h.logger.Info().
+		Int("user_id", int(userID)).
+		Int("listing_id", listingID).
+		Int("image_id", imageID).
+		Bool("microservice_enabled", h.useListingsMicroservice).
+		Bool("client_available", h.listingsClient != nil).
+		Msg("Using monolith storage for DeleteListingImage (fallback)")
 
 	// Check if listing exists and belongs to user
 	listing, err := h.storage.GetListing(c.Context(), listingID)
@@ -523,7 +888,7 @@ func (h *Handler) DeleteListingImage(c *fiber.Ctx) error {
 		Int("image_id", imageID).
 		Int("listing_id", listingID).
 		Bool("was_main", wasMainImage).
-		Msg("Image deleted successfully")
+		Msg("Image deleted successfully via monolith")
 
 	return utils.SuccessResponse(c, fiber.Map{
 		"message":    "marketplace.image_deleted",
@@ -590,6 +955,74 @@ func (h *Handler) ReorderListingImages(c *fiber.Ctx) error {
 		h.logger.Error().Msg("ReorderListingImages: empty images array")
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.empty_images_array")
 	}
+
+	// Route to microservice if enabled, otherwise use monolith storage (fallback)
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		// Use microservice via gRPC
+		h.logger.Info().
+			Int("user_id", int(userID)).
+			Int("listing_id", listingID).
+			Int("images_count", len(req.Images)).
+			Msg("Routing ReorderListingImages to microservice")
+
+		// Verify ownership by getting listing first
+		grpcCtx := contextWithAuth(c, c.Context())
+		grpcReq := &pb.GetListingRequest{Id: int64(listingID)}
+		grpcResp, err := h.listingsClient.GetListing(grpcCtx, grpcReq)
+		if err != nil {
+			h.logger.Error().Err(err).Int("listing_id", listingID).Msg("ReorderListingImages: failed to get listing from microservice")
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.listing_not_found")
+		}
+
+		// Verify ownership
+		if grpcResp.Listing.UserId != int64(userID) {
+			h.logger.Warn().
+				Int("user_id", int(userID)).
+				Int64("listing_user_id", grpcResp.Listing.UserId).
+				Int("listing_id", listingID).
+				Msg("ReorderListingImages: user is not the owner")
+			return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.not_owner")
+		}
+
+		// Convert request body to proto format
+		imageOrders := make([]*pb.ImageOrder, len(req.Images))
+		for i, item := range req.Images {
+			imageOrders[i] = &pb.ImageOrder{
+				ImageId:      int64(item.ImageID),
+				DisplayOrder: int32(item.DisplayOrder), // #nosec G115 - display order is validated and limited to reasonable values (1-10)
+			}
+		}
+
+		// Call microservice to reorder images
+		if err := h.listingsClient.ReorderListingImages(grpcCtx, int64(listingID), imageOrders); err != nil {
+			h.logger.Error().
+				Err(err).
+				Int("listing_id", listingID).
+				Msg("ReorderListingImages: failed to reorder images via microservice")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.reorder_failed")
+		}
+
+		h.logger.Info().
+			Int("listing_id", listingID).
+			Int("images_count", len(req.Images)).
+			Msg("Images reordered successfully via microservice")
+
+		return utils.SuccessResponse(c, fiber.Map{
+			"message":      "marketplace.images_reordered",
+			"listing_id":   listingID,
+			"images_count": len(req.Images),
+			"updated_at":   time.Now(),
+		})
+	}
+
+	// Fallback to monolith storage
+	h.logger.Info().
+		Int("user_id", int(userID)).
+		Int("listing_id", listingID).
+		Int("images_count", len(req.Images)).
+		Bool("microservice_enabled", h.useListingsMicroservice).
+		Bool("client_available", h.listingsClient != nil).
+		Msg("Using monolith storage for ReorderListingImages (fallback)")
 
 	// Check if listing exists and belongs to user
 	listing, err := h.storage.GetListing(c.Context(), listingID)
@@ -697,7 +1130,7 @@ func (h *Handler) ReorderListingImages(c *fiber.Ctx) error {
 	h.logger.Info().
 		Int("listing_id", listingID).
 		Int("images_count", len(req.Images)).
-		Msg("Images reordered successfully")
+		Msg("Images reordered successfully via monolith")
 
 	return utils.SuccessResponse(c, fiber.Map{
 		"message":      "marketplace.images_reordered",
@@ -716,6 +1149,12 @@ func (h *Handler) ReorderListingImages(c *fiber.Ctx) error {
 // @Param limit query int false "Items per page (default: 20)"
 // @Param offset query int false "Offset for pagination (default: 0)"
 // @Param sort_by query string false "Sort by (date_desc, date_asc, price_asc, price_desc)"
+// @Param user_id query int false "Filter by user ID"
+// @Param storefront_id query int false "Filter by storefront ID"
+// @Param category_id query int false "Filter by category ID"
+// @Param status query string false "Filter by status (active, pending, sold, etc)"
+// @Param min_price query number false "Minimum price filter"
+// @Param max_price query number false "Maximum price filter"
 // @Param exclude_storefronts query boolean false "Exclude storefront listings"
 // @Success 200 {object} utils.SuccessResponseSwag{data=object{data=[]models.MarketplaceListing,meta=object{total=int}}}
 // @Failure 401 {object} utils.ErrorResponseSwag
@@ -723,15 +1162,248 @@ func (h *Handler) ReorderListingImages(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/listings [get]
 func (h *Handler) GetListings(c *fiber.Ctx) error {
-	// TODO: Implement via microservice when fully migrated
-	// For now, return empty list with proper structure
+	// Parse query parameters
+	limit := c.QueryInt("limit", 20)
+	offset := c.QueryInt("offset", 0)
+	sortBy := c.Query("sort_by", "")
+	excludeStorefronts := c.QueryBool("exclude_storefronts", false)
+
+	// Optional filters
+	userIDQuery := c.Query("user_id", "")
+	storefrontIDQuery := c.Query("storefront_id", "")
+	categoryIDQuery := c.Query("category_id", "")
+	status := c.Query("status", "")
+	minPriceQuery := c.Query("min_price", "")
+	maxPriceQuery := c.Query("max_price", "")
+
+	// Phase 7.4: Route to microservice if feature flag is enabled
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		h.logger.Info().
+			Bool("use_microservice", true).
+			Int("limit", limit).
+			Int("offset", offset).
+			Str("sort_by", sortBy).
+			Bool("exclude_storefronts", excludeStorefronts).
+			Msg("Routing GetListings to listings microservice")
+
+		// Build gRPC request
+		grpcReq := &pb.ListListingsRequest{
+			Limit:  int32(limit),
+			Offset: int32(offset),
+		}
+
+		// Add optional filters
+		if userIDQuery != "" {
+			if userID, err := strconv.ParseInt(userIDQuery, 10, 64); err == nil {
+				grpcReq.UserId = &userID
+			}
+		}
+		if storefrontIDQuery != "" {
+			if storefrontID, err := strconv.ParseInt(storefrontIDQuery, 10, 64); err == nil {
+				// Handle exclude_storefronts: if true, don't filter by storefront
+				// If false and storefront_id is provided, filter by it
+				if !excludeStorefronts {
+					grpcReq.StorefrontId = &storefrontID
+				}
+			}
+		} else if excludeStorefronts {
+			// If exclude_storefronts=true but no specific storefront_id, we need special handling
+			// This logic should be implemented in microservice
+			// For now, we just pass the filter as-is
+			h.logger.Debug().Msg("exclude_storefronts=true will be handled by filtering results")
+		}
+		if categoryIDQuery != "" {
+			if categoryID, err := strconv.ParseInt(categoryIDQuery, 10, 64); err == nil {
+				grpcReq.CategoryId = &categoryID
+			}
+		}
+		if status != "" {
+			grpcReq.Status = &status
+		}
+		if minPriceQuery != "" {
+			if minPrice, err := strconv.ParseFloat(minPriceQuery, 64); err == nil {
+				grpcReq.MinPrice = &minPrice
+			}
+		}
+		if maxPriceQuery != "" {
+			if maxPrice, err := strconv.ParseFloat(maxPriceQuery, 64); err == nil {
+				grpcReq.MaxPrice = &maxPrice
+			}
+		}
+
+		// Note: sort_by is currently NOT supported by microservice ListListings
+		// It will be implemented in future phases
+		if sortBy != "" {
+			h.logger.Warn().
+				Str("sort_by", sortBy).
+				Msg("sort_by parameter is not yet supported by microservice, ignoring")
+		}
+
+		// Call microservice via gRPC
+		grpcResp, err := h.listingsClient.ListListings(c.Context(), grpcReq)
+		if err != nil {
+			h.logger.Error().Err(err).Msg("Failed to get listings from microservice, falling back to monolith")
+			// Fallback to monolith (stub for now)
+			return utils.SuccessResponse(c, fiber.Map{
+				"data": []interface{}{},
+				"meta": fiber.Map{
+					"total":  0,
+					"limit":  limit,
+					"offset": offset,
+				},
+			})
+		}
+
+		// Convert proto.Listing to models.MarketplaceListing
+		listings := make([]models.MarketplaceListing, 0, len(grpcResp.Listings))
+		for _, protoListing := range grpcResp.Listings {
+			listing := models.MarketplaceListing{
+				ID:         int(protoListing.Id),
+				UserID:     int(protoListing.UserId),
+				CategoryID: int(protoListing.CategoryId),
+				Title:      protoListing.Title,
+				Price:      protoListing.Price,
+				Status:     protoListing.Status,
+				ViewsCount: int(protoListing.ViewsCount),
+			}
+
+			// Description (optional)
+			if protoListing.Description != nil {
+				listing.Description = *protoListing.Description
+			}
+
+			// Location (complex object)
+			if protoListing.Location != nil {
+				loc := protoListing.Location
+				if loc.City != nil {
+					listing.City = *loc.City
+				}
+				if loc.Country != nil {
+					listing.Country = *loc.Country
+				}
+				if loc.Latitude != nil {
+					listing.Latitude = loc.Latitude
+				}
+				if loc.Longitude != nil {
+					listing.Longitude = loc.Longitude
+				}
+				// Combine address fields into Location string
+				if loc.AddressLine1 != nil || loc.City != nil {
+					locationParts := []string{}
+					if loc.AddressLine1 != nil {
+						locationParts = append(locationParts, *loc.AddressLine1)
+					}
+					if loc.City != nil {
+						locationParts = append(locationParts, *loc.City)
+					}
+					if loc.Country != nil {
+						locationParts = append(locationParts, *loc.Country)
+					}
+					listing.Location = strings.Join(locationParts, ", ")
+				}
+			}
+
+			// Storefront ID (optional)
+			if protoListing.StorefrontId != nil {
+				storefrontID := int(*protoListing.StorefrontId)
+				listing.StorefrontID = &storefrontID
+			}
+
+			// SKU (for products)
+			if protoListing.Sku != nil {
+				listing.ExternalID = *protoListing.Sku
+			}
+
+			// Timestamps (parse from RFC3339 strings)
+			if createdAt, err := time.Parse(time.RFC3339, protoListing.CreatedAt); err == nil {
+				listing.CreatedAt = createdAt
+			}
+			if updatedAt, err := time.Parse(time.RFC3339, protoListing.UpdatedAt); err == nil {
+				listing.UpdatedAt = updatedAt
+			}
+			if protoListing.PublishedAt != nil {
+				if publishedAt, err := time.Parse(time.RFC3339, *protoListing.PublishedAt); err == nil {
+					listing.PublishedAt = &publishedAt
+				}
+			}
+
+			// Images - map from proto.ListingImage to models.MarketplaceImage
+			if len(protoListing.Images) > 0 {
+				listing.Images = make([]models.MarketplaceImage, 0, len(protoListing.Images))
+				for _, protoImage := range protoListing.Images {
+					image := models.MarketplaceImage{
+						ID:            int(protoImage.Id),
+						ListingID:     int(protoImage.ListingId),
+						PublicURL:     protoImage.Url,
+						DisplayOrder:  int(protoImage.DisplayOrder),
+						IsMain:        protoImage.IsPrimary,
+						StorageType:   "minio", // Default
+						StorageBucket: "listings",
+					}
+					if protoImage.StoragePath != nil {
+						image.FilePath = *protoImage.StoragePath
+					}
+					if protoImage.ThumbnailUrl != nil {
+						image.ThumbnailURL = *protoImage.ThumbnailUrl
+					}
+					if protoImage.MimeType != nil {
+						image.ContentType = *protoImage.MimeType
+					}
+					if protoImage.FileSize != nil {
+						image.FileSize = int(*protoImage.FileSize)
+					}
+					if createdAt, err := time.Parse(time.RFC3339, protoImage.CreatedAt); err == nil {
+						image.CreatedAt = createdAt
+					}
+					listing.Images = append(listing.Images, image)
+				}
+			}
+
+			// Filter out storefront listings if exclude_storefronts is true
+			if excludeStorefronts && listing.StorefrontID != nil {
+				continue
+			}
+
+			listings = append(listings, listing)
+		}
+
+		// Adjust total count if we filtered out storefronts
+		totalCount := int(grpcResp.Total)
+		if excludeStorefronts {
+			totalCount = len(listings)
+		}
+
+		h.logger.Info().
+			Int("count", len(listings)).
+			Int("total", totalCount).
+			Bool("served_by_microservice", true).
+			Msg("Successfully retrieved listings from microservice")
+
+		// Add header to indicate microservice was used
+		c.Set("X-Served-By", "microservice")
+		return utils.SuccessResponse(c, fiber.Map{
+			"data": listings,
+			"meta": fiber.Map{
+				"total":  totalCount,
+				"limit":  limit,
+				"offset": offset,
+			},
+		})
+	}
+
+	// Default: use monolith storage (stub for now)
+	h.logger.Debug().
+		Bool("use_microservice", false).
+		Int("limit", limit).
+		Int("offset", offset).
+		Msg("Routing GetListings to monolith (stub)")
 
 	return utils.SuccessResponse(c, fiber.Map{
 		"data": []interface{}{},
 		"meta": fiber.Map{
 			"total":  0,
-			"limit":  c.QueryInt("limit", 20),
-			"offset": c.QueryInt("offset", 0),
+			"limit":  limit,
+			"offset": offset,
 		},
 	})
 }
