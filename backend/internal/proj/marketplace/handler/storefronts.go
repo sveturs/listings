@@ -222,3 +222,69 @@ func (h *Handler) GetMyStorefronts(c *fiber.Ctx) error {
 
 	return c.JSON(storefronts)
 }
+
+// GetAllStorefrontsAdmin возвращает все витрины для админа с пагинацией
+// @Summary Get all storefronts (admin)
+// @Description Get paginated list of all B2C storefronts for admin panel
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param limit query int false "Items per page (default: 20, max: 100)"
+// @Param offset query int false "Offset for pagination (default: 0)"
+// @Param include_inactive query boolean false "Include inactive storefronts (default: false)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{b2c_stores=[]models.Storefront,total=int}}
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 403 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Security BearerAuth
+// @Router /api/v1/admin/b2c [get]
+func (h *Handler) GetAllStorefrontsAdmin(c *fiber.Ctx) error {
+	// Парсим query параметры с offset вместо page
+	limit := c.QueryInt("limit", 20)
+	offset := c.QueryInt("offset", 0)
+	includeInactive := c.QueryBool("include_inactive", false)
+
+	// Валидация лимита
+	if limit > 100 {
+		limit = 100
+	}
+	if limit < 1 {
+		limit = 20
+	}
+
+	// Конвертируем offset в page для storage
+	page := (offset / limit) + 1
+	if offset%limit != 0 {
+		page = (offset / limit) + 1
+	}
+	if page < 1 {
+		page = 1
+	}
+
+	// Подготавливаем фильтры
+	filters := storage.StorefrontFilters{
+		Page:      page,
+		Limit:     limit,
+		SortBy:    "created_at",
+		SortOrder: "desc",
+	}
+
+	// Если не включать неактивные, фильтруем по is_active=true
+	if !includeInactive {
+		isActive := true
+		filters.IsActive = &isActive
+	}
+
+	// Получаем витрины из БД
+	storefronts, total, err := h.storage.GetStorefronts(c.Context(), filters)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("Failed to get storefronts for admin")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.fetch_failed")
+	}
+
+	// Frontend ожидает b2c_stores
+	return c.JSON(fiber.Map{
+		"b2c_stores": storefronts,
+		"total":      total,
+	})
+}

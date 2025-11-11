@@ -44,6 +44,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Delete("/api/v1/marketplace/listings/:id/images/:imageId", h.jwtParserMW, authMiddleware.RequireAuth(), h.DeleteListingImage)
 	app.Patch("/api/v1/marketplace/listings/:id/images/reorder", h.jwtParserMW, authMiddleware.RequireAuth(), h.ReorderListingImages)
 
+	// Admin endpoints (требуют admin роль)
+	app.Get("/api/v1/admin/b2c", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), h.GetAllStorefrontsAdmin)
+
 	return nil
 }
 
