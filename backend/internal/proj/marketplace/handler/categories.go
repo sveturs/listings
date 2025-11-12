@@ -12,6 +12,13 @@ import (
 	"backend/pkg/utils"
 )
 
+// contextKey is a custom type for context keys to avoid collisions
+type contextKey string
+
+const (
+	tokenContextKey contextKey = "token"
+)
+
 // GetCategories godoc
 // @Summary Получить список категорий
 // @Description Получить список всех активных категорий
@@ -294,7 +301,7 @@ func (h *Handler) GetFavorites(c *fiber.Ctx) error {
 	// Извлечь JWT токен из Fiber context и добавить в Go context
 	ctx := c.UserContext()
 	if token, ok := authMiddleware.GetToken(c); ok {
-		ctx = context.WithValue(ctx, "token", token)
+		ctx = context.WithValue(ctx, tokenContextKey, token)
 	}
 
 	favorites, err := h.listingsClient.GetUserFavorites(ctx, userID)
@@ -351,7 +358,7 @@ func (h *Handler) AddToFavorites(c *fiber.Ctx) error {
 	// Извлечь JWT токен из Fiber context и добавить в Go context
 	ctx := c.UserContext()
 	if token, ok := authMiddleware.GetToken(c); ok {
-		ctx = context.WithValue(ctx, "token", token)
+		ctx = context.WithValue(ctx, tokenContextKey, token)
 	}
 
 	if err := h.listingsClient.AddToFavorites(ctx, userID, listingID); err != nil {
@@ -408,7 +415,7 @@ func (h *Handler) RemoveFromFavorites(c *fiber.Ctx) error {
 	// Извлечь JWT токен из Fiber context и добавить в Go context
 	ctx := c.UserContext()
 	if token, ok := authMiddleware.GetToken(c); ok {
-		ctx = context.WithValue(ctx, "token", token)
+		ctx = context.WithValue(ctx, tokenContextKey, token)
 	}
 
 	if err := h.listingsClient.RemoveFromFavorites(ctx, userID, listingID); err != nil {

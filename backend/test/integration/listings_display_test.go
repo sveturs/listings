@@ -39,7 +39,11 @@ func TestGetListingWithImages(t *testing.T) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Failed to close response body: %v", err)
+		}
+	}()
 
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Expected 200 OK")
 
@@ -90,7 +94,11 @@ func TestSearchAPI(t *testing.T) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Failed to close response body: %v", err)
+		}
+	}()
 
 	require.Equal(t, http.StatusOK, resp.StatusCode, "Expected 200 OK")
 
@@ -134,7 +142,11 @@ func TestOpenSearchSync(t *testing.T) {
 	// 1. Get data from listings microservice database
 	db, err := sqlx.Connect("postgres", listingsMicroDBDSN)
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Failed to close database connection: %v", err)
+		}
+	}()
 
 	var dbData struct {
 		ID          int       `db:"id"`
@@ -168,7 +180,11 @@ func TestOpenSearchSync(t *testing.T) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Failed to close response body: %v", err)
+		}
+	}()
 
 	require.Equal(t, http.StatusOK, resp.StatusCode, "OpenSearch document should exist")
 
@@ -205,7 +221,11 @@ func TestOpenSearchSync(t *testing.T) {
 func TestListingImagesInDatabase(t *testing.T) {
 	db, err := sqlx.Connect("postgres", listingsMicroDBDSN)
 	require.NoError(t, err)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Logf("Failed to close database connection: %v", err)
+		}
+	}()
 
 	var images []struct {
 		ID           int    `db:"id"`

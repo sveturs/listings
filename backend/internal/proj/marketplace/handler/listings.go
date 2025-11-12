@@ -4,6 +4,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"math"
 	"mime/multipart"
 	"strconv"
 	"strings"
@@ -1186,7 +1187,16 @@ func (h *Handler) GetListings(c *fiber.Ctx) error {
 			Bool("exclude_storefronts", excludeStorefronts).
 			Msg("Routing GetListings to listings microservice")
 
+		// Validate limit and offset to prevent int32 overflow
+		if limit > math.MaxInt32 || limit < 0 {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_limit")
+		}
+		if offset > math.MaxInt32 || offset < 0 {
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_offset")
+		}
+
 		// Build gRPC request
+		// #nosec G115 -- Values are validated against math.MaxInt32 above
 		grpcReq := &pb.ListListingsRequest{
 			Limit:  int32(limit),
 			Offset: int32(offset),

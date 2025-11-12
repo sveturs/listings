@@ -98,7 +98,11 @@ func (h *Handler) SearchListings(c *fiber.Ctx) error {
 		h.logger.Error().Err(err).Msg("OpenSearch request failed")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.search_failed")
 	}
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			h.logger.Error().Err(err).Msg("Failed to close OpenSearch response body")
+		}
+	}()
 
 	if res.IsError() {
 		h.logger.Error().
