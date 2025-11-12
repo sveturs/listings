@@ -1,5 +1,8 @@
 # Stage 1: Build stage
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
+
+# Accept GitHub token as build arg (optional - will work without for public repos)
+ARG GITHUB_TOKEN
 
 # Install build dependencies
 RUN apk add --no-cache git make gcc musl-dev
@@ -7,15 +10,23 @@ RUN apk add --no-cache git make gcc musl-dev
 # Set working directory
 WORKDIR /build
 
-# Copy go mod files first for better layer caching
+# Set GOPRIVATE for sveturs modules
+ENV GOPRIVATE=github.com/sveturs/*
+
+# Configure Git credentials if token provided (for private repos)
+RUN if [ -n "$GITHUB_TOKEN" ]; then \
+        git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"; \
+    fi
+
+# Copy go mod and vendor directory for offline build
 COPY go.mod go.sum ./
-RUN go mod download
+COPY vendor/ ./vendor/
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+# Build the application using vendored dependencies (no network access needed)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor \
     -ldflags="-w -s -X main.Version=$(git describe --tags --always --dirty) -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     -o /build/bin/listings-service \
     ./cmd/server
@@ -38,6 +49,9 @@ COPY --from=builder /build/bin/listings-service /app/listings-service
 
 # Copy migrations (if needed for embedded migrations)
 COPY --from=builder /build/migrations /app/migrations
+
+# Copy auth service public key
+COPY --from=builder /build/keys /app/keys
 
 # Change ownership
 RUN chown -R listings:listings /app

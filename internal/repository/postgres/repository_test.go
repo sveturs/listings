@@ -34,7 +34,37 @@ func setupTestRepo(t *testing.T) (*Repository, *tests.TestDB) {
 	// Create repository
 	repo := NewRepository(db, logger)
 
+	// Create test categories (fixtures)
+	setupTestCategories(t, db)
+
 	return repo, testDB
+}
+
+// setupTestCategories creates test category fixtures
+func setupTestCategories(t *testing.T, db *sqlx.DB) {
+	t.Helper()
+
+	categories := []struct {
+		id          int
+		name        string
+		slug        string
+		description string
+	}{
+		{100, "Test Electronics", "test-electronics", "Test category for electronics"},
+		{200, "Test Fashion", "test-fashion", "Test category for fashion items"},
+		{300, "Test Home & Garden", "test-home-garden", "Test category for home and garden"},
+	}
+
+	for _, cat := range categories {
+		_, err := db.Exec(`
+			INSERT INTO categories (id, name, slug, description, is_active, level, sort_order)
+			VALUES ($1, $2, $3, $4, true, 0, 0)
+			ON CONFLICT (id) DO NOTHING
+		`, cat.id, cat.name, cat.slug, cat.description)
+		if err != nil {
+			t.Fatalf("failed to create test category: %v", err)
+		}
+	}
 }
 
 func TestNewRepository(t *testing.T) {
@@ -69,6 +99,7 @@ func TestCreateListing(t *testing.T) {
 				CategoryID:   100,
 				Quantity:     10,
 				SKU:          stringPtr("TEST-SKU-001"),
+				SourceType:   "c2c",
 			},
 			wantErr: false,
 		},
@@ -84,6 +115,7 @@ func TestCreateListing(t *testing.T) {
 				CategoryID:   200,
 				Quantity:     5,
 				SKU:          stringPtr("STORE-SKU-001"),
+				SourceType:   "b2c",
 			},
 			wantErr: false,
 		},
@@ -143,6 +175,7 @@ func TestGetListingByID(t *testing.T) {
 		CategoryID:  100,
 		Quantity:    1,
 		SKU:         stringPtr("TEST-001"),
+		SourceType:  "c2c",
 	}
 	created, err := repo.CreateListing(ctx, input)
 	require.NoError(t, err)
@@ -198,6 +231,7 @@ func TestUpdateListing(t *testing.T) {
 		CategoryID:  100,
 		Quantity:    5,
 		SKU:         stringPtr("ORIG-001"),
+		SourceType:  "c2c",
 	}
 	created, err := repo.CreateListing(ctx, input)
 	require.NoError(t, err)
@@ -270,6 +304,7 @@ func TestDeleteListing(t *testing.T) {
 		CategoryID:  100,
 		Quantity:    3,
 		SKU:         stringPtr("DEL-001"),
+		SourceType:  "c2c",
 	}
 	created, err := repo.CreateListing(ctx, input)
 	require.NoError(t, err)
@@ -329,6 +364,7 @@ func TestListListings(t *testing.T) {
 			CategoryID:  100,
 			Quantity:    int32(i + 1),
 			SKU:         sku,
+			SourceType:  "c2c",
 		}
 		_, err := repo.CreateListing(ctx, input)
 		require.NoError(t, err)

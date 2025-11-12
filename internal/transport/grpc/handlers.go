@@ -3,26 +3,35 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	"github.com/sveturs/listings/internal/metrics"
 	"github.com/sveturs/listings/internal/service/listings"
 )
+
+// contains checks if substring is in string (case-insensitive helper)
+func contains(s, substr string) bool {
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
+}
 
 // Server implements gRPC ListingsServiceServer
 type Server struct {
 	pb.UnimplementedListingsServiceServer
 	service *listings.Service
+	metrics *metrics.Metrics
 	logger  zerolog.Logger
 }
 
 // NewServer creates a new gRPC server instance
-func NewServer(service *listings.Service, logger zerolog.Logger) *Server {
+func NewServer(service *listings.Service, m *metrics.Metrics, logger zerolog.Logger) *Server {
 	return &Server{
 		service: service,
+		metrics: m,
 		logger:  logger.With().Str("component", "grpc_handler").Logger(),
 	}
 }
@@ -41,6 +50,12 @@ func (s *Server) GetListing(ctx context.Context, req *pb.GetListingRequest) (*pb
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", req.Id).Msg("failed to get listing")
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("listing not found: %v", err))
+	}
+
+	// Check for nil listing (defensive programming)
+	if listing == nil {
+		s.logger.Error().Int64("listing_id", req.Id).Msg("listing returned nil without error")
+		return nil, status.Error(codes.NotFound, "listing not found")
 	}
 
 	// Convert to proto
@@ -67,6 +82,16 @@ func (s *Server) CreateListing(ctx context.Context, req *pb.CreateListingRequest
 	listing, err := s.service.CreateListing(ctx, input)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to create listing")
+
+		// Map errors to appropriate gRPC codes (use contains for wrapped errors)
+		errMsg := err.Error()
+		if contains(errMsg, "category not found") || contains(errMsg, "fk_listings_category_id") {
+			return nil, status.Error(codes.InvalidArgument, "category not found")
+		}
+		if contains(errMsg, "validation failed") {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create listing: %v", err))
 	}
 
@@ -96,9 +121,13 @@ func (s *Server) UpdateListing(ctx context.Context, req *pb.UpdateListingRequest
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", req.Id).Msg("failed to update listing")
 
-		// Check if it's an authorization error
-		if err.Error() == "unauthorized: user does not own this listing" {
+		// Map errors to appropriate gRPC codes (use contains for wrapped errors)
+		errMsg := err.Error()
+		if errMsg == "unauthorized: user does not own this listing" {
 			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		if contains(errMsg, "listing not found") || contains(errMsg, "sql: no rows in result set") {
+			return nil, status.Error(codes.NotFound, "listing not found")
 		}
 
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to update listing: %v", err))
@@ -115,7 +144,11 @@ func (s *Server) UpdateListing(ctx context.Context, req *pb.UpdateListingRequest
 
 // DeleteListing soft-deletes a listing
 func (s *Server) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest) (*pb.DeleteListingResponse, error) {
-	s.logger.Debug().Int64("listing_id", req.Id).Int64("user_id", req.UserId).Msg("DeleteListing called")
+	s.logger.Debug().
+		Int64("listing_id", req.Id).
+		Int64("user_id", req.UserId).
+		Bool("is_admin", req.IsAdmin).
+		Msg("DeleteListing called")
 
 	// Validate request
 	if req.Id <= 0 {
@@ -126,14 +159,55 @@ func (s *Server) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest
 		return nil, status.Error(codes.InvalidArgument, "user ID must be greater than 0")
 	}
 
+	// If admin is requesting deletion, bypass ownership check
+	if req.IsAdmin {
+		s.logger.Info().
+			Int64("listing_id", req.Id).
+			Int64("admin_user_id", req.UserId).
+			Msg("Admin bypass: deleting listing without ownership check")
+
+		// Get listing first to verify it exists
+		listing, err := s.service.GetListing(ctx, req.Id)
+		if err != nil {
+			s.logger.Error().Err(err).Int64("listing_id", req.Id).Msg("failed to get listing for admin deletion")
+			return nil, status.Error(codes.NotFound, "listing not found")
+		}
+
+		// Delete listing via service using listing owner's ID
+		err = s.service.DeleteListing(ctx, req.Id, listing.UserID)
+		if err != nil {
+			s.logger.Error().
+				Err(err).
+				Int64("listing_id", req.Id).
+				Int64("admin_user_id", req.UserId).
+				Int64("listing_owner_id", listing.UserID).
+				Msg("failed to delete listing as admin")
+			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to delete listing: %v", err))
+		}
+
+		s.logger.Info().
+			Int64("listing_id", req.Id).
+			Int64("admin_user_id", req.UserId).
+			Int64("listing_owner_id", listing.UserID).
+			Msg("Listing deleted successfully by admin")
+
+		return &pb.DeleteListingResponse{
+			Success: true,
+		}, nil
+	}
+
 	// Delete listing via service (with ownership check)
 	err := s.service.DeleteListing(ctx, req.Id, req.UserId)
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", req.Id).Msg("failed to delete listing")
 
-		// Check if it's an authorization error
-		if err.Error() == "unauthorized: user does not own this listing" {
+		// Map errors to appropriate gRPC codes (use contains for wrapped errors)
+		errMsg := err.Error()
+		if errMsg == "unauthorized: user does not own this listing" {
 			return nil, status.Error(codes.PermissionDenied, err.Error())
+		}
+		if contains(errMsg, "listing not found") || contains(errMsg, "sql: no rows in result set") {
+			return nil, status.Error(codes.NotFound, "listing not found")
 		}
 
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to delete listing: %v", err))
@@ -305,11 +379,8 @@ func (s *Server) validateUpdateListingRequest(req *pb.UpdateListingRequest) erro
 }
 
 func (s *Server) validateSearchListingsRequest(req *pb.SearchListingsRequest) error {
-	if req.Query == "" {
-		return fmt.Errorf("search query is required")
-	}
-
-	if len(req.Query) < 2 {
+	// Query is optional - if provided, validate it
+	if req.Query != "" && len(req.Query) < 2 {
 		return fmt.Errorf("search query must be at least 2 characters")
 	}
 

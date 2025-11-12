@@ -1,0 +1,133 @@
+version: '3.8'
+
+# Docker Compose configuration for Load Testing Environment
+# This spins up all necessary services for load testing the Listings microservice
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: listings_load_test_db
+    environment:
+      POSTGRES_USER: listings_user
+      POSTGRES_PASSWORD: listings_pass
+      POSTGRES_DB: listings_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listings_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - load_test_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: listings_load_test_redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - load_test_network
+
+  # Listings Service
+  listings:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: listings_load_test_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: listings_user
+      DB_PASSWORD: listings_pass
+      DB_NAME: listings_db
+      DB_SSLMODE: disable
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # Server
+      HTTP_PORT: 8086
+      GRPC_PORT: 50051
+      ENABLE_GRPC_REFLECTION: "true"
+
+      # Performance
+      DB_MAX_CONNS: 50
+      DB_MAX_IDLE_CONNS: 25
+      CACHE_TTL: 300
+
+      # Logging
+      LOG_LEVEL: info
+      LOG_FORMAT: json
+
+    ports:
+      - "8086:8086"   # HTTP
+      - "50051:50051" # gRPC
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8086/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - load_test_network
+
+  # Prometheus (monitoring)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: listings_load_test_prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1d'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - load_test_network
+
+  # Grafana (visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: listings_load_test_grafana
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-clock-panel
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    networks:
+      - load_test_network
+
+networks:
+  load_test_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

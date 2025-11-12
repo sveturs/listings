@@ -5,22 +5,30 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/rs/zerolog"
+	authservice "github.com/sveturs/auth/pkg/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/cache"
 	"github.com/sveturs/listings/internal/config"
+	"github.com/sveturs/listings/internal/health"
 	"github.com/sveturs/listings/internal/metrics"
+	"github.com/sveturs/listings/internal/middleware"
+	"github.com/sveturs/listings/internal/ratelimit"
+	"github.com/sveturs/listings/internal/repository/minio"
 	"github.com/sveturs/listings/internal/repository/opensearch"
 	"github.com/sveturs/listings/internal/repository/postgres"
 	"github.com/sveturs/listings/internal/service/listings"
+	"github.com/sveturs/listings/internal/timeout"
 	grpcTransport "github.com/sveturs/listings/internal/transport/grpc"
 	httpTransport "github.com/sveturs/listings/internal/transport/http"
 	"github.com/sveturs/listings/internal/worker"
@@ -54,15 +62,36 @@ func main() {
 		log.Fatalf("Invalid configuration: %v", err)
 	}
 
-	// Initialize logger
-	logger := initLogger(cfg.App.LogLevel, cfg.App.LogFormat)
-	logger.Info().
+	// Initialize zerolog logger (for HTTP/gRPC transports)
+	zerologLogger := initLogger(cfg.App.LogLevel, cfg.App.LogFormat)
+	zerologLogger.Info().
 		Str("version", Version).
 		Str("env", cfg.App.Env).
 		Msg("Starting Listings Service")
 
+	// Initialize zerolog logger
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	logLevel := zerolog.InfoLevel
+	if cfg.App.LogLevel == "debug" {
+		logLevel = zerolog.DebugLevel
+	}
+	logger := zerolog.New(os.Stdout).Level(logLevel).With().
+		Timestamp().
+		Str("service", "listings").
+		Str("version", Version).
+		Logger()
+
 	// Initialize metrics
 	metricsInstance := metrics.NewMetrics("listings")
+
+	// Start pprof server on separate port (for profiling)
+	go func() {
+		pprofAddr := ":6060"
+		logger.Info().Str("addr", pprofAddr).Msg("Starting pprof server")
+		if err := http.ListenAndServe(pprofAddr, nil); err != nil {
+			logger.Error().Err(err).Msg("pprof server failed")
+		}
+	}()
 
 	// Initialize PostgreSQL
 	db, err := postgres.InitDB(
@@ -71,14 +100,23 @@ func main() {
 		cfg.DB.MaxIdleConns,
 		cfg.DB.ConnMaxLifetime,
 		cfg.DB.ConnMaxIdleTime,
-		logger,
+		zerologLogger,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to initialize database")
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error().Err(err).Msg("failed to close database connection")
+		}
+	}()
 
-	pgRepo := postgres.NewRepository(db, logger)
+	pgRepo := postgres.NewRepository(db, zerologLogger)
+
+	// Start DB stats collector
+	dbStatsCollector := metrics.NewDBStatsCollector(db, metricsInstance, zerologLogger, 15*time.Second)
+	go dbStatsCollector.Start(context.Background())
+	defer dbStatsCollector.Stop()
 
 	// Initialize Redis cache
 	redisCache, err := cache.NewRedisCache(
@@ -88,12 +126,16 @@ func main() {
 		cfg.Redis.PoolSize,
 		cfg.Redis.MinIdleConns,
 		cfg.Redis.ListingTTL,
-		logger,
+		zerologLogger,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to initialize Redis cache")
 	}
-	defer redisCache.Close()
+	defer func() {
+		if err := redisCache.Close(); err != nil {
+			logger.Error().Err(err).Msg("failed to close Redis cache")
+		}
+	}()
 
 	// Initialize OpenSearch (if enabled)
 	var searchClient *opensearch.Client
@@ -103,17 +145,69 @@ func main() {
 			cfg.Search.Username,
 			cfg.Search.Password,
 			cfg.Search.Index,
-			logger,
+			zerologLogger,
 		)
 		if err != nil {
 			logger.Warn().Err(err).Msg("OpenSearch not available, continuing without search")
 		} else {
-			defer searchClient.Close()
+			defer func() {
+				if err := searchClient.Close(); err != nil {
+					logger.Error().Err(err).Msg("failed to close OpenSearch client")
+				}
+			}()
 		}
 	}
 
+	// Initialize MinIO (optional)
+	var minioClient *minio.Client
+	if cfg.Storage.Endpoint != "" {
+		minioClient, err = minio.NewClient(
+			cfg.Storage.Endpoint,
+			cfg.Storage.AccessKey,
+			cfg.Storage.SecretKey,
+			cfg.Storage.Bucket,
+			cfg.Storage.UseSSL,
+			zerologLogger,
+		)
+		if err != nil {
+			logger.Warn().Err(err).Msg("MinIO not available, continuing without object storage")
+		}
+	}
+
+	// Initialize Auth Service client (if enabled)
+	var authInterceptor *middleware.AuthInterceptor
+	if cfg.Auth.Enabled {
+		authServiceConfig := &authservice.Config{
+			HTTPURL: cfg.Auth.ServiceURL,
+			Timeout: cfg.Auth.Timeout,
+		}
+
+		authSvc, err := authservice.NewAuthService(authServiceConfig)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("failed to create auth service")
+		}
+
+		logger.Info().
+			Str("url", cfg.Auth.ServiceURL).
+			Msg("Auth service initialized")
+
+		authInterceptor = middleware.NewAuthInterceptor(authSvc, zerologLogger)
+	} else {
+		logger.Warn().Msg("Auth service DISABLED - all requests will be unauthenticated")
+	}
+
 	// Initialize listings service
-	listingsService := listings.NewService(pgRepo, redisCache, searchClient, logger)
+	listingsService := listings.NewService(pgRepo, redisCache, searchClient, zerologLogger)
+
+	// Initialize health check service
+	healthConfig := &health.Config{
+		CheckTimeout:     cfg.Health.CheckTimeout,
+		CheckInterval:    cfg.Health.CheckInterval,
+		StartupTimeout:   cfg.Health.StartupTimeout,
+		CacheDuration:    cfg.Health.CacheDuration,
+		EnableDeepChecks: cfg.Health.EnableDeepChecks,
+	}
+	healthChecker := health.NewService(db.DB, redisCache, searchClient, minioClient, healthConfig, zerologLogger)
 
 	// Initialize worker (if enabled and search is available)
 	var indexWorker *worker.Worker
@@ -123,7 +217,7 @@ func main() {
 			searchClient,
 			metricsInstance,
 			cfg.Worker.Concurrency,
-			logger,
+			zerologLogger,
 		)
 		if err := indexWorker.Start(); err != nil {
 			logger.Fatal().Err(err).Msg("failed to start indexing worker")
@@ -135,9 +229,46 @@ func main() {
 		}()
 	}
 
-	// Initialize gRPC server
-	grpcServer := grpc.NewServer()
-	grpcHandler := grpcTransport.NewServer(listingsService, logger)
+	// Initialize rate limiter (conditionally based on config)
+	var rateLimiterInterceptor grpc.UnaryServerInterceptor
+	if cfg.Features.RateLimitEnabled {
+		rateLimiterConfig := ratelimit.NewDefaultConfig()
+		rateLimiterInstance := ratelimit.NewRedisLimiter(redisCache.GetClient(), zerologLogger)
+		logger.Info().Msg("Rate limiter initialized with Redis backend")
+
+		// Create rate limiter interceptor with metrics
+		rateLimiterInterceptor = ratelimit.UnaryServerInterceptorWithMetrics(
+			rateLimiterInstance,
+			rateLimiterConfig,
+			metricsInstance,
+			zerologLogger,
+		)
+	} else {
+		logger.Warn().Msg("Rate limiting DISABLED - not recommended for production")
+	}
+
+	// Create timeout interceptor
+	timeoutInterceptor := timeout.UnaryServerInterceptor(metricsInstance, zerologLogger)
+
+	// Build interceptor chain (conditionally include rate limiter and auth)
+	// Order: timeout (outermost) → auth → rate limiting → metrics (innermost)
+	interceptors := []grpc.UnaryServerInterceptor{
+		timeoutInterceptor,
+	}
+	if cfg.Auth.Enabled && authInterceptor != nil {
+		interceptors = append(interceptors, authInterceptor.Unary())
+	}
+	if cfg.Features.RateLimitEnabled {
+		interceptors = append(interceptors, rateLimiterInterceptor)
+	}
+	interceptors = append(interceptors, metricsInstance.UnaryServerInterceptor())
+
+	// Initialize gRPC server with interceptors
+	// Order: timeout → auth (if enabled) → rate limiting (if enabled) → metrics
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(interceptors...),
+	)
+	grpcHandler := grpcTransport.NewServer(listingsService, metricsInstance, zerologLogger)
 	pb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 
 	// Enable gRPC reflection for tools like grpcurl
@@ -156,17 +287,21 @@ func main() {
 		}
 	}()
 
-	// Initialize HTTP server
-	httpHandler := httpTransport.NewMinimalHandler(listingsService, logger)
+	// Initialize HTTP server with health checks
+	httpHandler := httpTransport.NewMinimalHandler(listingsService, zerologLogger)
+	healthHandler := httpTransport.NewHealthHandler(healthChecker, zerologLogger)
+
 	httpApp, err := httpTransport.StartMinimalServer(
 		cfg.Server.HTTPHost,
 		cfg.Server.HTTPPort,
 		httpHandler,
-		logger,
+		healthHandler,
+		zerologLogger,
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to start HTTP server")
 	}
+
 	defer func() {
 		if err := httpApp.Shutdown(); err != nil {
 			logger.Error().Err(err).Msg("failed to shutdown HTTP server")

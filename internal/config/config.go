@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -20,6 +21,7 @@ type Config struct {
 	Features FeatureFlags
 	Tracing  TracingConfig
 	CORS     CORSConfig
+	Health   HealthConfig
 }
 
 // AppConfig contains general application settings
@@ -42,7 +44,7 @@ type ServerConfig struct {
 // DBConfig contains PostgreSQL database configuration
 type DBConfig struct {
 	Host     string `envconfig:"SVETULISTINGS_DB_HOST" default:"localhost"`
-	Port     int    `envconfig:"SVETULISTINGS_DB_PORT" default:"35433"`
+	Port     int    `envconfig:"SVETULISTINGS_DB_PORT" default:"35434"`
 	User     string `envconfig:"SVETULISTINGS_DB_USER" default:"listings_user"`
 	Password string `envconfig:"SVETULISTINGS_DB_PASSWORD" default:"listings_password"`
 	Name     string `envconfig:"SVETULISTINGS_DB_NAME" default:"listings_db"`
@@ -103,8 +105,10 @@ type StorageConfig struct {
 
 // AuthConfig contains Auth Service integration settings
 type AuthConfig struct {
-	ServiceURL    string `envconfig:"SVETULISTINGS_AUTH_SERVICE_URL" default:"http://localhost:8081"`
-	PublicKeyPath string `envconfig:"SVETULISTINGS_AUTH_PUBLIC_KEY_PATH" default:"/keys/public.pem"`
+	ServiceURL    string        `envconfig:"SVETULISTINGS_AUTH_SERVICE_URL" default:"http://localhost:8081"`
+	PublicKeyPath string        `envconfig:"SVETULISTINGS_AUTH_PUBLIC_KEY_PATH" default:"/keys/public.pem"`
+	Timeout       time.Duration `envconfig:"SVETULISTINGS_AUTH_TIMEOUT" default:"10s"`
+	Enabled       bool          `envconfig:"SVETULISTINGS_AUTH_ENABLED" default:"false"` // Disabled for Phase 13.1.15.8 until logger adapter is fixed
 }
 
 // WorkerConfig contains async worker settings
@@ -137,8 +141,20 @@ type CORSConfig struct {
 	AllowedHeaders []string `envconfig:"SVETULISTINGS_CORS_ALLOWED_HEADERS" default:"Content-Type,Authorization"`
 }
 
+// HealthConfig contains health check configuration
+type HealthConfig struct {
+	CheckTimeout     time.Duration `envconfig:"SVETULISTINGS_HEALTH_CHECK_TIMEOUT" default:"5s"`
+	CheckInterval    time.Duration `envconfig:"SVETULISTINGS_HEALTH_CHECK_INTERVAL" default:"30s"`
+	StartupTimeout   time.Duration `envconfig:"SVETULISTINGS_HEALTH_STARTUP_TIMEOUT" default:"60s"`
+	CacheDuration    time.Duration `envconfig:"SVETULISTINGS_HEALTH_CACHE_DURATION" default:"10s"`
+	EnableDeepChecks bool          `envconfig:"SVETULISTINGS_HEALTH_ENABLE_DEEP_CHECKS" default:"true"`
+}
+
 // Load reads configuration from environment variables
 func Load() (*Config, error) {
+	// Load .env file (ignore error if file doesn't exist - OK for production)
+	_ = godotenv.Load()
+
 	var cfg Config
 
 	if err := envconfig.Process("", &cfg); err != nil {

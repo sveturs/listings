@@ -9,12 +9,11 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-	// TODO: Uncomment when proto files are generated in Sprint 4.4
-	// pb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 
 // ErrNotFound is returned when a listing is not found.
@@ -50,9 +49,7 @@ type ClientConfig struct {
 // Client provides a unified interface for accessing the listings microservice.
 // It attempts gRPC first, and falls back to HTTP REST if gRPC is unavailable and fallback is enabled.
 type Client struct {
-	// TODO: Uncomment when proto files are generated in Sprint 4.4
-	// grpcClient pb.ListingsServiceClient
-	grpcClient interface{} // Temporary placeholder
+	grpcClient pb.ListingsServiceClient
 	grpcConn   *grpc.ClientConn
 	httpClient *HTTPClient
 	config     ClientConfig
@@ -95,8 +92,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 			}
 		} else {
 			client.grpcConn = conn
-			// TODO: Uncomment when proto files are generated in Sprint 4.4
-			// client.grpcClient = pb.NewListingsServiceClient(conn)
+			client.grpcClient = pb.NewListingsServiceClient(conn)
 			client.logger.Info().Str("addr", config.GRPCAddr).Msg("Connected to gRPC server")
 		}
 	}
@@ -112,8 +108,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	// Ensure at least one transport is available
-	// TODO: Change to grpcClient once proto is generated
-	if client.grpcConn == nil && client.httpClient == nil {
+	if client.grpcClient == nil && client.httpClient == nil {
 		return nil, errors.New("no transport available: both gRPC and HTTP failed")
 	}
 
@@ -271,6 +266,179 @@ func (c *Client) ListListings(ctx context.Context, req *ListListingsRequest) (*L
 	}
 
 	return nil, ErrUnavailable
+}
+
+// AddToFavorites adds a listing to user's favorites.
+// It tries gRPC first, then falls back to HTTP if enabled.
+func (c *Client) AddToFavorites(ctx context.Context, userID, listingID int64) error {
+	if c.grpcClient != nil {
+		err := c.addToFavoritesGRPC(ctx, userID, listingID)
+		if err == nil {
+			return nil
+		}
+
+		c.logger.Warn().Err(err).Int64("user_id", userID).Int64("listing_id", listingID).Msg("gRPC AddToFavorites failed")
+
+		if !c.shouldFallback(err) {
+			return err
+		}
+	}
+
+	// Fallback to HTTP
+	if c.httpClient != nil {
+		return c.httpClient.AddToFavorites(ctx, userID, listingID)
+	}
+
+	return ErrUnavailable
+}
+
+// RemoveFromFavorites removes a listing from user's favorites.
+// It tries gRPC first, then falls back to HTTP if enabled.
+func (c *Client) RemoveFromFavorites(ctx context.Context, userID, listingID int64) error {
+	if c.grpcClient != nil {
+		err := c.removeFromFavoritesGRPC(ctx, userID, listingID)
+		if err == nil {
+			return nil
+		}
+
+		c.logger.Warn().Err(err).Int64("user_id", userID).Int64("listing_id", listingID).Msg("gRPC RemoveFromFavorites failed")
+
+		if !c.shouldFallback(err) {
+			return err
+		}
+	}
+
+	// Fallback to HTTP
+	if c.httpClient != nil {
+		return c.httpClient.RemoveFromFavorites(ctx, userID, listingID)
+	}
+
+	return ErrUnavailable
+}
+
+// GetUserFavorites retrieves list of listing IDs favorited by a user.
+// It tries gRPC first, then falls back to HTTP if enabled.
+// Returns listing_ids and total count.
+func (c *Client) GetUserFavorites(ctx context.Context, userID int64) ([]int64, int, error) {
+	if c.grpcClient != nil {
+		listingIDs, total, err := c.getUserFavoritesGRPC(ctx, userID)
+		if err == nil {
+			return listingIDs, total, nil
+		}
+
+		c.logger.Warn().Err(err).Int64("user_id", userID).Msg("gRPC GetUserFavorites failed")
+
+		if !c.shouldFallback(err) {
+			return nil, 0, err
+		}
+	}
+
+	// Fallback to HTTP
+	if c.httpClient != nil {
+		return c.httpClient.GetUserFavorites(ctx, userID)
+	}
+
+	return nil, 0, ErrUnavailable
+}
+
+// IsFavorite checks if a listing is in user's favorites.
+// It tries gRPC first, then falls back to HTTP if enabled.
+func (c *Client) IsFavorite(ctx context.Context, userID, listingID int64) (bool, error) {
+	if c.grpcClient != nil {
+		isFav, err := c.isFavoriteGRPC(ctx, userID, listingID)
+		if err == nil {
+			return isFav, nil
+		}
+
+		c.logger.Warn().Err(err).Int64("user_id", userID).Int64("listing_id", listingID).Msg("gRPC IsFavorite failed")
+
+		if !c.shouldFallback(err) {
+			return false, err
+		}
+	}
+
+	// Fallback to HTTP
+	if c.httpClient != nil {
+		return c.httpClient.IsFavorite(ctx, userID, listingID)
+	}
+
+	return false, ErrUnavailable
+}
+
+// GetFavoritedUsers retrieves list of user IDs who favorited a listing.
+// It tries gRPC first, then falls back to HTTP if enabled.
+func (c *Client) GetFavoritedUsers(ctx context.Context, listingID int64) ([]int64, error) {
+	if c.grpcClient != nil {
+		userIDs, err := c.getFavoritedUsersGRPC(ctx, listingID)
+		if err == nil {
+			return userIDs, nil
+		}
+
+		c.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("gRPC GetFavoritedUsers failed")
+
+		if !c.shouldFallback(err) {
+			return nil, err
+		}
+	}
+
+	// Fallback to HTTP
+	if c.httpClient != nil {
+		return c.httpClient.GetFavoritedUsers(ctx, listingID)
+	}
+
+	return nil, ErrUnavailable
+}
+
+// ============================================================================
+// Image Management Methods
+// ============================================================================
+
+// DeleteListingImage removes an image from a listing.
+// It tries gRPC first, then falls back to HTTP if enabled.
+func (c *Client) DeleteListingImage(ctx context.Context, imageID int64) error {
+	if c.grpcClient != nil {
+		err := c.deleteListingImageGRPC(ctx, imageID)
+		if err == nil {
+			return nil
+		}
+
+		c.logger.Warn().Err(err).Int64("image_id", imageID).Msg("gRPC DeleteListingImage failed")
+
+		if !c.shouldFallback(err) {
+			return err
+		}
+	}
+
+	// Fallback to HTTP
+	if c.httpClient != nil {
+		return c.httpClient.DeleteListingImage(ctx, imageID)
+	}
+
+	return ErrUnavailable
+}
+
+// ReorderListingImages updates display order for multiple images.
+// It tries gRPC first, then falls back to HTTP if enabled.
+func (c *Client) ReorderListingImages(ctx context.Context, listingID int64, imageOrders []ImageOrder) error {
+	if c.grpcClient != nil {
+		err := c.reorderListingImagesGRPC(ctx, listingID, imageOrders)
+		if err == nil {
+			return nil
+		}
+
+		c.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("gRPC ReorderListingImages failed")
+
+		if !c.shouldFallback(err) {
+			return err
+		}
+	}
+
+	// Fallback to HTTP
+	if c.httpClient != nil {
+		return c.httpClient.ReorderListingImages(ctx, listingID, imageOrders)
+	}
+
+	return ErrUnavailable
 }
 
 // shouldFallback determines if we should fallback to HTTP based on the error type.

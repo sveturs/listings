@@ -21,6 +21,11 @@ type MinimalService interface {
 	CreateListing(ctx context.Context, input *domain.CreateListingInput) (*domain.Listing, error)
 	GetListing(ctx context.Context, id int64) (*domain.Listing, error)
 	ListListings(ctx context.Context, filter *domain.ListListingsFilter) ([]*domain.Listing, int32, error)
+
+	// Storefront methods
+	GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error)
+	GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error)
+	ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error)
 }
 
 // MinimalHandler provides basic HTTP endpoints
@@ -38,26 +43,26 @@ func NewMinimalHandler(service MinimalService, logger zerolog.Logger) *MinimalHa
 }
 
 // SetupRoutes sets up minimal routes
+// Note: Health check routes are now handled by HealthHandler
 func (h *MinimalHandler) SetupRoutes(app *fiber.App) {
 	app.Use(recover.New())
 	app.Use(logger.New())
 	app.Use(cors.New())
 
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "healthy", "timestamp": time.Now().Unix()})
-	})
-
-	app.Get("/ready", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "ready", "timestamp": time.Now().Unix()})
-	})
-
 	// Prometheus metrics endpoint
 	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 
 	api := app.Group("/api/v1")
+
+	// Listings endpoints
 	api.Get("/listings", h.ListListings)
 	api.Get("/listings/:id", h.GetListing)
 	api.Post("/listings", h.CreateListing)
+
+	// Storefronts endpoints
+	api.Get("/storefronts", h.ListStorefronts)
+	api.Get("/storefronts/:id", h.GetStorefront)
+	api.Get("/storefronts/slug/:slug", h.GetStorefrontBySlug)
 }
 
 // GetListing handles GET listing
@@ -108,15 +113,90 @@ func (h *MinimalHandler) ListListings(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"listings": listings, "total": total})
 }
 
+// GetStorefront handles GET storefront by ID
+func (h *MinimalHandler) GetStorefront(c *fiber.Ctx) error {
+	// Add X-Served-By header for traffic distribution measurement
+	c.Set("X-Served-By", "microservice")
+
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid id parameter"})
+	}
+
+	storefront, err := h.service.GetStorefront(c.Context(), int64(id))
+	if err != nil {
+		h.logger.Error().Err(err).Int64("id", int64(id)).Msg("failed to get storefront")
+		return c.Status(404).JSON(fiber.Map{"error": "storefront not found"})
+	}
+
+	return c.JSON(storefront)
+}
+
+// GetStorefrontBySlug handles GET storefront by slug
+func (h *MinimalHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
+	// Add X-Served-By header for traffic distribution measurement
+	c.Set("X-Served-By", "microservice")
+
+	slug := c.Params("slug")
+	if slug == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "slug parameter is required"})
+	}
+
+	storefront, err := h.service.GetStorefrontBySlug(c.Context(), slug)
+	if err != nil {
+		h.logger.Error().Err(err).Str("slug", slug).Msg("failed to get storefront by slug")
+		return c.Status(404).JSON(fiber.Map{"error": "storefront not found"})
+	}
+
+	return c.JSON(storefront)
+}
+
+// ListStorefronts handles GET storefronts list
+func (h *MinimalHandler) ListStorefronts(c *fiber.Ctx) error {
+	// Add X-Served-By header for traffic distribution measurement
+	c.Set("X-Served-By", "microservice")
+
+	// Parse pagination parameters
+	limit := c.QueryInt("limit", 20)
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	offset := c.QueryInt("offset", 0)
+	if offset < 0 {
+		offset = 0
+	}
+
+	storefronts, total, err := h.service.ListStorefronts(c.Context(), limit, offset)
+	if err != nil {
+		h.logger.Error().Err(err).Int("limit", limit).Int("offset", offset).Msg("failed to list storefronts")
+		return c.Status(500).JSON(fiber.Map{"error": "failed to list storefronts"})
+	}
+
+	return c.JSON(fiber.Map{
+		"storefronts": storefronts,
+		"total":       total,
+	})
+}
+
 // StartMinimalServer starts minimal HTTP server
-func StartMinimalServer(host string, port int, handler *MinimalHandler, logger zerolog.Logger) (*fiber.App, error) {
+func StartMinimalServer(host string, port int, handler *MinimalHandler, healthHandler *HealthHandler, logger zerolog.Logger) (*fiber.App, error) {
 	app := fiber.New(fiber.Config{
 		AppName:      "Listings Service",
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	})
 
+	// Register API routes first
 	handler.SetupRoutes(app)
+
+	// Register health check routes BEFORE starting server
+	if healthHandler != nil {
+		healthHandler.RegisterRoutes(app)
+	}
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 	go func() {

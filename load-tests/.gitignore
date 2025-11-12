@@ -1,0 +1,31 @@
+# Load test results
+results/*.json
+results/*.log
+results/*.txt
+results/*.html
+
+# Keep results directory structure
+!results/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+
+# System monitoring outputs
+*.prof
+*.pprof
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+volumes/
+
+# Grafana data
+grafana-data/
+grafana_data/

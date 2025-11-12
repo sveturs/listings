@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -199,17 +198,4 @@ func TestHealthCheck(t *testing.T) {
 
 	err := repo.HealthCheck(ctx)
 	assert.NoError(t, err)
-}
-
-// Helper functions
-func stringPtr(s string) *string {
-	return &s
-}
-
-func float64Ptr(f float64) *float64 {
-	return &f
-}
-
-func int32Ptr(i int32) *int32 {
-	return &i
 }

@@ -1,0 +1,8 @@
+# Grafana dashboards directory
+# Place your custom Grafana dashboard JSON files here
+# They will be automatically imported on Grafana startup
+
+# Example dashboards can be found at:
+# - https://grafana.com/grafana/dashboards/
+# - Import dashboard ID 1860 (Node Exporter Full)
+# - Import dashboard ID 6417 (PostgreSQL Database)

@@ -10,6 +10,7 @@ import (
 type Listing struct {
 	ID             int64      `json:"id" db:"id"`
 	UUID           string     `json:"uuid" db:"uuid"`
+	Slug           string     `json:"slug" db:"slug"`
 	UserID         int64      `json:"user_id" db:"user_id"`
 	StorefrontID   *int64     `json:"storefront_id,omitempty" db:"storefront_id"`
 	Title          string     `json:"title" db:"title"`
@@ -21,8 +22,12 @@ type Listing struct {
 	Visibility     string     `json:"visibility" db:"visibility"`
 	Quantity       int32      `json:"quantity" db:"quantity"`
 	SKU            *string    `json:"sku,omitempty" db:"sku"`
-	ViewsCount     int32      `json:"views_count" db:"views_count"`
+	SourceType     string     `json:"source_type" db:"source_type"`              // c2c or b2c
+	StockStatus    *string    `json:"stock_status,omitempty" db:"stock_status"`  // in_stock, out_of_stock, low_stock, discontinued (enum from DB)
+	AttributesJSON *string    `json:"attributes_json,omitempty" db:"attributes"` // JSONB column stored as string for flexibility
+	ViewsCount     int32      `json:"views_count" db:"view_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
+	ExpiresAt      *time.Time `json:"expires_at,omitempty" db:"expires_at"`
 	CreatedAt      time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at" db:"updated_at"`
 	PublishedAt    *time.Time `json:"published_at,omitempty" db:"published_at"`
@@ -80,7 +85,7 @@ type ListingLocation struct {
 // ListingStats represents cached statistics for a listing
 type ListingStats struct {
 	ListingID      int64      `json:"listing_id" db:"listing_id"`
-	ViewsCount     int32      `json:"views_count" db:"views_count"`
+	ViewsCount     int32      `json:"views_count" db:"view_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
 	InquiriesCount int32      `json:"inquiries_count" db:"inquiries_count"`
 	LastViewedAt   *time.Time `json:"last_viewed_at,omitempty" db:"last_viewed_at"`
@@ -112,6 +117,7 @@ type CreateListingInput struct {
 	CategoryID   int64   `json:"category_id" validate:"required"`
 	Quantity     int32   `json:"quantity" validate:"required,gte=0"`
 	SKU          *string `json:"sku,omitempty"`
+	SourceType   string  `json:"source_type" validate:"required,oneof=c2c b2c"`
 }
 
 // UpdateListingInput represents input for updating an existing listing
@@ -129,6 +135,7 @@ type ListListingsFilter struct {
 	StorefrontID *int64   `json:"storefront_id,omitempty"`
 	CategoryID   *int64   `json:"category_id,omitempty"`
 	Status       *string  `json:"status,omitempty"`
+	SourceType   *string  `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"`
 	MinPrice     *float64 `json:"min_price,omitempty"`
 	MaxPrice     *float64 `json:"max_price,omitempty"`
 	Limit        int32    `json:"limit" validate:"required,gte=1,lte=100"`
@@ -139,6 +146,7 @@ type ListListingsFilter struct {
 type SearchListingsQuery struct {
 	Query      string   `json:"query" validate:"required,min=2"`
 	CategoryID *int64   `json:"category_id,omitempty"`
+	SourceType *string  `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"` // Filter by c2c or b2c listings
 	MinPrice   *float64 `json:"min_price,omitempty"`
 	MaxPrice   *float64 `json:"max_price,omitempty"`
 	Limit      int32    `json:"limit" validate:"required,gte=1,lte=100"`
@@ -159,6 +167,12 @@ const (
 	VisibilityPublic   = "public"
 	VisibilityPrivate  = "private"
 	VisibilityUnlisted = "unlisted"
+)
+
+// Constants for listing source type
+const (
+	SourceTypeC2C = "c2c" // Consumer-to-Consumer
+	SourceTypeB2C = "b2c" // Business-to-Consumer
 )
 
 // Constants for indexing operations

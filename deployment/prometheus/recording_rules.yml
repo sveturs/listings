@@ -1,0 +1,458 @@
+# Prometheus Recording Rules for Listings Microservice
+# Pre-aggregated metrics for performance and efficient alerting
+
+groups:
+  # ===================================================================
+  # REQUEST RATE METRICS
+  # ===================================================================
+  - name: request_rate_metrics
+    interval: 30s
+    rules:
+      # Total request rate per minute
+      - record: job:http_requests:rate1m
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice"}[1m]))
+          by (job, instance, method, status)
+
+      # Total request rate per 5 minutes
+      - record: job:http_requests:rate5m
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice"}[5m]))
+          by (job, instance, method, status)
+
+      # Total request rate per hour
+      - record: job:http_requests:rate1h
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice"}[1h]))
+          by (job, instance, method, status)
+
+      # Request rate by method (1m)
+      - record: method:http_requests:rate1m
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice"}[1m]))
+          by (method)
+
+      # Request rate by method (5m)
+      - record: method:http_requests:rate5m
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice"}[5m]))
+          by (method)
+
+      # Total requests per second (all instances)
+      - record: service:http_requests_per_second:sum
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice"}[1m]))
+
+  # ===================================================================
+  # ERROR RATE METRICS
+  # ===================================================================
+  - name: error_rate_metrics
+    interval: 30s
+    rules:
+      # Error rate percentage (1m)
+      - record: job:http_requests_error_rate:ratio1m
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice", status=~"5.."}[1m]))
+          by (job, instance, method)
+          /
+          sum(rate(http_requests_total{job="listings-microservice"}[1m]))
+          by (job, instance, method)
+
+      # Error rate percentage (5m)
+      - record: job:http_requests_error_rate:ratio5m
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice", status=~"5.."}[5m]))
+          by (job, instance, method)
+          /
+          sum(rate(http_requests_total{job="listings-microservice"}[5m]))
+          by (job, instance, method)
+
+      # Error rate percentage (1h)
+      - record: job:http_requests_error_rate:ratio1h
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice", status=~"5.."}[1h]))
+          by (job, instance)
+          /
+          sum(rate(http_requests_total{job="listings-microservice"}[1h]))
+          by (job, instance)
+
+      # 4xx error rate (client errors)
+      - record: job:http_requests_4xx_rate:ratio5m
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice", status=~"4.."}[5m]))
+          by (job, instance, method)
+          /
+          sum(rate(http_requests_total{job="listings-microservice"}[5m]))
+          by (job, instance, method)
+
+      # Total error count (5xx only)
+      - record: service:http_requests_5xx:sum
+        expr: |
+          sum(rate(http_requests_total{job="listings-microservice", status=~"5.."}[1m]))
+
+  # ===================================================================
+  # LATENCY PERCENTILES
+  # ===================================================================
+  - name: latency_metrics
+    interval: 30s
+    rules:
+      # P50 latency (median) - 5m window
+      - record: job:http_request_duration:p50_5m
+        expr: |
+          histogram_quantile(0.50,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m]))
+            by (job, instance, method, le)
+          )
+
+      # P50 latency by method
+      - record: method:http_request_duration:p50_5m
+        expr: |
+          histogram_quantile(0.50,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m]))
+            by (method, le)
+          )
+
+      # P95 latency - 5m window
+      - record: job:http_request_duration:p95_5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m]))
+            by (job, instance, method, le)
+          )
+
+      # P95 latency by method
+      - record: method:http_request_duration:p95_5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m]))
+            by (method, le)
+          )
+
+      # P99 latency - 5m window
+      - record: job:http_request_duration:p99_5m
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m]))
+            by (job, instance, method, le)
+          )
+
+      # P99 latency by method
+      - record: method:http_request_duration:p99_5m
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[5m]))
+            by (method, le)
+          )
+
+      # Average latency - 5m window
+      - record: job:http_request_duration:avg_5m
+        expr: |
+          sum(rate(http_request_duration_seconds_sum{job="listings-microservice"}[5m]))
+          by (job, instance, method)
+          /
+          sum(rate(http_request_duration_seconds_count{job="listings-microservice"}[5m]))
+          by (job, instance, method)
+
+  # ===================================================================
+  # SLO METRICS (Service Level Objectives)
+  # ===================================================================
+  - name: slo_metrics
+    interval: 1m
+    rules:
+      # Availability SLO (target: 99.9%)
+      - record: service:availability:ratio1h
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status!~"5.."}[1h]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[1h]))
+          ) * 100
+
+      # Availability SLO (24h window)
+      - record: service:availability:ratio24h
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status!~"5.."}[24h]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[24h]))
+          ) * 100
+
+      # Success rate SLO (target: 99.5%)
+      - record: service:success_rate:ratio1h
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status=~"2.."}[1h]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[1h]))
+          ) * 100
+
+      # Success rate SLO (24h window)
+      - record: service:success_rate:ratio24h
+        expr: |
+          (
+            sum(rate(http_requests_total{job="listings-microservice", status=~"2.."}[24h]))
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[24h]))
+          ) * 100
+
+      # Error budget remaining (monthly - 0.1% error budget = 43.2 minutes downtime)
+      - record: service:error_budget_remaining:ratio30d
+        expr: |
+          1 - (
+            sum(increase(http_requests_total{job="listings-microservice", status=~"5.."}[30d]))
+            /
+            sum(increase(http_requests_total{job="listings-microservice"}[30d]))
+          ) / 0.001
+
+      # Latency SLO compliance P95 (target: < 200ms)
+      - record: service:latency_slo_p95:ratio1h
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[1h]))
+            by (le)
+          )
+
+      # Latency SLO compliance P99 (target: < 1s)
+      - record: service:latency_slo_p99:ratio1h
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket{job="listings-microservice"}[1h]))
+            by (le)
+          )
+
+  # ===================================================================
+  # DATABASE METRICS
+  # ===================================================================
+  - name: database_metrics
+    interval: 30s
+    rules:
+      # Database connection pool utilization
+      - record: job:db_connection_pool:utilization
+        expr: |
+          (
+            listings_db_connections_open
+            /
+            listings_db_connections_max
+          ) * 100
+
+      # Database query rate (1m)
+      - record: job:db_queries:rate1m
+        expr: |
+          sum(rate(listings_db_queries_total[1m]))
+          by (job, instance, operation)
+
+      # Database query rate (5m)
+      - record: job:db_queries:rate5m
+        expr: |
+          sum(rate(listings_db_queries_total[5m]))
+          by (job, instance, operation)
+
+      # Database error rate
+      - record: job:db_errors:rate5m
+        expr: |
+          sum(rate(listings_db_errors_total[5m]))
+          by (job, instance, operation)
+
+      # Database query P95 latency
+      - record: job:db_query_duration:p95_5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_db_query_duration_seconds_bucket[5m]))
+            by (job, instance, operation, le)
+          )
+
+      # Database query P99 latency
+      - record: job:db_query_duration:p99_5m
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(listings_db_query_duration_seconds_bucket[5m]))
+            by (job, instance, operation, le)
+          )
+
+      # Database connection wait time P95
+      - record: job:db_connection_wait:p95_5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_db_connection_wait_duration_seconds_bucket[5m]))
+            by (job, instance, le)
+          )
+
+  # ===================================================================
+  # CACHE METRICS
+  # ===================================================================
+  - name: cache_metrics
+    interval: 30s
+    rules:
+      # Cache hit ratio (5m)
+      - record: job:cache_hit_ratio:rate5m
+        expr: |
+          (
+            rate(listings_cache_hits_total[5m])
+            /
+            (rate(listings_cache_hits_total[5m]) + rate(listings_cache_misses_total[5m]))
+          ) * 100
+
+      # Cache hit ratio (1h)
+      - record: job:cache_hit_ratio:rate1h
+        expr: |
+          (
+            rate(listings_cache_hits_total[1h])
+            /
+            (rate(listings_cache_hits_total[1h]) + rate(listings_cache_misses_total[1h]))
+          ) * 100
+
+      # Cache operations rate (5m)
+      - record: job:cache_operations:rate5m
+        expr: |
+          sum(rate(listings_cache_operations_total[5m]))
+          by (job, instance, operation)
+
+      # Cache error rate
+      - record: job:cache_errors:rate5m
+        expr: |
+          sum(rate(listings_cache_errors_total[5m]))
+          by (job, instance)
+
+      # Cache eviction rate
+      - record: job:cache_evictions:rate5m
+        expr: |
+          sum(rate(listings_cache_evictions_total[5m]))
+          by (job, instance)
+
+  # ===================================================================
+  # RATE LIMITING METRICS
+  # ===================================================================
+  - name: rate_limiting_metrics
+    interval: 30s
+    rules:
+      # Rate limit rejection rate (5m)
+      - record: job:rate_limit_rejections:rate5m
+        expr: |
+          sum(rate(listings_rate_limit_rejections_total[5m]))
+          by (job, instance, limiter)
+
+      # Rate limit rejection percentage
+      - record: job:rate_limit_rejection_ratio:rate5m
+        expr: |
+          (
+            sum(rate(listings_rate_limit_rejections_total[5m]))
+            by (job, instance)
+            /
+            sum(rate(http_requests_total{job="listings-microservice"}[5m]))
+            by (job, instance)
+          ) * 100
+
+  # ===================================================================
+  # BUSINESS METRICS
+  # ===================================================================
+  - name: business_metrics
+    interval: 1m
+    rules:
+      # Listings created per minute
+      - record: business:listings_created:rate1m
+        expr: |
+          sum(rate(listings_created_total[1m]))
+          by (job, instance)
+
+      # Listings updated per minute
+      - record: business:listings_updated:rate1m
+        expr: |
+          sum(rate(listings_updated_total[1m]))
+          by (job, instance)
+
+      # Listings deleted per minute
+      - record: business:listings_deleted:rate1m
+        expr: |
+          sum(rate(listings_deleted_total[1m]))
+          by (job, instance)
+
+      # Total active listings
+      - record: business:listings_active:current
+        expr: |
+          listings_active_total
+
+      # Listings by status distribution (percentage)
+      - record: business:listings_by_status:ratio
+        expr: |
+          (
+            listings_by_status
+            /
+            sum(listings_by_status)
+          ) * 100
+
+  # ===================================================================
+  # SYSTEM METRICS
+  # ===================================================================
+  - name: system_metrics
+    interval: 30s
+    rules:
+      # Memory usage percentage
+      - record: instance:memory_usage:ratio
+        expr: |
+          (
+            1 - (
+              node_memory_MemAvailable_bytes
+              /
+              node_memory_MemTotal_bytes
+            )
+          ) * 100
+
+      # CPU usage percentage
+      - record: instance:cpu_usage:ratio
+        expr: |
+          (
+            100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+          )
+
+      # Disk usage percentage
+      - record: instance:disk_usage:ratio
+        expr: |
+          (
+            1 - (
+              node_filesystem_avail_bytes{mountpoint="/",fstype!="tmpfs"}
+              /
+              node_filesystem_size_bytes{mountpoint="/",fstype!="tmpfs"}
+            )
+          ) * 100
+
+      # Disk I/O rate (reads + writes)
+      - record: instance:disk_io:rate5m
+        expr: |
+          sum(rate(node_disk_read_bytes_total[5m]) + rate(node_disk_written_bytes_total[5m]))
+          by (instance, device)
+
+      # Network throughput (received + transmitted)
+      - record: instance:network_throughput:rate5m
+        expr: |
+          sum(rate(node_network_receive_bytes_total[5m]) + rate(node_network_transmit_bytes_total[5m]))
+          by (instance, device)
+
+  # ===================================================================
+  # GO RUNTIME METRICS
+  # ===================================================================
+  - name: go_runtime_metrics
+    interval: 30s
+    rules:
+      # Goroutine count
+      - record: job:go_goroutines:current
+        expr: |
+          sum(go_goroutines{job="listings-microservice"})
+          by (job, instance)
+
+      # GC duration P95
+      - record: job:go_gc_duration:p95_5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(go_gc_duration_seconds_bucket{job="listings-microservice"}[5m]))
+            by (job, instance, le)
+          )
+
+      # Memory allocated (heap)
+      - record: job:go_memstats_alloc:current
+        expr: |
+          go_memstats_alloc_bytes{job="listings-microservice"}
+
+      # GC rate
+      - record: job:go_gc:rate1m
+        expr: |
+          rate(go_gc_duration_seconds_count{job="listings-microservice"}[1m])

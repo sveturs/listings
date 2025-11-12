@@ -166,7 +166,7 @@ class ListingsExtractor:
                     price, currency,
                     category_id, status, visibility,
                     quantity, sku,
-                    views_count, favorites_count,
+                    view_count, favorites_count,
                     created_at, updated_at, published_at
                 FROM listings
                 WHERE is_deleted = false
@@ -270,7 +270,7 @@ def transform_listing_to_document(listing: Dict[str, Any]) -> Dict[str, Any]:
         'visibility': listing['visibility'],
         'quantity': listing['quantity'],
         'sku': listing['sku'],
-        'views_count': listing['views_count'],
+        'views_count': listing['view_count'],
         'favorites_count': listing['favorites_count'],
         'created_at': listing['created_at'].isoformat() if listing['created_at'] else None,
         'updated_at': listing['updated_at'].isoformat() if listing['updated_at'] else None,

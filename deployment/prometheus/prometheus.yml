@@ -1,0 +1,207 @@
+# Prometheus Configuration for Listings Microservice
+# Production-ready scraping configuration with proper intervals and labels
+
+global:
+  scrape_interval: 15s # Default scrape interval
+  scrape_timeout: 10s
+  evaluation_interval: 15s # Evaluate rules every 15 seconds
+
+  # Attach these labels to any time series or alerts when communicating with external systems
+  external_labels:
+    cluster: 'svetu-prod'
+    environment: 'production'
+    monitor: 'listings-monitor'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+      timeout: 10s
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - 'alerts.yml'
+  - 'recording_rules.yml'
+
+# Scrape configurations
+scrape_configs:
+  # ===================================================================
+  # LISTINGS MICROSERVICE - High-frequency monitoring
+  # ===================================================================
+  - job_name: 'listings-microservice'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+    static_configs:
+      - targets:
+          - 'listings_app:8086' # Docker internal (from docker-compose)
+          - 'host.docker.internal:8086' # Host machine access
+
+    # Service identification labels
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: service
+        replacement: listings
+      - target_label: service_type
+        replacement: microservice
+      - target_label: layer
+        replacement: application
+
+  # ===================================================================
+  # MONOLITH BACKEND - Legacy system metrics
+  # ===================================================================
+  - job_name: 'svetu-monolith'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+    static_configs:
+      - targets:
+          - 'backend:3000' # Docker internal
+          - 'localhost:3000' # Development
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: service
+        replacement: monolith
+      - target_label: service_type
+        replacement: monolith
+      - target_label: layer
+        replacement: application
+
+  # ===================================================================
+  # PROMETHEUS SELF-MONITORING
+  # ===================================================================
+  - job_name: 'prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+
+    relabel_configs:
+      - target_label: service
+        replacement: prometheus
+      - target_label: layer
+        replacement: monitoring
+
+  # ===================================================================
+  # NODE EXPORTER - System metrics (CPU, Memory, Disk, Network)
+  # ===================================================================
+  - job_name: 'node-exporter'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+    static_configs:
+      - targets:
+          - 'host.docker.internal:9100' # Host machine (exporters run on host)
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: service
+        replacement: node-exporter
+      - target_label: layer
+        replacement: infrastructure
+
+  # ===================================================================
+  # POSTGRES EXPORTER - Database metrics
+  # ===================================================================
+  - job_name: 'postgres-exporter'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+    static_configs:
+      - targets:
+          - 'host.docker.internal:9187' # Host machine (exporters run on host)
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: service
+        replacement: postgres
+      - target_label: layer
+        replacement: database
+
+  # ===================================================================
+  # REDIS EXPORTER - Cache metrics
+  # ===================================================================
+  - job_name: 'redis-exporter'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+    static_configs:
+      - targets:
+          - 'host.docker.internal:9121' # Host machine (exporters run on host)
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: service
+        replacement: redis
+      - target_label: layer
+        replacement: cache
+
+  # ===================================================================
+  # OPENSEARCH EXPORTER - Search engine metrics (currently not deployed)
+  # ===================================================================
+  #- job_name: 'opensearch-exporter'
+  #  scrape_interval: 30s
+  #  scrape_timeout: 10s
+  #
+  #  static_configs:
+  #    - targets:
+  #        - 'host.docker.internal:9114' # Host machine
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: service
+        replacement: opensearch
+      - target_label: layer
+        replacement: search
+
+  # ===================================================================
+  # BLACKBOX EXPORTER - HTTP endpoint probing
+  # ===================================================================
+  - job_name: 'blackbox-http'
+    scrape_interval: 30s
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+
+    static_configs:
+      - targets:
+          - http://listings:9093/health
+          - http://backend:3000/health
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+      - target_label: service
+        replacement: blackbox
+      - target_label: layer
+        replacement: monitoring
+
+# Remote write configuration (optional - for long-term storage)
+# Uncomment when using Thanos, Cortex, or Victoria Metrics
+# remote_write:
+#   - url: 'http://thanos-receiver:19291/api/v1/receive'
+#     queue_config:
+#       capacity: 10000
+#       max_shards: 10
+#       min_shards: 1
+#       max_samples_per_send: 5000
+#       batch_send_deadline: 5s
+#       min_backoff: 30ms
+#       max_backoff: 100ms
+
+# Storage configuration moved to docker-compose.yml command arguments

@@ -38,6 +38,29 @@ type Metrics struct {
 
 	// Error metrics
 	ErrorsTotal *prometheus.CounterVec
+
+	// Inventory-specific metrics
+	InventoryProductViews       *prometheus.CounterVec
+	InventoryProductViewsErrors prometheus.Counter
+	InventoryStockOperations    *prometheus.CounterVec
+	InventoryStockLowThreshold  *prometheus.CounterVec
+	InventoryMovementsRecorded  *prometheus.CounterVec
+	InventoryMovementsErrors    *prometheus.CounterVec
+	InventoryStockValue         *prometheus.GaugeVec
+	InventoryOutOfStockProducts prometheus.Gauge
+
+	// gRPC handler metrics (granular)
+	GRPCHandlerRequestsActive *prometheus.GaugeVec
+
+	// Rate limiting metrics
+	RateLimitHitsTotal     *prometheus.CounterVec
+	RateLimitAllowedTotal  *prometheus.CounterVec
+	RateLimitRejectedTotal *prometheus.CounterVec
+
+	// Timeout metrics
+	TimeoutsTotal     *prometheus.CounterVec
+	NearTimeoutsTotal *prometheus.CounterVec
+	TimeoutDuration   *prometheus.HistogramVec
 }
 
 // NewMetrics creates and registers all Prometheus metrics
@@ -195,6 +218,133 @@ func NewMetrics(namespace string) *Metrics {
 			},
 			[]string{"component", "error_type"},
 		),
+
+		// Inventory-specific metrics
+		InventoryProductViews: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "inventory_product_views_total",
+				Help:      "Total number of product view increments",
+			},
+			[]string{"product_id"},
+		),
+		InventoryProductViewsErrors: promauto.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "inventory_product_views_errors_total",
+				Help:      "Total number of product view increment errors",
+			},
+		),
+		InventoryStockOperations: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "inventory_stock_operations_total",
+				Help:      "Total number of stock operations (update/batch)",
+			},
+			[]string{"operation", "status"},
+		),
+		InventoryStockLowThreshold: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "inventory_stock_low_threshold_reached_total",
+				Help:      "Number of times stock fell below low threshold",
+			},
+			[]string{"product_id", "storefront_id"},
+		),
+		InventoryMovementsRecorded: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "inventory_movements_recorded_total",
+				Help:      "Total number of inventory movements recorded",
+			},
+			[]string{"movement_type"},
+		),
+		InventoryMovementsErrors: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "inventory_movements_errors_total",
+				Help:      "Total number of inventory movement recording errors",
+			},
+			[]string{"reason"},
+		),
+		InventoryStockValue: promauto.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "inventory_stock_value",
+				Help:      "Current stock value for products",
+			},
+			[]string{"storefront_id", "product_id"},
+		),
+		InventoryOutOfStockProducts: promauto.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "inventory_out_of_stock_products",
+				Help:      "Current number of out-of-stock products",
+			},
+		),
+
+		// gRPC handler metrics (granular)
+		GRPCHandlerRequestsActive: promauto.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "grpc_handler_requests_active",
+				Help:      "Current number of active gRPC requests",
+			},
+			[]string{"method"},
+		),
+
+		// Rate limiting metrics
+		RateLimitHitsTotal: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "rate_limit_hits_total",
+				Help:      "Total number of rate limit evaluations",
+			},
+			[]string{"method", "identifier_type"},
+		),
+		RateLimitAllowedTotal: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "rate_limit_allowed_total",
+				Help:      "Total number of allowed requests (under rate limit)",
+			},
+			[]string{"method", "identifier_type"},
+		),
+		RateLimitRejectedTotal: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "rate_limit_rejected_total",
+				Help:      "Total number of rejected requests (rate limit exceeded)",
+			},
+			[]string{"method", "identifier_type"},
+		),
+
+		// Timeout metrics
+		TimeoutsTotal: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "timeouts_total",
+				Help:      "Total number of timed out requests",
+			},
+			[]string{"method"},
+		),
+		NearTimeoutsTotal: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Name:      "near_timeouts_total",
+				Help:      "Total number of requests that approached timeout threshold (>80%)",
+			},
+			[]string{"method"},
+		),
+		TimeoutDuration: promauto.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Namespace: namespace,
+				Name:      "timeout_duration_seconds",
+				Help:      "Duration when timeout occurred",
+				Buckets:   []float64{0.1, 0.5, 1, 2, 5, 10, 15, 20, 30},
+			},
+			[]string{"method"},
+		),
 	}
 }
 
@@ -240,4 +390,54 @@ func (m *Metrics) UpdateDBConnectionStats(open, idle int) {
 // UpdateIndexingQueueSize updates indexing queue size metric
 func (m *Metrics) UpdateIndexingQueueSize(size int) {
 	m.IndexingQueueSize.Set(float64(size))
+}
+
+// RecordInventoryProductView records a product view increment
+func (m *Metrics) RecordInventoryProductView(productID string) {
+	m.InventoryProductViews.WithLabelValues(productID).Inc()
+}
+
+// RecordInventoryProductViewError records a product view increment error
+func (m *Metrics) RecordInventoryProductViewError() {
+	m.InventoryProductViewsErrors.Inc()
+}
+
+// RecordInventoryStockOperation records a stock operation (update/batch)
+func (m *Metrics) RecordInventoryStockOperation(operation, status string) {
+	m.InventoryStockOperations.WithLabelValues(operation, status).Inc()
+}
+
+// RecordInventoryLowStockThreshold records when stock falls below threshold
+func (m *Metrics) RecordInventoryLowStockThreshold(productID, storefrontID string) {
+	m.InventoryStockLowThreshold.WithLabelValues(productID, storefrontID).Inc()
+}
+
+// RecordInventoryMovement records an inventory movement
+func (m *Metrics) RecordInventoryMovement(movementType string) {
+	m.InventoryMovementsRecorded.WithLabelValues(movementType).Inc()
+}
+
+// RecordInventoryMovementError records an inventory movement error
+func (m *Metrics) RecordInventoryMovementError(reason string) {
+	m.InventoryMovementsErrors.WithLabelValues(reason).Inc()
+}
+
+// UpdateInventoryStockValue updates the stock value gauge for a product
+func (m *Metrics) UpdateInventoryStockValue(storefrontID, productID string, value float64) {
+	m.InventoryStockValue.WithLabelValues(storefrontID, productID).Set(value)
+}
+
+// UpdateInventoryOutOfStock updates the count of out-of-stock products
+func (m *Metrics) UpdateInventoryOutOfStock(count int) {
+	m.InventoryOutOfStockProducts.Set(float64(count))
+}
+
+// RecordRateLimitEvaluation records a rate limit evaluation
+func (m *Metrics) RecordRateLimitEvaluation(method, identifierType string, allowed bool) {
+	m.RateLimitHitsTotal.WithLabelValues(method, identifierType).Inc()
+	if allowed {
+		m.RateLimitAllowedTotal.WithLabelValues(method, identifierType).Inc()
+	} else {
+		m.RateLimitRejectedTotal.WithLabelValues(method, identifierType).Inc()
+	}
 }

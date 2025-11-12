@@ -250,3 +250,40 @@ env: ## Show current environment configuration
 	@echo "  BUILD_DIR: $(BUILD_DIR)"
 	@echo "  GO_VERSION: $(shell $(GO) version)"
 	@echo "  DATABASE_URL: $(DATABASE_URL)"
+
+## Load Testing commands
+
+load-test: ## Run all load tests (HTTP + gRPC)
+	@echo "$(GREEN)Running load tests...$(NC)"
+	@cd load-tests && ./run-all-tests.sh
+
+load-test-http: ## Run only HTTP load tests
+	@echo "$(GREEN)Running HTTP load tests...$(NC)"
+	@cd load-tests && ./run-all-tests.sh --http-only
+
+load-test-grpc: ## Run only gRPC load tests
+	@echo "$(GREEN)Running gRPC load tests...$(NC)"
+	@cd load-tests && ./run-all-tests.sh --grpc-only
+
+load-test-analyze: ## Analyze latest load test results
+	@echo "$(GREEN)Analyzing load test results...$(NC)"
+	@cd load-tests && ./analyze-results.sh
+
+load-test-setup: ## Setup load testing environment with Docker
+	@echo "$(GREEN)Setting up load testing environment...$(NC)"
+	@cd load-tests && docker-compose -f docker-compose.load-test.yml up -d
+	@echo "$(YELLOW)Waiting for services to be ready...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)Load testing environment ready!$(NC)"
+	@echo "$(YELLOW)Grafana: http://localhost:3000 (admin/admin)$(NC)"
+	@echo "$(YELLOW)Prometheus: http://localhost:9090$(NC)"
+
+load-test-teardown: ## Stop load testing environment
+	@echo "$(YELLOW)Stopping load testing environment...$(NC)"
+	@cd load-tests && docker-compose -f docker-compose.load-test.yml down
+	@echo "$(GREEN)Load testing environment stopped$(NC)"
+
+load-test-clean: ## Clean load test results
+	@echo "$(YELLOW)Cleaning load test results...$(NC)"
+	@rm -rf load-tests/results/*.json load-tests/results/*.log load-tests/results/*.txt
+	@echo "$(GREEN)Load test results cleaned$(NC)"

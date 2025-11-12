@@ -1,0 +1,480 @@
+{
+  "dashboard": {
+    "title": "Listings Service - Infrastructure",
+    "uid": "listings-infrastructure",
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "tags": ["listings", "microservice", "infrastructure"],
+    "editable": true,
+    "panels": [
+      {
+        "id": 1,
+        "type": "gauge",
+        "title": "CPU Usage",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"listings\"}[5m]) * 100",
+            "legendFormat": "CPU %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "red"}
+              ]
+            },
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": "gauge",
+        "title": "Memory Usage",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0},
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"listings\"} / 1024 / 1024",
+            "legendFormat": "Memory MB",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "mbytes",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1024, "color": "yellow"},
+                {"value": 2048, "color": "red"}
+              ]
+            },
+            "max": 4096
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "gauge",
+        "title": "Goroutines",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 0},
+        "targets": [
+          {
+            "expr": "go_goroutines{job=\"listings\"}",
+            "legendFormat": "Goroutines",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 500, "color": "yellow"},
+                {"value": 1000, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "timeseries",
+        "title": "Resource Usage Over Time",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"listings\"}[5m]) * 100",
+            "legendFormat": "CPU %",
+            "refId": "A"
+          },
+          {
+            "expr": "process_resident_memory_bytes{job=\"listings\"} / 1024 / 1024 / 1024",
+            "legendFormat": "Memory GB",
+            "refId": "B"
+          },
+          {
+            "expr": "go_goroutines{job=\"listings\"} / 10",
+            "legendFormat": "Goroutines / 10",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": "stat",
+        "title": "Database Connections (Open)",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 14},
+        "targets": [
+          {
+            "expr": "listings_db_connections_open",
+            "legendFormat": "Open",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 40, "color": "yellow"},
+                {"value": 80, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "stat",
+        "title": "Database Connections (Idle)",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 14},
+        "targets": [
+          {
+            "expr": "listings_db_connections_idle",
+            "legendFormat": "Idle",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "timeseries",
+        "title": "Database Connection Pool",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+        "targets": [
+          {
+            "expr": "listings_db_connections_open",
+            "legendFormat": "Open Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "listings_db_connections_idle",
+            "legendFormat": "Idle Connections",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 20,
+              "showPoints": "never"
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": "histogram",
+        "title": "Database Query Duration Distribution",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 18},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_db_query_duration_seconds_bucket[5m])) by (le, operation)",
+            "legendFormat": "{{operation}}",
+            "refId": "A",
+            "format": "heatmap"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "type": "table",
+        "title": "Slow Queries (P99 > 100ms)",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 18},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(listings_db_query_duration_seconds_bucket[5m])) by (le, operation)) > 0.1",
+            "legendFormat": "{{operation}}",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true},
+              "indexByName": {"operation": 0, "Value": 1},
+              "renameByName": {"operation": "Operation", "Value": "P99 Duration (s)"}
+            }
+          }
+        ],
+        "options": {
+          "sortBy": [
+            {
+              "displayName": "P99 Duration (s)",
+              "desc": true
+            }
+          ]
+        }
+      },
+      {
+        "id": 10,
+        "type": "stat",
+        "title": "Redis Commands/sec",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 26},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_cache_hits_total[1m])) + sum(rate(listings_cache_misses_total[1m]))",
+            "legendFormat": "Commands/sec",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "decimals": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 11,
+        "type": "gauge",
+        "title": "Redis Hit Ratio",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 26},
+        "targets": [
+          {
+            "expr": "(sum(rate(listings_cache_hits_total[5m])) / (sum(rate(listings_cache_hits_total[5m])) + sum(rate(listings_cache_misses_total[5m])))) * 100",
+            "legendFormat": "Hit Ratio %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            },
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": "timeseries",
+        "title": "Redis Cache Performance",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 26},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_cache_hits_total[5m])) by (cache_type)",
+            "legendFormat": "Hits - {{cache_type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(listings_cache_misses_total[5m])) by (cache_type)",
+            "legendFormat": "Misses - {{cache_type}}",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byRegexp", "options": "Hits.*"},
+              "properties": [{"id": "color", "value": {"mode": "palette-classic"}}]
+            },
+            {
+              "matcher": {"id": "byRegexp", "options": "Misses.*"},
+              "properties": [{"id": "custom.fillOpacity", "value": 30}]
+            }
+          ]
+        }
+      },
+      {
+        "id": 13,
+        "type": "timeseries",
+        "title": "Rate Limiting Activity",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 30},
+        "targets": [
+          {
+            "expr": "sum(rate(listings_rate_limit_hits_total[5m])) by (method)",
+            "legendFormat": "Evaluations - {{method}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(listings_rate_limit_allowed_total[5m])) by (method)",
+            "legendFormat": "Allowed - {{method}}",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(listings_rate_limit_rejected_total[5m])) by (method)",
+            "legendFormat": "Rejected - {{method}}",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byRegexp", "options": "Rejected.*"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+            }
+          ]
+        }
+      },
+      {
+        "id": 14,
+        "type": "timeseries",
+        "title": "Network I/O (Request/Response Size)",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 30},
+        "targets": [
+          {
+            "expr": "rate(process_open_fds{job=\"listings\"}[5m])",
+            "legendFormat": "Open File Descriptors",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(listings_grpc_requests_total[5m]))",
+            "legendFormat": "Request Rate",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10,
+              "showPoints": "never"
+            }
+          }
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "datasource",
+          "type": "datasource",
+          "query": "prometheus",
+          "current": {
+            "text": "Prometheus",
+            "value": "Prometheus"
+          }
+        },
+        {
+          "name": "interval",
+          "type": "interval",
+          "query": "1m,5m,10m,30m,1h",
+          "auto": true,
+          "auto_count": 30,
+          "auto_min": "10s"
+        }
+      ]
+    }
+  }
+}

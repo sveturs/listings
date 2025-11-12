@@ -1,0 +1,354 @@
+groups:
+  - name: performance_critical_alerts
+    interval: 15s
+    rules:
+      # === Critical Latency Alerts ===
+
+      - alert: HighP95Latency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_grpc_request_duration_seconds_bucket[2m])) by (method, le)
+          ) > 0.050
+        for: 2m
+        labels:
+          severity: critical
+          component: performance
+          alert_group: latency
+        annotations:
+          summary: "High P95 latency detected ({{ $labels.method }})"
+          description: |
+            P95 latency for {{ $labels.method }} is {{ $value | humanizeDuration }}.
+            This exceeds the critical threshold of 50ms.
+            Current value: {{ $value | humanizeDuration }}
+            Threshold: 50ms
+          runbook_url: "https://wiki.svetu.rs/runbooks/high-latency"
+
+      - alert: CriticalP99Latency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(listings_grpc_request_duration_seconds_bucket[2m])) by (method, le)
+          ) > 0.100
+        for: 2m
+        labels:
+          severity: critical
+          component: performance
+          alert_group: latency
+        annotations:
+          summary: "Critical P99 latency detected ({{ $labels.method }})"
+          description: |
+            P99 latency for {{ $labels.method }} is {{ $value | humanizeDuration }}.
+            This exceeds the critical threshold of 100ms.
+            Immediate investigation required.
+            Current value: {{ $value | humanizeDuration }}
+            Threshold: 100ms
+          runbook_url: "https://wiki.svetu.rs/runbooks/critical-latency"
+
+      - alert: SustainedHighLatency
+        expr: |
+          histogram_quantile(0.50,
+            sum(rate(listings_grpc_request_duration_seconds_bucket[5m])) by (method, le)
+          ) > 0.020
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+          alert_group: latency
+        annotations:
+          summary: "Sustained high median latency ({{ $labels.method }})"
+          description: |
+            P50 latency for {{ $labels.method }} has been elevated for 5+ minutes.
+            Current value: {{ $value | humanizeDuration }}
+            Expected: < 20ms
+            This indicates general performance degradation.
+          runbook_url: "https://wiki.svetu.rs/runbooks/sustained-latency"
+
+      # === Error Rate Alerts ===
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(listings_grpc_requests_total{status!~"OK|0"}[2m])) by (method)
+          /
+          sum(rate(listings_grpc_requests_total[2m])) by (method)
+          > 0.005
+        for: 2m
+        labels:
+          severity: warning
+          component: performance
+          alert_group: errors
+        annotations:
+          summary: "High error rate detected ({{ $labels.method }})"
+          description: |
+            Error rate for {{ $labels.method }} is {{ $value | humanizePercentage }}.
+            This exceeds the warning threshold of 0.5%.
+            Current rate: {{ $value | humanizePercentage }}
+            Threshold: 0.5%
+          runbook_url: "https://wiki.svetu.rs/runbooks/high-error-rate"
+
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(listings_grpc_requests_total{status!~"OK|0"}[2m])) by (method)
+          /
+          sum(rate(listings_grpc_requests_total[2m])) by (method)
+          > 0.01
+        for: 1m
+        labels:
+          severity: critical
+          component: performance
+          alert_group: errors
+        annotations:
+          summary: "CRITICAL error rate detected ({{ $labels.method }})"
+          description: |
+            Error rate for {{ $labels.method }} is {{ $value | humanizePercentage }}.
+            This exceeds the CRITICAL threshold of 1%.
+            Immediate action required!
+            Current rate: {{ $value | humanizePercentage }}
+            Threshold: 1%
+          runbook_url: "https://wiki.svetu.rs/runbooks/critical-error-rate"
+
+      # === Database Performance Alerts ===
+
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_db_query_duration_seconds_bucket[2m])) by (operation, le)
+          ) > 0.050
+        for: 3m
+        labels:
+          severity: warning
+          component: database
+          alert_group: performance
+        annotations:
+          summary: "Slow database queries detected ({{ $labels.operation }})"
+          description: |
+            P95 database query latency for {{ $labels.operation }} is {{ $value | humanizeDuration }}.
+            This may indicate database performance issues.
+            Current value: {{ $value | humanizeDuration }}
+            Threshold: 50ms
+          runbook_url: "https://wiki.svetu.rs/runbooks/slow-queries"
+
+      - alert: DatabaseConnectionPoolSaturation
+        expr: |
+          (listings_db_connections_open - listings_db_connections_idle)
+          /
+          listings_db_connections_open > 0.80
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+          alert_group: connections
+        annotations:
+          summary: "Database connection pool saturation"
+          description: |
+            Connection pool is {{ $value | humanizePercentage }} full.
+            This may lead to connection exhaustion.
+            Consider increasing pool size or investigating slow queries.
+            Current usage: {{ $value | humanizePercentage }}
+            Threshold: 80%
+          runbook_url: "https://wiki.svetu.rs/runbooks/db-pool-saturation"
+
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: |
+          (listings_db_connections_open - listings_db_connections_idle)
+          /
+          listings_db_connections_open > 0.95
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+          alert_group: connections
+        annotations:
+          summary: "CRITICAL: Database connection pool near exhaustion"
+          description: |
+            Connection pool is {{ $value | humanizePercentage }} full.
+            Service degradation or failures imminent!
+            Current usage: {{ $value | humanizePercentage }}
+            Threshold: 95%
+          runbook_url: "https://wiki.svetu.rs/runbooks/db-pool-exhaustion"
+
+      # === Throughput Alerts ===
+
+      - alert: LowThroughput
+        expr: |
+          sum(rate(listings_grpc_requests_total[5m])) < 10
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+          alert_group: throughput
+        annotations:
+          summary: "Unusually low request throughput"
+          description: |
+            Request rate has been below 10 RPS for 5+ minutes.
+            This may indicate upstream issues or service degradation.
+            Current rate: {{ $value | humanize }} RPS
+            Expected: > 10 RPS
+          runbook_url: "https://wiki.svetu.rs/runbooks/low-throughput"
+
+      - alert: UnusuallyHighThroughput
+        expr: |
+          sum(rate(listings_grpc_requests_total[1m])) > 1000
+        for: 2m
+        labels:
+          severity: warning
+          component: performance
+          alert_group: throughput
+        annotations:
+          summary: "Unusually high request throughput"
+          description: |
+            Request rate has exceeded 1000 RPS for 2+ minutes.
+            This may indicate a traffic spike or potential DDoS.
+            Current rate: {{ $value | humanize }} RPS
+            Baseline: < 1000 RPS
+          runbook_url: "https://wiki.svetu.rs/runbooks/high-throughput"
+
+      # === Memory Alerts ===
+
+      - alert: HighMemoryUsage
+        expr: |
+          go_memstats_alloc_bytes{job="listings-microservice"}
+          /
+          go_memstats_sys_bytes{job="listings-microservice"} > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+          alert_group: memory
+        annotations:
+          summary: "High memory usage detected"
+          description: |
+            Memory usage is {{ $value | humanizePercentage }} of allocated system memory.
+            This may indicate a memory leak or high load.
+            Current usage: {{ $value | humanizePercentage }}
+            Threshold: 80%
+          runbook_url: "https://wiki.svetu.rs/runbooks/high-memory"
+
+      - alert: MemoryLeak
+        expr: |
+          rate(go_memstats_alloc_bytes{job="listings-microservice"}[15m]) > 1048576
+        for: 15m
+        labels:
+          severity: critical
+          component: system
+          alert_group: memory
+        annotations:
+          summary: "Potential memory leak detected"
+          description: |
+            Memory allocation rate has been consistently increasing.
+            Rate: {{ $value | humanize }} bytes/sec
+            This may indicate a memory leak requiring investigation.
+          runbook_url: "https://wiki.svetu.rs/runbooks/memory-leak"
+
+      # === Stock Operation Performance Alerts (CRITICAL for order processing) ===
+
+      - alert: SlowStockOperations
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_grpc_request_duration_seconds_bucket{method=~".*Stock.*"}[2m])) by (method, le)
+          ) > 0.030
+        for: 2m
+        labels:
+          severity: critical
+          component: stock
+          alert_group: performance
+        annotations:
+          summary: "CRITICAL: Slow stock operations ({{ $labels.method }})"
+          description: |
+            Stock operations are critical for order processing.
+            P95 latency for {{ $labels.method }} is {{ $value | humanizeDuration }}.
+            This may impact checkout experience.
+            Current value: {{ $value | humanizeDuration }}
+            Threshold: 30ms
+          runbook_url: "https://wiki.svetu.rs/runbooks/slow-stock-ops"
+
+      - alert: StockOperationErrors
+        expr: |
+          sum(rate(listings_grpc_requests_total{method=~".*Stock.*",status!~"OK|0"}[2m]))
+          /
+          sum(rate(listings_grpc_requests_total{method=~".*Stock.*"}[2m]))
+          > 0.001
+        for: 1m
+        labels:
+          severity: critical
+          component: stock
+          alert_group: errors
+        annotations:
+          summary: "Stock operation errors detected"
+          description: |
+            Stock operations are failing at {{ $value | humanizePercentage }}.
+            This will directly impact order processing!
+            Current error rate: {{ $value | humanizePercentage }}
+            Threshold: 0.1%
+          runbook_url: "https://wiki.svetu.rs/runbooks/stock-errors"
+
+  - name: performance_recording_rules
+    interval: 15s
+    rules:
+      # Pre-computed latency percentiles for faster querying
+
+      - record: listings:grpc_latency_p50:rate1m
+        expr: |
+          histogram_quantile(0.50,
+            sum(rate(listings_grpc_request_duration_seconds_bucket[1m])) by (method, le)
+          )
+
+      - record: listings:grpc_latency_p95:rate1m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_grpc_request_duration_seconds_bucket[1m])) by (method, le)
+          )
+
+      - record: listings:grpc_latency_p99:rate1m
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(listings_grpc_request_duration_seconds_bucket[1m])) by (method, le)
+          )
+
+      # Pre-computed error rates
+
+      - record: listings:grpc_error_rate:rate1m
+        expr: |
+          sum(rate(listings_grpc_requests_total{status!~"OK|0"}[1m])) by (method)
+          /
+          sum(rate(listings_grpc_requests_total[1m])) by (method)
+
+      - record: listings:grpc_success_rate:rate1m
+        expr: |
+          sum(rate(listings_grpc_requests_total{status=~"OK|0"}[1m])) by (method)
+          /
+          sum(rate(listings_grpc_requests_total[1m])) by (method)
+
+      # Database performance aggregates
+
+      - record: listings:db_latency_p95:rate1m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(listings_db_query_duration_seconds_bucket[1m])) by (operation, le)
+          )
+
+      - record: listings:db_connection_pool_usage:ratio
+        expr: |
+          (listings_db_connections_open - listings_db_connections_idle)
+          /
+          listings_db_connections_open
+
+      # Throughput aggregates
+
+      - record: listings:grpc_request_rate:rate1m
+        expr: |
+          sum(rate(listings_grpc_requests_total[1m])) by (method)
+
+      - record: listings:grpc_request_rate_total:rate1m
+        expr: |
+          sum(rate(listings_grpc_requests_total[1m]))
+
+      # Memory usage ratios
+
+      - record: listings:memory_usage:ratio
+        expr: |
+          go_memstats_alloc_bytes{job="listings-microservice"}
+          /
+          go_memstats_sys_bytes{job="listings-microservice"}
+
+      - record: listings:memory_allocation_rate:rate15m
+        expr: |
+          rate(go_memstats_alloc_bytes{job="listings-microservice"}[15m])

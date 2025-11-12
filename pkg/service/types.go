@@ -132,6 +132,12 @@ type SearchListingsResponse struct {
 	Total    int32      `json:"total"`
 }
 
+// ImageOrder represents display order update for a single image.
+type ImageOrder struct {
+	ImageID      int64 `json:"image_id" validate:"required,gt=0"`
+	DisplayOrder int32 `json:"display_order" validate:"gte=0"`
+}
+
 // Constants for listing statuses
 const (
 	StatusDraft    = "draft"
