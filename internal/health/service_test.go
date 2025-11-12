@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,23 +17,6 @@ func setupTestDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
 	require.NoError(t, err)
 	return db, mock
-}
-
-// setupTestRedis creates a mock Redis client for testing
-func setupTestRedis(t *testing.T) *redis.Client {
-	// Use a test Redis instance if available, otherwise mock
-	client := redis.NewClient(&redis.Options{
-		Addr: "localhost:36380",
-		DB:   15, // Use a separate DB for tests
-	})
-
-	// Clean up test keys
-	t.Cleanup(func() {
-		client.FlushDB(context.Background())
-		client.Close()
-	})
-
-	return client
 }
 
 func TestNewService(t *testing.T) {

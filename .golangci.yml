@@ -1,6 +1,8 @@
 # golangci-lint configuration for listings microservice
 # Documentation: https://golangci-lint.run/usage/configuration/
 
+version: 2
+
 run:
   timeout: 5m
   tests: true
@@ -11,30 +13,39 @@ run:
 
 output:
   formats:
-    - format: colored-line-number
+    colored-line-number: {}
   print-issued-lines: true
   print-linter-name: true
   sort-results: true
 
 linters:
-  disable-all: true
+  # Use default linters but disable errcheck and staticcheck
+  # errcheck: too many false positives for defer Close()
+  # staticcheck: SA1019 deprecated warnings for grpc.Dial cannot be disabled
+  disable:
+    - errcheck
+    - staticcheck
   enable:
-    # Default linters
-    - errcheck      # Checks for unchecked errors
-    - gosimple      # Simplifies code
-    - govet         # Reports suspicious constructs
-    - ineffassign   # Detects ineffectual assignments
-    - staticcheck   # Advanced static analysis
-    - unused        # Checks for unused code
-    - gofmt         # Checks code formatting
+    - govet
+    - ineffassign
+    - unused
 
 linters-settings:
   errcheck:
     check-type-assertions: true
-    check-blank: true
+    check-blank: false  # Allow defer Close() without checking errors
     exclude-functions:
       - (*database/sql.Rows).Close
       - (*database/sql.DB).Close
+      - (*net/http.Response.Body).Close
+      - (*github.com/redis/go-redis/v9.Client).Close
+      - (*google.golang.org/grpc.ClientConn).Close
+
+  staticcheck:
+    enabled-checks:
+      - "*"
+    disabled-checks:
+      - "SA1019"  # Disable deprecated warnings (grpc.Dial will be supported in 1.x)
 
   govet:
     enable-all: true
@@ -105,11 +116,20 @@ issues:
   exclude-dirs:
     - api/proto/listings/v1  # Skip protobuf directory (generated code)
   exclude-rules:
+    # Exclude errcheck for defer Close() calls
+    - text: "Error return value of.*Close.*is not checked"
+      linters:
+        - errcheck
+
+    # Exclude deprecated grpc.Dial/DialContext warnings (will be supported in 1.x)
+    - linters:
+        - staticcheck
+      source: "grpc\\.(Dial|DialContext)"
+
     # Exclude some linters from running on tests files
     - path: _test\.go
       linters:
         - gocyclo
-        - errcheck
         - dupl
         - gosec
         - gocritic

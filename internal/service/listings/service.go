@@ -2038,13 +2038,9 @@ func convertProductToListing(product *domain.Product) *domain.Listing {
 		listing.Visibility = "hidden"
 	}
 
-	// Convert attributes to JSON if present
-	if len(product.Attributes) > 0 {
-		// Attributes are already map[string]interface{}, we need to store as JSONB
-		// For now, store the map as-is (will be JSON marshalled later)
-		// In real implementation, you'd marshal to JSON string
-		// listing.AttributesJSON = ... (depends on how you store JSONB)
-	}
+	// TODO: Convert attributes to JSON if present
+	// Attributes are already map[string]interface{}, we need to store as JSONB
+	// For now, we skip attribute conversion as it needs proper JSONB handling
 
 	// Convert images
 	if len(product.Images) > 0 {

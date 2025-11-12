@@ -86,7 +86,7 @@ func (c *Client) addToFavoritesGRPC(ctx context.Context, userID, listingID int64
 		ListingId: listingID,
 	}
 
-	_, err := c.grpcClient.(pb.ListingsServiceClient).AddToFavorites(ctx, req)
+	_, err := c.grpcClient.AddToFavorites(ctx, req)
 	if err != nil {
 		return convertGRPCError(err)
 	}
@@ -105,7 +105,7 @@ func (c *Client) removeFromFavoritesGRPC(ctx context.Context, userID, listingID 
 		ListingId: listingID,
 	}
 
-	_, err := c.grpcClient.(pb.ListingsServiceClient).RemoveFromFavorites(ctx, req)
+	_, err := c.grpcClient.RemoveFromFavorites(ctx, req)
 	if err != nil {
 		return convertGRPCError(err)
 	}
@@ -125,7 +125,7 @@ func (c *Client) getUserFavoritesGRPC(ctx context.Context, userID int64) ([]int6
 		// It returns all favorites. If pagination is needed, update proto first.
 	}
 
-	resp, err := c.grpcClient.(pb.ListingsServiceClient).GetUserFavorites(ctx, req)
+	resp, err := c.grpcClient.GetUserFavorites(ctx, req)
 	if err != nil {
 		return nil, 0, convertGRPCError(err)
 	}
@@ -144,7 +144,7 @@ func (c *Client) isFavoriteGRPC(ctx context.Context, userID, listingID int64) (b
 		ListingId: listingID,
 	}
 
-	resp, err := c.grpcClient.(pb.ListingsServiceClient).IsFavorite(ctx, req)
+	resp, err := c.grpcClient.IsFavorite(ctx, req)
 	if err != nil {
 		return false, convertGRPCError(err)
 	}
@@ -162,7 +162,7 @@ func (c *Client) getFavoritedUsersGRPC(ctx context.Context, listingID int64) ([]
 		ListingId: listingID,
 	}
 
-	resp, err := c.grpcClient.(pb.ListingsServiceClient).GetFavoritedUsers(ctx, req)
+	resp, err := c.grpcClient.GetFavoritedUsers(ctx, req)
 	if err != nil {
 		return nil, convertGRPCError(err)
 	}
@@ -184,7 +184,7 @@ func (c *Client) deleteListingImageGRPC(ctx context.Context, imageID int64) erro
 		ImageId: imageID,
 	}
 
-	_, err := c.grpcClient.(pb.ListingsServiceClient).DeleteListingImage(ctx, req)
+	_, err := c.grpcClient.DeleteListingImage(ctx, req)
 	if err != nil {
 		return convertGRPCError(err)
 	}
@@ -212,7 +212,7 @@ func (c *Client) reorderListingImagesGRPC(ctx context.Context, listingID int64, 
 		ImageOrders: pbOrders,
 	}
 
-	_, err := c.grpcClient.(pb.ListingsServiceClient).ReorderListingImages(ctx, req)
+	_, err := c.grpcClient.ReorderListingImages(ctx, req)
 	if err != nil {
 		return convertGRPCError(err)
 	}

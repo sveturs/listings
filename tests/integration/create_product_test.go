@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -165,7 +164,7 @@ func TestCreateProduct_Success(t *testing.T) {
 		Sku:          stringPtr("TEST-PHONE-001"),
 		// Barcode: не поддерживается в таблице listings (только в variants)
 		StockQuantity: 50,
-		IsActive:     true,
+		IsActive:      true,
 	}
 
 	resp, err := client.CreateProduct(ctx, req)
@@ -288,11 +287,11 @@ func TestCreateProduct_WithAttributes(t *testing.T) {
 
 	// Create JSONB attributes
 	attrs, err := structpb.NewStruct(map[string]interface{}{
-		"brand":       "TestBrand",
-		"model":       "Pro-2024",
-		"color":       "Black",
-		"weight_kg":   0.18,
-		"waterproof":  true,
+		"brand":           "TestBrand",
+		"model":           "Pro-2024",
+		"color":           "Black",
+		"weight_kg":       0.18,
+		"waterproof":      true,
 		"warranty_months": 12,
 	})
 	require.NoError(t, err, "Failed to create attributes struct")

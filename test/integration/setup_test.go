@@ -29,7 +29,6 @@ const (
 	bufSize = 1024 * 1024 // 1MB
 
 	// defaultTimeout is the default timeout for test contexts
-	defaultTimeout = 30 // seconds
 )
 
 // =============================================================================

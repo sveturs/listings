@@ -105,7 +105,11 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to initialize database")
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error().Err(err).Msg("failed to close database connection")
+		}
+	}()
 
 	pgRepo := postgres.NewRepository(db, zerologLogger)
 
@@ -127,7 +131,11 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to initialize Redis cache")
 	}
-	defer redisCache.Close()
+	defer func() {
+		if err := redisCache.Close(); err != nil {
+			logger.Error().Err(err).Msg("failed to close Redis cache")
+		}
+	}()
 
 	// Initialize OpenSearch (if enabled)
 	var searchClient *opensearch.Client
@@ -142,7 +150,11 @@ func main() {
 		if err != nil {
 			logger.Warn().Err(err).Msg("OpenSearch not available, continuing without search")
 		} else {
-			defer searchClient.Close()
+			defer func() {
+				if err := searchClient.Close(); err != nil {
+					logger.Error().Err(err).Msg("failed to close OpenSearch client")
+				}
+			}()
 		}
 	}
 
@@ -179,7 +191,7 @@ func main() {
 			Str("url", cfg.Auth.ServiceURL).
 			Msg("Auth service initialized")
 
-		authInterceptor = middleware.NewAuthInterceptor(*authSvc, zerologLogger)
+		authInterceptor = middleware.NewAuthInterceptor(authSvc, zerologLogger)
 	} else {
 		logger.Warn().Msg("Auth service DISABLED - all requests will be unauthenticated")
 	}

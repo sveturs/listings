@@ -505,18 +505,6 @@ func stringPtr(s string) *string {
 	return &s
 }
 
-func int64Ptr(i int64) *int64 {
-	return &i
-}
-
-func float64Ptr(f float64) *float64 {
-	return &f
-}
-
-func boolPtr(b bool) *bool {
-	return &b
-}
-
 // CloneFixtures creates a deep copy of fixtures to avoid mutation in tests.
 // Use this when you need to modify fixtures without affecting other tests.
 //

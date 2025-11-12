@@ -50,14 +50,8 @@ func createTestProductWithVariants(t *testing.T, repo *Repository, storefrontID 
 }
 
 // float64Ptr returns a pointer to a float64 value
-func float64PtrVal(v float64) *float64 {
-	return &v
-}
 
 // int32PtrVal returns a pointer to an int32 value
-func int32PtrVal(v int32) *int32 {
-	return &v
-}
 
 // ============================================================================
 // 1. CreateProductVariant Tests (6 tests)

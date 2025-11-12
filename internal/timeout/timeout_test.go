@@ -81,7 +81,8 @@ func TestRemainingTime(t *testing.T) {
 		{
 			name: "context with deadline",
 			setup: func() context.Context {
-				ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
 				return ctx
 			},
 			validate: func(d time.Duration) bool {
@@ -171,7 +172,8 @@ func TestHasSufficientTime(t *testing.T) {
 		{
 			name: "sufficient time remaining",
 			setup: func() context.Context {
-				ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
 				return ctx
 			},
 			required: 5 * time.Second,
@@ -180,7 +182,8 @@ func TestHasSufficientTime(t *testing.T) {
 		{
 			name: "insufficient time remaining",
 			setup: func() context.Context {
-				ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+				defer cancel()
 				return ctx
 			},
 			required: 5 * time.Second,
@@ -227,7 +230,8 @@ func TestCheckDeadline(t *testing.T) {
 		{
 			name: "context not expired",
 			setup: func() context.Context {
-				ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
 				return ctx
 			},
 			expectErr: false,

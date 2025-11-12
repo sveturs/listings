@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -28,12 +27,12 @@ func TestGRPCRecordInventoryMovement_FullCycle(t *testing.T) {
 	productID := int64(5000) // Initial quantity: 100
 
 	testCases := []struct {
-		name         string
-		request      *pb.RecordInventoryMovementRequest
-		wantErr      bool
-		wantCode     codes.Code
-		wantBefore   int32
-		wantAfter    int32
+		name       string
+		request    *pb.RecordInventoryMovementRequest
+		wantErr    bool
+		wantCode   codes.Code
+		wantBefore int32
+		wantAfter  int32
 	}{
 		{
 			name: "Valid stock IN movement",
@@ -168,12 +167,12 @@ func TestGRPCBatchUpdateStock_FullCycle(t *testing.T) {
 	ctx := tests.TestContext(t)
 
 	testCases := []struct {
-		name            string
-		request         *pb.BatchUpdateStockRequest
-		wantErr         bool
-		wantCode        codes.Code
-		wantSuccessful  int32
-		wantFailed      int32
+		name           string
+		request        *pb.BatchUpdateStockRequest
+		wantErr        bool
+		wantCode       codes.Code
+		wantSuccessful int32
+		wantFailed     int32
 	}{
 		{
 			name: "Successful batch update",
@@ -225,7 +224,7 @@ func TestGRPCBatchUpdateStock_FullCycle(t *testing.T) {
 			request: &pb.BatchUpdateStockRequest{
 				StorefrontId: 1000,
 				Items: []*pb.StockUpdateItem{
-					{ProductId: 5003, Quantity: 60}, // Valid
+					{ProductId: 5003, Quantity: 60},  // Valid
 					{ProductId: 99999, Quantity: 50}, // Invalid
 				},
 				UserId: 1000,
@@ -644,9 +643,9 @@ func TestGRPCRecordInventoryMovement_LongStrings(t *testing.T) {
 
 	// Create strings of various lengths
 	normalString := "Normal reason text"
-	longString := stringRepeat("x", 255)        // Typical VARCHAR limit
-	veryLongString := stringRepeat("y", 10000)  // Exceeds typical limit
-	unicodeString := "Тест кирилицы 测试中文 🚀🎉" // Unicode characters
+	longString := stringRepeat("x", 255)       // Typical VARCHAR limit
+	veryLongString := stringRepeat("y", 10000) // Exceeds typical limit
+	unicodeString := "Тест кирилицы 测试中文 🚀🎉"   // Unicode characters
 
 	testCases := []struct {
 		name    string

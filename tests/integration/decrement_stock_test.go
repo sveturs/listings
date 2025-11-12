@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -222,8 +221,8 @@ func TestDecrementStock_VariantLevel(t *testing.T) {
 
 	ctx := tests.TestContext(t)
 
-	productID := int64(8004)  // Product with variants
-	variantID := int64(9000)  // Size S, stock: 50
+	productID := int64(8004) // Product with variants
+	variantID := int64(9000) // Size S, stock: 50
 	initialStock := tests.GetVariantQuantity(t, testDB.DB, variantID)
 	assert.Equal(t, int32(50), initialStock)
 
@@ -651,9 +650,9 @@ func TestDecrementStock_BatchPartialFailure(t *testing.T) {
 
 	req := &pb.DecrementStockRequest{
 		Items: []*pb.StockItem{
-			{ProductId: product1, Quantity: 10},  // OK
-			{ProductId: product2, Quantity: 50},  // FAIL: insufficient (only 10 available)
-			{ProductId: product3, Quantity: 5},   // OK if not for batch failure
+			{ProductId: product1, Quantity: 10}, // OK
+			{ProductId: product2, Quantity: 50}, // FAIL: insufficient (only 10 available)
+			{ProductId: product3, Quantity: 5},  // OK if not for batch failure
 		},
 		OrderId: stringPtr("ORDER-PARTIAL-FAIL-001"),
 	}

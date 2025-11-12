@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -259,7 +258,7 @@ func TestStockWorkflow_E2E_CheckDecrementRollback(t *testing.T) {
 
 	checkReq := &pb.CheckStockAvailabilityRequest{
 		Items: []*pb.StockItem{
-			{ProductId: productID, Quantity: 30},                  // Product-level
+			{ProductId: productID, Quantity: 30},                           // Product-level
 			{ProductId: productID, VariantId: &variantSizeS, Quantity: 15}, // Variant S
 			{ProductId: productID, VariantId: &variantSizeM, Quantity: 10}, // Variant M
 		},

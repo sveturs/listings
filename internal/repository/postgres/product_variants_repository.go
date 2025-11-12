@@ -76,7 +76,7 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 
 	// Marshal JSONB fields
 	var variantAttributesJSON []byte
-	if input.VariantAttributes != nil && len(input.VariantAttributes) > 0 {
+	if len(input.VariantAttributes) > 0 {
 		variantAttributesJSON, err = json.Marshal(input.VariantAttributes)
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to marshal variant attributes")
@@ -87,7 +87,7 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 	}
 
 	var dimensionsJSON []byte
-	if input.Dimensions != nil && len(input.Dimensions) > 0 {
+	if len(input.Dimensions) > 0 {
 		dimensionsJSON, err = json.Marshal(input.Dimensions)
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to marshal dimensions")
@@ -722,7 +722,7 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 	for _, input := range inputs {
 		// Marshal JSONB fields
 		var variantAttributesJSON []byte
-		if input.VariantAttributes != nil && len(input.VariantAttributes) > 0 {
+		if len(input.VariantAttributes) > 0 {
 			variantAttributesJSON, err = json.Marshal(input.VariantAttributes)
 			if err != nil {
 				r.logger.Error().Err(err).Msg("failed to marshal variant attributes")
@@ -733,7 +733,7 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 		}
 
 		var dimensionsJSON []byte
-		if input.Dimensions != nil && len(input.Dimensions) > 0 {
+		if len(input.Dimensions) > 0 {
 			dimensionsJSON, err = json.Marshal(input.Dimensions)
 			if err != nil {
 				r.logger.Error().Err(err).Msg("failed to marshal dimensions")

@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -45,42 +44,36 @@ func TestListing_Error_MissingRequiredFields(t *testing.T) {
 		{
 			name: "Missing title",
 			req: &pb.CreateListingRequest{
-				UserId:      100,
-				Title:       "", // Missing
-				Price:       99.99,
-				Currency:    "USD",
-				CategoryId:  1,
-				Quantity:    1,
-				
-				
+				UserId:     100,
+				Title:      "", // Missing
+				Price:      99.99,
+				Currency:   "USD",
+				CategoryId: 1,
+				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
 		},
 		{
 			name: "Missing currency",
 			req: &pb.CreateListingRequest{
-				UserId:      100,
-				Title:       "Test Product",
-				Price:       99.99,
-				Currency:    "", // Missing
-				CategoryId:  1,
-				Quantity:    1,
-				
-				
+				UserId:     100,
+				Title:      "Test Product",
+				Price:      99.99,
+				Currency:   "", // Missing
+				CategoryId: 1,
+				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
 		},
 		{
 			name: "Missing user_id",
 			req: &pb.CreateListingRequest{
-				UserId:      0, // Missing
-				Title:       "Test Product",
-				Price:       99.99,
-				Currency:    "USD",
-				CategoryId:  1,
-				Quantity:    1,
-				
-				
+				UserId:     0, // Missing
+				Title:      "Test Product",
+				Price:      99.99,
+				Currency:   "USD",
+				CategoryId: 1,
+				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
 		},
@@ -118,13 +111,12 @@ func TestListing_Error_InvalidEnumValues(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			req := &pb.CreateListingRequest{
-				UserId:      100,
-				Title:       "Test Product",
-				Price:       99.99,
-				Currency:    "USD",
-				CategoryId:  1,
-				Quantity:    1,
-				
+				UserId:     100,
+				Title:      "Test Product",
+				Price:      99.99,
+				Currency:   "USD",
+				CategoryId: 1,
+				Quantity:   1,
 			}
 
 			resp, err := client.CreateListing(ctx, req)
@@ -225,14 +217,12 @@ func TestListing_Error_InvalidCurrency(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			req := &pb.CreateListingRequest{
-				UserId:      100,
-				Title:       "Test Product",
-				Price:       99.99,
-				Currency:    tc.currency,
-				CategoryId:  1,
-				Quantity:    1,
-				
-				
+				UserId:     100,
+				Title:      "Test Product",
+				Price:      99.99,
+				Currency:   tc.currency,
+				CategoryId: 1,
+				Quantity:   1,
 			}
 
 			resp, err := client.CreateListing(ctx, req)
@@ -259,15 +249,14 @@ func TestListing_Error_DuplicateSKU(t *testing.T) {
 
 	// Create first listing with SKU
 	req1 := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "First Product",
-		Price:       99.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
-		Sku:         stringPtr("DUPLICATE-SKU-001"),
+		UserId:     100,
+		Title:      "First Product",
+		Price:      99.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
+
+		Sku: stringPtr("DUPLICATE-SKU-001"),
 	}
 
 	resp1, err := client.CreateListing(ctx, req1)
@@ -276,15 +265,14 @@ func TestListing_Error_DuplicateSKU(t *testing.T) {
 
 	// Try to create second listing with same SKU
 	req2 := &pb.CreateListingRequest{
-		UserId:      101,
-		Title:       "Second Product",
-		Price:       149.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
-		Sku:         stringPtr("DUPLICATE-SKU-001"), // Same SKU
+		UserId:     101,
+		Title:      "Second Product",
+		Price:      149.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
+
+		Sku: stringPtr("DUPLICATE-SKU-001"), // Same SKU
 	}
 
 	resp2, err := client.CreateListing(ctx, req2)
@@ -323,14 +311,12 @@ func TestListing_Error_TooManyListings(t *testing.T) {
 
 	for i := 0; i < 1000; i++ {
 		req := &pb.CreateListingRequest{
-			UserId:      100,
-			Title:       "Bulk Test Product",
-			Price:       99.99,
-			Currency:    "USD",
-			CategoryId:  1,
-			Quantity:    1,
-			
-			
+			UserId:     100,
+			Title:      "Bulk Test Product",
+			Price:      99.99,
+			Currency:   "USD",
+			CategoryId: 1,
+			Quantity:   1,
 		}
 
 		_, err := client.CreateListing(ctx, req)
@@ -408,14 +394,12 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 
 	// First request should succeed
 	req1 := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "Test Before Disconnect",
-		Price:       99.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
+		UserId:     100,
+		Title:      "Test Before Disconnect",
+		Price:      99.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
 	}
 
 	resp1, err := client.CreateListing(ctx, req1)
@@ -428,14 +412,12 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 
 	// Second request should fail
 	req2 := &pb.CreateListingRequest{
-		UserId:      101,
-		Title:       "Test After Disconnect",
-		Price:       99.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
+		UserId:     101,
+		Title:      "Test After Disconnect",
+		Price:      99.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
 	}
 
 	resp2, err := client.CreateListing(ctx, req2)
@@ -464,14 +446,12 @@ func TestListing_Error_ContextTimeout(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	req := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "Timeout Test",
-		Price:       99.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
+		UserId:     100,
+		Title:      "Timeout Test",
+		Price:      99.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -495,14 +475,12 @@ func TestListing_Error_ContextCancellation(t *testing.T) {
 	cancel()
 
 	req := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "Cancelled Request Test",
-		Price:       99.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
+		UserId:     100,
+		Title:      "Cancelled Request Test",
+		Price:      99.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -527,14 +505,12 @@ func TestListing_Error_UpdateOthersListing(t *testing.T) {
 
 	// Create listing as user 100
 	createReq := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "User 100 Listing",
-		Price:       99.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
+		UserId:     100,
+		Title:      "User 100 Listing",
+		Price:      99.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
 	}
 
 	createResp, err := client.CreateListing(ctx, createReq)
@@ -571,14 +547,12 @@ func TestListing_Error_DeleteOthersListing(t *testing.T) {
 
 	// Create listing as user 100
 	createReq := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "User 100 Listing",
-		Price:       99.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
+		UserId:     100,
+		Title:      "User 100 Listing",
+		Price:      99.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
 	}
 
 	createResp, err := client.CreateListing(ctx, createReq)

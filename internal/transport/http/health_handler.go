@@ -64,9 +64,10 @@ func (h *HealthHandler) Health(c *fiber.Ctx) error {
 
 	// Set HTTP status based on health status
 	statusCode := fiber.StatusOK
-	if response.Status == health.HealthStatusUnhealthy {
+	switch response.Status {
+	case health.HealthStatusUnhealthy:
 		statusCode = fiber.StatusServiceUnavailable
-	} else if response.Status == health.HealthStatusDegraded {
+	case health.HealthStatusDegraded:
 		statusCode = fiber.StatusOK // Still accepting traffic
 	}
 

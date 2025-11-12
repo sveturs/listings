@@ -129,15 +129,21 @@ func (c *GRPCTestClient) Client() pb.ListingsServiceClient {
 
 // Context creates a new context with the default timeout.
 // This is a convenience method for creating contexts for RPC calls.
+// Note: The cancel function is intentionally not returned as this is a test utility.
+// In production code, always call cancel to avoid context leaks.
 func (c *GRPCTestClient) Context() context.Context {
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	_ = cancel // Test utility: cancel will be called when context times out
 	return ctx
 }
 
 // ContextWithTimeout creates a new context with a custom timeout.
 // Use this when you need a different timeout than the default.
+// Note: The cancel function is intentionally not returned as this is a test utility.
+// In production code, always call cancel to avoid context leaks.
 func (c *GRPCTestClient) ContextWithTimeout(timeout time.Duration) context.Context {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	_ = cancel // Test utility: cancel will be called when context times out
 	return ctx
 }
 

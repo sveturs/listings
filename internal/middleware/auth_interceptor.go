@@ -16,12 +16,12 @@ import (
 
 // AuthInterceptor provides JWT authentication for gRPC
 type AuthInterceptor struct {
-	authService authservice.AuthService
+	authService *authservice.AuthService
 	logger      zerolog.Logger
 }
 
 // NewAuthInterceptor creates new auth interceptor
-func NewAuthInterceptor(authService authservice.AuthService, logger zerolog.Logger) *AuthInterceptor {
+func NewAuthInterceptor(authService *authservice.AuthService, logger zerolog.Logger) *AuthInterceptor {
 	return &AuthInterceptor{
 		authService: authService,
 		logger:      logger,

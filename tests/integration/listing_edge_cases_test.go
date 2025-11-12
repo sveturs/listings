@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -35,8 +34,6 @@ func TestListing_BoundaryValues_MinTitle(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -65,8 +62,6 @@ func TestListing_BoundaryValues_MaxTitle(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -94,8 +89,6 @@ func TestListing_BoundaryValues_TitleTooLong(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -127,8 +120,6 @@ func TestListing_BoundaryValues_MinPrice(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -153,8 +144,6 @@ func TestListing_BoundaryValues_ZeroPrice(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -185,8 +174,6 @@ func TestListing_BoundaryValues_NegativePrice(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -213,8 +200,7 @@ func TestListing_BoundaryValues_ZeroQuantity(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    0, // Zero quantity
-		
-		
+
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -246,8 +232,7 @@ func TestListing_BoundaryValues_MaxQuantity(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    2147483647, // Max int32 value
-		
-		
+
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -276,8 +261,6 @@ func TestListing_Unicode_Emoji(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    10,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -303,8 +286,6 @@ func TestListing_Unicode_CJK(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    5,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -329,8 +310,6 @@ func TestListing_Unicode_RTL(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    3,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -356,8 +335,6 @@ func TestListing_Unicode_SpecialSymbols(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -384,8 +361,6 @@ func TestListing_Unicode_ZeroWidthCharacters(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -415,8 +390,6 @@ func TestListing_Unicode_ControlCharacters(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -453,8 +426,6 @@ func TestListing_EdgeCase_EmptyDescription(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -482,8 +453,6 @@ func TestListing_EdgeCase_VeryLongDescription(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -513,8 +482,6 @@ func TestListing_EdgeCase_InvalidCategoryID(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  999999, // Non-existent category
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -541,8 +508,6 @@ func TestListing_EdgeCase_SQLInjectionAttempt(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)
@@ -575,8 +540,6 @@ func TestListing_EdgeCase_XSSAttempt(t *testing.T) {
 		Currency:    "USD",
 		CategoryId:  1,
 		Quantity:    1,
-		
-		
 	}
 
 	resp, err := client.CreateListing(ctx, req)

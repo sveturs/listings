@@ -288,11 +288,5 @@ func SkipIfNoDocker(t *testing.T) {
 }
 
 // testClock returns current time for performance measurements
-func testClock() time.Time {
-	return time.Now()
-}
 
 // testClockSince returns duration since start time
-func testClockSince(start time.Time) time.Duration {
-	return time.Since(start)
-}

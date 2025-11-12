@@ -22,9 +22,9 @@ type Listing struct {
 	Visibility     string     `json:"visibility" db:"visibility"`
 	Quantity       int32      `json:"quantity" db:"quantity"`
 	SKU            *string    `json:"sku,omitempty" db:"sku"`
-	SourceType     string     `json:"source_type" db:"source_type"`             // c2c or b2c
-	StockStatus    *string    `json:"stock_status,omitempty" db:"stock_status"` // in_stock, out_of_stock, low_stock, discontinued (enum from DB)
-	AttributesJSON *string    `json:"attributes,omitempty" db:"attributes"`     // JSONB column stored as string for flexibility
+	SourceType     string     `json:"source_type" db:"source_type"`              // c2c or b2c
+	StockStatus    *string    `json:"stock_status,omitempty" db:"stock_status"`  // in_stock, out_of_stock, low_stock, discontinued (enum from DB)
+	AttributesJSON *string    `json:"attributes_json,omitempty" db:"attributes"` // JSONB column stored as string for flexibility
 	ViewsCount     int32      `json:"views_count" db:"view_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
 	ExpiresAt      *time.Time `json:"expires_at,omitempty" db:"expires_at"`

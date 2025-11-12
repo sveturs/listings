@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -43,14 +42,12 @@ func TestConcurrency_ParallelCreates(t *testing.T) {
 			defer wg.Done()
 
 			req := &pb.CreateListingRequest{
-				UserId:      100,
-				Title:       "Concurrent Test Product",
-				Price:       99.99,
-				Currency:    "USD",
-				CategoryId:  1,
-				Quantity:    1,
-				
-				
+				UserId:     100,
+				Title:      "Concurrent Test Product",
+				Price:      99.99,
+				Currency:   "USD",
+				CategoryId: 1,
+				Quantity:   1,
 			}
 
 			resp, err := client.CreateListing(ctx, req)
@@ -88,14 +85,12 @@ func TestConcurrency_ParallelUpdates(t *testing.T) {
 
 	// Create initial listing
 	createReq := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "Original Title",
-		Price:       100.00,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    100,
-		
-		
+		UserId:     100,
+		Title:      "Original Title",
+		Price:      100.00,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   100,
 	}
 
 	createResp, err := client.CreateListing(ctx, createReq)
@@ -153,14 +148,12 @@ func TestConcurrency_ReadWriteRace(t *testing.T) {
 
 	// Create initial listing
 	createReq := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "Race Test Listing",
-		Price:       100.00,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    100,
-		
-		
+		UserId:     100,
+		Title:      "Race Test Listing",
+		Price:      100.00,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   100,
 	}
 
 	createResp, err := client.CreateListing(ctx, createReq)
@@ -256,14 +249,12 @@ func TestConcurrency_CreateAndDelete(t *testing.T) {
 
 			// Create
 			createReq := &pb.CreateListingRequest{
-				UserId:      100,
-				Title:       "Create/Delete Test",
-				Price:       99.99,
-				Currency:    "USD",
-				CategoryId:  1,
-				Quantity:    1,
-				
-				
+				UserId:     100,
+				Title:      "Create/Delete Test",
+				Price:      99.99,
+				Currency:   "USD",
+				CategoryId: 1,
+				Quantity:   1,
 			}
 
 			createResp, err := client.CreateListing(ctx, createReq)
@@ -306,14 +297,12 @@ func TestConcurrency_BulkOperations(t *testing.T) {
 	listingIDs := make([]int64, 100)
 	for i := 0; i < 100; i++ {
 		createReq := &pb.CreateListingRequest{
-			UserId:      100,
-			Title:       "Bulk Test Listing",
-			Price:       99.99,
-			Currency:    "USD",
-			CategoryId:  1,
-			Quantity:    10,
-			
-			
+			UserId:     100,
+			Title:      "Bulk Test Listing",
+			Price:      99.99,
+			Currency:   "USD",
+			CategoryId: 1,
+			Quantity:   10,
 		}
 
 		createResp, err := client.CreateListing(ctx, createReq)
@@ -365,14 +354,12 @@ func TestConcurrency_NoDeadlock(t *testing.T) {
 	listingIDs := make([]int64, 10)
 	for i := 0; i < 10; i++ {
 		createReq := &pb.CreateListingRequest{
-			UserId:      int64(100 + i),
-			Title:       "Deadlock Test",
-			Price:       99.99,
-			Currency:    "USD",
-			CategoryId:  1,
-			Quantity:    10,
-			
-			
+			UserId:     int64(100 + i),
+			Title:      "Deadlock Test",
+			Price:      99.99,
+			Currency:   "USD",
+			CategoryId: 1,
+			Quantity:   10,
 		}
 
 		createResp, err := client.CreateListing(ctx, createReq)
@@ -434,14 +421,12 @@ func TestConcurrency_DoubleDelete(t *testing.T) {
 
 	// Create listing
 	createReq := &pb.CreateListingRequest{
-		UserId:      100,
-		Title:       "Double Delete Test",
-		Price:       99.99,
-		Currency:    "USD",
-		CategoryId:  1,
-		Quantity:    1,
-		
-		
+		UserId:     100,
+		Title:      "Double Delete Test",
+		Price:      99.99,
+		Currency:   "USD",
+		CategoryId: 1,
+		Quantity:   1,
 	}
 
 	createResp, err := client.CreateListing(ctx, createReq)
@@ -498,14 +483,12 @@ func TestConcurrency_ParallelSearches(t *testing.T) {
 	// Create test listings
 	for i := 0; i < 50; i++ {
 		createReq := &pb.CreateListingRequest{
-			UserId:      100,
-			Title:       "Search Test Product",
-			Price:       99.99,
-			Currency:    "USD",
-			CategoryId:  int64(1 + (i % 3)),
-			Quantity:    1,
-			
-			
+			UserId:     100,
+			Title:      "Search Test Product",
+			Price:      99.99,
+			Currency:   "USD",
+			CategoryId: int64(1 + (i % 3)),
+			Quantity:   1,
 		}
 
 		_, err := client.CreateListing(ctx, createReq)

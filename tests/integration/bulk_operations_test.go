@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -65,7 +64,7 @@ const (
 	// Products for BulkDeleteProducts tests
 	product30001 = int64(30001) // Soft delete 1
 	product30002 = int64(30002) // Soft delete 2
-product30003 = int64(30003) // Product Soft Delete 3
+	product30003 = int64(30003) // Product Soft Delete 3
 	product30004 = int64(30004) // Product Soft Delete 4
 	product30005 = int64(30005) // Product Soft Delete 5
 	product30013 = int64(30013) // Product Hard Delete 3
@@ -198,14 +197,14 @@ func TestBulkCreateProducts_Success_Multiple(t *testing.T) {
 	products := make([]*pb.ProductInput, 10)
 	for i := 0; i < 10; i++ {
 		products[i] = &pb.ProductInput{
-			Name:        fmt.Sprintf("Bulk Product %d", i+1),
-			Description: fmt.Sprintf("Description for product %d", i+1),
-			Price:       float64(100 + i*10),
-			Currency:    "RSD",
+			Name:          fmt.Sprintf("Bulk Product %d", i+1),
+			Description:   fmt.Sprintf("Description for product %d", i+1),
+			Price:         float64(100 + i*10),
+			Currency:      "RSD",
 			StockQuantity: int32(10 + i),
-			CategoryId:  testCategory1301,
-			Sku: stringPtr(fmt.Sprintf("BULK-MULTI-%03d", i+1)),
-			IsActive:    true,
+			CategoryId:    testCategory1301,
+			Sku:           stringPtr(fmt.Sprintf("BULK-MULTI-%03d", i+1)),
+			IsActive:      true,
 		}
 	}
 
@@ -253,15 +252,15 @@ func TestBulkCreateProducts_Success_WithAttributes(t *testing.T) {
 		StorefrontId: bulkCreateStorefront,
 		Products: []*pb.ProductInput{
 			{
-				Name:        "Samsung Galaxy Tablet",
-				Description: "Premium Android tablet",
-				Price:       799.99,
-				Currency: "USD",
+				Name:          "Samsung Galaxy Tablet",
+				Description:   "Premium Android tablet",
+				Price:         799.99,
+				Currency:      "USD",
 				StockQuantity: 20,
-				CategoryId:  testCategory1301,
-				Sku: stringPtr("BULK-ATTR-001"),
-				IsActive:    true,
-				Attributes:  attributes,
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr("BULK-ATTR-001"),
+				IsActive:      true,
+				Attributes:    attributes,
 			},
 		},
 	}
@@ -290,14 +289,14 @@ func TestBulkCreateProducts_Success_LargeBatch(t *testing.T) {
 	products := make([]*pb.ProductInput, 100)
 	for i := 0; i < 100; i++ {
 		products[i] = &pb.ProductInput{
-			Name:        fmt.Sprintf("Large Batch Product %d", i+1),
-			Description: fmt.Sprintf("Product %d in large batch", i+1),
-			Price:       float64(50 + (i % 50)),
-			Currency:    "RSD",
-			StockQuantity:    int32(10 + (i % 20)),
-			CategoryId:  testCategory1301,
-			Sku: stringPtr(fmt.Sprintf("BULK-LARGE-%04d", i+1)),
-			IsActive:    true,
+			Name:          fmt.Sprintf("Large Batch Product %d", i+1),
+			Description:   fmt.Sprintf("Product %d in large batch", i+1),
+			Price:         float64(50 + (i % 50)),
+			Currency:      "RSD",
+			StockQuantity: int32(10 + (i % 20)),
+			CategoryId:    testCategory1301,
+			Sku:           stringPtr(fmt.Sprintf("BULK-LARGE-%04d", i+1)),
+			IsActive:      true,
 		}
 	}
 
@@ -359,12 +358,12 @@ func TestBulkCreateProducts_Error_TooLargeBatch(t *testing.T) {
 	products := make([]*pb.ProductInput, 1001)
 	for i := 0; i < 1001; i++ {
 		products[i] = &pb.ProductInput{
-			Name:       fmt.Sprintf("Product %d", i),
-			Price:      100.0,
-			Currency: "USD",
+			Name:          fmt.Sprintf("Product %d", i),
+			Price:         100.0,
+			Currency:      "USD",
 			StockQuantity: 10,
-			CategoryId: testCategory1301,
-			Sku: stringPtr(fmt.Sprintf("SKU-%d", i)),
+			CategoryId:    testCategory1301,
+			Sku:           stringPtr(fmt.Sprintf("SKU-%d", i)),
 		}
 	}
 
@@ -398,47 +397,47 @@ func TestBulkCreateProducts_Error_MissingRequiredFields(t *testing.T) {
 		{
 			name: "Missing Name",
 			product: &pb.ProductInput{
-				Description: "No name provided",
-				Price:       100.0,
-				Currency: "USD",
+				Description:   "No name provided",
+				Price:         100.0,
+				Currency:      "USD",
 				StockQuantity: 10,
-				CategoryId:  testCategory1301,
-				Sku: stringPtr("NO-NAME-001"),
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr("NO-NAME-001"),
 			},
 			expectedErr: "name",
 		},
 		{
 			name: "Negative Price",
 			product: &pb.ProductInput{
-				Name:        "Negative Price Product",
-				Price:       -50.0,
+				Name:          "Negative Price Product",
+				Price:         -50.0,
 				StockQuantity: 10,
-				CategoryId:  testCategory1301,
-				Sku: stringPtr("NEG-PRICE-001"),
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr("NEG-PRICE-001"),
 			},
 			expectedErr: "price",
 		},
 		{
 			name: "Negative Quantity",
 			product: &pb.ProductInput{
-				Name:        "Negative Quantity Product",
-				Price:       100.0,
-				Currency: "USD",
-				StockQuantity:    -5,
-				CategoryId:  testCategory1301,
-				Sku: stringPtr("NEG-QTY-001"),
+				Name:          "Negative Quantity Product",
+				Price:         100.0,
+				Currency:      "USD",
+				StockQuantity: -5,
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr("NEG-QTY-001"),
 			},
 			expectedErr: "quantity",
 		},
 		{
 			name: "Invalid Category ID",
 			product: &pb.ProductInput{
-				Name:        "Invalid Category Product",
-				Price:       100.0,
-				Currency: "USD",
+				Name:          "Invalid Category Product",
+				Price:         100.0,
+				Currency:      "USD",
 				StockQuantity: 10,
-				CategoryId:  0,
-				Sku: stringPtr("INV-CAT-001"),
+				CategoryId:    0,
+				Sku:           stringPtr("INV-CAT-001"),
 			},
 			expectedErr: "category",
 		},
@@ -480,14 +479,14 @@ func TestBulkCreateProducts_Error_DuplicateSKU(t *testing.T) {
 		StorefrontId: bulkCreateStorefront,
 		Products: []*pb.ProductInput{
 			{
-				Name:        "Original Product",
-				Description: "First product with this SKU",
-				Price:       100.0,
-				Currency: "USD",
+				Name:          "Original Product",
+				Description:   "First product with this SKU",
+				Price:         100.0,
+				Currency:      "USD",
 				StockQuantity: 10,
-				CategoryId:  testCategory1301,
-				Sku: stringPtr("DUPLICATE-SKU-TEST"),
-				IsActive:    true,
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr("DUPLICATE-SKU-TEST"),
+				IsActive:      true,
 			},
 		},
 	}
@@ -502,14 +501,14 @@ func TestBulkCreateProducts_Error_DuplicateSKU(t *testing.T) {
 		StorefrontId: bulkCreateStorefront,
 		Products: []*pb.ProductInput{
 			{
-				Name:        "Duplicate Product",
-				Description: "This should fail due to duplicate SKU",
-				Price:       200.0,
-				Currency: "USD",
+				Name:          "Duplicate Product",
+				Description:   "This should fail due to duplicate SKU",
+				Price:         200.0,
+				Currency:      "USD",
 				StockQuantity: 20,
-				CategoryId:  testCategory1302,
-				Sku: stringPtr("DUPLICATE-SKU-TEST"),
-				IsActive:    true,
+				CategoryId:    testCategory1302,
+				Sku:           stringPtr("DUPLICATE-SKU-TEST"),
+				IsActive:      true,
 			},
 		},
 	}
@@ -543,22 +542,22 @@ func TestBulkCreateProducts_PartialSuccess(t *testing.T) {
 		StorefrontId: bulkCreateStorefront,
 		Products: []*pb.ProductInput{
 			{
-				Name:        "Valid Product 1",
-				Price:       100.0,
-				Currency: "USD",
+				Name:          "Valid Product 1",
+				Price:         100.0,
+				Currency:      "USD",
 				StockQuantity: 10,
-				CategoryId:  testCategory1301,
-				Sku: stringPtr("PARTIAL-VALID-001"),
-				IsActive:    true,
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr("PARTIAL-VALID-001"),
+				IsActive:      true,
 			},
 			{
-				Name:        "Valid Product 2",
-				Price:       200.0,
-				Currency:    "RSD",
+				Name:          "Valid Product 2",
+				Price:         200.0,
+				Currency:      "RSD",
 				StockQuantity: 20,
-				CategoryId:  testCategory1302,
-				Sku: stringPtr("PARTIAL-VALID-002"),
-				IsActive:    true,
+				CategoryId:    testCategory1302,
+				Sku:           stringPtr("PARTIAL-VALID-002"),
+				IsActive:      true,
 			},
 		},
 	}
@@ -672,10 +671,10 @@ func TestBulkUpdateProducts_Success_WithAttributes(t *testing.T) {
 	// Update attributes for product 20015 (Lenovo ThinkPad)
 	newAttributes, err := structpb.NewStruct(map[string]interface{}{
 		"brand":     "Lenovo",
-		"processor": "Intel i9",  // upgraded
-		"ram":       "32GB",      // upgraded
-		"storage":   "1TB SSD",   // upgraded
-		"warranty":  "3 years",   // new field
+		"processor": "Intel i9", // upgraded
+		"ram":       "32GB",     // upgraded
+		"storage":   "1TB SSD",  // upgraded
+		"warranty":  "3 years",  // new field
 	})
 	require.NoError(t, err)
 
@@ -1136,7 +1135,7 @@ func TestBulkDeleteProducts_Error_WrongStorefront(t *testing.T) {
 
 	// Try to delete products from different storefront
 	req := &pb.BulkDeleteProductsRequest{
-		StorefrontId: bulkCreateStorefront, // Wrong storefront
+		StorefrontId: bulkCreateStorefront,                // Wrong storefront
 		ProductIds:   []int64{product30001, product30002}, // Belong to bulkDeleteStorefront
 		HardDelete:   false,
 	}
@@ -1284,13 +1283,13 @@ func TestBulkOperations_Race_CreateAndUpdate(t *testing.T) {
 		StorefrontId: bulkCreateStorefront,
 		Products: []*pb.ProductInput{
 			{
-				Name:        "Race Test Product",
-				Price:       500.0,
-				Currency: "USD",
+				Name:          "Race Test Product",
+				Price:         500.0,
+				Currency:      "USD",
 				StockQuantity: 50,
-				CategoryId:  testCategory1301,
-				Sku: stringPtr("RACE-TEST-001"),
-				IsActive:    true,
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr("RACE-TEST-001"),
+				IsActive:      true,
 			},
 		},
 	}
@@ -1394,13 +1393,13 @@ func BenchmarkBulkCreateProducts_100Items(b *testing.B) {
 		products := make([]*pb.ProductInput, 100)
 		for j := 0; j < 100; j++ {
 			products[j] = &pb.ProductInput{
-				Name:        fmt.Sprintf("Bench Product %d-%d", i, j),
-				Price:       float64(100 + j),
-				Currency:    "RSD",
+				Name:          fmt.Sprintf("Bench Product %d-%d", i, j),
+				Price:         float64(100 + j),
+				Currency:      "RSD",
 				StockQuantity: int32(10),
-				CategoryId:  testCategory1301,
-				Sku: stringPtr(fmt.Sprintf("BENCH-%d-%d", i, j)),
-				IsActive:    true,
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr(fmt.Sprintf("BENCH-%d-%d", i, j)),
+				IsActive:      true,
 			}
 		}
 
@@ -1427,13 +1426,13 @@ func BenchmarkBulkUpdateProducts_50Items(b *testing.B) {
 	products := make([]*pb.ProductInput, 50)
 	for i := 0; i < 50; i++ {
 		products[i] = &pb.ProductInput{
-			Name:        fmt.Sprintf("Update Bench Product %d", i),
-			Price:       100.0,
-			Currency: "USD",
+			Name:          fmt.Sprintf("Update Bench Product %d", i),
+			Price:         100.0,
+			Currency:      "USD",
 			StockQuantity: 10,
-			CategoryId:  testCategory1301,
-			Sku: stringPtr(fmt.Sprintf("UPD-BENCH-%d", i)),
-			IsActive:    true,
+			CategoryId:    testCategory1301,
+			Sku:           stringPtr(fmt.Sprintf("UPD-BENCH-%d", i)),
+			IsActive:      true,
 		}
 	}
 
@@ -1488,13 +1487,13 @@ func BenchmarkBulkDeleteProducts_100Items(b *testing.B) {
 		products := make([]*pb.ProductInput, 100)
 		for j := 0; j < 100; j++ {
 			products[j] = &pb.ProductInput{
-				Name:        fmt.Sprintf("Delete Bench Product %d-%d", i, j),
-				Price:       100.0,
-				Currency:    "RSD",
+				Name:          fmt.Sprintf("Delete Bench Product %d-%d", i, j),
+				Price:         100.0,
+				Currency:      "RSD",
 				StockQuantity: 10,
-				CategoryId:  testCategory1301,
-				Sku: stringPtr(fmt.Sprintf("DEL-BENCH-%d-%d", i, j)),
-				IsActive:    true,
+				CategoryId:    testCategory1301,
+				Sku:           stringPtr(fmt.Sprintf("DEL-BENCH-%d-%d", i, j)),
+				IsActive:      true,
 			}
 		}
 

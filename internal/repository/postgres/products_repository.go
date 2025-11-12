@@ -1535,7 +1535,7 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 					errors = append(errors, domain.BulkProductError{
 						Index:        int32(idx),
 						ErrorCode:    "products.sku_duplicate",
-						ErrorMessage: fmt.Sprintf("SKU already exists"),
+						ErrorMessage: "SKU already exists",
 					})
 					continue
 				}
@@ -1911,8 +1911,7 @@ func (r *Repository) UpdateProductInventory(ctx context.Context, storefrontID, p
 	}
 
 	// Update stock quantity
-	var updateQuery string
-	updateQuery = fmt.Sprintf("UPDATE %s SET quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3 AND source_type = 'b2c'", tableName, idColumn)
+	updateQuery := fmt.Sprintf("UPDATE %s SET quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3 AND source_type = 'b2c'", tableName, idColumn)
 	_, err = tx.ExecContext(ctx, updateQuery, newQuantity, productID, storefrontID)
 
 	if err != nil {
@@ -2118,8 +2117,7 @@ func (r *Repository) BatchUpdateStock(ctx context.Context, storefrontID int64, i
 		result.StockBefore = currentQuantity
 
 		// Update stock quantity (absolute set)
-		var updateQuery string
-		updateQuery = fmt.Sprintf("UPDATE %s SET quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3 AND source_type = 'b2c'", tableName, idColumn)
+		updateQuery := fmt.Sprintf("UPDATE %s SET quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3 AND source_type = 'b2c'", tableName, idColumn)
 		_, err = tx.ExecContext(ctx, updateQuery, item.Quantity, item.ProductID, storefrontID)
 
 		if err != nil {

@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -45,9 +44,6 @@ func int32Ptr(i int32) *int32 {
 }
 
 // int64Ptr returns a pointer to an int64
-func int64Ptr(i int64) *int64 {
-	return &i
-}
 
 // float64Ptr returns a pointer to a float64
 func float64Ptr(f float64) *float64 {

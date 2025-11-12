@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -599,36 +598,36 @@ func TestServiceBusinessLogic_OutOfStockPrevention(t *testing.T) {
 	userID := int64(1000)
 
 	testCases := []struct {
-		name        string
-		quantity    int32
+		name         string
+		quantity     int32
 		movementType string
-		wantErr     bool
-		errContains string
+		wantErr      bool
+		errContains  string
 	}{
 		{
-			name:        "Remove exact available quantity",
-			quantity:    5,
+			name:         "Remove exact available quantity",
+			quantity:     5,
 			movementType: "out",
-			wantErr:     false,
+			wantErr:      false,
 		},
 		{
-			name:        "Try to remove more than available",
-			quantity:    10,
+			name:         "Try to remove more than available",
+			quantity:     10,
 			movementType: "out",
-			wantErr:     true,
-			errContains: "products.insufficient_stock",
+			wantErr:      true,
+			errContains:  "products.insufficient_stock",
 		},
 		{
-			name:        "Add stock after out of stock",
-			quantity:    100,
+			name:         "Add stock after out of stock",
+			quantity:     100,
 			movementType: "in",
-			wantErr:     false,
+			wantErr:      false,
 		},
 		{
-			name:        "Adjustment to zero (valid)",
-			quantity:    0,
+			name:         "Adjustment to zero (valid)",
+			quantity:     0,
 			movementType: "adjustment",
-			wantErr:     false,
+			wantErr:      false,
 		},
 	}
 

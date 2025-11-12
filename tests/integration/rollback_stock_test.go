@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package integration
 
@@ -29,16 +28,16 @@ const (
 	rollbackBufSize = 1024 * 1024
 
 	// Test product IDs from fixtures
-	testProductSingleRollback    = int64(8000)
-	testProductBatchRollback1    = int64(8001)
-	testProductBatchRollback2    = int64(8002)
-	testProductBatchRollback3    = int64(8003)
-	testProductIdempotency       = int64(8004)
-	testProductPartialRollback   = int64(8005)
-	testProductConcurrent        = int64(8006)
+	testProductSingleRollback     = int64(8000)
+	testProductBatchRollback1     = int64(8001)
+	testProductBatchRollback2     = int64(8002)
+	testProductBatchRollback3     = int64(8003)
+	testProductIdempotency        = int64(8004)
+	testProductPartialRollback    = int64(8005)
+	testProductConcurrent         = int64(8006)
 	testProductNoDecrementHistory = int64(8007)
-	testProductE2EWorkflow       = int64(8008)
-	testProductVariantRollback   = int64(8009)
+	testProductE2EWorkflow        = int64(8008)
+	testProductVariantRollback    = int64(8009)
 
 	// Test variant IDs
 	testVariantSizeS = int64(9000)
