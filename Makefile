@@ -17,7 +17,7 @@ DOCKER_COMPOSE := docker-compose
 
 # Migration variables
 MIGRATE := migrate
-DATABASE_URL := postgres://listings_user:listings_password@localhost:35433/listings_db?sslmode=disable
+DATABASE_URL := postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable
 
 # Color output
 GREEN := \033[0;32m

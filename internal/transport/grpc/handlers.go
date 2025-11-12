@@ -22,23 +22,34 @@ func contains(s, substr string) bool {
 // Server implements gRPC ListingsServiceServer
 type Server struct {
 	pb.UnimplementedListingsServiceServer
-	service *listings.Service
-	metrics *metrics.Metrics
-	logger  zerolog.Logger
+	service           *listings.Service
+	storefrontService *listings.StorefrontService
+	metrics           *metrics.Metrics
+	logger            zerolog.Logger
 }
 
 // NewServer creates a new gRPC server instance
-func NewServer(service *listings.Service, m *metrics.Metrics, logger zerolog.Logger) *Server {
+func NewServer(service *listings.Service, storefrontService *listings.StorefrontService, m *metrics.Metrics, logger zerolog.Logger) *Server {
 	return &Server{
-		service: service,
-		metrics: m,
-		logger:  logger.With().Str("component", "grpc_handler").Logger(),
+		service:           service,
+		storefrontService: storefrontService,
+		metrics:           m,
+		logger:            logger.With().Str("component", "grpc_handler").Logger(),
 	}
 }
 
 // GetListing retrieves a single listing by ID
 func (s *Server) GetListing(ctx context.Context, req *pb.GetListingRequest) (*pb.GetListingResponse, error) {
-	s.logger.Debug().Int64("listing_id", req.Id).Msg("GetListing called")
+	// Extract requested language
+	requestedLang := ""
+	if req.Lang != nil {
+		requestedLang = *req.Lang
+	}
+
+	s.logger.Debug().
+		Int64("listing_id", req.Id).
+		Str("requested_lang", requestedLang).
+		Msg("GetListing called")
 
 	// Validate request
 	if req.Id <= 0 {
@@ -56,6 +67,33 @@ func (s *Server) GetListing(ctx context.Context, req *pb.GetListingRequest) (*pb
 	if listing == nil {
 		s.logger.Error().Int64("listing_id", req.Id).Msg("listing returned nil without error")
 		return nil, status.Error(codes.NotFound, "listing not found")
+	}
+
+	// Log translation info for debugging
+	s.logger.Debug().
+		Int64("listing_id", req.Id).
+		Str("requested_lang", requestedLang).
+		Str("original_lang", listing.OriginalLanguage).
+		Bool("has_title_translations", len(listing.TitleTranslations) > 0).
+		Bool("has_description_translations", len(listing.DescriptionTranslations) > 0).
+		Msg("GetListing translation info")
+
+	// Apply translation if requested and different from original language
+	if requestedLang != "" && requestedLang != listing.OriginalLanguage {
+		s.logger.Info().
+			Int64("listing_id", req.Id).
+			Str("requested_lang", requestedLang).
+			Str("original_lang", listing.OriginalLanguage).
+			Str("original_title", listing.Title).
+			Msg("Applying translation to listing")
+
+		ApplyTranslation(listing, requestedLang)
+
+		s.logger.Info().
+			Int64("listing_id", req.Id).
+			Str("lang", requestedLang).
+			Str("translated_title", listing.Title).
+			Msg("Translation applied successfully")
 	}
 
 	// Convert to proto

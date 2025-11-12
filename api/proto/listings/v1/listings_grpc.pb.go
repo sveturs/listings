@@ -4,11 +4,10 @@
 // - protoc             v3.21.12
 // source: api/proto/listings/v1/listings.proto
 
-package listingsv1
+package listingsvcv1
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -76,6 +75,23 @@ const (
 	ListingsService_GetProductStats_FullMethodName           = "/listings.v1.ListingsService/GetProductStats"
 	ListingsService_IncrementProductViews_FullMethodName     = "/listings.v1.ListingsService/IncrementProductViews"
 	ListingsService_ReindexAll_FullMethodName                = "/listings.v1.ListingsService/ReindexAll"
+	ListingsService_CreateStorefront_FullMethodName          = "/listings.v1.ListingsService/CreateStorefront"
+	ListingsService_UpdateStorefront_FullMethodName          = "/listings.v1.ListingsService/UpdateStorefront"
+	ListingsService_DeleteStorefront_FullMethodName          = "/listings.v1.ListingsService/DeleteStorefront"
+	ListingsService_GetMyStorefronts_FullMethodName          = "/listings.v1.ListingsService/GetMyStorefronts"
+	ListingsService_AddStaff_FullMethodName                  = "/listings.v1.ListingsService/AddStaff"
+	ListingsService_UpdateStaff_FullMethodName               = "/listings.v1.ListingsService/UpdateStaff"
+	ListingsService_RemoveStaff_FullMethodName               = "/listings.v1.ListingsService/RemoveStaff"
+	ListingsService_GetStaff_FullMethodName                  = "/listings.v1.ListingsService/GetStaff"
+	ListingsService_SetWorkingHours_FullMethodName           = "/listings.v1.ListingsService/SetWorkingHours"
+	ListingsService_GetWorkingHours_FullMethodName           = "/listings.v1.ListingsService/GetWorkingHours"
+	ListingsService_IsOpenNow_FullMethodName                 = "/listings.v1.ListingsService/IsOpenNow"
+	ListingsService_SetPaymentMethods_FullMethodName         = "/listings.v1.ListingsService/SetPaymentMethods"
+	ListingsService_GetPaymentMethods_FullMethodName         = "/listings.v1.ListingsService/GetPaymentMethods"
+	ListingsService_SetDeliveryOptions_FullMethodName        = "/listings.v1.ListingsService/SetDeliveryOptions"
+	ListingsService_GetDeliveryOptions_FullMethodName        = "/listings.v1.ListingsService/GetDeliveryOptions"
+	ListingsService_GetMapData_FullMethodName                = "/listings.v1.ListingsService/GetMapData"
+	ListingsService_GetDashboardStats_FullMethodName         = "/listings.v1.ListingsService/GetDashboardStats"
 )
 
 // ListingsServiceClient is the client API for ListingsService service.
@@ -126,10 +142,10 @@ type ListingsServiceClient interface {
 	GetUserFavorites(ctx context.Context, in *GetUserFavoritesRequest, opts ...grpc.CallOption) (*GetUserFavoritesResponse, error)
 	// IsFavorite checks if a listing is in user's favorites
 	IsFavorite(ctx context.Context, in *IsFavoriteRequest, opts ...grpc.CallOption) (*IsFavoriteResponse, error)
-	// GetStorefront retrieves a single storefront by ID
-	GetStorefront(ctx context.Context, in *GetStorefrontRequest, opts ...grpc.CallOption) (*StorefrontResponse, error)
-	// GetStorefrontBySlug retrieves a storefront by slug
-	GetStorefrontBySlug(ctx context.Context, in *GetStorefrontBySlugRequest, opts ...grpc.CallOption) (*StorefrontResponse, error)
+	// GetStorefront retrieves a single storefront by ID or slug
+	GetStorefront(ctx context.Context, in *GetStorefrontRequest, opts ...grpc.CallOption) (*GetStorefrontResponse, error)
+	// GetStorefrontBySlug retrieves a storefront by slug (legacy)
+	GetStorefrontBySlug(ctx context.Context, in *GetStorefrontBySlugRequest, opts ...grpc.CallOption) (*GetStorefrontResponse, error)
 	// ListStorefronts returns a paginated list of storefronts
 	ListStorefronts(ctx context.Context, in *ListStorefrontsRequest, opts ...grpc.CallOption) (*ListStorefrontsResponse, error)
 	// CreateVariants creates multiple variants for a listing
@@ -211,6 +227,40 @@ type ListingsServiceClient interface {
 	// ReindexAll performs full reindexing of all products to OpenSearch
 	// Used for rebuilding search index after schema changes or data migration
 	ReindexAll(ctx context.Context, in *ReindexAllRequest, opts ...grpc.CallOption) (*ReindexAllResponse, error)
+	// CreateStorefront creates a new B2C storefront
+	CreateStorefront(ctx context.Context, in *CreateStorefrontRequest, opts ...grpc.CallOption) (*StorefrontFull, error)
+	// UpdateStorefront updates an existing storefront
+	UpdateStorefront(ctx context.Context, in *UpdateStorefrontRequest, opts ...grpc.CallOption) (*StorefrontFull, error)
+	// DeleteStorefront removes a storefront (soft or hard delete)
+	DeleteStorefront(ctx context.Context, in *DeleteStorefrontRequest, opts ...grpc.CallOption) (*DeleteStorefrontResponse, error)
+	// GetMyStorefronts retrieves storefronts owned by user
+	GetMyStorefronts(ctx context.Context, in *ListStorefrontsRequest, opts ...grpc.CallOption) (*ListStorefrontsResponse, error)
+	// AddStaff adds a new staff member to storefront
+	AddStaff(ctx context.Context, in *AddStaffRequest, opts ...grpc.CallOption) (*StorefrontStaff, error)
+	// UpdateStaff updates staff member role/permissions
+	UpdateStaff(ctx context.Context, in *UpdateStaffRequest, opts ...grpc.CallOption) (*StorefrontStaff, error)
+	// RemoveStaff removes a staff member from storefront
+	RemoveStaff(ctx context.Context, in *RemoveStaffRequest, opts ...grpc.CallOption) (*DeleteStorefrontResponse, error)
+	// GetStaff retrieves all staff members for storefront
+	GetStaff(ctx context.Context, in *GetStaffRequest, opts ...grpc.CallOption) (*GetStaffResponse, error)
+	// SetWorkingHours sets operating hours for storefront
+	SetWorkingHours(ctx context.Context, in *SetWorkingHoursRequest, opts ...grpc.CallOption) (*GetWorkingHoursResponse, error)
+	// GetWorkingHours retrieves operating hours
+	GetWorkingHours(ctx context.Context, in *GetWorkingHoursRequest, opts ...grpc.CallOption) (*GetWorkingHoursResponse, error)
+	// IsOpenNow checks if storefront is currently open
+	IsOpenNow(ctx context.Context, in *IsOpenNowRequest, opts ...grpc.CallOption) (*IsOpenNowResponse, error)
+	// SetPaymentMethods configures payment methods for storefront
+	SetPaymentMethods(ctx context.Context, in *SetPaymentMethodsRequest, opts ...grpc.CallOption) (*GetPaymentMethodsResponse, error)
+	// GetPaymentMethods retrieves payment methods
+	GetPaymentMethods(ctx context.Context, in *GetPaymentMethodsRequest, opts ...grpc.CallOption) (*GetPaymentMethodsResponse, error)
+	// SetDeliveryOptions configures delivery options for storefront
+	SetDeliveryOptions(ctx context.Context, in *SetDeliveryOptionsRequest, opts ...grpc.CallOption) (*GetDeliveryOptionsResponse, error)
+	// GetDeliveryOptions retrieves delivery options
+	GetDeliveryOptions(ctx context.Context, in *GetDeliveryOptionsRequest, opts ...grpc.CallOption) (*GetDeliveryOptionsResponse, error)
+	// GetMapData retrieves storefront map data for viewport bounds
+	GetMapData(ctx context.Context, in *GetMapDataRequest, opts ...grpc.CallOption) (*GetMapDataResponse, error)
+	// GetDashboardStats retrieves storefront dashboard statistics
+	GetDashboardStats(ctx context.Context, in *DashboardStatsRequest, opts ...grpc.CallOption) (*DashboardStatsResponse, error)
 }
 
 type listingsServiceClient struct {
@@ -431,9 +481,9 @@ func (c *listingsServiceClient) IsFavorite(ctx context.Context, in *IsFavoriteRe
 	return out, nil
 }
 
-func (c *listingsServiceClient) GetStorefront(ctx context.Context, in *GetStorefrontRequest, opts ...grpc.CallOption) (*StorefrontResponse, error) {
+func (c *listingsServiceClient) GetStorefront(ctx context.Context, in *GetStorefrontRequest, opts ...grpc.CallOption) (*GetStorefrontResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(StorefrontResponse)
+	out := new(GetStorefrontResponse)
 	err := c.cc.Invoke(ctx, ListingsService_GetStorefront_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -441,9 +491,9 @@ func (c *listingsServiceClient) GetStorefront(ctx context.Context, in *GetStoref
 	return out, nil
 }
 
-func (c *listingsServiceClient) GetStorefrontBySlug(ctx context.Context, in *GetStorefrontBySlugRequest, opts ...grpc.CallOption) (*StorefrontResponse, error) {
+func (c *listingsServiceClient) GetStorefrontBySlug(ctx context.Context, in *GetStorefrontBySlugRequest, opts ...grpc.CallOption) (*GetStorefrontResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(StorefrontResponse)
+	out := new(GetStorefrontResponse)
 	err := c.cc.Invoke(ctx, ListingsService_GetStorefrontBySlug_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -771,6 +821,176 @@ func (c *listingsServiceClient) ReindexAll(ctx context.Context, in *ReindexAllRe
 	return out, nil
 }
 
+func (c *listingsServiceClient) CreateStorefront(ctx context.Context, in *CreateStorefrontRequest, opts ...grpc.CallOption) (*StorefrontFull, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StorefrontFull)
+	err := c.cc.Invoke(ctx, ListingsService_CreateStorefront_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) UpdateStorefront(ctx context.Context, in *UpdateStorefrontRequest, opts ...grpc.CallOption) (*StorefrontFull, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StorefrontFull)
+	err := c.cc.Invoke(ctx, ListingsService_UpdateStorefront_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) DeleteStorefront(ctx context.Context, in *DeleteStorefrontRequest, opts ...grpc.CallOption) (*DeleteStorefrontResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteStorefrontResponse)
+	err := c.cc.Invoke(ctx, ListingsService_DeleteStorefront_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetMyStorefronts(ctx context.Context, in *ListStorefrontsRequest, opts ...grpc.CallOption) (*ListStorefrontsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListStorefrontsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetMyStorefronts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) AddStaff(ctx context.Context, in *AddStaffRequest, opts ...grpc.CallOption) (*StorefrontStaff, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StorefrontStaff)
+	err := c.cc.Invoke(ctx, ListingsService_AddStaff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) UpdateStaff(ctx context.Context, in *UpdateStaffRequest, opts ...grpc.CallOption) (*StorefrontStaff, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StorefrontStaff)
+	err := c.cc.Invoke(ctx, ListingsService_UpdateStaff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) RemoveStaff(ctx context.Context, in *RemoveStaffRequest, opts ...grpc.CallOption) (*DeleteStorefrontResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteStorefrontResponse)
+	err := c.cc.Invoke(ctx, ListingsService_RemoveStaff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetStaff(ctx context.Context, in *GetStaffRequest, opts ...grpc.CallOption) (*GetStaffResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetStaffResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetStaff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) SetWorkingHours(ctx context.Context, in *SetWorkingHoursRequest, opts ...grpc.CallOption) (*GetWorkingHoursResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetWorkingHoursResponse)
+	err := c.cc.Invoke(ctx, ListingsService_SetWorkingHours_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetWorkingHours(ctx context.Context, in *GetWorkingHoursRequest, opts ...grpc.CallOption) (*GetWorkingHoursResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetWorkingHoursResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetWorkingHours_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) IsOpenNow(ctx context.Context, in *IsOpenNowRequest, opts ...grpc.CallOption) (*IsOpenNowResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IsOpenNowResponse)
+	err := c.cc.Invoke(ctx, ListingsService_IsOpenNow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) SetPaymentMethods(ctx context.Context, in *SetPaymentMethodsRequest, opts ...grpc.CallOption) (*GetPaymentMethodsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPaymentMethodsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_SetPaymentMethods_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetPaymentMethods(ctx context.Context, in *GetPaymentMethodsRequest, opts ...grpc.CallOption) (*GetPaymentMethodsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPaymentMethodsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetPaymentMethods_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) SetDeliveryOptions(ctx context.Context, in *SetDeliveryOptionsRequest, opts ...grpc.CallOption) (*GetDeliveryOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDeliveryOptionsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_SetDeliveryOptions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetDeliveryOptions(ctx context.Context, in *GetDeliveryOptionsRequest, opts ...grpc.CallOption) (*GetDeliveryOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDeliveryOptionsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetDeliveryOptions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetMapData(ctx context.Context, in *GetMapDataRequest, opts ...grpc.CallOption) (*GetMapDataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMapDataResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetMapData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetDashboardStats(ctx context.Context, in *DashboardStatsRequest, opts ...grpc.CallOption) (*DashboardStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DashboardStatsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetDashboardStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ListingsServiceServer is the server API for ListingsService service.
 // All implementations must embed UnimplementedListingsServiceServer
 // for forward compatibility.
@@ -819,10 +1039,10 @@ type ListingsServiceServer interface {
 	GetUserFavorites(context.Context, *GetUserFavoritesRequest) (*GetUserFavoritesResponse, error)
 	// IsFavorite checks if a listing is in user's favorites
 	IsFavorite(context.Context, *IsFavoriteRequest) (*IsFavoriteResponse, error)
-	// GetStorefront retrieves a single storefront by ID
-	GetStorefront(context.Context, *GetStorefrontRequest) (*StorefrontResponse, error)
-	// GetStorefrontBySlug retrieves a storefront by slug
-	GetStorefrontBySlug(context.Context, *GetStorefrontBySlugRequest) (*StorefrontResponse, error)
+	// GetStorefront retrieves a single storefront by ID or slug
+	GetStorefront(context.Context, *GetStorefrontRequest) (*GetStorefrontResponse, error)
+	// GetStorefrontBySlug retrieves a storefront by slug (legacy)
+	GetStorefrontBySlug(context.Context, *GetStorefrontBySlugRequest) (*GetStorefrontResponse, error)
 	// ListStorefronts returns a paginated list of storefronts
 	ListStorefronts(context.Context, *ListStorefrontsRequest) (*ListStorefrontsResponse, error)
 	// CreateVariants creates multiple variants for a listing
@@ -904,6 +1124,40 @@ type ListingsServiceServer interface {
 	// ReindexAll performs full reindexing of all products to OpenSearch
 	// Used for rebuilding search index after schema changes or data migration
 	ReindexAll(context.Context, *ReindexAllRequest) (*ReindexAllResponse, error)
+	// CreateStorefront creates a new B2C storefront
+	CreateStorefront(context.Context, *CreateStorefrontRequest) (*StorefrontFull, error)
+	// UpdateStorefront updates an existing storefront
+	UpdateStorefront(context.Context, *UpdateStorefrontRequest) (*StorefrontFull, error)
+	// DeleteStorefront removes a storefront (soft or hard delete)
+	DeleteStorefront(context.Context, *DeleteStorefrontRequest) (*DeleteStorefrontResponse, error)
+	// GetMyStorefronts retrieves storefronts owned by user
+	GetMyStorefronts(context.Context, *ListStorefrontsRequest) (*ListStorefrontsResponse, error)
+	// AddStaff adds a new staff member to storefront
+	AddStaff(context.Context, *AddStaffRequest) (*StorefrontStaff, error)
+	// UpdateStaff updates staff member role/permissions
+	UpdateStaff(context.Context, *UpdateStaffRequest) (*StorefrontStaff, error)
+	// RemoveStaff removes a staff member from storefront
+	RemoveStaff(context.Context, *RemoveStaffRequest) (*DeleteStorefrontResponse, error)
+	// GetStaff retrieves all staff members for storefront
+	GetStaff(context.Context, *GetStaffRequest) (*GetStaffResponse, error)
+	// SetWorkingHours sets operating hours for storefront
+	SetWorkingHours(context.Context, *SetWorkingHoursRequest) (*GetWorkingHoursResponse, error)
+	// GetWorkingHours retrieves operating hours
+	GetWorkingHours(context.Context, *GetWorkingHoursRequest) (*GetWorkingHoursResponse, error)
+	// IsOpenNow checks if storefront is currently open
+	IsOpenNow(context.Context, *IsOpenNowRequest) (*IsOpenNowResponse, error)
+	// SetPaymentMethods configures payment methods for storefront
+	SetPaymentMethods(context.Context, *SetPaymentMethodsRequest) (*GetPaymentMethodsResponse, error)
+	// GetPaymentMethods retrieves payment methods
+	GetPaymentMethods(context.Context, *GetPaymentMethodsRequest) (*GetPaymentMethodsResponse, error)
+	// SetDeliveryOptions configures delivery options for storefront
+	SetDeliveryOptions(context.Context, *SetDeliveryOptionsRequest) (*GetDeliveryOptionsResponse, error)
+	// GetDeliveryOptions retrieves delivery options
+	GetDeliveryOptions(context.Context, *GetDeliveryOptionsRequest) (*GetDeliveryOptionsResponse, error)
+	// GetMapData retrieves storefront map data for viewport bounds
+	GetMapData(context.Context, *GetMapDataRequest) (*GetMapDataResponse, error)
+	// GetDashboardStats retrieves storefront dashboard statistics
+	GetDashboardStats(context.Context, *DashboardStatsRequest) (*DashboardStatsResponse, error)
 	mustEmbedUnimplementedListingsServiceServer()
 }
 
@@ -977,10 +1231,10 @@ func (UnimplementedListingsServiceServer) GetUserFavorites(context.Context, *Get
 func (UnimplementedListingsServiceServer) IsFavorite(context.Context, *IsFavoriteRequest) (*IsFavoriteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsFavorite not implemented")
 }
-func (UnimplementedListingsServiceServer) GetStorefront(context.Context, *GetStorefrontRequest) (*StorefrontResponse, error) {
+func (UnimplementedListingsServiceServer) GetStorefront(context.Context, *GetStorefrontRequest) (*GetStorefrontResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStorefront not implemented")
 }
-func (UnimplementedListingsServiceServer) GetStorefrontBySlug(context.Context, *GetStorefrontBySlugRequest) (*StorefrontResponse, error) {
+func (UnimplementedListingsServiceServer) GetStorefrontBySlug(context.Context, *GetStorefrontBySlugRequest) (*GetStorefrontResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStorefrontBySlug not implemented")
 }
 func (UnimplementedListingsServiceServer) ListStorefronts(context.Context, *ListStorefrontsRequest) (*ListStorefrontsResponse, error) {
@@ -1078,6 +1332,57 @@ func (UnimplementedListingsServiceServer) IncrementProductViews(context.Context,
 }
 func (UnimplementedListingsServiceServer) ReindexAll(context.Context, *ReindexAllRequest) (*ReindexAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReindexAll not implemented")
+}
+func (UnimplementedListingsServiceServer) CreateStorefront(context.Context, *CreateStorefrontRequest) (*StorefrontFull, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateStorefront not implemented")
+}
+func (UnimplementedListingsServiceServer) UpdateStorefront(context.Context, *UpdateStorefrontRequest) (*StorefrontFull, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateStorefront not implemented")
+}
+func (UnimplementedListingsServiceServer) DeleteStorefront(context.Context, *DeleteStorefrontRequest) (*DeleteStorefrontResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteStorefront not implemented")
+}
+func (UnimplementedListingsServiceServer) GetMyStorefronts(context.Context, *ListStorefrontsRequest) (*ListStorefrontsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMyStorefronts not implemented")
+}
+func (UnimplementedListingsServiceServer) AddStaff(context.Context, *AddStaffRequest) (*StorefrontStaff, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddStaff not implemented")
+}
+func (UnimplementedListingsServiceServer) UpdateStaff(context.Context, *UpdateStaffRequest) (*StorefrontStaff, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateStaff not implemented")
+}
+func (UnimplementedListingsServiceServer) RemoveStaff(context.Context, *RemoveStaffRequest) (*DeleteStorefrontResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveStaff not implemented")
+}
+func (UnimplementedListingsServiceServer) GetStaff(context.Context, *GetStaffRequest) (*GetStaffResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStaff not implemented")
+}
+func (UnimplementedListingsServiceServer) SetWorkingHours(context.Context, *SetWorkingHoursRequest) (*GetWorkingHoursResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetWorkingHours not implemented")
+}
+func (UnimplementedListingsServiceServer) GetWorkingHours(context.Context, *GetWorkingHoursRequest) (*GetWorkingHoursResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetWorkingHours not implemented")
+}
+func (UnimplementedListingsServiceServer) IsOpenNow(context.Context, *IsOpenNowRequest) (*IsOpenNowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsOpenNow not implemented")
+}
+func (UnimplementedListingsServiceServer) SetPaymentMethods(context.Context, *SetPaymentMethodsRequest) (*GetPaymentMethodsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetPaymentMethods not implemented")
+}
+func (UnimplementedListingsServiceServer) GetPaymentMethods(context.Context, *GetPaymentMethodsRequest) (*GetPaymentMethodsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPaymentMethods not implemented")
+}
+func (UnimplementedListingsServiceServer) SetDeliveryOptions(context.Context, *SetDeliveryOptionsRequest) (*GetDeliveryOptionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDeliveryOptions not implemented")
+}
+func (UnimplementedListingsServiceServer) GetDeliveryOptions(context.Context, *GetDeliveryOptionsRequest) (*GetDeliveryOptionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeliveryOptions not implemented")
+}
+func (UnimplementedListingsServiceServer) GetMapData(context.Context, *GetMapDataRequest) (*GetMapDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMapData not implemented")
+}
+func (UnimplementedListingsServiceServer) GetDashboardStats(context.Context, *DashboardStatsRequest) (*DashboardStatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDashboardStats not implemented")
 }
 func (UnimplementedListingsServiceServer) mustEmbedUnimplementedListingsServiceServer() {}
 func (UnimplementedListingsServiceServer) testEmbeddedByValue()                         {}
@@ -2090,6 +2395,312 @@ func _ListingsService_ReindexAll_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_CreateStorefront_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateStorefrontRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CreateStorefront(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CreateStorefront_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CreateStorefront(ctx, req.(*CreateStorefrontRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_UpdateStorefront_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateStorefrontRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).UpdateStorefront(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_UpdateStorefront_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).UpdateStorefront(ctx, req.(*UpdateStorefrontRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_DeleteStorefront_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteStorefrontRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).DeleteStorefront(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_DeleteStorefront_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).DeleteStorefront(ctx, req.(*DeleteStorefrontRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetMyStorefronts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListStorefrontsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetMyStorefronts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetMyStorefronts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetMyStorefronts(ctx, req.(*ListStorefrontsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_AddStaff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddStaffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).AddStaff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_AddStaff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).AddStaff(ctx, req.(*AddStaffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_UpdateStaff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateStaffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).UpdateStaff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_UpdateStaff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).UpdateStaff(ctx, req.(*UpdateStaffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_RemoveStaff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveStaffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).RemoveStaff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_RemoveStaff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).RemoveStaff(ctx, req.(*RemoveStaffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetStaff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStaffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetStaff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetStaff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetStaff(ctx, req.(*GetStaffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_SetWorkingHours_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetWorkingHoursRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).SetWorkingHours(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_SetWorkingHours_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).SetWorkingHours(ctx, req.(*SetWorkingHoursRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetWorkingHours_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetWorkingHoursRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetWorkingHours(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetWorkingHours_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetWorkingHours(ctx, req.(*GetWorkingHoursRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_IsOpenNow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsOpenNowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).IsOpenNow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_IsOpenNow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).IsOpenNow(ctx, req.(*IsOpenNowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_SetPaymentMethods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetPaymentMethodsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).SetPaymentMethods(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_SetPaymentMethods_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).SetPaymentMethods(ctx, req.(*SetPaymentMethodsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetPaymentMethods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPaymentMethodsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetPaymentMethods(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetPaymentMethods_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetPaymentMethods(ctx, req.(*GetPaymentMethodsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_SetDeliveryOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetDeliveryOptionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).SetDeliveryOptions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_SetDeliveryOptions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).SetDeliveryOptions(ctx, req.(*SetDeliveryOptionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetDeliveryOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDeliveryOptionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetDeliveryOptions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetDeliveryOptions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetDeliveryOptions(ctx, req.(*GetDeliveryOptionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetMapData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMapDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetMapData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetMapData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetMapData(ctx, req.(*GetMapDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetDashboardStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DashboardStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetDashboardStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetDashboardStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetDashboardStats(ctx, req.(*DashboardStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ListingsService_ServiceDesc is the grpc.ServiceDesc for ListingsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -2316,6 +2927,74 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReindexAll",
 			Handler:    _ListingsService_ReindexAll_Handler,
+		},
+		{
+			MethodName: "CreateStorefront",
+			Handler:    _ListingsService_CreateStorefront_Handler,
+		},
+		{
+			MethodName: "UpdateStorefront",
+			Handler:    _ListingsService_UpdateStorefront_Handler,
+		},
+		{
+			MethodName: "DeleteStorefront",
+			Handler:    _ListingsService_DeleteStorefront_Handler,
+		},
+		{
+			MethodName: "GetMyStorefronts",
+			Handler:    _ListingsService_GetMyStorefronts_Handler,
+		},
+		{
+			MethodName: "AddStaff",
+			Handler:    _ListingsService_AddStaff_Handler,
+		},
+		{
+			MethodName: "UpdateStaff",
+			Handler:    _ListingsService_UpdateStaff_Handler,
+		},
+		{
+			MethodName: "RemoveStaff",
+			Handler:    _ListingsService_RemoveStaff_Handler,
+		},
+		{
+			MethodName: "GetStaff",
+			Handler:    _ListingsService_GetStaff_Handler,
+		},
+		{
+			MethodName: "SetWorkingHours",
+			Handler:    _ListingsService_SetWorkingHours_Handler,
+		},
+		{
+			MethodName: "GetWorkingHours",
+			Handler:    _ListingsService_GetWorkingHours_Handler,
+		},
+		{
+			MethodName: "IsOpenNow",
+			Handler:    _ListingsService_IsOpenNow_Handler,
+		},
+		{
+			MethodName: "SetPaymentMethods",
+			Handler:    _ListingsService_SetPaymentMethods_Handler,
+		},
+		{
+			MethodName: "GetPaymentMethods",
+			Handler:    _ListingsService_GetPaymentMethods_Handler,
+		},
+		{
+			MethodName: "SetDeliveryOptions",
+			Handler:    _ListingsService_SetDeliveryOptions_Handler,
+		},
+		{
+			MethodName: "GetDeliveryOptions",
+			Handler:    _ListingsService_GetDeliveryOptions_Handler,
+		},
+		{
+			MethodName: "GetMapData",
+			Handler:    _ListingsService_GetMapData_Handler,
+		},
+		{
+			MethodName: "GetDashboardStats",
+			Handler:    _ListingsService_GetDashboardStats_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -16,21 +16,22 @@ func DomainToProtoListing(listing *domain.Listing) *pb.Listing {
 	}
 
 	pbListing := &pb.Listing{
-		Id:             listing.ID,
-		Uuid:           listing.UUID,
-		UserId:         listing.UserID,
-		Title:          listing.Title,
-		Price:          listing.Price,
-		Currency:       listing.Currency,
-		CategoryId:     listing.CategoryID,
-		Status:         listing.Status,
-		Visibility:     listing.Visibility,
-		Quantity:       listing.Quantity,
-		ViewsCount:     listing.ViewsCount,
-		FavoritesCount: listing.FavoritesCount,
-		CreatedAt:      listing.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:      listing.UpdatedAt.Format(time.RFC3339),
-		IsDeleted:      listing.IsDeleted,
+		Id:               listing.ID,
+		Uuid:             listing.UUID,
+		UserId:           listing.UserID,
+		Title:            listing.Title,
+		Price:            listing.Price,
+		Currency:         listing.Currency,
+		CategoryId:       listing.CategoryID,
+		Status:           listing.Status,
+		Visibility:       listing.Visibility,
+		Quantity:         listing.Quantity,
+		ViewsCount:       listing.ViewsCount,
+		FavoritesCount:   listing.FavoritesCount,
+		CreatedAt:        listing.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:        listing.UpdatedAt.Format(time.RFC3339),
+		IsDeleted:        listing.IsDeleted,
+		OriginalLanguage: listing.OriginalLanguage,
 	}
 
 	// Optional fields
@@ -55,6 +56,9 @@ func DomainToProtoListing(listing *domain.Listing) *pb.Listing {
 		deletedStr := listing.DeletedAt.Format(time.RFC3339)
 		pbListing.DeletedAt = &deletedStr
 	}
+
+	// Translations
+	pbListing.Translations = DomainTranslationsToProto(listing)
 
 	// Relations
 	if len(listing.Images) > 0 {
@@ -213,6 +217,15 @@ func ProtoToCreateListingInput(req *pb.CreateListingRequest) *domain.CreateListi
 
 	if req.Sku != nil {
 		input.SKU = req.Sku
+	}
+
+	// Translations
+	if len(req.Translations) > 0 {
+		input.Translations = ProtoTranslationsToMap(req.Translations)
+	}
+
+	if req.OriginalLanguage != nil && *req.OriginalLanguage != "" {
+		input.OriginalLanguage = *req.OriginalLanguage
 	}
 
 	return input
@@ -1066,12 +1079,18 @@ func StorefrontToProto(sf *domain.Storefront) *pb.Storefront {
 		return nil
 	}
 
+	// Convert *string to string for Country (required in proto)
+	country := ""
+	if sf.Country != nil {
+		country = *sf.Country
+	}
+
 	protoSF := &pb.Storefront{
 		Id:             sf.ID,
 		UserId:         sf.UserID,
 		Slug:           sf.Slug,
 		Name:           sf.Name,
-		Country:        sf.Country,
+		Country:        country,
 		IsActive:       sf.IsActive,
 		IsVerified:     sf.IsVerified,
 		Rating:         sf.Rating,
@@ -1137,4 +1156,123 @@ func StorefrontToProto(sf *domain.Storefront) *pb.Storefront {
 	}
 
 	return protoSF
+}
+
+// DomainTranslationsToProto converts domain listing translation fields to proto map
+func DomainTranslationsToProto(listing *domain.Listing) map[string]*pb.ListingFieldTranslations {
+	if listing == nil {
+		return nil
+	}
+
+	result := make(map[string]*pb.ListingFieldTranslations)
+
+	// Collect all unique language codes
+	languages := make(map[string]bool)
+	for lang := range listing.TitleTranslations {
+		languages[lang] = true
+	}
+	for lang := range listing.DescriptionTranslations {
+		languages[lang] = true
+	}
+	for lang := range listing.LocationTranslations {
+		languages[lang] = true
+	}
+	for lang := range listing.CityTranslations {
+		languages[lang] = true
+	}
+	for lang := range listing.CountryTranslations {
+		languages[lang] = true
+	}
+
+	// Build translations for each language
+	for lang := range languages {
+		fields := &pb.ListingFieldTranslations{}
+
+		if title, ok := listing.TitleTranslations[lang]; ok && title != "" {
+			fields.Title = &title
+		}
+		if desc, ok := listing.DescriptionTranslations[lang]; ok && desc != "" {
+			fields.Description = &desc
+		}
+		if loc, ok := listing.LocationTranslations[lang]; ok && loc != "" {
+			fields.Location = &loc
+		}
+		if city, ok := listing.CityTranslations[lang]; ok && city != "" {
+			fields.City = &city
+		}
+		if country, ok := listing.CountryTranslations[lang]; ok && country != "" {
+			fields.Country = &country
+		}
+
+		result[lang] = fields
+	}
+
+	return result
+}
+
+// ProtoTranslationsToMap converts proto translations to domain format map[string]map[string]string
+func ProtoTranslationsToMap(protoTranslations map[string]*pb.ListingFieldTranslations) map[string]map[string]string {
+	if protoTranslations == nil {
+		return nil
+	}
+
+	result := make(map[string]map[string]string)
+	for lang, fields := range protoTranslations {
+		if fields == nil {
+			continue
+		}
+
+		langFields := make(map[string]string)
+		if fields.Title != nil && *fields.Title != "" {
+			langFields["title"] = *fields.Title
+		}
+		if fields.Description != nil && *fields.Description != "" {
+			langFields["description"] = *fields.Description
+		}
+		if fields.Location != nil && *fields.Location != "" {
+			langFields["location"] = *fields.Location
+		}
+		if fields.City != nil && *fields.City != "" {
+			langFields["city"] = *fields.City
+		}
+		if fields.Country != nil && *fields.Country != "" {
+			langFields["country"] = *fields.Country
+		}
+
+		if len(langFields) > 0 {
+			result[lang] = langFields
+		}
+	}
+
+	return result
+}
+
+// ApplyTranslation applies translations to a listing for a specific language
+func ApplyTranslation(listing *domain.Listing, lang string) {
+	if listing == nil || lang == "" || lang == listing.OriginalLanguage {
+		return
+	}
+
+	// Apply title translation
+	if title, ok := listing.TitleTranslations[lang]; ok && title != "" {
+		listing.Title = title
+	}
+
+	// Apply description translation
+	if desc, ok := listing.DescriptionTranslations[lang]; ok && desc != "" {
+		listing.Description = &desc
+	}
+
+	// Apply location translation if Location is loaded
+	if listing.Location != nil {
+		if loc, ok := listing.LocationTranslations[lang]; ok && loc != "" {
+			listing.Location.Country = &loc
+		}
+		if city, ok := listing.CityTranslations[lang]; ok && city != "" {
+			listing.Location.City = &city
+		}
+		if country, ok := listing.CountryTranslations[lang]; ok && country != "" {
+			listing.Location.Country = &country
+		}
+	}
 }

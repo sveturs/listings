@@ -84,11 +84,6 @@ type Repository interface {
 	IncrementProductViews(ctx context.Context, productID int64) error
 	BatchUpdateStock(ctx context.Context, storefrontID int64, items []domain.StockUpdateItem, reason string, userID int64) (int32, int32, []domain.StockUpdateResult, error)
 
-	// Storefront operations
-	GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error)
-	GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error)
-	ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error)
-
 	// Transaction and database operations
 	BeginTx(ctx context.Context) (*sql.Tx, error)
 	GetDB() *sqlx.DB
@@ -1825,36 +1820,6 @@ func (s *Service) BatchUpdateStock(ctx context.Context, storefrontID int64, item
 		Msg("batch stock update completed")
 
 	return successCount, failedCount, results, nil
-}
-
-// GetStorefront retrieves a storefront by ID
-func (s *Service) GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error) {
-	sf, err := s.repo.GetStorefront(ctx, storefrontID)
-	if err != nil {
-		s.logger.Error().Err(err).Int64("storefront_id", storefrontID).Msg("failed to get storefront")
-		return nil, fmt.Errorf("failed to get storefront: %w", err)
-	}
-	return sf, nil
-}
-
-// GetStorefrontBySlug retrieves a storefront by slug
-func (s *Service) GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error) {
-	sf, err := s.repo.GetStorefrontBySlug(ctx, slug)
-	if err != nil {
-		s.logger.Error().Err(err).Str("slug", slug).Msg("failed to get storefront by slug")
-		return nil, fmt.Errorf("failed to get storefront by slug: %w", err)
-	}
-	return sf, nil
-}
-
-// ListStorefronts returns a paginated list of storefronts
-func (s *Service) ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error) {
-	storefronts, total, err := s.repo.ListStorefronts(ctx, limit, offset)
-	if err != nil {
-		s.logger.Error().Err(err).Int("limit", limit).Int("offset", offset).Msg("failed to list storefronts")
-		return nil, 0, fmt.Errorf("failed to list storefronts: %w", err)
-	}
-	return storefronts, total, nil
 }
 
 // ============================================================================

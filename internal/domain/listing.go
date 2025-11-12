@@ -34,6 +34,14 @@ type Listing struct {
 	DeletedAt      *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 	IsDeleted      bool       `json:"is_deleted" db:"is_deleted"`
 
+	// Translations
+	TitleTranslations       map[string]string `json:"title_translations" db:"title_translations"`
+	DescriptionTranslations map[string]string `json:"description_translations" db:"description_translations"`
+	LocationTranslations    map[string]string `json:"location_translations" db:"location_translations"`
+	CityTranslations        map[string]string `json:"city_translations" db:"city_translations"`
+	CountryTranslations     map[string]string `json:"country_translations" db:"country_translations"`
+	OriginalLanguage        string            `json:"original_language" db:"original_language"`
+
 	// Relations (loaded on demand)
 	Attributes []*ListingAttribute `json:"attributes,omitempty" db:"-"`
 	Images     []*ListingImage     `json:"images,omitempty" db:"-"`
@@ -118,6 +126,10 @@ type CreateListingInput struct {
 	Quantity     int32   `json:"quantity" validate:"required,gte=0"`
 	SKU          *string `json:"sku,omitempty"`
 	SourceType   string  `json:"source_type" validate:"required,oneof=c2c b2c"`
+
+	// Translations
+	Translations     map[string]map[string]string `json:"translations,omitempty"`
+	OriginalLanguage string                       `json:"original_language,omitempty"`
 }
 
 // UpdateListingInput represents input for updating an existing listing

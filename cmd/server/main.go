@@ -199,6 +199,9 @@ func main() {
 	// Initialize listings service
 	listingsService := listings.NewService(pgRepo, redisCache, searchClient, zerologLogger)
 
+	// Initialize storefront service
+	storefrontService := listings.NewStorefrontService(pgRepo, &zerologLogger)
+
 	// Initialize health check service
 	healthConfig := &health.Config{
 		CheckTimeout:     cfg.Health.CheckTimeout,
@@ -268,7 +271,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, metricsInstance, zerologLogger)
 	pb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 
 	// Enable gRPC reflection for tools like grpcurl
