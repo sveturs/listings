@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-package listings.v1;
+package listingssvc.v1;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingsvcv1";
+option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1";
 
 // ============================================================================
 // ENUMS - Storefront Management
