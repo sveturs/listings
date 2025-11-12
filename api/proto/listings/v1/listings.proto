@@ -214,6 +214,12 @@ service ListingsService {
   // IncrementProductViews increments view counter for analytics
   // Used when customer views product detail page
   rpc IncrementProductViews(IncrementProductViewsRequest) returns (google.protobuf.Empty);
+
+  // === OpenSearch Reindexing (ADMINISTRATIVE) ===
+
+  // ReindexAll performs full reindexing of all products to OpenSearch
+  // Used for rebuilding search index after schema changes or data migration
+  rpc ReindexAll(ReindexAllRequest) returns (ReindexAllResponse);
 }
 
 // ============================================================================
@@ -1195,4 +1201,22 @@ message GetProductStatsResponse {
 // IncrementProductViewsRequest increments view counter
 message IncrementProductViewsRequest {
   int64 product_id = 1; // Required
+}
+
+// ============================================================================
+// Request/Response Messages - OpenSearch Reindexing
+// ============================================================================
+
+// ReindexAllRequest requests full reindexing of products
+message ReindexAllRequest {
+  optional string source_type = 1; // Filter: "c2c", "b2c", or empty for all
+  optional int32 batch_size = 2;   // Batch size for processing (default: 1000)
+}
+
+// ReindexAllResponse returns reindexing statistics
+message ReindexAllResponse {
+  int32 total_indexed = 1;     // Total successfully indexed products
+  int32 total_failed = 2;      // Total failed products
+  int32 duration_seconds = 3;  // Total operation duration in seconds
+  repeated string errors = 4;  // Sample error messages (max 10)
 }

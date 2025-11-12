@@ -57,7 +57,7 @@ func setupTestCategories(t *testing.T, db *sqlx.DB) {
 
 	for _, cat := range categories {
 		_, err := db.Exec(`
-			INSERT INTO c2c_categories (id, name, slug, description, is_active, level, sort_order)
+			INSERT INTO categories (id, name, slug, description, is_active, level, sort_order)
 			VALUES ($1, $2, $3, $4, true, 0, 0)
 			ON CONFLICT (id) DO NOTHING
 		`, cat.id, cat.name, cat.slug, cat.description)

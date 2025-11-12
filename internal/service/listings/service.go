@@ -625,11 +625,126 @@ func (s *Service) GetImageByID(ctx context.Context, imageID int64) (*domain.List
 }
 
 func (s *Service) DeleteImage(ctx context.Context, imageID int64) error {
-	return s.repo.DeleteImage(ctx, imageID)
+	// Get image first to know which listing to invalidate cache for
+	image, err := s.repo.GetImageByID(ctx, imageID)
+	if err != nil {
+		return err
+	}
+
+	listingID := image.ListingID
+
+	// Delete image
+	err = s.repo.DeleteImage(ctx, imageID)
+	if err != nil {
+		return err
+	}
+
+	// Invalidate cache for this listing (image was deleted)
+	if s.cache != nil {
+		cacheKey := fmt.Sprintf("listing:%d", listingID)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
+			// Log but don't fail - cache invalidation failure is not critical
+			s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to invalidate listing cache after deleting image")
+		} else {
+			s.logger.Debug().Int64("listing_id", listingID).Msg("listing cache invalidated after deleting image")
+		}
+	}
+
+	// Reindex in OpenSearch (async, non-blocking)
+	if s.indexer != nil {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Warn().Interface("panic", r).Int64("listing_id", listingID).
+						Msg("recovered from panic during OpenSearch reindexing after image delete")
+				}
+			}()
+
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full listing with remaining images
+			listing, err := s.repo.GetListingByID(indexCtx, listingID)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", listingID).
+					Msg("failed to get listing for reindexing after image delete (non-blocking)")
+				return
+			}
+
+			// Load remaining images
+			images, err := s.repo.GetImages(indexCtx, listingID)
+			if err == nil {
+				listing.Images = images
+			}
+
+			// Update in OpenSearch
+			if err := s.indexer.UpdateListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", listingID).
+					Msg("OpenSearch reindexing failed after image delete (non-blocking)")
+			} else {
+				s.logger.Debug().Int64("listing_id", listingID).Msg("listing reindexed in OpenSearch after image delete")
+			}
+		}()
+	}
+
+	return nil
 }
 
 func (s *Service) AddImage(ctx context.Context, image *domain.ListingImage) (*domain.ListingImage, error) {
-	return s.repo.AddImage(ctx, image)
+	result, err := s.repo.AddImage(ctx, image)
+	if err != nil {
+		return nil, err
+	}
+
+	// Invalidate cache for this listing (images were added)
+	if s.cache != nil {
+		cacheKey := fmt.Sprintf("listing:%d", image.ListingID)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
+			// Log but don't fail - cache invalidation failure is not critical
+			s.logger.Warn().Err(err).Int64("listing_id", image.ListingID).Msg("failed to invalidate listing cache after adding image")
+		} else {
+			s.logger.Debug().Int64("listing_id", image.ListingID).Msg("listing cache invalidated after adding image")
+		}
+	}
+
+	// Reindex in OpenSearch (async, non-blocking)
+	if s.indexer != nil {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Warn().Interface("panic", r).Int64("listing_id", image.ListingID).
+						Msg("recovered from panic during OpenSearch reindexing after image add")
+				}
+			}()
+
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full listing with all images
+			listing, err := s.repo.GetListingByID(indexCtx, image.ListingID)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", image.ListingID).
+					Msg("failed to get listing for reindexing after image add (non-blocking)")
+				return
+			}
+
+			// Load all images
+			images, err := s.repo.GetImages(indexCtx, image.ListingID)
+			if err == nil {
+				listing.Images = images
+			}
+
+			// Update in OpenSearch
+			if err := s.indexer.UpdateListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", image.ListingID).
+					Msg("OpenSearch reindexing failed after image add (non-blocking)")
+			} else {
+				s.logger.Debug().Int64("listing_id", image.ListingID).Msg("listing reindexed in OpenSearch after image add")
+			}
+		}()
+	}
+
+	return result, nil
 }
 
 func (s *Service) GetImages(ctx context.Context, listingID int64) ([]*domain.ListingImage, error) {
@@ -662,7 +777,60 @@ func (s *Service) ReorderImages(ctx context.Context, listingID int64, orders []p
 		Int("count", len(orders)).
 		Msg("reordering images")
 
-	return s.repo.ReorderImages(ctx, listingID, orders)
+	err := s.repo.ReorderImages(ctx, listingID, orders)
+	if err != nil {
+		return err
+	}
+
+	// Invalidate cache for this listing (images were reordered)
+	if s.cache != nil {
+		cacheKey := fmt.Sprintf("listing:%d", listingID)
+		if err := s.cache.Delete(ctx, cacheKey); err != nil {
+			// Log but don't fail - cache invalidation failure is not critical
+			s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to invalidate listing cache after reordering images")
+		} else {
+			s.logger.Debug().Int64("listing_id", listingID).Msg("listing cache invalidated after reordering images")
+		}
+	}
+
+	// Reindex in OpenSearch (async, non-blocking)
+	if s.indexer != nil {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Warn().Interface("panic", r).Int64("listing_id", listingID).
+						Msg("recovered from panic during OpenSearch reindexing after image reorder")
+				}
+			}()
+
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full listing with reordered images
+			listing, err := s.repo.GetListingByID(indexCtx, listingID)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", listingID).
+					Msg("failed to get listing for reindexing after image reorder (non-blocking)")
+				return
+			}
+
+			// Load images in new order
+			images, err := s.repo.GetImages(indexCtx, listingID)
+			if err == nil {
+				listing.Images = images
+			}
+
+			// Update in OpenSearch
+			if err := s.indexer.UpdateListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", listingID).
+					Msg("OpenSearch reindexing failed after image reorder (non-blocking)")
+			} else {
+				s.logger.Debug().Int64("listing_id", listingID).Msg("listing reindexed in OpenSearch after image reorder")
+			}
+		}()
+	}
+
+	return nil
 }
 
 // Category operations
@@ -1047,6 +1215,44 @@ func (s *Service) CreateProduct(ctx context.Context, input *domain.CreateProduct
 		return nil, err // Return as-is to preserve error placeholders
 	}
 
+	// Async indexing in OpenSearch (non-blocking, graceful degradation)
+	if s.indexer != nil {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Warn().Interface("panic", r).Int64("product_id", product.ID).
+						Msg("recovered from panic during OpenSearch indexing")
+				}
+			}()
+
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full product with images for indexing
+			fullProduct, err := s.repo.GetProductByID(indexCtx, product.ID, nil)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", product.ID).
+					Msg("failed to get product for indexing (non-blocking)")
+				return
+			}
+
+			// Get images
+			// Note: Images are loaded via repository's GetProductByID if it supports it
+			// Or we can load them separately if needed
+			// For now, assume fullProduct may have images loaded
+
+			// Convert domain.Product to domain.Listing for indexing
+			listing := convertProductToListing(fullProduct)
+
+			if err := s.indexer.IndexListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", product.ID).
+					Msg("OpenSearch indexing failed (non-blocking)")
+			} else {
+				s.logger.Debug().Int64("product_id", product.ID).Msg("product indexed in OpenSearch")
+			}
+		}()
+	}
+
 	s.logger.Info().Int64("product_id", product.ID).Msg("product created successfully")
 	return product, nil
 }
@@ -1121,6 +1327,39 @@ func (s *Service) UpdateProduct(ctx context.Context, productID int64, storefront
 	if err != nil {
 		s.logger.Error().Err(err).Int64("product_id", productID).Msg("failed to update product")
 		return nil, err // Return as-is to preserve error placeholders
+	}
+
+	// Async re-indexing in OpenSearch (non-blocking, graceful degradation)
+	if s.indexer != nil {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Warn().Interface("panic", r).Int64("product_id", product.ID).
+						Msg("recovered from panic during OpenSearch re-indexing")
+				}
+			}()
+
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full product with images for indexing
+			fullProduct, err := s.repo.GetProductByID(indexCtx, product.ID, nil)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", product.ID).
+					Msg("failed to get product for re-indexing (non-blocking)")
+				return
+			}
+
+			// Convert domain.Product to domain.Listing for indexing
+			listing := convertProductToListing(fullProduct)
+
+			if err := s.indexer.UpdateListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", product.ID).
+					Msg("OpenSearch re-indexing failed (non-blocking)")
+			} else {
+				s.logger.Debug().Int64("product_id", product.ID).Msg("product re-indexed in OpenSearch")
+			}
+		}()
 	}
 
 	s.logger.Info().Int64("product_id", product.ID).Msg("product updated successfully")
@@ -1211,6 +1450,28 @@ func (s *Service) DeleteProduct(ctx context.Context, productID, storefrontID int
 	if err != nil {
 		s.logger.Error().Err(err).Int64("product_id", productID).Msg("failed to delete product")
 		return 0, err // Return as-is to preserve error placeholders
+	}
+
+	// Async deletion from OpenSearch (non-blocking, graceful degradation)
+	if s.indexer != nil {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Warn().Interface("panic", r).Int64("product_id", productID).
+						Msg("recovered from panic during OpenSearch deletion")
+				}
+			}()
+
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			if err := s.indexer.DeleteListing(indexCtx, productID); err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("OpenSearch deletion failed (non-blocking)")
+			} else {
+				s.logger.Debug().Int64("product_id", productID).Msg("product removed from OpenSearch index")
+			}
+		}()
 	}
 
 	deleteType := "soft deleted"
@@ -1594,4 +1855,222 @@ func (s *Service) ListStorefronts(ctx context.Context, limit, offset int) ([]*do
 		return nil, 0, fmt.Errorf("failed to list storefronts: %w", err)
 	}
 	return storefronts, total, nil
+}
+
+// ============================================================================
+// Helper Functions for OpenSearch Integration
+// ============================================================================
+
+// ReindexAll performs full reindexing of all products to OpenSearch
+// This is an administrative operation used for rebuilding search index
+func (s *Service) ReindexAll(ctx context.Context, sourceType string, batchSize int) (int32, int32, int, []string, error) {
+	s.logger.Info().
+		Str("source_type", sourceType).
+		Int("batch_size", batchSize).
+		Msg("starting full reindexing")
+
+	startTime := time.Now()
+
+	// Validate inputs
+	if s.indexer == nil {
+		return 0, 0, 0, nil, fmt.Errorf("opensearch_not_configured")
+	}
+
+	if batchSize <= 0 || batchSize > 10000 {
+		batchSize = 1000 // Default batch size
+	}
+
+	// Validate source_type filter
+	if sourceType != "" && sourceType != "b2c" && sourceType != "c2c" {
+		return 0, 0, 0, nil, fmt.Errorf("invalid source_type: must be 'b2c', 'c2c', or empty")
+	}
+
+	var totalIndexed int32
+	var totalFailed int32
+	var errors []string
+	offset := 0
+
+	// Fetch and index products in batches
+	for {
+		// Check context for cancellation
+		select {
+		case <-ctx.Done():
+			duration := int(time.Since(startTime).Seconds())
+			s.logger.Warn().
+				Int32("indexed", totalIndexed).
+				Int32("failed", totalFailed).
+				Int("duration_seconds", duration).
+				Msg("reindexing cancelled")
+			return totalIndexed, totalFailed, duration, errors, ctx.Err()
+		default:
+		}
+
+		// Fetch batch of products
+		// Note: Need to implement GetProductsBatch in repository
+		// For now, use a simpler approach with ListProducts
+		s.logger.Debug().Int("offset", offset).Int("batch_size", batchSize).Msg("fetching batch")
+
+		// Build filter for listing query
+		filter := &domain.ListListingsFilter{
+			Limit:  int32(batchSize),
+			Offset: int32(offset),
+		}
+		if sourceType != "" {
+			filter.SourceType = &sourceType
+		}
+
+		// Fetch listings (products)
+		listings, total, err := s.repo.ListListings(ctx, filter)
+		if err != nil {
+			s.logger.Error().Err(err).Msg("failed to fetch products batch")
+			errors = append(errors, fmt.Sprintf("batch fetch error at offset %d: %v", offset, err))
+			totalFailed += int32(batchSize) // Approximate
+			break
+		}
+
+		// No more products
+		if len(listings) == 0 {
+			s.logger.Debug().Msg("no more products to index")
+			break
+		}
+
+		s.logger.Debug().Int("count", len(listings)).Int32("total", total).Msg("fetched batch")
+
+		// Load images for each listing
+		for _, listing := range listings {
+			images, err := s.repo.GetImages(ctx, listing.ID)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to load images")
+			} else {
+				listing.Images = images
+			}
+		}
+
+		// Bulk index the batch using OpenSearch client
+		// We need to access the underlying OpenSearch client for bulk operations
+		// For now, index one by one (can be optimized later with BulkIndexProducts)
+		for _, listing := range listings {
+			if err := s.indexer.IndexListing(ctx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to index listing")
+				totalFailed++
+				if len(errors) < 10 { // Keep max 10 sample errors
+					errors = append(errors, fmt.Sprintf("listing %d: %v", listing.ID, err))
+				}
+			} else {
+				totalIndexed++
+			}
+		}
+
+		s.logger.Info().
+			Int32("indexed_so_far", totalIndexed).
+			Int32("failed_so_far", totalFailed).
+			Int("batch_size", len(listings)).
+			Msg("batch indexed")
+
+		// Move to next batch
+		offset += batchSize
+
+		// Check if we've processed all
+		if offset >= int(total) {
+			break
+		}
+	}
+
+	duration := int(time.Since(startTime).Seconds())
+
+	s.logger.Info().
+		Int32("total_indexed", totalIndexed).
+		Int32("total_failed", totalFailed).
+		Int("duration_seconds", duration).
+		Msg("reindexing completed")
+
+	return totalIndexed, totalFailed, duration, errors, nil
+}
+
+// convertProductToListing converts domain.Product to domain.Listing for OpenSearch indexing
+// This is necessary because OpenSearch Client expects domain.Listing format
+// Note: Product and Listing are different entities, this is a mapping for search indexing only
+func convertProductToListing(product *domain.Product) *domain.Listing {
+	if product == nil {
+		return nil
+	}
+
+	// Create a minimal listing representation for search indexing
+	listing := &domain.Listing{
+		ID:         product.ID,
+		Title:      product.Name,
+		Price:      product.Price,
+		Currency:   product.Currency,
+		CategoryID: product.CategoryID,
+		Quantity:   product.StockQuantity,
+		ViewsCount: product.ViewCount,
+		CreatedAt:  product.CreatedAt,
+		UpdatedAt:  product.UpdatedAt,
+	}
+
+	// Set source type as b2c
+	listing.SourceType = "b2c"
+
+	// Storefront ID
+	listing.StorefrontID = &product.StorefrontID
+
+	// Optional description
+	desc := product.Description
+	if desc != "" {
+		listing.Description = &desc
+	}
+
+	// Optional SKU
+	if product.SKU != nil {
+		listing.SKU = product.SKU
+	}
+
+	// Stock status
+	stockStatus := product.StockStatus
+	listing.StockStatus = &stockStatus
+
+	// Set default status and visibility for B2C products
+	if product.IsActive {
+		listing.Status = "active"
+		listing.Visibility = "public"
+	} else {
+		listing.Status = "inactive"
+		listing.Visibility = "hidden"
+	}
+
+	// Convert attributes to JSON if present
+	if len(product.Attributes) > 0 {
+		// Attributes are already map[string]interface{}, we need to store as JSONB
+		// For now, store the map as-is (will be JSON marshalled later)
+		// In real implementation, you'd marshal to JSON string
+		// listing.AttributesJSON = ... (depends on how you store JSONB)
+	}
+
+	// Convert images
+	if len(product.Images) > 0 {
+		listing.Images = make([]*domain.ListingImage, 0, len(product.Images))
+		for _, img := range product.Images {
+			listing.Images = append(listing.Images, &domain.ListingImage{
+				ID:        img.ID,
+				URL:       img.URL,
+				IsPrimary: img.IsPrimary,
+			})
+		}
+	}
+
+	// Convert location
+	if product.HasIndividualLocation {
+		listing.Location = &domain.ListingLocation{}
+		if product.IndividualAddress != nil {
+			listing.Location.AddressLine1 = product.IndividualAddress
+		}
+		if product.IndividualLatitude != nil {
+			listing.Location.Latitude = product.IndividualLatitude
+		}
+		if product.IndividualLongitude != nil {
+			listing.Location.Longitude = product.IndividualLongitude
+		}
+	}
+
+	return listing
 }

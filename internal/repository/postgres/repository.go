@@ -182,6 +182,15 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 		return nil, fmt.Errorf("failed to get listing: %w", err)
 	}
 
+	// Load images for indexing and API responses
+	images, err := r.GetImages(ctx, id)
+	if err != nil {
+		r.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to load images for listing")
+		// Don't fail the whole request if images fail to load
+	} else {
+		listing.Images = images
+	}
+
 	return &listing, nil
 }
 

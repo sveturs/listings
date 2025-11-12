@@ -7860,6 +7860,128 @@ func (x *IncrementProductViewsRequest) GetProductId() int64 {
 	return 0
 }
 
+// ReindexAllRequest requests full reindexing of products
+type ReindexAllRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SourceType    *string                `protobuf:"bytes,1,opt,name=source_type,json=sourceType,proto3,oneof" json:"source_type,omitempty"` // Filter: "c2c", "b2c", or empty for all
+	BatchSize     *int32                 `protobuf:"varint,2,opt,name=batch_size,json=batchSize,proto3,oneof" json:"batch_size,omitempty"`   // Batch size for processing (default: 1000)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReindexAllRequest) Reset() {
+	*x = ReindexAllRequest{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[103]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReindexAllRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReindexAllRequest) ProtoMessage() {}
+
+func (x *ReindexAllRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[103]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReindexAllRequest.ProtoReflect.Descriptor instead.
+func (*ReindexAllRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{103}
+}
+
+func (x *ReindexAllRequest) GetSourceType() string {
+	if x != nil && x.SourceType != nil {
+		return *x.SourceType
+	}
+	return ""
+}
+
+func (x *ReindexAllRequest) GetBatchSize() int32 {
+	if x != nil && x.BatchSize != nil {
+		return *x.BatchSize
+	}
+	return 0
+}
+
+// ReindexAllResponse returns reindexing statistics
+type ReindexAllResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	TotalIndexed    int32                  `protobuf:"varint,1,opt,name=total_indexed,json=totalIndexed,proto3" json:"total_indexed,omitempty"`          // Total successfully indexed products
+	TotalFailed     int32                  `protobuf:"varint,2,opt,name=total_failed,json=totalFailed,proto3" json:"total_failed,omitempty"`             // Total failed products
+	DurationSeconds int32                  `protobuf:"varint,3,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"` // Total operation duration in seconds
+	Errors          []string               `protobuf:"bytes,4,rep,name=errors,proto3" json:"errors,omitempty"`                                           // Sample error messages (max 10)
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ReindexAllResponse) Reset() {
+	*x = ReindexAllResponse{}
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[104]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReindexAllResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReindexAllResponse) ProtoMessage() {}
+
+func (x *ReindexAllResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_listings_proto_msgTypes[104]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReindexAllResponse.ProtoReflect.Descriptor instead.
+func (*ReindexAllResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{104}
+}
+
+func (x *ReindexAllResponse) GetTotalIndexed() int32 {
+	if x != nil {
+		return x.TotalIndexed
+	}
+	return 0
+}
+
+func (x *ReindexAllResponse) GetTotalFailed() int32 {
+	if x != nil {
+		return x.TotalFailed
+	}
+	return 0
+}
+
+func (x *ReindexAllResponse) GetDurationSeconds() int32 {
+	if x != nil {
+		return x.DurationSeconds
+	}
+	return 0
+}
+
+func (x *ReindexAllResponse) GetErrors() []string {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
 var File_api_proto_listings_v1_listings_proto protoreflect.FileDescriptor
 
 const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
@@ -8876,7 +8998,19 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x05stats\x18\x01 \x01(\v2\x19.listings.v1.ProductStatsR\x05stats\"=\n" +
 	"\x1cIncrementProductViewsRequest\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x01 \x01(\x03R\tproductId2\xa6%\n" +
+	"product_id\x18\x01 \x01(\x03R\tproductId\"|\n" +
+	"\x11ReindexAllRequest\x12$\n" +
+	"\vsource_type\x18\x01 \x01(\tH\x00R\n" +
+	"sourceType\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"batch_size\x18\x02 \x01(\x05H\x01R\tbatchSize\x88\x01\x01B\x0e\n" +
+	"\f_source_typeB\r\n" +
+	"\v_batch_size\"\x9f\x01\n" +
+	"\x12ReindexAllResponse\x12#\n" +
+	"\rtotal_indexed\x18\x01 \x01(\x05R\ftotalIndexed\x12!\n" +
+	"\ftotal_failed\x18\x02 \x01(\x05R\vtotalFailed\x12)\n" +
+	"\x10duration_seconds\x18\x03 \x01(\x05R\x0fdurationSeconds\x12\x16\n" +
+	"\x06errors\x18\x04 \x03(\tR\x06errors2\xf5%\n" +
 	"\x0fListingsService\x12M\n" +
 	"\n" +
 	"GetListing\x12\x1e.listings.v1.GetListingRequest\x1a\x1f.listings.v1.GetListingResponse\x12V\n" +
@@ -8935,7 +9069,9 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x17RecordInventoryMovement\x12+.listings.v1.RecordInventoryMovementRequest\x1a,.listings.v1.RecordInventoryMovementResponse\x12_\n" +
 	"\x10BatchUpdateStock\x12$.listings.v1.BatchUpdateStockRequest\x1a%.listings.v1.BatchUpdateStockResponse\x12\\\n" +
 	"\x0fGetProductStats\x12#.listings.v1.GetProductStatsRequest\x1a$.listings.v1.GetProductStatsResponse\x12Z\n" +
-	"\x15IncrementProductViews\x12).listings.v1.IncrementProductViewsRequest\x1a\x16.google.protobuf.EmptyB>Z<github.com/sveturs/listings/api/proto/listings/v1;listingsv1b\x06proto3"
+	"\x15IncrementProductViews\x12).listings.v1.IncrementProductViewsRequest\x1a\x16.google.protobuf.Empty\x12M\n" +
+	"\n" +
+	"ReindexAll\x12\x1e.listings.v1.ReindexAllRequest\x1a\x1f.listings.v1.ReindexAllResponseB>Z<github.com/sveturs/listings/api/proto/listings/v1;listingsv1b\x06proto3"
 
 var (
 	file_api_proto_listings_v1_listings_proto_rawDescOnce sync.Once
@@ -8949,7 +9085,7 @@ func file_api_proto_listings_v1_listings_proto_rawDescGZIP() []byte {
 	return file_api_proto_listings_v1_listings_proto_rawDescData
 }
 
-var file_api_proto_listings_v1_listings_proto_msgTypes = make([]protoimpl.MessageInfo, 108)
+var file_api_proto_listings_v1_listings_proto_msgTypes = make([]protoimpl.MessageInfo, 110)
 var file_api_proto_listings_v1_listings_proto_goTypes = []any{
 	(*Listing)(nil),                           // 0: listings.v1.Listing
 	(*ListingImage)(nil),                      // 1: listings.v1.ListingImage
@@ -9054,33 +9190,35 @@ var file_api_proto_listings_v1_listings_proto_goTypes = []any{
 	(*ProductStats)(nil),                      // 100: listings.v1.ProductStats
 	(*GetProductStatsResponse)(nil),           // 101: listings.v1.GetProductStatsResponse
 	(*IncrementProductViewsRequest)(nil),      // 102: listings.v1.IncrementProductViewsRequest
-	nil,                                       // 103: listings.v1.ListingVariant.AttributesEntry
-	nil,                                       // 104: listings.v1.Category.TranslationsEntry
-	nil,                                       // 105: listings.v1.CategoryTreeNode.TranslationsEntry
-	nil,                                       // 106: listings.v1.VariantInput.AttributesEntry
-	nil,                                       // 107: listings.v1.UpdateVariantRequest.AttributesEntry
-	(*structpb.Struct)(nil),                   // 108: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil),             // 109: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),             // 110: google.protobuf.FieldMask
-	(*emptypb.Empty)(nil),                     // 111: google.protobuf.Empty
+	(*ReindexAllRequest)(nil),                 // 103: listings.v1.ReindexAllRequest
+	(*ReindexAllResponse)(nil),                // 104: listings.v1.ReindexAllResponse
+	nil,                                       // 105: listings.v1.ListingVariant.AttributesEntry
+	nil,                                       // 106: listings.v1.Category.TranslationsEntry
+	nil,                                       // 107: listings.v1.CategoryTreeNode.TranslationsEntry
+	nil,                                       // 108: listings.v1.VariantInput.AttributesEntry
+	nil,                                       // 109: listings.v1.UpdateVariantRequest.AttributesEntry
+	(*structpb.Struct)(nil),                   // 110: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),             // 111: google.protobuf.Timestamp
+	(*fieldmaskpb.FieldMask)(nil),             // 112: google.protobuf.FieldMask
+	(*emptypb.Empty)(nil),                     // 113: google.protobuf.Empty
 }
 var file_api_proto_listings_v1_listings_proto_depIdxs = []int32{
 	1,   // 0: listings.v1.Listing.images:type_name -> listings.v1.ListingImage
 	2,   // 1: listings.v1.Listing.attributes:type_name -> listings.v1.ListingAttribute
 	3,   // 2: listings.v1.Listing.location:type_name -> listings.v1.ListingLocation
 	4,   // 3: listings.v1.Listing.variants:type_name -> listings.v1.ListingVariant
-	103, // 4: listings.v1.ListingVariant.attributes:type_name -> listings.v1.ListingVariant.AttributesEntry
-	104, // 5: listings.v1.Category.translations:type_name -> listings.v1.Category.TranslationsEntry
+	105, // 4: listings.v1.ListingVariant.attributes:type_name -> listings.v1.ListingVariant.AttributesEntry
+	106, // 5: listings.v1.Category.translations:type_name -> listings.v1.Category.TranslationsEntry
 	6,   // 6: listings.v1.CategoryTreeNode.children:type_name -> listings.v1.CategoryTreeNode
-	105, // 7: listings.v1.CategoryTreeNode.translations:type_name -> listings.v1.CategoryTreeNode.TranslationsEntry
-	108, // 8: listings.v1.Product.attributes:type_name -> google.protobuf.Struct
-	109, // 9: listings.v1.Product.created_at:type_name -> google.protobuf.Timestamp
-	109, // 10: listings.v1.Product.updated_at:type_name -> google.protobuf.Timestamp
+	107, // 7: listings.v1.CategoryTreeNode.translations:type_name -> listings.v1.CategoryTreeNode.TranslationsEntry
+	110, // 8: listings.v1.Product.attributes:type_name -> google.protobuf.Struct
+	111, // 9: listings.v1.Product.created_at:type_name -> google.protobuf.Timestamp
+	111, // 10: listings.v1.Product.updated_at:type_name -> google.protobuf.Timestamp
 	8,   // 11: listings.v1.Product.variants:type_name -> listings.v1.ProductVariant
-	108, // 12: listings.v1.ProductVariant.variant_attributes:type_name -> google.protobuf.Struct
-	108, // 13: listings.v1.ProductVariant.dimensions:type_name -> google.protobuf.Struct
-	109, // 14: listings.v1.ProductVariant.created_at:type_name -> google.protobuf.Timestamp
-	109, // 15: listings.v1.ProductVariant.updated_at:type_name -> google.protobuf.Timestamp
+	110, // 12: listings.v1.ProductVariant.variant_attributes:type_name -> google.protobuf.Struct
+	110, // 13: listings.v1.ProductVariant.dimensions:type_name -> google.protobuf.Struct
+	111, // 14: listings.v1.ProductVariant.created_at:type_name -> google.protobuf.Timestamp
+	111, // 15: listings.v1.ProductVariant.updated_at:type_name -> google.protobuf.Timestamp
 	0,   // 16: listings.v1.GetListingResponse.listing:type_name -> listings.v1.Listing
 	0,   // 17: listings.v1.CreateListingResponse.listing:type_name -> listings.v1.Listing
 	0,   // 18: listings.v1.UpdateListingResponse.listing:type_name -> listings.v1.Listing
@@ -9095,9 +9233,9 @@ var file_api_proto_listings_v1_listings_proto_depIdxs = []int32{
 	40,  // 27: listings.v1.StorefrontResponse.storefront:type_name -> listings.v1.Storefront
 	40,  // 28: listings.v1.ListStorefrontsResponse.storefronts:type_name -> listings.v1.Storefront
 	47,  // 29: listings.v1.CreateVariantsRequest.variants:type_name -> listings.v1.VariantInput
-	106, // 30: listings.v1.VariantInput.attributes:type_name -> listings.v1.VariantInput.AttributesEntry
+	108, // 30: listings.v1.VariantInput.attributes:type_name -> listings.v1.VariantInput.AttributesEntry
 	4,   // 31: listings.v1.VariantsResponse.variants:type_name -> listings.v1.ListingVariant
-	107, // 32: listings.v1.UpdateVariantRequest.attributes:type_name -> listings.v1.UpdateVariantRequest.AttributesEntry
+	109, // 32: listings.v1.UpdateVariantRequest.attributes:type_name -> listings.v1.UpdateVariantRequest.AttributesEntry
 	0,   // 33: listings.v1.ListingsResponse.listings:type_name -> listings.v1.Listing
 	7,   // 34: listings.v1.ProductResponse.product:type_name -> listings.v1.Product
 	7,   // 35: listings.v1.ProductsResponse.products:type_name -> listings.v1.Product
@@ -9109,26 +9247,26 @@ var file_api_proto_listings_v1_listings_proto_depIdxs = []int32{
 	65,  // 41: listings.v1.RollbackStockResponse.results:type_name -> listings.v1.StockResult
 	64,  // 42: listings.v1.CheckStockAvailabilityRequest.items:type_name -> listings.v1.StockItem
 	71,  // 43: listings.v1.CheckStockAvailabilityResponse.items:type_name -> listings.v1.StockAvailability
-	108, // 44: listings.v1.CreateProductRequest.attributes:type_name -> google.protobuf.Struct
-	108, // 45: listings.v1.UpdateProductRequest.attributes:type_name -> google.protobuf.Struct
-	110, // 46: listings.v1.UpdateProductRequest.update_mask:type_name -> google.protobuf.FieldMask
-	108, // 47: listings.v1.ProductInput.attributes:type_name -> google.protobuf.Struct
+	110, // 44: listings.v1.CreateProductRequest.attributes:type_name -> google.protobuf.Struct
+	110, // 45: listings.v1.UpdateProductRequest.attributes:type_name -> google.protobuf.Struct
+	112, // 46: listings.v1.UpdateProductRequest.update_mask:type_name -> google.protobuf.FieldMask
+	110, // 47: listings.v1.ProductInput.attributes:type_name -> google.protobuf.Struct
 	77,  // 48: listings.v1.BulkCreateProductsRequest.products:type_name -> listings.v1.ProductInput
 	7,   // 49: listings.v1.BulkCreateProductsResponse.products:type_name -> listings.v1.Product
 	85,  // 50: listings.v1.BulkCreateProductsResponse.errors:type_name -> listings.v1.BulkOperationError
-	108, // 51: listings.v1.ProductUpdateInput.attributes:type_name -> google.protobuf.Struct
-	110, // 52: listings.v1.ProductUpdateInput.update_mask:type_name -> google.protobuf.FieldMask
+	110, // 51: listings.v1.ProductUpdateInput.attributes:type_name -> google.protobuf.Struct
+	112, // 52: listings.v1.ProductUpdateInput.update_mask:type_name -> google.protobuf.FieldMask
 	80,  // 53: listings.v1.BulkUpdateProductsRequest.updates:type_name -> listings.v1.ProductUpdateInput
 	7,   // 54: listings.v1.BulkUpdateProductsResponse.products:type_name -> listings.v1.Product
 	85,  // 55: listings.v1.BulkUpdateProductsResponse.errors:type_name -> listings.v1.BulkOperationError
 	85,  // 56: listings.v1.BulkDeleteProductsResponse.errors:type_name -> listings.v1.BulkOperationError
-	108, // 57: listings.v1.CreateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
-	108, // 58: listings.v1.CreateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
-	108, // 59: listings.v1.UpdateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
-	108, // 60: listings.v1.UpdateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
-	110, // 61: listings.v1.UpdateProductVariantRequest.update_mask:type_name -> google.protobuf.FieldMask
-	108, // 62: listings.v1.ProductVariantInput.variant_attributes:type_name -> google.protobuf.Struct
-	108, // 63: listings.v1.ProductVariantInput.dimensions:type_name -> google.protobuf.Struct
+	110, // 57: listings.v1.CreateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
+	110, // 58: listings.v1.CreateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
+	110, // 59: listings.v1.UpdateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
+	110, // 60: listings.v1.UpdateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
+	112, // 61: listings.v1.UpdateProductVariantRequest.update_mask:type_name -> google.protobuf.FieldMask
+	110, // 62: listings.v1.ProductVariantInput.variant_attributes:type_name -> google.protobuf.Struct
+	110, // 63: listings.v1.ProductVariantInput.dimensions:type_name -> google.protobuf.Struct
 	90,  // 64: listings.v1.BulkCreateProductVariantsRequest.variants:type_name -> listings.v1.ProductVariantInput
 	8,   // 65: listings.v1.BulkCreateProductVariantsResponse.variants:type_name -> listings.v1.ProductVariant
 	85,  // 66: listings.v1.BulkCreateProductVariantsResponse.errors:type_name -> listings.v1.BulkOperationError
@@ -9146,8 +9284,8 @@ var file_api_proto_listings_v1_listings_proto_depIdxs = []int32{
 	23,  // 78: listings.v1.ListingsService.AddListingImage:input_type -> listings.v1.AddImageRequest
 	24,  // 79: listings.v1.ListingsService.GetListingImages:input_type -> listings.v1.ListingIDRequest
 	26,  // 80: listings.v1.ListingsService.ReorderListingImages:input_type -> listings.v1.ReorderImagesRequest
-	111, // 81: listings.v1.ListingsService.GetRootCategories:input_type -> google.protobuf.Empty
-	111, // 82: listings.v1.ListingsService.GetAllCategories:input_type -> google.protobuf.Empty
+	113, // 81: listings.v1.ListingsService.GetRootCategories:input_type -> google.protobuf.Empty
+	113, // 82: listings.v1.ListingsService.GetAllCategories:input_type -> google.protobuf.Empty
 	28,  // 83: listings.v1.ListingsService.GetPopularCategories:input_type -> listings.v1.PopularCategoriesRequest
 	30,  // 84: listings.v1.ListingsService.GetCategory:input_type -> listings.v1.CategoryIDRequest
 	30,  // 85: listings.v1.ListingsService.GetCategoryTree:input_type -> listings.v1.CategoryIDRequest
@@ -9165,7 +9303,7 @@ var file_api_proto_listings_v1_listings_proto_depIdxs = []int32{
 	50,  // 97: listings.v1.ListingsService.DeleteVariant:input_type -> listings.v1.VariantIDRequest
 	51,  // 98: listings.v1.ListingsService.GetListingsForReindex:input_type -> listings.v1.ReindexRequest
 	53,  // 99: listings.v1.ListingsService.ResetReindexFlags:input_type -> listings.v1.ResetFlagsRequest
-	111, // 100: listings.v1.ListingsService.SyncDiscounts:input_type -> google.protobuf.Empty
+	113, // 100: listings.v1.ListingsService.SyncDiscounts:input_type -> google.protobuf.Empty
 	54,  // 101: listings.v1.ListingsService.GetProduct:input_type -> listings.v1.GetProductRequest
 	56,  // 102: listings.v1.ListingsService.GetProductsBySKUs:input_type -> listings.v1.GetProductsBySKUsRequest
 	58,  // 103: listings.v1.ListingsService.GetProductsByIDs:input_type -> listings.v1.GetProductsByIDsRequest
@@ -9189,62 +9327,64 @@ var file_api_proto_listings_v1_listings_proto_depIdxs = []int32{
 	96,  // 121: listings.v1.ListingsService.BatchUpdateStock:input_type -> listings.v1.BatchUpdateStockRequest
 	99,  // 122: listings.v1.ListingsService.GetProductStats:input_type -> listings.v1.GetProductStatsRequest
 	102, // 123: listings.v1.ListingsService.IncrementProductViews:input_type -> listings.v1.IncrementProductViewsRequest
-	10,  // 124: listings.v1.ListingsService.GetListing:output_type -> listings.v1.GetListingResponse
-	12,  // 125: listings.v1.ListingsService.CreateListing:output_type -> listings.v1.CreateListingResponse
-	14,  // 126: listings.v1.ListingsService.UpdateListing:output_type -> listings.v1.UpdateListingResponse
-	16,  // 127: listings.v1.ListingsService.DeleteListing:output_type -> listings.v1.DeleteListingResponse
-	18,  // 128: listings.v1.ListingsService.SearchListings:output_type -> listings.v1.SearchListingsResponse
-	20,  // 129: listings.v1.ListingsService.ListListings:output_type -> listings.v1.ListListingsResponse
-	22,  // 130: listings.v1.ListingsService.GetListingImage:output_type -> listings.v1.ImageResponse
-	111, // 131: listings.v1.ListingsService.DeleteListingImage:output_type -> google.protobuf.Empty
-	22,  // 132: listings.v1.ListingsService.AddListingImage:output_type -> listings.v1.ImageResponse
-	25,  // 133: listings.v1.ListingsService.GetListingImages:output_type -> listings.v1.ImagesResponse
-	111, // 134: listings.v1.ListingsService.ReorderListingImages:output_type -> google.protobuf.Empty
-	29,  // 135: listings.v1.ListingsService.GetRootCategories:output_type -> listings.v1.CategoriesResponse
-	29,  // 136: listings.v1.ListingsService.GetAllCategories:output_type -> listings.v1.CategoriesResponse
-	29,  // 137: listings.v1.ListingsService.GetPopularCategories:output_type -> listings.v1.CategoriesResponse
-	31,  // 138: listings.v1.ListingsService.GetCategory:output_type -> listings.v1.CategoryResponse
-	32,  // 139: listings.v1.ListingsService.GetCategoryTree:output_type -> listings.v1.CategoryTreeResponse
-	33,  // 140: listings.v1.ListingsService.GetFavoritedUsers:output_type -> listings.v1.UserIDsResponse
-	111, // 141: listings.v1.ListingsService.AddToFavorites:output_type -> google.protobuf.Empty
-	111, // 142: listings.v1.ListingsService.RemoveFromFavorites:output_type -> google.protobuf.Empty
-	37,  // 143: listings.v1.ListingsService.GetUserFavorites:output_type -> listings.v1.GetUserFavoritesResponse
-	39,  // 144: listings.v1.ListingsService.IsFavorite:output_type -> listings.v1.IsFavoriteResponse
-	43,  // 145: listings.v1.ListingsService.GetStorefront:output_type -> listings.v1.StorefrontResponse
-	43,  // 146: listings.v1.ListingsService.GetStorefrontBySlug:output_type -> listings.v1.StorefrontResponse
-	45,  // 147: listings.v1.ListingsService.ListStorefronts:output_type -> listings.v1.ListStorefrontsResponse
-	111, // 148: listings.v1.ListingsService.CreateVariants:output_type -> google.protobuf.Empty
-	48,  // 149: listings.v1.ListingsService.GetVariants:output_type -> listings.v1.VariantsResponse
-	111, // 150: listings.v1.ListingsService.UpdateVariant:output_type -> google.protobuf.Empty
-	111, // 151: listings.v1.ListingsService.DeleteVariant:output_type -> google.protobuf.Empty
-	52,  // 152: listings.v1.ListingsService.GetListingsForReindex:output_type -> listings.v1.ListingsResponse
-	111, // 153: listings.v1.ListingsService.ResetReindexFlags:output_type -> google.protobuf.Empty
-	111, // 154: listings.v1.ListingsService.SyncDiscounts:output_type -> google.protobuf.Empty
-	55,  // 155: listings.v1.ListingsService.GetProduct:output_type -> listings.v1.ProductResponse
-	57,  // 156: listings.v1.ListingsService.GetProductsBySKUs:output_type -> listings.v1.ProductsResponse
-	57,  // 157: listings.v1.ListingsService.GetProductsByIDs:output_type -> listings.v1.ProductsResponse
-	57,  // 158: listings.v1.ListingsService.ListProducts:output_type -> listings.v1.ProductsResponse
-	61,  // 159: listings.v1.ListingsService.GetVariant:output_type -> listings.v1.VariantResponse
-	63,  // 160: listings.v1.ListingsService.GetVariantsByProductID:output_type -> listings.v1.ProductVariantsResponse
-	67,  // 161: listings.v1.ListingsService.DecrementStock:output_type -> listings.v1.DecrementStockResponse
-	69,  // 162: listings.v1.ListingsService.RollbackStock:output_type -> listings.v1.RollbackStockResponse
-	72,  // 163: listings.v1.ListingsService.CheckStockAvailability:output_type -> listings.v1.CheckStockAvailabilityResponse
-	55,  // 164: listings.v1.ListingsService.CreateProduct:output_type -> listings.v1.ProductResponse
-	55,  // 165: listings.v1.ListingsService.UpdateProduct:output_type -> listings.v1.ProductResponse
-	76,  // 166: listings.v1.ListingsService.DeleteProduct:output_type -> listings.v1.DeleteProductResponse
-	79,  // 167: listings.v1.ListingsService.BulkCreateProducts:output_type -> listings.v1.BulkCreateProductsResponse
-	82,  // 168: listings.v1.ListingsService.BulkUpdateProducts:output_type -> listings.v1.BulkUpdateProductsResponse
-	84,  // 169: listings.v1.ListingsService.BulkDeleteProducts:output_type -> listings.v1.BulkDeleteProductsResponse
-	61,  // 170: listings.v1.ListingsService.CreateProductVariant:output_type -> listings.v1.VariantResponse
-	61,  // 171: listings.v1.ListingsService.UpdateProductVariant:output_type -> listings.v1.VariantResponse
-	89,  // 172: listings.v1.ListingsService.DeleteProductVariant:output_type -> listings.v1.DeleteProductVariantResponse
-	92,  // 173: listings.v1.ListingsService.BulkCreateProductVariants:output_type -> listings.v1.BulkCreateProductVariantsResponse
-	94,  // 174: listings.v1.ListingsService.RecordInventoryMovement:output_type -> listings.v1.RecordInventoryMovementResponse
-	98,  // 175: listings.v1.ListingsService.BatchUpdateStock:output_type -> listings.v1.BatchUpdateStockResponse
-	101, // 176: listings.v1.ListingsService.GetProductStats:output_type -> listings.v1.GetProductStatsResponse
-	111, // 177: listings.v1.ListingsService.IncrementProductViews:output_type -> google.protobuf.Empty
-	124, // [124:178] is the sub-list for method output_type
-	70,  // [70:124] is the sub-list for method input_type
+	103, // 124: listings.v1.ListingsService.ReindexAll:input_type -> listings.v1.ReindexAllRequest
+	10,  // 125: listings.v1.ListingsService.GetListing:output_type -> listings.v1.GetListingResponse
+	12,  // 126: listings.v1.ListingsService.CreateListing:output_type -> listings.v1.CreateListingResponse
+	14,  // 127: listings.v1.ListingsService.UpdateListing:output_type -> listings.v1.UpdateListingResponse
+	16,  // 128: listings.v1.ListingsService.DeleteListing:output_type -> listings.v1.DeleteListingResponse
+	18,  // 129: listings.v1.ListingsService.SearchListings:output_type -> listings.v1.SearchListingsResponse
+	20,  // 130: listings.v1.ListingsService.ListListings:output_type -> listings.v1.ListListingsResponse
+	22,  // 131: listings.v1.ListingsService.GetListingImage:output_type -> listings.v1.ImageResponse
+	113, // 132: listings.v1.ListingsService.DeleteListingImage:output_type -> google.protobuf.Empty
+	22,  // 133: listings.v1.ListingsService.AddListingImage:output_type -> listings.v1.ImageResponse
+	25,  // 134: listings.v1.ListingsService.GetListingImages:output_type -> listings.v1.ImagesResponse
+	113, // 135: listings.v1.ListingsService.ReorderListingImages:output_type -> google.protobuf.Empty
+	29,  // 136: listings.v1.ListingsService.GetRootCategories:output_type -> listings.v1.CategoriesResponse
+	29,  // 137: listings.v1.ListingsService.GetAllCategories:output_type -> listings.v1.CategoriesResponse
+	29,  // 138: listings.v1.ListingsService.GetPopularCategories:output_type -> listings.v1.CategoriesResponse
+	31,  // 139: listings.v1.ListingsService.GetCategory:output_type -> listings.v1.CategoryResponse
+	32,  // 140: listings.v1.ListingsService.GetCategoryTree:output_type -> listings.v1.CategoryTreeResponse
+	33,  // 141: listings.v1.ListingsService.GetFavoritedUsers:output_type -> listings.v1.UserIDsResponse
+	113, // 142: listings.v1.ListingsService.AddToFavorites:output_type -> google.protobuf.Empty
+	113, // 143: listings.v1.ListingsService.RemoveFromFavorites:output_type -> google.protobuf.Empty
+	37,  // 144: listings.v1.ListingsService.GetUserFavorites:output_type -> listings.v1.GetUserFavoritesResponse
+	39,  // 145: listings.v1.ListingsService.IsFavorite:output_type -> listings.v1.IsFavoriteResponse
+	43,  // 146: listings.v1.ListingsService.GetStorefront:output_type -> listings.v1.StorefrontResponse
+	43,  // 147: listings.v1.ListingsService.GetStorefrontBySlug:output_type -> listings.v1.StorefrontResponse
+	45,  // 148: listings.v1.ListingsService.ListStorefronts:output_type -> listings.v1.ListStorefrontsResponse
+	113, // 149: listings.v1.ListingsService.CreateVariants:output_type -> google.protobuf.Empty
+	48,  // 150: listings.v1.ListingsService.GetVariants:output_type -> listings.v1.VariantsResponse
+	113, // 151: listings.v1.ListingsService.UpdateVariant:output_type -> google.protobuf.Empty
+	113, // 152: listings.v1.ListingsService.DeleteVariant:output_type -> google.protobuf.Empty
+	52,  // 153: listings.v1.ListingsService.GetListingsForReindex:output_type -> listings.v1.ListingsResponse
+	113, // 154: listings.v1.ListingsService.ResetReindexFlags:output_type -> google.protobuf.Empty
+	113, // 155: listings.v1.ListingsService.SyncDiscounts:output_type -> google.protobuf.Empty
+	55,  // 156: listings.v1.ListingsService.GetProduct:output_type -> listings.v1.ProductResponse
+	57,  // 157: listings.v1.ListingsService.GetProductsBySKUs:output_type -> listings.v1.ProductsResponse
+	57,  // 158: listings.v1.ListingsService.GetProductsByIDs:output_type -> listings.v1.ProductsResponse
+	57,  // 159: listings.v1.ListingsService.ListProducts:output_type -> listings.v1.ProductsResponse
+	61,  // 160: listings.v1.ListingsService.GetVariant:output_type -> listings.v1.VariantResponse
+	63,  // 161: listings.v1.ListingsService.GetVariantsByProductID:output_type -> listings.v1.ProductVariantsResponse
+	67,  // 162: listings.v1.ListingsService.DecrementStock:output_type -> listings.v1.DecrementStockResponse
+	69,  // 163: listings.v1.ListingsService.RollbackStock:output_type -> listings.v1.RollbackStockResponse
+	72,  // 164: listings.v1.ListingsService.CheckStockAvailability:output_type -> listings.v1.CheckStockAvailabilityResponse
+	55,  // 165: listings.v1.ListingsService.CreateProduct:output_type -> listings.v1.ProductResponse
+	55,  // 166: listings.v1.ListingsService.UpdateProduct:output_type -> listings.v1.ProductResponse
+	76,  // 167: listings.v1.ListingsService.DeleteProduct:output_type -> listings.v1.DeleteProductResponse
+	79,  // 168: listings.v1.ListingsService.BulkCreateProducts:output_type -> listings.v1.BulkCreateProductsResponse
+	82,  // 169: listings.v1.ListingsService.BulkUpdateProducts:output_type -> listings.v1.BulkUpdateProductsResponse
+	84,  // 170: listings.v1.ListingsService.BulkDeleteProducts:output_type -> listings.v1.BulkDeleteProductsResponse
+	61,  // 171: listings.v1.ListingsService.CreateProductVariant:output_type -> listings.v1.VariantResponse
+	61,  // 172: listings.v1.ListingsService.UpdateProductVariant:output_type -> listings.v1.VariantResponse
+	89,  // 173: listings.v1.ListingsService.DeleteProductVariant:output_type -> listings.v1.DeleteProductVariantResponse
+	92,  // 174: listings.v1.ListingsService.BulkCreateProductVariants:output_type -> listings.v1.BulkCreateProductVariantsResponse
+	94,  // 175: listings.v1.ListingsService.RecordInventoryMovement:output_type -> listings.v1.RecordInventoryMovementResponse
+	98,  // 176: listings.v1.ListingsService.BatchUpdateStock:output_type -> listings.v1.BatchUpdateStockResponse
+	101, // 177: listings.v1.ListingsService.GetProductStats:output_type -> listings.v1.GetProductStatsResponse
+	113, // 178: listings.v1.ListingsService.IncrementProductViews:output_type -> google.protobuf.Empty
+	104, // 179: listings.v1.ListingsService.ReindexAll:output_type -> listings.v1.ReindexAllResponse
+	125, // [125:180] is the sub-list for method output_type
+	70,  // [70:125] is the sub-list for method input_type
 	70,  // [70:70] is the sub-list for extension type_name
 	70,  // [70:70] is the sub-list for extension extendee
 	0,   // [0:70] is the sub-list for field type_name
@@ -9302,13 +9442,14 @@ func file_api_proto_listings_v1_listings_proto_init() {
 	file_api_proto_listings_v1_listings_proto_msgTypes[95].OneofWrappers = []any{}
 	file_api_proto_listings_v1_listings_proto_msgTypes[96].OneofWrappers = []any{}
 	file_api_proto_listings_v1_listings_proto_msgTypes[97].OneofWrappers = []any{}
+	file_api_proto_listings_v1_listings_proto_msgTypes[103].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_listings_v1_listings_proto_rawDesc), len(file_api_proto_listings_v1_listings_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   108,
+			NumMessages:   110,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

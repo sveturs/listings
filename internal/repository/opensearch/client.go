@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	"github.com/rs/zerolog"
@@ -77,6 +78,18 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		"created_at":      listing.CreatedAt,
 		"updated_at":      listing.UpdatedAt,
 		"published_at":    listing.PublishedAt,
+	}
+
+	// Add images if present
+	if len(listing.Images) > 0 {
+		images := make([]map[string]interface{}, 0, len(listing.Images))
+		for _, img := range listing.Images {
+			images = append(images, map[string]interface{}{
+				"public_url": img.URL,
+				"is_main":    img.IsPrimary,
+			})
+		}
+		doc["images"] = images
 	}
 
 	body, err := json.Marshal(doc)
@@ -422,6 +435,248 @@ func (c *Client) GetListingByID(ctx context.Context, listingID int64) (*domain.L
 	}
 
 	return listing, nil
+}
+
+// IndexProduct indexes a single B2C product in OpenSearch
+// Used for real-time indexing when product is created
+func (c *Client) IndexProduct(ctx context.Context, product *domain.Listing) error {
+	if product == nil {
+		return fmt.Errorf("product cannot be nil")
+	}
+
+	// Prepare document for indexing (similar format to C2C listings for unified index)
+	doc := c.buildProductDocument(product)
+
+	body, err := json.Marshal(doc)
+	if err != nil {
+		c.logger.Error().Err(err).Int64("product_id", product.ID).Msg("failed to marshal product document")
+		return fmt.Errorf("failed to marshal product document: %w", err)
+	}
+
+	// Index document
+	res, err := c.client.Index(
+		c.index,
+		bytes.NewReader(body),
+		c.client.Index.WithContext(ctx),
+		c.client.Index.WithDocumentID(fmt.Sprintf("%d", product.ID)),
+		c.client.Index.WithRefresh("false"), // Async refresh for performance
+	)
+
+	if err != nil {
+		c.logger.Error().Err(err).Int64("product_id", product.ID).Msg("failed to index product")
+		return fmt.Errorf("failed to index product: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		c.logger.Error().Int("status", res.StatusCode).Int64("product_id", product.ID).Msg("OpenSearch index error")
+		return fmt.Errorf("OpenSearch index error: %s", res.Status())
+	}
+
+	c.logger.Debug().Int64("product_id", product.ID).Msg("product indexed successfully")
+	return nil
+}
+
+// UpdateProduct updates a B2C product document in OpenSearch
+// Used for real-time updates when product is modified
+func (c *Client) UpdateProduct(ctx context.Context, product *domain.Listing) error {
+	// For simplicity, re-index the entire document
+	// In production, you might want partial updates for efficiency
+	return c.IndexProduct(ctx, product)
+}
+
+// DeleteProduct removes a B2C product from OpenSearch index
+// Used for real-time deletion when product is deleted
+func (c *Client) DeleteProduct(ctx context.Context, productID int64) error {
+	res, err := c.client.Delete(
+		c.index,
+		fmt.Sprintf("%d", productID),
+		c.client.Delete.WithContext(ctx),
+	)
+
+	if err != nil {
+		c.logger.Error().Err(err).Int64("product_id", productID).Msg("failed to delete product from index")
+		return fmt.Errorf("failed to delete product: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() && res.StatusCode != 404 {
+		c.logger.Error().Int("status", res.StatusCode).Int64("product_id", productID).Msg("OpenSearch delete error")
+		return fmt.Errorf("OpenSearch delete error: %s", res.Status())
+	}
+
+	c.logger.Debug().Int64("product_id", productID).Msg("product deleted from index")
+	return nil
+}
+
+// BulkIndexProducts indexes multiple products in a single bulk request
+// Used for batch operations and reindexing
+// Recommended batch size: 100-1000 products
+func (c *Client) BulkIndexProducts(ctx context.Context, products []*domain.Listing) error {
+	if len(products) == 0 {
+		return nil
+	}
+
+	c.logger.Debug().Int("count", len(products)).Msg("bulk indexing products")
+
+	// Build bulk request body
+	var bulkBody bytes.Buffer
+	for _, product := range products {
+		// Action line (index operation)
+		action := map[string]interface{}{
+			"index": map[string]interface{}{
+				"_index": c.index,
+				"_id":    fmt.Sprintf("%d", product.ID),
+			},
+		}
+
+		actionJSON, err := json.Marshal(action)
+		if err != nil {
+			c.logger.Error().Err(err).Int64("product_id", product.ID).Msg("failed to marshal action")
+			return fmt.Errorf("failed to marshal action for product %d: %w", product.ID, err)
+		}
+		bulkBody.Write(actionJSON)
+		bulkBody.WriteByte('\n')
+
+		// Document line
+		doc := c.buildProductDocument(product)
+		docJSON, err := json.Marshal(doc)
+		if err != nil {
+			c.logger.Error().Err(err).Int64("product_id", product.ID).Msg("failed to marshal document")
+			return fmt.Errorf("failed to marshal document for product %d: %w", product.ID, err)
+		}
+		bulkBody.Write(docJSON)
+		bulkBody.WriteByte('\n')
+	}
+
+	// Execute bulk request
+	res, err := c.client.Bulk(
+		bytes.NewReader(bulkBody.Bytes()),
+		c.client.Bulk.WithContext(ctx),
+	)
+
+	if err != nil {
+		c.logger.Error().Err(err).Int("product_count", len(products)).Msg("bulk index request failed")
+		return fmt.Errorf("bulk index request failed: %w", err)
+	}
+	defer res.Body.Close()
+
+	// Check response
+	if res.IsError() {
+		body, _ := io.ReadAll(res.Body)
+		c.logger.Error().Int("status", res.StatusCode).Str("body", string(body)).Msg("bulk index response error")
+		return fmt.Errorf("bulk index response error: %s", res.Status())
+	}
+
+	// Parse response to check for individual errors
+	var bulkResp map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&bulkResp); err != nil {
+		c.logger.Error().Err(err).Msg("failed to parse bulk response")
+		return fmt.Errorf("failed to parse bulk response: %w", err)
+	}
+
+	// Check for errors in bulk response
+	if errors, ok := bulkResp["errors"].(bool); ok && errors {
+		c.logger.Warn().Msg("some items in bulk request failed")
+		// Log individual errors but don't fail the entire operation
+		if items, ok := bulkResp["items"].([]interface{}); ok {
+			for i, item := range items {
+				if itemMap, ok := item.(map[string]interface{}); ok {
+					for action, details := range itemMap {
+						if detailsMap, ok := details.(map[string]interface{}); ok {
+							if errorInfo, hasError := detailsMap["error"]; hasError {
+								c.logger.Warn().
+									Int("index", i).
+									Str("action", action).
+									Interface("error", errorInfo).
+									Msg("bulk item error")
+							}
+						}
+					}
+				}
+			}
+		}
+		return fmt.Errorf("some items in bulk request failed (see logs)")
+	}
+
+	c.logger.Info().Int("count", len(products)).Msg("bulk index completed successfully")
+	return nil
+}
+
+// buildProductDocument builds an OpenSearch document from a product/listing
+// Formats document to match the unified index structure used by monolith
+func (c *Client) buildProductDocument(product *domain.Listing) map[string]interface{} {
+	doc := map[string]interface{}{
+		"id":              product.ID,
+		"uuid":            product.UUID,
+		"source_type":     product.SourceType, // "b2c" or "c2c"
+		"document_type":   "listing",          // Required for unified search
+		"title":           product.Title,
+		"price":           product.Price,
+		"currency":        product.Currency,
+		"category_id":     product.CategoryID,
+		"status":          product.Status,
+		"visibility":      product.Visibility,
+		"views_count":     product.ViewsCount,
+		"favorites_count": product.FavoritesCount,
+		"created_at":      product.CreatedAt,
+		"updated_at":      product.UpdatedAt,
+	}
+
+	// Optional fields
+	if product.Description != nil {
+		doc["description"] = *product.Description
+	}
+	if product.StorefrontID != nil {
+		doc["storefront_id"] = *product.StorefrontID
+	}
+	if product.SKU != nil {
+		doc["sku"] = *product.SKU
+	}
+	if product.StockStatus != nil {
+		doc["stock_status"] = *product.StockStatus
+	}
+	if product.AttributesJSON != nil {
+		doc["attributes"] = *product.AttributesJSON
+	}
+	if product.PublishedAt != nil {
+		doc["published_at"] = *product.PublishedAt
+	}
+
+	// Add images if present
+	if len(product.Images) > 0 {
+		images := make([]map[string]interface{}, 0, len(product.Images))
+		for _, img := range product.Images {
+			images = append(images, map[string]interface{}{
+				"id":        img.ID,
+				"file_path": img.URL,
+				"is_main":   img.IsPrimary,
+			})
+		}
+		doc["images"] = images
+	}
+
+	// Add location if present (B2C products may have individual locations)
+	if product.Location != nil {
+		loc := product.Location
+		if loc.Latitude != nil && loc.Longitude != nil {
+			doc["has_individual_location"] = true
+			doc["individual_latitude"] = *loc.Latitude
+			doc["individual_longitude"] = *loc.Longitude
+			doc["location"] = map[string]interface{}{
+				"lat": *loc.Latitude,
+				"lon": *loc.Longitude,
+			}
+		}
+		if loc.Country != nil {
+			doc["country"] = *loc.Country
+		}
+		if loc.City != nil {
+			doc["city"] = *loc.City
+		}
+	}
+
+	return doc
 }
 
 // GetClient returns the underlying OpenSearch client for advanced usage

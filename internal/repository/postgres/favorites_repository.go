@@ -9,7 +9,7 @@ import (
 func (r *Repository) GetFavoritedUsers(ctx context.Context, listingID int64) ([]int64, error) {
 	query := `
 		SELECT DISTINCT user_id
-		FROM c2c_favorites
+		FROM listing_favorites
 		WHERE listing_id = $1
 		ORDER BY user_id ASC
 	`
@@ -41,7 +41,7 @@ func (r *Repository) GetFavoritedUsers(ctx context.Context, listingID int64) ([]
 // AddToFavorites adds a listing to user's favorites
 func (r *Repository) AddToFavorites(ctx context.Context, userID, listingID int64) error {
 	query := `
-		INSERT INTO c2c_favorites (user_id, listing_id)
+		INSERT INTO listing_favorites (user_id, listing_id)
 		VALUES ($1, $2)
 		ON CONFLICT (user_id, listing_id) DO NOTHING
 	`
@@ -59,7 +59,7 @@ func (r *Repository) AddToFavorites(ctx context.Context, userID, listingID int64
 // RemoveFromFavorites removes a listing from user's favorites
 func (r *Repository) RemoveFromFavorites(ctx context.Context, userID, listingID int64) error {
 	query := `
-		DELETE FROM c2c_favorites
+		DELETE FROM listing_favorites
 		WHERE user_id = $1 AND listing_id = $2
 	`
 
@@ -78,7 +78,7 @@ func (r *Repository) RemoveFromFavorites(ctx context.Context, userID, listingID 
 func (r *Repository) GetUserFavorites(ctx context.Context, userID int64) ([]int64, error) {
 	query := `
 		SELECT listing_id
-		FROM c2c_favorites
+		FROM listing_favorites
 		WHERE user_id = $1
 		ORDER BY created_at DESC
 	`
@@ -111,7 +111,7 @@ func (r *Repository) GetUserFavorites(ctx context.Context, userID int64) ([]int6
 func (r *Repository) IsFavorite(ctx context.Context, userID, listingID int64) (bool, error) {
 	query := `
 		SELECT EXISTS(
-			SELECT 1 FROM c2c_favorites
+			SELECT 1 FROM listing_favorites
 			WHERE user_id = $1 AND listing_id = $2
 		)
 	`
@@ -128,7 +128,7 @@ func (r *Repository) IsFavorite(ctx context.Context, userID, listingID int64) (b
 
 // GetCountByListing returns the total count of users who favorited a listing
 func (r *Repository) GetCountByListing(ctx context.Context, listingID int64) (int64, error) {
-	query := `SELECT COUNT(*) FROM c2c_favorites WHERE listing_id = $1`
+	query := `SELECT COUNT(*) FROM listing_favorites WHERE listing_id = $1`
 
 	var count int64
 	err := r.db.QueryRowxContext(ctx, query, listingID).Scan(&count)
@@ -142,7 +142,7 @@ func (r *Repository) GetCountByListing(ctx context.Context, listingID int64) (in
 
 // GetCountByUser returns the total count of listings favorited by a user
 func (r *Repository) GetCountByUser(ctx context.Context, userID int64) (int64, error) {
-	query := `SELECT COUNT(*) FROM c2c_favorites WHERE user_id = $1`
+	query := `SELECT COUNT(*) FROM listing_favorites WHERE user_id = $1`
 
 	var count int64
 	err := r.db.QueryRowxContext(ctx, query, userID).Scan(&count)
@@ -163,7 +163,7 @@ func (r *Repository) BatchCheckFavorites(ctx context.Context, userID int64, list
 
 	query := `
 		SELECT listing_id
-		FROM c2c_favorites
+		FROM listing_favorites
 		WHERE user_id = $1 AND listing_id = ANY($2::bigint[])
 	`
 

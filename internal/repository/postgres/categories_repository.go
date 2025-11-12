@@ -16,7 +16,7 @@ func (r *Repository) GetRootCategories(ctx context.Context) ([]*domain.Category,
 			is_active, created_at, sort_order, level,
 			has_custom_ui, custom_ui_component,
 			COALESCE((SELECT COUNT(*) FROM listings WHERE category_id = mc.id AND status = 'active'), 0) as listing_count
-		FROM c2c_categories mc
+		FROM categories mc
 		WHERE is_active = true AND parent_id IS NULL
 		ORDER BY sort_order ASC, name ASC
 	`
@@ -86,7 +86,7 @@ func (r *Repository) GetAllCategories(ctx context.Context) ([]*domain.Category, 
 			is_active, created_at, sort_order, level,
 			has_custom_ui, custom_ui_component,
 			COALESCE((SELECT COUNT(*) FROM listings WHERE category_id = mc.id AND status = 'active'), 0) as listing_count
-		FROM c2c_categories mc
+		FROM categories mc
 		WHERE is_active = true
 		ORDER BY sort_order ASC, name ASC
 	`
@@ -160,7 +160,7 @@ func (r *Repository) GetPopularCategories(ctx context.Context, limit int) ([]*do
 			mc.is_active, mc.created_at, mc.sort_order, mc.level,
 			mc.has_custom_ui, mc.custom_ui_component,
 			COUNT(l.id) as listing_count
-		FROM c2c_categories mc
+		FROM categories mc
 		LEFT JOIN listings l ON l.category_id = mc.id AND l.status = 'active' AND l.is_deleted = false
 		WHERE mc.is_active = true
 		GROUP BY mc.id, mc.name, mc.slug, mc.parent_id, mc.icon, mc.description,
@@ -238,7 +238,7 @@ func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*do
 			is_active, created_at, sort_order, level,
 			has_custom_ui, custom_ui_component,
 			COALESCE((SELECT COUNT(*) FROM listings WHERE category_id = mc.id AND status = 'active'), 0) as listing_count
-		FROM c2c_categories mc
+		FROM categories mc
 		WHERE id = $1
 	`
 

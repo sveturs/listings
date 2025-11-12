@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -151,6 +152,9 @@ type HealthConfig struct {
 
 // Load reads configuration from environment variables
 func Load() (*Config, error) {
+	// Load .env file (ignore error if file doesn't exist - OK for production)
+	_ = godotenv.Load()
+
 	var cfg Config
 
 	if err := envconfig.Process("", &cfg); err != nil {

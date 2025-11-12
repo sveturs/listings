@@ -74,6 +74,7 @@ const (
 	ListingsService_BatchUpdateStock_FullMethodName          = "/listings.v1.ListingsService/BatchUpdateStock"
 	ListingsService_GetProductStats_FullMethodName           = "/listings.v1.ListingsService/GetProductStats"
 	ListingsService_IncrementProductViews_FullMethodName     = "/listings.v1.ListingsService/IncrementProductViews"
+	ListingsService_ReindexAll_FullMethodName                = "/listings.v1.ListingsService/ReindexAll"
 )
 
 // ListingsServiceClient is the client API for ListingsService service.
@@ -206,6 +207,9 @@ type ListingsServiceClient interface {
 	// IncrementProductViews increments view counter for analytics
 	// Used when customer views product detail page
 	IncrementProductViews(ctx context.Context, in *IncrementProductViewsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ReindexAll performs full reindexing of all products to OpenSearch
+	// Used for rebuilding search index after schema changes or data migration
+	ReindexAll(ctx context.Context, in *ReindexAllRequest, opts ...grpc.CallOption) (*ReindexAllResponse, error)
 }
 
 type listingsServiceClient struct {
@@ -756,6 +760,16 @@ func (c *listingsServiceClient) IncrementProductViews(ctx context.Context, in *I
 	return out, nil
 }
 
+func (c *listingsServiceClient) ReindexAll(ctx context.Context, in *ReindexAllRequest, opts ...grpc.CallOption) (*ReindexAllResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReindexAllResponse)
+	err := c.cc.Invoke(ctx, ListingsService_ReindexAll_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ListingsServiceServer is the server API for ListingsService service.
 // All implementations must embed UnimplementedListingsServiceServer
 // for forward compatibility.
@@ -886,6 +900,9 @@ type ListingsServiceServer interface {
 	// IncrementProductViews increments view counter for analytics
 	// Used when customer views product detail page
 	IncrementProductViews(context.Context, *IncrementProductViewsRequest) (*emptypb.Empty, error)
+	// ReindexAll performs full reindexing of all products to OpenSearch
+	// Used for rebuilding search index after schema changes or data migration
+	ReindexAll(context.Context, *ReindexAllRequest) (*ReindexAllResponse, error)
 	mustEmbedUnimplementedListingsServiceServer()
 }
 
@@ -1057,6 +1074,9 @@ func (UnimplementedListingsServiceServer) GetProductStats(context.Context, *GetP
 }
 func (UnimplementedListingsServiceServer) IncrementProductViews(context.Context, *IncrementProductViewsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IncrementProductViews not implemented")
+}
+func (UnimplementedListingsServiceServer) ReindexAll(context.Context, *ReindexAllRequest) (*ReindexAllResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReindexAll not implemented")
 }
 func (UnimplementedListingsServiceServer) mustEmbedUnimplementedListingsServiceServer() {}
 func (UnimplementedListingsServiceServer) testEmbeddedByValue()                         {}
@@ -2051,6 +2071,24 @@ func _ListingsService_IncrementProductViews_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_ReindexAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReindexAllRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ReindexAll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ReindexAll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ReindexAll(ctx, req.(*ReindexAllRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ListingsService_ServiceDesc is the grpc.ServiceDesc for ListingsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -2273,6 +2311,10 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "IncrementProductViews",
 			Handler:    _ListingsService_IncrementProductViews_Handler,
+		},
+		{
+			MethodName: "ReindexAll",
+			Handler:    _ListingsService_ReindexAll_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
