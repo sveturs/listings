@@ -16,45 +16,43 @@ const (
 )
 
 type Config struct {
-	Port                      string
-	DatabaseURL               string
-	GoogleClientID            string
-	GoogleClientSecret        string
-	GoogleRedirectURL         string
-	FrontendURL               string
-	AuthServiceURL            string
-	AuthServicePublicKeyPath  string // Path to auth service public key for JWT validation
-	BackendURL                string
-	Environment               string
-	LogLevel                  string `yaml:"log_level"`
-	OpenAIAPIKey              string
-	GoogleTranslateAPIKey     string
-	ClaudeAPIKey              string
-	DeepLAPIKey               string
-	DeepLUseFreeAPI           bool `yaml:"deepl_use_free_api"`
-	StripeAPIKey              string
-	StripeWebhookSecret       string
-	OpenSearch                OpenSearchConfig  `yaml:"opensearch"`
-	FileStorage               FileStorageConfig `yaml:"file_storage"`
-	FileUpload                FileUploadConfig  `yaml:"file_upload"`
-	MinIOPublicURL            string
-	Docs                      DocsConfig        `yaml:"docs"`
-	AllSecure                 AllSecureConfig   `yaml:"allsecure"`
-	PostExpress               PostExpressConfig `yaml:"postexpress"`
-	BEXAuthToken              string            `yaml:"bex_auth_token"`
-	BEXClientID               string            `yaml:"bex_client_id"`
-	BEXAPIURL                 string            `yaml:"bex_api_url"`
-	SearchWeights             *SearchWeights    `yaml:"search_weights"`
-	Redis                     RedisConfig       `yaml:"redis"`
-	MigrationsOnAPI           string            `yaml:"migrations_on_api"` // off, schema, full
-	ReindexOnAPI              string            `yaml:"reindex_on_api"`    // on
-	FeatureFlags              *FeatureFlags     `yaml:"feature_flags"`
-	Currency                  CurrencyConfig    `yaml:"currency"`
-	DeliveryGRPCURL           string            `yaml:"delivery_grpc_url"`            // URL для delivery микросервиса через gRPC
-	ListingsGRPCURL           string            `yaml:"listings_grpc_url"`            // URL для listings микросервиса через gRPC
-	UseListingsMicroservice   bool              `yaml:"use_listings_microservice"`    // Feature flag для включения listings микросервиса
-	EnableListingsProductCRUD bool              `yaml:"enable_listings_product_crud"` // Feature flag для Product CRUD через listings microservice
-	Marketplace               MarketplaceConfig `yaml:"marketplace"`                  // Marketplace microservice migration config
+	Port                     string
+	DatabaseURL              string
+	GoogleClientID           string
+	GoogleClientSecret       string
+	GoogleRedirectURL        string
+	FrontendURL              string
+	AuthServiceURL           string
+	AuthServicePublicKeyPath string // Path to auth service public key for JWT validation
+	BackendURL               string
+	Environment              string
+	LogLevel                 string `yaml:"log_level"`
+	OpenAIAPIKey             string
+	GoogleTranslateAPIKey    string
+	ClaudeAPIKey             string
+	DeepLAPIKey              string
+	DeepLUseFreeAPI          bool `yaml:"deepl_use_free_api"`
+	StripeAPIKey             string
+	StripeWebhookSecret      string
+	OpenSearch               OpenSearchConfig  `yaml:"opensearch"`
+	FileStorage              FileStorageConfig `yaml:"file_storage"`
+	FileUpload               FileUploadConfig  `yaml:"file_upload"`
+	MinIOPublicURL           string
+	Docs                     DocsConfig        `yaml:"docs"`
+	AllSecure                AllSecureConfig   `yaml:"allsecure"`
+	PostExpress              PostExpressConfig `yaml:"postexpress"`
+	BEXAuthToken             string            `yaml:"bex_auth_token"`
+	BEXClientID              string            `yaml:"bex_client_id"`
+	BEXAPIURL                string            `yaml:"bex_api_url"`
+	SearchWeights            *SearchWeights    `yaml:"search_weights"`
+	Redis                    RedisConfig       `yaml:"redis"`
+	MigrationsOnAPI          string            `yaml:"migrations_on_api"` // off, schema, full
+	ReindexOnAPI             string            `yaml:"reindex_on_api"`    // on
+	FeatureFlags             *FeatureFlags     `yaml:"feature_flags"`
+	Currency                 CurrencyConfig    `yaml:"currency"`
+	DeliveryGRPCURL          string            `yaml:"delivery_grpc_url"` // URL для delivery микросервиса через gRPC
+	Listings                 ListingsConfig    `yaml:"listings"`          // Listings microservice configuration
+	Marketplace              MarketplaceConfig `yaml:"marketplace"`       // Marketplace microservice migration config
 }
 
 type FileStorageConfig struct {
@@ -106,6 +104,30 @@ type RedisConfig struct {
 }
 
 // MarketplaceConfig содержит настройки для миграции marketplace на microservice
+// ListingsConfig содержит настройки для listings microservice integration
+type ListingsConfig struct {
+	// Feature flag для включения listings microservice
+	UseMicroservice bool `yaml:"use_microservice" envconfig:"USE_LISTINGS_MICROSERVICE" default:"false"`
+
+	// gRPC endpoint
+	GRPCURL string `yaml:"grpc_url" envconfig:"LISTINGS_GRPC_URL" default:"localhost:50051"`
+
+	// HTTP endpoint (fallback if gRPC unavailable)
+	HTTPURL string `yaml:"http_url" envconfig:"LISTINGS_HTTP_URL" default:"http://localhost:8086"`
+
+	// Timeout для запросов к microservice
+	Timeout time.Duration `yaml:"timeout" envconfig:"LISTINGS_TIMEOUT" default:"10s"`
+
+	// Количество попыток retry при ошибках
+	RetryAttempts int `yaml:"retry_attempts" envconfig:"LISTINGS_RETRY_ATTEMPTS" default:"3"`
+
+	// Fallback на monolith при ошибках microservice
+	EnableFallback bool `yaml:"enable_fallback" envconfig:"LISTINGS_ENABLE_FALLBACK" default:"true"`
+
+	// Feature flag для Product CRUD через listings microservice
+	EnableProductCRUD bool `yaml:"enable_product_crud" envconfig:"ENABLE_LISTINGS_PRODUCT_CRUD" default:"false"`
+}
+
 type MarketplaceConfig struct {
 	// Feature flag для включения microservice
 	// Default: true (100% microservice for dev environment)
@@ -272,17 +294,35 @@ func NewConfig() (*Config, error) {
 	// Delivery gRPC service configuration (required in .env)
 	config.DeliveryGRPCURL = os.Getenv("DELIVERY_GRPC_URL")
 
-	// Listings gRPC service configuration (optional - feature flag controlled)
-	config.ListingsGRPCURL = os.Getenv("LISTINGS_GRPC_URL")
-	if config.ListingsGRPCURL == "" {
-		config.ListingsGRPCURL = "localhost:50051" // Default gRPC port
+	// Listings microservice configuration
+	listingsConfig := ListingsConfig{
+		UseMicroservice:   os.Getenv("USE_LISTINGS_MICROSERVICE") == envValueTrue,
+		GRPCURL:           getEnvOrDefault("LISTINGS_GRPC_URL", "localhost:50051"),
+		HTTPURL:           getEnvOrDefault("LISTINGS_HTTP_URL", "http://localhost:8086"),
+		Timeout:           10 * time.Second,
+		RetryAttempts:     3,
+		EnableFallback:    true,
+		EnableProductCRUD: os.Getenv("ENABLE_LISTINGS_PRODUCT_CRUD") == envValueTrue,
 	}
 
-	// Feature flag для использования listings микросервиса (по умолчанию false - используем local DB)
-	config.UseListingsMicroservice = os.Getenv("USE_LISTINGS_MICROSERVICE") == envValueTrue
+	// Парсим timeout
+	if timeoutStr := os.Getenv("LISTINGS_TIMEOUT"); timeoutStr != "" {
+		if timeout, err := time.ParseDuration(timeoutStr); err == nil && timeout > 0 {
+			listingsConfig.Timeout = timeout
+		}
+	}
 
-	// Feature flag для Product CRUD через listings microservice (по умолчанию false - безопасный rollout)
-	config.EnableListingsProductCRUD = os.Getenv("ENABLE_LISTINGS_PRODUCT_CRUD") == envValueTrue
+	// Парсим retry attempts
+	if retriesStr := os.Getenv("LISTINGS_RETRY_ATTEMPTS"); retriesStr != "" {
+		if retries, err := strconv.Atoi(retriesStr); err == nil && retries > 0 {
+			listingsConfig.RetryAttempts = retries
+		}
+	}
+
+	// Парсим fallback flag
+	if fallbackStr := os.Getenv("LISTINGS_ENABLE_FALLBACK"); fallbackStr != "" {
+		listingsConfig.EnableFallback = fallbackStr == envValueTrue
+	}
 
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
@@ -592,46 +632,52 @@ func NewConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port:                      port,
-		DatabaseURL:               dbURL,
-		GoogleClientID:            googleClientID,
-		GoogleClientSecret:        googleClientSecret,
-		GoogleRedirectURL:         googleRedirectURL,
-		FrontendURL:               frontendURL,
-		Environment:               environment,
-		LogLevel:                  logLevel,
-		OpenAIAPIKey:              openAIAPIKey,
-		GoogleTranslateAPIKey:     config.GoogleTranslateAPIKey,
-		ClaudeAPIKey:              config.ClaudeAPIKey,
-		DeepLAPIKey:               config.DeepLAPIKey,
-		DeepLUseFreeAPI:           config.DeepLUseFreeAPI,
-		StripeAPIKey:              config.StripeAPIKey,
-		StripeWebhookSecret:       config.StripeWebhookSecret,
-		AuthServiceURL:            config.AuthServiceURL,
-		AuthServicePublicKeyPath:  config.AuthServicePublicKeyPath,
-		BackendURL:                config.BackendURL,
-		MinIOPublicURL:            config.MinIOPublicURL,
-		DeliveryGRPCURL:           config.DeliveryGRPCURL,
-		ListingsGRPCURL:           config.ListingsGRPCURL,
-		UseListingsMicroservice:   config.UseListingsMicroservice,
-		EnableListingsProductCRUD: config.EnableListingsProductCRUD,
-		OpenSearch:                config.OpenSearch,
-		FileStorage:               config.FileStorage,
-		FileUpload:                fileUploadConfig,
-		Docs:                      docsConfig,
-		AllSecure:                 allSecureConfig,
-		PostExpress:               postExpressConfig,
-		BEXAuthToken:              config.BEXAuthToken,
-		BEXClientID:               config.BEXClientID,
-		BEXAPIURL:                 config.BEXAPIURL,
-		SearchWeights:             searchWeights,
-		Redis:                     redisConfig,
-		MigrationsOnAPI:           migrationsOnAPI,
-		ReindexOnAPI:              reindexOnAPI,
-		FeatureFlags:              LoadFeatureFlags(),
-		Currency:                  currencyConfig,
-		Marketplace:               marketplaceConfig,
+		Port:                     port,
+		DatabaseURL:              dbURL,
+		GoogleClientID:           googleClientID,
+		GoogleClientSecret:       googleClientSecret,
+		GoogleRedirectURL:        googleRedirectURL,
+		FrontendURL:              frontendURL,
+		Environment:              environment,
+		LogLevel:                 logLevel,
+		OpenAIAPIKey:             openAIAPIKey,
+		GoogleTranslateAPIKey:    config.GoogleTranslateAPIKey,
+		ClaudeAPIKey:             config.ClaudeAPIKey,
+		DeepLAPIKey:              config.DeepLAPIKey,
+		DeepLUseFreeAPI:          config.DeepLUseFreeAPI,
+		StripeAPIKey:             config.StripeAPIKey,
+		StripeWebhookSecret:      config.StripeWebhookSecret,
+		AuthServiceURL:           config.AuthServiceURL,
+		AuthServicePublicKeyPath: config.AuthServicePublicKeyPath,
+		BackendURL:               config.BackendURL,
+		MinIOPublicURL:           config.MinIOPublicURL,
+		DeliveryGRPCURL:          config.DeliveryGRPCURL,
+		Listings:                 listingsConfig,
+		OpenSearch:               config.OpenSearch,
+		FileStorage:              config.FileStorage,
+		FileUpload:               fileUploadConfig,
+		Docs:                     docsConfig,
+		AllSecure:                allSecureConfig,
+		PostExpress:              postExpressConfig,
+		BEXAuthToken:             config.BEXAuthToken,
+		BEXClientID:              config.BEXClientID,
+		BEXAPIURL:                config.BEXAPIURL,
+		SearchWeights:            searchWeights,
+		Redis:                    redisConfig,
+		MigrationsOnAPI:          migrationsOnAPI,
+		ReindexOnAPI:             reindexOnAPI,
+		FeatureFlags:             LoadFeatureFlags(),
+		Currency:                 currencyConfig,
+		Marketplace:              marketplaceConfig,
 	}, nil
+}
+
+// getEnvOrDefault возвращает значение переменной окружения или default значение
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
 
 // IsProduction проверяет, работает ли приложение в production режиме

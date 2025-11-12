@@ -14,11 +14,7 @@ type MarketplaceStorage interface {
 	GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error)
 	GetCategoryBySlug(ctx context.Context, slug string) (*models.MarketplaceCategory, error)
 
-	// Favorites
-	GetUserFavorites(ctx context.Context, userID int) ([]int, error)
-	AddToFavorites(ctx context.Context, userID, listingID int) error
-	RemoveFromFavorites(ctx context.Context, userID, listingID int) error
-	IsFavorite(ctx context.Context, userID, listingID int) (bool, error)
+	// Favorites - MIGRATED TO MICROSERVICE (removed deprecated methods)
 
 	// Attributes
 	GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error)

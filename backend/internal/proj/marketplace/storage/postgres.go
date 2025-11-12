@@ -114,72 +114,8 @@ func (s *postgresMarketplaceStorage) GetCategoryBySlug(ctx context.Context, slug
 	return &category, nil
 }
 
-// GetUserFavorites получает список ID избранных объявлений пользователя
-func (s *postgresMarketplaceStorage) GetUserFavorites(ctx context.Context, userID int) ([]int, error) {
-	query := `
-		SELECT listing_id
-		FROM c2c_favorites
-		WHERE user_id = $1
-		ORDER BY created_at DESC
-	`
-
-	var listingIDs []int
-	if err := s.db.SelectContext(ctx, &listingIDs, query, userID); err != nil {
-		s.logger.Error().Err(err).Int("user_id", userID).Msg("Failed to get user favorites")
-		return nil, fmt.Errorf("failed to get user favorites: %w", err)
-	}
-
-	return listingIDs, nil
-}
-
-// AddToFavorites добавляет объявление в избранное
-func (s *postgresMarketplaceStorage) AddToFavorites(ctx context.Context, userID, listingID int) error {
-	query := `
-		INSERT INTO c2c_favorites (user_id, listing_id)
-		VALUES ($1, $2)
-		ON CONFLICT (user_id, listing_id) DO NOTHING
-	`
-
-	if _, err := s.db.ExecContext(ctx, query, userID, listingID); err != nil {
-		s.logger.Error().Err(err).Int("user_id", userID).Int("listing_id", listingID).Msg("Failed to add to favorites")
-		return fmt.Errorf("failed to add to favorites: %w", err)
-	}
-
-	return nil
-}
-
-// RemoveFromFavorites удаляет объявление из избранного
-func (s *postgresMarketplaceStorage) RemoveFromFavorites(ctx context.Context, userID, listingID int) error {
-	query := `
-		DELETE FROM c2c_favorites
-		WHERE user_id = $1 AND listing_id = $2
-	`
-
-	if _, err := s.db.ExecContext(ctx, query, userID, listingID); err != nil {
-		s.logger.Error().Err(err).Int("user_id", userID).Int("listing_id", listingID).Msg("Failed to remove from favorites")
-		return fmt.Errorf("failed to remove from favorites: %w", err)
-	}
-
-	return nil
-}
-
-// IsFavorite проверяет, находится ли объявление в избранном
-func (s *postgresMarketplaceStorage) IsFavorite(ctx context.Context, userID, listingID int) (bool, error) {
-	query := `
-		SELECT EXISTS(
-			SELECT 1 FROM c2c_favorites
-			WHERE user_id = $1 AND listing_id = $2
-		)
-	`
-
-	var exists bool
-	if err := s.db.GetContext(ctx, &exists, query, userID, listingID); err != nil {
-		s.logger.Error().Err(err).Int("user_id", userID).Int("listing_id", listingID).Msg("Failed to check favorite")
-		return false, fmt.Errorf("failed to check favorite: %w", err)
-	}
-
-	return exists, nil
-}
+// Favorites methods REMOVED - fully migrated to listings microservice
+// See Phase 14 in PROGRESS.md for migration details
 
 // GetCategoryAttributes получает атрибуты категории
 func (s *postgresMarketplaceStorage) GetCategoryAttributes(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {

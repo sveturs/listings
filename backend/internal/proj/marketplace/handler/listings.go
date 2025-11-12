@@ -1430,3 +1430,94 @@ func (h *Handler) GetListingsStatistics(c *fiber.Ctx) error {
 		"views":   0,
 	})
 }
+
+// DeleteListing godoc
+// @Summary Удалить объявление
+// @Description Удаляет объявление (soft delete). Только владелец объявления или администратор может удалить объявление
+// @Tags marketplace
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path int true "Listing ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object{message=string,listing_id=int,deleted_at=string}}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 403 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/marketplace/listings/{id} [delete]
+func (h *Handler) DeleteListing(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
+		h.logger.Warn().Msg("DeleteListing: user not authenticated")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
+	}
+
+	// Get user roles for admin check
+	roles, hasRoles := authMiddleware.GetRoles(c)
+	isAdmin := false
+	if hasRoles {
+		for _, role := range roles {
+			if role == models.RoleAdmin || role == models.RoleSuperAdmin {
+				isAdmin = true
+				break
+			}
+		}
+	}
+
+	// Parse listing ID from path params
+	idParam := c.Params("id")
+	listingID, err := strconv.Atoi(idParam)
+	if err != nil {
+		h.logger.Error().Err(err).Str("id", idParam).Msg("DeleteListing: invalid listing ID")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_id")
+	}
+
+	// Route to microservice if enabled, otherwise use monolith storage (fallback)
+	if h.useListingsMicroservice && h.listingsClient != nil {
+		// Use microservice via gRPC
+		h.logger.Info().
+			Int("user_id", int(userID)).
+			Int("listing_id", listingID).
+			Bool("is_admin", isAdmin).
+			Msg("Routing DeleteListing to microservice")
+
+		// Call microservice to delete listing (ownership check is done in microservice)
+		grpcCtx := contextWithAuth(c, c.Context())
+		deleteReq := &pb.DeleteListingRequest{
+			Id:      int64(listingID),
+			UserId:  int64(userID),
+			IsAdmin: isAdmin,
+		}
+		_, err = h.listingsClient.DeleteListing(grpcCtx, deleteReq)
+		if err != nil {
+			h.logger.Error().
+				Err(err).
+				Int("listing_id", listingID).
+				Msg("DeleteListing: failed to delete listing via microservice")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.delete_failed")
+		}
+
+		h.logger.Info().
+			Int("listing_id", listingID).
+			Int("user_id", int(userID)).
+			Bool("is_admin", isAdmin).
+			Msg("Listing deleted successfully via microservice")
+
+		return utils.SuccessResponse(c, fiber.Map{
+			"message":    "marketplace.listing_deleted",
+			"listing_id": listingID,
+			"deleted_at": time.Now(),
+		})
+	}
+
+	// Fallback to monolith storage
+	h.logger.Warn().
+		Int("listing_id", listingID).
+		Msg("DeleteListing: microservice not available, no fallback implementation")
+
+	// Since storage interface doesn't have DeleteListing method,
+	// and we're migrating to microservice, return error
+	return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "marketplace.service_unavailable")
+}

@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -74,6 +75,25 @@ func (c *Client) Close() error {
 	return nil
 }
 
+// contextWithAuth извлекает JWT токен из context и добавляет в gRPC metadata
+// Используется для передачи токена аутентификации в gRPC вызовы
+// ВАЖНО: В нашей архитектуре токен хранится в c.Locals("token") Fiber context,
+// но мы НЕ можем передавать fiber.Ctx в gRPC клиент.
+// Вместо этого handlers должны извлекать токен из c.Locals и добавлять в Go context
+// с помощью context.WithValue(c.Context(), "token", token)
+func (c *Client) contextWithAuth(ctx context.Context) context.Context {
+	// Попробовать извлечь токен из Go context (добавляется handler-ом перед вызовом gRPC)
+	if token, ok := ctx.Value("token").(string); ok && token != "" {
+		// Добавить токен в gRPC metadata в формате "Bearer {token}"
+		ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token)
+		c.logger.Debug().Msg("JWT token added to gRPC metadata")
+	} else {
+		// Токен не найден - это нормально для публичных endpoints
+		c.logger.Debug().Msg("No JWT token found in context for gRPC call")
+	}
+	return ctx
+}
+
 // GetListing получает listing по ID
 func (c *Client) GetListing(ctx context.Context, req *pb.GetListingRequest) (*pb.GetListingResponse, error) {
 	if c.isCircuitBreakerOpen() {
@@ -125,6 +145,9 @@ func (c *Client) CreateListing(ctx context.Context, req *pb.CreateListingRequest
 		c.logger.Warn().Msg("Circuit breaker is open, rejecting CreateListing request")
 		return nil, ErrServiceUnavailable
 	}
+
+	// Добавить JWT токен в gRPC metadata (если есть в context)
+	ctx = c.contextWithAuth(ctx)
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
@@ -255,6 +278,162 @@ func (c *Client) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest
 	c.onFailure()
 	c.logger.Error().Err(err).Msg("DeleteListing failed after all retries")
 	return nil, fmt.Errorf("failed to delete listing after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// AddListingImage добавляет изображение к listing
+func (c *Client) AddListingImage(ctx context.Context, req *pb.AddImageRequest) (*pb.ImageResponse, error) {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting AddListingImage request")
+		return nil, ErrServiceUnavailable
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	var resp *pb.ImageResponse
+	var err error
+
+	backoff := initialBackoff
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying AddListingImage")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		resp, err = c.client.AddListingImage(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Info().
+				Int64("listing_id", req.ListingId).
+				Int64("image_id", resp.Image.Id).
+				Msg("Listing image added successfully")
+			return resp, nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in AddListingImage")
+			return nil, MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in AddListingImage")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("AddListingImage failed after all retries")
+	return nil, fmt.Errorf("failed to add listing image after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// DeleteListingImage удаляет изображение из listing
+func (c *Client) DeleteListingImage(ctx context.Context, imageID int64) error {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting DeleteListingImage request")
+		return ErrServiceUnavailable
+	}
+
+	// Добавить JWT токен в gRPC metadata (если есть в context)
+	ctx = c.contextWithAuth(ctx)
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.ImageIDRequest{
+		ImageId: imageID,
+	}
+
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying DeleteListingImage")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		_, err = c.client.DeleteListingImage(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Info().
+				Int64("image_id", imageID).
+				Msg("Listing image deleted successfully")
+			return nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in DeleteListingImage")
+			return MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in DeleteListingImage")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("DeleteListingImage failed after all retries")
+	return fmt.Errorf("failed to delete listing image after %d attempts: %w", maxRetries, MapGRPCError(err))
+}
+
+// ReorderListingImages изменяет порядок отображения изображений listing
+func (c *Client) ReorderListingImages(ctx context.Context, listingID int64, imageOrders []*pb.ImageOrder) error {
+	if c.isCircuitBreakerOpen() {
+		c.logger.Warn().Msg("Circuit breaker is open, rejecting ReorderListingImages request")
+		return ErrServiceUnavailable
+	}
+
+	// Добавить JWT токен в gRPC metadata (если есть в context)
+	ctx = c.contextWithAuth(ctx)
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	req := &pb.ReorderImagesRequest{
+		ListingId:   listingID,
+		ImageOrders: imageOrders,
+	}
+
+	var err error
+	backoff := initialBackoff
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info().Int("attempt", attempt+1).Msg("Retrying ReorderListingImages")
+			time.Sleep(backoff)
+			backoff = time.Duration(float64(backoff) * backoffMultiplier)
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+
+		_, err = c.client.ReorderListingImages(ctx, req)
+		if err == nil {
+			c.onSuccess()
+			c.logger.Info().
+				Int64("listing_id", listingID).
+				Int("images_count", len(imageOrders)).
+				Msg("Listing images reordered successfully")
+			return nil
+		}
+
+		if !c.shouldRetry(err) {
+			c.onFailure()
+			c.logger.Error().Err(err).Msg("Non-retryable error in ReorderListingImages")
+			return MapGRPCError(err)
+		}
+
+		c.logger.Warn().Err(err).Int("attempt", attempt+1).Msg("Retryable error in ReorderListingImages")
+	}
+
+	c.onFailure()
+	c.logger.Error().Err(err).Msg("ReorderListingImages failed after all retries")
+	return fmt.Errorf("failed to reorder listing images after %d attempts: %w", maxRetries, MapGRPCError(err))
 }
 
 // SearchListings выполняет поиск по listings
@@ -403,6 +582,9 @@ func (c *Client) AddToFavorites(ctx context.Context, userID, listingID int) erro
 		return ErrServiceUnavailable
 	}
 
+	// Добавить JWT токен в gRPC metadata (если есть в context)
+	ctx = c.contextWithAuth(ctx)
+
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
@@ -455,6 +637,9 @@ func (c *Client) RemoveFromFavorites(ctx context.Context, userID, listingID int)
 		return ErrServiceUnavailable
 	}
 
+	// Добавить JWT токен в gRPC metadata (если есть в context)
+	ctx = c.contextWithAuth(ctx)
+
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
@@ -506,6 +691,9 @@ func (c *Client) GetUserFavorites(ctx context.Context, userID int) ([]int, error
 		c.logger.Warn().Msg("Circuit breaker is open, rejecting GetUserFavorites request")
 		return nil, ErrServiceUnavailable
 	}
+
+	// Добавить JWT токен в gRPC metadata (если есть в context)
+	ctx = c.contextWithAuth(ctx)
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()

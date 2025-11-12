@@ -265,19 +265,19 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	// Listings gRPC client (Phase 7.4 - Categories Integration)
 	var listingsClient *listings.Client
-	if cfg.UseListingsMicroservice && cfg.ListingsGRPCURL != "" {
+	if cfg.Listings.UseMicroservice && cfg.Listings.GRPCURL != "" {
 		var err error
-		listingsClient, err = listings.NewClient(cfg.ListingsGRPCURL, *zerologLogger)
+		listingsClient, err = listings.NewClient(cfg.Listings.GRPCURL, *zerologLogger)
 		if err != nil {
-			logger.Error().Err(err).Str("url", cfg.ListingsGRPCURL).Msg("Failed to create listings gRPC client, falling back to monolith")
+			logger.Error().Err(err).Str("url", cfg.Listings.GRPCURL).Msg("Failed to create listings gRPC client, falling back to monolith")
 			listingsClient = nil // Fallback to monolith
 		} else {
-			logger.Info().Str("url", cfg.ListingsGRPCURL).Msg("Listings gRPC client initialized successfully")
+			logger.Info().Str("url", cfg.Listings.GRPCURL).Msg("Listings gRPC client initialized successfully")
 			// Inject listings client into cart repository for product data
 			db.SetListingsClientToCart(listingsClient)
 		}
 	} else {
-		logger.Info().Bool("use_microservice", cfg.UseListingsMicroservice).Str("grpc_url", cfg.ListingsGRPCURL).Msg("Listings microservice disabled, using monolith")
+		logger.Info().Bool("use_microservice", cfg.Listings.UseMicroservice).Str("grpc_url", cfg.Listings.GRPCURL).Msg("Listings microservice disabled, using monolith")
 	}
 
 	// Orders модуль инициализация (ПОСЛЕ delivery и listings модулей)
@@ -292,7 +292,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	// TEMPORARY: Marketplace handler (minimal functionality until microservice migration)
-	marketplaceHandlerInstance := marketplaceHandler.NewHandler(db.GetSQLXDB(), services, jwtParserMW, *zerologLogger, listingsClient, cfg.UseListingsMicroservice)
+	marketplaceHandlerInstance := marketplaceHandler.NewHandler(db.GetSQLXDB(), services, jwtParserMW, *zerologLogger, listingsClient, cfg.Listings.UseMicroservice)
 
 	// Инициализация универсальных handlers
 	creditHandlerInstance := creditHandler.NewHandler()

@@ -131,7 +131,7 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 
 	// Инициализируем gRPC клиент для listings микросервиса
 	// DEV MODE: Microservice is REQUIRED - fail fast if URL is empty or connection fails
-	grpcURL := cfg.ListingsGRPCURL
+	grpcURL := cfg.Listings.GRPCURL
 	if grpcURL == "" {
 		return nil, fmt.Errorf("LISTINGS_GRPC_URL is required - listings microservice must be running. Backend cannot start without it")
 	}

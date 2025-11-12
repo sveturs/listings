@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -280,13 +281,34 @@ func (h *Handler) GetFavorites(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
 
-	// TODO: Implement favorites in microservice
-	// For now, graceful degradation: return empty array if legacy table doesn't exist
-	favorites, err := h.storage.GetUserFavorites(c.Context(), userID)
-	if err != nil {
-		h.logger.Warn().Err(err).Int("user_id", userID).Msg("Failed to get favorites (legacy table dropped), returning empty array")
-		return utils.SuccessResponse(c, []int{})
+	// Require microservice - no fallback
+	if !h.useListingsMicroservice || h.listingsClient == nil {
+		return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "marketplace.service_unavailable")
 	}
+
+	// Use microservice via gRPC
+	h.logger.Info().
+		Int("user_id", userID).
+		Msg("Routing GetFavorites to microservice")
+
+	// Извлечь JWT токен из Fiber context и добавить в Go context
+	ctx := c.UserContext()
+	if token, ok := authMiddleware.GetToken(c); ok {
+		ctx = context.WithValue(ctx, "token", token)
+	}
+
+	favorites, err := h.listingsClient.GetUserFavorites(ctx, userID)
+	if err != nil {
+		h.logger.Error().Err(err).
+			Int("user_id", userID).
+			Msg("GetFavorites: failed to get favorites via microservice")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.favorites_get_failed")
+	}
+
+	h.logger.Debug().
+		Int("user_id", userID).
+		Int("count", len(favorites)).
+		Msg("GetFavorites successful via microservice")
 
 	return utils.SuccessResponse(c, favorites)
 }
@@ -315,12 +337,35 @@ func (h *Handler) AddToFavorites(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_listing_id")
 	}
 
-	// TODO: Implement favorites in microservice
-	// For now, graceful degradation: return success even if legacy table doesn't exist
-	if err := h.storage.AddToFavorites(c.Context(), userID, listingID); err != nil {
-		h.logger.Warn().Err(err).Int("user_id", userID).Int("listing_id", listingID).Msg("Failed to add to favorites (legacy table dropped), returning success anyway")
-		return utils.SuccessResponse(c, map[string]bool{"added": true})
+	// Require microservice - no fallback
+	if !h.useListingsMicroservice || h.listingsClient == nil {
+		return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "marketplace.service_unavailable")
 	}
+
+	// Use microservice via gRPC
+	h.logger.Info().
+		Int("user_id", userID).
+		Int("listing_id", listingID).
+		Msg("Routing AddToFavorites to microservice")
+
+	// Извлечь JWT токен из Fiber context и добавить в Go context
+	ctx := c.UserContext()
+	if token, ok := authMiddleware.GetToken(c); ok {
+		ctx = context.WithValue(ctx, "token", token)
+	}
+
+	if err := h.listingsClient.AddToFavorites(ctx, userID, listingID); err != nil {
+		h.logger.Error().Err(err).
+			Int("user_id", userID).
+			Int("listing_id", listingID).
+			Msg("AddToFavorites: failed to add to favorites via microservice")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.favorites_add_failed")
+	}
+
+	h.logger.Debug().
+		Int("user_id", userID).
+		Int("listing_id", listingID).
+		Msg("AddToFavorites successful via microservice")
 
 	return utils.SuccessResponse(c, map[string]bool{"added": true})
 }
@@ -349,12 +394,35 @@ func (h *Handler) RemoveFromFavorites(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalid_listing_id")
 	}
 
-	// TODO: Implement favorites in microservice
-	// For now, graceful degradation: return success even if legacy table doesn't exist
-	if err := h.storage.RemoveFromFavorites(c.Context(), userID, listingID); err != nil {
-		h.logger.Warn().Err(err).Int("user_id", userID).Int("listing_id", listingID).Msg("Failed to remove from favorites (legacy table dropped), returning success anyway")
-		return utils.SuccessResponse(c, map[string]bool{"removed": true})
+	// Require microservice - no fallback
+	if !h.useListingsMicroservice || h.listingsClient == nil {
+		return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "marketplace.service_unavailable")
 	}
+
+	// Use microservice via gRPC
+	h.logger.Info().
+		Int("user_id", userID).
+		Int("listing_id", listingID).
+		Msg("Routing RemoveFromFavorites to microservice")
+
+	// Извлечь JWT токен из Fiber context и добавить в Go context
+	ctx := c.UserContext()
+	if token, ok := authMiddleware.GetToken(c); ok {
+		ctx = context.WithValue(ctx, "token", token)
+	}
+
+	if err := h.listingsClient.RemoveFromFavorites(ctx, userID, listingID); err != nil {
+		h.logger.Error().Err(err).
+			Int("user_id", userID).
+			Int("listing_id", listingID).
+			Msg("RemoveFromFavorites: failed to remove from favorites via microservice")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.favorites_remove_failed")
+	}
+
+	h.logger.Debug().
+		Int("user_id", userID).
+		Int("listing_id", listingID).
+		Msg("RemoveFromFavorites successful via microservice")
 
 	return utils.SuccessResponse(c, map[string]bool{"removed": true})
 }

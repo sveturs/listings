@@ -18,6 +18,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Get("/api/v1/marketplace/categories/:id/attributes", h.GetCategoryAttributes)
 	app.Get("/api/v1/marketplace/categories/:slug/variant-attributes", h.GetVariantAttributes)
 	app.Get("/api/v1/marketplace/neighborhood-stats", h.GetNeighborhoodStats)
+	app.Get("/api/v1/marketplace/search", h.SearchListings)
 
 	// Storefronts (B2C) - публичные эндпоинты
 	app.Get("/api/v1/b2c", h.GetStorefronts)
@@ -40,6 +41,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Get("/api/v1/marketplace/listings", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), h.GetListings)
 	app.Post("/api/v1/marketplace/listings", h.jwtParserMW, authMiddleware.RequireAuth(), h.CreateListing)
 	app.Get("/api/v1/marketplace/listings/:id", h.GetListing)
+	app.Delete("/api/v1/marketplace/listings/:id", h.jwtParserMW, authMiddleware.RequireAuth(), h.DeleteListing)
 	app.Get("/api/v1/marketplace/listings/:id/similar", h.GetSimilarListings)
 	app.Post("/api/v1/marketplace/listings/:id/images", h.jwtParserMW, authMiddleware.RequireAuth(), mw.RateLimitByUser(10, time.Minute), h.UploadListingImages)
 	app.Delete("/api/v1/marketplace/listings/:id/images/:imageId", h.jwtParserMW, authMiddleware.RequireAuth(), h.DeleteListingImage)

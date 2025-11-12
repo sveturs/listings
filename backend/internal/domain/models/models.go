@@ -57,7 +57,8 @@ type (
 		ViewsCount          int                     `json:"views_count"`
 		CreatedAt           time.Time               `json:"created_at"`
 		UpdatedAt           time.Time               `json:"updated_at"`
-		Images              []MarketplaceImage      `json:"images,omitempty"`
+		PublishedAt         *time.Time              `json:"published_at,omitempty"`
+		Images              []MarketplaceImage      `json:"images"`
 		User                *User                   `json:"user,omitempty"`
 		Category            *MarketplaceCategory    `json:"category,omitempty"`
 		HelpfulVotes        int                     `json:"helpful_votes"`

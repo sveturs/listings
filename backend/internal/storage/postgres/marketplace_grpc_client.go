@@ -771,7 +771,7 @@ func convertProtoToListing(pb *listingsv1.Listing) *models.MarketplaceListing {
 		}
 	}
 
-	// Convert images
+	// Convert images (always initialize array)
 	if len(pb.Images) > 0 {
 		listing.Images = make([]models.MarketplaceImage, len(pb.Images))
 		for i, pbImg := range pb.Images {
@@ -795,6 +795,9 @@ func convertProtoToListing(pb *listingsv1.Listing) *models.MarketplaceListing {
 				}
 			}
 		}
+	} else {
+		// Initialize empty array instead of nil for consistency
+		listing.Images = []models.MarketplaceImage{}
 	}
 
 	// Convert location if present
