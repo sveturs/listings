@@ -8,13 +8,13 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
 	"github.com/sveturs/listings/internal/repository/postgres"
 )
 
 // GetListingImage retrieves a single image by ID
-func (s *Server) GetListingImage(ctx context.Context, req *pb.ImageIDRequest) (*pb.ImageResponse, error) {
+func (s *Server) GetListingImage(ctx context.Context, req *listingspb.ImageIDRequest) (*listingspb.ImageResponse, error) {
 	s.logger.Debug().Int64("image_id", req.ImageId).Msg("GetListingImage called")
 
 	if req.ImageId <= 0 {
@@ -28,13 +28,13 @@ func (s *Server) GetListingImage(ctx context.Context, req *pb.ImageIDRequest) (*
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("image not found: %v", err))
 	}
 
-	return &pb.ImageResponse{
+	return &listingspb.ImageResponse{
 		Image: DomainToProtoImage(image),
 	}, nil
 }
 
 // DeleteListingImage removes an image from a listing
-func (s *Server) DeleteListingImage(ctx context.Context, req *pb.ImageIDRequest) (*emptypb.Empty, error) {
+func (s *Server) DeleteListingImage(ctx context.Context, req *listingspb.ImageIDRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int64("image_id", req.ImageId).Msg("DeleteListingImage called")
 
 	if req.ImageId <= 0 {
@@ -53,7 +53,7 @@ func (s *Server) DeleteListingImage(ctx context.Context, req *pb.ImageIDRequest)
 }
 
 // AddListingImage adds a new image to a listing
-func (s *Server) AddListingImage(ctx context.Context, req *pb.AddImageRequest) (*pb.ImageResponse, error) {
+func (s *Server) AddListingImage(ctx context.Context, req *listingspb.AddImageRequest) (*listingspb.ImageResponse, error) {
 	s.logger.Debug().Int64("listing_id", req.ListingId).Msg("AddListingImage called")
 
 	if req.ListingId <= 0 {
@@ -75,13 +75,13 @@ func (s *Server) AddListingImage(ctx context.Context, req *pb.AddImageRequest) (
 	}
 
 	s.logger.Info().Int64("image_id", newImage.ID).Int64("listing_id", req.ListingId).Msg("image added successfully")
-	return &pb.ImageResponse{
+	return &listingspb.ImageResponse{
 		Image: DomainToProtoImage(newImage),
 	}, nil
 }
 
 // GetListingImages retrieves all images for a listing
-func (s *Server) GetListingImages(ctx context.Context, req *pb.ListingIDRequest) (*pb.ImagesResponse, error) {
+func (s *Server) GetListingImages(ctx context.Context, req *listingspb.ListingIDRequest) (*listingspb.ImagesResponse, error) {
 	s.logger.Debug().Int64("listing_id", req.ListingId).Msg("GetListingImages called")
 
 	if req.ListingId <= 0 {
@@ -96,19 +96,19 @@ func (s *Server) GetListingImages(ctx context.Context, req *pb.ListingIDRequest)
 	}
 
 	// Convert to proto
-	pbImages := make([]*pb.ListingImage, len(images))
+	pbImages := make([]*listingspb.ListingImage, len(images))
 	for i, img := range images {
 		pbImages[i] = DomainToProtoImage(img)
 	}
 
 	s.logger.Debug().Int("count", len(images)).Msg("images retrieved")
-	return &pb.ImagesResponse{
+	return &listingspb.ImagesResponse{
 		Images: pbImages,
 	}, nil
 }
 
 // ReorderListingImages updates display order for multiple images
-func (s *Server) ReorderListingImages(ctx context.Context, req *pb.ReorderImagesRequest) (*emptypb.Empty, error) {
+func (s *Server) ReorderListingImages(ctx context.Context, req *listingspb.ReorderImagesRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int64("listing_id", req.ListingId).Int("count", len(req.ImageOrders)).Msg("ReorderListingImages called")
 
 	if req.ListingId <= 0 {
@@ -140,7 +140,7 @@ func (s *Server) ReorderListingImages(ctx context.Context, req *pb.ReorderImages
 }
 
 // GetRootCategories retrieves all top-level categories
-func (s *Server) GetRootCategories(ctx context.Context, req *emptypb.Empty) (*pb.CategoriesResponse, error) {
+func (s *Server) GetRootCategories(ctx context.Context, req *emptypb.Empty) (*listingspb.CategoriesResponse, error) {
 	s.logger.Debug().Msg("GetRootCategories called")
 
 	// Get root categories from service
@@ -151,19 +151,19 @@ func (s *Server) GetRootCategories(ctx context.Context, req *emptypb.Empty) (*pb
 	}
 
 	// Convert to proto
-	pbCategories := make([]*pb.Category, len(categories))
+	pbCategories := make([]*listingspb.Category, len(categories))
 	for i, cat := range categories {
 		pbCategories[i] = DomainToProtoCategory(cat)
 	}
 
 	s.logger.Debug().Int("count", len(categories)).Msg("root categories retrieved")
-	return &pb.CategoriesResponse{
+	return &listingspb.CategoriesResponse{
 		Categories: pbCategories,
 	}, nil
 }
 
 // GetAllCategories retrieves all categories in the system
-func (s *Server) GetAllCategories(ctx context.Context, req *emptypb.Empty) (*pb.CategoriesResponse, error) {
+func (s *Server) GetAllCategories(ctx context.Context, req *emptypb.Empty) (*listingspb.CategoriesResponse, error) {
 	s.logger.Debug().Msg("GetAllCategories called")
 
 	// Get all categories from service
@@ -174,19 +174,19 @@ func (s *Server) GetAllCategories(ctx context.Context, req *emptypb.Empty) (*pb.
 	}
 
 	// Convert to proto
-	pbCategories := make([]*pb.Category, len(categories))
+	pbCategories := make([]*listingspb.Category, len(categories))
 	for i, cat := range categories {
 		pbCategories[i] = DomainToProtoCategory(cat)
 	}
 
 	s.logger.Debug().Int("count", len(categories)).Msg("all categories retrieved")
-	return &pb.CategoriesResponse{
+	return &listingspb.CategoriesResponse{
 		Categories: pbCategories,
 	}, nil
 }
 
 // GetPopularCategories retrieves most popular categories by listing count
-func (s *Server) GetPopularCategories(ctx context.Context, req *pb.PopularCategoriesRequest) (*pb.CategoriesResponse, error) {
+func (s *Server) GetPopularCategories(ctx context.Context, req *listingspb.PopularCategoriesRequest) (*listingspb.CategoriesResponse, error) {
 	s.logger.Debug().Int32("limit", req.Limit).Msg("GetPopularCategories called")
 
 	limit := int(req.Limit)
@@ -205,19 +205,19 @@ func (s *Server) GetPopularCategories(ctx context.Context, req *pb.PopularCatego
 	}
 
 	// Convert to proto
-	pbCategories := make([]*pb.Category, len(categories))
+	pbCategories := make([]*listingspb.Category, len(categories))
 	for i, cat := range categories {
 		pbCategories[i] = DomainToProtoCategory(cat)
 	}
 
 	s.logger.Debug().Int("count", len(categories)).Msg("popular categories retrieved")
-	return &pb.CategoriesResponse{
+	return &listingspb.CategoriesResponse{
 		Categories: pbCategories,
 	}, nil
 }
 
 // GetCategory retrieves a single category by ID
-func (s *Server) GetCategory(ctx context.Context, req *pb.CategoryIDRequest) (*pb.CategoryResponse, error) {
+func (s *Server) GetCategory(ctx context.Context, req *listingspb.CategoryIDRequest) (*listingspb.CategoryResponse, error) {
 	s.logger.Debug().Int64("category_id", req.CategoryId).Msg("GetCategory called")
 
 	if req.CategoryId <= 0 {
@@ -231,13 +231,13 @@ func (s *Server) GetCategory(ctx context.Context, req *pb.CategoryIDRequest) (*p
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("category not found: %v", err))
 	}
 
-	return &pb.CategoryResponse{
+	return &listingspb.CategoryResponse{
 		Category: DomainToProtoCategory(category),
 	}, nil
 }
 
 // GetCategoryTree retrieves category hierarchy starting from a node
-func (s *Server) GetCategoryTree(ctx context.Context, req *pb.CategoryIDRequest) (*pb.CategoryTreeResponse, error) {
+func (s *Server) GetCategoryTree(ctx context.Context, req *listingspb.CategoryIDRequest) (*listingspb.CategoryTreeResponse, error) {
 	s.logger.Debug().Int64("category_id", req.CategoryId).Msg("GetCategoryTree called")
 
 	if req.CategoryId <= 0 {
@@ -251,13 +251,13 @@ func (s *Server) GetCategoryTree(ctx context.Context, req *pb.CategoryIDRequest)
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("category tree not found: %v", err))
 	}
 
-	return &pb.CategoryTreeResponse{
+	return &listingspb.CategoryTreeResponse{
 		Tree: DomainToProtoCategoryTree(tree),
 	}, nil
 }
 
 // GetFavoritedUsers retrieves list of user IDs who favorited a listing
-func (s *Server) GetFavoritedUsers(ctx context.Context, req *pb.ListingIDRequest) (*pb.UserIDsResponse, error) {
+func (s *Server) GetFavoritedUsers(ctx context.Context, req *listingspb.ListingIDRequest) (*listingspb.UserIDsResponse, error) {
 	s.logger.Debug().Int64("listing_id", req.ListingId).Msg("GetFavoritedUsers called")
 
 	if req.ListingId <= 0 {
@@ -272,13 +272,13 @@ func (s *Server) GetFavoritedUsers(ctx context.Context, req *pb.ListingIDRequest
 	}
 
 	s.logger.Debug().Int("count", len(userIDs)).Msg("favorited users retrieved")
-	return &pb.UserIDsResponse{
+	return &listingspb.UserIDsResponse{
 		UserIds: userIDs,
 	}, nil
 }
 
 // AddToFavorites adds a listing to user's favorites
-func (s *Server) AddToFavorites(ctx context.Context, req *pb.AddToFavoritesRequest) (*emptypb.Empty, error) {
+func (s *Server) AddToFavorites(ctx context.Context, req *listingspb.AddToFavoritesRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("AddToFavorites called")
 
 	if req.UserId <= 0 {
@@ -301,7 +301,7 @@ func (s *Server) AddToFavorites(ctx context.Context, req *pb.AddToFavoritesReque
 }
 
 // RemoveFromFavorites removes a listing from user's favorites
-func (s *Server) RemoveFromFavorites(ctx context.Context, req *pb.RemoveFromFavoritesRequest) (*emptypb.Empty, error) {
+func (s *Server) RemoveFromFavorites(ctx context.Context, req *listingspb.RemoveFromFavoritesRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("RemoveFromFavorites called")
 
 	if req.UserId <= 0 {
@@ -324,7 +324,7 @@ func (s *Server) RemoveFromFavorites(ctx context.Context, req *pb.RemoveFromFavo
 }
 
 // GetUserFavorites retrieves list of listing IDs favorited by a user
-func (s *Server) GetUserFavorites(ctx context.Context, req *pb.GetUserFavoritesRequest) (*pb.GetUserFavoritesResponse, error) {
+func (s *Server) GetUserFavorites(ctx context.Context, req *listingspb.GetUserFavoritesRequest) (*listingspb.GetUserFavoritesResponse, error) {
 	s.logger.Debug().Int64("user_id", req.UserId).Msg("GetUserFavorites called")
 
 	if req.UserId <= 0 {
@@ -339,14 +339,14 @@ func (s *Server) GetUserFavorites(ctx context.Context, req *pb.GetUserFavoritesR
 	}
 
 	s.logger.Debug().Int("count", len(listingIDs)).Msg("user favorites retrieved")
-	return &pb.GetUserFavoritesResponse{
+	return &listingspb.GetUserFavoritesResponse{
 		ListingIds: listingIDs,
 		Total:      int32(len(listingIDs)),
 	}, nil
 }
 
 // IsFavorite checks if a listing is in user's favorites
-func (s *Server) IsFavorite(ctx context.Context, req *pb.IsFavoriteRequest) (*pb.IsFavoriteResponse, error) {
+func (s *Server) IsFavorite(ctx context.Context, req *listingspb.IsFavoriteRequest) (*listingspb.IsFavoriteResponse, error) {
 	s.logger.Debug().Int64("user_id", req.UserId).Int64("listing_id", req.ListingId).Msg("IsFavorite called")
 
 	if req.UserId <= 0 {
@@ -365,13 +365,13 @@ func (s *Server) IsFavorite(ctx context.Context, req *pb.IsFavoriteRequest) (*pb
 	}
 
 	s.logger.Debug().Bool("is_favorite", isFavorite).Msg("favorite status checked")
-	return &pb.IsFavoriteResponse{
+	return &listingspb.IsFavoriteResponse{
 		IsFavorite: isFavorite,
 	}, nil
 }
 
 // CreateVariants creates multiple variants for a listing
-func (s *Server) CreateVariants(ctx context.Context, req *pb.CreateVariantsRequest) (*emptypb.Empty, error) {
+func (s *Server) CreateVariants(ctx context.Context, req *listingspb.CreateVariantsRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int64("listing_id", req.ListingId).Int("count", len(req.Variants)).Msg("CreateVariants called")
 
 	if req.ListingId <= 0 {
@@ -400,7 +400,7 @@ func (s *Server) CreateVariants(ctx context.Context, req *pb.CreateVariantsReque
 }
 
 // GetVariants retrieves all variants for a listing
-func (s *Server) GetVariants(ctx context.Context, req *pb.ListingIDRequest) (*pb.VariantsResponse, error) {
+func (s *Server) GetVariants(ctx context.Context, req *listingspb.ListingIDRequest) (*listingspb.VariantsResponse, error) {
 	s.logger.Debug().Int64("listing_id", req.ListingId).Msg("GetVariants called")
 
 	if req.ListingId <= 0 {
@@ -415,19 +415,19 @@ func (s *Server) GetVariants(ctx context.Context, req *pb.ListingIDRequest) (*pb
 	}
 
 	// Convert to proto
-	pbVariants := make([]*pb.ListingVariant, len(variants))
+	pbVariants := make([]*listingspb.ListingVariant, len(variants))
 	for i, v := range variants {
 		pbVariants[i] = DomainToProtoVariant(v)
 	}
 
 	s.logger.Debug().Int("count", len(variants)).Msg("variants retrieved")
-	return &pb.VariantsResponse{
+	return &listingspb.VariantsResponse{
 		Variants: pbVariants,
 	}, nil
 }
 
 // UpdateVariant updates a specific variant
-func (s *Server) UpdateVariant(ctx context.Context, req *pb.UpdateVariantRequest) (*emptypb.Empty, error) {
+func (s *Server) UpdateVariant(ctx context.Context, req *listingspb.UpdateVariantRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int64("variant_id", req.VariantId).Msg("UpdateVariant called")
 
 	if req.VariantId <= 0 {
@@ -473,7 +473,7 @@ func (s *Server) UpdateVariant(ctx context.Context, req *pb.UpdateVariantRequest
 }
 
 // DeleteVariant removes a variant from a listing
-func (s *Server) DeleteVariant(ctx context.Context, req *pb.VariantIDRequest) (*emptypb.Empty, error) {
+func (s *Server) DeleteVariant(ctx context.Context, req *listingspb.VariantIDRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int64("variant_id", req.VariantId).Msg("DeleteVariant called")
 
 	if req.VariantId <= 0 {
@@ -492,7 +492,7 @@ func (s *Server) DeleteVariant(ctx context.Context, req *pb.VariantIDRequest) (*
 }
 
 // GetListingsForReindex retrieves listings that need reindexing
-func (s *Server) GetListingsForReindex(ctx context.Context, req *pb.ReindexRequest) (*pb.ListingsResponse, error) {
+func (s *Server) GetListingsForReindex(ctx context.Context, req *listingspb.ReindexRequest) (*listingspb.ListingsResponse, error) {
 	s.logger.Debug().Int32("batch_size", req.BatchSize).Msg("GetListingsForReindex called")
 
 	batchSize := int(req.BatchSize)
@@ -511,20 +511,20 @@ func (s *Server) GetListingsForReindex(ctx context.Context, req *pb.ReindexReque
 	}
 
 	// Convert to proto
-	pbListings := make([]*pb.Listing, len(listings))
+	pbListings := make([]*listingspb.Listing, len(listings))
 	for i, listing := range listings {
 		pbListings[i] = DomainToProtoListing(listing)
 	}
 
 	s.logger.Debug().Int("count", len(listings)).Msg("listings for reindex retrieved")
-	return &pb.ListingsResponse{
+	return &listingspb.ListingsResponse{
 		Listings: pbListings,
 		Total:    int32(len(listings)),
 	}, nil
 }
 
 // ResetReindexFlags resets reindex flags for specified listings
-func (s *Server) ResetReindexFlags(ctx context.Context, req *pb.ResetFlagsRequest) (*emptypb.Empty, error) {
+func (s *Server) ResetReindexFlags(ctx context.Context, req *listingspb.ResetFlagsRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().Int("count", len(req.ListingIds)).Msg("ResetReindexFlags called")
 
 	if len(req.ListingIds) == 0 {

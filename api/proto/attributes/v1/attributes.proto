@@ -1,0 +1,463 @@
+// attributes.proto - Unified Attributes Service for Listings Microservice
+// Version: v1
+// Created: 2025-11-13
+// Description: gRPC service for managing attributes, category relationships, and listing values
+
+syntax = "proto3";
+
+package attributes.v1;
+
+option go_package = "github.com/sveturs/listings/api/proto/attributes/v1;attributesv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// ============================================================================
+// AttributeService - Unified Attributes Management
+// ============================================================================
+service AttributeService {
+  // ========== Admin: Attribute CRUD ==========
+
+  // CreateAttribute creates a new attribute definition
+  rpc CreateAttribute(CreateAttributeRequest) returns (CreateAttributeResponse);
+
+  // UpdateAttribute updates an existing attribute
+  rpc UpdateAttribute(UpdateAttributeRequest) returns (UpdateAttributeResponse);
+
+  // DeleteAttribute soft-deletes an attribute (sets is_active=false)
+  rpc DeleteAttribute(DeleteAttributeRequest) returns (DeleteAttributeResponse);
+
+  // GetAttribute retrieves a single attribute by ID or code
+  rpc GetAttribute(GetAttributeRequest) returns (GetAttributeResponse);
+
+  // ListAttributes lists all attributes with optional filtering
+  rpc ListAttributes(ListAttributesRequest) returns (ListAttributesResponse);
+
+  // ========== Admin: Category-Attribute Linking ==========
+
+  // LinkAttributeToCategory links an attribute to a category with optional overrides
+  rpc LinkAttributeToCategory(LinkAttributeToCategoryRequest) returns (LinkAttributeToCategoryResponse);
+
+  // UpdateCategoryAttribute updates category-specific attribute settings
+  rpc UpdateCategoryAttribute(UpdateCategoryAttributeRequest) returns (UpdateCategoryAttributeResponse);
+
+  // UnlinkAttributeFromCategory removes the attribute-category relationship
+  rpc UnlinkAttributeFromCategory(UnlinkAttributeFromCategoryRequest) returns (UnlinkAttributeFromCategoryResponse);
+
+  // ========== Public: Category Attributes ==========
+
+  // GetCategoryAttributes retrieves all attributes for a specific category
+  rpc GetCategoryAttributes(GetCategoryAttributesRequest) returns (GetCategoryAttributesResponse);
+
+  // GetCategoryVariantAttributes retrieves variant attributes for a category
+  rpc GetCategoryVariantAttributes(GetCategoryVariantAttributesRequest) returns (GetCategoryVariantAttributesResponse);
+
+  // ========== Public: Listing Attributes ==========
+
+  // GetListingAttributes retrieves all attribute values for a listing
+  rpc GetListingAttributes(GetListingAttributesRequest) returns (GetListingAttributesResponse);
+
+  // SetListingAttributes sets/updates attribute values for a listing
+  rpc SetListingAttributes(SetListingAttributesRequest) returns (SetListingAttributesResponse);
+
+  // ========== Public: Validation ==========
+
+  // ValidateAttributeValues validates attribute values before saving
+  rpc ValidateAttributeValues(ValidateAttributeValuesRequest) returns (ValidateAttributeValuesResponse);
+
+  // ========== Admin: Migration Helper ==========
+
+  // BulkImportAttributes imports multiple attributes at once (for migration)
+  rpc BulkImportAttributes(BulkImportAttributesRequest) returns (BulkImportAttributesResponse);
+}
+
+// ============================================================================
+// MESSAGE TYPES: Attribute Definitions
+// ============================================================================
+
+// Attribute represents a single attribute definition
+message Attribute {
+  int32 id = 1;
+  string code = 2;
+
+  // i18n fields (JSON format: {"en": "...", "ru": "...", "sr": "..."})
+  google.protobuf.Struct name = 3;
+  google.protobuf.Struct display_name = 4;
+
+  // Configuration
+  AttributeType attribute_type = 5;
+  AttributePurpose purpose = 6;
+
+  // JSONB fields
+  google.protobuf.Struct options = 7;
+  google.protobuf.Struct validation_rules = 8;
+  google.protobuf.Struct ui_settings = 9;
+
+  // Behavior flags
+  bool is_searchable = 10;
+  bool is_filterable = 11;
+  bool is_required = 12;
+  bool is_variant_compatible = 13;
+  bool affects_stock = 14;
+  bool affects_price = 15;
+  bool show_in_card = 16;
+
+  // Metadata
+  bool is_active = 17;
+  int32 sort_order = 18;
+  string icon = 19;
+
+  // Legacy mapping
+  int32 legacy_category_attribute_id = 20;
+  int32 legacy_product_variant_attribute_id = 21;
+
+  // Timestamps
+  google.protobuf.Timestamp created_at = 22;
+  google.protobuf.Timestamp updated_at = 23;
+}
+
+// AttributeType enum
+enum AttributeType {
+  ATTRIBUTE_TYPE_UNSPECIFIED = 0;
+  ATTRIBUTE_TYPE_TEXT = 1;
+  ATTRIBUTE_TYPE_TEXTAREA = 2;
+  ATTRIBUTE_TYPE_NUMBER = 3;
+  ATTRIBUTE_TYPE_BOOLEAN = 4;
+  ATTRIBUTE_TYPE_SELECT = 5;
+  ATTRIBUTE_TYPE_MULTISELECT = 6;
+  ATTRIBUTE_TYPE_DATE = 7;
+  ATTRIBUTE_TYPE_COLOR = 8;
+  ATTRIBUTE_TYPE_SIZE = 9;
+}
+
+// AttributePurpose enum
+enum AttributePurpose {
+  ATTRIBUTE_PURPOSE_UNSPECIFIED = 0;
+  ATTRIBUTE_PURPOSE_REGULAR = 1;
+  ATTRIBUTE_PURPOSE_VARIANT = 2;
+  ATTRIBUTE_PURPOSE_BOTH = 3;
+}
+
+// CategoryAttribute represents category-specific attribute configuration
+message CategoryAttribute {
+  int32 id = 1;
+  int32 category_id = 2;
+  int32 attribute_id = 3;
+  Attribute attribute = 4;  // Embedded attribute data
+
+  // Category-specific overrides (null = inherit from attribute)
+  optional bool is_enabled = 5;
+  optional bool is_required = 6;
+  optional bool is_searchable = 7;
+  optional bool is_filterable = 8;
+  int32 sort_order = 9;
+
+  // Category-specific configuration
+  google.protobuf.Struct category_specific_options = 10;
+  google.protobuf.Struct custom_validation_rules = 11;
+  google.protobuf.Struct custom_ui_settings = 12;
+
+  bool is_active = 13;
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+}
+
+// ListingAttributeValue represents an attribute value for a listing
+message ListingAttributeValue {
+  int32 id = 1;
+  int32 listing_id = 2;
+  int32 attribute_id = 3;
+  Attribute attribute = 4;  // Embedded attribute metadata
+
+  // Polymorphic value (only one should be set based on attribute_type)
+  oneof value {
+    string value_text = 5;
+    double value_number = 6;
+    bool value_boolean = 7;
+    string value_date = 8;  // ISO 8601 format
+    google.protobuf.Struct value_json = 9;
+  }
+
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+// VariantAttribute represents variant-specific attribute configuration
+message VariantAttribute {
+  int32 id = 1;
+  int32 category_id = 2;
+  int32 attribute_id = 3;
+  Attribute attribute = 4;
+
+  bool is_required = 5;
+  bool affects_price = 6;
+  bool affects_stock = 7;
+  int32 sort_order = 8;
+  string display_as = 9;  // dropdown, buttons, swatches, radio
+
+  bool is_active = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES: Attribute CRUD
+// ============================================================================
+
+// CreateAttributeRequest
+message CreateAttributeRequest {
+  string code = 1;
+  google.protobuf.Struct name = 2;
+  google.protobuf.Struct display_name = 3;
+  AttributeType attribute_type = 4;
+  AttributePurpose purpose = 5;
+
+  google.protobuf.Struct options = 6;
+  google.protobuf.Struct validation_rules = 7;
+  google.protobuf.Struct ui_settings = 8;
+
+  bool is_searchable = 9;
+  bool is_filterable = 10;
+  bool is_required = 11;
+  bool is_variant_compatible = 12;
+  bool affects_stock = 13;
+  bool affects_price = 14;
+  bool show_in_card = 15;
+
+  int32 sort_order = 16;
+  string icon = 17;
+}
+
+message CreateAttributeResponse {
+  Attribute attribute = 1;
+}
+
+// UpdateAttributeRequest
+message UpdateAttributeRequest {
+  int32 id = 1;
+
+  optional google.protobuf.Struct name = 2;
+  optional google.protobuf.Struct display_name = 3;
+  optional google.protobuf.Struct options = 4;
+  optional google.protobuf.Struct validation_rules = 5;
+  optional google.protobuf.Struct ui_settings = 6;
+
+  optional bool is_searchable = 7;
+  optional bool is_filterable = 8;
+  optional bool is_required = 9;
+  optional bool show_in_card = 10;
+
+  optional int32 sort_order = 11;
+  optional string icon = 12;
+  optional bool is_active = 13;
+}
+
+message UpdateAttributeResponse {
+  Attribute attribute = 1;
+}
+
+// DeleteAttributeRequest
+message DeleteAttributeRequest {
+  int32 id = 1;
+}
+
+message DeleteAttributeResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// GetAttributeRequest
+message GetAttributeRequest {
+  oneof identifier {
+    int32 id = 1;
+    string code = 2;
+  }
+}
+
+message GetAttributeResponse {
+  Attribute attribute = 1;
+}
+
+// ListAttributesRequest
+message ListAttributesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+
+  // Filters
+  optional AttributeType attribute_type = 3;
+  optional AttributePurpose purpose = 4;
+  optional bool is_active = 5;
+  optional bool is_searchable = 6;
+  optional bool is_filterable = 7;
+
+  string search_query = 8;  // Search in name/code
+  string sort_by = 9;       // "name", "code", "created_at", "sort_order"
+  string sort_order = 10;   // "asc", "desc"
+}
+
+message ListAttributesResponse {
+  repeated Attribute attributes = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+  int32 total_pages = 5;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES: Category-Attribute Linking
+// ============================================================================
+
+// LinkAttributeToCategoryRequest
+message LinkAttributeToCategoryRequest {
+  int32 category_id = 1;
+  int32 attribute_id = 2;
+
+  optional bool is_enabled = 3;
+  optional bool is_required = 4;
+  optional bool is_searchable = 5;
+  optional bool is_filterable = 6;
+  int32 sort_order = 7;
+
+  google.protobuf.Struct category_specific_options = 8;
+  google.protobuf.Struct custom_validation_rules = 9;
+  google.protobuf.Struct custom_ui_settings = 10;
+}
+
+message LinkAttributeToCategoryResponse {
+  CategoryAttribute category_attribute = 1;
+}
+
+// UpdateCategoryAttributeRequest
+message UpdateCategoryAttributeRequest {
+  int32 category_id = 1;
+  int32 attribute_id = 2;
+
+  optional bool is_enabled = 3;
+  optional bool is_required = 4;
+  optional bool is_searchable = 5;
+  optional bool is_filterable = 6;
+  optional int32 sort_order = 7;
+
+  optional google.protobuf.Struct category_specific_options = 8;
+  optional google.protobuf.Struct custom_validation_rules = 9;
+  optional google.protobuf.Struct custom_ui_settings = 10;
+}
+
+message UpdateCategoryAttributeResponse {
+  CategoryAttribute category_attribute = 1;
+}
+
+// UnlinkAttributeFromCategoryRequest
+message UnlinkAttributeFromCategoryRequest {
+  int32 category_id = 1;
+  int32 attribute_id = 2;
+}
+
+message UnlinkAttributeFromCategoryResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES: Public Category Queries
+// ============================================================================
+
+// GetCategoryAttributesRequest
+message GetCategoryAttributesRequest {
+  int32 category_id = 1;
+  bool include_inactive = 2;
+  bool include_parent_categories = 3;  // Include inherited attributes
+}
+
+message GetCategoryAttributesResponse {
+  repeated CategoryAttribute category_attributes = 1;
+}
+
+// GetCategoryVariantAttributesRequest
+message GetCategoryVariantAttributesRequest {
+  int32 category_id = 1;
+  bool include_inactive = 2;
+}
+
+message GetCategoryVariantAttributesResponse {
+  repeated VariantAttribute variant_attributes = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES: Listing Attributes
+// ============================================================================
+
+// GetListingAttributesRequest
+message GetListingAttributesRequest {
+  int32 listing_id = 1;
+  repeated int32 attribute_ids = 2;  // Optional: filter by specific attributes
+}
+
+message GetListingAttributesResponse {
+  repeated ListingAttributeValue attribute_values = 1;
+}
+
+// SetListingAttributesRequest
+message SetListingAttributesRequest {
+  int32 listing_id = 1;
+  repeated AttributeValueInput values = 2;
+}
+
+message AttributeValueInput {
+  int32 attribute_id = 1;
+
+  oneof value {
+    string value_text = 2;
+    double value_number = 3;
+    bool value_boolean = 4;
+    string value_date = 5;
+    google.protobuf.Struct value_json = 6;
+  }
+}
+
+message SetListingAttributesResponse {
+  repeated ListingAttributeValue attribute_values = 1;
+  repeated ValidationError validation_errors = 2;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES: Validation
+// ============================================================================
+
+// ValidateAttributeValuesRequest
+message ValidateAttributeValuesRequest {
+  int32 category_id = 1;
+  repeated AttributeValueInput values = 2;
+}
+
+message ValidateAttributeValuesResponse {
+  bool is_valid = 1;
+  repeated ValidationError errors = 2;
+}
+
+message ValidationError {
+  int32 attribute_id = 1;
+  string attribute_code = 2;
+  string error_code = 3;
+  string error_message = 4;
+  google.protobuf.Struct details = 5;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES: Bulk Import (Migration)
+// ============================================================================
+
+// BulkImportAttributesRequest
+message BulkImportAttributesRequest {
+  repeated Attribute attributes = 1;
+  bool skip_duplicates = 2;
+  bool update_existing = 3;
+}
+
+message BulkImportAttributesResponse {
+  int32 total_imported = 1;
+  int32 total_skipped = 2;
+  int32 total_updated = 3;
+  int32 total_failed = 4;
+  repeated string error_messages = 5;
+}

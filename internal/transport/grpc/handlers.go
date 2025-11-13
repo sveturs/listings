@@ -9,8 +9,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/metrics"
+	"github.com/sveturs/listings/internal/service"
 	"github.com/sveturs/listings/internal/service/listings"
 )
 
@@ -19,27 +21,36 @@ func contains(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
-// Server implements gRPC ListingsServiceServer
+// Server implements gRPC ListingsServiceServer and AttributeServiceServer
 type Server struct {
-	pb.UnimplementedListingsServiceServer
+	listingspb.UnimplementedListingsServiceServer
+	attributespb.UnimplementedAttributeServiceServer
 	service           *listings.Service
 	storefrontService *listings.StorefrontService
+	attrService       service.AttributeService
 	metrics           *metrics.Metrics
 	logger            zerolog.Logger
 }
 
 // NewServer creates a new gRPC server instance
-func NewServer(service *listings.Service, storefrontService *listings.StorefrontService, m *metrics.Metrics, logger zerolog.Logger) *Server {
+func NewServer(
+	service *listings.Service,
+	storefrontService *listings.StorefrontService,
+	attrService service.AttributeService,
+	m *metrics.Metrics,
+	logger zerolog.Logger,
+) *Server {
 	return &Server{
 		service:           service,
 		storefrontService: storefrontService,
+		attrService:       attrService,
 		metrics:           m,
 		logger:            logger.With().Str("component", "grpc_handler").Logger(),
 	}
 }
 
 // GetListing retrieves a single listing by ID
-func (s *Server) GetListing(ctx context.Context, req *pb.GetListingRequest) (*pb.GetListingResponse, error) {
+func (s *Server) GetListing(ctx context.Context, req *listingspb.GetListingRequest) (*listingspb.GetListingResponse, error) {
 	// Extract requested language
 	requestedLang := ""
 	if req.Lang != nil {
@@ -99,13 +110,13 @@ func (s *Server) GetListing(ctx context.Context, req *pb.GetListingRequest) (*pb
 	// Convert to proto
 	pbListing := DomainToProtoListing(listing)
 
-	return &pb.GetListingResponse{
+	return &listingspb.GetListingResponse{
 		Listing: pbListing,
 	}, nil
 }
 
 // CreateListing creates a new listing
-func (s *Server) CreateListing(ctx context.Context, req *pb.CreateListingRequest) (*pb.CreateListingResponse, error) {
+func (s *Server) CreateListing(ctx context.Context, req *listingspb.CreateListingRequest) (*listingspb.CreateListingResponse, error) {
 	s.logger.Debug().Int64("user_id", req.UserId).Str("title", req.Title).Msg("CreateListing called")
 
 	// Validate request
@@ -137,13 +148,13 @@ func (s *Server) CreateListing(ctx context.Context, req *pb.CreateListingRequest
 	pbListing := DomainToProtoListing(listing)
 
 	s.logger.Info().Int64("listing_id", listing.ID).Msg("listing created successfully")
-	return &pb.CreateListingResponse{
+	return &listingspb.CreateListingResponse{
 		Listing: pbListing,
 	}, nil
 }
 
 // UpdateListing updates an existing listing
-func (s *Server) UpdateListing(ctx context.Context, req *pb.UpdateListingRequest) (*pb.UpdateListingResponse, error) {
+func (s *Server) UpdateListing(ctx context.Context, req *listingspb.UpdateListingRequest) (*listingspb.UpdateListingResponse, error) {
 	s.logger.Debug().Int64("listing_id", req.Id).Int64("user_id", req.UserId).Msg("UpdateListing called")
 
 	// Validate request
@@ -175,13 +186,13 @@ func (s *Server) UpdateListing(ctx context.Context, req *pb.UpdateListingRequest
 	pbListing := DomainToProtoListing(listing)
 
 	s.logger.Info().Int64("listing_id", listing.ID).Msg("listing updated successfully")
-	return &pb.UpdateListingResponse{
+	return &listingspb.UpdateListingResponse{
 		Listing: pbListing,
 	}, nil
 }
 
 // DeleteListing soft-deletes a listing
-func (s *Server) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest) (*pb.DeleteListingResponse, error) {
+func (s *Server) DeleteListing(ctx context.Context, req *listingspb.DeleteListingRequest) (*listingspb.DeleteListingResponse, error) {
 	s.logger.Debug().
 		Int64("listing_id", req.Id).
 		Int64("user_id", req.UserId).
@@ -229,7 +240,7 @@ func (s *Server) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest
 			Int64("listing_owner_id", listing.UserID).
 			Msg("Listing deleted successfully by admin")
 
-		return &pb.DeleteListingResponse{
+		return &listingspb.DeleteListingResponse{
 			Success: true,
 		}, nil
 	}
@@ -252,13 +263,13 @@ func (s *Server) DeleteListing(ctx context.Context, req *pb.DeleteListingRequest
 	}
 
 	s.logger.Info().Int64("listing_id", req.Id).Msg("listing deleted successfully")
-	return &pb.DeleteListingResponse{
+	return &listingspb.DeleteListingResponse{
 		Success: true,
 	}, nil
 }
 
 // SearchListings performs full-text search on listings
-func (s *Server) SearchListings(ctx context.Context, req *pb.SearchListingsRequest) (*pb.SearchListingsResponse, error) {
+func (s *Server) SearchListings(ctx context.Context, req *listingspb.SearchListingsRequest) (*listingspb.SearchListingsResponse, error) {
 	s.logger.Debug().Str("query", req.Query).Msg("SearchListings called")
 
 	// Validate request
@@ -277,20 +288,20 @@ func (s *Server) SearchListings(ctx context.Context, req *pb.SearchListingsReque
 	}
 
 	// Convert to proto
-	pbListings := make([]*pb.Listing, len(listings))
+	pbListings := make([]*listingspb.Listing, len(listings))
 	for i, listing := range listings {
 		pbListings[i] = DomainToProtoListing(listing)
 	}
 
 	s.logger.Debug().Int("count", len(listings)).Int32("total", total).Msg("search completed")
-	return &pb.SearchListingsResponse{
+	return &listingspb.SearchListingsResponse{
 		Listings: pbListings,
 		Total:    total,
 	}, nil
 }
 
 // ListListings returns a paginated list of listings
-func (s *Server) ListListings(ctx context.Context, req *pb.ListListingsRequest) (*pb.ListListingsResponse, error) {
+func (s *Server) ListListings(ctx context.Context, req *listingspb.ListListingsRequest) (*listingspb.ListListingsResponse, error) {
 	s.logger.Debug().Int32("limit", req.Limit).Int32("offset", req.Offset).Msg("ListListings called")
 
 	// Validate request
@@ -309,13 +320,13 @@ func (s *Server) ListListings(ctx context.Context, req *pb.ListListingsRequest) 
 	}
 
 	// Convert to proto
-	pbListings := make([]*pb.Listing, len(listings))
+	pbListings := make([]*listingspb.Listing, len(listings))
 	for i, listing := range listings {
 		pbListings[i] = DomainToProtoListing(listing)
 	}
 
 	s.logger.Debug().Int("count", len(listings)).Int32("total", total).Msg("listings retrieved")
-	return &pb.ListListingsResponse{
+	return &listingspb.ListListingsResponse{
 		Listings: pbListings,
 		Total:    total,
 	}, nil
@@ -323,7 +334,7 @@ func (s *Server) ListListings(ctx context.Context, req *pb.ListListingsRequest) 
 
 // Validation helpers
 
-func (s *Server) validateCreateListingRequest(req *pb.CreateListingRequest) error {
+func (s *Server) validateCreateListingRequest(req *listingspb.CreateListingRequest) error {
 	if req.UserId <= 0 {
 		return fmt.Errorf("user_id must be greater than 0")
 	}
@@ -363,7 +374,7 @@ func (s *Server) validateCreateListingRequest(req *pb.CreateListingRequest) erro
 	return nil
 }
 
-func (s *Server) validateUpdateListingRequest(req *pb.UpdateListingRequest) error {
+func (s *Server) validateUpdateListingRequest(req *listingspb.UpdateListingRequest) error {
 	if req.Id <= 0 {
 		return fmt.Errorf("listing ID must be greater than 0")
 	}
@@ -416,7 +427,7 @@ func (s *Server) validateUpdateListingRequest(req *pb.UpdateListingRequest) erro
 	return nil
 }
 
-func (s *Server) validateSearchListingsRequest(req *pb.SearchListingsRequest) error {
+func (s *Server) validateSearchListingsRequest(req *listingspb.SearchListingsRequest) error {
 	// Query is optional - if provided, validate it
 	if req.Query != "" && len(req.Query) < 2 {
 		return fmt.Errorf("search query must be at least 2 characters")
@@ -443,7 +454,7 @@ func (s *Server) validateSearchListingsRequest(req *pb.SearchListingsRequest) er
 	return nil
 }
 
-func (s *Server) validateListListingsRequest(req *pb.ListListingsRequest) error {
+func (s *Server) validateListListingsRequest(req *listingspb.ListListingsRequest) error {
 	if req.Limit <= 0 {
 		return fmt.Errorf("limit must be greater than 0")
 	}

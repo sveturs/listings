@@ -6,13 +6,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/service/listings"
 )
 
 // DecrementStock atomically decrements stock for multiple products/variants
 // Used during order creation to reserve inventory
-func (s *Server) DecrementStock(ctx context.Context, req *pb.DecrementStockRequest) (*pb.DecrementStockResponse, error) {
+func (s *Server) DecrementStock(ctx context.Context, req *listingspb.DecrementStockRequest) (*listingspb.DecrementStockResponse, error) {
 	logger := s.logger.With().
 		Str("method", "DecrementStock").
 		Int("items_count", len(req.Items)).
@@ -26,7 +26,7 @@ func (s *Server) DecrementStock(ctx context.Context, req *pb.DecrementStockReque
 
 	// Validate request
 	if len(req.Items) == 0 {
-		return &pb.DecrementStockResponse{
+		return &listingspb.DecrementStockResponse{
 			Success: false,
 			Error:   strPtr("no items provided"),
 		}, nil
@@ -36,14 +36,14 @@ func (s *Server) DecrementStock(ctx context.Context, req *pb.DecrementStockReque
 	items := make([]listings.StockItem, 0, len(req.Items))
 	for _, item := range req.Items {
 		if item.ProductId <= 0 {
-			return &pb.DecrementStockResponse{
+			return &listingspb.DecrementStockResponse{
 				Success: false,
 				Error:   strPtr("invalid product_id"),
 			}, nil
 		}
 
 		if item.Quantity <= 0 {
-			return &pb.DecrementStockResponse{
+			return &listingspb.DecrementStockResponse{
 				Success: false,
 				Error:   strPtr("quantity must be positive"),
 			}, nil
@@ -67,9 +67,9 @@ func (s *Server) DecrementStock(ctx context.Context, req *pb.DecrementStockReque
 		logger.Error().Err(err).Msg("Failed to decrement stock")
 
 		// Convert results to proto
-		pbResults := make([]*pb.StockResult, 0, len(results))
+		pbResults := make([]*listingspb.StockResult, 0, len(results))
 		for _, result := range results {
-			pbResults = append(pbResults, &pb.StockResult{
+			pbResults = append(pbResults, &listingspb.StockResult{
 				ProductId:   result.ProductID,
 				VariantId:   result.VariantID,
 				StockBefore: result.StockBefore,
@@ -79,7 +79,7 @@ func (s *Server) DecrementStock(ctx context.Context, req *pb.DecrementStockReque
 			})
 		}
 
-		return &pb.DecrementStockResponse{
+		return &listingspb.DecrementStockResponse{
 			Success: false,
 			Error:   strPtr(err.Error()),
 			Results: pbResults,
@@ -87,9 +87,9 @@ func (s *Server) DecrementStock(ctx context.Context, req *pb.DecrementStockReque
 	}
 
 	// Convert successful results to proto
-	pbResults := make([]*pb.StockResult, 0, len(results))
+	pbResults := make([]*listingspb.StockResult, 0, len(results))
 	for _, result := range results {
-		pbResults = append(pbResults, &pb.StockResult{
+		pbResults = append(pbResults, &listingspb.StockResult{
 			ProductId:   result.ProductID,
 			VariantId:   result.VariantID,
 			StockBefore: result.StockBefore,
@@ -103,7 +103,7 @@ func (s *Server) DecrementStock(ctx context.Context, req *pb.DecrementStockReque
 		Int("items_processed", len(results)).
 		Msg("Stock decremented successfully")
 
-	return &pb.DecrementStockResponse{
+	return &listingspb.DecrementStockResponse{
 		Success: true,
 		Results: pbResults,
 	}, nil
@@ -111,7 +111,7 @@ func (s *Server) DecrementStock(ctx context.Context, req *pb.DecrementStockReque
 
 // RollbackStock restores stock if order creation fails
 // Compensating transaction for failed orders
-func (s *Server) RollbackStock(ctx context.Context, req *pb.RollbackStockRequest) (*pb.RollbackStockResponse, error) {
+func (s *Server) RollbackStock(ctx context.Context, req *listingspb.RollbackStockRequest) (*listingspb.RollbackStockResponse, error) {
 	logger := s.logger.With().
 		Str("method", "RollbackStock").
 		Int("items_count", len(req.Items)).
@@ -125,7 +125,7 @@ func (s *Server) RollbackStock(ctx context.Context, req *pb.RollbackStockRequest
 
 	// Validate request
 	if len(req.Items) == 0 {
-		return &pb.RollbackStockResponse{
+		return &listingspb.RollbackStockResponse{
 			Success: false,
 			Error:   strPtr("no items provided"),
 		}, nil
@@ -135,14 +135,14 @@ func (s *Server) RollbackStock(ctx context.Context, req *pb.RollbackStockRequest
 	items := make([]listings.StockItem, 0, len(req.Items))
 	for _, item := range req.Items {
 		if item.ProductId <= 0 {
-			return &pb.RollbackStockResponse{
+			return &listingspb.RollbackStockResponse{
 				Success: false,
 				Error:   strPtr("invalid product_id"),
 			}, nil
 		}
 
 		if item.Quantity <= 0 {
-			return &pb.RollbackStockResponse{
+			return &listingspb.RollbackStockResponse{
 				Success: false,
 				Error:   strPtr("quantity must be positive"),
 			}, nil
@@ -164,17 +164,17 @@ func (s *Server) RollbackStock(ctx context.Context, req *pb.RollbackStockRequest
 	results, err := s.service.RollbackStock(ctx, items, req.OrderId)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to rollback stock")
-		return &pb.RollbackStockResponse{
+		return &listingspb.RollbackStockResponse{
 			Success: false,
 			Error:   strPtr(err.Error()),
 		}, nil
 	}
 
 	// Convert results to proto and check if all succeeded
-	pbResults := make([]*pb.StockResult, 0, len(results))
+	pbResults := make([]*listingspb.StockResult, 0, len(results))
 	allSucceeded := true
 	for _, result := range results {
-		pbResults = append(pbResults, &pb.StockResult{
+		pbResults = append(pbResults, &listingspb.StockResult{
 			ProductId:   result.ProductID,
 			VariantId:   result.VariantID,
 			StockBefore: result.StockBefore,
@@ -193,7 +193,7 @@ func (s *Server) RollbackStock(ctx context.Context, req *pb.RollbackStockRequest
 		Bool("all_succeeded", allSucceeded).
 		Msg("Stock rollback completed")
 
-	return &pb.RollbackStockResponse{
+	return &listingspb.RollbackStockResponse{
 		Success: allSucceeded,
 		Results: pbResults,
 	}, nil
@@ -201,7 +201,7 @@ func (s *Server) RollbackStock(ctx context.Context, req *pb.RollbackStockRequest
 
 // CheckStockAvailability verifies if requested quantities are available
 // Used for validation before order creation
-func (s *Server) CheckStockAvailability(ctx context.Context, req *pb.CheckStockAvailabilityRequest) (*pb.CheckStockAvailabilityResponse, error) {
+func (s *Server) CheckStockAvailability(ctx context.Context, req *listingspb.CheckStockAvailabilityRequest) (*listingspb.CheckStockAvailabilityResponse, error) {
 	logger := s.logger.With().
 		Str("method", "CheckStockAvailability").
 		Int("items_count", len(req.Items)).
@@ -245,9 +245,9 @@ func (s *Server) CheckStockAvailability(ctx context.Context, req *pb.CheckStockA
 	}
 
 	// Convert results to proto
-	pbAvailabilities := make([]*pb.StockAvailability, 0, len(availabilities))
+	pbAvailabilities := make([]*listingspb.StockAvailability, 0, len(availabilities))
 	for _, avail := range availabilities {
-		pbAvailabilities = append(pbAvailabilities, &pb.StockAvailability{
+		pbAvailabilities = append(pbAvailabilities, &listingspb.StockAvailability{
 			ProductId:         avail.ProductID,
 			VariantId:         avail.VariantID,
 			RequestedQuantity: avail.RequestedQuantity,
@@ -260,7 +260,7 @@ func (s *Server) CheckStockAvailability(ctx context.Context, req *pb.CheckStockA
 		Bool("all_available", allAvailable).
 		Msg("Stock availability checked")
 
-	return &pb.CheckStockAvailabilityResponse{
+	return &listingspb.CheckStockAvailabilityResponse{
 		AllAvailable: allAvailable,
 		Items:        pbAvailabilities,
 	}, nil

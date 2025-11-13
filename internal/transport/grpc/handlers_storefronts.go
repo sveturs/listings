@@ -8,13 +8,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	listingsv1 "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
 	"github.com/sveturs/listings/internal/service/listings"
 )
 
 // CreateStorefront creates a new storefront
-func (s *Server) CreateStorefront(ctx context.Context, req *listingsv1.CreateStorefrontRequest) (*listingsv1.StorefrontFull, error) {
+func (s *Server) CreateStorefront(ctx context.Context, req *listingspb.CreateStorefrontRequest) (*listingspb.StorefrontFull, error) {
 	s.logger.Info().Int64("user_id", req.UserId).Msg("CreateStorefront called")
 
 	if err := validateCreateStorefrontRequest(req); err != nil {
@@ -50,16 +50,16 @@ func (s *Server) CreateStorefront(ctx context.Context, req *listingsv1.CreateSto
 }
 
 // GetStorefront retrieves a storefront by ID or slug
-func (s *Server) GetStorefront(ctx context.Context, req *listingsv1.GetStorefrontRequest) (*listingsv1.GetStorefrontResponse, error) {
+func (s *Server) GetStorefront(ctx context.Context, req *listingspb.GetStorefrontRequest) (*listingspb.GetStorefrontResponse, error) {
 	s.logger.Info().Msg("GetStorefront called")
 
 	var id *int64
 	var slug *string
 
 	switch identifier := req.Identifier.(type) {
-	case *listingsv1.GetStorefrontRequest_Id:
+	case *listingspb.GetStorefrontRequest_Id:
 		id = &identifier.Id
-	case *listingsv1.GetStorefrontRequest_Slug:
+	case *listingspb.GetStorefrontRequest_Slug:
 		slug = &identifier.Slug
 	default:
 		return nil, status.Error(codes.InvalidArgument, "either id or slug must be provided")
@@ -80,16 +80,16 @@ func (s *Server) GetStorefront(ctx context.Context, req *listingsv1.GetStorefron
 
 	s.logger.Info().Int64("storefront_id", storefront.ID).Msg("Storefront retrieved successfully")
 
-	return &listingsv1.GetStorefrontResponse{
+	return &listingspb.GetStorefrontResponse{
 		Storefront: mapDomainStorefrontToProto(storefront),
 	}, nil
 }
 
 // GetStorefrontBySlug retrieves a storefront by slug
-func (s *Server) GetStorefrontBySlug(ctx context.Context, req *listingsv1.GetStorefrontBySlugRequest) (*listingsv1.GetStorefrontResponse, error) {
+func (s *Server) GetStorefrontBySlug(ctx context.Context, req *listingspb.GetStorefrontBySlugRequest) (*listingspb.GetStorefrontResponse, error) {
 	// Convert to GetStorefrontRequest
-	getReq := &listingsv1.GetStorefrontRequest{
-		Identifier: &listingsv1.GetStorefrontRequest_Slug{
+	getReq := &listingspb.GetStorefrontRequest{
+		Identifier: &listingspb.GetStorefrontRequest_Slug{
 			Slug: req.Slug,
 		},
 		IncludeStaff:           false,
@@ -101,7 +101,7 @@ func (s *Server) GetStorefrontBySlug(ctx context.Context, req *listingsv1.GetSto
 }
 
 // UpdateStorefront updates a storefront
-func (s *Server) UpdateStorefront(ctx context.Context, req *listingsv1.UpdateStorefrontRequest) (*listingsv1.StorefrontFull, error) {
+func (s *Server) UpdateStorefront(ctx context.Context, req *listingspb.UpdateStorefrontRequest) (*listingspb.StorefrontFull, error) {
 	s.logger.Info().Int64("storefront_id", req.Id).Msg("UpdateStorefront called")
 
 	if req.Id == 0 {
@@ -138,7 +138,7 @@ func (s *Server) UpdateStorefront(ctx context.Context, req *listingsv1.UpdateSto
 }
 
 // DeleteStorefront deletes a storefront
-func (s *Server) DeleteStorefront(ctx context.Context, req *listingsv1.DeleteStorefrontRequest) (*listingsv1.DeleteStorefrontResponse, error) {
+func (s *Server) DeleteStorefront(ctx context.Context, req *listingspb.DeleteStorefrontRequest) (*listingspb.DeleteStorefrontResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.Id).Msg("DeleteStorefront called")
 
 	if req.Id == 0 {
@@ -153,14 +153,14 @@ func (s *Server) DeleteStorefront(ctx context.Context, req *listingsv1.DeleteSto
 
 	s.logger.Info().Int64("storefront_id", req.Id).Msg("Storefront deleted successfully")
 
-	return &listingsv1.DeleteStorefrontResponse{
+	return &listingspb.DeleteStorefrontResponse{
 		Success: true,
 		Message: "Storefront deleted successfully",
 	}, nil
 }
 
 // ListStorefronts lists storefronts with filters
-func (s *Server) ListStorefronts(ctx context.Context, req *listingsv1.ListStorefrontsRequest) (*listingsv1.ListStorefrontsResponse, error) {
+func (s *Server) ListStorefronts(ctx context.Context, req *listingspb.ListStorefrontsRequest) (*listingspb.ListStorefrontsResponse, error) {
 	s.logger.Info().Msg("ListStorefronts called")
 
 	filter := mapProtoFilterToDomain(req)
@@ -171,26 +171,26 @@ func (s *Server) ListStorefronts(ctx context.Context, req *listingsv1.ListStoref
 		return nil, status.Errorf(codes.Internal, "failed to list storefronts: %v", err)
 	}
 
-	protoStorefronts := make([]*listingsv1.StorefrontFull, len(storefronts))
+	protoStorefronts := make([]*listingspb.StorefrontFull, len(storefronts))
 	for i, sf := range storefronts {
 		protoStorefronts[i] = mapDomainStorefrontToProto(&sf)
 	}
 
 	s.logger.Info().Int("count", len(storefronts)).Int("total", total).Msg("Storefronts listed successfully")
 
-	return &listingsv1.ListStorefrontsResponse{
+	return &listingspb.ListStorefrontsResponse{
 		Storefronts: protoStorefronts,
 		Total:       int32(total),
 	}, nil
 }
 
 // GetMyStorefronts retrieves storefronts for a specific user
-func (s *Server) GetMyStorefronts(ctx context.Context, req *listingsv1.ListStorefrontsRequest) (*listingsv1.ListStorefrontsResponse, error) {
+func (s *Server) GetMyStorefronts(ctx context.Context, req *listingspb.ListStorefrontsRequest) (*listingspb.ListStorefrontsResponse, error) {
 	return s.ListStorefronts(ctx, req)
 }
 
 // AddStaff adds a staff member to a storefront
-func (s *Server) AddStaff(ctx context.Context, req *listingsv1.AddStaffRequest) (*listingsv1.StorefrontStaff, error) {
+func (s *Server) AddStaff(ctx context.Context, req *listingspb.AddStaffRequest) (*listingspb.StorefrontStaff, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Int64("user_id", req.UserId).Msg("AddStaff called")
 
 	if req.StorefrontId == 0 || req.UserId == 0 {
@@ -212,7 +212,7 @@ func (s *Server) AddStaff(ctx context.Context, req *listingsv1.AddStaffRequest) 
 }
 
 // UpdateStaff updates a staff member
-func (s *Server) UpdateStaff(ctx context.Context, req *listingsv1.UpdateStaffRequest) (*listingsv1.StorefrontStaff, error) {
+func (s *Server) UpdateStaff(ctx context.Context, req *listingspb.UpdateStaffRequest) (*listingspb.StorefrontStaff, error) {
 	s.logger.Info().Int64("staff_id", req.Id).Msg("UpdateStaff called")
 
 	if req.Id == 0 {
@@ -236,11 +236,11 @@ func (s *Server) UpdateStaff(ctx context.Context, req *listingsv1.UpdateStaffReq
 
 	s.logger.Info().Int64("staff_id", req.Id).Msg("Staff updated successfully")
 
-	return &listingsv1.StorefrontStaff{Id: req.Id}, nil
+	return &listingspb.StorefrontStaff{Id: req.Id}, nil
 }
 
 // RemoveStaff removes a staff member from a storefront
-func (s *Server) RemoveStaff(ctx context.Context, req *listingsv1.RemoveStaffRequest) (*listingsv1.DeleteStorefrontResponse, error) {
+func (s *Server) RemoveStaff(ctx context.Context, req *listingspb.RemoveStaffRequest) (*listingspb.DeleteStorefrontResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Int64("user_id", req.UserId).Msg("RemoveStaff called")
 
 	if req.StorefrontId == 0 || req.UserId == 0 {
@@ -255,14 +255,14 @@ func (s *Server) RemoveStaff(ctx context.Context, req *listingsv1.RemoveStaffReq
 
 	s.logger.Info().Msg("Staff removed successfully")
 
-	return &listingsv1.DeleteStorefrontResponse{
+	return &listingspb.DeleteStorefrontResponse{
 		Success: true,
 		Message: "Staff removed successfully",
 	}, nil
 }
 
 // GetStaff retrieves all staff members for a storefront
-func (s *Server) GetStaff(ctx context.Context, req *listingsv1.GetStaffRequest) (*listingsv1.GetStaffResponse, error) {
+func (s *Server) GetStaff(ctx context.Context, req *listingspb.GetStaffRequest) (*listingspb.GetStaffResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("GetStaff called")
 
 	if req.StorefrontId == 0 {
@@ -275,20 +275,20 @@ func (s *Server) GetStaff(ctx context.Context, req *listingsv1.GetStaffRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to get staff: %v", err)
 	}
 
-	protoStaff := make([]*listingsv1.StorefrontStaff, len(staff))
+	protoStaff := make([]*listingspb.StorefrontStaff, len(staff))
 	for i, member := range staff {
 		protoStaff[i] = mapDomainStaffToProto(&member)
 	}
 
 	s.logger.Info().Int("count", len(staff)).Msg("Staff retrieved successfully")
 
-	return &listingsv1.GetStaffResponse{
+	return &listingspb.GetStaffResponse{
 		Staff: protoStaff,
 	}, nil
 }
 
 // SetWorkingHours sets working hours for a storefront
-func (s *Server) SetWorkingHours(ctx context.Context, req *listingsv1.SetWorkingHoursRequest) (*listingsv1.GetWorkingHoursResponse, error) {
+func (s *Server) SetWorkingHours(ctx context.Context, req *listingspb.SetWorkingHoursRequest) (*listingspb.GetWorkingHoursResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("SetWorkingHours called")
 
 	if req.StorefrontId == 0 {
@@ -311,20 +311,20 @@ func (s *Server) SetWorkingHours(ctx context.Context, req *listingsv1.SetWorking
 		return nil, status.Errorf(codes.Internal, "failed to get working hours: %v", err)
 	}
 
-	protoHours := make([]*listingsv1.StorefrontHours, len(savedHours))
+	protoHours := make([]*listingspb.StorefrontHours, len(savedHours))
 	for i, h := range savedHours {
 		protoHours[i] = mapDomainHoursToProto(&h)
 	}
 
 	s.logger.Info().Int("count", len(savedHours)).Msg("Working hours set successfully")
 
-	return &listingsv1.GetWorkingHoursResponse{
+	return &listingspb.GetWorkingHoursResponse{
 		Hours: protoHours,
 	}, nil
 }
 
 // GetWorkingHours retrieves working hours for a storefront
-func (s *Server) GetWorkingHours(ctx context.Context, req *listingsv1.GetWorkingHoursRequest) (*listingsv1.GetWorkingHoursResponse, error) {
+func (s *Server) GetWorkingHours(ctx context.Context, req *listingspb.GetWorkingHoursRequest) (*listingspb.GetWorkingHoursResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("GetWorkingHours called")
 
 	if req.StorefrontId == 0 {
@@ -337,20 +337,20 @@ func (s *Server) GetWorkingHours(ctx context.Context, req *listingsv1.GetWorking
 		return nil, status.Errorf(codes.Internal, "failed to get working hours: %v", err)
 	}
 
-	protoHours := make([]*listingsv1.StorefrontHours, len(hours))
+	protoHours := make([]*listingspb.StorefrontHours, len(hours))
 	for i, h := range hours {
 		protoHours[i] = mapDomainHoursToProto(&h)
 	}
 
 	s.logger.Info().Int("count", len(hours)).Msg("Working hours retrieved successfully")
 
-	return &listingsv1.GetWorkingHoursResponse{
+	return &listingspb.GetWorkingHoursResponse{
 		Hours: protoHours,
 	}, nil
 }
 
 // IsOpenNow checks if a storefront is currently open
-func (s *Server) IsOpenNow(ctx context.Context, req *listingsv1.IsOpenNowRequest) (*listingsv1.IsOpenNowResponse, error) {
+func (s *Server) IsOpenNow(ctx context.Context, req *listingspb.IsOpenNowRequest) (*listingspb.IsOpenNowResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("IsOpenNow called")
 
 	if req.StorefrontId == 0 {
@@ -363,7 +363,7 @@ func (s *Server) IsOpenNow(ctx context.Context, req *listingsv1.IsOpenNowRequest
 		return nil, status.Errorf(codes.Internal, "failed to check if open: %v", err)
 	}
 
-	response := &listingsv1.IsOpenNowResponse{
+	response := &listingspb.IsOpenNowResponse{
 		IsOpen: isOpen,
 	}
 
@@ -380,7 +380,7 @@ func (s *Server) IsOpenNow(ctx context.Context, req *listingsv1.IsOpenNowRequest
 }
 
 // SetPaymentMethods sets payment methods for a storefront
-func (s *Server) SetPaymentMethods(ctx context.Context, req *listingsv1.SetPaymentMethodsRequest) (*listingsv1.GetPaymentMethodsResponse, error) {
+func (s *Server) SetPaymentMethods(ctx context.Context, req *listingspb.SetPaymentMethodsRequest) (*listingspb.GetPaymentMethodsResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("SetPaymentMethods called")
 
 	if req.StorefrontId == 0 {
@@ -403,20 +403,20 @@ func (s *Server) SetPaymentMethods(ctx context.Context, req *listingsv1.SetPayme
 		return nil, status.Errorf(codes.Internal, "failed to get payment methods: %v", err)
 	}
 
-	protoMethods := make([]*listingsv1.StorefrontPaymentMethod, len(savedMethods))
+	protoMethods := make([]*listingspb.StorefrontPaymentMethod, len(savedMethods))
 	for i, m := range savedMethods {
 		protoMethods[i] = mapDomainPaymentMethodToProto(&m)
 	}
 
 	s.logger.Info().Int("count", len(savedMethods)).Msg("Payment methods set successfully")
 
-	return &listingsv1.GetPaymentMethodsResponse{
+	return &listingspb.GetPaymentMethodsResponse{
 		Methods: protoMethods,
 	}, nil
 }
 
 // GetPaymentMethods retrieves payment methods for a storefront
-func (s *Server) GetPaymentMethods(ctx context.Context, req *listingsv1.GetPaymentMethodsRequest) (*listingsv1.GetPaymentMethodsResponse, error) {
+func (s *Server) GetPaymentMethods(ctx context.Context, req *listingspb.GetPaymentMethodsRequest) (*listingspb.GetPaymentMethodsResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("GetPaymentMethods called")
 
 	if req.StorefrontId == 0 {
@@ -429,20 +429,20 @@ func (s *Server) GetPaymentMethods(ctx context.Context, req *listingsv1.GetPayme
 		return nil, status.Errorf(codes.Internal, "failed to get payment methods: %v", err)
 	}
 
-	protoMethods := make([]*listingsv1.StorefrontPaymentMethod, len(methods))
+	protoMethods := make([]*listingspb.StorefrontPaymentMethod, len(methods))
 	for i, m := range methods {
 		protoMethods[i] = mapDomainPaymentMethodToProto(&m)
 	}
 
 	s.logger.Info().Int("count", len(methods)).Msg("Payment methods retrieved successfully")
 
-	return &listingsv1.GetPaymentMethodsResponse{
+	return &listingspb.GetPaymentMethodsResponse{
 		Methods: protoMethods,
 	}, nil
 }
 
 // SetDeliveryOptions sets delivery options for a storefront
-func (s *Server) SetDeliveryOptions(ctx context.Context, req *listingsv1.SetDeliveryOptionsRequest) (*listingsv1.GetDeliveryOptionsResponse, error) {
+func (s *Server) SetDeliveryOptions(ctx context.Context, req *listingspb.SetDeliveryOptionsRequest) (*listingspb.GetDeliveryOptionsResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("SetDeliveryOptions called")
 
 	if req.StorefrontId == 0 {
@@ -465,20 +465,20 @@ func (s *Server) SetDeliveryOptions(ctx context.Context, req *listingsv1.SetDeli
 		return nil, status.Errorf(codes.Internal, "failed to get delivery options: %v", err)
 	}
 
-	protoOptions := make([]*listingsv1.StorefrontDeliveryOption, len(savedOptions))
+	protoOptions := make([]*listingspb.StorefrontDeliveryOption, len(savedOptions))
 	for i, o := range savedOptions {
 		protoOptions[i] = mapDomainDeliveryOptionToProto(&o)
 	}
 
 	s.logger.Info().Int("count", len(savedOptions)).Msg("Delivery options set successfully")
 
-	return &listingsv1.GetDeliveryOptionsResponse{
+	return &listingspb.GetDeliveryOptionsResponse{
 		Options: protoOptions,
 	}, nil
 }
 
 // GetDeliveryOptions retrieves delivery options for a storefront
-func (s *Server) GetDeliveryOptions(ctx context.Context, req *listingsv1.GetDeliveryOptionsRequest) (*listingsv1.GetDeliveryOptionsResponse, error) {
+func (s *Server) GetDeliveryOptions(ctx context.Context, req *listingspb.GetDeliveryOptionsRequest) (*listingspb.GetDeliveryOptionsResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("GetDeliveryOptions called")
 
 	if req.StorefrontId == 0 {
@@ -491,20 +491,20 @@ func (s *Server) GetDeliveryOptions(ctx context.Context, req *listingsv1.GetDeli
 		return nil, status.Errorf(codes.Internal, "failed to get delivery options: %v", err)
 	}
 
-	protoOptions := make([]*listingsv1.StorefrontDeliveryOption, len(options))
+	protoOptions := make([]*listingspb.StorefrontDeliveryOption, len(options))
 	for i, o := range options {
 		protoOptions[i] = mapDomainDeliveryOptionToProto(&o)
 	}
 
 	s.logger.Info().Int("count", len(options)).Msg("Delivery options retrieved successfully")
 
-	return &listingsv1.GetDeliveryOptionsResponse{
+	return &listingspb.GetDeliveryOptionsResponse{
 		Options: protoOptions,
 	}, nil
 }
 
 // GetMapData retrieves storefronts for map display
-func (s *Server) GetMapData(ctx context.Context, req *listingsv1.GetMapDataRequest) (*listingsv1.GetMapDataResponse, error) {
+func (s *Server) GetMapData(ctx context.Context, req *listingspb.GetMapDataRequest) (*listingspb.GetMapDataResponse, error) {
 	s.logger.Info().Msg("GetMapData called")
 
 	bounds := &domain.MapBounds{
@@ -525,20 +525,20 @@ func (s *Server) GetMapData(ctx context.Context, req *listingsv1.GetMapDataReque
 		return nil, status.Errorf(codes.Internal, "failed to get map data: %v", err)
 	}
 
-	protoMapData := make([]*listingsv1.StorefrontMapData, len(mapData))
+	protoMapData := make([]*listingspb.StorefrontMapData, len(mapData))
 	for i, data := range mapData {
 		protoMapData[i] = mapDomainMapDataToProto(&data)
 	}
 
 	s.logger.Info().Int("count", len(mapData)).Msg("Map data retrieved successfully")
 
-	return &listingsv1.GetMapDataResponse{
+	return &listingspb.GetMapDataResponse{
 		Storefronts: protoMapData,
 	}, nil
 }
 
 // GetDashboardStats retrieves dashboard statistics for a storefront
-func (s *Server) GetDashboardStats(ctx context.Context, req *listingsv1.DashboardStatsRequest) (*listingsv1.DashboardStatsResponse, error) {
+func (s *Server) GetDashboardStats(ctx context.Context, req *listingspb.DashboardStatsRequest) (*listingspb.DashboardStatsResponse, error) {
 	s.logger.Info().Int64("storefront_id", req.StorefrontId).Msg("GetDashboardStats called")
 
 	if req.StorefrontId == 0 {
@@ -567,7 +567,7 @@ func (s *Server) GetDashboardStats(ctx context.Context, req *listingsv1.Dashboar
 }
 
 // Validation helper function
-func validateCreateStorefrontRequest(req *listingsv1.CreateStorefrontRequest) error {
+func validateCreateStorefrontRequest(req *listingspb.CreateStorefrontRequest) error {
 	if req.UserId == 0 {
 		return fmt.Errorf("user_id is required")
 	}

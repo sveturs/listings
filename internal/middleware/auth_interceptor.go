@@ -112,15 +112,26 @@ func (a *AuthInterceptor) enrichContext(ctx context.Context, validationResp *ent
 func (a *AuthInterceptor) isPublicMethod(method string) bool {
 	// Public methods that don't require authentication
 	publicMethods := []string{
-		"/listings.v1.ListingsService/GetRootCategories",
-		"/listings.v1.ListingsService/GetAllCategories",
-		"/listings.v1.ListingsService/GetCategory",
-		"/listings.v1.ListingsService/GetCategoryBySlug",
-		"/listings.v1.ListingsService/SearchListings",
-		"/listings.v1.ListingsService/ListListings",
-		"/listings.v1.ListingsService/GetListing",
-		"/listings.v1.ListingsService/GetProduct",
-		"/listings.v1.ListingsService/GetProductBySKU",
+		"/listingssvc.v1.ListingsService/GetRootCategories",
+		"/listingssvc.v1.ListingsService/GetAllCategories",
+		"/listingssvc.v1.ListingsService/GetCategory",
+		"/listingssvc.v1.ListingsService/GetCategoryBySlug",
+		"/listingssvc.v1.ListingsService/SearchListings",
+		"/listingssvc.v1.ListingsService/ListListings",
+		"/listingssvc.v1.ListingsService/GetListing",
+		"/listingssvc.v1.ListingsService/GetProduct",
+		"/listingssvc.v1.ListingsService/GetProductBySKU",
+		// Storefront public methods
+		"/listingssvc.v1.ListingsService/GetStorefront",
+		"/listingssvc.v1.ListingsService/GetStorefrontBySlug",
+		"/listingssvc.v1.ListingsService/ListStorefronts",
+		"/listingssvc.v1.ListingsService/GetMyStorefronts",
+		"/listingssvc.v1.ListingsService/GetWorkingHours",
+		"/listingssvc.v1.ListingsService/IsOpenNow",
+		"/listingssvc.v1.ListingsService/GetStaff",
+		"/listingssvc.v1.ListingsService/GetPaymentMethods",
+		"/listingssvc.v1.ListingsService/GetDeliveryOptions",
+		"/listingssvc.v1.ListingsService/GetMapData",
 	}
 
 	for _, publicMethod := range publicMethods {

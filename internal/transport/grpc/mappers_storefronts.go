@@ -7,18 +7,18 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	listingsv1 "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
 	"github.com/sveturs/listings/internal/service/listings"
 )
 
 // mapDomainStorefrontToProto maps domain.Storefront to proto StorefrontFull
-func mapDomainStorefrontToProto(s *domain.Storefront) *listingsv1.StorefrontFull {
+func mapDomainStorefrontToProto(s *domain.Storefront) *listingspb.StorefrontFull {
 	if s == nil {
 		return nil
 	}
 
-	storefront := &listingsv1.StorefrontFull{
+	storefront := &listingspb.StorefrontFull{
 		Id:                    s.ID,
 		UserId:                s.UserID,
 		Slug:                  s.Slug,
@@ -65,28 +65,28 @@ func mapDomainStorefrontToProto(s *domain.Storefront) *listingsv1.StorefrontFull
 	}
 
 	if len(s.Staff) > 0 {
-		storefront.Staff = make([]*listingsv1.StorefrontStaff, len(s.Staff))
+		storefront.Staff = make([]*listingspb.StorefrontStaff, len(s.Staff))
 		for i, staff := range s.Staff {
 			storefront.Staff[i] = mapDomainStaffToProto(&staff)
 		}
 	}
 
 	if len(s.Hours) > 0 {
-		storefront.Hours = make([]*listingsv1.StorefrontHours, len(s.Hours))
+		storefront.Hours = make([]*listingspb.StorefrontHours, len(s.Hours))
 		for i, hour := range s.Hours {
 			storefront.Hours[i] = mapDomainHoursToProto(&hour)
 		}
 	}
 
 	if len(s.PaymentMethods) > 0 {
-		storefront.PaymentMethods = make([]*listingsv1.StorefrontPaymentMethod, len(s.PaymentMethods))
+		storefront.PaymentMethods = make([]*listingspb.StorefrontPaymentMethod, len(s.PaymentMethods))
 		for i, method := range s.PaymentMethods {
 			storefront.PaymentMethods[i] = mapDomainPaymentMethodToProto(&method)
 		}
 	}
 
 	if len(s.DeliveryOptions) > 0 {
-		storefront.DeliveryOptions = make([]*listingsv1.StorefrontDeliveryOption, len(s.DeliveryOptions))
+		storefront.DeliveryOptions = make([]*listingspb.StorefrontDeliveryOption, len(s.DeliveryOptions))
 		for i, option := range s.DeliveryOptions {
 			storefront.DeliveryOptions[i] = mapDomainDeliveryOptionToProto(&option)
 		}
@@ -96,12 +96,12 @@ func mapDomainStorefrontToProto(s *domain.Storefront) *listingsv1.StorefrontFull
 }
 
 // mapDomainStaffToProto maps domain.StorefrontStaff to proto StorefrontStaff
-func mapDomainStaffToProto(s *domain.StorefrontStaff) *listingsv1.StorefrontStaff {
+func mapDomainStaffToProto(s *domain.StorefrontStaff) *listingspb.StorefrontStaff {
 	if s == nil {
 		return nil
 	}
 
-	return &listingsv1.StorefrontStaff{
+	return &listingspb.StorefrontStaff{
 		Id:           s.ID,
 		StorefrontId: s.StorefrontID,
 		UserId:       s.UserID,
@@ -115,12 +115,12 @@ func mapDomainStaffToProto(s *domain.StorefrontStaff) *listingsv1.StorefrontStaf
 }
 
 // mapDomainHoursToProto maps domain.StorefrontHours to proto StorefrontHours
-func mapDomainHoursToProto(h *domain.StorefrontHours) *listingsv1.StorefrontHours {
+func mapDomainHoursToProto(h *domain.StorefrontHours) *listingspb.StorefrontHours {
 	if h == nil {
 		return nil
 	}
 
-	return &listingsv1.StorefrontHours{
+	return &listingspb.StorefrontHours{
 		Id:           h.ID,
 		StorefrontId: h.StorefrontID,
 		DayOfWeek:    h.DayOfWeek,
@@ -133,7 +133,7 @@ func mapDomainHoursToProto(h *domain.StorefrontHours) *listingsv1.StorefrontHour
 }
 
 // mapProtoHoursToDomain maps proto StorefrontHours to domain.StorefrontHours
-func mapProtoHoursToDomain(h *listingsv1.StorefrontHours) *domain.StorefrontHours {
+func mapProtoHoursToDomain(h *listingspb.StorefrontHours) *domain.StorefrontHours {
 	if h == nil {
 		return nil
 	}
@@ -151,12 +151,12 @@ func mapProtoHoursToDomain(h *listingsv1.StorefrontHours) *domain.StorefrontHour
 }
 
 // mapDomainPaymentMethodToProto maps domain.PaymentMethod to proto StorefrontPaymentMethod
-func mapDomainPaymentMethodToProto(m *domain.PaymentMethod) *listingsv1.StorefrontPaymentMethod {
+func mapDomainPaymentMethodToProto(m *domain.PaymentMethod) *listingspb.StorefrontPaymentMethod {
 	if m == nil {
 		return nil
 	}
 
-	return &listingsv1.StorefrontPaymentMethod{
+	return &listingspb.StorefrontPaymentMethod{
 		Id:             m.ID,
 		StorefrontId:   m.StorefrontID,
 		MethodType:     mapDomainPaymentMethodTypeToProto(m.MethodType),
@@ -171,7 +171,7 @@ func mapDomainPaymentMethodToProto(m *domain.PaymentMethod) *listingsv1.Storefro
 }
 
 // mapProtoPaymentMethodToDomain maps proto StorefrontPaymentMethod to domain.PaymentMethod
-func mapProtoPaymentMethodToDomain(m *listingsv1.StorefrontPaymentMethod) *domain.PaymentMethod {
+func mapProtoPaymentMethodToDomain(m *listingspb.StorefrontPaymentMethod) *domain.PaymentMethod {
 	if m == nil {
 		return nil
 	}
@@ -190,12 +190,12 @@ func mapProtoPaymentMethodToDomain(m *listingsv1.StorefrontPaymentMethod) *domai
 }
 
 // mapDomainDeliveryOptionToProto maps domain.StorefrontDeliveryOption to proto StorefrontDeliveryOption
-func mapDomainDeliveryOptionToProto(o *domain.StorefrontDeliveryOption) *listingsv1.StorefrontDeliveryOption {
+func mapDomainDeliveryOptionToProto(o *domain.StorefrontDeliveryOption) *listingspb.StorefrontDeliveryOption {
 	if o == nil {
 		return nil
 	}
 
-	return &listingsv1.StorefrontDeliveryOption{
+	return &listingspb.StorefrontDeliveryOption{
 		Id:               o.ID,
 		StorefrontId:     o.StorefrontID,
 		Name:             o.Name,
@@ -222,7 +222,7 @@ func mapDomainDeliveryOptionToProto(o *domain.StorefrontDeliveryOption) *listing
 }
 
 // mapProtoDeliveryOptionToDomain maps proto StorefrontDeliveryOption to domain.StorefrontDeliveryOption
-func mapProtoDeliveryOptionToDomain(o *listingsv1.StorefrontDeliveryOption) *domain.StorefrontDeliveryOption {
+func mapProtoDeliveryOptionToDomain(o *listingspb.StorefrontDeliveryOption) *domain.StorefrontDeliveryOption {
 	if o == nil {
 		return nil
 	}
@@ -252,12 +252,12 @@ func mapProtoDeliveryOptionToDomain(o *listingsv1.StorefrontDeliveryOption) *dom
 }
 
 // mapDomainMapDataToProto maps domain.StorefrontMapData to proto StorefrontMapData
-func mapDomainMapDataToProto(d *domain.StorefrontMapData) *listingsv1.StorefrontMapData {
+func mapDomainMapDataToProto(d *domain.StorefrontMapData) *listingspb.StorefrontMapData {
 	if d == nil {
 		return nil
 	}
 
-	return &listingsv1.StorefrontMapData{
+	return &listingspb.StorefrontMapData{
 		Id:            d.ID,
 		Slug:          d.Slug,
 		Name:          d.Name,
@@ -277,12 +277,12 @@ func mapDomainMapDataToProto(d *domain.StorefrontMapData) *listingsv1.Storefront
 }
 
 // mapDomainDashboardStatsToProto maps domain.StorefrontDashboardStats to proto DashboardStatsResponse
-func mapDomainDashboardStatsToProto(s *domain.StorefrontDashboardStats) *listingsv1.DashboardStatsResponse {
+func mapDomainDashboardStatsToProto(s *domain.StorefrontDashboardStats) *listingspb.DashboardStatsResponse {
 	if s == nil {
 		return nil
 	}
 
-	return &listingsv1.DashboardStatsResponse{
+	return &listingspb.DashboardStatsResponse{
 		TotalProducts:    s.TotalProducts,
 		ActiveProducts:   s.ActiveProducts,
 		OrdersCount:      s.OrdersCount,
@@ -297,7 +297,7 @@ func mapDomainDashboardStatsToProto(s *domain.StorefrontDashboardStats) *listing
 }
 
 // mapProtoFilterToDomain maps proto ListStorefrontsRequest to domain.ListStorefrontsFilter
-func mapProtoFilterToDomain(req *listingsv1.ListStorefrontsRequest) *domain.ListStorefrontsFilter {
+func mapProtoFilterToDomain(req *listingspb.ListStorefrontsRequest) *domain.ListStorefrontsFilter {
 	// Initialize with default values for required fields
 	sortBy := ""
 	if req.SortBy != nil {
@@ -370,7 +370,7 @@ func mapProtoFilterToDomain(req *listingsv1.ListStorefrontsRequest) *domain.List
 }
 
 // mapProtoLocationToService maps proto Location to listings.StorefrontLocation
-func mapProtoLocationToService(loc *listingsv1.Location) listings.StorefrontLocation {
+func mapProtoLocationToService(loc *listingspb.Location) listings.StorefrontLocation {
 	return listings.StorefrontLocation{
 		UserLat:     loc.UserLat,
 		UserLng:     loc.UserLng,
@@ -382,7 +382,7 @@ func mapProtoLocationToService(loc *listingsv1.Location) listings.StorefrontLoca
 }
 
 // mapProtoLocationToServicePtr maps proto Location to *listings.StorefrontLocation
-func mapProtoLocationToServicePtr(loc *listingsv1.Location) *listings.StorefrontLocation {
+func mapProtoLocationToServicePtr(loc *listingspb.Location) *listings.StorefrontLocation {
 	if loc == nil {
 		return nil
 	}
@@ -392,140 +392,140 @@ func mapProtoLocationToServicePtr(loc *listingsv1.Location) *listings.Storefront
 
 // Enum mapping functions
 
-func mapDomainGeoStrategyToProto(strategy string) listingsv1.StorefrontGeoStrategy {
+func mapDomainGeoStrategyToProto(strategy string) listingspb.StorefrontGeoStrategy {
 	switch strategy {
 	case "storefront_location":
-		return listingsv1.StorefrontGeoStrategy_STOREFRONT_GEO_STRATEGY_STOREFRONT_LOCATION
+		return listingspb.StorefrontGeoStrategy_STOREFRONT_GEO_STRATEGY_STOREFRONT_LOCATION
 	case "individual_location":
-		return listingsv1.StorefrontGeoStrategy_STOREFRONT_GEO_STRATEGY_INDIVIDUAL_LOCATION
+		return listingspb.StorefrontGeoStrategy_STOREFRONT_GEO_STRATEGY_INDIVIDUAL_LOCATION
 	default:
-		return listingsv1.StorefrontGeoStrategy_STOREFRONT_GEO_STRATEGY_UNSPECIFIED
+		return listingspb.StorefrontGeoStrategy_STOREFRONT_GEO_STRATEGY_UNSPECIFIED
 	}
 }
 
-func mapDomainPrivacyLevelToProto(level string) listingsv1.LocationPrivacyLevel {
+func mapDomainPrivacyLevelToProto(level string) listingspb.LocationPrivacyLevel {
 	switch level {
 	case "exact":
-		return listingsv1.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_EXACT
+		return listingspb.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_EXACT
 	case "street":
-		return listingsv1.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_STREET
+		return listingspb.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_STREET
 	case "district":
-		return listingsv1.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_DISTRICT
+		return listingspb.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_DISTRICT
 	case "city":
-		return listingsv1.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_CITY
+		return listingspb.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_CITY
 	default:
-		return listingsv1.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_UNSPECIFIED
+		return listingspb.LocationPrivacyLevel_LOCATION_PRIVACY_LEVEL_UNSPECIFIED
 	}
 }
 
-func mapDomainSubscriptionPlanToProto(plan string) listingsv1.SubscriptionPlanType {
+func mapDomainSubscriptionPlanToProto(plan string) listingspb.SubscriptionPlanType {
 	switch plan {
 	case "starter":
-		return listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_STARTER
+		return listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_STARTER
 	case "professional":
-		return listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_PROFESSIONAL
+		return listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_PROFESSIONAL
 	case "business":
-		return listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_BUSINESS
+		return listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_BUSINESS
 	case "enterprise":
-		return listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_ENTERPRISE
+		return listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_ENTERPRISE
 	default:
-		return listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_UNSPECIFIED
+		return listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_UNSPECIFIED
 	}
 }
 
-func mapProtoSubscriptionPlanToDomain(plan listingsv1.SubscriptionPlanType) string {
+func mapProtoSubscriptionPlanToDomain(plan listingspb.SubscriptionPlanType) string {
 	switch plan {
-	case listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_STARTER:
+	case listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_STARTER:
 		return "starter"
-	case listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_PROFESSIONAL:
+	case listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_PROFESSIONAL:
 		return "professional"
-	case listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_BUSINESS:
+	case listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_BUSINESS:
 		return "business"
-	case listingsv1.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_ENTERPRISE:
+	case listingspb.SubscriptionPlanType_SUBSCRIPTION_PLAN_TYPE_ENTERPRISE:
 		return "enterprise"
 	default:
 		return "starter"
 	}
 }
 
-func mapDomainStaffRoleToProto(role string) listingsv1.StaffRole {
+func mapDomainStaffRoleToProto(role string) listingspb.StaffRole {
 	switch role {
 	case "owner":
-		return listingsv1.StaffRole_STAFF_ROLE_OWNER
+		return listingspb.StaffRole_STAFF_ROLE_OWNER
 	case "manager":
-		return listingsv1.StaffRole_STAFF_ROLE_MANAGER
+		return listingspb.StaffRole_STAFF_ROLE_MANAGER
 	case "cashier":
-		return listingsv1.StaffRole_STAFF_ROLE_CASHIER
+		return listingspb.StaffRole_STAFF_ROLE_CASHIER
 	case "support":
-		return listingsv1.StaffRole_STAFF_ROLE_SUPPORT
+		return listingspb.StaffRole_STAFF_ROLE_SUPPORT
 	case "moderator":
-		return listingsv1.StaffRole_STAFF_ROLE_MODERATOR
+		return listingspb.StaffRole_STAFF_ROLE_MODERATOR
 	default:
-		return listingsv1.StaffRole_STAFF_ROLE_UNSPECIFIED
+		return listingspb.StaffRole_STAFF_ROLE_UNSPECIFIED
 	}
 }
 
-func mapProtoStaffRoleToDomain(role listingsv1.StaffRole) string {
+func mapProtoStaffRoleToDomain(role listingspb.StaffRole) string {
 	switch role {
-	case listingsv1.StaffRole_STAFF_ROLE_OWNER:
+	case listingspb.StaffRole_STAFF_ROLE_OWNER:
 		return "owner"
-	case listingsv1.StaffRole_STAFF_ROLE_MANAGER:
+	case listingspb.StaffRole_STAFF_ROLE_MANAGER:
 		return "manager"
-	case listingsv1.StaffRole_STAFF_ROLE_CASHIER:
+	case listingspb.StaffRole_STAFF_ROLE_CASHIER:
 		return "cashier"
-	case listingsv1.StaffRole_STAFF_ROLE_SUPPORT:
+	case listingspb.StaffRole_STAFF_ROLE_SUPPORT:
 		return "support"
-	case listingsv1.StaffRole_STAFF_ROLE_MODERATOR:
+	case listingspb.StaffRole_STAFF_ROLE_MODERATOR:
 		return "moderator"
 	default:
 		return "owner"
 	}
 }
 
-func mapDomainPaymentMethodTypeToProto(methodType string) listingsv1.PaymentMethodType {
+func mapDomainPaymentMethodTypeToProto(methodType string) listingspb.PaymentMethodType {
 	switch methodType {
 	case "cash":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_CASH
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_CASH
 	case "cod":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_COD
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_COD
 	case "card":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_CARD
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_CARD
 	case "bank_transfer":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_BANK_TRANSFER
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_BANK_TRANSFER
 	case "paypal":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_PAYPAL
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_PAYPAL
 	case "crypto":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_CRYPTO
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_CRYPTO
 	case "postanska":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_POSTANSKA
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_POSTANSKA
 	case "keks_pay":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_KEKS_PAY
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_KEKS_PAY
 	case "ips":
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_IPS
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_IPS
 	default:
-		return listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_UNSPECIFIED
+		return listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_UNSPECIFIED
 	}
 }
 
-func mapProtoPaymentMethodTypeToDomain(methodType listingsv1.PaymentMethodType) string {
+func mapProtoPaymentMethodTypeToDomain(methodType listingspb.PaymentMethodType) string {
 	switch methodType {
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_CASH:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_CASH:
 		return "cash"
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_COD:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_COD:
 		return "cod"
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_CARD:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_CARD:
 		return "card"
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_BANK_TRANSFER:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_BANK_TRANSFER:
 		return "bank_transfer"
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_PAYPAL:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_PAYPAL:
 		return "paypal"
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_CRYPTO:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_CRYPTO:
 		return "crypto"
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_POSTANSKA:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_POSTANSKA:
 		return "postanska"
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_KEKS_PAY:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_KEKS_PAY:
 		return "keks_pay"
-	case listingsv1.PaymentMethodType_PAYMENT_METHOD_TYPE_IPS:
+	case listingspb.PaymentMethodType_PAYMENT_METHOD_TYPE_IPS:
 		return "ips"
 	default:
 		return "cash"

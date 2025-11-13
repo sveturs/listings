@@ -3,19 +3,19 @@ package grpc
 import (
 	"time"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // DomainToProtoListing converts domain.Listing to protobuf Listing
-func DomainToProtoListing(listing *domain.Listing) *pb.Listing {
+func DomainToProtoListing(listing *domain.Listing) *listingspb.Listing {
 	if listing == nil {
 		return nil
 	}
 
-	pbListing := &pb.Listing{
+	pbListing := &listingspb.Listing{
 		Id:               listing.ID,
 		Uuid:             listing.UUID,
 		UserId:           listing.UserID,
@@ -62,14 +62,14 @@ func DomainToProtoListing(listing *domain.Listing) *pb.Listing {
 
 	// Relations
 	if len(listing.Images) > 0 {
-		pbListing.Images = make([]*pb.ListingImage, len(listing.Images))
+		pbListing.Images = make([]*listingspb.ListingImage, len(listing.Images))
 		for i, img := range listing.Images {
 			pbListing.Images[i] = DomainToProtoImage(img)
 		}
 	}
 
 	if len(listing.Attributes) > 0 {
-		pbListing.Attributes = make([]*pb.ListingAttribute, len(listing.Attributes))
+		pbListing.Attributes = make([]*listingspb.ListingAttribute, len(listing.Attributes))
 		for i, attr := range listing.Attributes {
 			pbListing.Attributes[i] = DomainToProtoAttribute(attr)
 		}
@@ -87,12 +87,12 @@ func DomainToProtoListing(listing *domain.Listing) *pb.Listing {
 }
 
 // DomainToProtoImage converts domain.ListingImage to protobuf ListingImage
-func DomainToProtoImage(img *domain.ListingImage) *pb.ListingImage {
+func DomainToProtoImage(img *domain.ListingImage) *listingspb.ListingImage {
 	if img == nil {
 		return nil
 	}
 
-	pbImage := &pb.ListingImage{
+	pbImage := &listingspb.ListingImage{
 		Id:           img.ID,
 		ListingId:    img.ListingID,
 		Url:          img.URL,
@@ -130,12 +130,12 @@ func DomainToProtoImage(img *domain.ListingImage) *pb.ListingImage {
 }
 
 // DomainToProtoAttribute converts domain.ListingAttribute to protobuf ListingAttribute
-func DomainToProtoAttribute(attr *domain.ListingAttribute) *pb.ListingAttribute {
+func DomainToProtoAttribute(attr *domain.ListingAttribute) *listingspb.ListingAttribute {
 	if attr == nil {
 		return nil
 	}
 
-	return &pb.ListingAttribute{
+	return &listingspb.ListingAttribute{
 		Id:             attr.ID,
 		ListingId:      attr.ListingID,
 		AttributeKey:   attr.AttributeKey,
@@ -145,12 +145,12 @@ func DomainToProtoAttribute(attr *domain.ListingAttribute) *pb.ListingAttribute 
 }
 
 // DomainToProtoLocation converts domain.ListingLocation to protobuf ListingLocation
-func DomainToProtoLocation(loc *domain.ListingLocation) *pb.ListingLocation {
+func DomainToProtoLocation(loc *domain.ListingLocation) *listingspb.ListingLocation {
 	if loc == nil {
 		return nil
 	}
 
-	pbLocation := &pb.ListingLocation{
+	pbLocation := &listingspb.ListingLocation{
 		Id:        loc.ID,
 		ListingId: loc.ListingID,
 		CreatedAt: loc.CreatedAt.Format(time.RFC3339),
@@ -189,7 +189,7 @@ func DomainToProtoLocation(loc *domain.ListingLocation) *pb.ListingLocation {
 }
 
 // ProtoToCreateListingInput converts CreateListingRequest to domain.CreateListingInput
-func ProtoToCreateListingInput(req *pb.CreateListingRequest) *domain.CreateListingInput {
+func ProtoToCreateListingInput(req *listingspb.CreateListingRequest) *domain.CreateListingInput {
 	if req == nil {
 		return nil
 	}
@@ -232,7 +232,7 @@ func ProtoToCreateListingInput(req *pb.CreateListingRequest) *domain.CreateListi
 }
 
 // ProtoToUpdateListingInput converts UpdateListingRequest to domain.UpdateListingInput
-func ProtoToUpdateListingInput(req *pb.UpdateListingRequest) *domain.UpdateListingInput {
+func ProtoToUpdateListingInput(req *listingspb.UpdateListingRequest) *domain.UpdateListingInput {
 	if req == nil {
 		return nil
 	}
@@ -263,7 +263,7 @@ func ProtoToUpdateListingInput(req *pb.UpdateListingRequest) *domain.UpdateListi
 }
 
 // ProtoToListListingsFilter converts ListListingsRequest to domain.ListListingsFilter
-func ProtoToListListingsFilter(req *pb.ListListingsRequest) *domain.ListListingsFilter {
+func ProtoToListListingsFilter(req *listingspb.ListListingsRequest) *domain.ListListingsFilter {
 	if req == nil {
 		return nil
 	}
@@ -301,7 +301,7 @@ func ProtoToListListingsFilter(req *pb.ListListingsRequest) *domain.ListListings
 }
 
 // ProtoToSearchListingsQuery converts SearchListingsRequest to domain.SearchListingsQuery
-func ProtoToSearchListingsQuery(req *pb.SearchListingsRequest) *domain.SearchListingsQuery {
+func ProtoToSearchListingsQuery(req *listingspb.SearchListingsRequest) *domain.SearchListingsQuery {
 	if req == nil {
 		return nil
 	}
@@ -328,12 +328,12 @@ func ProtoToSearchListingsQuery(req *pb.SearchListingsRequest) *domain.SearchLis
 }
 
 // DomainToProtoCategory converts domain.Category to protobuf Category
-func DomainToProtoCategory(cat *domain.Category) *pb.Category {
+func DomainToProtoCategory(cat *domain.Category) *listingspb.Category {
 	if cat == nil {
 		return nil
 	}
 
-	pbCategory := &pb.Category{
+	pbCategory := &listingspb.Category{
 		Id:           cat.ID,
 		Name:         cat.Name,
 		Slug:         cat.Slug,
@@ -367,12 +367,12 @@ func DomainToProtoCategory(cat *domain.Category) *pb.Category {
 }
 
 // DomainToProtoCategoryTree converts domain.CategoryTreeNode to protobuf CategoryTreeNode
-func DomainToProtoCategoryTree(node *domain.CategoryTreeNode) *pb.CategoryTreeNode {
+func DomainToProtoCategoryTree(node *domain.CategoryTreeNode) *listingspb.CategoryTreeNode {
 	if node == nil {
 		return nil
 	}
 
-	pbNode := &pb.CategoryTreeNode{
+	pbNode := &listingspb.CategoryTreeNode{
 		Id:            node.ID,
 		Name:          node.Name,
 		Slug:          node.Slug,
@@ -400,7 +400,7 @@ func DomainToProtoCategoryTree(node *domain.CategoryTreeNode) *pb.CategoryTreeNo
 
 	// Convert children recursively
 	if len(node.Children) > 0 {
-		pbNode.Children = make([]*pb.CategoryTreeNode, len(node.Children))
+		pbNode.Children = make([]*listingspb.CategoryTreeNode, len(node.Children))
 		for i, child := range node.Children {
 			childCopy := child // Create copy to avoid pointer issues
 			pbNode.Children[i] = DomainToProtoCategoryTree(&childCopy)
@@ -411,12 +411,12 @@ func DomainToProtoCategoryTree(node *domain.CategoryTreeNode) *pb.CategoryTreeNo
 }
 
 // DomainToProtoVariant converts domain.ListingVariant to protobuf ListingVariant
-func DomainToProtoVariant(variant *domain.ListingVariant) *pb.ListingVariant {
+func DomainToProtoVariant(variant *domain.ListingVariant) *listingspb.ListingVariant {
 	if variant == nil {
 		return nil
 	}
 
-	pbVariant := &pb.ListingVariant{
+	pbVariant := &listingspb.ListingVariant{
 		Id:         variant.ID,
 		ListingId:  variant.ListingID,
 		Sku:        variant.SKU,
@@ -450,8 +450,8 @@ func DomainToProtoVariant(variant *domain.ListingVariant) *pb.ListingVariant {
 	return pbVariant
 }
 
-// ProtoToVariantInput converts pb.VariantInput to domain.ListingVariant
-func ProtoToVariantInput(input *pb.VariantInput, listingID int64) *domain.ListingVariant {
+// ProtoToVariantInput converts listingspb.VariantInput to domain.ListingVariant
+func ProtoToVariantInput(input *listingspb.VariantInput, listingID int64) *domain.ListingVariant {
 	if input == nil {
 		return nil
 	}
@@ -478,8 +478,8 @@ func ProtoToVariantInput(input *pb.VariantInput, listingID int64) *domain.Listin
 	return variant
 }
 
-// ProtoToAddImageInput converts pb.AddImageRequest to domain.ListingImage
-func ProtoToAddImageInput(req *pb.AddImageRequest) *domain.ListingImage {
+// ProtoToAddImageInput converts listingspb.AddImageRequest to domain.ListingImage
+func ProtoToAddImageInput(req *listingspb.AddImageRequest) *domain.ListingImage {
 	if req == nil {
 		return nil
 	}
@@ -518,13 +518,13 @@ func ProtoToAddImageInput(req *pb.AddImageRequest) *domain.ListingImage {
 	return image
 }
 
-// ProductToProto converts domain.Product to pb.Product
-func ProductToProto(p *domain.Product) *pb.Product {
+// ProductToProto converts domain.Product to listingspb.Product
+func ProductToProto(p *domain.Product) *listingspb.Product {
 	if p == nil {
 		return nil
 	}
 
-	pbProduct := &pb.Product{
+	pbProduct := &listingspb.Product{
 		Id:                    p.ID,
 		StorefrontId:          p.StorefrontID,
 		Name:                  p.Name,
@@ -585,7 +585,7 @@ func ProductToProto(p *domain.Product) *pb.Product {
 
 	// Convert variants
 	if len(p.Variants) > 0 {
-		pbProduct.Variants = make([]*pb.ProductVariant, len(p.Variants))
+		pbProduct.Variants = make([]*listingspb.ProductVariant, len(p.Variants))
 		for i, v := range p.Variants {
 			pbProduct.Variants[i] = ProductVariantToProto(&v)
 		}
@@ -594,13 +594,13 @@ func ProductToProto(p *domain.Product) *pb.Product {
 	return pbProduct
 }
 
-// ProductVariantToProto converts domain.ProductVariant to pb.ProductVariant
-func ProductVariantToProto(v *domain.ProductVariant) *pb.ProductVariant {
+// ProductVariantToProto converts domain.ProductVariant to listingspb.ProductVariant
+func ProductVariantToProto(v *domain.ProductVariant) *listingspb.ProductVariant {
 	if v == nil {
 		return nil
 	}
 
-	pbVariant := &pb.ProductVariant{
+	pbVariant := &listingspb.ProductVariant{
 		Id:            v.ID,
 		ProductId:     v.ProductID,
 		StockQuantity: v.StockQuantity,
@@ -665,8 +665,8 @@ func ProductVariantToProto(v *domain.ProductVariant) *pb.ProductVariant {
 	return pbVariant
 }
 
-// ProtoToCreateProductInput converts pb.CreateProductRequest to domain.CreateProductInput
-func ProtoToCreateProductInput(req *pb.CreateProductRequest) *domain.CreateProductInput {
+// ProtoToCreateProductInput converts listingspb.CreateProductRequest to domain.CreateProductInput
+func ProtoToCreateProductInput(req *listingspb.CreateProductRequest) *domain.CreateProductInput {
 	if req == nil {
 		return nil
 	}
@@ -719,8 +719,8 @@ func ProtoToCreateProductInput(req *pb.CreateProductRequest) *domain.CreateProdu
 	return input
 }
 
-// ProtoToUpdateProductInput converts pb.UpdateProductRequest to domain.UpdateProductInput
-func ProtoToUpdateProductInput(req *pb.UpdateProductRequest) *domain.UpdateProductInput {
+// ProtoToUpdateProductInput converts listingspb.UpdateProductRequest to domain.UpdateProductInput
+func ProtoToUpdateProductInput(req *listingspb.UpdateProductRequest) *domain.UpdateProductInput {
 	if req == nil {
 		return nil
 	}
@@ -779,8 +779,8 @@ func ProtoToUpdateProductInput(req *pb.UpdateProductRequest) *domain.UpdateProdu
 	return input
 }
 
-// ProtoToCreateVariantInput converts pb.CreateProductVariantRequest to domain.CreateVariantInput
-func ProtoToCreateVariantInput(req *pb.CreateProductVariantRequest) *domain.CreateVariantInput {
+// ProtoToCreateVariantInput converts listingspb.CreateProductVariantRequest to domain.CreateVariantInput
+func ProtoToCreateVariantInput(req *listingspb.CreateProductVariantRequest) *domain.CreateVariantInput {
 	if req == nil {
 		return nil
 	}
@@ -828,8 +828,8 @@ func ProtoToCreateVariantInput(req *pb.CreateProductVariantRequest) *domain.Crea
 	return input
 }
 
-// ProtoToUpdateVariantInput converts pb.UpdateProductVariantRequest to domain.UpdateVariantInput
-func ProtoToUpdateVariantInput(req *pb.UpdateProductVariantRequest) *domain.UpdateVariantInput {
+// ProtoToUpdateVariantInput converts listingspb.UpdateProductVariantRequest to domain.UpdateVariantInput
+func ProtoToUpdateVariantInput(req *listingspb.UpdateProductVariantRequest) *domain.UpdateVariantInput {
 	if req == nil {
 		return nil
 	}
@@ -884,8 +884,8 @@ func ProtoToUpdateVariantInput(req *pb.UpdateProductVariantRequest) *domain.Upda
 	return input
 }
 
-// ProtoToBulkVariantInputs converts slice of pb.ProductVariantInput to slice of domain.CreateVariantInput
-func ProtoToBulkVariantInputs(productID int64, protoInputs []*pb.ProductVariantInput) []*domain.CreateVariantInput {
+// ProtoToBulkVariantInputs converts slice of listingspb.ProductVariantInput to slice of domain.CreateVariantInput
+func ProtoToBulkVariantInputs(productID int64, protoInputs []*listingspb.ProductVariantInput) []*domain.CreateVariantInput {
 	if len(protoInputs) == 0 {
 		return nil
 	}
@@ -943,8 +943,8 @@ func ProtoToBulkVariantInputs(productID int64, protoInputs []*pb.ProductVariantI
 	return inputs
 }
 
-// ProtoToProductInput converts pb.ProductInput to domain.CreateProductInput
-func ProtoToProductInput(p *pb.ProductInput, storefrontID int64) *domain.CreateProductInput {
+// ProtoToProductInput converts listingspb.ProductInput to domain.CreateProductInput
+func ProtoToProductInput(p *listingspb.ProductInput, storefrontID int64) *domain.CreateProductInput {
 	if p == nil {
 		return nil
 	}
@@ -993,8 +993,8 @@ func ProtoToProductInput(p *pb.ProductInput, storefrontID int64) *domain.CreateP
 	return input
 }
 
-// ProtoToBulkProductInputs converts repeated pb.ProductInput to domain.CreateProductInput slice
-func ProtoToBulkProductInputs(protoInputs []*pb.ProductInput, storefrontID int64) []*domain.CreateProductInput {
+// ProtoToBulkProductInputs converts repeated listingspb.ProductInput to domain.CreateProductInput slice
+func ProtoToBulkProductInputs(protoInputs []*listingspb.ProductInput, storefrontID int64) []*domain.CreateProductInput {
 	if len(protoInputs) == 0 {
 		return nil
 	}
@@ -1010,8 +1010,8 @@ func ProtoToBulkProductInputs(protoInputs []*pb.ProductInput, storefrontID int64
 	return inputs
 }
 
-// ProtoToBulkUpdateInput converts pb.ProductUpdateInput to domain.BulkUpdateProductInput
-func ProtoToBulkUpdateInput(req *pb.ProductUpdateInput) *domain.BulkUpdateProductInput {
+// ProtoToBulkUpdateInput converts listingspb.ProductUpdateInput to domain.BulkUpdateProductInput
+func ProtoToBulkUpdateInput(req *listingspb.ProductUpdateInput) *domain.BulkUpdateProductInput {
 	if req == nil {
 		return nil
 	}
@@ -1053,8 +1053,8 @@ func ProtoToBulkUpdateInput(req *pb.ProductUpdateInput) *domain.BulkUpdateProduc
 	return input
 }
 
-// ProtoToBulkUpdateInputs converts repeated pb.ProductUpdateInput to domain.BulkUpdateProductInput slice
-func ProtoToBulkUpdateInputs(protoUpdates []*pb.ProductUpdateInput) []*domain.BulkUpdateProductInput {
+// ProtoToBulkUpdateInputs converts repeated listingspb.ProductUpdateInput to domain.BulkUpdateProductInput slice
+func ProtoToBulkUpdateInputs(protoUpdates []*listingspb.ProductUpdateInput) []*domain.BulkUpdateProductInput {
 	if len(protoUpdates) == 0 {
 		return nil
 	}
@@ -1073,8 +1073,8 @@ func ProtoToBulkUpdateInputs(protoUpdates []*pb.ProductUpdateInput) []*domain.Bu
 	return inputs
 }
 
-// StorefrontToProto converts domain.Storefront to pb.Storefront
-func StorefrontToProto(sf *domain.Storefront) *pb.Storefront {
+// StorefrontToProto converts domain.Storefront to listingspb.Storefront
+func StorefrontToProto(sf *domain.Storefront) *listingspb.Storefront {
 	if sf == nil {
 		return nil
 	}
@@ -1085,7 +1085,7 @@ func StorefrontToProto(sf *domain.Storefront) *pb.Storefront {
 		country = *sf.Country
 	}
 
-	protoSF := &pb.Storefront{
+	protoSF := &listingspb.Storefront{
 		Id:             sf.ID,
 		UserId:         sf.UserID,
 		Slug:           sf.Slug,
@@ -1159,12 +1159,12 @@ func StorefrontToProto(sf *domain.Storefront) *pb.Storefront {
 }
 
 // DomainTranslationsToProto converts domain listing translation fields to proto map
-func DomainTranslationsToProto(listing *domain.Listing) map[string]*pb.ListingFieldTranslations {
+func DomainTranslationsToProto(listing *domain.Listing) map[string]*listingspb.ListingFieldTranslations {
 	if listing == nil {
 		return nil
 	}
 
-	result := make(map[string]*pb.ListingFieldTranslations)
+	result := make(map[string]*listingspb.ListingFieldTranslations)
 
 	// Collect all unique language codes
 	languages := make(map[string]bool)
@@ -1186,7 +1186,7 @@ func DomainTranslationsToProto(listing *domain.Listing) map[string]*pb.ListingFi
 
 	// Build translations for each language
 	for lang := range languages {
-		fields := &pb.ListingFieldTranslations{}
+		fields := &listingspb.ListingFieldTranslations{}
 
 		if title, ok := listing.TitleTranslations[lang]; ok && title != "" {
 			fields.Title = &title
@@ -1211,7 +1211,7 @@ func DomainTranslationsToProto(listing *domain.Listing) map[string]*pb.ListingFi
 }
 
 // ProtoTranslationsToMap converts proto translations to domain format map[string]map[string]string
-func ProtoTranslationsToMap(protoTranslations map[string]*pb.ListingFieldTranslations) map[string]map[string]string {
+func ProtoTranslationsToMap(protoTranslations map[string]*listingspb.ListingFieldTranslations) map[string]map[string]string {
 	if protoTranslations == nil {
 		return nil
 	}

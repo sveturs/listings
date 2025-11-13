@@ -17,7 +17,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
+	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
 	"github.com/sveturs/listings/internal/cache"
 	"github.com/sveturs/listings/internal/config"
 	"github.com/sveturs/listings/internal/health"
@@ -27,6 +28,7 @@ import (
 	"github.com/sveturs/listings/internal/repository/minio"
 	"github.com/sveturs/listings/internal/repository/opensearch"
 	"github.com/sveturs/listings/internal/repository/postgres"
+	"github.com/sveturs/listings/internal/service"
 	"github.com/sveturs/listings/internal/service/listings"
 	"github.com/sveturs/listings/internal/timeout"
 	grpcTransport "github.com/sveturs/listings/internal/transport/grpc"
@@ -202,6 +204,10 @@ func main() {
 	// Initialize storefront service
 	storefrontService := listings.NewStorefrontService(pgRepo, &zerologLogger)
 
+	// Initialize attribute repository and service
+	attrRepo := postgres.NewAttributeRepository(db, zerologLogger)
+	attributeService := service.NewAttributeService(attrRepo, redisCache.GetClient(), zerologLogger)
+
 	// Initialize health check service
 	healthConfig := &health.Config{
 		CheckTimeout:     cfg.Health.CheckTimeout,
@@ -271,8 +277,9 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, metricsInstance, zerologLogger)
-	pb.RegisterListingsServiceServer(grpcServer, grpcHandler)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, metricsInstance, zerologLogger)
+	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
+	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
 
 	// Enable gRPC reflection for tools like grpcurl
 	reflection.Register(grpcServer)

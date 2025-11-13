@@ -7,12 +7,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/timeout"
 )
 
 // BulkDeleteProducts deletes multiple products in a single atomic operation
-func (s *Server) BulkDeleteProducts(ctx context.Context, req *pb.BulkDeleteProductsRequest) (*pb.BulkDeleteProductsResponse, error) {
+func (s *Server) BulkDeleteProducts(ctx context.Context, req *listingspb.BulkDeleteProductsRequest) (*listingspb.BulkDeleteProductsResponse, error) {
 	s.logger.Debug().
 		Int64("storefront_id", req.StorefrontId).
 		Int("product_count", len(req.ProductIds)).
@@ -63,10 +63,10 @@ func (s *Server) BulkDeleteProducts(ctx context.Context, req *pb.BulkDeleteProdu
 	}
 
 	// Convert error map to proto errors
-	protoErrors := make([]*pb.BulkOperationError, 0, len(errorMap))
+	protoErrors := make([]*listingspb.BulkOperationError, 0, len(errorMap))
 	for productID, errorCode := range errorMap {
 		id := productID
-		protoErrors = append(protoErrors, &pb.BulkOperationError{
+		protoErrors = append(protoErrors, &listingspb.BulkOperationError{
 			ProductId:    &id,
 			ErrorCode:    errorCode,
 			ErrorMessage: errorCode, // Use error code as message (frontend will translate)
@@ -79,7 +79,7 @@ func (s *Server) BulkDeleteProducts(ctx context.Context, req *pb.BulkDeleteProdu
 		Int32("variants_deleted", variantsDeleted).
 		Msg("bulk delete products completed")
 
-	return &pb.BulkDeleteProductsResponse{
+	return &listingspb.BulkDeleteProductsResponse{
 		SuccessfulCount: successCount,
 		FailedCount:     failedCount,
 		VariantsDeleted: variantsDeleted,
