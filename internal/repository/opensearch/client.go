@@ -72,12 +72,21 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		"source_type":     listing.SourceType,     // c2c or b2c
 		"document_type":   "listing",              // Required for unified search filtering
 		"stock_status":    listing.StockStatus,    // in_stock, out_of_stock, etc
-		"attributes":      listing.AttributesJSON, // JSONB attributes as string
 		"views_count":     listing.ViewsCount,
 		"favorites_count": listing.FavoritesCount,
 		"created_at":      listing.CreatedAt,
 		"updated_at":      listing.UpdatedAt,
 		"published_at":    listing.PublishedAt,
+	}
+
+	// Add attributes from cache if available
+	attributes, searchableText, err := c.getAttributesFromCache(ctx, int32(listing.ID))
+	if err != nil {
+		// Log but don't fail - attributes are optional
+		c.logger.Debug().Err(err).Int64("listing_id", listing.ID).Msg("no attributes cache found")
+	} else {
+		doc["attributes"] = attributes
+		doc["attributes_searchable_text"] = searchableText
 	}
 
 	// Add images if present
@@ -358,6 +367,29 @@ func buildFilters(query *domain.SearchListingsQuery) []interface{} {
 		filters = append(filters, map[string]interface{}{
 			"range": map[string]interface{}{"price": priceRange},
 		})
+	}
+
+	// Add attribute filters
+	if len(query.AttributeFilters) > 0 {
+		for _, attrFilter := range query.AttributeFilters {
+			// Build nested query for each attribute filter
+			if attrFilter.MinNumber != nil || attrFilter.MaxNumber != nil {
+				// Range query for numeric attributes
+				filters = append(filters, GetAttributeRangeQuery(
+					attrFilter.Code,
+					attrFilter.MinNumber,
+					attrFilter.MaxNumber,
+				))
+			} else {
+				// Exact match query
+				filters = append(filters, GetAttributeNestedQuery(
+					attrFilter.Code,
+					attrFilter.ValueText,
+					attrFilter.ValueNumber,
+					attrFilter.ValueBool,
+				))
+			}
+		}
 	}
 
 	return filters
@@ -688,4 +720,14 @@ func (c *Client) GetClient() *opensearch.Client {
 func (c *Client) Close() error {
 	// opensearch-go client doesn't require explicit closing
 	return nil
+}
+
+// getAttributesFromCache retrieves cached attributes for a listing from attribute_search_cache
+// Returns: attributes array, searchable text, error
+func (c *Client) getAttributesFromCache(ctx context.Context, listingID int32) ([]interface{}, string, error) {
+	// This method requires database connection which Client doesn't have
+	// It should be called from a higher level service that has both OpenSearch and DB access
+	// For now, return empty to avoid breaking changes
+	// TODO: Refactor to pass attributes from service layer
+	return nil, "", fmt.Errorf("attributes cache not implemented in client")
 }

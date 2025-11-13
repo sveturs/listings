@@ -155,14 +155,25 @@ type ListListingsFilter struct {
 }
 
 // SearchListingsQuery represents a search query for listings
+// AttributeFilter represents a single attribute filter for search
+type AttributeFilter struct {
+	Code        string   `json:"code" validate:"required"`
+	ValueText   *string  `json:"value_text,omitempty"`
+	ValueNumber *float64 `json:"value_number,omitempty"`
+	ValueBool   *bool    `json:"value_bool,omitempty"`
+	MinNumber   *float64 `json:"min_number,omitempty"` // For range queries
+	MaxNumber   *float64 `json:"max_number,omitempty"` // For range queries
+}
+
 type SearchListingsQuery struct {
-	Query      string   `json:"query" validate:"required,min=2"`
-	CategoryID *int64   `json:"category_id,omitempty"`
-	SourceType *string  `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"` // Filter by c2c or b2c listings
-	MinPrice   *float64 `json:"min_price,omitempty"`
-	MaxPrice   *float64 `json:"max_price,omitempty"`
-	Limit      int32    `json:"limit" validate:"required,gte=1,lte=100"`
-	Offset     int32    `json:"offset" validate:"gte=0"`
+	Query            string            `json:"query" validate:"required,min=2"`
+	CategoryID       *int64            `json:"category_id,omitempty"`
+	SourceType       *string           `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"` // Filter by c2c or b2c listings
+	MinPrice         *float64          `json:"min_price,omitempty"`
+	MaxPrice         *float64          `json:"max_price,omitempty"`
+	AttributeFilters []AttributeFilter `json:"attribute_filters,omitempty"` // Filter by attributes
+	Limit            int32             `json:"limit" validate:"required,gte=1,lte=100"`
+	Offset           int32             `json:"offset" validate:"gte=0"`
 }
 
 // Constants for listing statuses
