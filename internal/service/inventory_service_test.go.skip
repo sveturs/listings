@@ -1,0 +1,266 @@
+// Package service provides business logic layer for the listings microservice.
+package service
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
+	"github.com/sveturs/listings/internal/domain"
+)
+
+// Mock ReservationRepository
+type MockReservationRepository struct {
+	mock.Mock
+}
+
+func (m *MockReservationRepository) Create(ctx context.Context, reservation *domain.InventoryReservation) error {
+	args := m.Called(ctx, reservation)
+	if args.Error(0) == nil {
+		reservation.ID = 1
+	}
+	return args.Error(0)
+}
+
+func (m *MockReservationRepository) GetByID(ctx context.Context, reservationID int64) (*domain.InventoryReservation, error) {
+	args := m.Called(ctx, reservationID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.InventoryReservation), args.Error(1)
+}
+
+func (m *MockReservationRepository) GetByOrderID(ctx context.Context, orderID int64) ([]*domain.InventoryReservation, error) {
+	args := m.Called(ctx, orderID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.InventoryReservation), args.Error(1)
+}
+
+func (m *MockReservationRepository) GetActiveByListingID(ctx context.Context, listingID int64) ([]*domain.InventoryReservation, error) {
+	args := m.Called(ctx, listingID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.InventoryReservation), args.Error(1)
+}
+
+func (m *MockReservationRepository) GetExpiredActive(ctx context.Context, asOf time.Time) ([]*domain.InventoryReservation, error) {
+	args := m.Called(ctx, asOf)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.InventoryReservation), args.Error(1)
+}
+
+func (m *MockReservationRepository) Commit(ctx context.Context, reservationID int64) error {
+	args := m.Called(ctx, reservationID)
+	return args.Error(0)
+}
+
+func (m *MockReservationRepository) Release(ctx context.Context, reservationID int64) error {
+	args := m.Called(ctx, reservationID)
+	return args.Error(0)
+}
+
+func (m *MockReservationRepository) MarkAsExpired(ctx context.Context, reservationIDs []int64) error {
+	args := m.Called(ctx, reservationIDs)
+	return args.Error(0)
+}
+
+func (m *MockReservationRepository) WithTx(tx interface{}) interface{} {
+	args := m.Called(tx)
+	return args.Get(0)
+}
+
+// Test GetAvailableStock
+func TestGetAvailableStock_NoReservations(t *testing.T) {
+	mockReservationRepo := new(MockReservationRepository)
+	mockProductsRepo := new(MockProductsRepository)
+	logger := zerolog.Nop()
+
+	listingID := int64(100)
+	listing := &domain.Product{
+		ID:            listingID,
+		StockQuantity: 10,
+	}
+
+	mockProductsRepo.On("GetProductByID", mock.Anything, listingID, (*int64)(nil)).Return(listing, nil)
+	mockReservationRepo.On("GetActiveByListingID", mock.Anything, listingID).Return([]*domain.InventoryReservation{}, nil)
+
+	service := &inventoryService{
+		reservationRepo: mockReservationRepo,
+		productsRepo:    &mockProductsRepoWrapper{listing: listing},
+		logger:          logger,
+	}
+
+	availableStock, err := service.GetAvailableStock(context.Background(), listingID)
+
+	require.NoError(t, err)
+	assert.Equal(t, 10, availableStock)
+	mockReservationRepo.AssertExpectations(t)
+}
+
+// Test GetAvailableStock_WithReservations
+func TestGetAvailableStock_WithReservations(t *testing.T) {
+	mockReservationRepo := new(MockReservationRepository)
+	logger := zerolog.Nop()
+
+	listingID := int64(100)
+	listing := &domain.Product{
+		ID:            listingID,
+		StockQuantity: 10,
+	}
+
+	// Mock active reservations (total reserved: 3 + 2 = 5)
+	reservations := []*domain.InventoryReservation{
+		{
+			ID:        1,
+			ListingID: listingID,
+			Quantity:  3,
+			Status:    domain.ReservationStatusActive,
+		},
+		{
+			ID:        2,
+			ListingID: listingID,
+			Quantity:  2,
+			Status:    domain.ReservationStatusActive,
+		},
+	}
+
+	mockReservationRepo.On("GetActiveByListingID", mock.Anything, listingID).Return(reservations, nil)
+
+	service := &inventoryService{
+		reservationRepo: mockReservationRepo,
+		productsRepo:    &mockProductsRepoWrapper{listing: listing},
+		logger:          logger,
+	}
+
+	availableStock, err := service.GetAvailableStock(context.Background(), listingID)
+
+	require.NoError(t, err)
+	assert.Equal(t, 5, availableStock) // 10 total - 5 reserved = 5 available
+	mockReservationRepo.AssertExpectations(t)
+}
+
+// Test CheckStockAvailability
+func TestCheckStockAvailability_Success(t *testing.T) {
+	mockReservationRepo := new(MockReservationRepository)
+	logger := zerolog.Nop()
+
+	listingID := int64(100)
+	listing := &domain.Product{
+		ID:            listingID,
+		StockQuantity: 10,
+	}
+
+	mockReservationRepo.On("GetActiveByListingID", mock.Anything, listingID).Return([]*domain.InventoryReservation{}, nil)
+
+	service := &inventoryService{
+		reservationRepo: mockReservationRepo,
+		productsRepo:    &mockProductsRepoWrapper{listing: listing},
+		logger:          logger,
+	}
+
+	available, err := service.CheckStockAvailability(context.Background(), listingID, 5)
+
+	require.NoError(t, err)
+	assert.True(t, available)
+	mockReservationRepo.AssertExpectations(t)
+}
+
+// Test CheckStockAvailability_InsufficientStock
+func TestCheckStockAvailability_InsufficientStock(t *testing.T) {
+	mockReservationRepo := new(MockReservationRepository)
+	logger := zerolog.Nop()
+
+	listingID := int64(100)
+	listing := &domain.Product{
+		ID:            listingID,
+		StockQuantity: 10,
+	}
+
+	// Mock reservations that reduce available stock
+	reservations := []*domain.InventoryReservation{
+		{
+			ID:        1,
+			ListingID: listingID,
+			Quantity:  8,
+			Status:    domain.ReservationStatusActive,
+		},
+	}
+
+	mockReservationRepo.On("GetActiveByListingID", mock.Anything, listingID).Return(reservations, nil)
+
+	service := &inventoryService{
+		reservationRepo: mockReservationRepo,
+		productsRepo:    &mockProductsRepoWrapper{listing: listing},
+		logger:          logger,
+	}
+
+	// Request 5 but only 2 available (10 - 8 reserved)
+	available, err := service.CheckStockAvailability(context.Background(), listingID, 5)
+
+	require.NoError(t, err)
+	assert.False(t, available)
+	mockReservationRepo.AssertExpectations(t)
+}
+
+// Test CommitReservation
+func TestCommitReservation_Success(t *testing.T) {
+	mockReservationRepo := new(MockReservationRepository)
+	logger := zerolog.Nop()
+
+	reservationID := int64(1)
+	reservation := &domain.InventoryReservation{
+		ID:        reservationID,
+		Status:    domain.ReservationStatusActive,
+		ExpiresAt: time.Now().Add(10 * time.Minute), // Not expired
+	}
+
+	mockReservationRepo.On("GetByID", mock.Anything, reservationID).Return(reservation, nil)
+	mockReservationRepo.On("Commit", mock.Anything, reservationID).Return(nil)
+
+	service := &inventoryService{
+		reservationRepo: mockReservationRepo,
+		logger:          logger,
+	}
+
+	err := service.CommitReservation(context.Background(), reservationID)
+
+	require.NoError(t, err)
+	mockReservationRepo.AssertExpectations(t)
+}
+
+// Test CommitReservation_Expired
+func TestCommitReservation_Expired(t *testing.T) {
+	mockReservationRepo := new(MockReservationRepository)
+	logger := zerolog.Nop()
+
+	reservationID := int64(1)
+	reservation := &domain.InventoryReservation{
+		ID:        reservationID,
+		Status:    domain.ReservationStatusActive,
+		ExpiresAt: time.Now().Add(-10 * time.Minute), // Expired 10 minutes ago
+	}
+
+	mockReservationRepo.On("GetByID", mock.Anything, reservationID).Return(reservation, nil)
+
+	service := &inventoryService{
+		reservationRepo: mockReservationRepo,
+		logger:          logger,
+	}
+
+	err := service.CommitReservation(context.Background(), reservationID)
+
+	require.Error(t, err)
+	var expiredErr *ErrReservationExpired
+	assert.ErrorAs(t, err, &expiredErr)
+	mockReservationRepo.AssertExpectations(t)
+}
