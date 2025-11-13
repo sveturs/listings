@@ -52,6 +52,11 @@ func NewClient(addresses []string, username, password, index string, logger zero
 	}, nil
 }
 
+// NewClientSimple creates a simple OpenSearch client with just a URL (for CLI tools)
+func NewClientSimple(url string, logger zerolog.Logger) (*Client, error) {
+	return NewClient([]string{url}, "", "", "marketplace_listings", logger)
+}
+
 // IndexListing indexes a listing document in OpenSearch
 func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) error {
 	// Prepare document for indexing
@@ -730,4 +735,82 @@ func (c *Client) getAttributesFromCache(ctx context.Context, listingID int32) ([
 	// For now, return empty to avoid breaking changes
 	// TODO: Refactor to pass attributes from service layer
 	return nil, "", fmt.Errorf("attributes cache not implemented in client")
+}
+
+// DeleteIndex deletes an OpenSearch index
+func (c *Client) DeleteIndex(ctx context.Context, indexName string) error {
+	res, err := c.client.Indices.Delete(
+		[]string{indexName},
+		c.client.Indices.Delete.WithContext(ctx),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete index %s: %w", indexName, err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		if res.StatusCode == 404 {
+			// Index doesn't exist - not an error
+			c.logger.Debug().Str("index", indexName).Msg("index does not exist")
+			return nil
+		}
+		return fmt.Errorf("failed to delete index %s: %s", indexName, res.Status())
+	}
+
+	c.logger.Info().Str("index", indexName).Msg("index deleted successfully")
+	return nil
+}
+
+// CreateIndex creates an OpenSearch index with the given mapping
+func (c *Client) CreateIndex(ctx context.Context, indexName string, mapping map[string]interface{}) error {
+	body, err := json.Marshal(mapping)
+	if err != nil {
+		return fmt.Errorf("failed to marshal mapping: %w", err)
+	}
+
+	res, err := c.client.Indices.Create(
+		indexName,
+		c.client.Indices.Create.WithContext(ctx),
+		c.client.Indices.Create.WithBody(bytes.NewReader(body)),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create index %s: %w", indexName, err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("failed to create index %s: %s - %s", indexName, res.Status(), string(bodyBytes))
+	}
+
+	c.logger.Info().Str("index", indexName).Msg("index created successfully")
+	return nil
+}
+
+// CountDocuments returns the number of documents in an index
+func (c *Client) CountDocuments(ctx context.Context, indexName string) (int, error) {
+	res, err := c.client.Count(
+		c.client.Count.WithContext(ctx),
+		c.client.Count.WithIndex(indexName),
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count documents in %s: %w", indexName, err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return 0, fmt.Errorf("failed to count documents in %s: %s", indexName, res.Status())
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return 0, fmt.Errorf("failed to parse count response: %w", err)
+	}
+
+	count, ok := result["count"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("invalid count response format")
+	}
+
+	return int(count), nil
 }

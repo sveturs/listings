@@ -300,10 +300,10 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 	query := `
 		SELECT id, uuid, user_id, storefront_id, title, description,
 		       price, currency, category_id, status, visibility, quantity, sku,
-		       source_type, stock_status, views_count, favorites_count,
+		       source_type, stock_status, view_count, favorites_count,
 		       created_at, updated_at, published_at
 		FROM listings
-		WHERE status = 'active' AND visibility = 'public'
+		WHERE status = 'active' AND visibility = 'public' AND is_deleted = false
 		ORDER BY id ASC
 	`
 
