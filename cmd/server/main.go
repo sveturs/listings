@@ -17,8 +17,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/cache"
 	"github.com/sveturs/listings/internal/config"
 	"github.com/sveturs/listings/internal/health"
@@ -208,6 +208,9 @@ func main() {
 	attrRepo := postgres.NewAttributeRepository(db, zerologLogger)
 	attributeService := service.NewAttributeService(attrRepo, redisCache.GetClient(), zerologLogger)
 
+	// Initialize category service
+	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
+
 	// Initialize health check service
 	healthConfig := &health.Config{
 		CheckTimeout:     cfg.Health.CheckTimeout,
@@ -277,7 +280,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
 

@@ -227,7 +227,16 @@ type Category struct {
 	Level             int32     `json:"level" db:"level"`
 	HasCustomUI       bool      `json:"has_custom_ui" db:"has_custom_ui"`
 	CustomUIComponent *string   `json:"custom_ui_component,omitempty" db:"custom_ui_component"`
+	ExternalID        *string   `json:"external_id,omitempty" db:"external_id"`
 	CreatedAt         time.Time `json:"created_at" db:"created_at"`
+	// SEO fields
+	SEOTitle       *string `json:"seo_title,omitempty" db:"seo_title"`
+	SEODescription *string `json:"seo_description,omitempty" db:"seo_description"`
+	SEOKeywords    *string `json:"seo_keywords,omitempty" db:"seo_keywords"`
+	// Localized titles
+	TitleEn *string `json:"title_en,omitempty" db:"title_en"`
+	TitleRu *string `json:"title_ru,omitempty" db:"title_ru"`
+	TitleSr *string `json:"title_sr,omitempty" db:"title_sr"`
 }
 
 // CategoryTreeNode represents a category with its children in a tree structure

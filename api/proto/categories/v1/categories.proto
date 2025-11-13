@@ -1,0 +1,177 @@
+syntax = "proto3";
+
+package categoriessvc.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/sveturs/listings/api/proto/categories/v1;categoriessvcv1";
+
+// ============================================================================
+// MESSAGES - Category
+// ============================================================================
+
+// Category message represents a product category
+message Category {
+  int32 id = 1;
+  string name = 2;
+  string slug = 3;
+  optional int32 parent_id = 4;
+  optional string icon = 5;
+  google.protobuf.Timestamp created_at = 6;
+  bool has_custom_ui = 7;
+  optional string custom_ui_component = 8;
+  int32 sort_order = 9;
+  int32 level = 10;
+  int32 count = 11;
+  optional string external_id = 12;
+  optional string description = 13;
+  bool is_active = 14;
+  optional string seo_title = 15;
+  optional string seo_description = 16;
+  optional string seo_keywords = 17;
+  optional string title_en = 18;
+  optional string title_ru = 19;
+  optional string title_sr = 20;
+}
+
+// CategoryTree includes subcategories
+message CategoryTree {
+  Category category = 1;
+  repeated CategoryTree subcategories = 2;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Get Categories
+// ============================================================================
+
+message GetCategoriesRequest {
+  optional int32 parent_id = 1; // Filter by parent category (null for root)
+  optional bool is_active = 2; // Filter by active status
+  optional bool include_children = 3; // Include all descendants
+  int32 page = 4; // Page number (1-based)
+  int32 page_size = 5; // Items per page (default 50, max 100)
+}
+
+message GetCategoriesResponse {
+  repeated Category categories = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Get Category Tree
+// ============================================================================
+
+message GetCategoryTreeRequest {
+  optional int32 root_id = 1; // Start from this category (null for entire tree)
+  optional bool active_only = 2; // Include only active categories
+}
+
+message GetCategoryTreeResponse {
+  repeated CategoryTree tree = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Get Category by ID
+// ============================================================================
+
+message GetCategoryRequest {
+  int32 id = 1;
+}
+
+message GetCategoryResponse {
+  Category category = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Get Category by Slug
+// ============================================================================
+
+message GetCategoryBySlugRequest {
+  string slug = 1;
+}
+
+message GetCategoryBySlugResponse {
+  Category category = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Create Category (Admin)
+// ============================================================================
+
+message CreateCategoryRequest {
+  string name = 1;
+  string slug = 2;
+  optional int32 parent_id = 3;
+  optional string icon = 4;
+  optional string description = 5;
+  optional string custom_ui_component = 6;
+  int32 sort_order = 7;
+  optional string seo_title = 8;
+  optional string seo_description = 9;
+  optional string seo_keywords = 10;
+  optional string title_en = 11;
+  optional string title_ru = 12;
+  optional string title_sr = 13;
+}
+
+message CreateCategoryResponse {
+  Category category = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Update Category (Admin)
+// ============================================================================
+
+message UpdateCategoryRequest {
+  int32 id = 1;
+  optional string name = 2;
+  optional string slug = 3;
+  optional int32 parent_id = 4;
+  optional string icon = 5;
+  optional string description = 6;
+  optional string custom_ui_component = 7;
+  optional int32 sort_order = 8;
+  optional bool is_active = 9;
+  optional string seo_title = 10;
+  optional string seo_description = 11;
+  optional string seo_keywords = 12;
+  optional string title_en = 13;
+  optional string title_ru = 14;
+  optional string title_sr = 15;
+}
+
+message UpdateCategoryResponse {
+  Category category = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Delete Category (Admin)
+// ============================================================================
+
+message DeleteCategoryRequest {
+  int32 id = 1;
+}
+
+message DeleteCategoryResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================================
+// SERVICE - CategoryService
+// ============================================================================
+
+service CategoryService {
+  // Public endpoints
+  rpc GetCategories(GetCategoriesRequest) returns (GetCategoriesResponse);
+  rpc GetCategoryTree(GetCategoryTreeRequest) returns (GetCategoryTreeResponse);
+  rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse);
+  rpc GetCategoryBySlug(GetCategoryBySlugRequest) returns (GetCategoryBySlugResponse);
+
+  // Admin endpoints (require authentication)
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse);
+  rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse);
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
+}

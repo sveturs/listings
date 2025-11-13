@@ -28,6 +28,7 @@ type Server struct {
 	service           *listings.Service
 	storefrontService *listings.StorefrontService
 	attrService       service.AttributeService
+	categoryService   service.CategoryService
 	metrics           *metrics.Metrics
 	logger            zerolog.Logger
 }
@@ -37,6 +38,7 @@ func NewServer(
 	service *listings.Service,
 	storefrontService *listings.StorefrontService,
 	attrService service.AttributeService,
+	categoryService service.CategoryService,
 	m *metrics.Metrics,
 	logger zerolog.Logger,
 ) *Server {
@@ -44,6 +46,7 @@ func NewServer(
 		service:           service,
 		storefrontService: storefrontService,
 		attrService:       attrService,
+		categoryService:   categoryService,
 		metrics:           m,
 		logger:            logger.With().Str("component", "grpc_handler").Logger(),
 	}
