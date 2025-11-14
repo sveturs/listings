@@ -77,25 +77,25 @@ const (
 )
 
 // setupBulkOperationsTest creates a test environment with bulk operations fixtures
-func setupBulkOperationsTest(t *testing.T) (pb.ListingsServiceClient, *tests.TestDB, func()) {
-	t.Helper()
+func setupBulkOperationsTest(tb testing.TB) (pb.ListingsServiceClient, *tests.TestDB, func()) {
+	tb.Helper()
 
-	tests.SkipIfNoDocker(t)
+	tests.SkipIfNoDocker(tb)
 
 	// Setup test database
-	testDB := tests.SetupTestPostgres(t)
+	testDB := tests.SetupTestPostgres(tb)
 
 	// Run migrations
-	tests.RunMigrations(t, testDB.DB, "../../migrations")
+	tests.RunMigrations(tb, testDB.DB, "../../migrations")
 
 	// Load bulk operations fixtures
-	tests.LoadTestFixtures(t, testDB.DB, "../fixtures/bulk_operations_fixtures.sql")
+	tests.LoadTestFixtures(tb, testDB.DB, "../fixtures/bulk_operations_fixtures.sql")
 
 	// Create sqlx.DB wrapper
 	db := sqlx.NewDb(testDB.DB, "postgres")
 
 	// Create logger
-	logger := zerolog.New(zerolog.NewTestWriter(t)).With().Timestamp().Logger()
+	logger := zerolog.New(zerolog.NewTestWriter(tb)).With().Timestamp().Logger()
 
 	// Create repository
 	repo := postgres.NewRepository(db, logger)
@@ -128,7 +128,7 @@ func setupBulkOperationsTest(t *testing.T) (pb.ListingsServiceClient, *tests.Tes
 		}),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
 	client := pb.NewListingsServiceClient(conn)
 
@@ -136,7 +136,7 @@ func setupBulkOperationsTest(t *testing.T) (pb.ListingsServiceClient, *tests.Tes
 		conn.Close()
 		grpcServer.Stop()
 		lis.Close()
-		testDB.TeardownTestPostgres(t)
+		testDB.TeardownTestPostgres(tb)
 	}
 
 	return client, testDB, cleanup
@@ -1383,7 +1383,12 @@ func TestBulkOperations_Transaction_RollbackOnError(t *testing.T) {
 
 // BenchmarkBulkCreateProducts_100Items benchmarks creating 100 products
 func BenchmarkBulkCreateProducts_100Items(b *testing.B) {
-	client, _, cleanup := setupBulkOperationsTest(&testing.T{})
+	if testing.Short() {
+		b.Skip("Skipping Docker benchmark in short mode")
+	}
+
+	// Use b directly (testing.B implements testing.TB interface)
+	client, _, cleanup := setupBulkOperationsTest(b)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -1417,7 +1422,12 @@ func BenchmarkBulkCreateProducts_100Items(b *testing.B) {
 
 // BenchmarkBulkUpdateProducts_50Items benchmarks updating 50 products
 func BenchmarkBulkUpdateProducts_50Items(b *testing.B) {
-	client, _, cleanup := setupBulkOperationsTest(&testing.T{})
+	if testing.Short() {
+		b.Skip("Skipping Docker benchmark in short mode")
+	}
+
+	// Use b directly (testing.B implements testing.TB interface)
+	client, _, cleanup := setupBulkOperationsTest(b)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -1476,7 +1486,12 @@ func BenchmarkBulkUpdateProducts_50Items(b *testing.B) {
 
 // BenchmarkBulkDeleteProducts_100Items benchmarks deleting 100 products
 func BenchmarkBulkDeleteProducts_100Items(b *testing.B) {
-	client, _, cleanup := setupBulkOperationsTest(&testing.T{})
+	if testing.Short() {
+		b.Skip("Skipping Docker benchmark in short mode")
+	}
+
+	// Use b directly (testing.B implements testing.TB interface)
+	client, _, cleanup := setupBulkOperationsTest(b)
 	defer cleanup()
 
 	ctx := context.Background()

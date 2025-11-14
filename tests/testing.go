@@ -26,14 +26,14 @@ type TestDB struct {
 }
 
 // SetupTestPostgres creates a PostgreSQL container for testing
-func SetupTestPostgres(t *testing.T) *TestDB {
-	t.Helper()
+func SetupTestPostgres(tb testing.TB) *TestDB {
+	tb.Helper()
 
 	pool, err := dockertest.NewPool("")
-	require.NoError(t, err, "Could not connect to docker")
+	require.NoError(tb, err, "Could not connect to docker")
 
 	err = pool.Client.Ping()
-	require.NoError(t, err, "Could not ping docker")
+	require.NoError(tb, err, "Could not ping docker")
 
 	// Pull PostgreSQL 15 image
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
@@ -49,11 +49,11 @@ func SetupTestPostgres(t *testing.T) *TestDB {
 		config.AutoRemove = true
 		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
 	})
-	require.NoError(t, err, "Could not start PostgreSQL container")
+	require.NoError(tb, err, "Could not start PostgreSQL container")
 
 	// Set expiry to clean up in case of test panic
 	err = resource.Expire(120)
-	require.NoError(t, err, "Could not set container expiry")
+	require.NoError(tb, err, "Could not set container expiry")
 
 	var db *sql.DB
 	hostAndPort := resource.GetHostPort("5432/tcp")
@@ -68,7 +68,7 @@ func SetupTestPostgres(t *testing.T) *TestDB {
 		}
 		return db.Ping()
 	})
-	require.NoError(t, err, "Could not connect to PostgreSQL container")
+	require.NoError(tb, err, "Could not connect to PostgreSQL container")
 
 	return &TestDB{
 		DB:       db,
@@ -78,8 +78,8 @@ func SetupTestPostgres(t *testing.T) *TestDB {
 }
 
 // TeardownTestPostgres cleans up the test database
-func (tdb *TestDB) TeardownTestPostgres(t *testing.T) {
-	t.Helper()
+func (tdb *TestDB) TeardownTestPostgres(tb testing.TB) {
+	tb.Helper()
 
 	if tdb.DB != nil {
 		_ = tdb.DB.Close()
@@ -87,7 +87,7 @@ func (tdb *TestDB) TeardownTestPostgres(t *testing.T) {
 
 	if tdb.Pool != nil && tdb.Resource != nil {
 		err := tdb.Pool.Purge(tdb.Resource)
-		require.NoError(t, err, "Could not purge PostgreSQL container")
+		require.NoError(tb, err, "Could not purge PostgreSQL container")
 	}
 }
 
@@ -99,11 +99,11 @@ type TestRedis struct {
 }
 
 // SetupTestRedis creates a Redis container for testing
-func SetupTestRedis(t *testing.T) *TestRedis {
-	t.Helper()
+func SetupTestRedis(tb testing.TB) *TestRedis {
+	tb.Helper()
 
 	pool, err := dockertest.NewPool("")
-	require.NoError(t, err, "Could not connect to docker")
+	require.NoError(tb, err, "Could not connect to docker")
 
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "redis",
@@ -112,10 +112,10 @@ func SetupTestRedis(t *testing.T) *TestRedis {
 		config.AutoRemove = true
 		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
 	})
-	require.NoError(t, err, "Could not start Redis container")
+	require.NoError(tb, err, "Could not start Redis container")
 
 	err = resource.Expire(120)
-	require.NoError(t, err, "Could not set container expiry")
+	require.NoError(tb, err, "Could not set container expiry")
 
 	addr := resource.GetHostPort("6379/tcp")
 
@@ -125,7 +125,7 @@ func SetupTestRedis(t *testing.T) *TestRedis {
 		// Simple connection test (would need redis client in real implementation)
 		return nil
 	})
-	require.NoError(t, err, "Could not connect to Redis container")
+	require.NoError(tb, err, "Could not connect to Redis container")
 
 	return &TestRedis{
 		Pool:     pool,
@@ -135,19 +135,19 @@ func SetupTestRedis(t *testing.T) *TestRedis {
 }
 
 // TeardownTestRedis cleans up the test Redis
-func (tr *TestRedis) TeardownTestRedis(t *testing.T) {
-	t.Helper()
+func (tr *TestRedis) TeardownTestRedis(tb testing.TB) {
+	tb.Helper()
 
 	if tr.Pool != nil && tr.Resource != nil {
 		err := tr.Pool.Purge(tr.Resource)
-		require.NoError(t, err, "Could not purge Redis container")
+		require.NoError(tb, err, "Could not purge Redis container")
 	}
 }
 
 // LoadTestFixtures loads test data from SQL file
 // Automatically loads categories fixture first if needed
-func LoadTestFixtures(t *testing.T, db *sql.DB, fixtureFile string) {
-	t.Helper()
+func LoadTestFixtures(tb testing.TB, db *sql.DB, fixtureFile string) {
+	tb.Helper()
 
 	// Auto-load categories fixture if not already loaded and not loading categories itself
 	if !strings.Contains(fixtureFile, "00_categories_fixtures.sql") {
@@ -161,27 +161,27 @@ func LoadTestFixtures(t *testing.T, db *sql.DB, fixtureFile string) {
 				catData, err := os.ReadFile(categoriesFile)
 				if err == nil {
 					_, _ = db.Exec(string(catData))
-					t.Logf("Auto-loaded categories fixture: %s", categoriesFile)
+					tb.Logf("Auto-loaded categories fixture: %s", categoriesFile)
 				}
 			}
 		}
 	}
 
 	data, err := os.ReadFile(fixtureFile)
-	require.NoError(t, err, "Could not read fixture file: %s", fixtureFile)
+	require.NoError(tb, err, "Could not read fixture file: %s", fixtureFile)
 
 	_, err = db.Exec(string(data))
-	require.NoError(t, err, "Could not load fixtures from: %s", fixtureFile)
+	require.NoError(tb, err, "Could not load fixtures from: %s", fixtureFile)
 }
 
 // RunMigrations runs database migrations from directory
-func RunMigrations(t *testing.T, db *sql.DB, migrationsDir string) {
-	t.Helper()
+func RunMigrations(tb testing.TB, db *sql.DB, migrationsDir string) {
+	tb.Helper()
 
 	// This is a simplified version
 	// In production, use golang-migrate library
 	files, err := os.ReadDir(migrationsDir)
-	require.NoError(t, err, "Could not read migrations directory")
+	require.NoError(tb, err, "Could not read migrations directory")
 
 	for _, file := range files {
 		if file.IsDir() {
@@ -191,10 +191,10 @@ func RunMigrations(t *testing.T, db *sql.DB, migrationsDir string) {
 		if len(file.Name()) > 7 && file.Name()[len(file.Name())-7:] == ".up.sql" {
 			migrationPath := fmt.Sprintf("%s/%s", migrationsDir, file.Name())
 			data, err := os.ReadFile(migrationPath)
-			require.NoError(t, err, "Could not read migration file: %s", migrationPath)
+			require.NoError(tb, err, "Could not read migration file: %s", migrationPath)
 
 			_, err = db.Exec(string(data))
-			require.NoError(t, err, "Could not run migration: %s", file.Name())
+			require.NoError(tb, err, "Could not run migration: %s", file.Name())
 
 			log.Printf("Applied migration: %s", file.Name())
 		}
@@ -202,8 +202,8 @@ func RunMigrations(t *testing.T, db *sql.DB, migrationsDir string) {
 }
 
 // CleanupTestDB truncates all tables for clean test state
-func CleanupTestDB(t *testing.T, db *sql.DB) {
-	t.Helper()
+func CleanupTestDB(tb testing.TB, db *sql.DB) {
+	tb.Helper()
 
 	tables := []string{
 		"listing_images",
@@ -217,15 +217,15 @@ func CleanupTestDB(t *testing.T, db *sql.DB) {
 
 	for _, table := range tables {
 		_, err := db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table))
-		require.NoError(t, err, "Could not truncate table: %s", table)
+		require.NoError(tb, err, "Could not truncate table: %s", table)
 	}
 }
 
 // TestContext creates a test context with timeout
-func TestContext(t *testing.T) context.Context {
-	t.Helper()
+func TestContext(tb testing.TB) context.Context {
+	tb.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	t.Cleanup(cancel)
+	tb.Cleanup(cancel)
 	return ctx
 }
 
@@ -253,37 +253,37 @@ func GenerateTestListings(count int) []map[string]interface{} {
 }
 
 // AssertNoError is a helper to assert no error with better messages
-func AssertNoError(t *testing.T, err error, msgAndArgs ...interface{}) {
-	t.Helper()
-	require.NoError(t, err, msgAndArgs...)
+func AssertNoError(tb testing.TB, err error, msgAndArgs ...interface{}) {
+	tb.Helper()
+	require.NoError(tb, err, msgAndArgs...)
 }
 
 // AssertEqual is a helper for equality assertions
-func AssertEqual(t *testing.T, expected, actual interface{}, msgAndArgs ...interface{}) {
-	t.Helper()
-	require.Equal(t, expected, actual, msgAndArgs...)
+func AssertEqual(tb testing.TB, expected, actual interface{}, msgAndArgs ...interface{}) {
+	tb.Helper()
+	require.Equal(tb, expected, actual, msgAndArgs...)
 }
 
 // AssertNotNil is a helper for nil checks
-func AssertNotNil(t *testing.T, obj interface{}, msgAndArgs ...interface{}) {
-	t.Helper()
-	require.NotNil(t, obj, msgAndArgs...)
+func AssertNotNil(tb testing.TB, obj interface{}, msgAndArgs ...interface{}) {
+	tb.Helper()
+	require.NotNil(tb, obj, msgAndArgs...)
 }
 
 // SkipIfShort skips test if running in short mode
-func SkipIfShort(t *testing.T) {
-	t.Helper()
+func SkipIfShort(tb testing.TB) {
+	tb.Helper()
 	if testing.Short() {
-		t.Skip("Skipping test in short mode")
+		tb.Skip("Skipping test in short mode")
 	}
 }
 
 // SkipIfNoDocker skips test if Docker is not available
-func SkipIfNoDocker(t *testing.T) {
-	t.Helper()
+func SkipIfNoDocker(tb testing.TB) {
+	tb.Helper()
 	pool, err := dockertest.NewPool("")
 	if err != nil || pool.Client.Ping() != nil {
-		t.Skip("Docker not available, skipping integration test")
+		tb.Skip("Docker not available, skipping integration test")
 	}
 }
 

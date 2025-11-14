@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS inventory_reservations (
 
     -- Product references
     listing_id BIGINT NOT NULL,            -- FK to listings
-    variant_id BIGINT NULL,                -- FK to listing_variants (optional, for variant products)
+    variant_id BIGINT NULL,                -- FK to b2c_product_variants (optional, for variant products)
 
     -- Order association (NULL until order created)
     order_id BIGINT NULL,                  -- FK to orders (SET NULL on delete)
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS inventory_reservations (
         REFERENCES listings(id) ON DELETE CASCADE,
 
     CONSTRAINT fk_inventory_reservations_variant FOREIGN KEY (variant_id)
-        REFERENCES listing_variants(id) ON DELETE CASCADE,
+        REFERENCES b2c_product_variants(id) ON DELETE CASCADE,
 
     CONSTRAINT fk_inventory_reservations_order FOREIGN KEY (order_id)
         REFERENCES orders(id) ON DELETE SET NULL,

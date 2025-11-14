@@ -2,7 +2,7 @@ package grpc_test
 
 import (
 	"context"
-	"testing"
+	stdtesting "testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -18,10 +18,17 @@ import (
 )
 
 // TestAddToCart_Success tests successful add to cart operation
-func TestAddToCart_Success(t *testing.T) {
+func TestAddToCart_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	// Setup test environment
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	// Create order service handler
 	orderHandler := grpcTransport.NewOrderServiceServer(
@@ -59,9 +66,16 @@ func TestAddToCart_Success(t *testing.T) {
 }
 
 // TestAddToCart_InvalidInput tests validation errors
-func TestAddToCart_InvalidInput(t *testing.T) {
+func TestAddToCart_InvalidInput(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -130,7 +144,7 @@ func TestAddToCart_InvalidInput(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *stdtesting.T) {
 			resp, err := orderHandler.AddToCart(ctx, tt.req)
 
 			assert.Nil(t, resp)
@@ -144,9 +158,16 @@ func TestAddToCart_InvalidInput(t *testing.T) {
 }
 
 // TestGetCart_Success tests successful get cart operation
-func TestGetCart_Success(t *testing.T) {
+func TestGetCart_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -190,9 +211,16 @@ func TestGetCart_Success(t *testing.T) {
 }
 
 // TestClearCart_Success tests successful clear cart operation
-func TestClearCart_Success(t *testing.T) {
+func TestClearCart_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -237,9 +265,16 @@ func TestClearCart_Success(t *testing.T) {
 }
 
 // TestGetUserCarts_Success tests get all user carts
-func TestGetUserCarts_Success(t *testing.T) {
+func TestGetUserCarts_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -286,9 +321,16 @@ func TestGetUserCarts_Success(t *testing.T) {
 }
 
 // TestCreateOrder_Success tests successful order creation
-func TestCreateOrder_Success(t *testing.T) {
+func TestCreateOrder_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -344,9 +386,16 @@ func TestCreateOrder_Success(t *testing.T) {
 }
 
 // TestCreateOrder_EmptyCart tests order creation with empty cart
-func TestCreateOrder_EmptyCart(t *testing.T) {
+func TestCreateOrder_EmptyCart(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -407,9 +456,16 @@ func TestCreateOrder_EmptyCart(t *testing.T) {
 }
 
 // TestGetOrder_Success tests successful get order
-func TestGetOrder_Success(t *testing.T) {
+func TestGetOrder_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -443,9 +499,16 @@ func TestGetOrder_Success(t *testing.T) {
 }
 
 // TestGetOrder_Unauthorized tests unauthorized access to order
-func TestGetOrder_Unauthorized(t *testing.T) {
+func TestGetOrder_Unauthorized(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -481,9 +544,16 @@ func TestGetOrder_Unauthorized(t *testing.T) {
 }
 
 // TestListOrders_Success tests successful list orders
-func TestListOrders_Success(t *testing.T) {
+func TestListOrders_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -526,9 +596,16 @@ func TestListOrders_Success(t *testing.T) {
 }
 
 // TestCancelOrder_Success tests successful order cancellation
-func TestCancelOrder_Success(t *testing.T) {
+func TestCancelOrder_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -565,9 +642,16 @@ func TestCancelOrder_Success(t *testing.T) {
 }
 
 // TestUpdateOrderStatus_Success tests successful status update (admin operation)
-func TestUpdateOrderStatus_Success(t *testing.T) {
+func TestUpdateOrderStatus_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,
@@ -600,9 +684,16 @@ func TestUpdateOrderStatus_Success(t *testing.T) {
 }
 
 // TestGetOrderStats_Success tests order statistics retrieval
-func TestGetOrderStats_Success(t *testing.T) {
+func TestGetOrderStats_Success(t *stdtesting.T) {
+	if stdtesting.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
 	env := testing.NewTestEnvironment(t)
 	defer env.Cleanup()
+
+	// Seed test data
+	env.SeedTestData(t)
 
 	orderHandler := grpcTransport.NewOrderServiceServer(
 		env.CartService,

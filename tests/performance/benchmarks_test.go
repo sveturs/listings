@@ -14,12 +14,16 @@ import (
 
 // BenchmarkCreateListing measures listing creation performance
 func BenchmarkCreateListing(b *testing.B) {
-	tests.SkipIfNoDocker(&testing.T{})
+	if testing.Short() {
+		b.Skip("Skipping Docker benchmark in short mode")
+	}
 
-	testDB := tests.SetupTestPostgres(&testing.T{})
-	defer testDB.TeardownTestPostgres(&testing.T{})
+	tests.SkipIfNoDocker(b)
 
-	tests.RunMigrations(&testing.T{}, testDB.DB, "../../migrations")
+	testDB := tests.SetupTestPostgres(b)
+	defer testDB.TeardownTestPostgres(b)
+
+	tests.RunMigrations(b, testDB.DB, "../../migrations")
 
 	db := sqlx.NewDb(testDB.DB, "postgres")
 	logger := zerolog.Nop()
@@ -39,6 +43,7 @@ func BenchmarkCreateListing(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
 		_, err := repo.CreateListing(ctx, input)
@@ -50,12 +55,16 @@ func BenchmarkCreateListing(b *testing.B) {
 
 // BenchmarkGetListingByID measures listing retrieval performance
 func BenchmarkGetListingByID(b *testing.B) {
-	tests.SkipIfNoDocker(&testing.T{})
+	if testing.Short() {
+		b.Skip("Skipping Docker benchmark in short mode")
+	}
 
-	testDB := tests.SetupTestPostgres(&testing.T{})
-	defer testDB.TeardownTestPostgres(&testing.T{})
+	tests.SkipIfNoDocker(b)
 
-	tests.RunMigrations(&testing.T{}, testDB.DB, "../../migrations")
+	testDB := tests.SetupTestPostgres(b)
+	defer testDB.TeardownTestPostgres(b)
+
+	tests.RunMigrations(b, testDB.DB, "../../migrations")
 
 	db := sqlx.NewDb(testDB.DB, "postgres")
 	logger := zerolog.Nop()
@@ -81,6 +90,7 @@ func BenchmarkGetListingByID(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
 		_, err := repo.GetListingByID(ctx, listing.ID)
@@ -92,12 +102,16 @@ func BenchmarkGetListingByID(b *testing.B) {
 
 // BenchmarkUpdateListing measures listing update performance
 func BenchmarkUpdateListing(b *testing.B) {
-	tests.SkipIfNoDocker(&testing.T{})
+	if testing.Short() {
+		b.Skip("Skipping Docker benchmark in short mode")
+	}
 
-	testDB := tests.SetupTestPostgres(&testing.T{})
-	defer testDB.TeardownTestPostgres(&testing.T{})
+	tests.SkipIfNoDocker(b)
 
-	tests.RunMigrations(&testing.T{}, testDB.DB, "../../migrations")
+	testDB := tests.SetupTestPostgres(b)
+	defer testDB.TeardownTestPostgres(b)
+
+	tests.RunMigrations(b, testDB.DB, "../../migrations")
 
 	db := sqlx.NewDb(testDB.DB, "postgres")
 	logger := zerolog.Nop()
@@ -128,6 +142,7 @@ func BenchmarkUpdateListing(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
 		_, err := repo.UpdateListing(ctx, listing.ID, update)
@@ -139,12 +154,16 @@ func BenchmarkUpdateListing(b *testing.B) {
 
 // BenchmarkListListings measures listing pagination performance
 func BenchmarkListListings(b *testing.B) {
-	tests.SkipIfNoDocker(&testing.T{})
+	if testing.Short() {
+		b.Skip("Skipping Docker benchmark in short mode")
+	}
 
-	testDB := tests.SetupTestPostgres(&testing.T{})
-	defer testDB.TeardownTestPostgres(&testing.T{})
+	tests.SkipIfNoDocker(b)
 
-	tests.RunMigrations(&testing.T{}, testDB.DB, "../../migrations")
+	testDB := tests.SetupTestPostgres(b)
+	defer testDB.TeardownTestPostgres(b)
+
+	tests.RunMigrations(b, testDB.DB, "../../migrations")
 
 	db := sqlx.NewDb(testDB.DB, "postgres")
 	logger := zerolog.Nop()
@@ -176,6 +195,7 @@ func BenchmarkListListings(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
 		_, _, err := repo.ListListings(ctx, filter)
@@ -187,12 +207,16 @@ func BenchmarkListListings(b *testing.B) {
 
 // BenchmarkParallelGetListing measures concurrent read performance
 func BenchmarkParallelGetListing(b *testing.B) {
-	tests.SkipIfNoDocker(&testing.T{})
+	if testing.Short() {
+		b.Skip("Skipping Docker benchmark in short mode")
+	}
 
-	testDB := tests.SetupTestPostgres(&testing.T{})
-	defer testDB.TeardownTestPostgres(&testing.T{})
+	tests.SkipIfNoDocker(b)
 
-	tests.RunMigrations(&testing.T{}, testDB.DB, "../../migrations")
+	testDB := tests.SetupTestPostgres(b)
+	defer testDB.TeardownTestPostgres(b)
+
+	tests.RunMigrations(b, testDB.DB, "../../migrations")
 
 	db := sqlx.NewDb(testDB.DB, "postgres")
 	logger := zerolog.Nop()
@@ -218,6 +242,7 @@ func BenchmarkParallelGetListing(b *testing.B) {
 	}
 
 	b.ResetTimer()
+	b.ReportAllocs()
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {

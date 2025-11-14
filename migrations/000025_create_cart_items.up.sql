@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
 
     -- Product references
     listing_id BIGINT NOT NULL,            -- FK to listings
-    variant_id BIGINT NULL,                -- FK to listing_variants (optional, for variant products)
+    variant_id BIGINT NULL,                -- FK to b2c_product_variants (optional, for variant products)
 
     -- Item details
     quantity INTEGER NOT NULL,             -- Number of items
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
         REFERENCES listings(id) ON DELETE CASCADE,
 
     CONSTRAINT fk_cart_items_variant FOREIGN KEY (variant_id)
-        REFERENCES listing_variants(id) ON DELETE CASCADE,
+        REFERENCES b2c_product_variants(id) ON DELETE CASCADE,
 
     -- Business Logic Constraints
     CONSTRAINT chk_cart_items_quantity_positive CHECK (quantity > 0)

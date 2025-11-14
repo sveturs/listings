@@ -7,14 +7,13 @@
 --   4. Add source_type CHECK constraint to listings table
 
 -- =============================================================================
--- Step 1: Drop unused and backup tables
+-- Step 1: Drop backup tables
 -- =============================================================================
-
--- Drop empty b2c_product_variants table (0 records)
-DROP TABLE IF EXISTS b2c_product_variants CASCADE;
 
 -- Drop backup table created on 2025-11-10
 DROP TABLE IF EXISTS c2c_categories_backup_20251110 CASCADE;
+
+-- Note: b2c_product_variants is actively used - DO NOT DROP
 
 -- =============================================================================
 -- Step 2: Rename c2c_favorites -> listing_favorites
