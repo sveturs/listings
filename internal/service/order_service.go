@@ -239,14 +239,12 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 	}
 
 	// 13. Deduct stock
-	// NOTE: This requires a DeductStock method in the products repository
-	// For now, we'll add this as a TODO
-	// TODO: Implement stock deduction in transaction
-	// for _, item := range cart.Items {
-	//     if err := s.productsRepo.DeductStock(ctx, tx, item.ListingID, item.Quantity); err != nil {
-	//         return nil, fmt.Errorf("failed to deduct stock: %w", err)
-	//     }
-	// }
+	for _, item := range cart.Items {
+		if err := s.productsRepo.DeductStockWithPgxTx(ctx, tx, item.ListingID, item.Quantity); err != nil {
+			s.logger.Error().Err(err).Int64("listing_id", item.ListingID).Msg("failed to deduct stock")
+			return nil, fmt.Errorf("failed to deduct stock: %w", err)
+		}
+	}
 
 	// 14. Clear cart
 	// TODO: Fix transaction type mismatch - CartRepository expects *sql.Tx but we have pgx.Tx
@@ -353,6 +351,13 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		}
 	}
 
+	// Get reservations before releasing (needed for stock restoration)
+	reservations, err := s.reservationRepo.GetByOrderID(ctx, orderID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get reservations")
+		return nil, fmt.Errorf("failed to get reservations: %w", err)
+	}
+
 	// Update order status to cancelled
 	orderRepoTx := s.orderRepo.WithTx(tx)
 	if err := orderRepoTx.UpdateStatus(ctx, orderID, domain.OrderStatusCancelled); err != nil {
@@ -366,13 +371,13 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		return nil, fmt.Errorf("failed to release reservations: %w", err)
 	}
 
-	// TODO: Restore stock for released reservations
-	// Need to implement productsRepo.RestoreStock() method first
-	// for _, reservation := range reservations {
-	//     if err := s.productsRepo.RestoreStock(ctx, tx, reservation.ListingID, reservation.Quantity); err != nil {
-	//         return nil, fmt.Errorf("failed to restore stock: %w", err)
-	//     }
-	// }
+	// Restore stock for released reservations
+	for _, reservation := range reservations {
+		if err := s.productsRepo.RestoreStockWithPgxTx(ctx, tx, reservation.ListingID, reservation.Quantity); err != nil {
+			s.logger.Error().Err(err).Int64("listing_id", reservation.ListingID).Msg("failed to restore stock")
+			return nil, fmt.Errorf("failed to restore stock: %w", err)
+		}
+	}
 
 	// Commit transaction
 	if err := tx.Commit(ctx); err != nil {

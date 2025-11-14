@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/lib/pq"
 	"github.com/sveturs/listings/internal/domain"
 )
@@ -2169,4 +2170,423 @@ func (r *Repository) BatchUpdateStock(ctx context.Context, storefrontID int64, i
 // Helper function to create string pointer
 func strPtr(s string) *string {
 	return &s
+}
+
+// ============================================================================
+// STOCK MANAGEMENT METHODS (Phase 17)
+// ============================================================================
+
+// LockListingsByIDs locks listings by IDs in ascending order to prevent deadlocks.
+// MUST be called within a transaction (tx *sql.Tx).
+// This method implements SELECT FOR UPDATE with ORDER BY id ASC to ensure
+// consistent lock ordering across concurrent transactions, preventing deadlock.
+//
+// Returns error if:
+// - Any listing is not found
+// - Any listing is not active (status != 'active')
+// - Database error occurs
+func (r *Repository) LockListingsByIDs(ctx context.Context, tx *sql.Tx, listingIDs []int64) error {
+	if len(listingIDs) == 0 {
+		return nil
+	}
+
+	r.logger.Debug().
+		Interface("listing_ids", listingIDs).
+		Msg("locking listings for update")
+
+	// Lock in ascending ID order to prevent deadlocks
+	// Using pq.Array for PostgreSQL array parameter
+	query := `
+		SELECT id, status
+		FROM listings
+		WHERE id = ANY($1)
+		  AND source_type = 'b2c'
+		  AND deleted_at IS NULL
+		ORDER BY id ASC
+		FOR UPDATE
+	`
+
+	rows, err := tx.QueryContext(ctx, query, pq.Array(listingIDs))
+	if err != nil {
+		r.logger.Error().Err(err).Interface("listing_ids", listingIDs).Msg("failed to lock listings")
+		return fmt.Errorf("failed to lock listings: %w", err)
+	}
+	defer rows.Close()
+
+	lockedListings := make(map[int64]string) // id -> status
+	for rows.Next() {
+		var id int64
+		var status string
+		if err := rows.Scan(&id, &status); err != nil {
+			return fmt.Errorf("failed to scan locked listing: %w", err)
+		}
+		lockedListings[id] = status
+	}
+
+	if err = rows.Err(); err != nil {
+		return fmt.Errorf("error iterating locked listings: %w", err)
+	}
+
+	// Validate all requested IDs were locked
+	for _, listingID := range listingIDs {
+		status, found := lockedListings[listingID]
+		if !found {
+			return fmt.Errorf("listing %d not found or deleted", listingID)
+		}
+		if status != "active" {
+			return fmt.Errorf("listing %d is not active (status: %s)", listingID, status)
+		}
+	}
+
+	r.logger.Debug().
+		Int("locked_count", len(lockedListings)).
+		Msg("listings locked successfully")
+
+	return nil
+}
+
+// DeductStock atomically decrements stock quantity for a listing.
+// MUST be called within a transaction (tx *sql.Tx).
+//
+// This method performs an atomic UPDATE with a WHERE clause that checks
+// stock >= quantity, ensuring the operation fails if insufficient stock.
+//
+// Returns error if:
+// - Listing not found
+// - Listing is not active
+// - Insufficient stock (quantity > current stock)
+// - Database error occurs
+func (r *Repository) DeductStock(ctx context.Context, tx *sql.Tx, listingID int64, quantity int32) error {
+	if quantity <= 0 {
+		return fmt.Errorf("quantity must be greater than 0")
+	}
+
+	r.logger.Debug().
+		Int64("listing_id", listingID).
+		Int32("quantity", quantity).
+		Msg("deducting stock")
+
+	// Atomic UPDATE with stock validation
+	// WHERE clause ensures: stock >= quantity (prevents negative stock)
+	query := `
+		UPDATE listings
+		SET quantity = quantity - $1,
+		    updated_at = NOW()
+		WHERE id = $2
+		  AND source_type = 'b2c'
+		  AND status = 'active'
+		  AND deleted_at IS NULL
+		  AND quantity >= $1
+	`
+
+	result, err := tx.ExecContext(ctx, query, quantity, listingID)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to deduct stock")
+		return fmt.Errorf("failed to deduct stock: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		// Check if listing exists and get current stock for better error message
+		var currentStock int32
+		var status string
+		checkQuery := `
+			SELECT quantity, status
+			FROM listings
+			WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL
+		`
+		checkErr := tx.QueryRowContext(ctx, checkQuery, listingID).Scan(&currentStock, &status)
+
+		if checkErr == sql.ErrNoRows {
+			return fmt.Errorf("listing %d not found", listingID)
+		}
+		if checkErr != nil {
+			return fmt.Errorf("failed to check listing status: %w", checkErr)
+		}
+		if status != "active" {
+			return fmt.Errorf("listing %d is not active (status: %s)", listingID, status)
+		}
+		// If we're here, it means insufficient stock
+		return fmt.Errorf("insufficient stock for listing %d: requested %d, available %d",
+			listingID, quantity, currentStock)
+	}
+
+	r.logger.Info().
+		Int64("listing_id", listingID).
+		Int32("quantity", quantity).
+		Msg("stock deducted successfully")
+
+	return nil
+}
+
+// RestoreStock atomically increments stock quantity for a listing.
+// MUST be called within a transaction (tx *sql.Tx).
+//
+// This method is used when:
+// - Cancelling an order (restoring reserved stock)
+// - Releasing an inventory reservation
+// - Rolling back a failed order creation
+//
+// Unlike DeductStock, RestoreStock does NOT check upper bounds,
+// as we're returning previously reserved stock.
+//
+// Returns error if:
+// - Listing not found
+// - Listing is not active
+// - Database error occurs
+func (r *Repository) RestoreStock(ctx context.Context, tx *sql.Tx, listingID int64, quantity int32) error {
+	if quantity <= 0 {
+		return fmt.Errorf("quantity must be greater than 0")
+	}
+
+	r.logger.Debug().
+		Int64("listing_id", listingID).
+		Int32("quantity", quantity).
+		Msg("restoring stock")
+
+	// Atomic UPDATE - no upper bound check needed for restoration
+	query := `
+		UPDATE listings
+		SET quantity = quantity + $1,
+		    updated_at = NOW()
+		WHERE id = $2
+		  AND source_type = 'b2c'
+		  AND status = 'active'
+		  AND deleted_at IS NULL
+	`
+
+	result, err := tx.ExecContext(ctx, query, quantity, listingID)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to restore stock")
+		return fmt.Errorf("failed to restore stock: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		// Check why restore failed
+		var status string
+		checkQuery := `
+			SELECT status
+			FROM listings
+			WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL
+		`
+		checkErr := tx.QueryRowContext(ctx, checkQuery, listingID).Scan(&status)
+
+		if checkErr == sql.ErrNoRows {
+			return fmt.Errorf("listing %d not found", listingID)
+		}
+		if checkErr != nil {
+			return fmt.Errorf("failed to check listing status: %w", checkErr)
+		}
+		if status != "active" {
+			return fmt.Errorf("listing %d is not active (status: %s)", listingID, status)
+		}
+		// Should not reach here
+		return fmt.Errorf("failed to restore stock for listing %d (unknown reason)", listingID)
+	}
+
+	r.logger.Info().
+		Int64("listing_id", listingID).
+		Int32("quantity", quantity).
+		Msg("stock restored successfully")
+
+	return nil
+}
+
+// ============================================================================
+// PGX TRANSACTION WRAPPERS
+// ============================================================================
+// These methods wrap the sql.Tx versions to work with pgx.Tx transactions
+// used by OrderRepository and ReservationRepository.
+
+// LockListingsByIDsWithPgxTx locks listings using pgx.Tx transaction.
+// This is a wrapper around LockListingsByIDs for compatibility with pgx-based services.
+func (r *Repository) LockListingsByIDsWithPgxTx(ctx context.Context, tx pgx.Tx, listingIDs []int64) error {
+	if len(listingIDs) == 0 {
+		return nil
+	}
+
+	r.logger.Debug().
+		Interface("listing_ids", listingIDs).
+		Msg("locking listings for update (pgx)")
+
+	// Lock in ascending ID order to prevent deadlocks
+	query := `
+		SELECT id, status
+		FROM listings
+		WHERE id = ANY($1)
+		  AND source_type = 'b2c'
+		  AND deleted_at IS NULL
+		ORDER BY id ASC
+		FOR UPDATE
+	`
+
+	rows, err := tx.Query(ctx, query, listingIDs)
+	if err != nil {
+		r.logger.Error().Err(err).Interface("listing_ids", listingIDs).Msg("failed to lock listings")
+		return fmt.Errorf("failed to lock listings: %w", err)
+	}
+	defer rows.Close()
+
+	lockedListings := make(map[int64]string) // id -> status
+	for rows.Next() {
+		var id int64
+		var status string
+		if err := rows.Scan(&id, &status); err != nil {
+			return fmt.Errorf("failed to scan locked listing: %w", err)
+		}
+		lockedListings[id] = status
+	}
+
+	if err = rows.Err(); err != nil {
+		return fmt.Errorf("error iterating locked listings: %w", err)
+	}
+
+	// Validate all requested IDs were locked
+	for _, listingID := range listingIDs {
+		status, found := lockedListings[listingID]
+		if !found {
+			return fmt.Errorf("listing %d not found or deleted", listingID)
+		}
+		if status != "active" {
+			return fmt.Errorf("listing %d is not active (status: %s)", listingID, status)
+		}
+	}
+
+	r.logger.Debug().
+		Int("locked_count", len(lockedListings)).
+		Msg("listings locked successfully (pgx)")
+
+	return nil
+}
+
+// DeductStockWithPgxTx atomically decrements stock using pgx.Tx transaction.
+// This is a wrapper around DeductStock for compatibility with pgx-based services.
+func (r *Repository) DeductStockWithPgxTx(ctx context.Context, tx pgx.Tx, listingID int64, quantity int32) error {
+	if quantity <= 0 {
+		return fmt.Errorf("quantity must be greater than 0")
+	}
+
+	r.logger.Debug().
+		Int64("listing_id", listingID).
+		Int32("quantity", quantity).
+		Msg("deducting stock (pgx)")
+
+	// Atomic UPDATE with stock validation
+	query := `
+		UPDATE listings
+		SET quantity = quantity - $1,
+		    updated_at = NOW()
+		WHERE id = $2
+		  AND source_type = 'b2c'
+		  AND status = 'active'
+		  AND deleted_at IS NULL
+		  AND quantity >= $1
+	`
+
+	result, err := tx.Exec(ctx, query, quantity, listingID)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to deduct stock")
+		return fmt.Errorf("failed to deduct stock: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		// Check if listing exists and get current stock for better error message
+		var currentStock int32
+		var status string
+		checkQuery := `
+			SELECT quantity, status
+			FROM listings
+			WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL
+		`
+		checkErr := tx.QueryRow(ctx, checkQuery, listingID).Scan(&currentStock, &status)
+
+		if checkErr == pgx.ErrNoRows {
+			return fmt.Errorf("listing %d not found", listingID)
+		}
+		if checkErr != nil {
+			return fmt.Errorf("failed to check listing status: %w", checkErr)
+		}
+		if status != "active" {
+			return fmt.Errorf("listing %d is not active (status: %s)", listingID, status)
+		}
+		// If we're here, it means insufficient stock
+		return fmt.Errorf("insufficient stock for listing %d: requested %d, available %d",
+			listingID, quantity, currentStock)
+	}
+
+	r.logger.Info().
+		Int64("listing_id", listingID).
+		Int32("quantity", quantity).
+		Msg("stock deducted successfully (pgx)")
+
+	return nil
+}
+
+// RestoreStockWithPgxTx atomically increments stock using pgx.Tx transaction.
+// This is a wrapper around RestoreStock for compatibility with pgx-based services.
+func (r *Repository) RestoreStockWithPgxTx(ctx context.Context, tx pgx.Tx, listingID int64, quantity int32) error {
+	if quantity <= 0 {
+		return fmt.Errorf("quantity must be greater than 0")
+	}
+
+	r.logger.Debug().
+		Int64("listing_id", listingID).
+		Int32("quantity", quantity).
+		Msg("restoring stock (pgx)")
+
+	// Atomic UPDATE - no upper bound check needed for restoration
+	query := `
+		UPDATE listings
+		SET quantity = quantity + $1,
+		    updated_at = NOW()
+		WHERE id = $2
+		  AND source_type = 'b2c'
+		  AND status = 'active'
+		  AND deleted_at IS NULL
+	`
+
+	result, err := tx.Exec(ctx, query, quantity, listingID)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to restore stock")
+		return fmt.Errorf("failed to restore stock: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		// Check why restore failed
+		var status string
+		checkQuery := `
+			SELECT status
+			FROM listings
+			WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL
+		`
+		checkErr := tx.QueryRow(ctx, checkQuery, listingID).Scan(&status)
+
+		if checkErr == pgx.ErrNoRows {
+			return fmt.Errorf("listing %d not found", listingID)
+		}
+		if checkErr != nil {
+			return fmt.Errorf("failed to check listing status: %w", checkErr)
+		}
+		if status != "active" {
+			return fmt.Errorf("listing %d is not active (status: %s)", listingID, status)
+		}
+		// Should not reach here
+		return fmt.Errorf("failed to restore stock for listing %d (unknown reason)", listingID)
+	}
+
+	r.logger.Info().
+		Int64("listing_id", listingID).
+		Int32("quantity", quantity).
+		Msg("stock restored successfully (pgx)")
+
+	return nil
 }
