@@ -115,6 +115,19 @@ func main() {
 
 	pgRepo := postgres.NewRepository(db, zerologLogger)
 
+	// Initialize PgxPool for order-related repositories (they require pgx for transactions)
+	pgxPool, err := postgres.InitPgxPool(
+		context.Background(),
+		cfg.DB.DSN(),
+		int32(cfg.DB.MaxOpenConns),
+		int32(cfg.DB.MaxIdleConns),
+		zerologLogger,
+	)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to initialize pgxpool")
+	}
+	defer pgxPool.Close()
+
 	// Start DB stats collector
 	dbStatsCollector := metrics.NewDBStatsCollector(db, metricsInstance, zerologLogger, 15*time.Second)
 	go dbStatsCollector.Start(context.Background())
@@ -211,6 +224,22 @@ func main() {
 	// Initialize category service
 	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
 
+	// Initialize order service dependencies
+	cartRepo := postgres.NewCartRepository(db, zerologLogger)
+	orderRepo := postgres.NewOrderRepository(pgxPool, zerologLogger)
+	reservationRepo := postgres.NewReservationRepository(pgxPool, zerologLogger)
+
+	// Initialize order service
+	orderService := service.NewOrderService(
+		orderRepo,
+		cartRepo,
+		reservationRepo,
+		pgRepo,
+		pgxPool,
+		nil, // Use default financial config
+		zerologLogger,
+	)
+
 	// Initialize health check service
 	healthConfig := &health.Config{
 		CheckTimeout:     cfg.Health.CheckTimeout,
@@ -280,9 +309,10 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
+	listingspb.RegisterOrderServiceServer(grpcServer, grpcHandler)
 
 	// Enable gRPC reflection for tools like grpcurl
 	reflection.Register(grpcServer)

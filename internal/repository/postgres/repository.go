@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver registration
 	"github.com/rs/zerolog"
@@ -70,6 +71,39 @@ func InitDB(dsn string, maxOpenConns, maxIdleConns int, connMaxLifetime, connMax
 		Msg("PostgreSQL connection pool initialized")
 
 	return db, nil
+}
+
+// InitPgxPool initializes pgxpool connection pool for pgx-based repositories
+func InitPgxPool(ctx context.Context, dsn string, maxConns, minConns int32, logger zerolog.Logger) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse DSN: %w", err)
+	}
+
+	// Configure connection pool
+	config.MaxConns = maxConns
+	config.MinConns = minConns
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pgxpool: %w", err)
+	}
+
+	// Test connection
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := pool.Ping(pingCtx); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	logger.Info().
+		Int32("max_conns", maxConns).
+		Int32("min_conns", minConns).
+		Msg("PgxPool connection pool initialized")
+
+	return pool, nil
 }
 
 // extractFieldTranslations extracts translations for a specific field from the translations map

@@ -21,14 +21,16 @@ func contains(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
-// Server implements gRPC ListingsServiceServer and AttributeServiceServer
+// Server implements gRPC ListingsServiceServer, AttributeServiceServer, and OrderServiceServer
 type Server struct {
 	listingspb.UnimplementedListingsServiceServer
 	attributespb.UnimplementedAttributeServiceServer
+	listingspb.UnimplementedOrderServiceServer
 	service           *listings.Service
 	storefrontService *listings.StorefrontService
 	attrService       service.AttributeService
 	categoryService   service.CategoryService
+	orderService      service.OrderService
 	metrics           *metrics.Metrics
 	logger            zerolog.Logger
 }
@@ -39,6 +41,7 @@ func NewServer(
 	storefrontService *listings.StorefrontService,
 	attrService service.AttributeService,
 	categoryService service.CategoryService,
+	orderService service.OrderService,
 	m *metrics.Metrics,
 	logger zerolog.Logger,
 ) *Server {
@@ -47,6 +50,7 @@ func NewServer(
 		storefrontService: storefrontService,
 		attrService:       attrService,
 		categoryService:   categoryService,
+		orderService:      orderService,
 		metrics:           m,
 		logger:            logger.With().Str("component", "grpc_handler").Logger(),
 	}

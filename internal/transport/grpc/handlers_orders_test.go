@@ -3,7 +3,6 @@ package grpc_test
 import (
 	"context"
 	stdtesting "testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,7 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	ordersspb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
 	grpcTransport "github.com/sveturs/listings/internal/transport/grpc"
 	"github.com/sveturs/listings/internal/testing"
 )
@@ -728,7 +726,7 @@ func TestGetOrderStats_Success(t *stdtesting.T) {
 
 // createTestOrder creates a test order and returns it
 func createTestOrder(
-	t *testing.T,
+	t *stdtesting.T,
 	env *testing.TestEnvironment,
 	handler *grpcTransport.OrderServiceServer,
 	storefrontID int64,
