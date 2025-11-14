@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
@@ -233,12 +234,13 @@ func (s *Server) GetUserCarts(ctx context.Context, req *listingspb.GetUserCartsR
 // ORDER OPERATIONS (6 methods)
 // ============================================================================
 
-// CreateOrder creates a new order from cart
-// Transaction: validates cart, creates order, reserves inventory, deducts stock, clears cart
+// CreateOrder creates a new order from cart OR direct items
+// Transaction: validates cart/items, creates order, reserves inventory, deducts stock, clears cart
 func (s *Server) CreateOrder(ctx context.Context, req *listingspb.CreateOrderRequest) (*listingspb.CreateOrderResponse, error) {
 	s.logger.Info().
 		Interface("user_id", req.UserId).
-		Int64("cart_id", req.CartId).
+		Interface("cart_id", req.CartId).
+		Int("items_count", len(req.Items)).
 		Str("payment_method", req.PaymentMethod).
 		Msg("CreateOrder called")
 
@@ -251,9 +253,34 @@ func (s *Server) CreateOrder(ctx context.Context, req *listingspb.CreateOrderReq
 	shippingAddress := protoStructToMap(req.ShippingAddress)
 	billingAddress := protoStructToMap(req.BillingAddress)
 
+	// Convert proto Items to service.OrderItemInput
+	var items []service.OrderItemInput
+	if len(req.Items) > 0 {
+		items = make([]service.OrderItemInput, 0, len(req.Items))
+		for _, protoItem := range req.Items {
+			item := service.OrderItemInput{
+				ProductID: protoItem.ProductId,
+				Quantity:  int(protoItem.Quantity),
+			}
+			if protoItem.VariantId != nil {
+				variantID := *protoItem.VariantId
+				item.VariantID = &variantID
+			}
+			items = append(items, item)
+		}
+	}
+
+	// Determine cart_id (0 if using direct items)
+	cartID := int64(0)
+	if req.CartId != nil {
+		cartID = *req.CartId
+	}
+
 	// Call service layer
 	order, err := s.orderService.CreateOrder(ctx, &service.CreateOrderRequest{
-		CartID:          req.CartId,
+		CartID:          cartID,
+		Items:           items,
+		StorefrontID:    req.StorefrontId,
 		UserID:          req.UserId,
 		ShippingAddress: shippingAddress,
 		BillingAddress:  billingAddress,
@@ -505,8 +532,24 @@ func validateAddToCartRequest(req *listingspb.AddToCartRequest) error {
 
 // validateCreateOrderRequest validates CreateOrder request
 func validateCreateOrderRequest(req *listingspb.CreateOrderRequest) error {
-	if req.CartId <= 0 {
-		return errors.New("cart_id must be greater than 0")
+	// Validate that either cart_id or items is provided
+	hasCartID := req.CartId != nil && *req.CartId > 0
+	hasItems := len(req.Items) > 0
+
+	if !hasCartID && !hasItems {
+		return errors.New("either cart_id or items must be provided")
+	}
+
+	// Validate items if using direct checkout
+	if hasItems {
+		for i, item := range req.Items {
+			if item.ProductId <= 0 {
+				return fmt.Errorf("items[%d].product_id must be greater than 0", i)
+			}
+			if item.Quantity <= 0 {
+				return fmt.Errorf("items[%d].quantity must be greater than 0", i)
+			}
+		}
 	}
 
 	if req.StorefrontId <= 0 {

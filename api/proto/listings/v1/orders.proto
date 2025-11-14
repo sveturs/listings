@@ -283,8 +283,16 @@ message GetUserCartsResponse {
 // REQUEST/RESPONSE - Order Operations
 // ============================================================================
 
-// CreateOrderRequest creates a new order from cart
+// OrderItemInput represents a single item for direct checkout (without cart)
+message OrderItemInput {
+  int64 product_id = 1;              // Required - product/listing ID
+  optional int64 variant_id = 2;     // Optional - variant ID
+  int32 quantity = 3;                // Required - quantity to order
+}
+
+// CreateOrderRequest creates a new order from cart OR direct items
 // Validation:
+// - Either cart_id > 0 OR len(items) > 0 (at least one required)
 // - All listings must exist and be available
 // - Prices must match (or accept price changes)
 // - Stock must be available for all items
@@ -293,7 +301,9 @@ message CreateOrderRequest {
   optional int64 user_id = 1;        // NULL for guest orders
   optional string session_id = 2;    // For anonymous carts
   int64 storefront_id = 3;           // Required
-  int64 cart_id = 4;                 // Cart to convert to order
+
+  // Cart-based checkout (existing flow)
+  optional int64 cart_id = 4;        // Cart to convert to order
 
   // Shipping information
   google.protobuf.Struct shipping_address = 5; // Required
@@ -313,6 +323,9 @@ message CreateOrderRequest {
 
   // Price validation
   bool accept_price_changes = 13;    // If false, reject if prices changed
+
+  // Direct checkout (new flow) - field number 15+ to avoid conflicts
+  repeated OrderItemInput items = 15; // Alternative to cart_id for direct checkout
 }
 
 message CreateOrderResponse {

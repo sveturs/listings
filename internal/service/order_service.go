@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -30,9 +31,23 @@ type OrderService interface {
 	ProcessRefund(ctx context.Context, orderID int64) error
 }
 
+// OrderItemInput represents a single item for direct checkout
+type OrderItemInput struct {
+	ProductID  int64  // Required - product/listing ID
+	VariantID  *int64 // Optional - variant ID
+	Quantity   int    // Required - quantity to order
+}
+
 // CreateOrderRequest contains parameters for creating an order
 type CreateOrderRequest struct {
-	CartID          int64                  // Cart to convert to order
+	// Cart-based checkout (existing flow)
+	CartID          int64                  // Cart to convert to order (0 if using Items)
+
+	// Direct checkout (new flow)
+	Items           []OrderItemInput       // Alternative to CartID for direct checkout
+	StorefrontID    int64                  // Required for direct checkout (not needed for cart-based)
+
+	// Common fields
 	UserID          *int64                 // NULL for guest orders
 	ShippingAddress map[string]interface{} // Required JSONB
 	BillingAddress  map[string]interface{} // Optional (defaults to shipping)
@@ -99,9 +114,12 @@ func NewOrderService(
 	}
 }
 
-// CreateOrder creates a new order from a cart (ACID transaction)
+// CreateOrder creates a new order from a cart OR direct items (ACID transaction)
 func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest) (*domain.Order, error) {
-	s.logger.Info().Int64("cart_id", req.CartID).Msg("creating order")
+	s.logger.Info().
+		Int64("cart_id", req.CartID).
+		Int("items_count", len(req.Items)).
+		Msg("creating order")
 
 	// Start transaction
 	tx, err := s.pool.Begin(ctx)
@@ -111,11 +129,21 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 	}
 	defer tx.Rollback(ctx)
 
-	// 1. Get cart with items
-	cart, err := s.cartRepo.GetByID(ctx, req.CartID)
-	if err != nil {
-		s.logger.Error().Err(err).Int64("cart_id", req.CartID).Msg("failed to get cart")
-		return nil, fmt.Errorf("failed to get cart: %w", err)
+	// 1. Get cart with items (or create temporary cart from items)
+	var cart *domain.Cart
+
+	if req.CartID > 0 {
+		// Existing flow: load cart from DB
+		cart, err = s.cartRepo.GetByID(ctx, req.CartID)
+		if err != nil {
+			s.logger.Error().Err(err).Int64("cart_id", req.CartID).Msg("failed to get cart")
+			return nil, fmt.Errorf("failed to get cart: %w", err)
+		}
+	} else if len(req.Items) > 0 {
+		// New flow: create temporary cart from items
+		cart = s.createTemporaryCartFromItems(req)
+	} else {
+		return nil, errors.New("either cart_id or items must be provided")
 	}
 
 	// 2. Validate cart not empty
@@ -549,4 +577,26 @@ func (s *orderService) buildReservations(orderID int64, cartItems []*domain.Cart
 	}
 
 	return reservations
+}
+
+// createTemporaryCartFromItems creates a temporary in-memory cart from direct items
+// Used for direct checkout flow (without persisting cart to DB)
+func (s *orderService) createTemporaryCartFromItems(req *CreateOrderRequest) *domain.Cart {
+	cart := &domain.Cart{
+		UserID:       req.UserID,
+		StorefrontID: req.StorefrontID,
+		Items:        make([]*domain.CartItem, 0, len(req.Items)),
+	}
+
+	for _, item := range req.Items {
+		cartItem := &domain.CartItem{
+			ListingID:     item.ProductID,
+			Quantity:      int32(item.Quantity), // Convert int to int32 for domain.CartItem
+			VariantID:     item.VariantID,
+			PriceSnapshot: 0, // Will be set during price validation
+		}
+		cart.Items = append(cart.Items, cartItem)
+	}
+
+	return cart
 }
