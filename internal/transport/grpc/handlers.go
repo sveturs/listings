@@ -31,6 +31,7 @@ type Server struct {
 	attrService       service.AttributeService
 	categoryService   service.CategoryService
 	orderService      service.OrderService
+	cartService       service.CartService
 	metrics           *metrics.Metrics
 	logger            zerolog.Logger
 }
@@ -42,6 +43,7 @@ func NewServer(
 	attrService service.AttributeService,
 	categoryService service.CategoryService,
 	orderService service.OrderService,
+	cartService service.CartService,
 	m *metrics.Metrics,
 	logger zerolog.Logger,
 ) *Server {
@@ -51,6 +53,7 @@ func NewServer(
 		attrService:       attrService,
 		categoryService:   categoryService,
 		orderService:      orderService,
+		cartService:       cartService,
 		metrics:           m,
 		logger:            logger.With().Str("component", "grpc_handler").Logger(),
 	}

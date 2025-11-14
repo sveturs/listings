@@ -17,7 +17,9 @@ type CartService interface {
 	// Cart operations
 	AddToCart(ctx context.Context, req *AddToCartRequest) (*domain.Cart, error)
 	UpdateCartItem(ctx context.Context, req *UpdateCartItemRequest) (*domain.Cart, error)
+	UpdateCartItemByItemID(ctx context.Context, cartItemID int64, quantity int32, userID *int64, sessionID *string) (*domain.Cart, error)
 	RemoveFromCart(ctx context.Context, cartID, itemID int64) error
+	RemoveFromCartByItemID(ctx context.Context, cartItemID int64, userID *int64, sessionID *string) error
 	GetCart(ctx context.Context, userID *int64, sessionID *string, storefrontID int64) (*domain.Cart, error)
 	ClearCart(ctx context.Context, cartID int64) error
 	GetUserCarts(ctx context.Context, userID int64) ([]*domain.Cart, error)
@@ -546,4 +548,92 @@ func (s *cartService) findCartItem(items []*domain.CartItem, listingID int64, va
 		}
 	}
 	return nil
+}
+
+// UpdateCartItemByItemID updates cart item quantity by item ID with ownership verification
+func (s *cartService) UpdateCartItemByItemID(ctx context.Context, cartItemID int64, quantity int32, userID *int64, sessionID *string) (*domain.Cart, error) {
+	s.logger.Debug().
+		Int64("cart_item_id", cartItemID).
+		Int32("quantity", quantity).
+		Interface("user_id", userID).
+		Interface("session_id", sessionID).
+		Msg("updating cart item by item ID")
+
+	// Validate quantity
+	if quantity <= 0 {
+		return nil, fmt.Errorf("%w: quantity must be greater than 0", ErrInvalidInput)
+	}
+
+	// Get cart item to find cart_id
+	cartItem, err := s.cartRepo.GetCartItemByID(ctx, cartItemID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("cart_item_id", cartItemID).Msg("failed to get cart item")
+		return nil, fmt.Errorf("failed to get cart item: %w", err)
+	}
+
+	// Get cart to verify ownership
+	cart, err := s.cartRepo.GetByID(ctx, cartItem.CartID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("cart_id", cartItem.CartID).Msg("failed to get cart")
+		return nil, fmt.Errorf("failed to get cart: %w", err)
+	}
+
+	// Verify ownership (user_id or session_id matches cart owner)
+	if userID != nil {
+		if cart.UserID == nil || *cart.UserID != *userID {
+			return nil, ErrUnauthorized
+		}
+	} else if sessionID != nil {
+		if cart.SessionID == nil || *cart.SessionID != *sessionID {
+			return nil, ErrUnauthorized
+		}
+	} else {
+		return nil, fmt.Errorf("%w: must provide either user_id or session_id", ErrInvalidInput)
+	}
+
+	// Call existing UpdateCartItem method
+	return s.UpdateCartItem(ctx, &UpdateCartItemRequest{
+		CartID:   cartItem.CartID,
+		ItemID:   cartItemID,
+		Quantity: quantity,
+	})
+}
+
+// RemoveFromCartByItemID removes cart item by item ID with ownership verification
+func (s *cartService) RemoveFromCartByItemID(ctx context.Context, cartItemID int64, userID *int64, sessionID *string) error {
+	s.logger.Debug().
+		Int64("cart_item_id", cartItemID).
+		Interface("user_id", userID).
+		Interface("session_id", sessionID).
+		Msg("removing cart item by item ID")
+
+	// Get cart item to find cart_id
+	cartItem, err := s.cartRepo.GetCartItemByID(ctx, cartItemID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("cart_item_id", cartItemID).Msg("failed to get cart item")
+		return fmt.Errorf("failed to get cart item: %w", err)
+	}
+
+	// Get cart to verify ownership
+	cart, err := s.cartRepo.GetByID(ctx, cartItem.CartID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("cart_id", cartItem.CartID).Msg("failed to get cart")
+		return fmt.Errorf("failed to get cart: %w", err)
+	}
+
+	// Verify ownership (user_id or session_id matches cart owner)
+	if userID != nil {
+		if cart.UserID == nil || *cart.UserID != *userID {
+			return ErrUnauthorized
+		}
+	} else if sessionID != nil {
+		if cart.SessionID == nil || *cart.SessionID != *sessionID {
+			return ErrUnauthorized
+		}
+	} else {
+		return fmt.Errorf("%w: must provide either user_id or session_id", ErrInvalidInput)
+	}
+
+	// Call existing RemoveFromCart method
+	return s.RemoveFromCart(ctx, cartItem.CartID, cartItemID)
 }

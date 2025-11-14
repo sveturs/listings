@@ -229,6 +229,15 @@ func main() {
 	orderRepo := postgres.NewOrderRepository(pgxPool, zerologLogger)
 	reservationRepo := postgres.NewReservationRepository(pgxPool, zerologLogger)
 
+	// Initialize cart service
+	cartService := service.NewCartService(
+		cartRepo,
+		pgRepo,
+		pgRepo,
+		pgRepo,
+		zerologLogger,
+	)
+
 	// Initialize order service
 	orderService := service.NewOrderService(
 		orderRepo,
@@ -309,7 +318,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
 	listingspb.RegisterOrderServiceServer(grpcServer, grpcHandler)

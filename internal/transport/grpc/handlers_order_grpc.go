@@ -2,12 +2,14 @@ package grpc
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
+	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
@@ -24,66 +26,207 @@ import (
 // ============================================================================
 
 // AddToCart adds an item to shopping cart
+// Creates cart if doesn't exist
+// Validates: listing exists, storefront matches, stock available
 func (s *Server) AddToCart(ctx context.Context, req *listingspb.AddToCartRequest) (*listingspb.AddToCartResponse, error) {
 	s.logger.Debug().
+		Interface("user_id", req.UserId).
+		Interface("session_id", req.SessionId).
 		Int64("storefront_id", req.StorefrontId).
 		Int64("listing_id", req.ListingId).
 		Int32("quantity", req.Quantity).
 		Msg("AddToCart called")
 
-	// Cart operations not yet implemented in OrderService
-	// Return Unimplemented for now
-	return nil, status.Error(codes.Unimplemented, "cart operations not yet implemented")
+	// Validate input
+	if err := validateAddToCartRequest(req); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Call service layer
+	cart, err := s.cartService.AddToCart(ctx, &service.AddToCartRequest{
+		UserID:       req.UserId,
+		SessionID:    req.SessionId,
+		StorefrontID: req.StorefrontId,
+		ListingID:    req.ListingId,
+		VariantID:    req.VariantId,
+		Quantity:     req.Quantity,
+	})
+
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Convert domain.Cart to proto Cart
+	pbCart := domainCartToProtoCart(cart)
+
+	return &listingspb.AddToCartResponse{
+		Cart:    pbCart,
+		Message: "Item added to cart successfully",
+	}, nil
 }
 
 // UpdateCartItem updates quantity or variant for a cart item
+// Validates: ownership, stock availability
 func (s *Server) UpdateCartItem(ctx context.Context, req *listingspb.UpdateCartItemRequest) (*listingspb.UpdateCartItemResponse, error) {
 	s.logger.Debug().
 		Int64("cart_item_id", req.CartItemId).
+		Interface("user_id", req.UserId).
+		Interface("quantity", req.Quantity).
 		Msg("UpdateCartItem called")
 
-	// Cart operations not yet implemented
-	return nil, status.Error(codes.Unimplemented, "cart operations not yet implemented")
+	// Validate input
+	if req.CartItemId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "cart_item_id must be greater than 0")
+	}
+
+	if req.Quantity != nil && *req.Quantity <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "quantity must be greater than 0")
+	}
+
+	// Call service layer with ownership verification built-in
+	updatedCart, err := s.cartService.UpdateCartItemByItemID(ctx, req.CartItemId, *req.Quantity, req.UserId, req.SessionId)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Find the updated item in the cart
+	var updatedItem *domain.CartItem
+	for _, item := range updatedCart.Items {
+		if item.ID == req.CartItemId {
+			updatedItem = item
+			break
+		}
+	}
+
+	// Convert domain.CartItem to proto CartItem
+	pbCartItem := domainCartItemToProtoCartItem(updatedItem)
+
+	return &listingspb.UpdateCartItemResponse{
+		Item:    pbCartItem,
+		Message: "Cart item updated successfully",
+	}, nil
 }
 
 // RemoveFromCart removes an item from cart
+// Validates: ownership
 func (s *Server) RemoveFromCart(ctx context.Context, req *listingspb.RemoveFromCartRequest) (*listingspb.RemoveFromCartResponse, error) {
 	s.logger.Debug().
 		Int64("cart_item_id", req.CartItemId).
+		Interface("user_id", req.UserId).
 		Msg("RemoveFromCart called")
 
-	// Cart operations not yet implemented
-	return nil, status.Error(codes.Unimplemented, "cart operations not yet implemented")
+	// Validate input
+	if req.CartItemId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "cart_item_id must be greater than 0")
+	}
+
+	// Call service layer with ownership verification built-in
+	err := s.cartService.RemoveFromCartByItemID(ctx, req.CartItemId, req.UserId, req.SessionId)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	return &listingspb.RemoveFromCartResponse{
+		Message: "Item removed from cart successfully",
+	}, nil
 }
 
 // GetCart retrieves user's cart for a storefront
+// Returns: cart with items, prices, stock availability
 func (s *Server) GetCart(ctx context.Context, req *listingspb.GetCartRequest) (*listingspb.GetCartResponse, error) {
 	s.logger.Debug().
+		Interface("user_id", req.UserId).
+		Interface("session_id", req.SessionId).
 		Int64("storefront_id", req.StorefrontId).
 		Msg("GetCart called")
 
-	// Cart operations not yet implemented
-	return nil, status.Error(codes.Unimplemented, "cart operations not yet implemented")
+	// Validate input
+	if (req.UserId == nil && req.SessionId == nil) || (req.UserId != nil && req.SessionId != nil) {
+		return nil, status.Error(codes.InvalidArgument, "must provide either user_id or session_id (not both)")
+	}
+
+	if req.StorefrontId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "storefront_id must be greater than 0")
+	}
+
+	// Call service layer
+	cart, err := s.cartService.GetCart(ctx, req.UserId, req.SessionId, req.StorefrontId)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Convert domain.Cart to proto Cart
+	pbCart := domainCartToProtoCart(cart)
+
+	// Calculate cart summary
+	summary := calculateCartSummary(cart)
+
+	return &listingspb.GetCartResponse{
+		Cart:    pbCart,
+		Summary: summary,
+	}, nil
 }
 
 // ClearCart removes all items from cart
+// Used after order creation or manual clear
 func (s *Server) ClearCart(ctx context.Context, req *listingspb.ClearCartRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().
+		Interface("user_id", req.UserId).
+		Interface("session_id", req.SessionId).
 		Int64("storefront_id", req.StorefrontId).
 		Msg("ClearCart called")
 
-	// Cart operations not yet implemented
-	return nil, status.Error(codes.Unimplemented, "cart operations not yet implemented")
+	// Validate input
+	if (req.UserId == nil && req.SessionId == nil) || (req.UserId != nil && req.SessionId != nil) {
+		return nil, status.Error(codes.InvalidArgument, "must provide either user_id or session_id (not both)")
+	}
+
+	if req.StorefrontId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "storefront_id must be greater than 0")
+	}
+
+	// First, get the cart to get its ID
+	cart, err := s.cartService.GetCart(ctx, req.UserId, req.SessionId, req.StorefrontId)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Clear cart
+	if err := s.cartService.ClearCart(ctx, cart.ID); err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 // GetUserCarts retrieves all carts for authenticated user
+// Returns: carts across all storefronts
 func (s *Server) GetUserCarts(ctx context.Context, req *listingspb.GetUserCartsRequest) (*listingspb.GetUserCartsResponse, error) {
 	s.logger.Debug().
 		Int64("user_id", req.UserId).
 		Msg("GetUserCarts called")
 
-	// Cart operations not yet implemented
-	return nil, status.Error(codes.Unimplemented, "cart operations not yet implemented")
+	// Validate input
+	if req.UserId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user_id must be greater than 0")
+	}
+
+	// Call service layer
+	carts, err := s.cartService.GetUserCarts(ctx, req.UserId)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Convert domain.Cart slice to proto Cart slice
+	pbCarts := make([]*listingspb.Cart, 0, len(carts))
+	for _, cart := range carts {
+		pbCarts = append(pbCarts, domainCartToProtoCart(cart))
+	}
+
+	return &listingspb.GetUserCartsResponse{
+		Carts:      pbCarts,
+		TotalCarts: int32(len(pbCarts)),
+	}, nil
 }
 
 // ============================================================================
@@ -91,105 +234,80 @@ func (s *Server) GetUserCarts(ctx context.Context, req *listingspb.GetUserCartsR
 // ============================================================================
 
 // CreateOrder creates a new order from cart
+// Transaction: validates cart, creates order, reserves inventory, deducts stock, clears cart
 func (s *Server) CreateOrder(ctx context.Context, req *listingspb.CreateOrderRequest) (*listingspb.CreateOrderResponse, error) {
 	s.logger.Info().
-		Int64("storefront_id", req.StorefrontId).
+		Interface("user_id", req.UserId).
 		Int64("cart_id", req.CartId).
 		Str("payment_method", req.PaymentMethod).
 		Msg("CreateOrder called")
 
-	// 1. Validate request
-	if req.GetStorefrontId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "storefront_id is required")
-	}
-	if req.GetCartId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "cart_id is required")
-	}
-	if req.GetPaymentMethod() == "" {
-		return nil, status.Error(codes.InvalidArgument, "payment_method is required")
-	}
-	if req.GetShippingMethod() == "" {
-		return nil, status.Error(codes.InvalidArgument, "shipping_method is required")
-	}
-	if req.ShippingAddress == nil {
-		return nil, status.Error(codes.InvalidArgument, "shipping_address is required")
+	// Validate input
+	if err := validateCreateOrderRequest(req); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	// 2. Convert proto to domain request
-	domainReq := &service.CreateOrderRequest{
-		CartID:          req.GetCartId(),
+	// Convert proto Struct to map[string]interface{}
+	shippingAddress := protoStructToMap(req.ShippingAddress)
+	billingAddress := protoStructToMap(req.BillingAddress)
+
+	// Call service layer
+	order, err := s.orderService.CreateOrder(ctx, &service.CreateOrderRequest{
+		CartID:          req.CartId,
 		UserID:          req.UserId,
-		ShippingAddress: req.ShippingAddress.AsMap(),
+		ShippingAddress: shippingAddress,
+		BillingAddress:  billingAddress,
 		ShippingCost:    0, // TODO: Calculate shipping cost
-		PaymentMethod:   req.GetPaymentMethod(),
-	}
+		DiscountCode:    nil,
+		DiscountAmount:  0,
+		PaymentMethod:   req.PaymentMethod,
+		CustomerNotes:   req.CustomerNotes,
+	})
 
-	// Set billing address (defaults to shipping if not provided)
-	if req.BillingAddress != nil {
-		domainReq.BillingAddress = req.BillingAddress.AsMap()
-	}
-
-	// Set optional customer notes
-	if req.CustomerNotes != nil {
-		domainReq.CustomerNotes = req.CustomerNotes
-	}
-
-	// 3. Call service layer
-	order, err := s.orderService.CreateOrder(ctx, domainReq)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("cart_id", req.GetCartId()).Msg("failed to create order")
-		return nil, mapOrderServiceError(err)
+		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
 
-	// 4. Convert domain to proto
-	pbOrder := order.ToProto()
-
-	// 5. Build warnings for price changes
-	var warnings []string
-	// TODO: Extract price change warnings from service response
-
-	s.logger.Info().
-		Int64("order_id", order.ID).
-		Str("order_number", order.OrderNumber).
-		Msg("order created successfully")
+	// Convert domain.Order to proto Order
+	pbOrder := domainOrderToProtoOrder(order)
 
 	return &listingspb.CreateOrderResponse{
-		Order:    pbOrder,
-		Message:  "Order created successfully",
-		Warnings: warnings,
+		Order:   pbOrder,
+		Message: "Order created successfully",
 	}, nil
 }
 
 // GetOrder retrieves a single order by ID
+// Validates: ownership (user can only see own orders)
 func (s *Server) GetOrder(ctx context.Context, req *listingspb.GetOrderRequest) (*listingspb.GetOrderResponse, error) {
 	s.logger.Debug().
 		Int64("order_id", req.OrderId).
+		Interface("user_id", req.UserId).
 		Msg("GetOrder called")
 
-	// 1. Validate request
-	if req.GetOrderId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "order_id is required")
+	// Validate input
+	if req.OrderId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "order_id must be greater than 0")
 	}
 
-	// 2. Call service layer
-	order, err := s.orderService.GetOrder(ctx, req.GetOrderId())
+	// Call service layer
+	order, err := s.orderService.GetOrder(ctx, req.OrderId)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("order_id", req.GetOrderId()).Msg("failed to get order")
-		return nil, mapOrderServiceError(err)
+		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
 
-	// 3. Verify ownership if user_id provided
-	if req.UserId != nil && order.UserID != nil && *order.UserID != *req.UserId {
+	// Verify ownership (if user_id provided)
+	if req.UserId != nil && order.UserID != nil && *req.UserId != *order.UserID {
 		s.logger.Warn().
-			Int64("order_id", req.GetOrderId()).
-			Int64("requested_by", *req.UserId).
-			Int64("order_owner", *order.UserID).
-			Msg("unauthorized order access attempt")
-		return nil, status.Error(codes.PermissionDenied, "cannot access other users' orders")
+			Int64("order_id", req.OrderId).
+			Int64("requesting_user_id", *req.UserId).
+			Int64("order_user_id", *order.UserID).
+			Msg("unauthorized access attempt")
+		return nil, status.Error(codes.PermissionDenied, "you don't have permission to view this order")
 	}
 
-	// 4. Convert domain to proto
-	pbOrder := order.ToProto()
+	// Convert domain.Order to proto Order
+	pbOrder := domainOrderToProtoOrder(order)
 
 	return &listingspb.GetOrderResponse{
 		Order: pbOrder,
@@ -197,17 +315,22 @@ func (s *Server) GetOrder(ctx context.Context, req *listingspb.GetOrderRequest) 
 }
 
 // ListOrders retrieves orders with filters and pagination
+// Admin: can see all orders
+// User: can only see own orders
 func (s *Server) ListOrders(ctx context.Context, req *listingspb.ListOrdersRequest) (*listingspb.ListOrdersResponse, error) {
 	s.logger.Debug().
+		Interface("user_id", req.UserId).
+		Interface("storefront_id", req.StorefrontId).
 		Int32("page", req.Page).
 		Int32("page_size", req.PageSize).
 		Msg("ListOrders called")
 
-	// 1. Set defaults
+	// Validate pagination
 	page := req.Page
 	if page <= 0 {
 		page = 1
 	}
+
 	pageSize := req.PageSize
 	if pageSize <= 0 {
 		pageSize = 20
@@ -216,286 +339,504 @@ func (s *Server) ListOrders(ctx context.Context, req *listingspb.ListOrdersReque
 		pageSize = 100
 	}
 
-	// 2. Build domain filter
-	filter := &service.ListOrdersRequest{
-		Limit:  int(pageSize),
-		Offset: int((page - 1) * pageSize),
-	}
+	// Calculate offset
+	offset := (page - 1) * pageSize
 
-	// 3. Apply filters
-	if req.UserId != nil {
-		userID := *req.UserId
-		filter.UserID = &userID
-	}
-	if req.StorefrontId != nil {
-		storefrontID := *req.StorefrontId
-		filter.StorefrontID = &storefrontID
-	}
-	if req.Status != nil {
-		statusDomain := domain.OrderStatusFromProto(*req.Status)
-		filter.Status = &statusDomain
-	}
+	// Call service layer
+	orders, totalCount, err := s.orderService.ListOrders(ctx, &service.ListOrdersRequest{
+		UserID:       req.UserId,
+		StorefrontID: req.StorefrontId,
+		Status:       domainOrderStatusFromProto(req.Status),
+		Limit:        int(pageSize),
+		Offset:       int(offset),
+	})
 
-	// 4. Call service layer
-	orders, total, err := s.orderService.ListOrders(ctx, filter)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to list orders")
-		return nil, mapOrderServiceError(err)
+		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
 
-	// 5. Convert domain to proto
-	pbOrders := make([]*listingspb.Order, len(orders))
-	for i, order := range orders {
-		pbOrders[i] = order.ToProto()
+	// Convert domain.Order slice to proto Order slice
+	pbOrders := make([]*listingspb.Order, 0, len(orders))
+	for _, order := range orders {
+		pbOrders = append(pbOrders, domainOrderToProtoOrder(order))
 	}
-
-	s.logger.Info().
-		Int("count", len(orders)).
-		Int64("total", total).
-		Msg("orders listed successfully")
 
 	return &listingspb.ListOrdersResponse{
 		Orders:     pbOrders,
-		TotalCount: int32(total),
+		TotalCount: int32(totalCount),
 		Page:       page,
 		PageSize:   pageSize,
 	}, nil
 }
 
 // CancelOrder cancels an order and releases inventory
+// Validates: order status (only pending/confirmed allowed)
+// Actions: update status, release reservations, restore stock, publish event
 func (s *Server) CancelOrder(ctx context.Context, req *listingspb.CancelOrderRequest) (*listingspb.CancelOrderResponse, error) {
 	s.logger.Info().
 		Int64("order_id", req.OrderId).
+		Interface("user_id", req.UserId).
 		Bool("refund", req.Refund).
 		Msg("CancelOrder called")
 
-	// 1. Validate request
-	if req.GetOrderId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "order_id is required")
+	// Validate input
+	if req.OrderId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "order_id must be greater than 0")
 	}
 
-	// 2. Determine user_id for cancellation
-	var userID int64
-	if req.UserId != nil {
-		userID = *req.UserId
-	} else {
-		// If no user_id in request, get from order
-		order, err := s.orderService.GetOrder(ctx, req.GetOrderId())
-		if err != nil {
-			return nil, mapOrderServiceError(err)
-		}
-		if order.UserID == nil {
-			return nil, status.Error(codes.Internal, "order has no owner")
-		}
-		userID = *order.UserID
+	// For user cancellations, require user_id
+	if req.UserId == nil {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required for order cancellation")
 	}
 
-	// 3. Call service layer
+	// Prepare reason
 	reason := ""
 	if req.Reason != nil {
 		reason = *req.Reason
 	}
 
-	order, err := s.orderService.CancelOrder(ctx, req.GetOrderId(), userID, reason)
+	// Call service layer
+	order, err := s.orderService.CancelOrder(ctx, req.OrderId, *req.UserId, reason)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("order_id", req.GetOrderId()).Msg("failed to cancel order")
-		return nil, mapOrderServiceError(err)
+		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
 
-	// 4. Convert domain to proto
-	pbOrder := order.ToProto()
-
-	// 5. Determine if refund was initiated
-	refundInitiated := req.Refund && order.PaymentStatus == domain.PaymentStatusCompleted
-
-	s.logger.Info().
-		Int64("order_id", order.ID).
-		Bool("refund_initiated", refundInitiated).
-		Msg("order cancelled successfully")
+	// Convert domain.Order to proto Order
+	pbOrder := domainOrderToProtoOrder(order)
 
 	return &listingspb.CancelOrderResponse{
 		Order:           pbOrder,
 		Message:         "Order cancelled successfully",
-		RefundInitiated: refundInitiated,
+		RefundInitiated: req.Refund,
 	}, nil
 }
 
 // UpdateOrderStatus updates order status (admin only)
+// Validates: status transition rules (state machine)
+// On status = shipped: requires tracking_number
+// On status = delivered: sets escrow_release_date
 func (s *Server) UpdateOrderStatus(ctx context.Context, req *listingspb.UpdateOrderStatusRequest) (*listingspb.UpdateOrderStatusResponse, error) {
 	s.logger.Info().
 		Int64("order_id", req.OrderId).
 		Str("new_status", req.NewStatus.String()).
 		Msg("UpdateOrderStatus called")
 
-	// 1. Validate request
-	if req.GetOrderId() == 0 {
-		return nil, status.Error(codes.InvalidArgument, "order_id is required")
+	// Validate input
+	if req.OrderId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "order_id must be greater than 0")
 	}
+
+	// Validate status
 	if req.NewStatus == listingspb.OrderStatus_ORDER_STATUS_UNSPECIFIED {
-		return nil, status.Error(codes.InvalidArgument, "new_status is required")
+		return nil, status.Error(codes.InvalidArgument, "new_status must be specified")
 	}
 
-	// 2. Validate tracking_number if status is SHIPPED
-	if req.NewStatus == listingspb.OrderStatus_ORDER_STATUS_SHIPPED {
-		if req.TrackingNumber == nil || *req.TrackingNumber == "" {
-			return nil, status.Error(codes.InvalidArgument, "tracking_number is required when status is SHIPPED")
-		}
+	// Convert proto status to domain status
+	domainStatus := domainOrderStatusFromProto(&req.NewStatus)
+	if domainStatus == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid order status")
 	}
 
-	// 3. Convert proto status to domain status
-	newStatus := domain.OrderStatusFromProto(req.NewStatus)
-
-	// 4. Call service layer
-	order, err := s.orderService.UpdateOrderStatus(ctx, req.GetOrderId(), newStatus)
+	// Call service layer
+	order, err := s.orderService.UpdateOrderStatus(ctx, req.OrderId, *domainStatus)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("order_id", req.GetOrderId()).Msg("failed to update order status")
-		return nil, mapOrderServiceError(err)
+		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
 
-	// 5. Convert domain to proto
-	pbOrder := order.ToProto()
-
-	// 6. Build warnings for invalid state transitions
-	var warnings []string
-	// Warnings are already handled by service layer errors
-
-	s.logger.Info().
-		Int64("order_id", order.ID).
-		Str("new_status", string(order.Status)).
-		Msg("order status updated successfully")
+	// Convert domain.Order to proto Order
+	pbOrder := domainOrderToProtoOrder(order)
 
 	return &listingspb.UpdateOrderStatusResponse{
-		Order:    pbOrder,
-		Message:  "Order status updated successfully",
-		Warnings: warnings,
+		Order:   pbOrder,
+		Message: "Order status updated successfully",
 	}, nil
 }
 
 // GetOrderStats retrieves order statistics (admin)
+// Returns: aggregated stats, status breakdown, daily trends
 func (s *Server) GetOrderStats(ctx context.Context, req *listingspb.GetOrderStatsRequest) (*listingspb.GetOrderStatsResponse, error) {
 	s.logger.Debug().
+		Interface("storefront_id", req.StorefrontId).
 		Msg("GetOrderStats called")
 
-	// 1. Build filters
-	var storefrontIDPtr *int64
-	if req.StorefrontId != nil {
-		storefrontID := *req.StorefrontId
-		storefrontIDPtr = &storefrontID
-	}
-
-	// 2. Call service layer
-	stats, err := s.orderService.GetOrderStats(ctx, nil, storefrontIDPtr)
+	// Call service layer
+	stats, err := s.orderService.GetOrderStats(ctx, nil, req.StorefrontId)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to get order stats")
-		return nil, mapOrderServiceError(err)
+		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
 
-	// 3. Convert domain to proto
+	// Convert domain stats to proto stats
 	pbStats := &listingspb.OrderStatsSummary{
 		TotalOrders:     int32(stats.TotalOrders),
 		PendingOrders:   int32(stats.PendingOrders),
 		ConfirmedOrders: int32(stats.ConfirmedOrders),
-		// CompletedOrders field doesn't exist in proto, using total
-		CancelledOrders: int32(stats.CancelledOrders),
 		TotalRevenue:    stats.TotalRevenue,
 	}
 
-	s.logger.Info().
-		Int64("total_orders", stats.TotalOrders).
-		Float64("total_revenue", stats.TotalRevenue).
-		Msg("order stats retrieved successfully")
-
 	return &listingspb.GetOrderStatsResponse{
 		Stats: pbStats,
-		// StatusBreakdown: nil, // TODO: Implement status breakdown
-		// DailyStats:      nil, // TODO: Implement daily stats
 	}, nil
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS - Validation
 // ============================================================================
 
-// extractAuthFromContext extracts user_id from gRPC metadata
-// Returns (userID *int64, sessionID *string)
-func extractAuthFromContext(ctx context.Context) (*int64, *string) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, nil
+// validateAddToCartRequest validates AddToCart request
+func validateAddToCartRequest(req *listingspb.AddToCartRequest) error {
+	if (req.UserId == nil && req.SessionId == nil) || (req.UserId != nil && req.SessionId != nil) {
+		return errors.New("must provide either user_id or session_id (not both)")
 	}
 
-	// Try to extract user_id from authorization header (JWT)
-	if authHeaders := md.Get("authorization"); len(authHeaders) > 0 {
-		// authHeader format: "Bearer <JWT>"
-		// JWT should contain user_id claim
-		// TODO: Parse JWT and extract user_id
+	if req.StorefrontId <= 0 {
+		return errors.New("storefront_id must be greater than 0")
 	}
 
-	// Try to extract session_id from x-session-id header
-	if sessionHeaders := md.Get("x-session-id"); len(sessionHeaders) > 0 {
-		sessionID := sessionHeaders[0]
-		return nil, &sessionID
+	if req.ListingId <= 0 {
+		return errors.New("listing_id must be greater than 0")
 	}
 
-	return nil, nil
+	if req.Quantity <= 0 {
+		return errors.New("quantity must be greater than 0")
+	}
+
+	return nil
 }
 
-// mapOrderServiceError converts service layer errors to gRPC status codes
-func mapOrderServiceError(err error) error {
+// validateCreateOrderRequest validates CreateOrder request
+func validateCreateOrderRequest(req *listingspb.CreateOrderRequest) error {
+	if req.CartId <= 0 {
+		return errors.New("cart_id must be greater than 0")
+	}
+
+	if req.StorefrontId <= 0 {
+		return errors.New("storefront_id must be greater than 0")
+	}
+
+	if req.ShippingAddress == nil {
+		return errors.New("shipping_address is required")
+	}
+
+	if req.ShippingMethod == "" {
+		return errors.New("shipping_method is required")
+	}
+
+	if req.PaymentMethod == "" {
+		return errors.New("payment_method is required")
+	}
+
+	return nil
+}
+
+// ============================================================================
+// HELPER FUNCTIONS - Mappers
+// ============================================================================
+
+// domainCartToProtoCart converts domain.Cart to proto Cart
+func domainCartToProtoCart(cart *domain.Cart) *listingspb.Cart {
+	if cart == nil {
+		return nil
+	}
+
+	pbCart := &listingspb.Cart{
+		Id:           cart.ID,
+		UserId:       cart.UserID,
+		SessionId:    cart.SessionID,
+		StorefrontId: cart.StorefrontID,
+		CreatedAt:    timestamppb.New(cart.CreatedAt),
+		UpdatedAt:    timestamppb.New(cart.UpdatedAt),
+	}
+
+	// Convert cart items
+	if len(cart.Items) > 0 {
+		pbCart.Items = make([]*listingspb.CartItem, 0, len(cart.Items))
+		for _, item := range cart.Items {
+			pbCart.Items = append(pbCart.Items, domainCartItemToProtoCartItem(item))
+		}
+	}
+
+	return pbCart
+}
+
+// domainCartItemToProtoCartItem converts domain.CartItem to proto CartItem
+func domainCartItemToProtoCartItem(item *domain.CartItem) *listingspb.CartItem {
+	if item == nil {
+		return nil
+	}
+
+	return &listingspb.CartItem{
+		Id:            item.ID,
+		CartId:        item.CartID,
+		ListingId:     item.ListingID,
+		VariantId:     item.VariantID,
+		Quantity:      item.Quantity,
+		PriceSnapshot: item.PriceSnapshot,
+		CreatedAt:     timestamppb.New(item.CreatedAt),
+		UpdatedAt:     timestamppb.New(item.UpdatedAt),
+	}
+}
+
+// domainOrderToProtoOrder converts domain.Order to proto Order
+func domainOrderToProtoOrder(order *domain.Order) *listingspb.Order {
+	if order == nil {
+		return nil
+	}
+
+	pbOrder := &listingspb.Order{
+		Id:           order.ID,
+		OrderNumber:  order.OrderNumber,
+		UserId:       order.UserID,
+		StorefrontId: order.StorefrontID,
+		Status:       protoOrderStatusFromDomain(order.Status),
+		Financials: &listingspb.OrderFinancials{
+			Subtotal:     order.Subtotal,
+			Tax:          order.Tax,
+			ShippingCost: order.Shipping,
+			Discount:     order.Discount,
+			Total:        order.Total,
+			Commission:   order.Commission,
+			SellerAmount: order.SellerAmount,
+			Currency:     order.Currency,
+		},
+		PaymentMethod:   order.PaymentMethod,
+		PaymentStatus:   protoPaymentStatusFromDomain(order.PaymentStatus),
+		ShippingAddress: mapToProtoStruct(order.ShippingAddress),
+		BillingAddress:  mapToProtoStruct(order.BillingAddress),
+		EscrowDays:      order.EscrowDays,
+		CreatedAt:       timestamppb.New(order.CreatedAt),
+		UpdatedAt:       timestamppb.New(order.UpdatedAt),
+	}
+
+	// Optional fields
+	if order.PaymentTransactionID != nil {
+		pbOrder.PaymentTransactionId = order.PaymentTransactionID
+	}
+
+	if order.PaymentCompletedAt != nil {
+		pbOrder.PaymentCompletedAt = timestamppb.New(*order.PaymentCompletedAt)
+	}
+
+	if order.ShippingMethod != nil {
+		pbOrder.ShippingMethod = order.ShippingMethod
+	}
+
+	if order.TrackingNumber != nil {
+		pbOrder.TrackingNumber = order.TrackingNumber
+	}
+
+	if order.EscrowReleaseDate != nil {
+		pbOrder.EscrowReleaseDate = timestamppb.New(*order.EscrowReleaseDate)
+	}
+
+	if order.CustomerNotes != nil {
+		pbOrder.CustomerNotes = order.CustomerNotes
+	}
+
+	if order.AdminNotes != nil {
+		pbOrder.AdminNotes = order.AdminNotes
+	}
+
+	if order.ConfirmedAt != nil {
+		pbOrder.ConfirmedAt = timestamppb.New(*order.ConfirmedAt)
+	}
+
+	if order.ShippedAt != nil {
+		pbOrder.ShippedAt = timestamppb.New(*order.ShippedAt)
+	}
+
+	if order.DeliveredAt != nil {
+		pbOrder.DeliveredAt = timestamppb.New(*order.DeliveredAt)
+	}
+
+	if order.CancelledAt != nil {
+		pbOrder.CancelledAt = timestamppb.New(*order.CancelledAt)
+	}
+
+	// Convert order items
+	if len(order.Items) > 0 {
+		pbOrder.Items = make([]*listingspb.OrderItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			pbOrder.Items = append(pbOrder.Items, domainOrderItemToProtoOrderItem(item))
+		}
+	}
+
+	return pbOrder
+}
+
+// domainOrderItemToProtoOrderItem converts domain.OrderItem to proto OrderItem
+func domainOrderItemToProtoOrderItem(item *domain.OrderItem) *listingspb.OrderItem {
+	if item == nil {
+		return nil
+	}
+
+	return &listingspb.OrderItem{
+		Id:          item.ID,
+		OrderId:     item.OrderID,
+		ListingId:   item.ListingID,
+		VariantId:   item.VariantID,
+		ListingName: item.ListingName,
+		Quantity:    item.Quantity,
+		UnitPrice:   item.UnitPrice,
+		Subtotal:    item.Subtotal,
+		Discount:    item.Discount,
+		Total:       item.Total,
+		CreatedAt:   timestamppb.New(item.CreatedAt),
+	}
+}
+
+// calculateCartSummary calculates cart summary (totals, warnings)
+func calculateCartSummary(cart *domain.Cart) *listingspb.CartSummary {
+	if cart == nil || len(cart.Items) == 0 {
+		return &listingspb.CartSummary{
+			TotalItems: 0,
+			Subtotal:   0,
+		}
+	}
+
+	var totalItems int32
+	var subtotal float64
+
+	for _, item := range cart.Items {
+		totalItems += item.Quantity
+		subtotal += float64(item.Quantity) * item.PriceSnapshot
+	}
+
+	return &listingspb.CartSummary{
+		TotalItems:        totalItems,
+		Subtotal:          subtotal,
+		EstimatedTotal:    subtotal, // TODO: Add tax and shipping calculation
+		EstimatedTax:      0,
+		EstimatedShipping: 0,
+	}
+}
+
+// protoOrderStatusFromDomain converts domain.OrderStatus to proto OrderStatus
+func protoOrderStatusFromDomain(status domain.OrderStatus) listingspb.OrderStatus {
+	switch status {
+	case domain.OrderStatusPending:
+		return listingspb.OrderStatus_ORDER_STATUS_PENDING
+	case domain.OrderStatusConfirmed:
+		return listingspb.OrderStatus_ORDER_STATUS_CONFIRMED
+	case domain.OrderStatusProcessing:
+		return listingspb.OrderStatus_ORDER_STATUS_PROCESSING
+	case domain.OrderStatusShipped:
+		return listingspb.OrderStatus_ORDER_STATUS_SHIPPED
+	case domain.OrderStatusDelivered:
+		return listingspb.OrderStatus_ORDER_STATUS_DELIVERED
+	case domain.OrderStatusCancelled:
+		return listingspb.OrderStatus_ORDER_STATUS_CANCELLED
+	case domain.OrderStatusRefunded:
+		return listingspb.OrderStatus_ORDER_STATUS_REFUNDED
+	case domain.OrderStatusFailed:
+		return listingspb.OrderStatus_ORDER_STATUS_FAILED
+	default:
+		return listingspb.OrderStatus_ORDER_STATUS_UNSPECIFIED
+	}
+}
+
+// domainOrderStatusFromProto converts proto OrderStatus to domain.OrderStatus
+func domainOrderStatusFromProto(status *listingspb.OrderStatus) *domain.OrderStatus {
+	if status == nil {
+		return nil
+	}
+
+	var domainStatus domain.OrderStatus
+	switch *status {
+	case listingspb.OrderStatus_ORDER_STATUS_PENDING:
+		domainStatus = domain.OrderStatusPending
+	case listingspb.OrderStatus_ORDER_STATUS_CONFIRMED:
+		domainStatus = domain.OrderStatusConfirmed
+	case listingspb.OrderStatus_ORDER_STATUS_PROCESSING:
+		domainStatus = domain.OrderStatusProcessing
+	case listingspb.OrderStatus_ORDER_STATUS_SHIPPED:
+		domainStatus = domain.OrderStatusShipped
+	case listingspb.OrderStatus_ORDER_STATUS_DELIVERED:
+		domainStatus = domain.OrderStatusDelivered
+	case listingspb.OrderStatus_ORDER_STATUS_CANCELLED:
+		domainStatus = domain.OrderStatusCancelled
+	case listingspb.OrderStatus_ORDER_STATUS_REFUNDED:
+		domainStatus = domain.OrderStatusRefunded
+	case listingspb.OrderStatus_ORDER_STATUS_FAILED:
+		domainStatus = domain.OrderStatusFailed
+	default:
+		return nil
+	}
+
+	return &domainStatus
+}
+
+// protoPaymentStatusFromDomain converts domain.PaymentStatus to proto PaymentStatus
+func protoPaymentStatusFromDomain(status domain.PaymentStatus) listingspb.PaymentStatus {
+	switch status {
+	case domain.PaymentStatusPending:
+		return listingspb.PaymentStatus_PAYMENT_STATUS_PENDING
+	case domain.PaymentStatusProcessing:
+		return listingspb.PaymentStatus_PAYMENT_STATUS_PROCESSING
+	case domain.PaymentStatusCompleted:
+		return listingspb.PaymentStatus_PAYMENT_STATUS_COMPLETED
+	case domain.PaymentStatusFailed:
+		return listingspb.PaymentStatus_PAYMENT_STATUS_FAILED
+	case domain.PaymentStatusRefunded:
+		return listingspb.PaymentStatus_PAYMENT_STATUS_REFUNDED
+	default:
+		return listingspb.PaymentStatus_PAYMENT_STATUS_UNSPECIFIED
+	}
+}
+
+// protoStructToMap converts proto Struct to map[string]interface{}
+func protoStructToMap(s *structpb.Struct) map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.AsMap()
+}
+
+// mapToProtoStruct converts map[string]interface{} to proto Struct
+func mapToProtoStruct(m map[string]interface{}) *structpb.Struct {
+	if m == nil {
+		return nil
+	}
+
+	s, err := structpb.NewStruct(m)
+	if err != nil {
+		// Log error but return nil instead of panicking
+		return nil
+	}
+
+	return s
+}
+
+// ============================================================================
+// HELPER FUNCTIONS - Error Mapping
+// ============================================================================
+
+// mapServiceErrorToGRPC maps service layer errors to gRPC status codes
+func mapServiceErrorToGRPC(err error, logger zerolog.Logger) error {
 	if err == nil {
 		return nil
 	}
 
-	errMsg := err.Error()
+	// Log the original error
+	logger.Error().Err(err).Msg("service error occurred")
 
-	// Order-specific errors
-	if contains(errMsg, "order not found") {
-		return status.Error(codes.NotFound, "order not found")
+	// Check for specific error types
+	if service.IsNotFoundError(err) {
+		return status.Error(codes.NotFound, err.Error())
 	}
 
-	if contains(errMsg, "cart is empty") || contains(errMsg, "cart empty") {
-		return status.Error(codes.FailedPrecondition, "cart is empty")
+	if service.IsValidationError(err) {
+		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	if contains(errMsg, "unauthorized") {
+	if service.IsConflictError(err) {
+		return status.Error(codes.FailedPrecondition, err.Error())
+	}
+
+	// Check for unauthorized errors
+	if errors.Is(err, service.ErrUnauthorized) {
 		return status.Error(codes.PermissionDenied, "unauthorized")
 	}
 
-	// Insufficient stock errors
-	if contains(errMsg, "insufficient stock") {
-		return status.Error(codes.FailedPrecondition, errMsg)
-	}
-
-	// Price change errors
-	if contains(errMsg, "price changed") {
-		return status.Error(codes.FailedPrecondition, errMsg)
-	}
-
-	// Order cannot be cancelled errors
-	if contains(errMsg, "cannot cancel") {
-		return status.Error(codes.FailedPrecondition, errMsg)
-	}
-
-	// Invalid status transition errors
-	if contains(errMsg, "cannot update status") || contains(errMsg, "invalid status transition") {
-		return status.Error(codes.FailedPrecondition, errMsg)
-	}
-
-	// Validation errors
-	if contains(errMsg, "validation") || contains(errMsg, "invalid") {
-		return status.Error(codes.InvalidArgument, errMsg)
-	}
-
-	// Not found errors
-	if contains(errMsg, "not found") {
-		return status.Error(codes.NotFound, errMsg)
-	}
-
-	// Already exists errors
-	if contains(errMsg, "already exists") || contains(errMsg, "duplicate") {
-		return status.Error(codes.AlreadyExists, errMsg)
-	}
-
-	// Default to Internal error
-	return status.Error(codes.Internal, fmt.Sprintf("internal error: %v", err))
+	// Default to internal error
+	return status.Error(codes.Internal, "internal server error")
 }

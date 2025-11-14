@@ -30,6 +30,7 @@ type CartRepository interface {
 	RemoveItem(ctx context.Context, cartID, itemID int64) error
 	ClearItems(ctx context.Context, cartID int64) error
 	GetItemsByCartID(ctx context.Context, cartID int64) ([]*domain.CartItem, error)
+	GetCartItemByID(ctx context.Context, cartItemID int64) (*domain.CartItem, error)
 
 	// Transaction support
 	WithTx(tx *sql.Tx) CartRepository
@@ -460,6 +461,86 @@ func (r *cartRepository) ClearItems(ctx context.Context, cartID int64) error {
 	rowsAffected, _ := result.RowsAffected()
 	r.logger.Info().Int64("cart_id", cartID).Int64("items_removed", rowsAffected).Msg("cart items cleared")
 	return nil
+}
+
+// GetCartItemByID retrieves a single cart item by its ID
+func (r *cartRepository) GetCartItemByID(ctx context.Context, cartItemID int64) (*domain.CartItem, error) {
+	query := `
+		SELECT ci.id, ci.cart_id, ci.listing_id, ci.variant_id, ci.quantity, ci.price_snapshot,
+		       ci.created_at, ci.updated_at,
+		       l.title as listing_name,
+		       COALESCE(lv.image_url, (SELECT url FROM listing_images WHERE listing_id = l.id AND is_primary = true LIMIT 1)) as listing_image,
+		       lv.attributes as variant_data,
+		       CASE
+		           WHEN lv.id IS NOT NULL THEN lv.stock
+		           ELSE l.quantity
+		       END as available_stock,
+		       CASE
+		           WHEN lv.id IS NOT NULL AND lv.price IS NOT NULL THEN lv.price
+		           ELSE l.price
+		       END as current_price
+		FROM cart_items ci
+		JOIN listings l ON ci.listing_id = l.id
+		LEFT JOIN listing_variants lv ON ci.variant_id = lv.id
+		WHERE ci.id = $1
+	`
+
+	var item domain.CartItem
+	var variantID sql.NullInt64
+	var listingName, listingImage sql.NullString
+	var variantDataJSON []byte
+	var availableStock sql.NullInt32
+	var currentPrice sql.NullFloat64
+
+	err := r.queryRowContext(ctx, query, cartItemID).Scan(
+		&item.ID,
+		&item.CartID,
+		&item.ListingID,
+		&variantID,
+		&item.Quantity,
+		&item.PriceSnapshot,
+		&item.CreatedAt,
+		&item.UpdatedAt,
+		&listingName,
+		&listingImage,
+		&variantDataJSON,
+		&availableStock,
+		&currentPrice,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("cart item not found")
+		}
+		r.logger.Error().Err(err).Int64("cart_item_id", cartItemID).Msg("failed to get cart item by ID")
+		return nil, fmt.Errorf("failed to get cart item by ID: %w", err)
+	}
+
+	// Handle nullable fields
+	if variantID.Valid {
+		item.VariantID = &variantID.Int64
+	}
+	if listingName.Valid {
+		item.ListingName = &listingName.String
+	}
+	if listingImage.Valid {
+		item.ListingImage = &listingImage.String
+	}
+	if availableStock.Valid {
+		item.AvailableStock = &availableStock.Int32
+	}
+	if currentPrice.Valid {
+		item.CurrentPrice = &currentPrice.Float64
+	}
+
+	// Parse variant data JSON
+	if len(variantDataJSON) > 0 {
+		if err := json.Unmarshal(variantDataJSON, &item.VariantData); err != nil {
+			r.logger.Error().Err(err).Msg("failed to unmarshal variant data")
+		}
+	}
+
+	return &item, nil
 }
 
 // GetItemsByCartID retrieves all items for a cart
