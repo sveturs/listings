@@ -7,7 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
 	"github.com/sveturs/listings/internal/domain"
@@ -33,55 +34,29 @@ type CartRepository interface {
 	GetCartItemByID(ctx context.Context, cartItemID int64) (*domain.CartItem, error)
 
 	// Transaction support
-	WithTx(tx *sql.Tx) CartRepository
+	WithTx(tx pgx.Tx) CartRepository
 }
 
 // cartRepository implements CartRepository using PostgreSQL
 type cartRepository struct {
-	db     *sqlx.DB
-	tx     *sql.Tx
+	db     dbOrTx
 	logger zerolog.Logger
 }
 
 // NewCartRepository creates a new cart repository
-func NewCartRepository(db *sqlx.DB, logger zerolog.Logger) CartRepository {
+func NewCartRepository(pool *pgxpool.Pool, logger zerolog.Logger) CartRepository {
 	return &cartRepository{
-		db:     db,
+		db:     pool,
 		logger: logger.With().Str("component", "cart_repository").Logger(),
 	}
 }
 
 // WithTx returns a new repository instance using the provided transaction
-func (r *cartRepository) WithTx(tx *sql.Tx) CartRepository {
+func (r *cartRepository) WithTx(tx pgx.Tx) CartRepository {
 	return &cartRepository{
-		db:     r.db,
-		tx:     tx,
+		db:     tx,
 		logger: r.logger,
 	}
-}
-
-// exec executes a query using either transaction or database connection
-func (r *cartRepository) queryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	if r.tx != nil {
-		return r.tx.QueryRowContext(ctx, query, args...)
-	}
-	return r.db.QueryRowContext(ctx, query, args...)
-}
-
-// exec executes a query using either transaction or database connection
-func (r *cartRepository) queryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	if r.tx != nil {
-		return r.tx.QueryContext(ctx, query, args...)
-	}
-	return r.db.QueryContext(ctx, query, args...)
-}
-
-// exec executes a non-query using either transaction or database connection
-func (r *cartRepository) execContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	if r.tx != nil {
-		return r.tx.ExecContext(ctx, query, args...)
-	}
-	return r.db.ExecContext(ctx, query, args...)
 }
 
 // Create creates a new cart
@@ -96,7 +71,7 @@ func (r *cartRepository) Create(ctx context.Context, cart *domain.Cart) error {
 		RETURNING id, created_at, updated_at
 	`
 
-	err := r.queryRowContext(ctx, query,
+	err := r.db.QueryRow(ctx, query,
 		cart.UserID,
 		cart.SessionID,
 		cart.StorefrontID,
@@ -123,7 +98,7 @@ func (r *cartRepository) GetByID(ctx context.Context, cartID int64) (*domain.Car
 	var userID sql.NullInt64
 	var sessionID sql.NullString
 
-	err := r.queryRowContext(ctx, query, cartID).Scan(
+	err := r.db.QueryRow(ctx, query, cartID).Scan(
 		&cart.ID,
 		&userID,
 		&sessionID,
@@ -133,7 +108,7 @@ func (r *cartRepository) GetByID(ctx context.Context, cartID int64) (*domain.Car
 	)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("cart not found")
 		}
 		r.logger.Error().Err(err).Int64("cart_id", cartID).Msg("failed to get cart by ID")
@@ -170,7 +145,7 @@ func (r *cartRepository) GetByUserAndStorefront(ctx context.Context, userID, sto
 	var userIDNullable sql.NullInt64
 	var sessionID sql.NullString
 
-	err := r.queryRowContext(ctx, query, userID, storefrontID).Scan(
+	err := r.db.QueryRow(ctx, query, userID, storefrontID).Scan(
 		&cart.ID,
 		&userIDNullable,
 		&sessionID,
@@ -180,7 +155,7 @@ func (r *cartRepository) GetByUserAndStorefront(ctx context.Context, userID, sto
 	)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("cart not found")
 		}
 		r.logger.Error().Err(err).Int64("user_id", userID).Int64("storefront_id", storefrontID).Msg("failed to get cart")
@@ -217,7 +192,7 @@ func (r *cartRepository) GetBySessionAndStorefront(ctx context.Context, sessionI
 	var userID sql.NullInt64
 	var sessionIDNullable sql.NullString
 
-	err := r.queryRowContext(ctx, query, sessionID, storefrontID).Scan(
+	err := r.db.QueryRow(ctx, query, sessionID, storefrontID).Scan(
 		&cart.ID,
 		&userID,
 		&sessionIDNullable,
@@ -227,7 +202,7 @@ func (r *cartRepository) GetBySessionAndStorefront(ctx context.Context, sessionI
 	)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("cart not found")
 		}
 		r.logger.Error().Err(err).Str("session_id", sessionID).Int64("storefront_id", storefrontID).Msg("failed to get cart")
@@ -261,7 +236,7 @@ func (r *cartRepository) GetUserCarts(ctx context.Context, userID int64) ([]*dom
 		ORDER BY updated_at DESC
 	`
 
-	rows, err := r.queryContext(ctx, query, userID)
+	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
 		r.logger.Error().Err(err).Int64("user_id", userID).Msg("failed to get user carts")
 		return nil, fmt.Errorf("failed to get user carts: %w", err)
@@ -326,7 +301,7 @@ func (r *cartRepository) Update(ctx context.Context, cart *domain.Cart) error {
 		RETURNING updated_at
 	`
 
-	err := r.queryRowContext(ctx, query,
+	err := r.db.QueryRow(ctx, query,
 		cart.UserID,
 		cart.SessionID,
 		cart.StorefrontID,
@@ -334,7 +309,7 @@ func (r *cartRepository) Update(ctx context.Context, cart *domain.Cart) error {
 	).Scan(&cart.UpdatedAt)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return fmt.Errorf("cart not found")
 		}
 		r.logger.Error().Err(err).Int64("cart_id", cart.ID).Msg("failed to update cart")
@@ -349,14 +324,13 @@ func (r *cartRepository) Update(ctx context.Context, cart *domain.Cart) error {
 func (r *cartRepository) Delete(ctx context.Context, cartID int64) error {
 	query := `DELETE FROM shopping_carts WHERE id = $1`
 
-	result, err := r.execContext(ctx, query, cartID)
+	result, err := r.db.Exec(ctx, query, cartID)
 	if err != nil {
 		r.logger.Error().Err(err).Int64("cart_id", cartID).Msg("failed to delete cart")
 		return fmt.Errorf("failed to delete cart: %w", err)
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	if result.RowsAffected() == 0 {
 		return fmt.Errorf("cart not found")
 	}
 
@@ -380,7 +354,7 @@ func (r *cartRepository) AddItem(ctx context.Context, item *domain.CartItem) err
 		RETURNING id, created_at, updated_at
 	`
 
-	err := r.queryRowContext(ctx, query,
+	err := r.db.QueryRow(ctx, query,
 		item.CartID,
 		item.ListingID,
 		item.VariantID,
@@ -410,7 +384,7 @@ func (r *cartRepository) UpdateItem(ctx context.Context, item *domain.CartItem) 
 		RETURNING updated_at
 	`
 
-	err := r.queryRowContext(ctx, query,
+	err := r.db.QueryRow(ctx, query,
 		item.Quantity,
 		item.PriceSnapshot,
 		item.ID,
@@ -418,7 +392,7 @@ func (r *cartRepository) UpdateItem(ctx context.Context, item *domain.CartItem) 
 	).Scan(&item.UpdatedAt)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return fmt.Errorf("cart item not found")
 		}
 		r.logger.Error().Err(err).Int64("cart_item_id", item.ID).Msg("failed to update cart item")
@@ -433,14 +407,13 @@ func (r *cartRepository) UpdateItem(ctx context.Context, item *domain.CartItem) 
 func (r *cartRepository) RemoveItem(ctx context.Context, cartID, itemID int64) error {
 	query := `DELETE FROM cart_items WHERE id = $1 AND cart_id = $2`
 
-	result, err := r.execContext(ctx, query, itemID, cartID)
+	result, err := r.db.Exec(ctx, query, itemID, cartID)
 	if err != nil {
 		r.logger.Error().Err(err).Int64("cart_item_id", itemID).Msg("failed to remove cart item")
 		return fmt.Errorf("failed to remove cart item: %w", err)
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	if result.RowsAffected() == 0 {
 		return fmt.Errorf("cart item not found")
 	}
 
@@ -452,14 +425,13 @@ func (r *cartRepository) RemoveItem(ctx context.Context, cartID, itemID int64) e
 func (r *cartRepository) ClearItems(ctx context.Context, cartID int64) error {
 	query := `DELETE FROM cart_items WHERE cart_id = $1`
 
-	result, err := r.execContext(ctx, query, cartID)
+	result, err := r.db.Exec(ctx, query, cartID)
 	if err != nil {
 		r.logger.Error().Err(err).Int64("cart_id", cartID).Msg("failed to clear cart items")
 		return fmt.Errorf("failed to clear cart items: %w", err)
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	r.logger.Info().Int64("cart_id", cartID).Int64("items_removed", rowsAffected).Msg("cart items cleared")
+	r.logger.Info().Int64("cart_id", cartID).Int64("items_removed", result.RowsAffected()).Msg("cart items cleared")
 	return nil
 }
 
@@ -492,7 +464,7 @@ func (r *cartRepository) GetCartItemByID(ctx context.Context, cartItemID int64) 
 	var availableStock sql.NullInt32
 	var currentPrice sql.NullFloat64
 
-	err := r.queryRowContext(ctx, query, cartItemID).Scan(
+	err := r.db.QueryRow(ctx, query, cartItemID).Scan(
 		&item.ID,
 		&item.CartID,
 		&item.ListingID,
@@ -509,7 +481,7 @@ func (r *cartRepository) GetCartItemByID(ctx context.Context, cartItemID int64) 
 	)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("cart item not found")
 		}
 		r.logger.Error().Err(err).Int64("cart_item_id", cartItemID).Msg("failed to get cart item by ID")
@@ -566,7 +538,7 @@ func (r *cartRepository) GetItemsByCartID(ctx context.Context, cartID int64) ([]
 		ORDER BY ci.created_at ASC
 	`
 
-	rows, err := r.queryContext(ctx, query, cartID)
+	rows, err := r.db.Query(ctx, query, cartID)
 	if err != nil {
 		r.logger.Error().Err(err).Int64("cart_id", cartID).Msg("failed to get cart items")
 		return nil, fmt.Errorf("failed to get cart items: %w", err)

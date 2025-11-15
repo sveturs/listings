@@ -225,7 +225,7 @@ func main() {
 	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
 
 	// Initialize order service dependencies
-	cartRepo := postgres.NewCartRepository(db, zerologLogger)
+	cartRepo := postgres.NewCartRepository(pgxPool, zerologLogger)
 	orderRepo := postgres.NewOrderRepository(pgxPool, zerologLogger)
 	reservationRepo := postgres.NewReservationRepository(pgxPool, zerologLogger)
 

@@ -387,7 +387,7 @@ func (env *TestEnvironment) setupRepositories(tb testing.TB) {
 	env.Repo = postgres.NewRepository(env.DB, env.Logger)
 
 	// Specialized repositories
-	env.CartRepo = postgres.NewCartRepository(env.DB, env.Logger)
+	env.CartRepo = postgres.NewCartRepository(env.PgPool, env.Logger)
 	env.OrderRepo = postgres.NewOrderRepository(env.PgPool, env.Logger)
 	env.ReservationRepo = postgres.NewReservationRepository(env.PgPool, env.Logger)
 
