@@ -189,14 +189,15 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 		return nil, &ErrPriceChanged{Changes: priceChanges}
 	}
 
-	// 7. Build order items with snapshot data
-	orderItems, err := BuildOrderItems(cart.Items, listings)
+	// 7. Build temporary order items for financial calculations
+	// NOTE: These items don't have order_id yet - that will be set after order creation
+	tempOrderItems, err := BuildOrderItems(cart.Items, listings)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build order items: %w", err)
 	}
 
 	// 8. Calculate financials
-	financials, err := CalculateOrderFinancials(orderItems, req.ShippingCost, req.DiscountAmount, s.config)
+	financials, err := CalculateOrderFinancials(tempOrderItems, req.ShippingCost, req.DiscountAmount, s.config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate financials: %w", err)
 	}
@@ -250,8 +251,20 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 		return nil, fmt.Errorf("failed to create order: %w", err)
 	}
 
-	// 11. Create order items
-	if err := orderRepoTx.CreateItems(ctx, order.ID, orderItems); err != nil {
+	// 11. Build final order items and set order_id (now available from database)
+	finalOrderItems, err := BuildOrderItems(cart.Items, listings)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to build order items")
+		return nil, fmt.Errorf("failed to build order items: %w", err)
+	}
+
+	// Set order_id on all items (order.ID is now populated from DB auto-increment)
+	for _, item := range finalOrderItems {
+		item.OrderID = order.ID
+	}
+
+	// Create order items in database
+	if err := orderRepoTx.CreateItems(ctx, order.ID, finalOrderItems); err != nil {
 		s.logger.Error().Err(err).Msg("failed to create order items")
 		return nil, fmt.Errorf("failed to create order items: %w", err)
 	}
