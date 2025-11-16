@@ -19,7 +19,7 @@ A high-performance, scalable microservice for managing marketplace listings with
 ┌─────────────────┐
 │  Other Services │
 └────────┬────────┘
-         │ gRPC (50053)
+         │ gRPC (50052)
          │
 ┌────────▼─────────┐      ┌──────────────┐
 │ Listings Service │◄────►│  PostgreSQL  │
@@ -135,7 +135,7 @@ listings/
    ```
 
 The service will start on:
-- **gRPC**: `localhost:50053`
+- **gRPC**: `localhost:50052`
 - **HTTP REST**: `localhost:8086`
 - **Metrics**: `localhost:9093/metrics`
 
@@ -237,7 +237,7 @@ Key configuration sections:
 
 ### Server Ports
 ```env
-SVETULISTINGS_GRPC_PORT=50053          # gRPC internal API
+SVETULISTINGS_GRPC_PORT=50052          # gRPC internal API
 SVETULISTINGS_HTTP_PORT=8086           # HTTP REST API
 SVETULISTINGS_METRICS_PORT=9093        # Prometheus metrics
 ```
