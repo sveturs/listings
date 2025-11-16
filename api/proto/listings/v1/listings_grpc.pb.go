@@ -26,6 +26,7 @@ const (
 	ListingsService_DeleteListing_FullMethodName             = "/listingssvc.v1.ListingsService/DeleteListing"
 	ListingsService_SearchListings_FullMethodName            = "/listingssvc.v1.ListingsService/SearchListings"
 	ListingsService_ListListings_FullMethodName              = "/listingssvc.v1.ListingsService/ListListings"
+	ListingsService_GetSimilarListings_FullMethodName        = "/listingssvc.v1.ListingsService/GetSimilarListings"
 	ListingsService_GetListingImage_FullMethodName           = "/listingssvc.v1.ListingsService/GetListingImage"
 	ListingsService_DeleteListingImage_FullMethodName        = "/listingssvc.v1.ListingsService/DeleteListingImage"
 	ListingsService_AddListingImage_FullMethodName           = "/listingssvc.v1.ListingsService/AddListingImage"
@@ -112,6 +113,8 @@ type ListingsServiceClient interface {
 	SearchListings(ctx context.Context, in *SearchListingsRequest, opts ...grpc.CallOption) (*SearchListingsResponse, error)
 	// ListListings returns a paginated list of listings
 	ListListings(ctx context.Context, in *ListListingsRequest, opts ...grpc.CallOption) (*ListListingsResponse, error)
+	// GetSimilarListings retrieves similar listings based on category and price
+	GetSimilarListings(ctx context.Context, in *GetSimilarListingsRequest, opts ...grpc.CallOption) (*GetSimilarListingsResponse, error)
 	// GetListingImage retrieves a single image by ID
 	GetListingImage(ctx context.Context, in *ImageIDRequest, opts ...grpc.CallOption) (*ImageResponse, error)
 	// DeleteListingImage removes an image from a listing
@@ -325,6 +328,16 @@ func (c *listingsServiceClient) ListListings(ctx context.Context, in *ListListin
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListListingsResponse)
 	err := c.cc.Invoke(ctx, ListingsService_ListListings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetSimilarListings(ctx context.Context, in *GetSimilarListingsRequest, opts ...grpc.CallOption) (*GetSimilarListingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSimilarListingsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetSimilarListings_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1009,6 +1022,8 @@ type ListingsServiceServer interface {
 	SearchListings(context.Context, *SearchListingsRequest) (*SearchListingsResponse, error)
 	// ListListings returns a paginated list of listings
 	ListListings(context.Context, *ListListingsRequest) (*ListListingsResponse, error)
+	// GetSimilarListings retrieves similar listings based on category and price
+	GetSimilarListings(context.Context, *GetSimilarListingsRequest) (*GetSimilarListingsResponse, error)
 	// GetListingImage retrieves a single image by ID
 	GetListingImage(context.Context, *ImageIDRequest) (*ImageResponse, error)
 	// DeleteListingImage removes an image from a listing
@@ -1185,6 +1200,9 @@ func (UnimplementedListingsServiceServer) SearchListings(context.Context, *Searc
 }
 func (UnimplementedListingsServiceServer) ListListings(context.Context, *ListListingsRequest) (*ListListingsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListListings not implemented")
+}
+func (UnimplementedListingsServiceServer) GetSimilarListings(context.Context, *GetSimilarListingsRequest) (*GetSimilarListingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSimilarListings not implemented")
 }
 func (UnimplementedListingsServiceServer) GetListingImage(context.Context, *ImageIDRequest) (*ImageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetListingImage not implemented")
@@ -1509,6 +1527,24 @@ func _ListingsService_ListListings_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ListingsServiceServer).ListListings(ctx, req.(*ListListingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetSimilarListings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSimilarListingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetSimilarListings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetSimilarListings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetSimilarListings(ctx, req.(*GetSimilarListingsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2731,6 +2767,10 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListListings",
 			Handler:    _ListingsService_ListListings_Handler,
+		},
+		{
+			MethodName: "GetSimilarListings",
+			Handler:    _ListingsService_GetSimilarListings_Handler,
 		},
 		{
 			MethodName: "GetListingImage",

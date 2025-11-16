@@ -101,6 +101,7 @@ type IndexingService interface {
 	IndexListing(ctx context.Context, listing *domain.Listing) error
 	UpdateListing(ctx context.Context, listing *domain.Listing) error
 	DeleteListing(ctx context.Context, listingID int64) error
+	GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error)
 }
 
 // Service implements business logic for listings
@@ -524,6 +525,74 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 	}
 
 	s.logger.Debug().Str("query", query.Query).Int("count", len(listings)).Int32("total", total).Msg("search completed")
+	return listings, total, nil
+}
+
+// GetSimilarListings finds listings similar to the given listing
+func (s *Service) GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error) {
+	// Apply business rules for limit
+	if limit <= 0 {
+		limit = 10 // Default to 10 similar items
+	}
+	if limit > 20 {
+		limit = 20 // Cap at 20 items max
+	}
+
+	// Try cache first (1-hour TTL for similar listings)
+	cacheKey := fmt.Sprintf("similar:%d:%d", listingID, limit)
+
+	if s.cache != nil {
+		var cached struct {
+			Listings []*domain.Listing
+			Total    int32
+		}
+		if err := s.cache.Get(ctx, cacheKey, &cached); err == nil {
+			s.logger.Debug().Int64("listing_id", listingID).Msg("similar listings found in cache")
+			return cached.Listings, cached.Total, nil
+		}
+	}
+
+	// Cache miss - query OpenSearch via indexer
+	listings, total, err := s.indexer.GetSimilarListings(ctx, listingID, limit)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to get similar listings")
+		// Graceful degradation: return empty array instead of error
+		return []*domain.Listing{}, 0, nil
+	}
+
+	// Load images for each similar listing (eager loading)
+	for _, listing := range listings {
+		images, err := s.repo.GetImages(ctx, listing.ID)
+		if err != nil {
+			// Log error but don't fail the request
+			s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to load images for similar listing")
+		} else {
+			listing.Images = images
+		}
+	}
+
+	// Cache results (non-blocking, 1-hour TTL)
+	if s.cache != nil {
+		go func() {
+			cached := struct {
+				Listings []*domain.Listing
+				Total    int32
+			}{
+				Listings: listings,
+				Total:    total,
+			}
+			if err := s.cache.Set(context.Background(), cacheKey, cached); err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to cache similar listings")
+			}
+		}()
+	}
+
+	s.logger.Debug().
+		Int64("listing_id", listingID).
+		Int("count", len(listings)).
+		Int32("total", total).
+		Msg("similar listings search completed")
+
 	return listings, total, nil
 }
 

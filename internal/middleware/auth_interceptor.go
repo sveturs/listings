@@ -119,6 +119,7 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 		"/listingssvc.v1.ListingsService/SearchListings",
 		"/listingssvc.v1.ListingsService/ListListings",
 		"/listingssvc.v1.ListingsService/GetListing",
+		"/listingssvc.v1.ListingsService/GetSimilarListings",
 		"/listingssvc.v1.ListingsService/GetProduct",
 		"/listingssvc.v1.ListingsService/GetProductBySKU",
 		// Storefront public methods

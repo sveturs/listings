@@ -310,6 +310,58 @@ func (s *Server) SearchListings(ctx context.Context, req *listingspb.SearchListi
 	}, nil
 }
 
+// GetSimilarListings retrieves similar listings based on category and price
+func (s *Server) GetSimilarListings(ctx context.Context, req *listingspb.GetSimilarListingsRequest) (*listingspb.GetSimilarListingsResponse, error) {
+	s.logger.Debug().Int64("listing_id", req.ListingId).Msg("GetSimilarListings called")
+
+	// Validate request
+	if req.ListingId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "listing_id must be positive")
+	}
+
+	// Default limit
+	limit := int32(10)
+	if req.Limit != nil {
+		limit = *req.Limit
+	}
+
+	// Validate limit range
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 20 {
+		limit = 20
+	}
+
+	// Get similar listings from service
+	listings, total, err := s.service.GetSimilarListings(ctx, req.ListingId, limit)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", req.ListingId).Msg("failed to get similar listings")
+		// Graceful degradation: return empty array on error
+		return &listingspb.GetSimilarListingsResponse{
+			Listings: []*listingspb.Listing{},
+			Total:    0,
+		}, nil
+	}
+
+	// Convert to proto
+	pbListings := make([]*listingspb.Listing, len(listings))
+	for i, listing := range listings {
+		pbListings[i] = DomainToProtoListing(listing)
+	}
+
+	s.logger.Debug().
+		Int64("listing_id", req.ListingId).
+		Int("count", len(listings)).
+		Int32("total", total).
+		Msg("similar listings retrieved")
+
+	return &listingspb.GetSimilarListingsResponse{
+		Listings: pbListings,
+		Total:    total,
+	}, nil
+}
+
 // ListListings returns a paginated list of listings
 func (s *Server) ListListings(ctx context.Context, req *listingspb.ListListingsRequest) (*listingspb.ListListingsResponse, error) {
 	s.logger.Debug().Int32("limit", req.Limit).Int32("offset", req.Offset).Msg("ListListings called")

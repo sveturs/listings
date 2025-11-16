@@ -96,6 +96,9 @@ service ListingsService {
   // ListListings returns a paginated list of listings
   rpc ListListings(ListListingsRequest) returns (ListListingsResponse);
 
+  // GetSimilarListings retrieves similar listings based on category and price
+  rpc GetSimilarListings(GetSimilarListingsRequest) returns (GetSimilarListingsResponse);
+
   // === Image Management (HIGH PRIORITY) ===
 
   // GetListingImage retrieves a single image by ID
@@ -632,6 +635,17 @@ message ListListingsRequest {
 }
 
 message ListListingsResponse {
+  repeated Listing listings = 1;
+  int32 total = 2;
+}
+
+// GetSimilarListings messages
+message GetSimilarListingsRequest {
+  int64 listing_id = 1; // Listing ID to find similar items for
+  optional int32 limit = 2; // Maximum results (default: 10, max: 20)
+}
+
+message GetSimilarListingsResponse {
   repeated Listing listings = 1;
   int32 total = 2;
 }

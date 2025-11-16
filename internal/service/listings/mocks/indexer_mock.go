@@ -30,3 +30,12 @@ func (m *MockIndexingService) DeleteListing(ctx context.Context, listingID int64
 	args := m.Called(ctx, listingID)
 	return args.Error(0)
 }
+
+// GetSimilarListings mocks getting similar listings
+func (m *MockIndexingService) GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error) {
+	args := m.Called(ctx, listingID, limit)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]*domain.Listing), args.Get(1).(int32), args.Error(2)
+}
