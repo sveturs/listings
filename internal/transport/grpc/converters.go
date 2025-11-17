@@ -3,6 +3,7 @@ package grpc
 import (
 	"time"
 
+	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -1275,4 +1276,200 @@ func ApplyTranslation(listing *domain.Listing, lang string) {
 			listing.Location.Country = &country
 		}
 	}
+}
+
+// ========================================================================================
+// CategoryService proto converters (separate from ListingsService proto converters above)
+// ========================================================================================
+
+// DomainToCategoryServiceProtoCategory converts domain.Category to categoriespb.Category
+func DomainToCategoryServiceProtoCategory(cat *domain.Category) *categoriespb.Category {
+	if cat == nil {
+		return nil
+	}
+
+	pbCat := &categoriespb.Category{
+		Id:          int32(cat.ID),
+		Name:        cat.Name,
+		Slug:        cat.Slug,
+		CreatedAt:   timestamppb.New(cat.CreatedAt),
+		HasCustomUi: cat.HasCustomUI,
+		SortOrder:   cat.SortOrder,
+		Level:       cat.Level,
+		Count:       cat.ListingCount,
+		IsActive:    cat.IsActive,
+	}
+
+	// Optional fields
+	if cat.ParentID != nil {
+		parentID := int32(*cat.ParentID)
+		pbCat.ParentId = &parentID
+	}
+	if cat.Icon != nil {
+		pbCat.Icon = cat.Icon
+	}
+	if cat.CustomUIComponent != nil {
+		pbCat.CustomUiComponent = cat.CustomUIComponent
+	}
+	if cat.ExternalID != nil {
+		pbCat.ExternalId = cat.ExternalID
+	}
+	if cat.Description != nil {
+		pbCat.Description = cat.Description
+	}
+	if cat.SEOTitle != nil {
+		pbCat.SeoTitle = cat.SEOTitle
+	}
+	if cat.SEODescription != nil {
+		pbCat.SeoDescription = cat.SEODescription
+	}
+	if cat.SEOKeywords != nil {
+		pbCat.SeoKeywords = cat.SEOKeywords
+	}
+	if cat.TitleEn != nil {
+		pbCat.TitleEn = cat.TitleEn
+	}
+	if cat.TitleRu != nil {
+		pbCat.TitleRu = cat.TitleRu
+	}
+	if cat.TitleSr != nil {
+		pbCat.TitleSr = cat.TitleSr
+	}
+
+	return pbCat
+}
+
+// DomainToCategoryServiceProtoCategoryTree converts domain.CategoryTreeNode to categoriespb.CategoryTree
+func DomainToCategoryServiceProtoCategoryTree(node *domain.CategoryTreeNode) *categoriespb.CategoryTree {
+	if node == nil {
+		return nil
+	}
+
+	// Convert CategoryTreeNode to Category struct first
+	cat := &domain.Category{
+		ID:                node.ID,
+		Name:              node.Name,
+		Slug:              node.Slug,
+		ParentID:          node.ParentID,
+		Icon:              node.Icon,
+		IsActive:          true, // TreeNode doesn't have IsActive, assume true
+		ListingCount:      node.ListingCount,
+		SortOrder:         0, // TreeNode doesn't have SortOrder
+		Level:             node.Level,
+		HasCustomUI:       node.HasCustomUI,
+		CustomUIComponent: node.CustomUIComponent,
+	}
+
+	pbTree := &categoriespb.CategoryTree{
+		Category: DomainToCategoryServiceProtoCategory(cat),
+	}
+
+	// Convert children
+	if len(node.Children) > 0 {
+		pbTree.Subcategories = make([]*categoriespb.CategoryTree, len(node.Children))
+		for i := range node.Children {
+			pbTree.Subcategories[i] = DomainToCategoryServiceProtoCategoryTree(&node.Children[i])
+		}
+	}
+
+	return pbTree
+}
+
+// ProtoToCategoryServiceCreateDomain converts CreateCategoryRequest to domain.Category
+func ProtoToCategoryServiceCreateDomain(req *categoriespb.CreateCategoryRequest) *domain.Category {
+	cat := &domain.Category{
+		Name:      req.Name,
+		Slug:      req.Slug,
+		SortOrder: req.SortOrder,
+		IsActive:  true, // New categories are active by default
+	}
+
+	// Optional fields
+	if req.ParentId != nil {
+		parentID := int64(*req.ParentId)
+		cat.ParentID = &parentID
+	}
+	if req.Icon != nil {
+		cat.Icon = req.Icon
+	}
+	if req.Description != nil {
+		cat.Description = req.Description
+	}
+	if req.CustomUiComponent != nil {
+		cat.CustomUIComponent = req.CustomUiComponent
+	}
+	if req.SeoTitle != nil {
+		cat.SEOTitle = req.SeoTitle
+	}
+	if req.SeoDescription != nil {
+		cat.SEODescription = req.SeoDescription
+	}
+	if req.SeoKeywords != nil {
+		cat.SEOKeywords = req.SeoKeywords
+	}
+	if req.TitleEn != nil {
+		cat.TitleEn = req.TitleEn
+	}
+	if req.TitleRu != nil {
+		cat.TitleRu = req.TitleRu
+	}
+	if req.TitleSr != nil {
+		cat.TitleSr = req.TitleSr
+	}
+
+	return cat
+}
+
+// ProtoToCategoryServiceUpdateDomain converts UpdateCategoryRequest to domain.Category
+func ProtoToCategoryServiceUpdateDomain(req *categoriespb.UpdateCategoryRequest) *domain.Category {
+	cat := &domain.Category{
+		ID: int64(req.Id),
+	}
+
+	// Optional fields - only set if provided
+	if req.Name != nil {
+		cat.Name = *req.Name
+	}
+	if req.Slug != nil {
+		cat.Slug = *req.Slug
+	}
+	if req.ParentId != nil {
+		parentID := int64(*req.ParentId)
+		cat.ParentID = &parentID
+	}
+	if req.Icon != nil {
+		cat.Icon = req.Icon
+	}
+	if req.Description != nil {
+		cat.Description = req.Description
+	}
+	if req.CustomUiComponent != nil {
+		cat.CustomUIComponent = req.CustomUiComponent
+	}
+	if req.SortOrder != nil {
+		cat.SortOrder = *req.SortOrder
+	}
+	if req.IsActive != nil {
+		cat.IsActive = *req.IsActive
+	}
+	if req.SeoTitle != nil {
+		cat.SEOTitle = req.SeoTitle
+	}
+	if req.SeoDescription != nil {
+		cat.SEODescription = req.SeoDescription
+	}
+	if req.SeoKeywords != nil {
+		cat.SEOKeywords = req.SeoKeywords
+	}
+	if req.TitleEn != nil {
+		cat.TitleEn = req.TitleEn
+	}
+	if req.TitleRu != nil {
+		cat.TitleRu = req.TitleRu
+	}
+	if req.TitleSr != nil {
+		cat.TitleSr = req.TitleSr
+	}
+
+	return cat
 }

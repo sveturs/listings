@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
+	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/cache"
 	"github.com/sveturs/listings/internal/config"
@@ -321,6 +322,11 @@ func main() {
 	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
+
+	// Create separate CategoryService handler to avoid method name conflicts
+	categoryHandler := grpcTransport.NewCategoryServiceServer(grpcHandler)
+	categoriespb.RegisterCategoryServiceServer(grpcServer, categoryHandler)
+
 	listingspb.RegisterOrderServiceServer(grpcServer, grpcHandler)
 
 	// Enable gRPC reflection for tools like grpcurl

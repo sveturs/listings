@@ -1,0 +1,126 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     ATTRIBUTES MIGRATION - QUICK REFERENCE                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MIGRATION COMMANDS                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  # Dry run (preview only)
+  go run ./cmd/migrate_attributes/main.go --dry-run
+
+  # Execute migration (verbose)
+  go run ./cmd/migrate_attributes/main.go -v
+
+  # Execute migration (silent)
+  go run ./cmd/migrate_attributes/main.go
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VALIDATION COMMANDS                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  # Full validation suite
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -f ./scripts/validate_attributes.sql
+
+  # Quick count check
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -c "SELECT COUNT(*) FROM attributes"
+
+  # Verify JSONB structure
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -c "SELECT id, code, name, display_name FROM attributes LIMIT 5"
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ROLLBACK COMMANDS                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  # Interactive rollback (with safety prompts)
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -f ./scripts/rollback_attributes.sql
+
+  # Quick rollback (manual)
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -c "DELETE FROM attributes; SELECT setval('attributes_id_seq', 1, false);"
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DATABASE CONNECTIONS                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  # Source DB (monolith)
+  psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"
+
+  # Target DB (microservice)
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable"
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ COMMON QUERIES                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  # Compare record counts
+  psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" \
+    -c "SELECT COUNT(*) FROM unified_attributes"
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -c "SELECT COUNT(*) FROM attributes"
+
+  # Check attribute by code
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -c "SELECT * FROM attributes WHERE code='year'"
+
+  # Check i18n structure validity
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -c "SELECT COUNT(*) FROM attributes WHERE name ? 'en' AND name ? 'ru' AND name ? 'sr'"
+
+  # List all attribute codes
+  psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+    -c "SELECT code FROM attributes ORDER BY code"
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MIGRATION STATUS                                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  Date:        2025-11-17
+  Status:      ✅ Completed
+  Records:     203/203 migrated
+  Time:        ~1 second
+  Idempotent:  ✅ Verified
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ FILES REFERENCE                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  Migration Tool:     /p/github.com/sveturs/listings/cmd/migrate_attributes/main.go
+  SQL Migration:      /p/github.com/sveturs/listings/scripts/migrate_attributes.sql
+  Validation:         /p/github.com/sveturs/listings/scripts/validate_attributes.sql
+  Rollback:           /p/github.com/sveturs/listings/scripts/rollback_attributes.sql
+  Full Guide:         /p/github.com/sveturs/listings/docs/ATTRIBUTES_MIGRATION_GUIDE.md
+  Summary:            /p/github.com/sveturs/listings/ATTRIBUTES_MIGRATION_SUMMARY.md
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ⚠️  "Already migrated: 203"
+      → Expected - migration is idempotent, safe to re-run
+
+  ⚠️  "duplicate key value violates unique constraint"
+      → Attributes already exist, migration will skip them
+
+  ⚠️  "connection refused"
+      → Check if database container is running:
+        docker ps | grep listings
+
+  ⚠️  "invalid JSONB"
+      → Verify source data has no special characters that break JSON
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ NEXT STEPS                                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  1. ✅ Attributes migrated
+  2. → Migrate category_attributes associations
+  3. → Migrate listing_attribute_values
+  4. → Update application to use JSONB i18n format
+  5. → Test frontend with new structure
+
+╚══════════════════════════════════════════════════════════════════════════════╝

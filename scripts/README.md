@@ -204,6 +204,111 @@ tail -f /tmp/migrate_data.log
 
 ---
 
+## Attributes Migration (unified_attributes → attributes)
+
+Migration of attribute definitions from monolith to microservice with i18n JSONB conversion.
+
+### Quick Start - Attributes
+
+```bash
+# Recommended: Use Go migration tool
+cd /p/github.com/sveturs/listings
+
+# Step 1: Preview migration (dry-run)
+go run ./cmd/migrate_attributes/main.go --dry-run
+
+# Step 2: Execute migration
+go run ./cmd/migrate_attributes/main.go -v
+
+# Step 3: Validate results
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+  -f ./scripts/validate_attributes.sql
+```
+
+### Key Features
+
+✅ **Idempotent:** Safe to run multiple times - skips existing records
+✅ **JSONB Conversion:** VARCHAR → `{"en", "ru", "sr"}` i18n format
+✅ **Transaction Support:** All-or-nothing migration
+✅ **Built-in Validation:** Automatic post-migration checks
+✅ **Dry-run Mode:** Preview before executing
+
+### Migration Scripts
+
+| File | Purpose |
+|------|---------|
+| `../cmd/migrate_attributes/main.go` | Automated Go migration tool ⭐ (recommended) |
+| `migrate_attributes.sql` | Manual SQL migration (requires CSV export) |
+| `validate_attributes.sql` | Comprehensive validation queries |
+| `rollback_attributes.sql` | Emergency rollback (deletes all attributes) |
+
+### Migration Results (2025-11-17)
+
+**Status:** ✅ Completed successfully
+- **Records:** 203 attributes migrated
+- **Time:** ~1 second
+- **Idempotency:** Verified (safe to re-run)
+
+### Validation Summary
+
+- ✅ All 203 records migrated
+- ✅ JSONB structure correct (`en`, `ru`, `sr` keys)
+- ✅ No NULL values in required fields
+- ✅ No duplicate codes
+- ✅ Sequence updated correctly (current: 549)
+- ✅ Search vectors generated for all records
+- ✅ Attribute type distribution: select(83), number(45), text(34), boolean(19), multiselect(16), date(5), textarea(1)
+
+### Data Transformation
+
+**Source:** `svetubd.unified_attributes` (port 5433)
+**Target:** `listings_dev_db.attributes` (port 35434)
+
+**Key Changes:**
+- `name` (VARCHAR) → `name` (JSONB) with `{en, ru, sr}` keys
+- `display_name` (VARCHAR) → `display_name` (JSONB) with `{en, ru, sr}` keys
+
+**Example:**
+```sql
+-- Before (monolith)
+name = 'year'
+display_name = 'Godište'
+
+-- After (microservice)
+name = {"en": "year", "ru": "year", "sr": "year"}
+display_name = {"en": "Godište", "ru": "Godište", "sr": "Godište"}
+```
+
+### Troubleshooting
+
+**Issue:** "duplicate key violation"
+```bash
+# Migration is idempotent - this is expected if re-running
+# Script will skip existing records automatically
+go run ./cmd/migrate_attributes/main.go  # Will show "Already migrated: 203"
+```
+
+**Issue:** Need to rollback
+```bash
+# Use interactive rollback script
+psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
+  -f ./scripts/rollback_attributes.sql
+```
+
+**Issue:** Verify specific attribute
+```sql
+-- Check JSONB structure
+SELECT id, code, name, display_name
+FROM attributes
+WHERE code = 'year';
+```
+
+### Documentation
+
+📚 **Full guide:** [../docs/ATTRIBUTES_MIGRATION_GUIDE.md](../docs/ATTRIBUTES_MIGRATION_GUIDE.md)
+
+---
+
 # Production Deployment
 
 Production-ready deployment automation using Blue-Green strategy with zero downtime.

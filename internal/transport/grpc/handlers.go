@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
+	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/metrics"
 	"github.com/sveturs/listings/internal/service"
@@ -21,10 +22,11 @@ func contains(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
-// Server implements gRPC ListingsServiceServer, AttributeServiceServer, and OrderServiceServer
+// Server implements gRPC ListingsServiceServer, AttributeServiceServer, CategoryServiceServer, and OrderServiceServer
 type Server struct {
 	listingspb.UnimplementedListingsServiceServer
 	attributespb.UnimplementedAttributeServiceServer
+	categoriespb.UnimplementedCategoryServiceServer
 	listingspb.UnimplementedOrderServiceServer
 	service           *listings.Service
 	storefrontService *listings.StorefrontService
