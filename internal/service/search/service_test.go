@@ -1,10 +1,13 @@
 package search
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/sveturs/listings/internal/opensearch"
 )
 
 func TestSearchRequest_Validate(t *testing.T) {
@@ -274,4 +277,588 @@ func TestParseListingFromHit_OptionalFields(t *testing.T) {
 	assert.Nil(t, listing.StorefrontID)
 	assert.Nil(t, listing.SKU)
 	assert.Empty(t, listing.Images)
+}
+
+// ============================================================================
+// PHASE 21.2: Tests for Advanced Search Methods
+// ============================================================================
+
+func TestGetMockPopularSearches(t *testing.T) {
+	svc := &Service{}
+
+	tests := []struct {
+		name       string
+		categoryID *int64
+		limit      int32
+		wantMin    int
+		wantMax    int
+	}{
+		{
+			name:       "cars category",
+			categoryID: func() *int64 { v := int64(1301); return &v }(),
+			limit:      10,
+			wantMin:    3,
+			wantMax:    5,
+		},
+		{
+			name:       "electronics category",
+			categoryID: func() *int64 { v := int64(1001); return &v }(),
+			limit:      10,
+			wantMin:    3,
+			wantMax:    5,
+		},
+		{
+			name:       "no category - global",
+			categoryID: nil,
+			limit:      10,
+			wantMin:    3,
+			wantMax:    5,
+		},
+		{
+			name:       "limit results",
+			categoryID: func() *int64 { v := int64(1001); return &v }(),
+			limit:      3,
+			wantMin:    3,
+			wantMax:    3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			searches := svc.getMockPopularSearches(tt.categoryID, tt.limit)
+
+			assert.GreaterOrEqual(t, len(searches), tt.wantMin)
+			assert.LessOrEqual(t, len(searches), tt.wantMax)
+
+			// Verify structure
+			for _, search := range searches {
+				assert.NotEmpty(t, search.Query)
+				assert.Greater(t, search.SearchCount, int64(0))
+				// TrendScore can be negative
+			}
+		})
+	}
+}
+
+func TestConvertFacetsForCache_RoundTrip(t *testing.T) {
+	svc := &Service{}
+
+	// Create original facets
+	original := &FacetsResponse{
+		Categories: []CategoryFacet{
+			{CategoryID: 1001, Count: 150},
+			{CategoryID: 1002, Count: 75},
+		},
+		PriceRanges: []PriceRangeFacet{
+			{Min: 0, Max: 100, Count: 50},
+			{Min: 100, Max: 200, Count: 30},
+		},
+		Attributes: map[string]AttributeFacet{
+			"color": {
+				Key: "color",
+				Values: []AttributeValueCount{
+					{Value: "red", Count: 20},
+					{Value: "blue", Count: 15},
+				},
+			},
+		},
+		SourceTypes: []Facet{
+			{Key: "b2c", Count: 100},
+			{Key: "c2c", Count: 50},
+		},
+		StockStatuses: []Facet{
+			{Key: "in_stock", Count: 120},
+			{Key: "out_of_stock", Count: 30},
+		},
+		TookMs: 42,
+		Cached: false,
+	}
+
+	// Convert to cache format
+	cached := svc.convertFacetsForCache(original)
+
+	// Simulate JSON marshaling/unmarshaling (what Redis does)
+	jsonData, err := json.Marshal(cached)
+	require.NoError(t, err)
+
+	var cachedAfterJSON map[string]interface{}
+	err = json.Unmarshal(jsonData, &cachedAfterJSON)
+	require.NoError(t, err)
+
+	// Convert back
+	restored := svc.convertCachedFacets(cachedAfterJSON, true)
+
+	// Verify round-trip
+	assert.Equal(t, len(original.Categories), len(restored.Categories))
+	assert.Equal(t, len(original.PriceRanges), len(restored.PriceRanges))
+	assert.Equal(t, len(original.Attributes), len(restored.Attributes))
+	assert.Equal(t, len(original.SourceTypes), len(restored.SourceTypes))
+	assert.Equal(t, len(original.StockStatuses), len(restored.StockStatuses))
+	assert.Equal(t, original.TookMs, restored.TookMs)
+	assert.True(t, restored.Cached)
+
+	// Verify categories
+	for i, cat := range original.Categories {
+		assert.Equal(t, cat.CategoryID, restored.Categories[i].CategoryID)
+		assert.Equal(t, cat.Count, restored.Categories[i].Count)
+	}
+
+	// Verify attributes
+	for key, attr := range original.Attributes {
+		restoredAttr, ok := restored.Attributes[key]
+		assert.True(t, ok)
+		assert.Equal(t, attr.Key, restoredAttr.Key)
+		assert.Equal(t, len(attr.Values), len(restoredAttr.Values))
+	}
+}
+
+func TestConvertSuggestionsForCache_RoundTrip(t *testing.T) {
+	svc := &Service{}
+
+	listingID := int64(123)
+	original := &SuggestionsResponse{
+		Suggestions: []Suggestion{
+			{Text: "laptop", Score: 10.5, ListingID: &listingID},
+			{Text: "laptop pro", Score: 8.3, ListingID: nil},
+		},
+		TookMs: 15,
+		Cached: false,
+	}
+
+	// Convert to cache format
+	cached := svc.convertSuggestionsForCache(original)
+
+	// Simulate JSON marshaling/unmarshaling (what Redis does)
+	jsonData, err := json.Marshal(cached)
+	require.NoError(t, err)
+
+	var cachedAfterJSON map[string]interface{}
+	err = json.Unmarshal(jsonData, &cachedAfterJSON)
+	require.NoError(t, err)
+
+	// Convert back
+	restored := svc.convertCachedSuggestions(cachedAfterJSON, true)
+
+	// Verify round-trip
+	assert.Equal(t, len(original.Suggestions), len(restored.Suggestions))
+	assert.Equal(t, original.TookMs, restored.TookMs)
+	assert.True(t, restored.Cached)
+
+	// Verify suggestions
+	for i, sugg := range original.Suggestions {
+		assert.Equal(t, sugg.Text, restored.Suggestions[i].Text)
+		assert.Equal(t, sugg.Score, restored.Suggestions[i].Score)
+		if sugg.ListingID != nil {
+			require.NotNil(t, restored.Suggestions[i].ListingID)
+			assert.Equal(t, *sugg.ListingID, *restored.Suggestions[i].ListingID)
+		} else {
+			assert.Nil(t, restored.Suggestions[i].ListingID)
+		}
+	}
+}
+
+func TestConvertPopularSearchesForCache_RoundTrip(t *testing.T) {
+	svc := &Service{}
+
+	original := &PopularSearchesResponse{
+		Searches: []PopularSearch{
+			{Query: "iphone", SearchCount: 1203, TrendScore: 22.5},
+			{Query: "laptop", SearchCount: 654, TrendScore: -1.2},
+		},
+		TookMs: 8,
+	}
+
+	// Convert to cache format
+	cached := svc.convertPopularSearchesForCache(original)
+
+	// Simulate JSON marshaling/unmarshaling (what Redis does)
+	jsonData, err := json.Marshal(cached)
+	require.NoError(t, err)
+
+	var cachedAfterJSON map[string]interface{}
+	err = json.Unmarshal(jsonData, &cachedAfterJSON)
+	require.NoError(t, err)
+
+	// Convert back
+	restored := svc.convertCachedPopularSearches(cachedAfterJSON)
+
+	// Verify round-trip
+	assert.Equal(t, len(original.Searches), len(restored.Searches))
+	assert.Equal(t, original.TookMs, restored.TookMs)
+
+	// Verify searches
+	for i, search := range original.Searches {
+		assert.Equal(t, search.Query, restored.Searches[i].Query)
+		assert.Equal(t, search.SearchCount, restored.Searches[i].SearchCount)
+		assert.Equal(t, search.TrendScore, restored.Searches[i].TrendScore)
+	}
+}
+
+func TestConvertFilteredSearchForCache_RoundTrip(t *testing.T) {
+	svc := &Service{}
+
+	desc := "Test description"
+	original := &SearchFiltersResponse{
+		Listings: []ListingSearchResult{
+			{
+				ID:          123,
+				UUID:        "test-uuid",
+				Title:       "Test Laptop",
+				Description: &desc,
+				Price:       999.99,
+				Currency:    "EUR",
+				CategoryID:  1001,
+			},
+		},
+		Total:  1,
+		TookMs: 25,
+		Cached: false,
+		Facets: &FacetsResponse{
+			Categories: []CategoryFacet{
+				{CategoryID: 1001, Count: 1},
+			},
+			PriceRanges:   []PriceRangeFacet{},
+			Attributes:    make(map[string]AttributeFacet),
+			SourceTypes:   []Facet{},
+			StockStatuses: []Facet{},
+			TookMs:        25,
+			Cached:        false,
+		},
+	}
+
+	// Convert to cache format
+	cached := svc.convertFilteredSearchForCache(original)
+
+	// Simulate JSON marshaling/unmarshaling (what Redis does)
+	jsonData, err := json.Marshal(cached)
+	require.NoError(t, err)
+
+	var cachedAfterJSON map[string]interface{}
+	err = json.Unmarshal(jsonData, &cachedAfterJSON)
+	require.NoError(t, err)
+
+	// Convert back
+	restored := svc.convertCachedFilteredSearch(cachedAfterJSON, true)
+
+	// Verify round-trip
+	assert.Equal(t, original.Total, restored.Total)
+	assert.Equal(t, original.TookMs, restored.TookMs)
+	assert.True(t, restored.Cached)
+	assert.Equal(t, len(original.Listings), len(restored.Listings))
+
+	// Verify listing
+	if len(restored.Listings) > 0 {
+		assert.Equal(t, original.Listings[0].ID, restored.Listings[0].ID)
+		assert.Equal(t, original.Listings[0].UUID, restored.Listings[0].UUID)
+		assert.Equal(t, original.Listings[0].Title, restored.Listings[0].Title)
+	}
+
+	// Verify facets
+	assert.NotNil(t, restored.Facets)
+	assert.Equal(t, len(original.Facets.Categories), len(restored.Facets.Categories))
+}
+
+func TestParseAggregations_EmptyResult(t *testing.T) {
+	svc := &Service{}
+
+	// Test with empty result (current implementation returns empty facets)
+	result := &opensearch.SearchResponse{}
+	facets, err := svc.parseAggregations(result)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, facets)
+	assert.Empty(t, facets.Categories)
+	assert.Empty(t, facets.PriceRanges)
+	assert.Empty(t, facets.Attributes)
+	assert.Empty(t, facets.SourceTypes)
+	assert.Empty(t, facets.StockStatuses)
+}
+
+func TestParseSuggestions_EmptyResult(t *testing.T) {
+	svc := &Service{}
+
+	// Test with empty result (current implementation returns empty suggestions)
+	result := &opensearch.SearchResponse{}
+	suggestions := svc.parseSuggestions(result)
+
+	assert.NotNil(t, suggestions)
+	assert.Empty(t, suggestions)
+}
+
+// ============================================================================
+// Integration-style Tests (with mock dependencies)
+// ============================================================================
+
+func TestGetMockPopularSearches_LimitApplied(t *testing.T) {
+	svc := &Service{}
+
+	categoryID := int64(1001)
+	limit := int32(2)
+
+	searches := svc.getMockPopularSearches(&categoryID, limit)
+
+	// Verify limit is respected
+	assert.LessOrEqual(t, len(searches), int(limit))
+
+	// Verify all searches have required fields
+	for _, search := range searches {
+		assert.NotEmpty(t, search.Query)
+		assert.Greater(t, search.SearchCount, int64(0))
+	}
+}
+
+func TestGetMockPopularSearches_UnknownCategory(t *testing.T) {
+	svc := &Service{}
+
+	unknownCategory := int64(9999)
+	limit := int32(10)
+
+	searches := svc.getMockPopularSearches(&unknownCategory, limit)
+
+	// Should return default searches for unknown category
+	assert.NotEmpty(t, searches)
+	assert.GreaterOrEqual(t, len(searches), 3)
+}
+
+// ============================================================================
+// Validation Tests for Phase 21.2 Request Types
+// ============================================================================
+
+func TestFacetsRequest_Validate(t *testing.T) {
+	tests := []struct {
+		name    string
+		req     *FacetsRequest
+		wantErr error
+	}{
+		{
+			name: "valid request",
+			req: &FacetsRequest{
+				Query:      "laptop",
+				CategoryID: func() *int64 { v := int64(1001); return &v }(),
+				UseCache:   true,
+			},
+			wantErr: nil,
+		},
+		{
+			name: "query too long",
+			req: &FacetsRequest{
+				Query: string(make([]byte, 501)),
+			},
+			wantErr: ErrQueryTooLong,
+		},
+		{
+			name: "valid with filters",
+			req: &FacetsRequest{
+				Query: "laptop",
+				Filters: &SearchFilters{
+					Price: &PriceRange{
+						Min: func() *float64 { v := 100.0; return &v }(),
+						Max: func() *float64 { v := 500.0; return &v }(),
+					},
+				},
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.req.Validate()
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestSearchFiltersRequest_Validate(t *testing.T) {
+	tests := []struct {
+		name      string
+		req       *SearchFiltersRequest
+		wantLimit int32
+		wantErr   error
+	}{
+		{
+			name: "valid request",
+			req: &SearchFiltersRequest{
+				Query:  "laptop",
+				Limit:  20,
+				Offset: 0,
+			},
+			wantLimit: 20,
+			wantErr:   nil,
+		},
+		{
+			name: "limit too small - use default",
+			req: &SearchFiltersRequest{
+				Query:  "laptop",
+				Limit:  0,
+				Offset: 0,
+			},
+			wantLimit: 20,
+			wantErr:   nil,
+		},
+		{
+			name: "limit too large - cap to max",
+			req: &SearchFiltersRequest{
+				Query:  "laptop",
+				Limit:  150,
+				Offset: 0,
+			},
+			wantLimit: 100,
+			wantErr:   nil,
+		},
+		{
+			name: "valid with filters and sort",
+			req: &SearchFiltersRequest{
+				Query:  "laptop",
+				Limit:  20,
+				Offset: 0,
+				Filters: &SearchFilters{
+					Price: &PriceRange{
+						Min: func() *float64 { v := 100.0; return &v }(),
+						Max: func() *float64 { v := 500.0; return &v }(),
+					},
+				},
+				Sort: &SortConfig{
+					Field: "price",
+					Order: "asc",
+				},
+			},
+			wantLimit: 20,
+			wantErr:   nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.req.Validate()
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantLimit, tt.req.Limit)
+			}
+		})
+	}
+}
+
+func TestSuggestionsRequest_Validate(t *testing.T) {
+	tests := []struct {
+		name      string
+		req       *SuggestionsRequest
+		wantLimit int32
+		wantErr   error
+	}{
+		{
+			name: "valid request",
+			req: &SuggestionsRequest{
+				Prefix: "lap",
+				Limit:  10,
+			},
+			wantLimit: 10,
+			wantErr:   nil,
+		},
+		{
+			name: "prefix too short",
+			req: &SuggestionsRequest{
+				Prefix: "l",
+				Limit:  10,
+			},
+			wantErr: ErrPrefixTooShort,
+		},
+		{
+			name: "prefix too long",
+			req: &SuggestionsRequest{
+				Prefix: string(make([]byte, 101)),
+				Limit:  10,
+			},
+			wantErr: ErrPrefixTooLong,
+		},
+		{
+			name: "limit too large - cap to max",
+			req: &SuggestionsRequest{
+				Prefix: "laptop",
+				Limit:  50,
+			},
+			wantLimit: 20,
+			wantErr:   nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.req.Validate()
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantLimit, tt.req.Limit)
+			}
+		})
+	}
+}
+
+func TestPopularSearchesRequest_Validate(t *testing.T) {
+	tests := []struct {
+		name          string
+		req           *PopularSearchesRequest
+		wantLimit     int32
+		wantTimeRange string
+		wantErr       error
+	}{
+		{
+			name: "valid request",
+			req: &PopularSearchesRequest{
+				Limit:     10,
+				TimeRange: "24h",
+			},
+			wantLimit:     10,
+			wantTimeRange: "24h",
+			wantErr:       nil,
+		},
+		{
+			name: "default time range",
+			req: &PopularSearchesRequest{
+				Limit:     10,
+				TimeRange: "",
+			},
+			wantLimit:     10,
+			wantTimeRange: "24h",
+			wantErr:       nil,
+		},
+		{
+			name: "invalid time range",
+			req: &PopularSearchesRequest{
+				Limit:     10,
+				TimeRange: "48h",
+			},
+			wantErr: ErrInvalidTimeRange,
+		},
+		{
+			name: "limit too large - cap to max",
+			req: &PopularSearchesRequest{
+				Limit:     50,
+				TimeRange: "7d",
+			},
+			wantLimit:     20,
+			wantTimeRange: "7d",
+			wantErr:       nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.req.Validate()
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantLimit, tt.req.Limit)
+				assert.Equal(t, tt.wantTimeRange, tt.req.TimeRange)
+			}
+		})
+	}
 }

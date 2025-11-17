@@ -183,11 +183,11 @@ func (cb *CircuitBreaker) GetStats() map[string]interface{} {
 	defer cb.mu.RUnlock()
 
 	return map[string]interface{}{
-		"state":          cb.state.String(),
-		"failures":       cb.failures,
-		"max_failures":   cb.maxFailures,
-		"reset_timeout":  cb.resetTimeout.String(),
-		"last_failure":   cb.lastFailure,
+		"state":              cb.state.String(),
+		"failures":           cb.failures,
+		"max_failures":       cb.maxFailures,
+		"reset_timeout":      cb.resetTimeout.String(),
+		"last_failure":       cb.lastFailure,
 		"time_since_failure": time.Since(cb.lastFailure).String(),
 	}
 }
