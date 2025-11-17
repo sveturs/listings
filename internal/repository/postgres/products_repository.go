@@ -27,7 +27,6 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 			p.location_privacy, p.show_on_map, p.has_variants
 		FROM listings p
 		WHERE p.id = $1
-		  AND p.source_type = 'b2c'
 		  AND ($2::bigint IS NULL OR p.storefront_id = $2)
 		  AND p.deleted_at IS NULL
 	`
