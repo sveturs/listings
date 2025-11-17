@@ -20,17 +20,20 @@ import (
 	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
 	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
+	searchv1 "github.com/sveturs/listings/api/proto/search/v1"
 	"github.com/sveturs/listings/internal/cache"
 	"github.com/sveturs/listings/internal/config"
 	"github.com/sveturs/listings/internal/health"
 	"github.com/sveturs/listings/internal/metrics"
 	"github.com/sveturs/listings/internal/middleware"
+	"github.com/sveturs/listings/internal/opensearch"
 	"github.com/sveturs/listings/internal/ratelimit"
 	"github.com/sveturs/listings/internal/repository/minio"
-	"github.com/sveturs/listings/internal/repository/opensearch"
+	opensearchRepo "github.com/sveturs/listings/internal/repository/opensearch"
 	"github.com/sveturs/listings/internal/repository/postgres"
 	"github.com/sveturs/listings/internal/service"
 	"github.com/sveturs/listings/internal/service/listings"
+	searchService "github.com/sveturs/listings/internal/service/search"
 	"github.com/sveturs/listings/internal/timeout"
 	grpcTransport "github.com/sveturs/listings/internal/transport/grpc"
 	httpTransport "github.com/sveturs/listings/internal/transport/http"
@@ -154,9 +157,9 @@ func main() {
 	}()
 
 	// Initialize OpenSearch (if enabled)
-	var searchClient *opensearch.Client
+	var searchClient *opensearchRepo.Client
 	if cfg.Features.AsyncIndexing {
-		searchClient, err = opensearch.NewClient(
+		searchClient, err = opensearchRepo.NewClient(
 			cfg.Search.Addresses,
 			cfg.Search.Username,
 			cfg.Search.Password,
@@ -224,6 +227,56 @@ func main() {
 
 	// Initialize category service
 	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
+
+	// Initialize search service (Phase 21.1)
+	var searchSvc *searchService.Service
+	if searchClient != nil {
+		// Create dedicated search client with circuit breaker
+		searchClientCfg := &opensearch.SearchConfig{
+			Addresses:    cfg.Search.Addresses,
+			Username:     cfg.Search.Username,
+			Password:     cfg.Search.Password,
+			Index:        cfg.Search.Index,
+			MaxRetries:   3,
+			RetryDelay:   100 * time.Millisecond,
+			Timeout:      5 * time.Second,
+			MaxFailures:  5,
+			ResetTimeout: 60 * time.Second,
+		}
+		osSearchClient, err := opensearch.NewSearchClient(searchClientCfg, zerologLogger)
+		if err != nil {
+			logger.Warn().Err(err).Msg("failed to initialize search client, search will be unavailable")
+		} else {
+			// Create search cache
+			searchCacheTTL := cfg.Redis.SearchTTL
+			if searchCacheTTL == 0 {
+				searchCacheTTL = 5 * time.Minute
+			}
+			searchCacheURL := fmt.Sprintf("redis://%s:%d/%d",
+				cfg.Redis.Host,
+				cfg.Redis.Port,
+				cfg.Redis.DB,
+			)
+			if cfg.Redis.Password != "" {
+				searchCacheURL = fmt.Sprintf("redis://:%s@%s:%d/%d",
+					cfg.Redis.Password,
+					cfg.Redis.Host,
+					cfg.Redis.Port,
+					cfg.Redis.DB,
+				)
+			}
+
+			searchCache, err := cache.NewSearchCache(searchCacheURL, searchCacheTTL, zerologLogger)
+			if err != nil {
+				logger.Warn().Err(err).Msg("failed to initialize search cache, caching disabled")
+				searchCache = nil
+			}
+
+			// Create search service
+			searchSvc = searchService.NewService(osSearchClient, searchCache, zerologLogger)
+			logger.Info().Msg("Search service initialized successfully")
+		}
+	}
 
 	// Initialize order service dependencies
 	cartRepo := postgres.NewCartRepository(pgxPool, zerologLogger)
@@ -328,6 +381,13 @@ func main() {
 	categoriespb.RegisterCategoryServiceServer(grpcServer, categoryHandler)
 
 	listingspb.RegisterOrderServiceServer(grpcServer, grpcHandler)
+
+	// Register SearchService (Phase 21.1)
+	if searchSvc != nil {
+		searchHandler := grpcTransport.NewSearchHandler(searchSvc, zerologLogger)
+		searchv1.RegisterSearchServiceServer(grpcServer, searchHandler)
+		logger.Info().Msg("SearchService registered with gRPC server")
+	}
 
 	// Enable gRPC reflection for tools like grpcurl
 	reflection.Register(grpcServer)

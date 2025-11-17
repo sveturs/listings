@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package search.v1;
+
+option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+
+// SearchService provides search functionality for marketplace listings
+service SearchService {
+  // SearchListings searches for listings based on query text and filters
+  rpc SearchListings(SearchListingsRequest) returns (SearchListingsResponse);
+}
+
+// SearchListingsRequest contains search parameters
+message SearchListingsRequest {
+  // Search query text (optional - can search without query)
+  string query = 1;
+
+  // Filter by category ID (optional)
+  optional int64 category_id = 2;
+
+  // Results per page (1-100, default: 20)
+  int32 limit = 3;
+
+  // Pagination offset (default: 0)
+  int32 offset = 4;
+
+  // Use Redis cache for results (default: true)
+  bool use_cache = 5;
+}
+
+// SearchListingsResponse contains search results
+message SearchListingsResponse {
+  // List of matching listings
+  repeated Listing listings = 1;
+
+  // Total number of matching documents
+  int64 total = 2;
+
+  // Search duration in milliseconds
+  int32 took_ms = 3;
+
+  // Whether result was served from cache
+  bool cached = 4;
+}
+
+// Listing represents a marketplace listing in search results
+message Listing {
+  // Listing ID
+  int64 id = 1;
+
+  // Listing UUID
+  string uuid = 2;
+
+  // Listing title
+  string title = 3;
+
+  // Listing description (optional)
+  optional string description = 4;
+
+  // Price
+  double price = 5;
+
+  // Currency code (e.g., "EUR", "USD")
+  string currency = 6;
+
+  // Category ID
+  int64 category_id = 7;
+
+  // Listing status (e.g., "active", "inactive")
+  string status = 8;
+
+  // Listing images
+  repeated ListingImage images = 9;
+
+  // Creation timestamp (RFC3339 format)
+  string created_at = 10;
+
+  // User ID (owner)
+  int64 user_id = 11;
+
+  // Storefront ID (optional)
+  optional int64 storefront_id = 12;
+
+  // Stock quantity
+  int32 quantity = 13;
+
+  // SKU (optional)
+  optional string sku = 14;
+
+  // Source type (c2c or b2c)
+  string source_type = 15;
+
+  // Stock status
+  string stock_status = 16;
+}
+
+// ListingImage represents an image in search results
+message ListingImage {
+  // Image ID
+  int64 id = 1;
+
+  // Image URL
+  string url = 2;
+
+  // Whether this is the primary image
+  bool is_primary = 3;
+
+  // Display order
+  int32 display_order = 4;
+}

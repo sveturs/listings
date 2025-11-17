@@ -77,6 +77,56 @@ func (m *mockOrderService) ProcessRefund(ctx context.Context, orderID int64) err
 }
 
 // =============================================================================
+// Mock Cart Service
+// =============================================================================
+
+type mockCartService struct{}
+
+func (m *mockCartService) AddToCart(ctx context.Context, req *service.AddToCartRequest) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) UpdateCartItem(ctx context.Context, req *service.UpdateCartItemRequest) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) UpdateCartItemByItemID(ctx context.Context, cartItemID int64, quantity int32, userID *int64, sessionID *string) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) RemoveFromCart(ctx context.Context, cartID, itemID int64) error {
+	return nil
+}
+
+func (m *mockCartService) RemoveFromCartByItemID(ctx context.Context, cartItemID int64, userID *int64, sessionID *string) error {
+	return nil
+}
+
+func (m *mockCartService) GetCart(ctx context.Context, userID *int64, sessionID *string, storefrontID int64) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) ClearCart(ctx context.Context, cartID int64) error {
+	return nil
+}
+
+func (m *mockCartService) GetUserCarts(ctx context.Context, userID int64) ([]*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) MergeSessionCartToUser(ctx context.Context, sessionID string, userID int64) error {
+	return nil
+}
+
+func (m *mockCartService) RecalculateCart(ctx context.Context, cartID int64) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) ValidateCartItems(ctx context.Context, cartID int64) ([]service.PriceChangeItem, error) {
+	return nil, nil
+}
+
+// =============================================================================
 // Global Metrics Singleton
 // =============================================================================
 
@@ -204,6 +254,9 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 	// Create mock order service for integration tests
 	orderService := &mockOrderService{}
 
+	// Create mock cart service for integration tests
+	cartService := &mockCartService{}
+
 	// Get singleton metrics instance
 	m := getTestMetrics()
 
@@ -214,6 +267,7 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		attrService,
 		categoryService,
 		orderService,
+		cartService,
 		m,
 		logger,
 	)
