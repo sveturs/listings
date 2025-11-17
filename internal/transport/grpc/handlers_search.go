@@ -12,17 +12,27 @@ import (
 	"github.com/sveturs/listings/internal/service/search"
 )
 
+// SearchServiceInterface defines the interface for search service
+type SearchServiceInterface interface {
+	SearchListings(ctx context.Context, req *search.SearchRequest) (*search.SearchResponse, error)
+	GetSearchFacets(ctx context.Context, req *search.FacetsRequest) (*search.FacetsResponse, error)
+	SearchWithFilters(ctx context.Context, req *search.SearchFiltersRequest) (*search.SearchFiltersResponse, error)
+	GetSuggestions(ctx context.Context, req *search.SuggestionsRequest) (*search.SuggestionsResponse, error)
+	GetPopularSearches(ctx context.Context, req *search.PopularSearchesRequest) (*search.PopularSearchesResponse, error)
+	GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]search.ListingSearchResult, int64, error)
+}
+
 // SearchHandler implements SearchService gRPC service
 type SearchHandler struct {
 	searchv1.UnimplementedSearchServiceServer
-	service *search.Service
+	service SearchServiceInterface
 	logger  zerolog.Logger
 }
 
 // NewSearchHandler creates a new search handler
 func NewSearchHandler(service *search.Service, logger zerolog.Logger) *SearchHandler {
 	return &SearchHandler{
-		service: service,
+		service: SearchServiceInterface(service),
 		logger:  logger.With().Str("handler", "search").Logger(),
 	}
 }
@@ -72,6 +82,229 @@ func (h *SearchHandler) SearchListings(
 		Msg("SearchListings completed")
 
 	return protoResp, nil
+}
+
+// ============================================================================
+// PHASE 21.2: Advanced Search Handlers
+// ============================================================================
+
+// GetSearchFacets returns aggregations for building filter UI
+func (h *SearchHandler) GetSearchFacets(
+	ctx context.Context,
+	req *searchv1.GetSearchFacetsRequest,
+) (*searchv1.GetSearchFacetsResponse, error) {
+	// Log request
+	h.logger.Info().
+		Interface("query", req.Query).
+		Interface("category_id", req.CategoryId).
+		Msg("GetSearchFacets RPC called")
+
+	// Convert proto to domain
+	domainReq := ProtoToFacetsRequest(req)
+
+	// Validate (service layer also validates, but double-check)
+	if err := domainReq.Validate(); err != nil {
+		h.logger.Warn().
+			Err(err).
+			Msg("invalid facets request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Call service
+	result, err := h.service.GetSearchFacets(ctx, domainReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Msg("facets service failed")
+
+		// Map service errors to gRPC status codes
+		if containsError(err, "invalid") {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to get search facets")
+	}
+
+	// Convert domain to proto
+	resp := FacetsResponseToProto(result)
+
+	h.logger.Info().
+		Int32("took_ms", resp.TookMs).
+		Bool("cached", resp.Cached).
+		Int("categories", len(resp.Categories)).
+		Int("price_ranges", len(resp.PriceRanges)).
+		Int("attributes", len(resp.Attributes)).
+		Msg("GetSearchFacets completed")
+
+	return resp, nil
+}
+
+// SearchWithFilters performs enhanced search with multiple filters
+func (h *SearchHandler) SearchWithFilters(
+	ctx context.Context,
+	req *searchv1.SearchWithFiltersRequest,
+) (*searchv1.SearchWithFiltersResponse, error) {
+	// Log request
+	h.logger.Info().
+		Str("query", req.Query).
+		Interface("category_id", req.CategoryId).
+		Int32("limit", req.Limit).
+		Int32("offset", req.Offset).
+		Bool("use_cache", req.UseCache).
+		Bool("include_facets", req.IncludeFacets).
+		Msg("SearchWithFilters RPC called")
+
+	// Convert proto to domain
+	domainReq := ProtoToSearchFiltersRequest(req)
+
+	// Validate
+	if err := domainReq.Validate(); err != nil {
+		h.logger.Warn().
+			Err(err).
+			Msg("invalid filtered search request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Call service
+	result, err := h.service.SearchWithFilters(ctx, domainReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Msg("filtered search service failed")
+
+		// Map service errors to gRPC status codes
+		if containsError(err, "invalid") {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to search with filters")
+	}
+
+	// Convert domain to proto
+	resp := SearchFiltersResponseToProto(result)
+
+	h.logger.Info().
+		Int("count", len(resp.Listings)).
+		Int64("total", resp.Total).
+		Int32("took_ms", resp.TookMs).
+		Bool("cached", resp.Cached).
+		Bool("has_facets", resp.Facets != nil).
+		Msg("SearchWithFilters completed")
+
+	return resp, nil
+}
+
+// GetSuggestions provides autocomplete suggestions
+func (h *SearchHandler) GetSuggestions(
+	ctx context.Context,
+	req *searchv1.GetSuggestionsRequest,
+) (*searchv1.GetSuggestionsResponse, error) {
+	// Log request
+	h.logger.Info().
+		Str("prefix", req.Prefix).
+		Interface("category_id", req.CategoryId).
+		Int32("limit", req.Limit).
+		Msg("GetSuggestions RPC called")
+
+	// Early validation (prefix length check)
+	if len(req.Prefix) < 2 {
+		h.logger.Warn().
+			Str("prefix", req.Prefix).
+			Msg("prefix too short")
+		return nil, status.Error(codes.InvalidArgument, "prefix must be at least 2 characters")
+	}
+
+	// Convert proto to domain
+	domainReq := ProtoToSuggestionsRequest(req)
+
+	// Validate
+	if err := domainReq.Validate(); err != nil {
+		h.logger.Warn().
+			Err(err).
+			Msg("invalid suggestions request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Call service
+	result, err := h.service.GetSuggestions(ctx, domainReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Msg("suggestions service failed")
+
+		// Map service errors to gRPC status codes
+		if containsError(err, "invalid") {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to get suggestions")
+	}
+
+	// Convert domain to proto
+	resp := SuggestionsResponseToProto(result)
+
+	h.logger.Info().
+		Str("prefix", req.Prefix).
+		Int("count", len(resp.Suggestions)).
+		Int32("took_ms", resp.TookMs).
+		Bool("cached", resp.Cached).
+		Msg("GetSuggestions completed")
+
+	return resp, nil
+}
+
+// GetPopularSearches returns trending search queries
+func (h *SearchHandler) GetPopularSearches(
+	ctx context.Context,
+	req *searchv1.GetPopularSearchesRequest,
+) (*searchv1.GetPopularSearchesResponse, error) {
+	// Log request
+	h.logger.Info().
+		Interface("category_id", req.CategoryId).
+		Interface("time_range", req.TimeRange).
+		Int32("limit", req.Limit).
+		Msg("GetPopularSearches RPC called")
+
+	// Convert proto to domain
+	domainReq := ProtoToPopularSearchesRequest(req)
+
+	// Validate
+	if err := domainReq.Validate(); err != nil {
+		h.logger.Warn().
+			Err(err).
+			Msg("invalid popular searches request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Call service
+	result, err := h.service.GetPopularSearches(ctx, domainReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Msg("popular searches service failed")
+
+		// Map service errors to gRPC status codes
+		if containsError(err, "invalid") {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to get popular searches")
+	}
+
+	// Convert domain to proto
+	resp := PopularSearchesResponseToProto(result)
+
+	h.logger.Info().
+		Int("count", len(resp.Searches)).
+		Int32("took_ms", resp.TookMs).
+		Msg("GetPopularSearches completed")
+
+	return resp, nil
+}
+
+// containsError checks if error message contains substring (case-insensitive)
+func containsError(err error, substr string) bool {
+	if err == nil || substr == "" {
+		return false
+	}
+	errMsg := err.Error()
+	return contains(errMsg, substr)
 }
 
 // validateSearchRequest validates search request parameters
