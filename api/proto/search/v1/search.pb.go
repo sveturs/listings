@@ -176,265 +176,11 @@ func (x *SearchListingsResponse) GetCached() bool {
 	return false
 }
 
-// Listing represents a marketplace listing in search results
-type Listing struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Listing ID
-	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Listing UUID
-	Uuid string `protobuf:"bytes,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
-	// Listing title
-	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	// Listing description (optional)
-	Description *string `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	// Price
-	Price float64 `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
-	// Currency code (e.g., "EUR", "USD")
-	Currency string `protobuf:"bytes,6,opt,name=currency,proto3" json:"currency,omitempty"`
-	// Category ID
-	CategoryId int64 `protobuf:"varint,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	// Listing status (e.g., "active", "inactive")
-	Status string `protobuf:"bytes,8,opt,name=status,proto3" json:"status,omitempty"`
-	// Listing images
-	Images []*ListingImage `protobuf:"bytes,9,rep,name=images,proto3" json:"images,omitempty"`
-	// Creation timestamp (RFC3339 format)
-	CreatedAt string `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// User ID (owner)
-	UserId int64 `protobuf:"varint,11,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	// Storefront ID (optional)
-	StorefrontId *int64 `protobuf:"varint,12,opt,name=storefront_id,json=storefrontId,proto3,oneof" json:"storefront_id,omitempty"`
-	// Stock quantity
-	Quantity int32 `protobuf:"varint,13,opt,name=quantity,proto3" json:"quantity,omitempty"`
-	// SKU (optional)
-	Sku *string `protobuf:"bytes,14,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
-	// Source type (c2c or b2c)
-	SourceType string `protobuf:"bytes,15,opt,name=source_type,json=sourceType,proto3" json:"source_type,omitempty"`
-	// Stock status
-	StockStatus   string `protobuf:"bytes,16,opt,name=stock_status,json=stockStatus,proto3" json:"stock_status,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Listing) Reset() {
-	*x = Listing{}
-	mi := &file_api_proto_search_v1_search_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Listing) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Listing) ProtoMessage() {}
-
-func (x *Listing) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_search_v1_search_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Listing.ProtoReflect.Descriptor instead.
-func (*Listing) Descriptor() ([]byte, []int) {
-	return file_api_proto_search_v1_search_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *Listing) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *Listing) GetUuid() string {
-	if x != nil {
-		return x.Uuid
-	}
-	return ""
-}
-
-func (x *Listing) GetTitle() string {
-	if x != nil {
-		return x.Title
-	}
-	return ""
-}
-
-func (x *Listing) GetDescription() string {
-	if x != nil && x.Description != nil {
-		return *x.Description
-	}
-	return ""
-}
-
-func (x *Listing) GetPrice() float64 {
-	if x != nil {
-		return x.Price
-	}
-	return 0
-}
-
-func (x *Listing) GetCurrency() string {
-	if x != nil {
-		return x.Currency
-	}
-	return ""
-}
-
-func (x *Listing) GetCategoryId() int64 {
-	if x != nil {
-		return x.CategoryId
-	}
-	return 0
-}
-
-func (x *Listing) GetStatus() string {
-	if x != nil {
-		return x.Status
-	}
-	return ""
-}
-
-func (x *Listing) GetImages() []*ListingImage {
-	if x != nil {
-		return x.Images
-	}
-	return nil
-}
-
-func (x *Listing) GetCreatedAt() string {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return ""
-}
-
-func (x *Listing) GetUserId() int64 {
-	if x != nil {
-		return x.UserId
-	}
-	return 0
-}
-
-func (x *Listing) GetStorefrontId() int64 {
-	if x != nil && x.StorefrontId != nil {
-		return *x.StorefrontId
-	}
-	return 0
-}
-
-func (x *Listing) GetQuantity() int32 {
-	if x != nil {
-		return x.Quantity
-	}
-	return 0
-}
-
-func (x *Listing) GetSku() string {
-	if x != nil && x.Sku != nil {
-		return *x.Sku
-	}
-	return ""
-}
-
-func (x *Listing) GetSourceType() string {
-	if x != nil {
-		return x.SourceType
-	}
-	return ""
-}
-
-func (x *Listing) GetStockStatus() string {
-	if x != nil {
-		return x.StockStatus
-	}
-	return ""
-}
-
-// ListingImage represents an image in search results
-type ListingImage struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Image ID
-	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Image URL
-	Url string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
-	// Whether this is the primary image
-	IsPrimary bool `protobuf:"varint,3,opt,name=is_primary,json=isPrimary,proto3" json:"is_primary,omitempty"`
-	// Display order
-	DisplayOrder  int32 `protobuf:"varint,4,opt,name=display_order,json=displayOrder,proto3" json:"display_order,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListingImage) Reset() {
-	*x = ListingImage{}
-	mi := &file_api_proto_search_v1_search_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListingImage) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListingImage) ProtoMessage() {}
-
-func (x *ListingImage) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_search_v1_search_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListingImage.ProtoReflect.Descriptor instead.
-func (*ListingImage) Descriptor() ([]byte, []int) {
-	return file_api_proto_search_v1_search_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *ListingImage) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *ListingImage) GetUrl() string {
-	if x != nil {
-		return x.Url
-	}
-	return ""
-}
-
-func (x *ListingImage) GetIsPrimary() bool {
-	if x != nil {
-		return x.IsPrimary
-	}
-	return false
-}
-
-func (x *ListingImage) GetDisplayOrder() int32 {
-	if x != nil {
-		return x.DisplayOrder
-	}
-	return 0
-}
-
 var File_api_proto_search_v1_search_proto protoreflect.FileDescriptor
 
 const file_api_proto_search_v1_search_proto_rawDesc = "" +
 	"\n" +
-	" api/proto/search/v1/search.proto\x12\tsearch.v1\"\xae\x01\n" +
+	" api/proto/search/v1/search.proto\x12\tsearch.v1\x1a api/proto/search/v1/common.proto\x1a api/proto/search/v1/facets.proto\x1a!api/proto/search/v1/filters.proto\x1a%api/proto/search/v1/suggestions.proto\x1a!api/proto/search/v1/popular.proto\"\xae\x01\n" +
 	"\x15SearchListingsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12$\n" +
 	"\vcategory_id\x18\x02 \x01(\x03H\x00R\n" +
@@ -447,39 +193,13 @@ const file_api_proto_search_v1_search_proto_rawDesc = "" +
 	"\blistings\x18\x01 \x03(\v2\x12.search.v1.ListingR\blistings\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\x12\x17\n" +
 	"\atook_ms\x18\x03 \x01(\x05R\x06tookMs\x12\x16\n" +
-	"\x06cached\x18\x04 \x01(\bR\x06cached\"\x89\x04\n" +
-	"\aListing\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
-	"\x04uuid\x18\x02 \x01(\tR\x04uuid\x12\x14\n" +
-	"\x05title\x18\x03 \x01(\tR\x05title\x12%\n" +
-	"\vdescription\x18\x04 \x01(\tH\x00R\vdescription\x88\x01\x01\x12\x14\n" +
-	"\x05price\x18\x05 \x01(\x01R\x05price\x12\x1a\n" +
-	"\bcurrency\x18\x06 \x01(\tR\bcurrency\x12\x1f\n" +
-	"\vcategory_id\x18\a \x01(\x03R\n" +
-	"categoryId\x12\x16\n" +
-	"\x06status\x18\b \x01(\tR\x06status\x12/\n" +
-	"\x06images\x18\t \x03(\v2\x17.search.v1.ListingImageR\x06images\x12\x1d\n" +
-	"\n" +
-	"created_at\x18\n" +
-	" \x01(\tR\tcreatedAt\x12\x17\n" +
-	"\auser_id\x18\v \x01(\x03R\x06userId\x12(\n" +
-	"\rstorefront_id\x18\f \x01(\x03H\x01R\fstorefrontId\x88\x01\x01\x12\x1a\n" +
-	"\bquantity\x18\r \x01(\x05R\bquantity\x12\x15\n" +
-	"\x03sku\x18\x0e \x01(\tH\x02R\x03sku\x88\x01\x01\x12\x1f\n" +
-	"\vsource_type\x18\x0f \x01(\tR\n" +
-	"sourceType\x12!\n" +
-	"\fstock_status\x18\x10 \x01(\tR\vstockStatusB\x0e\n" +
-	"\f_descriptionB\x10\n" +
-	"\x0e_storefront_idB\x06\n" +
-	"\x04_sku\"t\n" +
-	"\fListingImage\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03url\x12\x1d\n" +
-	"\n" +
-	"is_primary\x18\x03 \x01(\bR\tisPrimary\x12#\n" +
-	"\rdisplay_order\x18\x04 \x01(\x05R\fdisplayOrder2f\n" +
+	"\x06cached\x18\x04 \x01(\bR\x06cached2\xda\x03\n" +
 	"\rSearchService\x12U\n" +
-	"\x0eSearchListings\x12 .search.v1.SearchListingsRequest\x1a!.search.v1.SearchListingsResponseB:Z8github.com/sveturs/listings/api/proto/search/v1;searchv1b\x06proto3"
+	"\x0eSearchListings\x12 .search.v1.SearchListingsRequest\x1a!.search.v1.SearchListingsResponse\x12X\n" +
+	"\x0fGetSearchFacets\x12!.search.v1.GetSearchFacetsRequest\x1a\".search.v1.GetSearchFacetsResponse\x12^\n" +
+	"\x11SearchWithFilters\x12#.search.v1.SearchWithFiltersRequest\x1a$.search.v1.SearchWithFiltersResponse\x12U\n" +
+	"\x0eGetSuggestions\x12 .search.v1.GetSuggestionsRequest\x1a!.search.v1.GetSuggestionsResponse\x12a\n" +
+	"\x12GetPopularSearches\x12$.search.v1.GetPopularSearchesRequest\x1a%.search.v1.GetPopularSearchesResponseB:Z8github.com/sveturs/listings/api/proto/search/v1;searchv1b\x06proto3"
 
 var (
 	file_api_proto_search_v1_search_proto_rawDescOnce sync.Once
@@ -493,23 +213,37 @@ func file_api_proto_search_v1_search_proto_rawDescGZIP() []byte {
 	return file_api_proto_search_v1_search_proto_rawDescData
 }
 
-var file_api_proto_search_v1_search_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_api_proto_search_v1_search_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_api_proto_search_v1_search_proto_goTypes = []any{
-	(*SearchListingsRequest)(nil),  // 0: search.v1.SearchListingsRequest
-	(*SearchListingsResponse)(nil), // 1: search.v1.SearchListingsResponse
-	(*Listing)(nil),                // 2: search.v1.Listing
-	(*ListingImage)(nil),           // 3: search.v1.ListingImage
+	(*SearchListingsRequest)(nil),      // 0: search.v1.SearchListingsRequest
+	(*SearchListingsResponse)(nil),     // 1: search.v1.SearchListingsResponse
+	(*Listing)(nil),                    // 2: search.v1.Listing
+	(*GetSearchFacetsRequest)(nil),     // 3: search.v1.GetSearchFacetsRequest
+	(*SearchWithFiltersRequest)(nil),   // 4: search.v1.SearchWithFiltersRequest
+	(*GetSuggestionsRequest)(nil),      // 5: search.v1.GetSuggestionsRequest
+	(*GetPopularSearchesRequest)(nil),  // 6: search.v1.GetPopularSearchesRequest
+	(*GetSearchFacetsResponse)(nil),    // 7: search.v1.GetSearchFacetsResponse
+	(*SearchWithFiltersResponse)(nil),  // 8: search.v1.SearchWithFiltersResponse
+	(*GetSuggestionsResponse)(nil),     // 9: search.v1.GetSuggestionsResponse
+	(*GetPopularSearchesResponse)(nil), // 10: search.v1.GetPopularSearchesResponse
 }
 var file_api_proto_search_v1_search_proto_depIdxs = []int32{
-	2, // 0: search.v1.SearchListingsResponse.listings:type_name -> search.v1.Listing
-	3, // 1: search.v1.Listing.images:type_name -> search.v1.ListingImage
-	0, // 2: search.v1.SearchService.SearchListings:input_type -> search.v1.SearchListingsRequest
-	1, // 3: search.v1.SearchService.SearchListings:output_type -> search.v1.SearchListingsResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2,  // 0: search.v1.SearchListingsResponse.listings:type_name -> search.v1.Listing
+	0,  // 1: search.v1.SearchService.SearchListings:input_type -> search.v1.SearchListingsRequest
+	3,  // 2: search.v1.SearchService.GetSearchFacets:input_type -> search.v1.GetSearchFacetsRequest
+	4,  // 3: search.v1.SearchService.SearchWithFilters:input_type -> search.v1.SearchWithFiltersRequest
+	5,  // 4: search.v1.SearchService.GetSuggestions:input_type -> search.v1.GetSuggestionsRequest
+	6,  // 5: search.v1.SearchService.GetPopularSearches:input_type -> search.v1.GetPopularSearchesRequest
+	1,  // 6: search.v1.SearchService.SearchListings:output_type -> search.v1.SearchListingsResponse
+	7,  // 7: search.v1.SearchService.GetSearchFacets:output_type -> search.v1.GetSearchFacetsResponse
+	8,  // 8: search.v1.SearchService.SearchWithFilters:output_type -> search.v1.SearchWithFiltersResponse
+	9,  // 9: search.v1.SearchService.GetSuggestions:output_type -> search.v1.GetSuggestionsResponse
+	10, // 10: search.v1.SearchService.GetPopularSearches:output_type -> search.v1.GetPopularSearchesResponse
+	6,  // [6:11] is the sub-list for method output_type
+	1,  // [1:6] is the sub-list for method input_type
+	1,  // [1:1] is the sub-list for extension type_name
+	1,  // [1:1] is the sub-list for extension extendee
+	0,  // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_search_v1_search_proto_init() }
@@ -517,15 +251,19 @@ func file_api_proto_search_v1_search_proto_init() {
 	if File_api_proto_search_v1_search_proto != nil {
 		return
 	}
+	file_api_proto_search_v1_common_proto_init()
+	file_api_proto_search_v1_facets_proto_init()
+	file_api_proto_search_v1_filters_proto_init()
+	file_api_proto_search_v1_suggestions_proto_init()
+	file_api_proto_search_v1_popular_proto_init()
 	file_api_proto_search_v1_search_proto_msgTypes[0].OneofWrappers = []any{}
-	file_api_proto_search_v1_search_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_search_v1_search_proto_rawDesc), len(file_api_proto_search_v1_search_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

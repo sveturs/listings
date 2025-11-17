@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package search.v1;
+
+import "api/proto/search/v1/common.proto";
+
+option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+
+// GetSearchFacetsRequest requests aggregations for search filters
+message GetSearchFacetsRequest {
+  // Optional search query to pre-filter before aggregating
+  optional string query = 1;
+
+  // Optional category filter
+  optional int64 category_id = 2;
+
+  // Pre-filters to apply before aggregating
+  optional Filters filters = 3;
+}
+
+// GetSearchFacetsResponse contains aggregated facets for filtering
+message GetSearchFacetsResponse {
+  // Category distribution
+  repeated CategoryFacet categories = 1;
+
+  // Price range buckets
+  repeated PriceRangeFacet price_ranges = 2;
+
+  // Attribute facets (brand, color, size, etc.)
+  // Key is attribute key, value contains possible values and counts
+  map<string, AttributeFacet> attributes = 3;
+
+  // Source type distribution (c2c, b2c)
+  repeated Facet source_types = 4;
+
+  // Stock status distribution
+  repeated Facet stock_statuses = 5;
+
+  // Query execution time in milliseconds
+  int32 took_ms = 6;
+
+  // Whether result was served from cache
+  bool cached = 7;
+}
+
+// CategoryFacet represents category count
+message CategoryFacet {
+  // Category ID
+  int64 category_id = 1;
+
+  // Number of listings in this category
+  int64 count = 2;
+}
+
+// PriceRangeFacet represents price range bucket
+message PriceRangeFacet {
+  // Minimum price in range
+  double min = 1;
+
+  // Maximum price in range
+  double max = 2;
+
+  // Number of listings in this range
+  int64 count = 3;
+}
+
+// AttributeFacet contains all values for a specific attribute key
+message AttributeFacet {
+  // Attribute key (e.g., "brand", "color")
+  string key = 1;
+
+  // All possible values with their counts
+  repeated AttributeValueCount values = 2;
+}
+
+// AttributeValueCount represents count for specific attribute value
+message AttributeValueCount {
+  // Attribute value (e.g., "Nike", "Red")
+  string value = 1;
+
+  // Number of listings with this value
+  int64 count = 2;
+}
+
+// Facet represents generic key-count pair
+message Facet {
+  // Facet key (e.g., "c2c", "in_stock")
+  string key = 1;
+
+  // Number of items
+  int64 count = 2;
+}
+
+// Filters, PriceRange, AttributeValues, LocationFilter are defined in common.proto

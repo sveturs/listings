@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package search.v1;
+
+option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+
+// Listing represents a marketplace listing in search results
+message Listing {
+  // Listing ID
+  int64 id = 1;
+
+  // Listing UUID
+  string uuid = 2;
+
+  // Listing title
+  string title = 3;
+
+  // Listing description (optional)
+  optional string description = 4;
+
+  // Price
+  double price = 5;
+
+  // Currency code (e.g., "EUR", "USD")
+  string currency = 6;
+
+  // Category ID
+  int64 category_id = 7;
+
+  // Listing status (e.g., "active", "inactive")
+  string status = 8;
+
+  // Listing images
+  repeated ListingImage images = 9;
+
+  // Creation timestamp (RFC3339 format)
+  string created_at = 10;
+
+  // User ID (owner)
+  int64 user_id = 11;
+
+  // Storefront ID (optional)
+  optional int64 storefront_id = 12;
+
+  // Stock quantity
+  int32 quantity = 13;
+
+  // SKU (optional)
+  optional string sku = 14;
+
+  // Source type (c2c or b2c)
+  string source_type = 15;
+
+  // Stock status
+  string stock_status = 16;
+}
+
+// ListingImage represents an image in search results
+message ListingImage {
+  // Image ID
+  int64 id = 1;
+
+  // Image URL
+  string url = 2;
+
+  // Whether this is the primary image
+  bool is_primary = 3;
+
+  // Display order
+  int32 display_order = 4;
+}
+
+// Filters message (shared across multiple endpoints)
+message Filters {
+  // Price range filter
+  optional PriceRange price = 1;
+
+  // Attribute filters (e.g., {"brand": ["Nike", "Adidas"], "color": ["Red"]})
+  map<string, AttributeValues> attributes = 2;
+
+  // Geo location filter
+  optional LocationFilter location = 3;
+
+  // Source type filter ("c2c" or "b2c")
+  optional string source_type = 4;
+
+  // Stock status filter ("in_stock", "out_of_stock", "low_stock")
+  optional string stock_status = 5;
+}
+
+// PriceRange filter
+message PriceRange {
+  optional double min = 1;
+  optional double max = 2;
+}
+
+// AttributeValues represents list of values for an attribute
+message AttributeValues {
+  repeated string values = 1;
+}
+
+// LocationFilter for geo distance filtering
+message LocationFilter {
+  double lat = 1;
+  double lon = 2;
+  double radius_km = 3;
+}

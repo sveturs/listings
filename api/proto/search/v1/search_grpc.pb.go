@@ -19,7 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SearchService_SearchListings_FullMethodName = "/search.v1.SearchService/SearchListings"
+	SearchService_SearchListings_FullMethodName     = "/search.v1.SearchService/SearchListings"
+	SearchService_GetSearchFacets_FullMethodName    = "/search.v1.SearchService/GetSearchFacets"
+	SearchService_SearchWithFilters_FullMethodName  = "/search.v1.SearchService/SearchWithFilters"
+	SearchService_GetSuggestions_FullMethodName     = "/search.v1.SearchService/GetSuggestions"
+	SearchService_GetPopularSearches_FullMethodName = "/search.v1.SearchService/GetPopularSearches"
 )
 
 // SearchServiceClient is the client API for SearchService service.
@@ -29,7 +33,20 @@ const (
 // SearchService provides search functionality for marketplace listings
 type SearchServiceClient interface {
 	// SearchListings searches for listings based on query text and filters
+	// Phase 21.1 - Basic full-text search
 	SearchListings(ctx context.Context, in *SearchListingsRequest, opts ...grpc.CallOption) (*SearchListingsResponse, error)
+	// GetSearchFacets returns aggregations for filter UI
+	// Phase 21.2 - Returns category counts, price ranges, attribute values, etc.
+	GetSearchFacets(ctx context.Context, in *GetSearchFacetsRequest, opts ...grpc.CallOption) (*GetSearchFacetsResponse, error)
+	// SearchWithFilters performs advanced search with filters, sorting, and facets
+	// Phase 21.2 - Enhanced search with price, attributes, location, sorting
+	SearchWithFilters(ctx context.Context, in *SearchWithFiltersRequest, opts ...grpc.CallOption) (*SearchWithFiltersResponse, error)
+	// GetSuggestions provides autocomplete suggestions
+	// Phase 21.2 - Uses completion suggester for fast prefix matching
+	GetSuggestions(ctx context.Context, in *GetSuggestionsRequest, opts ...grpc.CallOption) (*GetSuggestionsResponse, error)
+	// GetPopularSearches returns trending search queries
+	// Phase 21.2 - Popular queries by time range for search suggestions UI
+	GetPopularSearches(ctx context.Context, in *GetPopularSearchesRequest, opts ...grpc.CallOption) (*GetPopularSearchesResponse, error)
 }
 
 type searchServiceClient struct {
@@ -50,6 +67,46 @@ func (c *searchServiceClient) SearchListings(ctx context.Context, in *SearchList
 	return out, nil
 }
 
+func (c *searchServiceClient) GetSearchFacets(ctx context.Context, in *GetSearchFacetsRequest, opts ...grpc.CallOption) (*GetSearchFacetsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSearchFacetsResponse)
+	err := c.cc.Invoke(ctx, SearchService_GetSearchFacets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *searchServiceClient) SearchWithFilters(ctx context.Context, in *SearchWithFiltersRequest, opts ...grpc.CallOption) (*SearchWithFiltersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchWithFiltersResponse)
+	err := c.cc.Invoke(ctx, SearchService_SearchWithFilters_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *searchServiceClient) GetSuggestions(ctx context.Context, in *GetSuggestionsRequest, opts ...grpc.CallOption) (*GetSuggestionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSuggestionsResponse)
+	err := c.cc.Invoke(ctx, SearchService_GetSuggestions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *searchServiceClient) GetPopularSearches(ctx context.Context, in *GetPopularSearchesRequest, opts ...grpc.CallOption) (*GetPopularSearchesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPopularSearchesResponse)
+	err := c.cc.Invoke(ctx, SearchService_GetPopularSearches_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SearchServiceServer is the server API for SearchService service.
 // All implementations must embed UnimplementedSearchServiceServer
 // for forward compatibility.
@@ -57,7 +114,20 @@ func (c *searchServiceClient) SearchListings(ctx context.Context, in *SearchList
 // SearchService provides search functionality for marketplace listings
 type SearchServiceServer interface {
 	// SearchListings searches for listings based on query text and filters
+	// Phase 21.1 - Basic full-text search
 	SearchListings(context.Context, *SearchListingsRequest) (*SearchListingsResponse, error)
+	// GetSearchFacets returns aggregations for filter UI
+	// Phase 21.2 - Returns category counts, price ranges, attribute values, etc.
+	GetSearchFacets(context.Context, *GetSearchFacetsRequest) (*GetSearchFacetsResponse, error)
+	// SearchWithFilters performs advanced search with filters, sorting, and facets
+	// Phase 21.2 - Enhanced search with price, attributes, location, sorting
+	SearchWithFilters(context.Context, *SearchWithFiltersRequest) (*SearchWithFiltersResponse, error)
+	// GetSuggestions provides autocomplete suggestions
+	// Phase 21.2 - Uses completion suggester for fast prefix matching
+	GetSuggestions(context.Context, *GetSuggestionsRequest) (*GetSuggestionsResponse, error)
+	// GetPopularSearches returns trending search queries
+	// Phase 21.2 - Popular queries by time range for search suggestions UI
+	GetPopularSearches(context.Context, *GetPopularSearchesRequest) (*GetPopularSearchesResponse, error)
 	mustEmbedUnimplementedSearchServiceServer()
 }
 
@@ -70,6 +140,18 @@ type UnimplementedSearchServiceServer struct{}
 
 func (UnimplementedSearchServiceServer) SearchListings(context.Context, *SearchListingsRequest) (*SearchListingsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchListings not implemented")
+}
+func (UnimplementedSearchServiceServer) GetSearchFacets(context.Context, *GetSearchFacetsRequest) (*GetSearchFacetsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSearchFacets not implemented")
+}
+func (UnimplementedSearchServiceServer) SearchWithFilters(context.Context, *SearchWithFiltersRequest) (*SearchWithFiltersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchWithFilters not implemented")
+}
+func (UnimplementedSearchServiceServer) GetSuggestions(context.Context, *GetSuggestionsRequest) (*GetSuggestionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSuggestions not implemented")
+}
+func (UnimplementedSearchServiceServer) GetPopularSearches(context.Context, *GetPopularSearchesRequest) (*GetPopularSearchesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPopularSearches not implemented")
 }
 func (UnimplementedSearchServiceServer) mustEmbedUnimplementedSearchServiceServer() {}
 func (UnimplementedSearchServiceServer) testEmbeddedByValue()                       {}
@@ -110,6 +192,78 @@ func _SearchService_SearchListings_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SearchService_GetSearchFacets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSearchFacetsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).GetSearchFacets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_GetSearchFacets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).GetSearchFacets(ctx, req.(*GetSearchFacetsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SearchService_SearchWithFilters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchWithFiltersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).SearchWithFilters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_SearchWithFilters_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).SearchWithFilters(ctx, req.(*SearchWithFiltersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SearchService_GetSuggestions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSuggestionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).GetSuggestions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_GetSuggestions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).GetSuggestions(ctx, req.(*GetSuggestionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SearchService_GetPopularSearches_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPopularSearchesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).GetPopularSearches(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_GetPopularSearches_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).GetPopularSearches(ctx, req.(*GetPopularSearchesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SearchService_ServiceDesc is the grpc.ServiceDesc for SearchService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -120,6 +274,22 @@ var SearchService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchListings",
 			Handler:    _SearchService_SearchListings_Handler,
+		},
+		{
+			MethodName: "GetSearchFacets",
+			Handler:    _SearchService_GetSearchFacets_Handler,
+		},
+		{
+			MethodName: "SearchWithFilters",
+			Handler:    _SearchService_SearchWithFilters_Handler,
+		},
+		{
+			MethodName: "GetSuggestions",
+			Handler:    _SearchService_GetSuggestions_Handler,
+		},
+		{
+			MethodName: "GetPopularSearches",
+			Handler:    _SearchService_GetPopularSearches_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

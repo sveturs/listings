@@ -2,12 +2,35 @@ syntax = "proto3";
 
 package search.v1;
 
+import "api/proto/search/v1/common.proto";
+import "api/proto/search/v1/facets.proto";
+import "api/proto/search/v1/filters.proto";
+import "api/proto/search/v1/suggestions.proto";
+import "api/proto/search/v1/popular.proto";
+
 option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
 
 // SearchService provides search functionality for marketplace listings
 service SearchService {
   // SearchListings searches for listings based on query text and filters
+  // Phase 21.1 - Basic full-text search
   rpc SearchListings(SearchListingsRequest) returns (SearchListingsResponse);
+
+  // GetSearchFacets returns aggregations for filter UI
+  // Phase 21.2 - Returns category counts, price ranges, attribute values, etc.
+  rpc GetSearchFacets(GetSearchFacetsRequest) returns (GetSearchFacetsResponse);
+
+  // SearchWithFilters performs advanced search with filters, sorting, and facets
+  // Phase 21.2 - Enhanced search with price, attributes, location, sorting
+  rpc SearchWithFilters(SearchWithFiltersRequest) returns (SearchWithFiltersResponse);
+
+  // GetSuggestions provides autocomplete suggestions
+  // Phase 21.2 - Uses completion suggester for fast prefix matching
+  rpc GetSuggestions(GetSuggestionsRequest) returns (GetSuggestionsResponse);
+
+  // GetPopularSearches returns trending search queries
+  // Phase 21.2 - Popular queries by time range for search suggestions UI
+  rpc GetPopularSearches(GetPopularSearchesRequest) returns (GetPopularSearchesResponse);
 }
 
 // SearchListingsRequest contains search parameters
@@ -43,68 +66,4 @@ message SearchListingsResponse {
   bool cached = 4;
 }
 
-// Listing represents a marketplace listing in search results
-message Listing {
-  // Listing ID
-  int64 id = 1;
-
-  // Listing UUID
-  string uuid = 2;
-
-  // Listing title
-  string title = 3;
-
-  // Listing description (optional)
-  optional string description = 4;
-
-  // Price
-  double price = 5;
-
-  // Currency code (e.g., "EUR", "USD")
-  string currency = 6;
-
-  // Category ID
-  int64 category_id = 7;
-
-  // Listing status (e.g., "active", "inactive")
-  string status = 8;
-
-  // Listing images
-  repeated ListingImage images = 9;
-
-  // Creation timestamp (RFC3339 format)
-  string created_at = 10;
-
-  // User ID (owner)
-  int64 user_id = 11;
-
-  // Storefront ID (optional)
-  optional int64 storefront_id = 12;
-
-  // Stock quantity
-  int32 quantity = 13;
-
-  // SKU (optional)
-  optional string sku = 14;
-
-  // Source type (c2c or b2c)
-  string source_type = 15;
-
-  // Stock status
-  string stock_status = 16;
-}
-
-// ListingImage represents an image in search results
-message ListingImage {
-  // Image ID
-  int64 id = 1;
-
-  // Image URL
-  string url = 2;
-
-  // Whether this is the primary image
-  bool is_primary = 3;
-
-  // Display order
-  int32 display_order = 4;
-}
+// Listing and ListingImage are now defined in common.proto
