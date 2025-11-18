@@ -104,8 +104,8 @@ service ListingsService {
   // GetListingImage retrieves a single image by ID
   rpc GetListingImage(ImageIDRequest) returns (ImageResponse);
 
-  // DeleteListingImage removes an image from a listing
-  rpc DeleteListingImage(ImageIDRequest) returns (google.protobuf.Empty);
+  // DeleteListingImage removes an image from a listing (with authorization)
+  rpc DeleteListingImage(DeleteListingImageRequest) returns (DeleteListingImageResponse);
 
   // AddListingImage adds a new image to a listing
   rpc AddListingImage(AddImageRequest) returns (ImageResponse);
@@ -703,6 +703,19 @@ message ReorderImagesRequest {
 message ImageOrder {
   int64 image_id = 1;
   int32 display_order = 2;
+}
+
+// DeleteListingImageRequest deletes an image with authorization
+message DeleteListingImageRequest {
+  int64 listing_id = 1;  // Required: Listing ID for authorization check
+  int64 image_id = 2;    // Required: Image ID to delete
+  int64 user_id = 3;     // Required: User ID for ownership verification
+}
+
+// DeleteListingImageResponse confirms deletion
+message DeleteListingImageResponse {
+  bool success = 1;
+  string message = 2;
 }
 
 // UploadImageChunkRequest represents streaming upload request (Phase 24)

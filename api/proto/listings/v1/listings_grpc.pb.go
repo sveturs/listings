@@ -118,8 +118,8 @@ type ListingsServiceClient interface {
 	GetSimilarListings(ctx context.Context, in *GetSimilarListingsRequest, opts ...grpc.CallOption) (*GetSimilarListingsResponse, error)
 	// GetListingImage retrieves a single image by ID
 	GetListingImage(ctx context.Context, in *ImageIDRequest, opts ...grpc.CallOption) (*ImageResponse, error)
-	// DeleteListingImage removes an image from a listing
-	DeleteListingImage(ctx context.Context, in *ImageIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// DeleteListingImage removes an image from a listing (with authorization)
+	DeleteListingImage(ctx context.Context, in *DeleteListingImageRequest, opts ...grpc.CallOption) (*DeleteListingImageResponse, error)
 	// AddListingImage adds a new image to a listing
 	AddListingImage(ctx context.Context, in *AddImageRequest, opts ...grpc.CallOption) (*ImageResponse, error)
 	// GetListingImages retrieves all images for a listing
@@ -359,9 +359,9 @@ func (c *listingsServiceClient) GetListingImage(ctx context.Context, in *ImageID
 	return out, nil
 }
 
-func (c *listingsServiceClient) DeleteListingImage(ctx context.Context, in *ImageIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *listingsServiceClient) DeleteListingImage(ctx context.Context, in *DeleteListingImageRequest, opts ...grpc.CallOption) (*DeleteListingImageResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(DeleteListingImageResponse)
 	err := c.cc.Invoke(ctx, ListingsService_DeleteListingImage_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -1044,8 +1044,8 @@ type ListingsServiceServer interface {
 	GetSimilarListings(context.Context, *GetSimilarListingsRequest) (*GetSimilarListingsResponse, error)
 	// GetListingImage retrieves a single image by ID
 	GetListingImage(context.Context, *ImageIDRequest) (*ImageResponse, error)
-	// DeleteListingImage removes an image from a listing
-	DeleteListingImage(context.Context, *ImageIDRequest) (*emptypb.Empty, error)
+	// DeleteListingImage removes an image from a listing (with authorization)
+	DeleteListingImage(context.Context, *DeleteListingImageRequest) (*DeleteListingImageResponse, error)
 	// AddListingImage adds a new image to a listing
 	AddListingImage(context.Context, *AddImageRequest) (*ImageResponse, error)
 	// GetListingImages retrieves all images for a listing
@@ -1229,7 +1229,7 @@ func (UnimplementedListingsServiceServer) GetSimilarListings(context.Context, *G
 func (UnimplementedListingsServiceServer) GetListingImage(context.Context, *ImageIDRequest) (*ImageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetListingImage not implemented")
 }
-func (UnimplementedListingsServiceServer) DeleteListingImage(context.Context, *ImageIDRequest) (*emptypb.Empty, error) {
+func (UnimplementedListingsServiceServer) DeleteListingImage(context.Context, *DeleteListingImageRequest) (*DeleteListingImageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteListingImage not implemented")
 }
 func (UnimplementedListingsServiceServer) AddListingImage(context.Context, *AddImageRequest) (*ImageResponse, error) {
@@ -1593,7 +1593,7 @@ func _ListingsService_GetListingImage_Handler(srv interface{}, ctx context.Conte
 }
 
 func _ListingsService_DeleteListingImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ImageIDRequest)
+	in := new(DeleteListingImageRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1605,7 +1605,7 @@ func _ListingsService_DeleteListingImage_Handler(srv interface{}, ctx context.Co
 		FullMethod: ListingsService_DeleteListingImage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ListingsServiceServer).DeleteListingImage(ctx, req.(*ImageIDRequest))
+		return srv.(ListingsServiceServer).DeleteListingImage(ctx, req.(*DeleteListingImageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

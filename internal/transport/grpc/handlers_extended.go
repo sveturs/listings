@@ -33,24 +33,7 @@ func (s *Server) GetListingImage(ctx context.Context, req *listingspb.ImageIDReq
 	}, nil
 }
 
-// DeleteListingImage removes an image from a listing
-func (s *Server) DeleteListingImage(ctx context.Context, req *listingspb.ImageIDRequest) (*emptypb.Empty, error) {
-	s.logger.Debug().Int64("image_id", req.ImageId).Msg("DeleteListingImage called")
-
-	if req.ImageId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "image ID must be greater than 0")
-	}
-
-	// Delete image via service
-	err := s.service.DeleteImage(ctx, req.ImageId)
-	if err != nil {
-		s.logger.Error().Err(err).Int64("image_id", req.ImageId).Msg("failed to delete image")
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to delete image: %v", err))
-	}
-
-	s.logger.Info().Int64("image_id", req.ImageId).Msg("image deleted successfully")
-	return &emptypb.Empty{}, nil
-}
+// NOTE: DeleteListingImage moved to images.go (Phase 25 - TRUE MICROSERVICE with authorization)
 
 // AddListingImage adds a new image to a listing
 func (s *Server) AddListingImage(ctx context.Context, req *listingspb.AddImageRequest) (*listingspb.ImageResponse, error) {

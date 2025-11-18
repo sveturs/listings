@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"image"
 	_ "image/gif"
+	"image/jpeg"
 	_ "image/jpeg"
 	_ "image/png"
-	"image/jpeg"
 	"io"
 	"path/filepath"
 	"strings"
@@ -24,13 +24,13 @@ import (
 )
 
 const (
-	maxImageSize      = 10 * 1024 * 1024  // 10MB per image
-	maxTotalSize      = 50 * 1024 * 1024  // 50MB total per upload batch
-	maxFiles          = 10                // Maximum files per upload
-	thumbnailSize     = 200               // Thumbnail dimensions (200x200px)
-	thumbnailQuality  = 85                // JPEG quality for thumbnails
-	chunkSize         = 1024 * 1024       // 1MB chunks
-	minioPresignedTTL = 24 * time.Hour    // Presigned URL expiry
+	maxImageSize      = 10 * 1024 * 1024 // 10MB per image
+	maxTotalSize      = 50 * 1024 * 1024 // 50MB total per upload batch
+	maxFiles          = 10               // Maximum files per upload
+	thumbnailSize     = 200              // Thumbnail dimensions (200x200px)
+	thumbnailQuality  = 85               // JPEG quality for thumbnails
+	chunkSize         = 1024 * 1024      // 1MB chunks
+	minioPresignedTTL = 24 * time.Hour   // Presigned URL expiry
 )
 
 var allowedExtensions = map[string]bool{

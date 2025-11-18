@@ -66,6 +66,19 @@ func (m *MockListingsService) SearchListings(ctx context.Context, query *domain.
 	return args.Get(0).([]*domain.Listing), args.Get(1).(int32), args.Error(2)
 }
 
+func (m *MockListingsService) GetImageByID(ctx context.Context, imageID int64) (*domain.ListingImage, error) {
+	args := m.Called(ctx, imageID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ListingImage), args.Error(1)
+}
+
+func (m *MockListingsService) DeleteImage(ctx context.Context, imageID int64) error {
+	args := m.Called(ctx, imageID)
+	return args.Error(0)
+}
+
 func setupTestServer() (*Server, *MockListingsService) {
 	mockService := new(MockListingsService)
 	logger := zerolog.Nop()
