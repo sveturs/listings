@@ -116,6 +116,11 @@ service ListingsService {
   // ReorderListingImages updates display order for multiple images
   rpc ReorderListingImages(ReorderImagesRequest) returns (google.protobuf.Empty);
 
+  // UploadListingImages uploads images via streaming (Phase 24 - TRUE MICROSERVICE)
+  // Client streams: metadata first, then chunks for each image
+  // Server returns: uploaded images with URLs + errors for failed uploads
+  rpc UploadListingImages(stream UploadImageChunkRequest) returns (UploadImagesResponse);
+
   // === Category Management (HIGH PRIORITY) ===
 
   // GetRootCategories retrieves all top-level categories (no parent)
@@ -698,6 +703,34 @@ message ReorderImagesRequest {
 message ImageOrder {
   int64 image_id = 1;
   int32 display_order = 2;
+}
+
+// UploadImageChunkRequest represents streaming upload request (Phase 24)
+// Client streams: metadata first, then chunks for each file
+message UploadImageChunkRequest {
+  oneof data {
+    UploadImageMetadata metadata = 1;  // Sent first for each file
+    bytes chunk = 2;                   // Followed by file chunks (1MB each)
+  }
+}
+
+// UploadImageMetadata contains file metadata (sent before chunks)
+message UploadImageMetadata {
+  int64 listing_id = 1;          // Required
+  int64 user_id = 2;             // Required for authorization
+  string filename = 3;           // Original filename
+  string content_type = 4;       // MIME type (image/jpeg, image/png, etc.)
+  int64 file_size = 5;           // Total file size in bytes
+  int32 display_order = 6;       // Display order (0-indexed)
+  bool is_primary = 7;           // Mark as primary image
+}
+
+// UploadImagesResponse returns upload results
+message UploadImagesResponse {
+  repeated ListingImage images = 1;  // Successfully uploaded images
+  int32 uploaded_count = 2;          // Number of successful uploads
+  int32 failed_count = 3;            // Number of failed uploads
+  repeated string errors = 4;        // Error messages for failed uploads
 }
 
 // ============================================================================

@@ -32,6 +32,7 @@ const (
 	ListingsService_AddListingImage_FullMethodName           = "/listingssvc.v1.ListingsService/AddListingImage"
 	ListingsService_GetListingImages_FullMethodName          = "/listingssvc.v1.ListingsService/GetListingImages"
 	ListingsService_ReorderListingImages_FullMethodName      = "/listingssvc.v1.ListingsService/ReorderListingImages"
+	ListingsService_UploadListingImages_FullMethodName       = "/listingssvc.v1.ListingsService/UploadListingImages"
 	ListingsService_GetRootCategories_FullMethodName         = "/listingssvc.v1.ListingsService/GetRootCategories"
 	ListingsService_GetAllCategories_FullMethodName          = "/listingssvc.v1.ListingsService/GetAllCategories"
 	ListingsService_GetPopularCategories_FullMethodName      = "/listingssvc.v1.ListingsService/GetPopularCategories"
@@ -125,6 +126,10 @@ type ListingsServiceClient interface {
 	GetListingImages(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*ImagesResponse, error)
 	// ReorderListingImages updates display order for multiple images
 	ReorderListingImages(ctx context.Context, in *ReorderImagesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// UploadListingImages uploads images via streaming (Phase 24 - TRUE MICROSERVICE)
+	// Client streams: metadata first, then chunks for each image
+	// Server returns: uploaded images with URLs + errors for failed uploads
+	UploadListingImages(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadImageChunkRequest, UploadImagesResponse], error)
 	// GetRootCategories retrieves all top-level categories (no parent)
 	GetRootCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CategoriesResponse, error)
 	// GetAllCategories retrieves all categories in the system
@@ -393,6 +398,19 @@ func (c *listingsServiceClient) ReorderListingImages(ctx context.Context, in *Re
 	}
 	return out, nil
 }
+
+func (c *listingsServiceClient) UploadListingImages(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadImageChunkRequest, UploadImagesResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &ListingsService_ServiceDesc.Streams[0], ListingsService_UploadListingImages_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[UploadImageChunkRequest, UploadImagesResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ListingsService_UploadListingImagesClient = grpc.ClientStreamingClient[UploadImageChunkRequest, UploadImagesResponse]
 
 func (c *listingsServiceClient) GetRootCategories(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CategoriesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -1034,6 +1052,10 @@ type ListingsServiceServer interface {
 	GetListingImages(context.Context, *ListingIDRequest) (*ImagesResponse, error)
 	// ReorderListingImages updates display order for multiple images
 	ReorderListingImages(context.Context, *ReorderImagesRequest) (*emptypb.Empty, error)
+	// UploadListingImages uploads images via streaming (Phase 24 - TRUE MICROSERVICE)
+	// Client streams: metadata first, then chunks for each image
+	// Server returns: uploaded images with URLs + errors for failed uploads
+	UploadListingImages(grpc.ClientStreamingServer[UploadImageChunkRequest, UploadImagesResponse]) error
 	// GetRootCategories retrieves all top-level categories (no parent)
 	GetRootCategories(context.Context, *emptypb.Empty) (*CategoriesResponse, error)
 	// GetAllCategories retrieves all categories in the system
@@ -1218,6 +1240,9 @@ func (UnimplementedListingsServiceServer) GetListingImages(context.Context, *Lis
 }
 func (UnimplementedListingsServiceServer) ReorderListingImages(context.Context, *ReorderImagesRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReorderListingImages not implemented")
+}
+func (UnimplementedListingsServiceServer) UploadListingImages(grpc.ClientStreamingServer[UploadImageChunkRequest, UploadImagesResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method UploadListingImages not implemented")
 }
 func (UnimplementedListingsServiceServer) GetRootCategories(context.Context, *emptypb.Empty) (*CategoriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRootCategories not implemented")
@@ -1638,6 +1663,13 @@ func _ListingsService_ReorderListingImages_Handler(srv interface{}, ctx context.
 	}
 	return interceptor(ctx, in, info, handler)
 }
+
+func _ListingsService_UploadListingImages_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ListingsServiceServer).UploadListingImages(&grpc.GenericServerStream[UploadImageChunkRequest, UploadImagesResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ListingsService_UploadListingImagesServer = grpc.ClientStreamingServer[UploadImageChunkRequest, UploadImagesResponse]
 
 func _ListingsService_GetRootCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
@@ -3037,6 +3069,12 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ListingsService_GetDashboardStats_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "UploadListingImages",
+			Handler:       _ListingsService_UploadListingImages_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "api/proto/listings/v1/listings.proto",
 }
