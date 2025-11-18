@@ -156,14 +156,14 @@ scrape_configs:
   #  static_configs:
   #    - targets:
   #        - 'host.docker.internal:9114' # Host machine
-
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-      - target_label: service
-        replacement: opensearch
-      - target_label: layer
-        replacement: search
+  #
+  #  relabel_configs:
+  #    - source_labels: [__address__]
+  #      target_label: instance
+  #    - target_label: service
+  #      replacement: opensearch
+  #    - target_label: layer
+  #      replacement: search
 
   # ===================================================================
   # BLACKBOX EXPORTER - HTTP endpoint probing

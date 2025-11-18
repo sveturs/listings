@@ -372,7 +372,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, minioClient, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
 

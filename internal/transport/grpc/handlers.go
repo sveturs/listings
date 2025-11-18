@@ -13,6 +13,7 @@ import (
 	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/metrics"
+	minioclient "github.com/sveturs/listings/internal/repository/minio"
 	"github.com/sveturs/listings/internal/service"
 	"github.com/sveturs/listings/internal/service/listings"
 )
@@ -34,6 +35,7 @@ type Server struct {
 	categoryService   service.CategoryService
 	orderService      service.OrderService
 	cartService       service.CartService
+	minioClient       *minioclient.Client
 	metrics           *metrics.Metrics
 	logger            zerolog.Logger
 }
@@ -46,6 +48,7 @@ func NewServer(
 	categoryService service.CategoryService,
 	orderService service.OrderService,
 	cartService service.CartService,
+	minioClient *minioclient.Client,
 	m *metrics.Metrics,
 	logger zerolog.Logger,
 ) *Server {
@@ -56,6 +59,7 @@ func NewServer(
 		categoryService:   categoryService,
 		orderService:      orderService,
 		cartService:       cartService,
+		minioClient:       minioClient,
 		metrics:           m,
 		logger:            logger.With().Str("component", "grpc_handler").Logger(),
 	}
