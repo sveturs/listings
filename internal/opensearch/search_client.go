@@ -120,6 +120,8 @@ type SearchResponse struct {
 			Source map[string]interface{} `json:"_source"`
 		} `json:"hits"`
 	} `json:"hits"`
+	Aggregations map[string]interface{} `json:"aggregations,omitempty"`
+	Suggest      map[string]interface{} `json:"suggest,omitempty"`
 }
 
 // Search executes a search query with retry logic and circuit breaker

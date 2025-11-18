@@ -760,15 +760,6 @@ func (s *Service) GetSimilarListings(ctx context.Context, listingID int64, limit
 
 // parseAggregations extracts facets from OpenSearch aggregations
 func (s *Service) parseAggregations(result *opensearch.SearchResponse) (*FacetsResponse, error) {
-	// Parse raw response to extract aggregations
-	// OpenSearch client doesn't parse aggregations automatically
-	// We need to work with the raw response structure
-
-	// Note: SearchResponse from opensearch package doesn't include aggregations
-	// We need to parse them from the raw response body
-	// For now, return empty facets structure
-	// TODO: Implement proper aggregation parsing when OpenSearch client supports it
-
 	facets := &FacetsResponse{
 		Categories:    []CategoryFacet{},
 		PriceRanges:   []PriceRangeFacet{},
@@ -777,7 +768,127 @@ func (s *Service) parseAggregations(result *opensearch.SearchResponse) (*FacetsR
 		StockStatuses: []Facet{},
 	}
 
-	s.logger.Warn().Msg("aggregation parsing not yet implemented - returning empty facets")
+	if result.Aggregations == nil || len(result.Aggregations) == 0 {
+		s.logger.Debug().Msg("no aggregations in response")
+		return facets, nil
+	}
+
+	// Parse categories aggregation
+	if categoriesAgg, ok := result.Aggregations["categories"].(map[string]interface{}); ok {
+		if buckets, ok := categoriesAgg["buckets"].([]interface{}); ok {
+			for _, bucket := range buckets {
+				if b, ok := bucket.(map[string]interface{}); ok {
+					categoryID, _ := b["key"].(float64)
+					docCount, _ := b["doc_count"].(float64)
+					facets.Categories = append(facets.Categories, CategoryFacet{
+						CategoryID: int64(categoryID),
+						Count:      int64(docCount),
+					})
+				}
+			}
+		}
+	}
+
+	// Parse price_ranges aggregation (histogram)
+	if priceRangesAgg, ok := result.Aggregations["price_ranges"].(map[string]interface{}); ok {
+		if buckets, ok := priceRangesAgg["buckets"].([]interface{}); ok {
+			for _, bucket := range buckets {
+				if b, ok := bucket.(map[string]interface{}); ok {
+					key, _ := b["key"].(float64)
+					docCount, _ := b["doc_count"].(float64)
+					if docCount > 0 { // Only include non-empty buckets
+						facets.PriceRanges = append(facets.PriceRanges, PriceRangeFacet{
+							Min:   key,
+							Max:   key + 100, // Interval is 100 (from buildAggregations)
+							Count: int64(docCount),
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// Parse source_types aggregation
+	if sourceTypesAgg, ok := result.Aggregations["source_types"].(map[string]interface{}); ok {
+		if buckets, ok := sourceTypesAgg["buckets"].([]interface{}); ok {
+			for _, bucket := range buckets {
+				if b, ok := bucket.(map[string]interface{}); ok {
+					key, _ := b["key"].(string)
+					docCount, _ := b["doc_count"].(float64)
+					facets.SourceTypes = append(facets.SourceTypes, Facet{
+						Key:   key,
+						Count: int64(docCount),
+					})
+				}
+			}
+		}
+	}
+
+	// Parse stock_statuses aggregation
+	if stockStatusesAgg, ok := result.Aggregations["stock_statuses"].(map[string]interface{}); ok {
+		if buckets, ok := stockStatusesAgg["buckets"].([]interface{}); ok {
+			for _, bucket := range buckets {
+				if b, ok := bucket.(map[string]interface{}); ok {
+					key, _ := b["key"].(string)
+					docCount, _ := b["doc_count"].(float64)
+					facets.StockStatuses = append(facets.StockStatuses, Facet{
+						Key:   key,
+						Count: int64(docCount),
+					})
+				}
+			}
+		}
+	}
+
+	// Parse attributes aggregation (nested)
+	if attributesAgg, ok := result.Aggregations["attributes"].(map[string]interface{}); ok {
+		if attributeKeys, ok := attributesAgg["attribute_keys"].(map[string]interface{}); ok {
+			if buckets, ok := attributeKeys["buckets"].([]interface{}); ok {
+				for _, bucket := range buckets {
+					if b, ok := bucket.(map[string]interface{}); ok {
+						attributeCode, _ := b["key"].(string)
+						if attributeCode == "" {
+							continue
+						}
+
+						// Parse attribute values sub-aggregation
+						values := []AttributeValueCount{}
+						if attributeValues, ok := b["attribute_values"].(map[string]interface{}); ok {
+							if valueBuckets, ok := attributeValues["buckets"].([]interface{}); ok {
+								for _, valueBucket := range valueBuckets {
+									if vb, ok := valueBucket.(map[string]interface{}); ok {
+										value, _ := vb["key"].(string)
+										docCount, _ := vb["doc_count"].(float64)
+										if value != "" {
+											values = append(values, AttributeValueCount{
+												Value: value,
+												Count: int64(docCount),
+											})
+										}
+									}
+								}
+							}
+						}
+
+						if len(values) > 0 {
+							facets.Attributes[attributeCode] = AttributeFacet{
+								Key:    attributeCode,
+								Values: values,
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	s.logger.Debug().
+		Int("categories", len(facets.Categories)).
+		Int("price_ranges", len(facets.PriceRanges)).
+		Int("attributes", len(facets.Attributes)).
+		Int("source_types", len(facets.SourceTypes)).
+		Int("stock_statuses", len(facets.StockStatuses)).
+		Msg("aggregations parsed successfully")
 
 	return facets, nil
 }
@@ -786,12 +897,51 @@ func (s *Service) parseAggregations(result *opensearch.SearchResponse) (*FacetsR
 func (s *Service) parseSuggestions(result *opensearch.SearchResponse) []Suggestion {
 	suggestions := []Suggestion{}
 
-	// Note: SearchResponse from opensearch package doesn't include suggest field
-	// We need to parse them from the raw response body
-	// For now, return empty suggestions
-	// TODO: Implement proper suggestion parsing when OpenSearch client supports it
+	if result.Suggest == nil || len(result.Suggest) == 0 {
+		s.logger.Debug().Msg("no suggestions in response")
+		return suggestions
+	}
 
-	s.logger.Warn().Msg("suggestion parsing not yet implemented - returning empty suggestions")
+	// The suggest field structure from BuildSuggestionsQuery is:
+	// { "suggest": { "listing-suggest": [...] } }
+	if listingSuggest, ok := result.Suggest["listing-suggest"].([]interface{}); ok {
+		for _, suggestionGroup := range listingSuggest {
+			if group, ok := suggestionGroup.(map[string]interface{}); ok {
+				// Each suggestion group has an "options" array
+				if options, ok := group["options"].([]interface{}); ok {
+					for _, option := range options {
+						if opt, ok := option.(map[string]interface{}); ok {
+							text, _ := opt["text"].(string)
+							score, _ := opt["_score"].(float64)
+
+							if text == "" {
+								continue
+							}
+
+							suggestion := Suggestion{
+								Text:  text,
+								Score: score,
+							}
+
+							// Extract listing_id from _source if available
+							if source, ok := opt["_source"].(map[string]interface{}); ok {
+								if id, ok := source["id"].(float64); ok {
+									listingID := int64(id)
+									suggestion.ListingID = &listingID
+								}
+							}
+
+							suggestions = append(suggestions, suggestion)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	s.logger.Debug().
+		Int("count", len(suggestions)).
+		Msg("suggestions parsed successfully")
 
 	return suggestions
 }

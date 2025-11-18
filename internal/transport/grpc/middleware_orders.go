@@ -238,10 +238,10 @@ func ChainUnaryInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.Un
 // Order: Recovery -> Logging -> Auth -> Metrics -> Handler
 func (m *OrderServiceMiddleware) GetDefaultInterceptors() grpc.UnaryServerInterceptor {
 	return ChainUnaryInterceptors(
-		m.RecoveryInterceptor(),  // 1. Catch panics first
-		m.LoggingInterceptor(),   // 2. Log all requests
-		m.AuthInterceptor(),      // 3. Extract auth info
-		m.MetricsInterceptor(),   // 4. Record metrics
+		m.RecoveryInterceptor(), // 1. Catch panics first
+		m.LoggingInterceptor(),  // 2. Log all requests
+		m.AuthInterceptor(),     // 3. Extract auth info
+		m.MetricsInterceptor(),  // 4. Record metrics
 	)
 }
 

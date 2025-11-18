@@ -862,3 +862,656 @@ func TestPopularSearchesRequest_Validate(t *testing.T) {
 		})
 	}
 }
+
+// ============================================================================
+// Parser Tests - parseAggregations()
+// ============================================================================
+
+func TestParseAggregations_FullResponse(t *testing.T) {
+	svc := &Service{}
+
+	// Create a realistic OpenSearch aggregations response
+	result := &opensearch.SearchResponse{
+		Aggregations: map[string]interface{}{
+			"categories": map[string]interface{}{
+				"buckets": []interface{}{
+					map[string]interface{}{
+						"key":       float64(1001),
+						"doc_count": float64(125),
+					},
+					map[string]interface{}{
+						"key":       float64(1002),
+						"doc_count": float64(87),
+					},
+					map[string]interface{}{
+						"key":       float64(1003),
+						"doc_count": float64(43),
+					},
+				},
+			},
+			"price_ranges": map[string]interface{}{
+				"buckets": []interface{}{
+					map[string]interface{}{
+						"key":       float64(0),
+						"doc_count": float64(50),
+					},
+					map[string]interface{}{
+						"key":       float64(100),
+						"doc_count": float64(75),
+					},
+					map[string]interface{}{
+						"key":       float64(200),
+						"doc_count": float64(0), // Should be filtered out
+					},
+					map[string]interface{}{
+						"key":       float64(300),
+						"doc_count": float64(25),
+					},
+				},
+			},
+			"source_types": map[string]interface{}{
+				"buckets": []interface{}{
+					map[string]interface{}{
+						"key":       "c2c",
+						"doc_count": float64(150),
+					},
+					map[string]interface{}{
+						"key":       "b2c",
+						"doc_count": float64(105),
+					},
+				},
+			},
+			"stock_statuses": map[string]interface{}{
+				"buckets": []interface{}{
+					map[string]interface{}{
+						"key":       "in_stock",
+						"doc_count": float64(200),
+					},
+					map[string]interface{}{
+						"key":       "out_of_stock",
+						"doc_count": float64(55),
+					},
+				},
+			},
+			"attributes": map[string]interface{}{
+				"attribute_keys": map[string]interface{}{
+					"buckets": []interface{}{
+						map[string]interface{}{
+							"key": "brand",
+							"attribute_values": map[string]interface{}{
+								"buckets": []interface{}{
+									map[string]interface{}{
+										"key":       "Apple",
+										"doc_count": float64(80),
+									},
+									map[string]interface{}{
+										"key":       "Samsung",
+										"doc_count": float64(60),
+									},
+								},
+							},
+						},
+						map[string]interface{}{
+							"key": "color",
+							"attribute_values": map[string]interface{}{
+								"buckets": []interface{}{
+									map[string]interface{}{
+										"key":       "Black",
+										"doc_count": float64(45),
+									},
+									map[string]interface{}{
+										"key":       "White",
+										"doc_count": float64(35),
+									},
+									map[string]interface{}{
+										"key":       "Silver",
+										"doc_count": float64(20),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	facets, err := svc.parseAggregations(result)
+
+	require.NoError(t, err)
+	require.NotNil(t, facets)
+
+	// Verify Categories
+	assert.Len(t, facets.Categories, 3)
+	assert.Equal(t, int64(1001), facets.Categories[0].CategoryID)
+	assert.Equal(t, int64(125), facets.Categories[0].Count)
+	assert.Equal(t, int64(1002), facets.Categories[1].CategoryID)
+	assert.Equal(t, int64(87), facets.Categories[1].Count)
+
+	// Verify PriceRanges (zero doc_count filtered out)
+	assert.Len(t, facets.PriceRanges, 3)
+	assert.Equal(t, float64(0), facets.PriceRanges[0].Min)
+	assert.Equal(t, float64(100), facets.PriceRanges[0].Max)
+	assert.Equal(t, int64(50), facets.PriceRanges[0].Count)
+
+	assert.Equal(t, float64(100), facets.PriceRanges[1].Min)
+	assert.Equal(t, float64(200), facets.PriceRanges[1].Max)
+	assert.Equal(t, int64(75), facets.PriceRanges[1].Count)
+
+	// Verify SourceTypes
+	assert.Len(t, facets.SourceTypes, 2)
+	assert.Equal(t, "c2c", facets.SourceTypes[0].Key)
+	assert.Equal(t, int64(150), facets.SourceTypes[0].Count)
+	assert.Equal(t, "b2c", facets.SourceTypes[1].Key)
+	assert.Equal(t, int64(105), facets.SourceTypes[1].Count)
+
+	// Verify StockStatuses
+	assert.Len(t, facets.StockStatuses, 2)
+	assert.Equal(t, "in_stock", facets.StockStatuses[0].Key)
+	assert.Equal(t, int64(200), facets.StockStatuses[0].Count)
+
+	// Verify Attributes
+	assert.Len(t, facets.Attributes, 2)
+
+	brandFacet, hasBrand := facets.Attributes["brand"]
+	require.True(t, hasBrand)
+	assert.Len(t, brandFacet.Values, 2)
+	assert.Equal(t, "Apple", brandFacet.Values[0].Value)
+	assert.Equal(t, int64(80), brandFacet.Values[0].Count)
+
+	colorFacet, hasColor := facets.Attributes["color"]
+	require.True(t, hasColor)
+	assert.Len(t, colorFacet.Values, 3)
+	assert.Equal(t, "Black", colorFacet.Values[0].Value)
+	assert.Equal(t, int64(45), colorFacet.Values[0].Count)
+}
+
+func TestParseAggregations_EmptyAggregations(t *testing.T) {
+	svc := &Service{}
+
+	tests := []struct {
+		name   string
+		result *opensearch.SearchResponse
+	}{
+		{
+			name: "nil aggregations",
+			result: &opensearch.SearchResponse{
+				Aggregations: nil,
+			},
+		},
+		{
+			name: "empty aggregations map",
+			result: &opensearch.SearchResponse{
+				Aggregations: map[string]interface{}{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			facets, err := svc.parseAggregations(tt.result)
+
+			require.NoError(t, err)
+			require.NotNil(t, facets)
+
+			// All facet types should be empty but initialized
+			assert.Empty(t, facets.Categories)
+			assert.Empty(t, facets.PriceRanges)
+			assert.Empty(t, facets.SourceTypes)
+			assert.Empty(t, facets.StockStatuses)
+			assert.NotNil(t, facets.Attributes)
+			assert.Empty(t, facets.Attributes)
+		})
+	}
+}
+
+func TestParseAggregations_InvalidTypeAssertions(t *testing.T) {
+	svc := &Service{}
+
+	tests := []struct {
+		name   string
+		result *opensearch.SearchResponse
+	}{
+		{
+			name: "categories - invalid bucket structure",
+			result: &opensearch.SearchResponse{
+				Aggregations: map[string]interface{}{
+					"categories": map[string]interface{}{
+						"buckets": []interface{}{
+							map[string]interface{}{
+								"key":       "invalid_string", // Should be float64
+								"doc_count": float64(10),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "price_ranges - invalid key type",
+			result: &opensearch.SearchResponse{
+				Aggregations: map[string]interface{}{
+					"price_ranges": map[string]interface{}{
+						"buckets": []interface{}{
+							map[string]interface{}{
+								"key":       "invalid", // Should be float64
+								"doc_count": float64(10),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "source_types - invalid key type",
+			result: &opensearch.SearchResponse{
+				Aggregations: map[string]interface{}{
+					"source_types": map[string]interface{}{
+						"buckets": []interface{}{
+							map[string]interface{}{
+								"key":       123, // Should be string
+								"doc_count": float64(10),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "attributes - missing attribute_values",
+			result: &opensearch.SearchResponse{
+				Aggregations: map[string]interface{}{
+					"attributes": map[string]interface{}{
+						"attribute_keys": map[string]interface{}{
+							"buckets": []interface{}{
+								map[string]interface{}{
+									"key": "brand",
+									// Missing attribute_values
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "buckets - not an array",
+			result: &opensearch.SearchResponse{
+				Aggregations: map[string]interface{}{
+					"categories": map[string]interface{}{
+						"buckets": "invalid", // Should be []interface{}
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Should not panic, should gracefully skip invalid entries
+			facets, err := svc.parseAggregations(tt.result)
+
+			require.NoError(t, err)
+			require.NotNil(t, facets)
+
+			// Should return empty facets for invalid data
+			assert.NotNil(t, facets.Categories)
+			assert.NotNil(t, facets.PriceRanges)
+			assert.NotNil(t, facets.SourceTypes)
+			assert.NotNil(t, facets.StockStatuses)
+			assert.NotNil(t, facets.Attributes)
+		})
+	}
+}
+
+func TestParseAggregations_PartialData(t *testing.T) {
+	svc := &Service{}
+
+	// Only some aggregations present
+	result := &opensearch.SearchResponse{
+		Aggregations: map[string]interface{}{
+			"categories": map[string]interface{}{
+				"buckets": []interface{}{
+					map[string]interface{}{
+						"key":       float64(1001),
+						"doc_count": float64(50),
+					},
+				},
+			},
+			// Other aggregations missing
+		},
+	}
+
+	facets, err := svc.parseAggregations(result)
+
+	require.NoError(t, err)
+	require.NotNil(t, facets)
+
+	// Categories should be populated
+	assert.Len(t, facets.Categories, 1)
+	assert.Equal(t, int64(1001), facets.Categories[0].CategoryID)
+
+	// Other facets should be empty but initialized
+	assert.Empty(t, facets.PriceRanges)
+	assert.Empty(t, facets.SourceTypes)
+	assert.Empty(t, facets.StockStatuses)
+	assert.NotNil(t, facets.Attributes)
+	assert.Empty(t, facets.Attributes)
+}
+
+// ============================================================================
+// Parser Tests - parseSuggestions()
+// ============================================================================
+
+func TestParseSuggestions_FullResponse(t *testing.T) {
+	svc := &Service{}
+
+	// Create a realistic completion suggester response
+	result := &opensearch.SearchResponse{
+		Suggest: map[string]interface{}{
+			"listing-suggest": []interface{}{
+				map[string]interface{}{
+					"options": []interface{}{
+						map[string]interface{}{
+							"text":   "iPhone 14 Pro",
+							"_score": float64(95.5),
+							"_source": map[string]interface{}{
+								"id": float64(12345),
+							},
+						},
+						map[string]interface{}{
+							"text":   "iPhone 13",
+							"_score": float64(88.3),
+							"_source": map[string]interface{}{
+								"id": float64(12346),
+							},
+						},
+						map[string]interface{}{
+							"text":   "iPhone 12 Mini",
+							"_score": float64(75.0),
+							"_source": map[string]interface{}{
+								"id": float64(12347),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	suggestions := svc.parseSuggestions(result)
+
+	require.Len(t, suggestions, 3)
+
+	// Verify first suggestion
+	assert.Equal(t, "iPhone 14 Pro", suggestions[0].Text)
+	assert.Equal(t, float64(95.5), suggestions[0].Score)
+	require.NotNil(t, suggestions[0].ListingID)
+	assert.Equal(t, int64(12345), *suggestions[0].ListingID)
+
+	// Verify second suggestion
+	assert.Equal(t, "iPhone 13", suggestions[1].Text)
+	assert.Equal(t, float64(88.3), suggestions[1].Score)
+	require.NotNil(t, suggestions[1].ListingID)
+	assert.Equal(t, int64(12346), *suggestions[1].ListingID)
+
+	// Verify third suggestion
+	assert.Equal(t, "iPhone 12 Mini", suggestions[2].Text)
+	assert.Equal(t, float64(75.0), suggestions[2].Score)
+	require.NotNil(t, suggestions[2].ListingID)
+	assert.Equal(t, int64(12347), *suggestions[2].ListingID)
+}
+
+func TestParseSuggestions_EmptySuggestions(t *testing.T) {
+	svc := &Service{}
+
+	tests := []struct {
+		name   string
+		result *opensearch.SearchResponse
+	}{
+		{
+			name: "nil suggest",
+			result: &opensearch.SearchResponse{
+				Suggest: nil,
+			},
+		},
+		{
+			name: "empty suggest map",
+			result: &opensearch.SearchResponse{
+				Suggest: map[string]interface{}{},
+			},
+		},
+		{
+			name: "empty listing-suggest array",
+			result: &opensearch.SearchResponse{
+				Suggest: map[string]interface{}{
+					"listing-suggest": []interface{}{},
+				},
+			},
+		},
+		{
+			name: "empty options array",
+			result: &opensearch.SearchResponse{
+				Suggest: map[string]interface{}{
+					"listing-suggest": []interface{}{
+						map[string]interface{}{
+							"options": []interface{}{},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			suggestions := svc.parseSuggestions(tt.result)
+
+			require.NotNil(t, suggestions)
+			assert.Empty(t, suggestions)
+		})
+	}
+}
+
+func TestParseSuggestions_MissingListingID(t *testing.T) {
+	svc := &Service{}
+
+	// Suggestion without _source or id field
+	result := &opensearch.SearchResponse{
+		Suggest: map[string]interface{}{
+			"listing-suggest": []interface{}{
+				map[string]interface{}{
+					"options": []interface{}{
+						map[string]interface{}{
+							"text":   "Laptop",
+							"_score": float64(85.0),
+							// No _source field
+						},
+						map[string]interface{}{
+							"text":   "Tablet",
+							"_score": float64(80.0),
+							"_source": map[string]interface{}{
+								// No id field in _source
+								"title": "Some Tablet",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	suggestions := svc.parseSuggestions(result)
+
+	require.Len(t, suggestions, 2)
+
+	// First suggestion - no _source at all
+	assert.Equal(t, "Laptop", suggestions[0].Text)
+	assert.Equal(t, float64(85.0), suggestions[0].Score)
+	assert.Nil(t, suggestions[0].ListingID)
+
+	// Second suggestion - _source without id
+	assert.Equal(t, "Tablet", suggestions[1].Text)
+	assert.Equal(t, float64(80.0), suggestions[1].Score)
+	assert.Nil(t, suggestions[1].ListingID)
+}
+
+func TestParseSuggestions_InvalidTypeAssertions(t *testing.T) {
+	svc := &Service{}
+
+	tests := []struct {
+		name   string
+		result *opensearch.SearchResponse
+	}{
+		{
+			name: "text is not string",
+			result: &opensearch.SearchResponse{
+				Suggest: map[string]interface{}{
+					"listing-suggest": []interface{}{
+						map[string]interface{}{
+							"options": []interface{}{
+								map[string]interface{}{
+									"text":   123, // Invalid type
+									"_score": float64(80.0),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "score is not float64",
+			result: &opensearch.SearchResponse{
+				Suggest: map[string]interface{}{
+					"listing-suggest": []interface{}{
+						map[string]interface{}{
+							"options": []interface{}{
+								map[string]interface{}{
+									"text":   "Laptop",
+									"_score": "invalid", // Invalid type
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "id is not float64",
+			result: &opensearch.SearchResponse{
+				Suggest: map[string]interface{}{
+					"listing-suggest": []interface{}{
+						map[string]interface{}{
+							"options": []interface{}{
+								map[string]interface{}{
+									"text":   "Laptop",
+									"_score": float64(80.0),
+									"_source": map[string]interface{}{
+										"id": "invalid", // Invalid type
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "listing-suggest not an array",
+			result: &opensearch.SearchResponse{
+				Suggest: map[string]interface{}{
+					"listing-suggest": "invalid", // Should be []interface{}
+				},
+			},
+		},
+		{
+			name: "options not an array",
+			result: &opensearch.SearchResponse{
+				Suggest: map[string]interface{}{
+					"listing-suggest": []interface{}{
+						map[string]interface{}{
+							"options": "invalid", // Should be []interface{}
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Should not panic, should gracefully skip invalid entries
+			suggestions := svc.parseSuggestions(tt.result)
+
+			require.NotNil(t, suggestions)
+			// Invalid entries should be filtered out
+		})
+	}
+}
+
+func TestParseSuggestions_EmptyText(t *testing.T) {
+	svc := &Service{}
+
+	// Suggestion with empty text (should be filtered out)
+	result := &opensearch.SearchResponse{
+		Suggest: map[string]interface{}{
+			"listing-suggest": []interface{}{
+				map[string]interface{}{
+					"options": []interface{}{
+						map[string]interface{}{
+							"text":   "", // Empty text
+							"_score": float64(80.0),
+						},
+						map[string]interface{}{
+							"text":   "Valid Suggestion",
+							"_score": float64(75.0),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	suggestions := svc.parseSuggestions(result)
+
+	// Empty text should be filtered out
+	require.Len(t, suggestions, 1)
+	assert.Equal(t, "Valid Suggestion", suggestions[0].Text)
+	assert.Equal(t, float64(75.0), suggestions[0].Score)
+}
+
+func TestParseSuggestions_MultipleGroups(t *testing.T) {
+	svc := &Service{}
+
+	// Multiple suggestion groups (from multiple input texts)
+	result := &opensearch.SearchResponse{
+		Suggest: map[string]interface{}{
+			"listing-suggest": []interface{}{
+				map[string]interface{}{
+					"options": []interface{}{
+						map[string]interface{}{
+							"text":   "Laptop Pro",
+							"_score": float64(90.0),
+						},
+					},
+				},
+				map[string]interface{}{
+					"options": []interface{}{
+						map[string]interface{}{
+							"text":   "Laptop Air",
+							"_score": float64(85.0),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	suggestions := svc.parseSuggestions(result)
+
+	// Should aggregate all suggestions from all groups
+	require.Len(t, suggestions, 2)
+	assert.Equal(t, "Laptop Pro", suggestions[0].Text)
+	assert.Equal(t, "Laptop Air", suggestions[1].Text)
+}
