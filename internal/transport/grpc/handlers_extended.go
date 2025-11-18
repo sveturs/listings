@@ -90,36 +90,121 @@ func (s *Server) GetListingImages(ctx context.Context, req *listingspb.ListingID
 	}, nil
 }
 
-// ReorderListingImages updates display order for multiple images
-func (s *Server) ReorderListingImages(ctx context.Context, req *listingspb.ReorderImagesRequest) (*emptypb.Empty, error) {
-	s.logger.Debug().Int64("listing_id", req.ListingId).Int("count", len(req.ImageOrders)).Msg("ReorderListingImages called")
+// ReorderListingImages implements TRUE MICROSERVICE pattern for image reordering
+// Includes: Authorization, validation, transaction-based batch update
+func (s *Server) ReorderListingImages(ctx context.Context, req *listingspb.ReorderImagesRequest) (*listingspb.ReorderImagesResponse, error) {
+	s.logger.Info().
+		Int64("listing_id", req.ListingId).
+		Int64("user_id", req.UserId).
+		Int("images_count", len(req.ImageIds)).
+		Msg("ReorderListingImages called")
+
+	// ============================================================================
+	// VALIDATION
+	// ============================================================================
 
 	if req.ListingId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "listing ID must be greater than 0")
+		s.logger.Warn().Int64("listing_id", req.ListingId).Msg("invalid listing_id")
+		return nil, status.Error(codes.InvalidArgument, "listing_id must be positive")
 	}
 
-	if len(req.ImageOrders) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "image orders cannot be empty")
+	if req.UserId <= 0 {
+		s.logger.Warn().Int64("user_id", req.UserId).Msg("invalid user_id")
+		return nil, status.Error(codes.InvalidArgument, "user_id must be positive")
 	}
 
-	// Convert proto orders to repository orders
-	orders := make([]postgres.ImageOrder, len(req.ImageOrders))
-	for i, pbOrder := range req.ImageOrders {
-		orders[i] = postgres.ImageOrder{
-			ImageID:      pbOrder.ImageId,
-			DisplayOrder: pbOrder.DisplayOrder,
+	if len(req.ImageIds) == 0 {
+		s.logger.Warn().Msg("empty image_ids list")
+		return nil, status.Error(codes.InvalidArgument, "image_ids cannot be empty")
+	}
+
+	// ============================================================================
+	// AUTHORIZATION: Verify user owns listing
+	// ============================================================================
+
+	listing, err := s.service.GetListing(ctx, req.ListingId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", req.ListingId).Msg("listing not found")
+		return nil, status.Error(codes.NotFound, "listing not found")
+	}
+
+	if listing.UserID != req.UserId {
+		s.logger.Warn().
+			Int64("user_id", req.UserId).
+			Int64("listing_user_id", listing.UserID).
+			Int64("listing_id", req.ListingId).
+			Msg("user does not own listing")
+		return nil, status.Error(codes.PermissionDenied, "you do not own this listing")
+	}
+
+	s.logger.Debug().Int64("listing_id", req.ListingId).Int64("user_id", req.UserId).Msg("authorization passed")
+
+	// ============================================================================
+	// VERIFY ALL IMAGE IDs BELONG TO THIS LISTING
+	// ============================================================================
+
+	existingImages, err := s.service.GetImages(ctx, req.ListingId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", req.ListingId).Msg("failed to get existing images")
+		return nil, status.Error(codes.Internal, "failed to get existing images")
+	}
+
+	// Build map of existing image IDs for O(1) lookup
+	imageMap := make(map[int64]bool)
+	for _, img := range existingImages {
+		imageMap[img.ID] = true
+	}
+
+	// Verify each requested image ID belongs to this listing
+	for i, imgID := range req.ImageIds {
+		if !imageMap[imgID] {
+			s.logger.Warn().
+				Int64("image_id", imgID).
+				Int64("listing_id", req.ListingId).
+				Int("position", i).
+				Msg("image does not belong to listing")
+			return nil, status.Errorf(codes.InvalidArgument, "image_id %d does not belong to listing %d", imgID, req.ListingId)
 		}
 	}
 
-	// Reorder images via service
-	err := s.service.ReorderImages(ctx, req.ListingId, orders)
-	if err != nil {
-		s.logger.Error().Err(err).Int64("listing_id", req.ListingId).Msg("failed to reorder images")
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to reorder images: %v", err))
+	s.logger.Debug().
+		Int64("listing_id", req.ListingId).
+		Int("existing_images", len(existingImages)).
+		Int("requested_images", len(req.ImageIds)).
+		Msg("image validation passed")
+
+	// ============================================================================
+	// REORDER IMAGES: Convert image_ids array to ImageOrder list
+	// Position = array index + 1 (1-indexed display_order)
+	// ============================================================================
+
+	var orders []postgres.ImageOrder
+	for position, imageID := range req.ImageIds {
+		orders = append(orders, postgres.ImageOrder{
+			ImageID:      imageID,
+			DisplayOrder: int32(position + 1), // 1-indexed
+		})
 	}
 
-	s.logger.Info().Int64("listing_id", req.ListingId).Int("count", len(orders)).Msg("images reordered successfully")
-	return &emptypb.Empty{}, nil
+	// Call repository method (transaction-based batch update)
+	if err := s.service.ReorderImages(ctx, req.ListingId, orders); err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", req.ListingId).Msg("failed to reorder images")
+		return nil, status.Error(codes.Internal, "failed to reorder images")
+	}
+
+	s.logger.Info().
+		Int64("listing_id", req.ListingId).
+		Int64("user_id", req.UserId).
+		Int("images_count", len(req.ImageIds)).
+		Msg("images reordered successfully")
+
+	// ============================================================================
+	// SUCCESS RESPONSE
+	// ============================================================================
+
+	return &listingspb.ReorderImagesResponse{
+		Success: true,
+	}, nil
 }
 
 // GetRootCategories retrieves all top-level categories

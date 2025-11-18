@@ -125,7 +125,7 @@ type ListingsServiceClient interface {
 	// GetListingImages retrieves all images for a listing
 	GetListingImages(ctx context.Context, in *ListingIDRequest, opts ...grpc.CallOption) (*ImagesResponse, error)
 	// ReorderListingImages updates display order for multiple images
-	ReorderListingImages(ctx context.Context, in *ReorderImagesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ReorderListingImages(ctx context.Context, in *ReorderImagesRequest, opts ...grpc.CallOption) (*ReorderImagesResponse, error)
 	// UploadListingImages uploads images via streaming (Phase 24 - TRUE MICROSERVICE)
 	// Client streams: metadata first, then chunks for each image
 	// Server returns: uploaded images with URLs + errors for failed uploads
@@ -389,9 +389,9 @@ func (c *listingsServiceClient) GetListingImages(ctx context.Context, in *Listin
 	return out, nil
 }
 
-func (c *listingsServiceClient) ReorderListingImages(ctx context.Context, in *ReorderImagesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *listingsServiceClient) ReorderListingImages(ctx context.Context, in *ReorderImagesRequest, opts ...grpc.CallOption) (*ReorderImagesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(ReorderImagesResponse)
 	err := c.cc.Invoke(ctx, ListingsService_ReorderListingImages_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -1051,7 +1051,7 @@ type ListingsServiceServer interface {
 	// GetListingImages retrieves all images for a listing
 	GetListingImages(context.Context, *ListingIDRequest) (*ImagesResponse, error)
 	// ReorderListingImages updates display order for multiple images
-	ReorderListingImages(context.Context, *ReorderImagesRequest) (*emptypb.Empty, error)
+	ReorderListingImages(context.Context, *ReorderImagesRequest) (*ReorderImagesResponse, error)
 	// UploadListingImages uploads images via streaming (Phase 24 - TRUE MICROSERVICE)
 	// Client streams: metadata first, then chunks for each image
 	// Server returns: uploaded images with URLs + errors for failed uploads
@@ -1238,7 +1238,7 @@ func (UnimplementedListingsServiceServer) AddListingImage(context.Context, *AddI
 func (UnimplementedListingsServiceServer) GetListingImages(context.Context, *ListingIDRequest) (*ImagesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetListingImages not implemented")
 }
-func (UnimplementedListingsServiceServer) ReorderListingImages(context.Context, *ReorderImagesRequest) (*emptypb.Empty, error) {
+func (UnimplementedListingsServiceServer) ReorderListingImages(context.Context, *ReorderImagesRequest) (*ReorderImagesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReorderListingImages not implemented")
 }
 func (UnimplementedListingsServiceServer) UploadListingImages(grpc.ClientStreamingServer[UploadImageChunkRequest, UploadImagesResponse]) error {
