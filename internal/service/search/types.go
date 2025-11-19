@@ -1,5 +1,10 @@
 package search
 
+import (
+	"fmt"
+	"time"
+)
+
 // SearchRequest represents domain search parameters
 type SearchRequest struct {
 	Query      string // Search query text
@@ -422,4 +427,91 @@ type PopularSearch struct {
 	Query       string  `json:"query"`
 	SearchCount int64   `json:"search_count"`
 	TrendScore  float64 `json:"trend_score"` // +/- change percentage
+}
+
+// ============================================================================
+// PHASE 28: Search Analytics - Trending Searches
+// ============================================================================
+
+// TrendingSearchesRequest - real trending queries from analytics
+type TrendingSearchesRequest struct {
+	CategoryID *int64 // Optional category filter
+	Limit      int32  // Max results (1-50)
+	Days       int32  // Period in days (1-30)
+}
+
+// Validate validates trending searches request parameters
+func (r *TrendingSearchesRequest) Validate() error {
+	// Limit validation
+	if r.Limit < 1 {
+		r.Limit = 10 // Default
+	}
+	if r.Limit > 50 {
+		r.Limit = 50 // Max
+	}
+
+	// Days validation
+	if r.Days < 1 {
+		r.Days = 7 // Default
+	}
+	if r.Days > 30 {
+		r.Days = 30 // Max
+	}
+
+	return nil
+}
+
+// TrendingSearchesResponse - trending queries from analytics
+type TrendingSearchesResponse struct {
+	Searches []TrendingSearchResult `json:"searches"`
+}
+
+// TrendingSearchResult represents a single trending search query
+type TrendingSearchResult struct {
+	QueryText    string    `json:"query_text"`
+	SearchCount  int32     `json:"search_count"`
+	LastSearched time.Time `json:"last_searched"`
+}
+
+// ============================================================================
+// PHASE 28: Search Analytics - Personal Search History
+// ============================================================================
+
+// SearchHistoryRequest represents a request for user's search history
+type SearchHistoryRequest struct {
+	UserID    *int64  `json:"user_id,omitempty"`
+	SessionID *string `json:"session_id,omitempty"`
+	Limit     int32   `json:"limit"`
+}
+
+// Validate validates search history request parameters
+func (r *SearchHistoryRequest) Validate() error {
+	// Must have either user_id or session_id (XOR)
+	if (r.UserID == nil && r.SessionID == nil) || (r.UserID != nil && r.SessionID != nil) {
+		return fmt.Errorf("exactly one of user_id or session_id must be provided")
+	}
+
+	// Limit validation [1-100]
+	if r.Limit < 1 {
+		r.Limit = 50 // Default
+	}
+	if r.Limit > 100 {
+		r.Limit = 100 // Max
+	}
+
+	return nil
+}
+
+// SearchHistoryResponse represents user's search history
+type SearchHistoryResponse struct {
+	Entries []SearchHistoryEntry `json:"entries"`
+}
+
+// SearchHistoryEntry represents a single search from user's history
+type SearchHistoryEntry struct {
+	QueryText        string     `json:"query_text"`
+	CategoryID       *int64     `json:"category_id,omitempty"`
+	ResultsCount     int32      `json:"results_count"`
+	ClickedListingID *int64     `json:"clicked_listing_id,omitempty"`
+	SearchedAt       time.Time  `json:"searched_at"`
 }

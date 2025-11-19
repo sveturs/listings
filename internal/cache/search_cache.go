@@ -74,6 +74,7 @@ func NewSearchCacheWithConfig(redisURL string, config SearchCacheConfig, logger 
 		Dur("suggestions_ttl", config.SuggestionsTTL).
 		Dur("popular_ttl", config.PopularTTL).
 		Dur("filtered_search_ttl", config.FilteredSearchTTL).
+		Dur("history_ttl", config.HistoryTTL).
 		Msg("Search cache initialized")
 
 	return &SearchCache{
@@ -253,6 +254,7 @@ func (sc *SearchCache) GetStats(ctx context.Context) (map[string]interface{}, er
 		"suggestions_ttl":     sc.config.SuggestionsTTL.String(),
 		"popular_ttl":         sc.config.PopularTTL.String(),
 		"filtered_search_ttl": sc.config.FilteredSearchTTL.String(),
+		"history_ttl":         sc.config.HistoryTTL.String(),
 	}, nil
 }
 
@@ -502,4 +504,121 @@ func (sc *SearchCache) GenerateFilteredKey(query string, categoryID *int64, filt
 	hash := md5.Sum([]byte(fmt.Sprintf("%v", parts)))
 	hashStr := hex.EncodeToString(hash[:])
 	return fmt.Sprintf("search:filtered:v1:%s", hashStr)
+}
+
+// ============================================================================
+// PHASE 28: Search Analytics - Trending Searches Cache
+// ============================================================================
+
+// GetTrending retrieves cached trending searches
+func (sc *SearchCache) GetTrending(ctx context.Context, key string) (map[string]interface{}, error) {
+	data, err := sc.client.Get(ctx, key).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			sc.logger.Debug().Str("key", key).Msg("trending cache miss")
+			return nil, fmt.Errorf("cache miss")
+		}
+		sc.logger.Error().Err(err).Str("key", key).Msg("failed to get trending from cache")
+		return nil, fmt.Errorf("cache get failed: %w", err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		sc.logger.Error().Err(err).Str("key", key).Msg("failed to unmarshal cached trending")
+		return nil, fmt.Errorf("cache unmarshal failed: %w", err)
+	}
+
+	sc.logger.Debug().Str("key", key).Msg("trending cache hit")
+	return result, nil
+}
+
+// SetTrending stores trending searches in cache
+func (sc *SearchCache) SetTrending(ctx context.Context, key string, trending map[string]interface{}) error {
+	data, err := json.Marshal(trending)
+	if err != nil {
+		sc.logger.Error().Err(err).Str("key", key).Msg("failed to marshal trending")
+		return fmt.Errorf("cache marshal failed: %w", err)
+	}
+
+	// Use 1 hour TTL for trending data
+	ttl := 1 * time.Hour
+	if err := sc.client.Set(ctx, key, data, ttl).Err(); err != nil {
+		sc.logger.Error().Err(err).Str("key", key).Msg("failed to set trending cache")
+		return fmt.Errorf("cache set failed: %w", err)
+	}
+
+	sc.logger.Debug().Str("key", key).Dur("ttl", ttl).Msg("trending cache set")
+	return nil
+}
+
+// GenerateTrendingKey creates a unique cache key for trending searches request
+func (sc *SearchCache) GenerateTrendingKey(categoryID *int64, days int32) string {
+	parts := []string{
+		fmt.Sprintf("cat:%v", categoryID),
+		fmt.Sprintf("days:%d", days),
+	}
+
+	hash := md5.Sum([]byte(fmt.Sprintf("%v", parts)))
+	hashStr := hex.EncodeToString(hash[:])
+	return fmt.Sprintf("search:trending:v1:%s", hashStr)
+}
+
+// ============================================================================
+// PHASE 28: Search Analytics - Personal Search History Cache
+// ============================================================================
+
+// GetHistory retrieves cached search history for a user or session
+func (sc *SearchCache) GetHistory(ctx context.Context, key string) (map[string]interface{}, error) {
+	data, err := sc.client.Get(ctx, key).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			sc.logger.Debug().Str("key", key).Msg("history cache miss")
+			return nil, fmt.Errorf("cache miss")
+		}
+		sc.logger.Error().Err(err).Str("key", key).Msg("failed to get history from cache")
+		return nil, fmt.Errorf("cache get failed: %w", err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		sc.logger.Error().Err(err).Str("key", key).Msg("failed to unmarshal cached history")
+		return nil, fmt.Errorf("cache unmarshal failed: %w", err)
+	}
+
+	sc.logger.Debug().Str("key", key).Msg("history cache hit")
+	return result, nil
+}
+
+// SetHistory stores search history in cache
+func (sc *SearchCache) SetHistory(ctx context.Context, key string, history map[string]interface{}) error {
+	data, err := json.Marshal(history)
+	if err != nil {
+		sc.logger.Error().Err(err).Str("key", key).Msg("failed to marshal history")
+		return fmt.Errorf("cache marshal failed: %w", err)
+	}
+
+	if err := sc.client.Set(ctx, key, data, sc.config.HistoryTTL).Err(); err != nil {
+		sc.logger.Error().Err(err).Str("key", key).Msg("failed to set history cache")
+		return fmt.Errorf("cache set failed: %w", err)
+	}
+
+	sc.logger.Debug().Str("key", key).Dur("ttl", sc.config.HistoryTTL).Msg("history cache set")
+	return nil
+}
+
+// GenerateHistoryKey creates a unique cache key for search history request
+func (sc *SearchCache) GenerateHistoryKey(userID *int64, sessionID *string) string {
+	var identifier string
+	if userID != nil {
+		identifier = fmt.Sprintf("user:%d", *userID)
+	} else if sessionID != nil {
+		identifier = fmt.Sprintf("session:%s", *sessionID)
+	} else {
+		// Fallback (should not happen due to validation)
+		identifier = "unknown"
+	}
+
+	hash := md5.Sum([]byte(identifier))
+	hashStr := hex.EncodeToString(hash[:])
+	return fmt.Sprintf("search:history:v1:%s", hashStr)
 }

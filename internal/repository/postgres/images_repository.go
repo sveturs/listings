@@ -275,13 +275,6 @@ func (r *Repository) ReorderImages(ctx context.Context, listingID int64, orders 
 	}
 	query += ")"
 
-	// DEBUG: Log query and args
-	r.logger.Debug().
-		Str("query", query).
-		Int("args_count", len(args)).
-		Interface("args", args).
-		Msg("ReorderImages SQL query")
-
 	result, err := tx.ExecContext(ctx, query, args...)
 	if err != nil {
 		r.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to reorder images")

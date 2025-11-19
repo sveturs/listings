@@ -272,9 +272,13 @@ func main() {
 				searchCache = nil
 			}
 
+			// Create search queries repository for analytics
+			searchQueriesRepo := postgres.NewSearchQueriesRepository(pgxPool, zerologLogger)
+
 			// Create search service
 			searchSvc = searchService.NewService(osSearchClient, searchCache, zerologLogger)
-			logger.Info().Msg("Search service initialized successfully")
+			searchSvc.SetSearchQueriesRepo(searchQueriesRepo)
+			logger.Info().Msg("Search service initialized successfully (with analytics)")
 		}
 	}
 

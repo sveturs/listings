@@ -1282,45 +1282,48 @@ message BulkOperationError {
 // CreateProductVariantRequest creates a new variant
 message CreateProductVariantRequest {
   int64 product_id = 1; // Parent product
-  optional string sku = 2; // Optional, unique within product
-  optional string barcode = 3;
-  optional double price = 4; // If null, inherits from product
-  optional double compare_at_price = 5; // "Was" price for discounts
-  optional double cost_price = 6; // For profit calculations
-  int32 stock_quantity = 7;
-  optional int32 low_stock_threshold = 8;
-  google.protobuf.Struct variant_attributes = 9; // {"color": "red", "size": "XL"}
-  optional double weight = 10; // In grams
-  google.protobuf.Struct dimensions = 11; // {"length": 10, "width": 5, "height": 3}
-  bool is_active = 12; // Default true
-  bool is_default = 13; // Default false
+  int64 user_id = 2; // Required for ownership validation (storefront owner check)
+  optional string sku = 3; // Optional, unique within product
+  optional string barcode = 4;
+  optional double price = 5; // If null, inherits from product
+  optional double compare_at_price = 6; // "Was" price for discounts
+  optional double cost_price = 7; // For profit calculations
+  int32 stock_quantity = 8;
+  optional int32 low_stock_threshold = 9;
+  google.protobuf.Struct variant_attributes = 10; // {"color": "red", "size": "XL"}
+  optional double weight = 11; // In grams
+  google.protobuf.Struct dimensions = 12; // {"length": 10, "width": 5, "height": 3}
+  bool is_active = 13; // Default true
+  bool is_default = 14; // Default false
 }
 
 // UpdateProductVariantRequest updates variant fields
 message UpdateProductVariantRequest {
   int64 variant_id = 1;
   int64 product_id = 2; // For validation
+  int64 user_id = 3; // Required for ownership validation (storefront owner check)
 
-  optional string sku = 3;
-  optional string barcode = 4;
-  optional double price = 5;
-  optional double compare_at_price = 6;
-  optional double cost_price = 7;
-  optional int32 stock_quantity = 8;
-  optional int32 low_stock_threshold = 9;
-  optional google.protobuf.Struct variant_attributes = 10;
-  optional double weight = 11;
-  optional google.protobuf.Struct dimensions = 12;
-  optional bool is_active = 13;
-  optional bool is_default = 14;
+  optional string sku = 4;
+  optional string barcode = 5;
+  optional double price = 6;
+  optional double compare_at_price = 7;
+  optional double cost_price = 8;
+  optional int32 stock_quantity = 9;
+  optional int32 low_stock_threshold = 10;
+  optional google.protobuf.Struct variant_attributes = 11;
+  optional double weight = 12;
+  optional google.protobuf.Struct dimensions = 13;
+  optional bool is_active = 14;
+  optional bool is_default = 15;
 
-  optional google.protobuf.FieldMask update_mask = 15;
+  optional google.protobuf.FieldMask update_mask = 16;
 }
 
 // DeleteProductVariantRequest removes a variant
 message DeleteProductVariantRequest {
   int64 variant_id = 1;
   int64 product_id = 2; // For validation
+  int64 user_id = 3; // Required for ownership validation (storefront owner check)
 }
 
 // DeleteProductVariantResponse confirms deletion
@@ -1348,7 +1351,8 @@ message ProductVariantInput {
 // BulkCreateProductVariantsRequest creates multiple variants
 message BulkCreateProductVariantsRequest {
   int64 product_id = 1;
-  repeated ProductVariantInput variants = 2; // Max 1000 items
+  int64 user_id = 2; // Required for ownership validation (storefront owner check)
+  repeated ProductVariantInput variants = 3; // Max 1000 items
 }
 
 // BulkCreateProductVariantsResponse returns created variants

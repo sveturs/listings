@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -26,6 +27,8 @@ type mockSearchService struct {
 	getSuggestionsFunc    func(ctx context.Context, req *search.SuggestionsRequest) (*search.SuggestionsResponse, error)
 	getPopularFunc        func(ctx context.Context, req *search.PopularSearchesRequest) (*search.PopularSearchesResponse, error)
 	getSimilarFunc        func(ctx context.Context, listingID int64, limit int32) ([]search.ListingSearchResult, int64, error)
+	getTrendingFunc       func(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error)
+	getHistoryFunc        func(ctx context.Context, req *search.SearchHistoryRequest) (*search.SearchHistoryResponse, error)
 }
 
 func (m *mockSearchService) SearchListings(ctx context.Context, req *search.SearchRequest) (*search.SearchResponse, error) {
@@ -68,6 +71,20 @@ func (m *mockSearchService) GetSimilarListings(ctx context.Context, listingID in
 		return m.getSimilarFunc(ctx, listingID, limit)
 	}
 	return []search.ListingSearchResult{}, 0, nil
+}
+
+func (m *mockSearchService) GetTrendingSearches(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error) {
+	if m.getTrendingFunc != nil {
+		return m.getTrendingFunc(ctx, req)
+	}
+	return &search.TrendingSearchesResponse{}, nil
+}
+
+func (m *mockSearchService) GetSearchHistory(ctx context.Context, req *search.SearchHistoryRequest) (*search.SearchHistoryResponse, error) {
+	if m.getHistoryFunc != nil {
+		return m.getHistoryFunc(ctx, req)
+	}
+	return &search.SearchHistoryResponse{}, nil
 }
 
 // ============================================================================
@@ -662,4 +679,503 @@ func TestContainsErrorFunction(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+// ============================================================================
+// PHASE 28: Test GetTrendingSearches Handler
+// ============================================================================
+
+func TestSearchHandler_GetTrendingSearches_Success(t *testing.T) {
+	// Arrange
+	now := testTimeNow()
+	mockSvc := &mockSearchService{
+		getTrendingFunc: func(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error) {
+			return &search.TrendingSearchesResponse{
+				Searches: []search.TrendingSearchResult{
+					{QueryText: "iphone", SearchCount: 542, LastSearched: now},
+					{QueryText: "laptop", SearchCount: 321, LastSearched: now},
+				},
+			}, nil
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		Limit: 10,
+		Days:  7,
+	}
+
+	// Act
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Len(t, resp.Searches, 2)
+	assert.Equal(t, "iphone", resp.Searches[0].QueryText)
+	assert.Equal(t, int32(542), resp.Searches[0].SearchCount)
+	assert.NotNil(t, resp.Searches[0].LastSearched)
+	assert.Equal(t, "laptop", resp.Searches[1].QueryText)
+}
+
+func TestSearchHandler_GetTrendingSearches_WithCategoryFilter(t *testing.T) {
+	// Arrange
+	now := testTimeNow()
+	categoryID := int64(1001)
+	mockSvc := &mockSearchService{
+		getTrendingFunc: func(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error) {
+			assert.NotNil(t, req.CategoryID)
+			assert.Equal(t, categoryID, *req.CategoryID)
+			return &search.TrendingSearchesResponse{
+				Searches: []search.TrendingSearchResult{
+					{QueryText: "macbook", SearchCount: 150, LastSearched: now},
+				},
+			}, nil
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		CategoryId: &categoryID,
+		Limit:      10,
+		Days:       7,
+	}
+
+	// Act
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Len(t, resp.Searches, 1)
+	assert.Equal(t, "macbook", resp.Searches[0].QueryText)
+}
+
+func TestSearchHandler_GetTrendingSearches_InvalidLimit_TooLow(t *testing.T) {
+	// Arrange
+	mockSvc := &mockSearchService{}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		Limit: 0, // Invalid
+		Days:  7,
+	}
+
+	// Act
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+	assert.Contains(t, err.Error(), "limit must be at least 1")
+}
+
+func TestSearchHandler_GetTrendingSearches_InvalidLimit_TooHigh(t *testing.T) {
+	// Arrange
+	mockSvc := &mockSearchService{}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		Limit: 51, // Invalid (max 50)
+		Days:  7,
+	}
+
+	// Act
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+	assert.Contains(t, err.Error(), "limit must not exceed 50")
+}
+
+func TestSearchHandler_GetTrendingSearches_InvalidDays_TooLow(t *testing.T) {
+	// Arrange
+	mockSvc := &mockSearchService{}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		Limit: 10,
+		Days:  0, // Invalid
+	}
+
+	// Act
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+	assert.Contains(t, err.Error(), "days must be at least 1")
+}
+
+func TestSearchHandler_GetTrendingSearches_InvalidDays_TooHigh(t *testing.T) {
+	// Arrange
+	mockSvc := &mockSearchService{}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		Limit: 10,
+		Days:  31, // Invalid (max 30)
+	}
+
+	// Act
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+	assert.Contains(t, err.Error(), "days must not exceed 30")
+}
+
+func TestSearchHandler_GetTrendingSearches_EmptyResult(t *testing.T) {
+	// Arrange
+	mockSvc := &mockSearchService{
+		getTrendingFunc: func(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error) {
+			return &search.TrendingSearchesResponse{
+				Searches: []search.TrendingSearchResult{},
+			}, nil
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		Limit: 10,
+		Days:  7,
+	}
+
+	// Act
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Empty(t, resp.Searches)
+}
+
+func TestSearchHandler_GetTrendingSearches_ServiceError(t *testing.T) {
+	// Arrange
+	mockSvc := &mockSearchService{
+		getTrendingFunc: func(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error) {
+			return nil, errors.New("database connection failed")
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		Limit: 10,
+		Days:  7,
+	}
+
+	// Act
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Equal(t, codes.Internal, status.Code(err))
+	assert.Contains(t, err.Error(), "failed to get trending searches")
+}
+
+func TestSearchHandler_GetTrendingSearches_DefaultParams(t *testing.T) {
+	// Arrange
+	mockSvc := &mockSearchService{
+		getTrendingFunc: func(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error) {
+			// Validate defaults are applied
+			assert.Equal(t, int32(10), req.Limit)
+			assert.Equal(t, int32(7), req.Days)
+			return &search.TrendingSearchesResponse{
+				Searches: []search.TrendingSearchResult{},
+			}, nil
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	// Request with zeros (should get defaults)
+	protoReq := &searchv1.GetTrendingSearchesRequest{
+		Limit: 0,
+		Days:  0,
+	}
+
+	// Act
+	// Note: Validation will reject Limit=0 and Days=0
+	// So we need to provide valid values
+	protoReq.Limit = 10
+	protoReq.Days = 7
+	resp, err := handler.GetTrendingSearches(context.Background(), protoReq)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+}
+
+// Helper function for tests
+func testTimeNow() time.Time {
+	return time.Date(2025, 1, 15, 12, 0, 0, 0, time.UTC)
+}
+// ============================================================================
+// PHASE 28: GetSearchHistory Tests
+// ============================================================================
+
+func TestGetSearchHistory_Success_UserID(t *testing.T) {
+	// Arrange
+	userID := int64(123)
+	mockSvc := &mockSearchService{
+		getHistoryFunc: func(ctx context.Context, req *search.SearchHistoryRequest) (*search.SearchHistoryResponse, error) {
+			assert.NotNil(t, req.UserID)
+			assert.Equal(t, userID, *req.UserID)
+			assert.Nil(t, req.SessionID)
+			assert.Equal(t, int32(50), req.Limit)
+
+			return &search.SearchHistoryResponse{
+				Entries: []search.SearchHistoryEntry{
+					{
+						QueryText:    "iphone 15",
+						CategoryID:   int64PtrTest(1001),
+						ResultsCount: 42,
+						SearchedAt:   testTimeNow(),
+					},
+					{
+						QueryText:    "macbook pro",
+						CategoryID:   int64PtrTest(1001),
+						ResultsCount: 15,
+						SearchedAt:   testTimeNow().Add(-1 * time.Hour),
+					},
+				},
+			}, nil
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetSearchHistoryRequest{
+		UserId: &userID,
+		Limit:  50,
+	}
+
+	// Act
+	resp, err := handler.GetSearchHistory(context.Background(), protoReq)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Len(t, resp.Entries, 2)
+
+	// Verify first entry
+	assert.Equal(t, "iphone 15", resp.Entries[0].QueryText)
+	assert.NotNil(t, resp.Entries[0].CategoryId)
+	assert.Equal(t, int64(1001), *resp.Entries[0].CategoryId)
+	assert.Equal(t, int32(42), resp.Entries[0].ResultsCount)
+	assert.NotNil(t, resp.Entries[0].SearchedAt)
+
+	// Verify second entry
+	assert.Equal(t, "macbook pro", resp.Entries[1].QueryText)
+}
+
+func TestGetSearchHistory_Success_SessionID(t *testing.T) {
+	// Arrange
+	sessionID := "550e8400-e29b-41d4-a716-446655440000"
+	mockSvc := &mockSearchService{
+		getHistoryFunc: func(ctx context.Context, req *search.SearchHistoryRequest) (*search.SearchHistoryResponse, error) {
+			assert.Nil(t, req.UserID)
+			assert.NotNil(t, req.SessionID)
+			assert.Equal(t, sessionID, *req.SessionID)
+			assert.Equal(t, int32(20), req.Limit)
+
+			return &search.SearchHistoryResponse{
+				Entries: []search.SearchHistoryEntry{
+					{
+						QueryText:        "tesla model 3",
+						CategoryID:       int64PtrTest(1301),
+						ResultsCount:     8,
+						ClickedListingID: int64PtrTest(999),
+						SearchedAt:       testTimeNow(),
+					},
+				},
+			}, nil
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetSearchHistoryRequest{
+		SessionId: &sessionID,
+		Limit:     20,
+	}
+
+	// Act
+	resp, err := handler.GetSearchHistory(context.Background(), protoReq)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Len(t, resp.Entries, 1)
+
+	// Verify entry with clicked listing
+	assert.Equal(t, "tesla model 3", resp.Entries[0].QueryText)
+	assert.NotNil(t, resp.Entries[0].ClickedListingId)
+	assert.Equal(t, int64(999), *resp.Entries[0].ClickedListingId)
+}
+
+func TestGetSearchHistory_MissingBothIDs(t *testing.T) {
+	// Arrange
+	mockSvc := &mockSearchService{}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetSearchHistoryRequest{
+		Limit: 50,
+	}
+
+	// Act
+	resp, err := handler.GetSearchHistory(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+
+	// Verify error code
+	st, ok := status.FromError(err)
+	require.True(t, ok)
+	assert.Equal(t, codes.InvalidArgument, st.Code())
+	assert.Contains(t, st.Message(), "either user_id or session_id must be provided")
+}
+
+func TestGetSearchHistory_BothIDsProvided(t *testing.T) {
+	// Arrange
+	userID := int64(123)
+	sessionID := "550e8400-e29b-41d4-a716-446655440000"
+
+	mockSvc := &mockSearchService{}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetSearchHistoryRequest{
+		UserId:    &userID,
+		SessionId: &sessionID, // Both provided - XOR violation
+		Limit:     50,
+	}
+
+	// Act
+	resp, err := handler.GetSearchHistory(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+
+	// Verify error code
+	st, ok := status.FromError(err)
+	require.True(t, ok)
+	assert.Equal(t, codes.InvalidArgument, st.Code())
+	assert.Contains(t, st.Message(), "only one of user_id or session_id must be provided")
+}
+
+func TestGetSearchHistory_InvalidLimit(t *testing.T) {
+	// Arrange
+	userID := int64(123)
+
+	mockSvc := &mockSearchService{}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetSearchHistoryRequest{
+		UserId: &userID,
+		Limit:  150, // Exceeds max of 100
+	}
+
+	// Act
+	resp, err := handler.GetSearchHistory(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+
+	// Verify error code
+	st, ok := status.FromError(err)
+	require.True(t, ok)
+	assert.Equal(t, codes.InvalidArgument, st.Code())
+	assert.Contains(t, st.Message(), "limit")
+}
+
+func TestGetSearchHistory_EmptyHistory(t *testing.T) {
+	// Arrange
+	userID := int64(999)
+	mockSvc := &mockSearchService{
+		getHistoryFunc: func(ctx context.Context, req *search.SearchHistoryRequest) (*search.SearchHistoryResponse, error) {
+			return &search.SearchHistoryResponse{
+				Entries: []search.SearchHistoryEntry{}, // Empty history
+			}, nil
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetSearchHistoryRequest{
+		UserId: &userID,
+		Limit:  50,
+	}
+
+	// Act
+	resp, err := handler.GetSearchHistory(context.Background(), protoReq)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Empty(t, resp.Entries)
+}
+
+func TestGetSearchHistory_ServiceError(t *testing.T) {
+	// Arrange
+	userID := int64(123)
+	serviceErr := errors.New("database connection failed")
+
+	mockSvc := &mockSearchService{
+		getHistoryFunc: func(ctx context.Context, req *search.SearchHistoryRequest) (*search.SearchHistoryResponse, error) {
+			return nil, serviceErr
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetSearchHistoryRequest{
+		UserId: &userID,
+		Limit:  50,
+	}
+
+	// Act
+	resp, err := handler.GetSearchHistory(context.Background(), protoReq)
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+
+	// Verify error code
+	st, ok := status.FromError(err)
+	require.True(t, ok)
+	assert.Equal(t, codes.Internal, st.Code())
+	assert.Contains(t, st.Message(), "failed to get search history")
+}
+
+func TestGetSearchHistory_DefaultLimit(t *testing.T) {
+	// Arrange
+	userID := int64(123)
+	mockSvc := &mockSearchService{
+		getHistoryFunc: func(ctx context.Context, req *search.SearchHistoryRequest) (*search.SearchHistoryResponse, error) {
+			// Should use default limit of 50
+			assert.Equal(t, int32(50), req.Limit)
+
+			return &search.SearchHistoryResponse{
+				Entries: []search.SearchHistoryEntry{},
+			}, nil
+		},
+	}
+	handler := newTestSearchHandler(mockSvc)
+
+	protoReq := &searchv1.GetSearchHistoryRequest{
+		UserId: &userID,
+		Limit:  0, // Will be set to default 50
+	}
+
+	// Act
+	resp, err := handler.GetSearchHistory(context.Background(), protoReq)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, resp)
 }

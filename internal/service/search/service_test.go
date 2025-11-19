@@ -283,62 +283,8 @@ func TestParseListingFromHit_OptionalFields(t *testing.T) {
 // PHASE 21.2: Tests for Advanced Search Methods
 // ============================================================================
 
-func TestGetMockPopularSearches(t *testing.T) {
-	svc := &Service{}
-
-	tests := []struct {
-		name       string
-		categoryID *int64
-		limit      int32
-		wantMin    int
-		wantMax    int
-	}{
-		{
-			name:       "cars category",
-			categoryID: func() *int64 { v := int64(1301); return &v }(),
-			limit:      10,
-			wantMin:    3,
-			wantMax:    5,
-		},
-		{
-			name:       "electronics category",
-			categoryID: func() *int64 { v := int64(1001); return &v }(),
-			limit:      10,
-			wantMin:    3,
-			wantMax:    5,
-		},
-		{
-			name:       "no category - global",
-			categoryID: nil,
-			limit:      10,
-			wantMin:    3,
-			wantMax:    5,
-		},
-		{
-			name:       "limit results",
-			categoryID: func() *int64 { v := int64(1001); return &v }(),
-			limit:      3,
-			wantMin:    3,
-			wantMax:    3,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			searches := svc.getMockPopularSearches(tt.categoryID, tt.limit)
-
-			assert.GreaterOrEqual(t, len(searches), tt.wantMin)
-			assert.LessOrEqual(t, len(searches), tt.wantMax)
-
-			// Verify structure
-			for _, search := range searches {
-				assert.NotEmpty(t, search.Query)
-				assert.Greater(t, search.SearchCount, int64(0))
-				// TrendScore can be negative
-			}
-		})
-	}
-}
+// Note: GetPopularSearches now uses real PostgreSQL queries via repository.
+// Tests moved to integration tests or handlers_search_test.go with mocked repository.
 
 func TestConvertFacetsForCache_RoundTrip(t *testing.T) {
 	svc := &Service{}
@@ -588,37 +534,6 @@ func TestParseSuggestions_EmptyResult(t *testing.T) {
 // ============================================================================
 // Integration-style Tests (with mock dependencies)
 // ============================================================================
-
-func TestGetMockPopularSearches_LimitApplied(t *testing.T) {
-	svc := &Service{}
-
-	categoryID := int64(1001)
-	limit := int32(2)
-
-	searches := svc.getMockPopularSearches(&categoryID, limit)
-
-	// Verify limit is respected
-	assert.LessOrEqual(t, len(searches), int(limit))
-
-	// Verify all searches have required fields
-	for _, search := range searches {
-		assert.NotEmpty(t, search.Query)
-		assert.Greater(t, search.SearchCount, int64(0))
-	}
-}
-
-func TestGetMockPopularSearches_UnknownCategory(t *testing.T) {
-	svc := &Service{}
-
-	unknownCategory := int64(9999)
-	limit := int32(10)
-
-	searches := svc.getMockPopularSearches(&unknownCategory, limit)
-
-	// Should return default searches for unknown category
-	assert.NotEmpty(t, searches)
-	assert.GreaterOrEqual(t, len(searches), 3)
-}
 
 // ============================================================================
 // Validation Tests for Phase 21.2 Request Types

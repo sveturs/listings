@@ -23,6 +23,10 @@ type SearchCacheConfig struct {
 	// FilteredSearchTTL is the TTL for filtered/sorted search results (Phase 21.2)
 	// Default: 5 minutes - same as basic search
 	FilteredSearchTTL time.Duration
+
+	// HistoryTTL is the TTL for user search history (Phase 28)
+	// Default: 5 minutes - personal history changes with each search
+	HistoryTTL time.Duration
 }
 
 // DefaultSearchCacheConfig returns default cache configuration
@@ -33,6 +37,7 @@ func DefaultSearchCacheConfig() SearchCacheConfig {
 		SuggestionsTTL:    1 * time.Hour,
 		PopularTTL:        15 * time.Minute,
 		FilteredSearchTTL: 5 * time.Minute,
+		HistoryTTL:        5 * time.Minute,
 	}
 }
 
@@ -49,6 +54,7 @@ func (c *SearchCacheConfig) Validate() error {
 		"SuggestionsTTL":    c.SuggestionsTTL,
 		"PopularTTL":        c.PopularTTL,
 		"FilteredSearchTTL": c.FilteredSearchTTL,
+		"HistoryTTL":        c.HistoryTTL,
 	}
 
 	for name, ttl := range ttls {
@@ -65,6 +71,8 @@ func (c *SearchCacheConfig) Validate() error {
 				c.PopularTTL = 15 * time.Minute
 			case "FilteredSearchTTL":
 				c.FilteredSearchTTL = 5 * time.Minute
+			case "HistoryTTL":
+				c.HistoryTTL = 5 * time.Minute
 			}
 		}
 		if ttl > maxTTL {
@@ -80,6 +88,8 @@ func (c *SearchCacheConfig) Validate() error {
 				c.PopularTTL = maxTTL
 			case "FilteredSearchTTL":
 				c.FilteredSearchTTL = maxTTL
+			case "HistoryTTL":
+				c.HistoryTTL = maxTTL
 			}
 		}
 	}

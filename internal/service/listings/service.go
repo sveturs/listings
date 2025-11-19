@@ -47,11 +47,19 @@ type Repository interface {
 	GetUserFavorites(ctx context.Context, userID int64) ([]int64, error)
 	IsFavorite(ctx context.Context, userID, listingID int64) (bool, error)
 
-	// Variant operations
+	// Variant operations (old ListingVariant - deprecated)
 	CreateVariants(ctx context.Context, variants []*domain.ListingVariant) error
 	GetVariants(ctx context.Context, listingID int64) ([]*domain.ListingVariant, error)
 	UpdateVariant(ctx context.Context, variant *domain.ListingVariant) error
 	DeleteVariant(ctx context.Context, variantID int64) error
+
+	// B2C Variant operations (new domain.Variant for b2c_product_variants table)
+	// Repository methods for postgres implementation
+	CreateVariant(ctx context.Context, variant *domain.Variant) (*domain.Variant, error)
+	GetVariant(ctx context.Context, id int64) (*domain.Variant, error)
+	UpdateB2CVariant(ctx context.Context, id int64, update *domain.VariantUpdate) (*domain.Variant, error)
+	DeleteB2CVariant(ctx context.Context, id int64) error
+	ListVariants(ctx context.Context, filters *domain.VariantFilters) ([]*domain.Variant, error)
 
 	// Reindexing operations
 	GetListingsForReindex(ctx context.Context, limit int) ([]*domain.Listing, error)

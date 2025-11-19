@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	searchv1 "github.com/sveturs/listings/api/proto/search/v1"
 	"github.com/sveturs/listings/internal/service/search"
@@ -20,6 +21,8 @@ type SearchServiceInterface interface {
 	GetSuggestions(ctx context.Context, req *search.SuggestionsRequest) (*search.SuggestionsResponse, error)
 	GetPopularSearches(ctx context.Context, req *search.PopularSearchesRequest) (*search.PopularSearchesResponse, error)
 	GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]search.ListingSearchResult, int64, error)
+	GetTrendingSearches(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error)
+	GetSearchHistory(ctx context.Context, req *search.SearchHistoryRequest) (*search.SearchHistoryResponse, error)
 }
 
 // SearchHandler implements SearchService gRPC service
@@ -296,6 +299,250 @@ func (h *SearchHandler) GetPopularSearches(
 		Msg("GetPopularSearches completed")
 
 	return resp, nil
+}
+
+// ============================================================================
+// PHASE 28: Search Analytics - Trending Searches
+// ============================================================================
+
+// GetTrendingSearches returns real trending search queries from analytics
+func (h *SearchHandler) GetTrendingSearches(
+	ctx context.Context,
+	req *searchv1.GetTrendingSearchesRequest,
+) (*searchv1.TrendingSearchesResponse, error) {
+	// Log request
+	h.logger.Info().
+		Interface("category_id", req.CategoryId).
+		Int32("limit", req.Limit).
+		Int32("days", req.Days).
+		Msg("GetTrendingSearches RPC called")
+
+	// Validate request
+	if err := h.validateTrendingRequest(req); err != nil {
+		h.logger.Warn().
+			Err(err).
+			Msg("invalid trending searches request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Convert proto to domain
+	domainReq := h.protoToTrendingRequest(req)
+
+	// Call service
+	result, err := h.service.GetTrendingSearches(ctx, domainReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Msg("trending searches service failed")
+
+		// Map service errors to gRPC status codes
+		if containsError(err, "invalid") {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to get trending searches")
+	}
+
+	// Convert domain to proto
+	resp := h.trendingResponseToProto(result)
+
+	h.logger.Info().
+		Int("count", len(resp.Searches)).
+		Msg("GetTrendingSearches completed")
+
+	return resp, nil
+}
+
+// validateTrendingRequest validates trending searches request parameters
+func (h *SearchHandler) validateTrendingRequest(req *searchv1.GetTrendingSearchesRequest) error {
+	// Validate limit (1-50)
+	if req.Limit < 1 {
+		return fmt.Errorf("limit must be at least 1")
+	}
+	if req.Limit > 50 {
+		return fmt.Errorf("limit must not exceed 50")
+	}
+
+	// Validate days (1-30)
+	if req.Days < 1 {
+		return fmt.Errorf("days must be at least 1")
+	}
+	if req.Days > 30 {
+		return fmt.Errorf("days must not exceed 30")
+	}
+
+	return nil
+}
+
+// protoToTrendingRequest converts proto request to domain request
+func (h *SearchHandler) protoToTrendingRequest(req *searchv1.GetTrendingSearchesRequest) *search.TrendingSearchesRequest {
+	domainReq := &search.TrendingSearchesRequest{
+		Limit: req.Limit,
+		Days:  req.Days,
+	}
+
+	// Handle optional category_id
+	if req.CategoryId != nil {
+		categoryID := *req.CategoryId
+		domainReq.CategoryID = &categoryID
+	}
+
+	// Set defaults
+	if domainReq.Limit == 0 {
+		domainReq.Limit = 10
+	}
+	if domainReq.Days == 0 {
+		domainReq.Days = 7
+	}
+
+	return domainReq
+}
+
+// trendingResponseToProto converts domain response to proto response
+func (h *SearchHandler) trendingResponseToProto(result *search.TrendingSearchesResponse) *searchv1.TrendingSearchesResponse {
+	protoSearches := make([]*searchv1.TrendingSearch, 0, len(result.Searches))
+
+	for _, ts := range result.Searches {
+		protoSearch := &searchv1.TrendingSearch{
+			QueryText:   ts.QueryText,
+			SearchCount: ts.SearchCount,
+			LastSearched: &timestamppb.Timestamp{
+				Seconds: ts.LastSearched.Unix(),
+				Nanos:   int32(ts.LastSearched.Nanosecond()),
+			},
+		}
+		protoSearches = append(protoSearches, protoSearch)
+	}
+
+	return &searchv1.TrendingSearchesResponse{
+		Searches: protoSearches,
+	}
+}
+
+// GetSearchHistory returns user's personal search history
+func (h *SearchHandler) GetSearchHistory(
+	ctx context.Context,
+	req *searchv1.GetSearchHistoryRequest,
+) (*searchv1.SearchHistoryResponse, error) {
+	// Log request
+	h.logger.Info().
+		Interface("user_id", req.UserId).
+		Interface("session_id", req.SessionId).
+		Int32("limit", req.Limit).
+		Msg("GetSearchHistory RPC called")
+
+	// Validate request
+	if err := h.validateSearchHistoryRequest(req); err != nil {
+		h.logger.Warn().
+			Err(err).
+			Msg("invalid search history request")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// Convert proto to domain
+	domainReq := h.protoToSearchHistoryRequest(req)
+
+	// Call service
+	result, err := h.service.GetSearchHistory(ctx, domainReq)
+	if err != nil {
+		h.logger.Error().
+			Err(err).
+			Msg("search history service failed")
+
+		// Map service errors to gRPC status codes
+		if containsError(err, "invalid") || containsError(err, "exactly one") {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to get search history")
+	}
+
+	// Convert domain to proto
+	resp := h.searchHistoryResponseToProto(result)
+
+	h.logger.Info().
+		Int("count", len(resp.Entries)).
+		Msg("GetSearchHistory completed")
+
+	return resp, nil
+}
+
+// validateSearchHistoryRequest validates search history request parameters
+func (h *SearchHandler) validateSearchHistoryRequest(req *searchv1.GetSearchHistoryRequest) error {
+	// Validate XOR: exactly one of user_id or session_id must be provided
+	hasUserID := req.UserId != nil
+	hasSessionID := req.SessionId != nil
+
+	if !hasUserID && !hasSessionID {
+		return fmt.Errorf("either user_id or session_id must be provided")
+	}
+	if hasUserID && hasSessionID {
+		return fmt.Errorf("only one of user_id or session_id must be provided")
+	}
+
+	// Validate limit (1-100)
+	if req.Limit < 0 {
+		return fmt.Errorf("limit must be >= 0")
+	}
+	if req.Limit > 100 {
+		return fmt.Errorf("limit must be <= 100")
+	}
+
+	return nil
+}
+
+// protoToSearchHistoryRequest converts proto request to domain request
+func (h *SearchHandler) protoToSearchHistoryRequest(req *searchv1.GetSearchHistoryRequest) *search.SearchHistoryRequest {
+	domainReq := &search.SearchHistoryRequest{
+		Limit: req.Limit,
+	}
+
+	// Handle optional user_id
+	if req.UserId != nil {
+		userID := *req.UserId
+		domainReq.UserID = &userID
+	}
+
+	// Handle optional session_id
+	if req.SessionId != nil {
+		sessionID := *req.SessionId
+		domainReq.SessionID = &sessionID
+	}
+
+	// Set default limit if not provided
+	if domainReq.Limit == 0 {
+		domainReq.Limit = 50
+	}
+
+	return domainReq
+}
+
+// searchHistoryResponseToProto converts domain response to proto response
+func (h *SearchHandler) searchHistoryResponseToProto(result *search.SearchHistoryResponse) *searchv1.SearchHistoryResponse {
+	protoEntries := make([]*searchv1.SearchHistoryEntry, 0, len(result.Entries))
+
+	for _, entry := range result.Entries {
+		protoEntry := &searchv1.SearchHistoryEntry{
+			QueryText:    entry.QueryText,
+			ResultsCount: entry.ResultsCount,
+			SearchedAt: &timestamppb.Timestamp{
+				Seconds: entry.SearchedAt.Unix(),
+				Nanos:   int32(entry.SearchedAt.Nanosecond()),
+			},
+		}
+
+		// Handle optional fields
+		if entry.CategoryID != nil {
+			protoEntry.CategoryId = entry.CategoryID
+		}
+		if entry.ClickedListingID != nil {
+			protoEntry.ClickedListingId = entry.ClickedListingID
+		}
+
+		protoEntries = append(protoEntries, protoEntry)
+	}
+
+	return &searchv1.SearchHistoryResponse{
+		Entries: protoEntries,
+	}
 }
 
 // containsError checks if error message contains substring (case-insensitive)

@@ -477,6 +477,68 @@ func (m *MockRepository) GetDB() *sqlx.DB {
 	return args.Get(0).(*sqlx.DB)
 }
 
+// B2C Product Variants operations
+
+// CreateVariant mocks creating a B2C variant
+func (m *MockRepository) CreateVariant(ctx context.Context, variant *domain.Variant) (*domain.Variant, error) {
+	args := m.Called(ctx, variant)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Variant), args.Error(1)
+}
+
+// GetVariant mocks getting a B2C variant by ID (alias for GetB2CVariant)
+func (m *MockRepository) GetVariant(ctx context.Context, id int64) (*domain.Variant, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Variant), args.Error(1)
+}
+
+// GetB2CVariant mocks getting a B2C variant by ID
+func (m *MockRepository) GetB2CVariant(ctx context.Context, id int64) (*domain.Variant, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Variant), args.Error(1)
+}
+
+// UpdateB2CVariant mocks updating a B2C variant
+func (m *MockRepository) UpdateB2CVariant(ctx context.Context, id int64, update *domain.VariantUpdate) (*domain.Variant, error) {
+	args := m.Called(ctx, id, update)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Variant), args.Error(1)
+}
+
+// DeleteB2CVariant mocks deleting a B2C variant
+func (m *MockRepository) DeleteB2CVariant(ctx context.Context, id int64) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+// ListVariants mocks listing B2C variants (alias for ListB2CVariants)
+func (m *MockRepository) ListVariants(ctx context.Context, filters *domain.VariantFilters) ([]*domain.Variant, error) {
+	args := m.Called(ctx, filters)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Variant), args.Error(1)
+}
+
+// ListB2CVariants mocks listing B2C variants
+func (m *MockRepository) ListB2CVariants(ctx context.Context, filters *domain.VariantFilters) ([]*domain.Variant, error) {
+	args := m.Called(ctx, filters)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Variant), args.Error(1)
+}
+
 // Storefront operations
 
 // GetStorefront mocks getting a storefront by ID

@@ -7736,18 +7736,19 @@ func (x *BulkOperationError) GetErrorMessage() string {
 type CreateProductVariantRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	ProductId         int64                  `protobuf:"varint,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"` // Parent product
-	Sku               *string                `protobuf:"bytes,2,opt,name=sku,proto3,oneof" json:"sku,omitempty"`                         // Optional, unique within product
-	Barcode           *string                `protobuf:"bytes,3,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
-	Price             *float64               `protobuf:"fixed64,4,opt,name=price,proto3,oneof" json:"price,omitempty"`                                           // If null, inherits from product
-	CompareAtPrice    *float64               `protobuf:"fixed64,5,opt,name=compare_at_price,json=compareAtPrice,proto3,oneof" json:"compare_at_price,omitempty"` // "Was" price for discounts
-	CostPrice         *float64               `protobuf:"fixed64,6,opt,name=cost_price,json=costPrice,proto3,oneof" json:"cost_price,omitempty"`                  // For profit calculations
-	StockQuantity     int32                  `protobuf:"varint,7,opt,name=stock_quantity,json=stockQuantity,proto3" json:"stock_quantity,omitempty"`
-	LowStockThreshold *int32                 `protobuf:"varint,8,opt,name=low_stock_threshold,json=lowStockThreshold,proto3,oneof" json:"low_stock_threshold,omitempty"`
-	VariantAttributes *structpb.Struct       `protobuf:"bytes,9,opt,name=variant_attributes,json=variantAttributes,proto3" json:"variant_attributes,omitempty"` // {"color": "red", "size": "XL"}
-	Weight            *float64               `protobuf:"fixed64,10,opt,name=weight,proto3,oneof" json:"weight,omitempty"`                                       // In grams
-	Dimensions        *structpb.Struct       `protobuf:"bytes,11,opt,name=dimensions,proto3" json:"dimensions,omitempty"`                                       // {"length": 10, "width": 5, "height": 3}
-	IsActive          bool                   `protobuf:"varint,12,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`                          // Default true
-	IsDefault         bool                   `protobuf:"varint,13,opt,name=is_default,json=isDefault,proto3" json:"is_default,omitempty"`                       // Default false
+	UserId            int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`          // Required for ownership validation (storefront owner check)
+	Sku               *string                `protobuf:"bytes,3,opt,name=sku,proto3,oneof" json:"sku,omitempty"`                         // Optional, unique within product
+	Barcode           *string                `protobuf:"bytes,4,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
+	Price             *float64               `protobuf:"fixed64,5,opt,name=price,proto3,oneof" json:"price,omitempty"`                                           // If null, inherits from product
+	CompareAtPrice    *float64               `protobuf:"fixed64,6,opt,name=compare_at_price,json=compareAtPrice,proto3,oneof" json:"compare_at_price,omitempty"` // "Was" price for discounts
+	CostPrice         *float64               `protobuf:"fixed64,7,opt,name=cost_price,json=costPrice,proto3,oneof" json:"cost_price,omitempty"`                  // For profit calculations
+	StockQuantity     int32                  `protobuf:"varint,8,opt,name=stock_quantity,json=stockQuantity,proto3" json:"stock_quantity,omitempty"`
+	LowStockThreshold *int32                 `protobuf:"varint,9,opt,name=low_stock_threshold,json=lowStockThreshold,proto3,oneof" json:"low_stock_threshold,omitempty"`
+	VariantAttributes *structpb.Struct       `protobuf:"bytes,10,opt,name=variant_attributes,json=variantAttributes,proto3" json:"variant_attributes,omitempty"` // {"color": "red", "size": "XL"}
+	Weight            *float64               `protobuf:"fixed64,11,opt,name=weight,proto3,oneof" json:"weight,omitempty"`                                        // In grams
+	Dimensions        *structpb.Struct       `protobuf:"bytes,12,opt,name=dimensions,proto3" json:"dimensions,omitempty"`                                        // {"length": 10, "width": 5, "height": 3}
+	IsActive          bool                   `protobuf:"varint,13,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`                           // Default true
+	IsDefault         bool                   `protobuf:"varint,14,opt,name=is_default,json=isDefault,proto3" json:"is_default,omitempty"`                        // Default false
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -7785,6 +7786,13 @@ func (*CreateProductVariantRequest) Descriptor() ([]byte, []int) {
 func (x *CreateProductVariantRequest) GetProductId() int64 {
 	if x != nil {
 		return x.ProductId
+	}
+	return 0
+}
+
+func (x *CreateProductVariantRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
 	}
 	return 0
 }
@@ -7878,19 +7886,20 @@ type UpdateProductVariantRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	VariantId         int64                  `protobuf:"varint,1,opt,name=variant_id,json=variantId,proto3" json:"variant_id,omitempty"`
 	ProductId         int64                  `protobuf:"varint,2,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"` // For validation
-	Sku               *string                `protobuf:"bytes,3,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
-	Barcode           *string                `protobuf:"bytes,4,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
-	Price             *float64               `protobuf:"fixed64,5,opt,name=price,proto3,oneof" json:"price,omitempty"`
-	CompareAtPrice    *float64               `protobuf:"fixed64,6,opt,name=compare_at_price,json=compareAtPrice,proto3,oneof" json:"compare_at_price,omitempty"`
-	CostPrice         *float64               `protobuf:"fixed64,7,opt,name=cost_price,json=costPrice,proto3,oneof" json:"cost_price,omitempty"`
-	StockQuantity     *int32                 `protobuf:"varint,8,opt,name=stock_quantity,json=stockQuantity,proto3,oneof" json:"stock_quantity,omitempty"`
-	LowStockThreshold *int32                 `protobuf:"varint,9,opt,name=low_stock_threshold,json=lowStockThreshold,proto3,oneof" json:"low_stock_threshold,omitempty"`
-	VariantAttributes *structpb.Struct       `protobuf:"bytes,10,opt,name=variant_attributes,json=variantAttributes,proto3,oneof" json:"variant_attributes,omitempty"`
-	Weight            *float64               `protobuf:"fixed64,11,opt,name=weight,proto3,oneof" json:"weight,omitempty"`
-	Dimensions        *structpb.Struct       `protobuf:"bytes,12,opt,name=dimensions,proto3,oneof" json:"dimensions,omitempty"`
-	IsActive          *bool                  `protobuf:"varint,13,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
-	IsDefault         *bool                  `protobuf:"varint,14,opt,name=is_default,json=isDefault,proto3,oneof" json:"is_default,omitempty"`
-	UpdateMask        *fieldmaskpb.FieldMask `protobuf:"bytes,15,opt,name=update_mask,json=updateMask,proto3,oneof" json:"update_mask,omitempty"`
+	UserId            int64                  `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`          // Required for ownership validation (storefront owner check)
+	Sku               *string                `protobuf:"bytes,4,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
+	Barcode           *string                `protobuf:"bytes,5,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
+	Price             *float64               `protobuf:"fixed64,6,opt,name=price,proto3,oneof" json:"price,omitempty"`
+	CompareAtPrice    *float64               `protobuf:"fixed64,7,opt,name=compare_at_price,json=compareAtPrice,proto3,oneof" json:"compare_at_price,omitempty"`
+	CostPrice         *float64               `protobuf:"fixed64,8,opt,name=cost_price,json=costPrice,proto3,oneof" json:"cost_price,omitempty"`
+	StockQuantity     *int32                 `protobuf:"varint,9,opt,name=stock_quantity,json=stockQuantity,proto3,oneof" json:"stock_quantity,omitempty"`
+	LowStockThreshold *int32                 `protobuf:"varint,10,opt,name=low_stock_threshold,json=lowStockThreshold,proto3,oneof" json:"low_stock_threshold,omitempty"`
+	VariantAttributes *structpb.Struct       `protobuf:"bytes,11,opt,name=variant_attributes,json=variantAttributes,proto3,oneof" json:"variant_attributes,omitempty"`
+	Weight            *float64               `protobuf:"fixed64,12,opt,name=weight,proto3,oneof" json:"weight,omitempty"`
+	Dimensions        *structpb.Struct       `protobuf:"bytes,13,opt,name=dimensions,proto3,oneof" json:"dimensions,omitempty"`
+	IsActive          *bool                  `protobuf:"varint,14,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
+	IsDefault         *bool                  `protobuf:"varint,15,opt,name=is_default,json=isDefault,proto3,oneof" json:"is_default,omitempty"`
+	UpdateMask        *fieldmaskpb.FieldMask `protobuf:"bytes,16,opt,name=update_mask,json=updateMask,proto3,oneof" json:"update_mask,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -7935,6 +7944,13 @@ func (x *UpdateProductVariantRequest) GetVariantId() int64 {
 func (x *UpdateProductVariantRequest) GetProductId() int64 {
 	if x != nil {
 		return x.ProductId
+	}
+	return 0
+}
+
+func (x *UpdateProductVariantRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
 	}
 	return 0
 }
@@ -8035,6 +8051,7 @@ type DeleteProductVariantRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	VariantId     int64                  `protobuf:"varint,1,opt,name=variant_id,json=variantId,proto3" json:"variant_id,omitempty"`
 	ProductId     int64                  `protobuf:"varint,2,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"` // For validation
+	UserId        int64                  `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`          // Required for ownership validation (storefront owner check)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -8079,6 +8096,13 @@ func (x *DeleteProductVariantRequest) GetVariantId() int64 {
 func (x *DeleteProductVariantRequest) GetProductId() int64 {
 	if x != nil {
 		return x.ProductId
+	}
+	return 0
+}
+
+func (x *DeleteProductVariantRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
 	}
 	return 0
 }
@@ -8273,7 +8297,8 @@ func (x *ProductVariantInput) GetIsDefault() bool {
 type BulkCreateProductVariantsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProductId     int64                  `protobuf:"varint,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
-	Variants      []*ProductVariantInput `protobuf:"bytes,2,rep,name=variants,proto3" json:"variants,omitempty"` // Max 1000 items
+	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // Required for ownership validation (storefront owner check)
+	Variants      []*ProductVariantInput `protobuf:"bytes,3,rep,name=variants,proto3" json:"variants,omitempty"`            // Max 1000 items
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -8311,6 +8336,13 @@ func (*BulkCreateProductVariantsRequest) Descriptor() ([]byte, []int) {
 func (x *BulkCreateProductVariantsRequest) GetProductId() int64 {
 	if x != nil {
 		return x.ProductId
+	}
+	return 0
+}
+
+func (x *BulkCreateProductVariantsRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
 	}
 	return 0
 }
@@ -12850,27 +12882,28 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\n" +
 	"error_code\x18\x03 \x01(\tR\terrorCode\x12#\n" +
 	"\rerror_message\x18\x04 \x01(\tR\ferrorMessageB\r\n" +
-	"\v_product_id\"\xfb\x04\n" +
+	"\v_product_id\"\x94\x05\n" +
 	"\x1bCreateProductVariantRequest\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x01 \x01(\x03R\tproductId\x12\x15\n" +
-	"\x03sku\x18\x02 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
-	"\abarcode\x18\x03 \x01(\tH\x01R\abarcode\x88\x01\x01\x12\x19\n" +
-	"\x05price\x18\x04 \x01(\x01H\x02R\x05price\x88\x01\x01\x12-\n" +
-	"\x10compare_at_price\x18\x05 \x01(\x01H\x03R\x0ecompareAtPrice\x88\x01\x01\x12\"\n" +
+	"product_id\x18\x01 \x01(\x03R\tproductId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x15\n" +
+	"\x03sku\x18\x03 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
+	"\abarcode\x18\x04 \x01(\tH\x01R\abarcode\x88\x01\x01\x12\x19\n" +
+	"\x05price\x18\x05 \x01(\x01H\x02R\x05price\x88\x01\x01\x12-\n" +
+	"\x10compare_at_price\x18\x06 \x01(\x01H\x03R\x0ecompareAtPrice\x88\x01\x01\x12\"\n" +
 	"\n" +
-	"cost_price\x18\x06 \x01(\x01H\x04R\tcostPrice\x88\x01\x01\x12%\n" +
-	"\x0estock_quantity\x18\a \x01(\x05R\rstockQuantity\x123\n" +
-	"\x13low_stock_threshold\x18\b \x01(\x05H\x05R\x11lowStockThreshold\x88\x01\x01\x12F\n" +
-	"\x12variant_attributes\x18\t \x01(\v2\x17.google.protobuf.StructR\x11variantAttributes\x12\x1b\n" +
-	"\x06weight\x18\n" +
-	" \x01(\x01H\x06R\x06weight\x88\x01\x01\x127\n" +
+	"cost_price\x18\a \x01(\x01H\x04R\tcostPrice\x88\x01\x01\x12%\n" +
+	"\x0estock_quantity\x18\b \x01(\x05R\rstockQuantity\x123\n" +
+	"\x13low_stock_threshold\x18\t \x01(\x05H\x05R\x11lowStockThreshold\x88\x01\x01\x12F\n" +
+	"\x12variant_attributes\x18\n" +
+	" \x01(\v2\x17.google.protobuf.StructR\x11variantAttributes\x12\x1b\n" +
+	"\x06weight\x18\v \x01(\x01H\x06R\x06weight\x88\x01\x01\x127\n" +
 	"\n" +
-	"dimensions\x18\v \x01(\v2\x17.google.protobuf.StructR\n" +
+	"dimensions\x18\f \x01(\v2\x17.google.protobuf.StructR\n" +
 	"dimensions\x12\x1b\n" +
-	"\tis_active\x18\f \x01(\bR\bisActive\x12\x1d\n" +
+	"\tis_active\x18\r \x01(\bR\bisActive\x12\x1d\n" +
 	"\n" +
-	"is_default\x18\r \x01(\bR\tisDefaultB\x06\n" +
+	"is_default\x18\x0e \x01(\bR\tisDefaultB\x06\n" +
 	"\x04_skuB\n" +
 	"\n" +
 	"\b_barcodeB\b\n" +
@@ -12878,31 +12911,32 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x11_compare_at_priceB\r\n" +
 	"\v_cost_priceB\x16\n" +
 	"\x14_low_stock_thresholdB\t\n" +
-	"\a_weight\"\xdb\x06\n" +
+	"\a_weight\"\xf4\x06\n" +
 	"\x1bUpdateProductVariantRequest\x12\x1d\n" +
 	"\n" +
 	"variant_id\x18\x01 \x01(\x03R\tvariantId\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x02 \x01(\x03R\tproductId\x12\x15\n" +
-	"\x03sku\x18\x03 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
-	"\abarcode\x18\x04 \x01(\tH\x01R\abarcode\x88\x01\x01\x12\x19\n" +
-	"\x05price\x18\x05 \x01(\x01H\x02R\x05price\x88\x01\x01\x12-\n" +
-	"\x10compare_at_price\x18\x06 \x01(\x01H\x03R\x0ecompareAtPrice\x88\x01\x01\x12\"\n" +
+	"product_id\x18\x02 \x01(\x03R\tproductId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\x03R\x06userId\x12\x15\n" +
+	"\x03sku\x18\x04 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
+	"\abarcode\x18\x05 \x01(\tH\x01R\abarcode\x88\x01\x01\x12\x19\n" +
+	"\x05price\x18\x06 \x01(\x01H\x02R\x05price\x88\x01\x01\x12-\n" +
+	"\x10compare_at_price\x18\a \x01(\x01H\x03R\x0ecompareAtPrice\x88\x01\x01\x12\"\n" +
 	"\n" +
-	"cost_price\x18\a \x01(\x01H\x04R\tcostPrice\x88\x01\x01\x12*\n" +
-	"\x0estock_quantity\x18\b \x01(\x05H\x05R\rstockQuantity\x88\x01\x01\x123\n" +
-	"\x13low_stock_threshold\x18\t \x01(\x05H\x06R\x11lowStockThreshold\x88\x01\x01\x12K\n" +
-	"\x12variant_attributes\x18\n" +
-	" \x01(\v2\x17.google.protobuf.StructH\aR\x11variantAttributes\x88\x01\x01\x12\x1b\n" +
-	"\x06weight\x18\v \x01(\x01H\bR\x06weight\x88\x01\x01\x12<\n" +
+	"cost_price\x18\b \x01(\x01H\x04R\tcostPrice\x88\x01\x01\x12*\n" +
+	"\x0estock_quantity\x18\t \x01(\x05H\x05R\rstockQuantity\x88\x01\x01\x123\n" +
+	"\x13low_stock_threshold\x18\n" +
+	" \x01(\x05H\x06R\x11lowStockThreshold\x88\x01\x01\x12K\n" +
+	"\x12variant_attributes\x18\v \x01(\v2\x17.google.protobuf.StructH\aR\x11variantAttributes\x88\x01\x01\x12\x1b\n" +
+	"\x06weight\x18\f \x01(\x01H\bR\x06weight\x88\x01\x01\x12<\n" +
 	"\n" +
-	"dimensions\x18\f \x01(\v2\x17.google.protobuf.StructH\tR\n" +
+	"dimensions\x18\r \x01(\v2\x17.google.protobuf.StructH\tR\n" +
 	"dimensions\x88\x01\x01\x12 \n" +
-	"\tis_active\x18\r \x01(\bH\n" +
+	"\tis_active\x18\x0e \x01(\bH\n" +
 	"R\bisActive\x88\x01\x01\x12\"\n" +
 	"\n" +
-	"is_default\x18\x0e \x01(\bH\vR\tisDefault\x88\x01\x01\x12@\n" +
-	"\vupdate_mask\x18\x0f \x01(\v2\x1a.google.protobuf.FieldMaskH\fR\n" +
+	"is_default\x18\x0f \x01(\bH\vR\tisDefault\x88\x01\x01\x12@\n" +
+	"\vupdate_mask\x18\x10 \x01(\v2\x1a.google.protobuf.FieldMaskH\fR\n" +
 	"updateMask\x88\x01\x01B\x06\n" +
 	"\x04_skuB\n" +
 	"\n" +
@@ -12918,12 +12952,13 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\n" +
 	"_is_activeB\r\n" +
 	"\v_is_defaultB\x0e\n" +
-	"\f_update_mask\"[\n" +
+	"\f_update_mask\"t\n" +
 	"\x1bDeleteProductVariantRequest\x12\x1d\n" +
 	"\n" +
 	"variant_id\x18\x01 \x01(\x03R\tvariantId\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x02 \x01(\x03R\tproductId\"c\n" +
+	"product_id\x18\x02 \x01(\x03R\tproductId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\x03R\x06userId\"c\n" +
 	"\x1cDeleteProductVariantResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
 	"\amessage\x18\x02 \x01(\tH\x00R\amessage\x88\x01\x01B\n" +
@@ -12954,11 +12989,12 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x11_compare_at_priceB\r\n" +
 	"\v_cost_priceB\x16\n" +
 	"\x14_low_stock_thresholdB\t\n" +
-	"\a_weight\"\x82\x01\n" +
+	"\a_weight\"\x9b\x01\n" +
 	" BulkCreateProductVariantsRequest\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x01 \x01(\x03R\tproductId\x12?\n" +
-	"\bvariants\x18\x02 \x03(\v2#.listingssvc.v1.ProductVariantInputR\bvariants\"\xe9\x01\n" +
+	"product_id\x18\x01 \x01(\x03R\tproductId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12?\n" +
+	"\bvariants\x18\x03 \x03(\v2#.listingssvc.v1.ProductVariantInputR\bvariants\"\xe9\x01\n" +
 	"!BulkCreateProductVariantsResponse\x12:\n" +
 	"\bvariants\x18\x01 \x03(\v2\x1e.listingssvc.v1.ProductVariantR\bvariants\x12)\n" +
 	"\x10successful_count\x18\x02 \x01(\x05R\x0fsuccessfulCount\x12!\n" +

@@ -8,14 +8,17 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/sveturs/listings/internal/cache"
+	"github.com/sveturs/listings/internal/domain"
 	"github.com/sveturs/listings/internal/opensearch"
+	"github.com/sveturs/listings/internal/repository"
 )
 
 // Service provides search functionality for listings
 type Service struct {
-	searchClient *opensearch.SearchClient
-	cache        *cache.SearchCache
-	logger       zerolog.Logger
+	searchClient      *opensearch.SearchClient
+	cache             *cache.SearchCache
+	searchQueriesRepo repository.SearchQueriesRepository
+	logger            zerolog.Logger
 }
 
 // NewService creates a new search service
@@ -25,10 +28,16 @@ func NewService(
 	logger zerolog.Logger,
 ) *Service {
 	return &Service{
-		searchClient: searchClient,
-		cache:        cache,
-		logger:       logger.With().Str("service", "search").Logger(),
+		searchClient:      searchClient,
+		cache:             cache,
+		searchQueriesRepo: nil, // Will be set via SetSearchQueriesRepo if needed
+		logger:            logger.With().Str("service", "search").Logger(),
 	}
+}
+
+// SetSearchQueriesRepo sets the search queries repository (optional)
+func (s *Service) SetSearchQueriesRepo(repo repository.SearchQueriesRepository) {
+	s.searchQueriesRepo = repo
 }
 
 // SearchListings searches for listings based on query and filters
@@ -650,9 +659,38 @@ func (s *Service) GetPopularSearches(ctx context.Context, req *PopularSearchesRe
 		}
 	}
 
-	// TODO: Query PostgreSQL search_queries table when implemented
-	// For now, return mock trending searches based on category
-	searches := s.getMockPopularSearches(req.CategoryID, req.Limit)
+	// Query PostgreSQL search_queries table for all-time popular searches
+	if s.searchQueriesRepo == nil {
+		s.logger.Warn().Msg("search queries repository not available, returning empty result")
+		return &PopularSearchesResponse{
+			Searches: []PopularSearch{},
+			TookMs:   int32(time.Since(start).Milliseconds()),
+		}, nil
+	}
+
+	// Build filter for repository
+	filter := &domain.GetPopularQueriesFilter{
+		CategoryID:     req.CategoryID,
+		Limit:          req.Limit,
+		MinSearchCount: 0, // No minimum, get all popular queries
+	}
+
+	// Query repository
+	trends, err := s.searchQueriesRepo.GetPopularQueries(ctx, filter)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to fetch popular queries")
+		return nil, fmt.Errorf("failed to fetch popular queries: %w", err)
+	}
+
+	// Convert domain.TrendingSearch → service.PopularSearch
+	searches := make([]PopularSearch, 0, len(trends))
+	for _, trend := range trends {
+		searches = append(searches, PopularSearch{
+			Query:       trend.QueryText,
+			SearchCount: trend.SearchCount,
+			TrendScore:  0.0, // All-time popular queries don't have trend percentage
+		})
+	}
 
 	response := &PopularSearchesResponse{
 		Searches: searches,
@@ -676,7 +714,7 @@ func (s *Service) GetPopularSearches(ctx context.Context, req *PopularSearchesRe
 		Dur("duration", time.Since(start)).
 		Int32("took_ms", response.TookMs).
 		Int("searches", len(response.Searches)).
-		Msg("popular searches fetched (mock data)")
+		Msg("popular searches fetched")
 
 	return response, nil
 }
@@ -970,54 +1008,6 @@ func (s *Service) getListingByID(ctx context.Context, listingID int64) (*Listing
 	return &listings[0], nil
 }
 
-// getMockPopularSearches returns mock trending data
-// TODO: Replace with real analytics query
-func (s *Service) getMockPopularSearches(categoryID *int64, limit int32) []PopularSearch {
-	// Mock data - will be replaced with real analytics
-	allSearches := map[int64][]PopularSearch{
-		1301: { // Cars category
-			{Query: "lamborghini", SearchCount: 542, TrendScore: 15.3},
-			{Query: "mercedes", SearchCount: 387, TrendScore: 8.2},
-			{Query: "bmw", SearchCount: 312, TrendScore: -3.1},
-			{Query: "audi", SearchCount: 298, TrendScore: 12.5},
-			{Query: "tesla", SearchCount: 276, TrendScore: 25.8},
-		},
-		1001: { // Electronics
-			{Query: "iphone", SearchCount: 1203, TrendScore: 22.5},
-			{Query: "samsung", SearchCount: 891, TrendScore: 5.7},
-			{Query: "laptop", SearchCount: 654, TrendScore: -1.2},
-			{Query: "airpods", SearchCount: 543, TrendScore: 18.3},
-			{Query: "macbook", SearchCount: 432, TrendScore: 7.9},
-		},
-	}
-
-	var searches []PopularSearch
-
-	if categoryID != nil {
-		if categorySearches, ok := allSearches[*categoryID]; ok {
-			searches = categorySearches
-		}
-	}
-
-	// Default: combine top searches from all categories
-	if len(searches) == 0 {
-		searches = []PopularSearch{
-			{Query: "iphone", SearchCount: 1203, TrendScore: 22.5},
-			{Query: "tesla", SearchCount: 276, TrendScore: 25.8},
-			{Query: "lamborghini", SearchCount: 542, TrendScore: 15.3},
-			{Query: "airpods", SearchCount: 543, TrendScore: 18.3},
-			{Query: "samsung", SearchCount: 891, TrendScore: 5.7},
-		}
-	}
-
-	// Apply limit
-	if int32(len(searches)) > limit {
-		searches = searches[:limit]
-	}
-
-	return searches
-}
-
 // ============================================================================
 // Cache Conversion Methods
 // ============================================================================
@@ -1268,5 +1258,296 @@ func (s *Service) convertPopularSearchesForCache(response *PopularSearchesRespon
 	return map[string]interface{}{
 		"searches": response.Searches,
 		"took_ms":  response.TookMs,
+	}
+}
+
+// ============================================================================
+// PHASE 28: Search Analytics - Trending Searches
+// ============================================================================
+
+// GetTrendingSearches returns real trending search queries from analytics
+func (s *Service) GetTrendingSearches(ctx context.Context, req *TrendingSearchesRequest) (*TrendingSearchesResponse, error) {
+	start := time.Now()
+
+	// Validate request
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	// Check if repository is available
+	if s.searchQueriesRepo == nil {
+		s.logger.Warn().Msg("search queries repository not available, returning empty result")
+		return &TrendingSearchesResponse{
+			Searches: []TrendingSearchResult{},
+		}, nil
+	}
+
+	s.logger.Debug().
+		Interface("category_id", req.CategoryID).
+		Int32("limit", req.Limit).
+		Int32("days", req.Days).
+		Msg("fetching trending searches")
+
+	// Generate cache key
+	cacheKey := ""
+	if s.cache != nil {
+		cacheKey = s.cache.GenerateTrendingKey(req.CategoryID, req.Days)
+
+		// Check cache
+		if cached, err := s.cache.GetTrending(ctx, cacheKey); err == nil && cached != nil {
+			s.logger.Debug().Msg("trending searches cache hit")
+			return s.convertCachedTrendingSearches(cached), nil
+		}
+	}
+
+	// Build filter for repository
+	filter := &domain.GetTrendingQueriesFilter{
+		CategoryID:         req.CategoryID,
+		Limit:              req.Limit,
+		DaysAgo:            req.Days,
+		MinResultsCount:    1, // Only successful searches
+		IncludeZeroResults: false,
+	}
+
+	// Query repository
+	results, err := s.searchQueriesRepo.GetTrendingQueries(ctx, filter)
+	if err != nil {
+		s.logger.Error().
+			Err(err).
+			Msg("failed to fetch trending queries from repository")
+		return nil, fmt.Errorf("failed to fetch trending queries: %w", err)
+	}
+
+	// Convert domain to service types
+	searches := make([]TrendingSearchResult, 0, len(results))
+	for _, result := range results {
+		searches = append(searches, TrendingSearchResult{
+			QueryText:    result.QueryText,
+			SearchCount:  int32(result.SearchCount),
+			LastSearched: result.LastSearched,
+		})
+	}
+
+	response := &TrendingSearchesResponse{
+		Searches: searches,
+	}
+
+	// Cache results (async, non-blocking) - 1 hour TTL
+	if s.cache != nil && cacheKey != "" {
+		go func() {
+			cacheCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			trendingMap := s.convertTrendingSearchesForCache(response)
+			if err := s.cache.SetTrending(cacheCtx, cacheKey, trendingMap); err != nil {
+				s.logger.Warn().Err(err).Msg("failed to cache trending searches")
+			}
+		}()
+	}
+
+	s.logger.Info().
+		Dur("duration", time.Since(start)).
+		Int("count", len(searches)).
+		Msg("trending searches fetched successfully")
+
+	return response, nil
+}
+
+// convertCachedTrendingSearches converts cached trending searches map to response
+func (s *Service) convertCachedTrendingSearches(cached map[string]interface{}) *TrendingSearchesResponse {
+	response := &TrendingSearchesResponse{
+		Searches: []TrendingSearchResult{},
+	}
+
+	if searches, ok := cached["searches"].([]interface{}); ok {
+		for _, searchData := range searches {
+			if searchMap, ok := searchData.(map[string]interface{}); ok {
+				search := TrendingSearchResult{}
+				if query, ok := searchMap["query_text"].(string); ok {
+					search.QueryText = query
+				}
+				if count, ok := searchMap["search_count"].(float64); ok {
+					search.SearchCount = int32(count)
+				}
+				if lastSearched, ok := searchMap["last_searched"].(string); ok {
+					if t, err := time.Parse(time.RFC3339, lastSearched); err == nil {
+						search.LastSearched = t
+					}
+				}
+				response.Searches = append(response.Searches, search)
+			}
+		}
+	}
+
+	return response
+}
+
+// convertTrendingSearchesForCache converts TrendingSearchesResponse to cacheable map
+func (s *Service) convertTrendingSearchesForCache(response *TrendingSearchesResponse) map[string]interface{} {
+	// Convert searches to map format with serializable time
+	searches := make([]map[string]interface{}, 0, len(response.Searches))
+	for _, search := range response.Searches {
+		searches = append(searches, map[string]interface{}{
+			"query_text":    search.QueryText,
+			"search_count":  search.SearchCount,
+			"last_searched": search.LastSearched.Format(time.RFC3339),
+		})
+	}
+
+	return map[string]interface{}{
+		"searches": searches,
+	}
+}
+
+// ============================================================================
+// PHASE 28: Search Analytics - Personal Search History
+// ============================================================================
+
+// GetSearchHistory returns user's personal search history
+func (s *Service) GetSearchHistory(ctx context.Context, req *SearchHistoryRequest) (*SearchHistoryResponse, error) {
+	start := time.Now()
+
+	// Validate request
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	// Check if repository is available
+	if s.searchQueriesRepo == nil {
+		s.logger.Warn().Msg("search queries repository not available, returning empty result")
+		return &SearchHistoryResponse{
+			Entries: []SearchHistoryEntry{},
+		}, nil
+	}
+
+	s.logger.Debug().
+		Interface("user_id", req.UserID).
+		Interface("session_id", req.SessionID).
+		Int32("limit", req.Limit).
+		Msg("fetching search history")
+
+	// Generate cache key
+	cacheKey := ""
+	if s.cache != nil {
+		cacheKey = s.cache.GenerateHistoryKey(req.UserID, req.SessionID)
+
+		// Check cache
+		if cached, err := s.cache.GetHistory(ctx, cacheKey); err == nil && cached != nil {
+			s.logger.Debug().Msg("search history cache hit")
+			return s.convertCachedSearchHistory(cached), nil
+		}
+	}
+
+	// Build filter for repository
+	filter := &domain.GetUserHistoryFilter{
+		UserID:    req.UserID,
+		SessionID: req.SessionID,
+		Limit:     req.Limit,
+	}
+
+	// Query repository
+	results, err := s.searchQueriesRepo.GetUserHistory(ctx, filter)
+	if err != nil {
+		s.logger.Error().
+			Err(err).
+			Msg("failed to fetch search history from repository")
+		return nil, fmt.Errorf("failed to fetch search history: %w", err)
+	}
+
+	// Convert domain to service types
+	entries := make([]SearchHistoryEntry, 0, len(results))
+	for _, result := range results {
+		entries = append(entries, SearchHistoryEntry{
+			QueryText:        result.QueryText,
+			CategoryID:       result.CategoryID,
+			ResultsCount:     result.ResultsCount,
+			ClickedListingID: result.ClickedListingID,
+			SearchedAt:       result.CreatedAt,
+		})
+	}
+
+	response := &SearchHistoryResponse{
+		Entries: entries,
+	}
+
+	// Cache results (async, non-blocking) - 5 min TTL
+	if s.cache != nil && cacheKey != "" {
+		go func() {
+			cacheCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			historyMap := s.convertSearchHistoryForCache(response)
+			if err := s.cache.SetHistory(cacheCtx, cacheKey, historyMap); err != nil {
+				s.logger.Warn().Err(err).Msg("failed to cache search history")
+			}
+		}()
+	}
+
+	s.logger.Info().
+		Dur("duration", time.Since(start)).
+		Int("count", len(entries)).
+		Msg("search history fetched successfully")
+
+	return response, nil
+}
+
+// convertCachedSearchHistory converts cached search history map to response
+func (s *Service) convertCachedSearchHistory(cached map[string]interface{}) *SearchHistoryResponse {
+	response := &SearchHistoryResponse{
+		Entries: []SearchHistoryEntry{},
+	}
+
+	if entries, ok := cached["entries"].([]interface{}); ok {
+		for _, entryData := range entries {
+			if entryMap, ok := entryData.(map[string]interface{}); ok {
+				entry := SearchHistoryEntry{}
+				if queryText, ok := entryMap["query_text"].(string); ok {
+					entry.QueryText = queryText
+				}
+				if categoryID, ok := entryMap["category_id"].(float64); ok {
+					id := int64(categoryID)
+					entry.CategoryID = &id
+				}
+				if resultsCount, ok := entryMap["results_count"].(float64); ok {
+					entry.ResultsCount = int32(resultsCount)
+				}
+				if clickedListingID, ok := entryMap["clicked_listing_id"].(float64); ok {
+					id := int64(clickedListingID)
+					entry.ClickedListingID = &id
+				}
+				if searchedAt, ok := entryMap["searched_at"].(string); ok {
+					if t, err := time.Parse(time.RFC3339, searchedAt); err == nil {
+						entry.SearchedAt = t
+					}
+				}
+				response.Entries = append(response.Entries, entry)
+			}
+		}
+	}
+
+	return response
+}
+
+// convertSearchHistoryForCache converts SearchHistoryResponse to cacheable map
+func (s *Service) convertSearchHistoryForCache(response *SearchHistoryResponse) map[string]interface{} {
+	// Convert entries to map format with serializable time
+	entries := make([]map[string]interface{}, 0, len(response.Entries))
+	for _, entry := range response.Entries {
+		entryMap := map[string]interface{}{
+			"query_text":    entry.QueryText,
+			"results_count": entry.ResultsCount,
+			"searched_at":   entry.SearchedAt.Format(time.RFC3339),
+		}
+		if entry.CategoryID != nil {
+			entryMap["category_id"] = *entry.CategoryID
+		}
+		if entry.ClickedListingID != nil {
+			entryMap["clicked_listing_id"] = *entry.ClickedListingID
+		}
+		entries = append(entries, entryMap)
+	}
+
+	return map[string]interface{}{
+		"entries": entries,
 	}
 }

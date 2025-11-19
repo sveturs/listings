@@ -19,11 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SearchService_SearchListings_FullMethodName     = "/search.v1.SearchService/SearchListings"
-	SearchService_GetSearchFacets_FullMethodName    = "/search.v1.SearchService/GetSearchFacets"
-	SearchService_SearchWithFilters_FullMethodName  = "/search.v1.SearchService/SearchWithFilters"
-	SearchService_GetSuggestions_FullMethodName     = "/search.v1.SearchService/GetSuggestions"
-	SearchService_GetPopularSearches_FullMethodName = "/search.v1.SearchService/GetPopularSearches"
+	SearchService_SearchListings_FullMethodName      = "/search.v1.SearchService/SearchListings"
+	SearchService_GetSearchFacets_FullMethodName     = "/search.v1.SearchService/GetSearchFacets"
+	SearchService_SearchWithFilters_FullMethodName   = "/search.v1.SearchService/SearchWithFilters"
+	SearchService_GetSuggestions_FullMethodName      = "/search.v1.SearchService/GetSuggestions"
+	SearchService_GetPopularSearches_FullMethodName  = "/search.v1.SearchService/GetPopularSearches"
+	SearchService_GetTrendingSearches_FullMethodName = "/search.v1.SearchService/GetTrendingSearches"
+	SearchService_GetSearchHistory_FullMethodName    = "/search.v1.SearchService/GetSearchHistory"
 )
 
 // SearchServiceClient is the client API for SearchService service.
@@ -47,6 +49,12 @@ type SearchServiceClient interface {
 	// GetPopularSearches returns trending search queries
 	// Phase 21.2 - Popular queries by time range for search suggestions UI
 	GetPopularSearches(ctx context.Context, in *GetPopularSearchesRequest, opts ...grpc.CallOption) (*GetPopularSearchesResponse, error)
+	// GetTrendingSearches returns trending search queries from analytics
+	// Phase 28 - Search Analytics - Real trending queries from search_queries table
+	GetTrendingSearches(ctx context.Context, in *GetTrendingSearchesRequest, opts ...grpc.CallOption) (*TrendingSearchesResponse, error)
+	// GetSearchHistory returns user's personal search history
+	// Phase 28 - Search Analytics - Personal search history for authenticated or anonymous users
+	GetSearchHistory(ctx context.Context, in *GetSearchHistoryRequest, opts ...grpc.CallOption) (*SearchHistoryResponse, error)
 }
 
 type searchServiceClient struct {
@@ -107,6 +115,26 @@ func (c *searchServiceClient) GetPopularSearches(ctx context.Context, in *GetPop
 	return out, nil
 }
 
+func (c *searchServiceClient) GetTrendingSearches(ctx context.Context, in *GetTrendingSearchesRequest, opts ...grpc.CallOption) (*TrendingSearchesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TrendingSearchesResponse)
+	err := c.cc.Invoke(ctx, SearchService_GetTrendingSearches_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *searchServiceClient) GetSearchHistory(ctx context.Context, in *GetSearchHistoryRequest, opts ...grpc.CallOption) (*SearchHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchHistoryResponse)
+	err := c.cc.Invoke(ctx, SearchService_GetSearchHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SearchServiceServer is the server API for SearchService service.
 // All implementations must embed UnimplementedSearchServiceServer
 // for forward compatibility.
@@ -128,6 +156,12 @@ type SearchServiceServer interface {
 	// GetPopularSearches returns trending search queries
 	// Phase 21.2 - Popular queries by time range for search suggestions UI
 	GetPopularSearches(context.Context, *GetPopularSearchesRequest) (*GetPopularSearchesResponse, error)
+	// GetTrendingSearches returns trending search queries from analytics
+	// Phase 28 - Search Analytics - Real trending queries from search_queries table
+	GetTrendingSearches(context.Context, *GetTrendingSearchesRequest) (*TrendingSearchesResponse, error)
+	// GetSearchHistory returns user's personal search history
+	// Phase 28 - Search Analytics - Personal search history for authenticated or anonymous users
+	GetSearchHistory(context.Context, *GetSearchHistoryRequest) (*SearchHistoryResponse, error)
 	mustEmbedUnimplementedSearchServiceServer()
 }
 
@@ -152,6 +186,12 @@ func (UnimplementedSearchServiceServer) GetSuggestions(context.Context, *GetSugg
 }
 func (UnimplementedSearchServiceServer) GetPopularSearches(context.Context, *GetPopularSearchesRequest) (*GetPopularSearchesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPopularSearches not implemented")
+}
+func (UnimplementedSearchServiceServer) GetTrendingSearches(context.Context, *GetTrendingSearchesRequest) (*TrendingSearchesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTrendingSearches not implemented")
+}
+func (UnimplementedSearchServiceServer) GetSearchHistory(context.Context, *GetSearchHistoryRequest) (*SearchHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSearchHistory not implemented")
 }
 func (UnimplementedSearchServiceServer) mustEmbedUnimplementedSearchServiceServer() {}
 func (UnimplementedSearchServiceServer) testEmbeddedByValue()                       {}
@@ -264,6 +304,42 @@ func _SearchService_GetPopularSearches_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SearchService_GetTrendingSearches_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTrendingSearchesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).GetTrendingSearches(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_GetTrendingSearches_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).GetTrendingSearches(ctx, req.(*GetTrendingSearchesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SearchService_GetSearchHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSearchHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchServiceServer).GetSearchHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SearchService_GetSearchHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchServiceServer).GetSearchHistory(ctx, req.(*GetSearchHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SearchService_ServiceDesc is the grpc.ServiceDesc for SearchService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -290,6 +366,14 @@ var SearchService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPopularSearches",
 			Handler:    _SearchService_GetPopularSearches_Handler,
+		},
+		{
+			MethodName: "GetTrendingSearches",
+			Handler:    _SearchService_GetTrendingSearches_Handler,
+		},
+		{
+			MethodName: "GetSearchHistory",
+			Handler:    _SearchService_GetSearchHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
