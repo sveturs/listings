@@ -15,6 +15,7 @@ import (
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
 	"github.com/sveturs/listings/internal/metrics"
+	miniorepo "github.com/sveturs/listings/internal/repository/minio"
 	"github.com/sveturs/listings/internal/repository/postgres"
 	"github.com/sveturs/listings/internal/service"
 	"github.com/sveturs/listings/internal/service/listings"
@@ -257,6 +258,12 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 	// Create mock cart service for integration tests
 	cartService := &mockCartService{}
 
+	// Mock analytics service (nil is OK for integration tests that don't need analytics)
+	var analyticsService service.AnalyticsService = nil
+
+	// Mock minio client (nil is OK for integration tests that don't need image operations)
+	var minioClient *miniorepo.Client = nil
+
 	// Get singleton metrics instance
 	m := getTestMetrics()
 
@@ -268,6 +275,8 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		categoryService,
 		orderService,
 		cartService,
+		analyticsService,
+		minioClient,
 		m,
 		logger,
 	)

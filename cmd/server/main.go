@@ -228,6 +228,12 @@ func main() {
 	// Initialize category service
 	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
 
+	// Initialize analytics repository (Phase 29) - needed by both search and analytics services
+	var analyticsRepo service.AnalyticsRepository
+	if searchClient != nil {
+		analyticsRepo = postgres.NewAnalyticsRepository(pgxPool, zerologLogger)
+	}
+
 	// Initialize search service (Phase 21.1)
 	var searchSvc *searchService.Service
 	if searchClient != nil {
@@ -280,6 +286,18 @@ func main() {
 			searchSvc.SetSearchQueriesRepo(searchQueriesRepo)
 			logger.Info().Msg("Search service initialized successfully (with analytics)")
 		}
+	}
+
+	// Initialize analytics service (Phase 29)
+	var analyticsSvc service.AnalyticsService
+	if searchClient != nil && analyticsRepo != nil {
+		// Create analytics service using existing Redis cache client
+		analyticsSvc = service.NewAnalyticsService(
+			analyticsRepo,
+			redisCache.GetClient(), // Reuse existing Redis client
+			zerologLogger,
+		)
+		logger.Info().Msg("Analytics service initialized successfully")
 	}
 
 	// Initialize order service dependencies
@@ -376,7 +394,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, minioClient, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, analyticsSvc, minioClient, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
 
@@ -391,6 +409,12 @@ func main() {
 		searchHandler := grpcTransport.NewSearchHandler(searchSvc, zerologLogger)
 		searchv1.RegisterSearchServiceServer(grpcServer, searchHandler)
 		logger.Info().Msg("SearchService registered with gRPC server")
+	}
+
+	// Register AnalyticsService (Phase 29)
+	if analyticsSvc != nil {
+		listingspb.RegisterAnalyticsServiceServer(grpcServer, grpcHandler)
+		logger.Info().Msg("AnalyticsService registered with gRPC server")
 	}
 
 	// Enable gRPC reflection for tools like grpcurl

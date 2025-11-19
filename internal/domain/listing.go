@@ -90,8 +90,9 @@ type ListingLocation struct {
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// ListingStats represents cached statistics for a listing
-type ListingStats struct {
+// ListingCachedStats represents cached statistics for a listing (lightweight version)
+// For comprehensive analytics, use ListingStats from analytics.go
+type ListingCachedStats struct {
 	ListingID      int64      `json:"listing_id" db:"listing_id"`
 	ViewsCount     int32      `json:"views_count" db:"view_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
