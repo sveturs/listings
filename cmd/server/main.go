@@ -19,6 +19,7 @@ import (
 
 	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
 	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
+	chatsvcv1 "github.com/sveturs/listings/api/proto/chat/v1"
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	searchv1 "github.com/sveturs/listings/api/proto/search/v1"
 	"github.com/sveturs/listings/internal/cache"
@@ -228,11 +229,9 @@ func main() {
 	// Initialize category service
 	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
 
-	// Initialize analytics repository (Phase 29) - needed by both search and analytics services
-	var analyticsRepo service.AnalyticsRepository
-	if searchClient != nil {
-		analyticsRepo = postgres.NewAnalyticsRepository(pgxPool, zerologLogger)
-	}
+	// Initialize analytics repository (Phase 29) - PostgreSQL only, no OpenSearch dependency
+	// Analytics uses materialized views and analytics_events table
+	analyticsRepo := postgres.NewAnalyticsRepository(pgxPool, zerologLogger)
 
 	// Initialize search service (Phase 21.1)
 	var searchSvc *searchService.Service
@@ -288,17 +287,24 @@ func main() {
 		}
 	}
 
-	// Initialize analytics service (Phase 29)
-	var analyticsSvc service.AnalyticsService
-	if searchClient != nil && analyticsRepo != nil {
-		// Create analytics service using existing Redis cache client
-		analyticsSvc = service.NewAnalyticsService(
-			analyticsRepo,
-			redisCache.GetClient(), // Reuse existing Redis client
-			zerologLogger,
-		)
-		logger.Info().Msg("Analytics service initialized successfully")
-	}
+	// Initialize analytics service (Phase 29) - always initialize, PostgreSQL only
+	// Analytics service works independently of OpenSearch
+	analyticsSvc := service.NewAnalyticsService(
+		analyticsRepo,
+		redisCache.GetClient(), // Reuse existing Redis client
+		zerologLogger,
+	)
+	logger.Info().Msg("Analytics service initialized successfully")
+
+	// Initialize storefront analytics service (Phase 30.1)
+	var storefrontAnalyticsSvc service.StorefrontAnalyticsService
+	storefrontAnalyticsRepo := postgres.NewStorefrontAnalyticsRepository(pgxPool, zerologLogger)
+	storefrontAnalyticsSvc = service.NewStorefrontAnalyticsService(
+		storefrontAnalyticsRepo,
+		redisCache.GetClient(), // Reuse existing Redis client
+		zerologLogger,
+	)
+	logger.Info().Msg("Storefront analytics service initialized successfully")
 
 	// Initialize order service dependencies
 	cartRepo := postgres.NewCartRepository(pgxPool, zerologLogger)
@@ -322,6 +328,35 @@ func main() {
 		pgRepo,
 		pgxPool,
 		nil, // Use default financial config
+		zerologLogger,
+	)
+
+	// Initialize chat service dependencies
+	chatRepo := postgres.NewChatRepository(pgxPool, zerologLogger)
+	messageRepo := postgres.NewMessageRepository(pgxPool, zerologLogger)
+	attachmentRepo := postgres.NewChatAttachmentRepository(pgxPool, zerologLogger)
+
+	// Create auth service for chat (for user validation)
+	var authSvc *authservice.AuthService
+	if cfg.Auth.Enabled {
+		authServiceConfig := &authservice.Config{
+			HTTPURL: cfg.Auth.ServiceURL,
+			Timeout: cfg.Auth.Timeout,
+		}
+		authSvc, err = authservice.NewAuthService(authServiceConfig)
+		if err != nil {
+			logger.Warn().Err(err).Msg("failed to create auth service for chat - chat service will have limited functionality")
+		}
+	}
+
+	// Initialize chat service
+	chatService := service.NewChatService(
+		chatRepo,
+		messageRepo,
+		attachmentRepo,
+		pgRepo,
+		authSvc,
+		pgxPool,
 		zerologLogger,
 	)
 
@@ -394,7 +429,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, analyticsSvc, minioClient, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, minioClient, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
 
@@ -411,11 +446,13 @@ func main() {
 		logger.Info().Msg("SearchService registered with gRPC server")
 	}
 
-	// Register AnalyticsService (Phase 29)
-	if analyticsSvc != nil {
-		listingspb.RegisterAnalyticsServiceServer(grpcServer, grpcHandler)
-		logger.Info().Msg("AnalyticsService registered with gRPC server")
-	}
+	// Register AnalyticsService (Phase 29) - always register
+	listingspb.RegisterAnalyticsServiceServer(grpcServer, grpcHandler)
+	logger.Info().Msg("AnalyticsService registered with gRPC server")
+
+	// Register ChatService
+	chatsvcv1.RegisterChatServiceServer(grpcServer, grpcHandler)
+	logger.Info().Msg("ChatService registered with gRPC server")
 
 	// Enable gRPC reflection for tools like grpcurl
 	reflection.Register(grpcServer)

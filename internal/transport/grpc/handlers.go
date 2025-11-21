@@ -12,6 +12,7 @@ import (
 
 	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
 	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
+	chatsvcv1 "github.com/sveturs/listings/api/proto/chat/v1"
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/metrics"
 	minioclient "github.com/sveturs/listings/internal/repository/minio"
@@ -24,23 +25,26 @@ func contains(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
-// Server implements gRPC ListingsServiceServer, AttributeServiceServer, CategoryServiceServer, OrderServiceServer, and AnalyticsServiceServer
+// Server implements gRPC ListingsServiceServer, AttributeServiceServer, CategoryServiceServer, OrderServiceServer, AnalyticsServiceServer, and ChatServiceServer
 type Server struct {
 	listingspb.UnimplementedListingsServiceServer
 	attributespb.UnimplementedAttributeServiceServer
 	categoriespb.UnimplementedCategoryServiceServer
 	listingspb.UnimplementedOrderServiceServer
 	listingspb.UnimplementedAnalyticsServiceServer
+	chatsvcv1.UnimplementedChatServiceServer
 	service              *listings.Service
 	storefrontService    *listings.StorefrontService
 	attrService          service.AttributeService
 	categoryService      service.CategoryService
-	orderService         service.OrderService
-	cartService          service.CartService
-	analyticsService     service.AnalyticsService
-	minioClient          *minioclient.Client
-	metrics              *metrics.Metrics
-	logger               zerolog.Logger
+	orderService                service.OrderService
+	cartService                 service.CartService
+	chatService                 service.ChatService
+	analyticsService            service.AnalyticsService
+	storefrontAnalyticsService  service.StorefrontAnalyticsService
+	minioClient                 *minioclient.Client
+	metrics                     *metrics.Metrics
+	logger                      zerolog.Logger
 }
 
 // NewServer creates a new gRPC server instance
@@ -51,22 +55,26 @@ func NewServer(
 	categoryService service.CategoryService,
 	orderService service.OrderService,
 	cartService service.CartService,
+	chatService service.ChatService,
 	analyticsService service.AnalyticsService,
+	storefrontAnalyticsService service.StorefrontAnalyticsService,
 	minioClient *minioclient.Client,
 	m *metrics.Metrics,
 	logger zerolog.Logger,
 ) *Server {
 	return &Server{
-		service:            service,
-		storefrontService:  storefrontService,
-		attrService:        attrService,
-		categoryService:    categoryService,
-		orderService:       orderService,
-		cartService:        cartService,
-		analyticsService:   analyticsService,
-		minioClient:        minioClient,
-		metrics:            m,
-		logger:             logger.With().Str("component", "grpc_handler").Logger(),
+		service:                    service,
+		storefrontService:          storefrontService,
+		attrService:                attrService,
+		categoryService:            categoryService,
+		orderService:               orderService,
+		cartService:                cartService,
+		chatService:                chatService,
+		analyticsService:           analyticsService,
+		storefrontAnalyticsService: storefrontAnalyticsService,
+		minioClient:                minioClient,
+		metrics:                    m,
+		logger:                     logger.With().Str("component", "grpc_handler").Logger(),
 	}
 }
 
@@ -704,6 +712,134 @@ func (s *Server) GetListingStats(
 		Int32("total_sales", response.TotalSales).
 		Float64("total_revenue", response.TotalRevenue).
 		Msg("GetListingStats completed successfully")
+
+	return response, nil
+}
+
+// GetStorefrontStats retrieves analytics for a storefront (owner or admin)
+func (s *Server) GetStorefrontStats(
+	ctx context.Context,
+	req *listingspb.GetStorefrontStatsRequest,
+) (*listingspb.GetStorefrontStatsResponse, error) {
+	// Log request
+	s.logger.Info().
+		Int64("storefront_id", req.StorefrontId).
+		Str("period", req.GetPeriod()).
+		Int64("user_id", req.UserId).
+		Strs("roles", req.Roles).
+		Msg("GetStorefrontStats RPC called")
+
+	// Validate request basics
+	if req == nil {
+		s.logger.Warn().Msg("nil request received")
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	if req.StorefrontId <= 0 {
+		s.logger.Warn().Int64("storefront_id", req.StorefrontId).Msg("invalid storefront_id")
+		return nil, status.Error(codes.InvalidArgument, "storefront_id must be positive")
+	}
+
+	if req.UserId <= 0 {
+		s.logger.Warn().Int64("user_id", req.UserId).Msg("invalid user_id")
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Call service (authorization happens inside service layer)
+	response, err := s.storefrontAnalyticsService.GetStorefrontStats(ctx, req)
+	if err != nil {
+		// Map service errors to gRPC status codes
+		errMsg := err.Error()
+
+		if contains(errMsg, "permission") || contains(errMsg, "unauthorized") || contains(errMsg, "owner") {
+			s.logger.Warn().
+				Err(err).
+				Int64("user_id", req.UserId).
+				Int64("storefront_id", req.StorefrontId).
+				Msg("permission denied for storefront stats")
+			return nil, status.Error(codes.PermissionDenied, "you don't have permission to view this storefront's analytics")
+		}
+
+		if contains(errMsg, "invalid") || contains(errMsg, "required") {
+			s.logger.Warn().
+				Err(err).
+				Int64("storefront_id", req.StorefrontId).
+				Msg("validation error for storefront stats")
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid input: %v", err))
+		}
+
+		if contains(errMsg, "not found") {
+			s.logger.Warn().
+				Err(err).
+				Int64("storefront_id", req.StorefrontId).
+				Msg("storefront not found")
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("storefront not found: %d", req.StorefrontId))
+		}
+
+		s.logger.Error().
+			Err(err).
+			Int64("user_id", req.UserId).
+			Int64("storefront_id", req.StorefrontId).
+			Str("period", req.GetPeriod()).
+			Msg("service error getting storefront stats")
+		return nil, status.Error(codes.Internal, "failed to retrieve storefront analytics")
+	}
+
+	// Log success
+	s.logger.Info().
+		Int64("user_id", req.UserId).
+		Int64("storefront_id", req.StorefrontId).
+		Str("storefront_name", response.StorefrontName).
+		Int64("total_sales", response.TotalSales).
+		Float64("total_revenue", response.TotalRevenue).
+		Int32("active_listings", response.ActiveListings).
+		Msg("GetStorefrontStats completed successfully")
+
+	return response, nil
+}
+
+// GetTrendingStats retrieves platform trending analytics (admin only)
+func (s *Server) GetTrendingStats(
+	ctx context.Context,
+	req *listingspb.GetTrendingStatsRequest,
+) (*listingspb.GetTrendingStatsResponse, error) {
+	// Log request
+	s.logger.Info().Msg("GetTrendingStats RPC called")
+
+	// No validation needed - request is empty (admin-only, no parameters)
+
+	// Call service
+	response, err := s.analyticsService.GetTrendingStats(ctx, req)
+	if err != nil {
+		// Map service errors to gRPC status codes
+		errMsg := err.Error()
+
+		if contains(errMsg, "permission") || contains(errMsg, "unauthorized") || contains(errMsg, "admin") {
+			s.logger.Warn().
+				Err(err).
+				Msg("permission denied for trending stats")
+			return nil, status.Error(codes.PermissionDenied, "admin access required")
+		}
+
+		if contains(errMsg, "invalid") || contains(errMsg, "required") {
+			s.logger.Warn().
+				Err(err).
+				Msg("validation error for trending stats")
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid input: %v", err))
+		}
+
+		s.logger.Error().
+			Err(err).
+			Msg("service error getting trending stats")
+		return nil, status.Error(codes.Internal, "failed to retrieve trending analytics")
+	}
+
+	// Log success
+	s.logger.Info().
+		Int("trending_categories", len(response.TrendingCategories)).
+		Int("hot_listings", len(response.HotListings)).
+		Int("popular_searches", len(response.PopularSearches)).
+		Msg("GetTrendingStats completed successfully")
 
 	return response, nil
 }

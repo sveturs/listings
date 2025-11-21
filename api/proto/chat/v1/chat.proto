@@ -1,0 +1,662 @@
+syntax = "proto3";
+
+package chatsvc.v1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/sveturs/listings/api/proto/chat/v1;chatsvcv1";
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+// ChatStatus represents the state of a chat
+enum ChatStatus {
+  CHAT_STATUS_UNSPECIFIED = 0;
+  CHAT_STATUS_ACTIVE = 1;        // Chat is active
+  CHAT_STATUS_ARCHIVED = 2;      // Chat archived by user
+  CHAT_STATUS_BLOCKED = 3;       // Chat blocked (spam/abuse)
+}
+
+// MessageStatus represents delivery/read status
+enum MessageStatus {
+  MESSAGE_STATUS_UNSPECIFIED = 0;
+  MESSAGE_STATUS_SENT = 1;       // Message sent successfully
+  MESSAGE_STATUS_DELIVERED = 2;  // Message delivered to recipient
+  MESSAGE_STATUS_READ = 3;       // Message read by recipient
+  MESSAGE_STATUS_FAILED = 4;     // Message failed to send
+}
+
+// AttachmentType represents the type of attachment
+enum AttachmentType {
+  ATTACHMENT_TYPE_UNSPECIFIED = 0;
+  ATTACHMENT_TYPE_IMAGE = 1;     // Image file (jpg, png, gif, etc.)
+  ATTACHMENT_TYPE_VIDEO = 2;     // Video file (mp4, webm, etc.)
+  ATTACHMENT_TYPE_DOCUMENT = 3;  // Document (pdf, doc, txt, etc.)
+}
+
+// ============================================================================
+// CORE ENTITIES
+// ============================================================================
+
+// Chat represents a conversation between buyer and seller
+message Chat {
+  // Identification
+  int64 id = 1;
+  int64 buyer_id = 2;               // User who initiated chat
+  int64 seller_id = 3;              // User who receives chat
+
+  // Context (what is being discussed)
+  optional int64 listing_id = 4;    // If discussing marketplace listing
+  optional int64 storefront_product_id = 5; // If discussing B2C product
+
+  // Status
+  ChatStatus status = 6;            // Active, archived, blocked
+  bool is_archived = 7;             // Archived by current user
+
+  // Metadata
+  google.protobuf.Timestamp last_message_at = 8; // Last message timestamp
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+
+  // Relations (loaded on demand)
+  Message last_message = 11;        // Most recent message (for list view)
+  int32 unread_count = 12;          // Unread messages count for current user
+
+  // Participant info (denormalized for UI)
+  optional string buyer_name = 13;
+  optional string seller_name = 14;
+  optional string listing_title = 15; // If listing_id present
+}
+
+// Message represents a single message in a chat
+message Message {
+  // Identification
+  int64 id = 1;
+  int64 chat_id = 2;
+  int64 sender_id = 3;              // Who sent the message
+  int64 receiver_id = 4;            // Who receives the message
+
+  // Content
+  string content = 5;               // Message text (required, max 10000 chars)
+  string original_language = 6;     // ISO 639-1 code (en, ru, sr)
+
+  // Context (optional - inherited from chat if not provided)
+  optional int64 listing_id = 7;
+  optional int64 storefront_product_id = 8;
+
+  // Status
+  MessageStatus status = 9;         // Sent, delivered, read
+  bool is_read = 10;                // Read by receiver
+
+  // Attachments
+  bool has_attachments = 11;        // Quick check for attachments
+  int32 attachments_count = 12;     // Number of attachments
+  repeated MessageAttachment attachments = 13; // Loaded on demand
+
+  // Timestamps
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+  optional google.protobuf.Timestamp read_at = 16; // When read by receiver
+
+  // Denormalized for UI
+  optional string sender_name = 17;
+}
+
+// MessageAttachment represents a file attachment
+message MessageAttachment {
+  int64 id = 1;
+  int64 message_id = 2;
+
+  // File metadata
+  AttachmentType file_type = 3;    // image, video, document
+  string file_name = 4;             // Original filename
+  int64 file_size = 5;              // Size in bytes
+  string content_type = 6;          // MIME type
+
+  // Storage
+  string storage_type = 7;          // "minio" (for now)
+  string storage_bucket = 8;        // MinIO bucket name
+  string file_path = 9;             // Path in storage
+  string public_url = 10;           // Public URL for download
+  optional string thumbnail_url = 11; // Thumbnail for images/videos
+
+  // Metadata
+  string metadata = 12;             // JSON metadata (dimensions, duration, etc.)
+  google.protobuf.Timestamp created_at = 13;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Chat Operations
+// ============================================================================
+
+// GetOrCreateChatRequest retrieves or creates a chat
+// AUTHORIZATION: user_id extracted from JWT metadata (NOT in request)
+// VALIDATION:
+// - Either listing_id OR storefront_product_id must be provided (not both)
+// - Current user must be buyer OR seller (cannot chat with yourself)
+// - If listing exists, ensure seller_id matches listing owner
+message GetOrCreateChatRequest {
+  optional int64 listing_id = 1;    // Marketplace listing
+  optional int64 storefront_product_id = 2; // B2C product
+  optional int64 other_user_id = 3; // If chatting without specific item (direct message)
+}
+
+message GetOrCreateChatResponse {
+  Chat chat = 1;                    // Existing or newly created chat
+  bool created = 2;                 // True if chat was just created
+}
+
+// ListUserChatsRequest retrieves all chats for a user
+// AUTHORIZATION: user_id extracted from JWT metadata (NOT in request)
+message ListUserChatsRequest {
+  // Filters
+  optional ChatStatus status = 1;   // Filter by status
+  bool archived_only = 2;           // Show archived chats
+  optional int64 listing_id = 3;    // Filter by listing
+
+  // Pagination
+  int32 limit = 4;                  // Max items per page (default: 20, max: 100)
+  int32 offset = 5;                 // Offset for pagination
+
+  // Sorting
+  string sort_by = 6;               // "last_message_at" (default), "created_at"
+  string sort_order = 7;            // "desc" (default), "asc"
+}
+
+message ListUserChatsResponse {
+  repeated Chat chats = 1;          // List of chats
+  int32 total_count = 2;            // Total chats matching filters
+  int32 unread_total = 3;           // Total unread messages across all chats
+}
+
+// GetChatByIDRequest retrieves a single chat
+// AUTHORIZATION: User must be buyer OR seller in the chat (validated via JWT)
+message GetChatByIDRequest {
+  int64 chat_id = 1;
+}
+
+message GetChatByIDResponse {
+  Chat chat = 1;
+}
+
+// ArchiveChatRequest archives/unarchives a chat
+// AUTHORIZATION: User must be buyer OR seller in the chat (validated via JWT)
+message ArchiveChatRequest {
+  int64 chat_id = 1;
+  bool archived = 2;                // true = archive, false = unarchive
+}
+
+// DeleteChatRequest deletes a chat (admin only)
+// AUTHORIZATION: Admin role required (validated via JWT)
+message DeleteChatRequest {
+  int64 chat_id = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Message Operations
+// ============================================================================
+
+// SendMessageRequest sends a new message in a chat
+// AUTHORIZATION: User must be buyer OR seller in the chat (validated via JWT)
+// VALIDATION:
+// - content: required, 1-10000 chars
+// - chat must exist and be active
+// - sender must be participant
+message SendMessageRequest {
+  int64 chat_id = 1;                // Required
+  string content = 2;               // Message text (required, 1-10000 chars)
+  string original_language = 3;     // ISO 639-1 code (default: "en")
+  repeated int64 attachment_ids = 4; // Pre-uploaded attachments (optional)
+}
+
+message SendMessageResponse {
+  Message message = 1;              // Created message
+}
+
+// GetMessagesRequest retrieves messages in a chat
+// AUTHORIZATION: User must be buyer OR seller in the chat (validated via JWT)
+// PAGINATION: Cursor-based (message_id) for real-time consistency
+message GetMessagesRequest {
+  int64 chat_id = 1;
+
+  // Cursor-based pagination (recommended for chat)
+  optional int64 before_message_id = 2; // Get messages before this ID (older)
+  optional int64 after_message_id = 3;  // Get messages after this ID (newer)
+
+  // Limit
+  int32 limit = 4;                  // Max items (default: 50, max: 100)
+}
+
+message GetMessagesResponse {
+  repeated Message messages = 1;    // Messages in chronological order
+  bool has_more = 2;                // True if more messages available
+  optional int64 next_cursor = 3;   // Next cursor for pagination
+}
+
+// StreamMessagesRequest streams new messages in real-time
+// AUTHORIZATION: User must be buyer OR seller in the chat (validated via JWT)
+// STREAMING: Server-side streaming RPC
+message StreamMessagesRequest {
+  int64 chat_id = 1;
+  optional int64 since_message_id = 2; // Stream messages after this ID
+}
+
+message StreamMessagesResponse {
+  Message message = 1;              // New message received
+}
+
+// MarkMessagesAsReadRequest marks messages as read
+// AUTHORIZATION: User must be receiver of the messages (validated via JWT)
+// SIDE EFFECTS: Updates chat.last_message_at, decrements unread count
+message MarkMessagesAsReadRequest {
+  int64 chat_id = 1;
+  repeated int64 message_ids = 2;   // Specific messages to mark (optional)
+  bool mark_all = 3;                // If true, mark all unread messages in chat
+}
+
+message MarkMessagesAsReadResponse {
+  int32 marked_count = 1;           // Number of messages marked as read
+}
+
+// GetUnreadCountRequest retrieves unread message count
+// AUTHORIZATION: user_id extracted from JWT metadata
+message GetUnreadCountRequest {
+  optional int64 chat_id = 1;       // If provided, count for specific chat
+}
+
+message GetUnreadCountResponse {
+  int32 unread_count = 1;           // Total unread messages
+  repeated ChatUnreadCount by_chat = 2; // Breakdown by chat
+}
+
+// ChatUnreadCount represents unread count for a specific chat
+message ChatUnreadCount {
+  int64 chat_id = 1;
+  int32 unread_count = 2;
+}
+
+// DeleteMessageRequest deletes a message (soft delete)
+// AUTHORIZATION: User must be sender OR admin (validated via JWT)
+message DeleteMessageRequest {
+  int64 message_id = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Attachment Operations
+// ============================================================================
+
+// UploadAttachmentRequest uploads a file attachment
+// AUTHORIZATION: user_id extracted from JWT metadata
+// VALIDATION:
+// - File size: max 10MB for images, 50MB for videos, 20MB for documents
+// - Supported types: jpg, png, gif, mp4, webm, pdf, doc, docx, txt
+// NOTE: This is a unary RPC, file content passed as bytes
+message UploadAttachmentRequest {
+  string file_name = 1;             // Original filename
+  string content_type = 2;          // MIME type
+  bytes file_data = 3;              // File content (max 50MB)
+  AttachmentType file_type = 4;     // image, video, document
+}
+
+message UploadAttachmentResponse {
+  MessageAttachment attachment = 1; // Created attachment (not yet linked to message)
+  string upload_id = 2;             // Temporary ID for linking to message
+}
+
+// GetAttachmentRequest retrieves attachment metadata
+// AUTHORIZATION: User must have access to the parent message (validated via JWT)
+message GetAttachmentRequest {
+  int64 attachment_id = 1;
+}
+
+message GetAttachmentResponse {
+  MessageAttachment attachment = 1;
+}
+
+// DeleteAttachmentRequest deletes an attachment
+// AUTHORIZATION: User must be sender of the parent message OR admin (validated via JWT)
+message DeleteAttachmentRequest {
+  int64 attachment_id = 1;
+}
+
+// ============================================================================
+// REQUEST/RESPONSE - Statistics
+// ============================================================================
+
+// GetChatStatsRequest retrieves chat statistics
+// AUTHORIZATION: Admin only (validated via JWT)
+message GetChatStatsRequest {
+  optional google.protobuf.Timestamp date_from = 1;
+  optional google.protobuf.Timestamp date_to = 2;
+  optional int64 user_id = 3;       // Stats for specific user
+}
+
+message GetChatStatsResponse {
+  int64 total_chats = 1;
+  int64 active_chats = 2;
+  int64 total_messages = 3;
+  int64 messages_today = 4;
+  double avg_messages_per_chat = 5;
+  repeated DailyChatStats daily_stats = 6;
+}
+
+message DailyChatStats {
+  string date = 1;                  // YYYY-MM-DD
+  int32 chats_created = 2;
+  int32 messages_sent = 3;
+  int32 active_users = 4;
+}
+
+// ============================================================================
+// SERVICE DEFINITION
+// ============================================================================
+
+// ChatService provides RPC methods for managing chat conversations
+//
+// AUTHORIZATION PATTERN (TRUE MICROSERVICE):
+// - All RPCs use JWT middleware to extract user_id from gRPC metadata
+// - user_id is NOT passed in request messages (extracted from JWT token)
+// - Service layer retrieves user_id from context: userID := ctx.Value("user_id").(int64)
+// - Ownership validation happens in service layer
+//
+// INTEGRATION:
+// - Auth Service: JWT validation (via github.com/sveturs/auth/pkg/grpc/middleware)
+// - Listings Service: Validate listing_id, get seller_id, listing title
+// - Storefronts Service: Validate storefront_product_id, get seller_id, product title
+// - MinIO: Upload/download attachments
+service ChatService {
+  // =========================================
+  // Chat Management (6 methods)
+  // =========================================
+
+  // GetOrCreateChat retrieves existing chat or creates new one
+  // Context: Marketplace listing, B2C product, or direct message
+  // AUTHORIZATION: Via JWT middleware (user_id validated)
+  // Returns: Chat with last message and unread count
+  rpc GetOrCreateChat(GetOrCreateChatRequest) returns (GetOrCreateChatResponse);
+
+  // ListUserChats retrieves all chats for authenticated user
+  // Returns: chats with last message, unread count, participant info
+  // AUTHORIZATION: Via JWT middleware (user_id validated)
+  // Pagination: Offset-based (standard for list views)
+  rpc ListUserChats(ListUserChatsRequest) returns (ListUserChatsResponse);
+
+  // GetChatByID retrieves a single chat with details
+  // AUTHORIZATION: Via JWT middleware (user must be participant)
+  // Returns: Full chat details with last message
+  rpc GetChatByID(GetChatByIDRequest) returns (GetChatByIDResponse);
+
+  // ArchiveChat archives/unarchives a chat for current user
+  // AUTHORIZATION: Via JWT middleware (user must be participant)
+  // SIDE EFFECTS: Updates is_archived flag for current user
+  rpc ArchiveChat(ArchiveChatRequest) returns (google.protobuf.Empty);
+
+  // DeleteChat permanently deletes a chat (admin only)
+  // AUTHORIZATION: Via JWT middleware (admin role required)
+  // SIDE EFFECTS: Cascades to messages and attachments
+  rpc DeleteChat(DeleteChatRequest) returns (google.protobuf.Empty);
+
+  // GetChatStats retrieves chat statistics (admin only)
+  // AUTHORIZATION: Via JWT middleware (admin role required)
+  // Returns: Aggregated stats, daily breakdown
+  rpc GetChatStats(GetChatStatsRequest) returns (GetChatStatsResponse);
+
+  // =========================================
+  // Message Operations (6 methods)
+  // =========================================
+
+  // SendMessage sends a new message in a chat
+  // SIDE EFFECTS: Updates chat.last_message_at, increments unread count
+  // AUTHORIZATION: Via JWT middleware (user must be participant)
+  // Validation: content required (1-10000 chars), chat must be active
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+
+  // GetMessages retrieves messages with cursor-based pagination
+  // Supports: before_message_id (load older) or after_message_id (load newer)
+  // AUTHORIZATION: Via JWT middleware (user must be participant)
+  // Pagination: Cursor-based (message_id) for real-time consistency
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
+
+  // StreamMessages streams new messages in real-time (server streaming)
+  // Use case: Keep UI updated with new messages
+  // AUTHORIZATION: Via JWT middleware (user must be participant)
+  // FALLBACK: Client can poll GetMessages if streaming fails
+  // Real-time: Long-lived connection, pushes messages as they arrive
+  rpc StreamMessages(StreamMessagesRequest) returns (stream StreamMessagesResponse);
+
+  // MarkMessagesAsRead marks messages as read
+  // SIDE EFFECTS: Updates message.is_read, message.read_at, decrements unread count
+  // AUTHORIZATION: Via JWT middleware (user must be receiver)
+  // Supports: Mark specific messages OR mark all in chat
+  rpc MarkMessagesAsRead(MarkMessagesAsReadRequest) returns (MarkMessagesAsReadResponse);
+
+  // GetUnreadCount retrieves unread message count
+  // Can be for all chats or specific chat
+  // AUTHORIZATION: Via JWT middleware (user_id validated)
+  // Returns: Total count + per-chat breakdown
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (GetUnreadCountResponse);
+
+  // DeleteMessage deletes a message (soft delete)
+  // AUTHORIZATION: Via JWT middleware (user must be sender OR admin)
+  // SIDE EFFECTS: Message content replaced with "[deleted]"
+  rpc DeleteMessage(DeleteMessageRequest) returns (google.protobuf.Empty);
+
+  // =========================================
+  // Attachment Operations (3 methods)
+  // =========================================
+
+  // UploadAttachment uploads a file attachment
+  // Returns: temporary attachment (linked to message via SendMessage)
+  // AUTHORIZATION: Via JWT middleware (authenticated user)
+  // Validation: File size limits (10MB/50MB/20MB), supported MIME types
+  // Storage: MinIO with public URL generation
+  rpc UploadAttachment(UploadAttachmentRequest) returns (UploadAttachmentResponse);
+
+  // GetAttachment retrieves attachment metadata
+  // AUTHORIZATION: Via JWT middleware (user must have access to parent message)
+  // Returns: Full attachment details with public URL
+  rpc GetAttachment(GetAttachmentRequest) returns (GetAttachmentResponse);
+
+  // DeleteAttachment deletes an attachment
+  // AUTHORIZATION: Via JWT middleware (user must be sender OR admin)
+  // SIDE EFFECTS: Removes file from MinIO, deletes DB record
+  rpc DeleteAttachment(DeleteAttachmentRequest) returns (google.protobuf.Empty);
+}
+
+// ============================================================================
+// VALIDATION RULES
+// ============================================================================
+
+// Chat Validation:
+// - GetOrCreateChat:
+//   - Exactly one of: listing_id, storefront_product_id, other_user_id
+//   - Cannot chat with yourself (buyer_id != seller_id)
+//   - If listing_id provided, verify listing exists and get seller_id
+//   - Unique constraint: (listing_id, buyer_id, seller_id) OR (storefront_product_id, buyer_id, seller_id)
+// - ArchiveChat:
+//   - User must be buyer OR seller
+//   - Cannot archive already archived chat
+//
+// Message Validation:
+// - SendMessage:
+//   - content: required, 1-10000 characters
+//   - sender_id must be participant in chat
+//   - chat must be active (not blocked)
+//   - original_language: valid ISO 639-1 code (en, ru, sr)
+// - GetMessages:
+//   - Cannot provide both before_message_id and after_message_id
+//   - user_id must be participant in chat
+// - MarkMessagesAsRead:
+//   - user_id must be receiver (not sender)
+//   - messages must belong to specified chat
+//
+// Attachment Validation:
+// - UploadAttachment:
+//   - file_size limits:
+//     - image: 10MB (10485760 bytes)
+//     - video: 50MB (52428800 bytes)
+//     - document: 20MB (20971520 bytes)
+//   - Supported MIME types:
+//     - image: image/jpeg, image/png, image/gif, image/webp
+//     - video: video/mp4, video/webm
+//     - document: application/pdf, application/msword, text/plain, application/vnd.openxmlformats-officedocument.wordprocessingml.document
+// - DeleteAttachment:
+//   - Only sender can delete (or admin)
+//
+// ============================================================================
+// AUTHORIZATION PATTERNS
+// ============================================================================
+//
+// JWT Middleware (github.com/sveturs/auth/pkg/grpc/middleware):
+// 1. Extract JWT from gRPC metadata: md.Get("authorization")
+// 2. Validate JWT signature using public key from Auth Service
+// 3. Extract user_id, email, roles from JWT claims
+// 4. Inject into context: ctx = context.WithValue(ctx, "user_id", userID)
+// 5. Service layer retrieves: userID := ctx.Value("user_id").(int64)
+//
+// Ownership Validation in Service Layer:
+// - GetChatByID: Verify userID == chat.buyer_id OR userID == chat.seller_id
+// - GetMessages: Same as GetChatByID
+// - SendMessage: Same as GetChatByID
+// - MarkMessagesAsRead: Verify userID == message.receiver_id
+//
+// Admin-Only Operations:
+// - DeleteChat: Require "admin" role in JWT claims
+// - GetChatStats: Require "admin" role in JWT claims
+//
+// ============================================================================
+// REAL-TIME UPDATES STRATEGY
+// ============================================================================
+//
+// Primary: StreamMessages (gRPC server streaming)
+// - Client opens long-lived streaming connection
+// - Server pushes new messages as they arrive
+// - Automatically reconnects on disconnection
+//
+// Fallback: Poll GetMessages (unary polling)
+// - Client polls GetMessages(after_message_id=last_seen) every 5-10 seconds
+// - Used when streaming is unavailable (firewall, proxy issues)
+// - Client detects streaming failure and switches to polling
+//
+// Pagination Strategy:
+// - Cursor-based (message_id) for chat messages
+// - Ensures consistency when new messages arrive during pagination
+// - Example flow:
+//   1. Client loads initial 50 messages: GetMessages(limit=50)
+//   2. User scrolls up: GetMessages(before_message_id=oldest_visible_id, limit=50)
+//   3. New message arrives: StreamMessages pushes update
+//   4. Client appends to bottom of list
+//
+// Unread Count Management:
+// - Incremented: On SendMessage (for receiver)
+// - Decremented: On MarkMessagesAsRead
+// - Stored: Calculated on-the-fly via SQL COUNT(*) WHERE is_read=false
+// - Cached: In Redis for performance (optional future optimization)
+//
+// ============================================================================
+// DATABASE TABLES
+// ============================================================================
+//
+// chats (migrated from c2c_chats):
+// - id BIGSERIAL PRIMARY KEY
+// - buyer_id BIGINT NOT NULL
+// - seller_id BIGINT NOT NULL
+// - listing_id BIGINT (nullable, FK to listings)
+// - storefront_product_id BIGINT (nullable, FK to b2c_products)
+// - status VARCHAR(20) DEFAULT 'active'
+// - is_archived BOOLEAN DEFAULT false
+// - last_message_at TIMESTAMP
+// - created_at TIMESTAMP DEFAULT NOW()
+// - updated_at TIMESTAMP DEFAULT NOW()
+// - UNIQUE (listing_id, buyer_id, seller_id) WHERE listing_id IS NOT NULL
+// - UNIQUE (storefront_product_id, buyer_id, seller_id) WHERE storefront_product_id IS NOT NULL
+//
+// messages (migrated from c2c_messages):
+// - id BIGSERIAL PRIMARY KEY
+// - chat_id BIGINT NOT NULL (FK to chats)
+// - sender_id BIGINT NOT NULL
+// - receiver_id BIGINT NOT NULL
+// - content TEXT NOT NULL
+// - original_language VARCHAR(10) DEFAULT 'en'
+// - listing_id BIGINT (nullable, inherited from chat)
+// - storefront_product_id BIGINT (nullable, inherited from chat)
+// - status VARCHAR(20) DEFAULT 'sent'
+// - is_read BOOLEAN DEFAULT false
+// - has_attachments BOOLEAN DEFAULT false
+// - attachments_count INT DEFAULT 0
+// - created_at TIMESTAMP DEFAULT NOW()
+// - updated_at TIMESTAMP DEFAULT NOW()
+// - read_at TIMESTAMP (nullable)
+// - INDEX idx_messages_chat_id (chat_id)
+// - INDEX idx_messages_receiver_unread (receiver_id, is_read) WHERE is_read = false
+//
+// chat_attachments (migrated from chat_attachments):
+// - id BIGSERIAL PRIMARY KEY
+// - message_id BIGINT NOT NULL (FK to messages)
+// - file_type VARCHAR(20) NOT NULL
+// - file_name VARCHAR(255) NOT NULL
+// - file_size BIGINT NOT NULL
+// - content_type VARCHAR(100) NOT NULL
+// - storage_type VARCHAR(50) DEFAULT 'minio'
+// - storage_bucket VARCHAR(100) NOT NULL
+// - file_path VARCHAR(500) NOT NULL
+// - public_url VARCHAR(500) NOT NULL
+// - thumbnail_url VARCHAR(500) (nullable)
+// - metadata JSONB
+// - created_at TIMESTAMP DEFAULT NOW()
+// - INDEX idx_attachments_message_id (message_id)
+//
+// ============================================================================
+// INTEGRATION WITH OTHER SERVICES
+// ============================================================================
+//
+// Auth Service (github.com/sveturs/auth):
+// - JWT validation (public key verification)
+// - User lookup (GetUserByID for denormalization)
+// - Role-based authorization (admin checks)
+//
+// Listings Service (github.com/sveturs/listings):
+// - Validate listing_id exists
+// - Get listing owner (seller_id)
+// - Get listing title for chat context
+//
+// Storefronts Service (via Listings):
+// - Validate storefront_product_id exists
+// - Get product owner (storefront owner = seller_id)
+// - Get product title for chat context
+//
+// MinIO (Object Storage):
+// - Upload attachments: PutObject(bucket, path, file)
+// - Generate public URLs: GetPresignedURL(bucket, path, expiry)
+// - Delete attachments: RemoveObject(bucket, path)
+// - Bucket: "chat-attachments"
+// - Path structure: "/{year}/{month}/{user_id}/{uuid}.{ext}"
+//
+// ============================================================================
+// NOTES
+// ============================================================================
+//
+// Database Migration from Monolith:
+// - Phase 1: Copy tables to microservice DB (pg_dump + restore)
+// - Phase 2: Deploy microservice in shadow mode (dual writes)
+// - Phase 3: Switch reads to microservice
+// - Phase 4: Switch writes to microservice
+// - Phase 5: Drop tables from monolith DB
+//
+// Performance Optimizations:
+// - Redis caching for unread counts (hot data)
+// - Database connection pooling (pgxpool)
+// - Message pagination with LIMIT + OFFSET or cursor
+// - Index on (chat_id, created_at) for message queries
+// - Index on (receiver_id, is_read) for unread queries
+//
+// Future Enhancements:
+// - Message reactions (emoji)
+// - Message threading (reply to specific message)
+// - Typing indicators (ephemeral state, not persisted)
+// - Read receipts (per-message read status)
+// - Message search (full-text search with PostgreSQL or OpenSearch)
+// - Voice messages (audio attachment type)
+// - Video calls (integration with WebRTC service)
