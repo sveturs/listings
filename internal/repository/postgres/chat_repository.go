@@ -154,12 +154,16 @@ func (r *chatRepository) GetByID(ctx context.Context, chatID int64) (*domain.Cha
 }
 
 // GetByParticipantsAndListing retrieves a chat by participants and listing
+// Note: Search is symmetric - checks both (buyer_id, seller_id) and (seller_id, buyer_id) combinations
 func (r *chatRepository) GetByParticipantsAndListing(ctx context.Context, buyerID, sellerID, listingID int64) (*domain.Chat, error) {
 	query := `
 		SELECT id, buyer_id, seller_id, listing_id, storefront_product_id,
 		       status, is_archived, last_message_at, created_at, updated_at
 		FROM chats
-		WHERE buyer_id = $1 AND seller_id = $2 AND listing_id = $3
+		WHERE listing_id = $3 AND (
+		    (buyer_id = $1 AND seller_id = $2) OR
+		    (buyer_id = $2 AND seller_id = $1)
+		)
 	`
 
 	var chat domain.Chat
@@ -202,12 +206,16 @@ func (r *chatRepository) GetByParticipantsAndListing(ctx context.Context, buyerI
 }
 
 // GetByParticipantsAndProduct retrieves a chat by participants and storefront product
+// Note: Search is symmetric - checks both (buyer_id, seller_id) and (seller_id, buyer_id) combinations
 func (r *chatRepository) GetByParticipantsAndProduct(ctx context.Context, buyerID, sellerID, productID int64) (*domain.Chat, error) {
 	query := `
 		SELECT id, buyer_id, seller_id, listing_id, storefront_product_id,
 		       status, is_archived, last_message_at, created_at, updated_at
 		FROM chats
-		WHERE buyer_id = $1 AND seller_id = $2 AND storefront_product_id = $3
+		WHERE storefront_product_id = $3 AND (
+		    (buyer_id = $1 AND seller_id = $2) OR
+		    (buyer_id = $2 AND seller_id = $1)
+		)
 	`
 
 	var chat domain.Chat
