@@ -582,3 +582,77 @@ const (
 	// MaxTimeSeriesLimit is the maximum limit for time series results
 	MaxTimeSeriesLimit = 1000
 )
+
+// ============================================================================
+// TRENDING ANALYTICS
+// ============================================================================
+
+// TrendingCategory represents a category with growing order volume
+type TrendingCategory struct {
+	CategoryID     int64   `json:"category_id" db:"category_id"`
+	CategoryName   string  `json:"category_name" db:"category_name"`
+	OrderCount30d  int32   `json:"order_count_30d" db:"order_count_30d"`
+	OrderCount7d   int32   `json:"order_count_7d" db:"order_count_7d"`
+	GrowthRate     float64 `json:"growth_rate" db:"growth_rate"`      // Percentage change
+	TrendScore     float64 `json:"trend_score" db:"trend_score"`      // Weighted score
+}
+
+// HotListing represents a listing with spiking order activity
+type HotListing struct {
+	ListingID       int64   `json:"listing_id" db:"listing_id"`
+	Title           string  `json:"title" db:"title"`
+	Orders24h       int64   `json:"orders_24h" db:"orders_24h"`
+	Orders7d        int64   `json:"orders_7d" db:"orders_7d"`
+	OrdersGrowth    float64 `json:"orders_growth" db:"orders_growth"`  // Spike ratio
+	QuantitySold24h int64   `json:"quantity_sold_24h" db:"quantity_sold_24h"`
+	Price           float64 `json:"price" db:"price"`
+}
+
+// PopularSearch represents frequently searched terms
+type PopularSearch struct {
+	Query       string `json:"query" db:"query"`
+	SearchCount int64  `json:"search_count" db:"search_count"`
+}
+
+// TrendingStats represents platform trending analytics
+type TrendingStats struct {
+	TrendingCategories []*TrendingCategory `json:"trending_categories"`
+	HotListings        []*HotListing       `json:"hot_listings"`
+	PopularSearches    []*PopularSearch    `json:"popular_searches"`
+	GeneratedAt        time.Time           `json:"generated_at"`
+}
+
+// String implements fmt.Stringer for TrendingCategory
+func (tc *TrendingCategory) String() string {
+	return fmt.Sprintf(
+		"TrendingCategory{CategoryID: %d, Name: %s, Orders30d: %d, Orders7d: %d, Growth: %.2f%%, Score: %.2f}",
+		tc.CategoryID,
+		tc.CategoryName,
+		tc.OrderCount30d,
+		tc.OrderCount7d,
+		tc.GrowthRate,
+		tc.TrendScore,
+	)
+}
+
+// String implements fmt.Stringer for HotListing
+func (hl *HotListing) String() string {
+	return fmt.Sprintf(
+		"HotListing{ListingID: %d, Title: %s, Orders24h: %d, Orders7d: %d, Growth: %.2fx, Price: %.2f}",
+		hl.ListingID,
+		hl.Title,
+		hl.Orders24h,
+		hl.Orders7d,
+		hl.OrdersGrowth,
+		hl.Price,
+	)
+}
+
+// String implements fmt.Stringer for PopularSearch
+func (ps *PopularSearch) String() string {
+	return fmt.Sprintf(
+		"PopularSearch{Query: %s, Count: %d}",
+		ps.Query,
+		ps.SearchCount,
+	)
+}

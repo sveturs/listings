@@ -41,9 +41,10 @@ type Message struct {
 	Attachments      []*ChatAttachment   `json:"attachments,omitempty"`
 
 	// Timestamps
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	ReadAt    *time.Time `json:"read_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeliveredAt *time.Time `json:"delivered_at,omitempty"`
+	ReadAt      *time.Time `json:"read_at,omitempty"`
 
 	// Denormalized for UI
 	SenderName *string `json:"sender_name,omitempty"`
@@ -101,10 +102,37 @@ func (m *Message) Validate() error {
 	return nil
 }
 
+// MarkAsDelivered marks the message as delivered with the current timestamp
+func (m *Message) MarkAsDelivered() {
+	if m.Status == MessageStatusSent {
+		m.Status = MessageStatusDelivered
+		now := time.Now()
+		m.DeliveredAt = &now
+	}
+}
+
 // MarkAsRead marks the message as read with the current timestamp
 func (m *Message) MarkAsRead() {
 	m.IsRead = true
 	m.Status = MessageStatusRead
 	now := time.Now()
 	m.ReadAt = &now
+	// Also set delivered if not already set
+	if m.DeliveredAt == nil {
+		m.DeliveredAt = &now
+	}
+}
+
+// GetStatus returns the current message status based on timestamps
+func (m *Message) GetStatus() MessageStatus {
+	if m.ReadAt != nil {
+		return MessageStatusRead
+	}
+	if m.DeliveredAt != nil {
+		return MessageStatusDelivered
+	}
+	if m.ID > 0 {
+		return MessageStatusSent
+	}
+	return MessageStatusFailed
 }

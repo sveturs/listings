@@ -206,11 +206,13 @@ type Chat struct {
 	LastMessage *Message `protobuf:"bytes,11,opt,name=last_message,json=lastMessage,proto3" json:"last_message,omitempty"`  // Most recent message (for list view)
 	UnreadCount int32    `protobuf:"varint,12,opt,name=unread_count,json=unreadCount,proto3" json:"unread_count,omitempty"` // Unread messages count for current user
 	// Participant info (denormalized for UI)
-	BuyerName     *string `protobuf:"bytes,13,opt,name=buyer_name,json=buyerName,proto3,oneof" json:"buyer_name,omitempty"`
-	SellerName    *string `protobuf:"bytes,14,opt,name=seller_name,json=sellerName,proto3,oneof" json:"seller_name,omitempty"`
-	ListingTitle  *string `protobuf:"bytes,15,opt,name=listing_title,json=listingTitle,proto3,oneof" json:"listing_title,omitempty"` // If listing_id present
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	BuyerName       *string `protobuf:"bytes,13,opt,name=buyer_name,json=buyerName,proto3,oneof" json:"buyer_name,omitempty"`
+	SellerName      *string `protobuf:"bytes,14,opt,name=seller_name,json=sellerName,proto3,oneof" json:"seller_name,omitempty"`
+	ListingTitle    *string `protobuf:"bytes,15,opt,name=listing_title,json=listingTitle,proto3,oneof" json:"listing_title,omitempty"`            // If listing_id present
+	ListingImageUrl *string `protobuf:"bytes,16,opt,name=listing_image_url,json=listingImageUrl,proto3,oneof" json:"listing_image_url,omitempty"` // First image of listing
+	ListingOwnerId  *int64  `protobuf:"varint,17,opt,name=listing_owner_id,json=listingOwnerId,proto3,oneof" json:"listing_owner_id,omitempty"`   // Owner ID of listing
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Chat) Reset() {
@@ -346,6 +348,20 @@ func (x *Chat) GetListingTitle() string {
 		return *x.ListingTitle
 	}
 	return ""
+}
+
+func (x *Chat) GetListingImageUrl() string {
+	if x != nil && x.ListingImageUrl != nil {
+		return *x.ListingImageUrl
+	}
+	return ""
+}
+
+func (x *Chat) GetListingOwnerId() int64 {
+	if x != nil && x.ListingOwnerId != nil {
+		return *x.ListingOwnerId
+	}
+	return 0
 }
 
 // Message represents a single message in a chat
@@ -2272,7 +2288,7 @@ var File_api_proto_chat_v1_chat_proto protoreflect.FileDescriptor
 const file_api_proto_chat_v1_chat_proto_rawDesc = "" +
 	"\n" +
 	"\x1capi/proto/chat/v1/chat.proto\x12\n" +
-	"chatsvc.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdf\x05\n" +
+	"chatsvc.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xea\x06\n" +
 	"\x04Chat\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
 	"\bbuyer_id\x18\x02 \x01(\x03R\abuyerId\x12\x1b\n" +
@@ -2295,12 +2311,16 @@ const file_api_proto_chat_v1_chat_proto_rawDesc = "" +
 	"buyer_name\x18\r \x01(\tH\x02R\tbuyerName\x88\x01\x01\x12$\n" +
 	"\vseller_name\x18\x0e \x01(\tH\x03R\n" +
 	"sellerName\x88\x01\x01\x12(\n" +
-	"\rlisting_title\x18\x0f \x01(\tH\x04R\flistingTitle\x88\x01\x01B\r\n" +
+	"\rlisting_title\x18\x0f \x01(\tH\x04R\flistingTitle\x88\x01\x01\x12/\n" +
+	"\x11listing_image_url\x18\x10 \x01(\tH\x05R\x0flistingImageUrl\x88\x01\x01\x12-\n" +
+	"\x10listing_owner_id\x18\x11 \x01(\x03H\x06R\x0elistingOwnerId\x88\x01\x01B\r\n" +
 	"\v_listing_idB\x18\n" +
 	"\x16_storefront_product_idB\r\n" +
 	"\v_buyer_nameB\x0e\n" +
 	"\f_seller_nameB\x10\n" +
-	"\x0e_listing_title\"\x92\x06\n" +
+	"\x0e_listing_titleB\x14\n" +
+	"\x12_listing_image_urlB\x13\n" +
+	"\x11_listing_owner_id\"\x92\x06\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\achat_id\x18\x02 \x01(\x03R\x06chatId\x12\x1b\n" +

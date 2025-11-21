@@ -100,6 +100,9 @@ type ChatService interface {
 	GetAttachment(ctx context.Context, attachmentID, userID int64) (*domain.ChatAttachment, error)
 	DeleteAttachment(ctx context.Context, attachmentID, userID int64) error
 
+	// WebSocket hub integration
+	SetHub(hub ChatHub)
+
 	// Real-time streaming (handled at transport layer, service provides messages)
 	// StreamMessages will be implemented in gRPC handler using GetMessages polling
 }
@@ -172,7 +175,16 @@ type chatService struct {
 	productsRepo   *postgres.Repository // For validating listing/product exists
 	authService    *authservice.AuthService
 	pool           *pgxpool.Pool
+	hub            ChatHub // WebSocket hub for real-time updates
 	logger         zerolog.Logger
+}
+
+// ChatHub defines the interface for WebSocket broadcasting
+// This allows chatService to broadcast events without tight coupling to websocket package
+type ChatHub interface {
+	BroadcastNewMessage(chatID int64, message *domain.Message)
+	BroadcastMessageRead(chatID, messageID, userID int64)
+	BroadcastTyping(chatID, userID int64, isTyping bool)
 }
 
 // NewChatService creates a new chat service
@@ -192,8 +204,15 @@ func NewChatService(
 		productsRepo:   productsRepo,
 		authService:    authService,
 		pool:           pool,
+		hub:            nil, // Will be set via SetHub if WebSocket is enabled
 		logger:         logger.With().Str("component", "chat_service").Logger(),
 	}
+}
+
+// SetHub sets the WebSocket hub for real-time broadcasting
+func (s *chatService) SetHub(hub ChatHub) {
+	s.hub = hub
+	s.logger.Info().Msg("WebSocket hub connected to chat service")
 }
 
 // CreateChat creates a new chat between buyer and seller
@@ -417,14 +436,21 @@ func (s *chatService) GetUserChats(ctx context.Context, req *GetUserChatsRequest
 		return nil, 0, fmt.Errorf("failed to list user chats: %w", err)
 	}
 
-	// Load unread counts for each chat
+	// Load unread counts and enrich metadata for each chat
 	for _, chat := range chats {
+		// Load unread count
 		unreadCount, err := s.messageRepo.GetUnreadCount(ctx, chat.ID, req.UserID)
 		if err != nil {
 			s.logger.Warn().Err(err).Int64("chat_id", chat.ID).Msg("failed to count unread messages")
 		} else {
 			chat.UnreadCount = unreadCount
 		}
+
+		// Enrich with listing metadata
+		s.enrichChatWithListingMetadata(ctx, chat)
+
+		// Enrich with user names
+		s.enrichChatWithUserNames(ctx, chat)
 	}
 
 	return chats, total, nil
@@ -560,6 +586,15 @@ func (s *chatService) SendMessage(ctx context.Context, req *SendMessageRequest) 
 		Int64("chat_id", req.ChatID).
 		Msg("message sent successfully")
 
+	// Broadcast through WebSocket if hub is available
+	if s.hub != nil {
+		s.hub.BroadcastNewMessage(req.ChatID, message)
+		s.logger.Debug().
+			Int64("message_id", message.ID).
+			Int64("chat_id", req.ChatID).
+			Msg("message broadcasted via WebSocket")
+	}
+
 	return message, nil
 }
 
@@ -655,6 +690,25 @@ func (s *chatService) MarkMessagesAsRead(ctx context.Context, req *MarkMessagesA
 		Int64("chat_id", req.ChatID).
 		Int("marked_count", markedCount).
 		Msg("messages marked as read")
+
+	// Broadcast message read events via WebSocket if hub is available
+	if s.hub != nil && markedCount > 0 {
+		// If specific messages were marked, broadcast for each
+		if len(req.MessageIDs) > 0 {
+			for _, msgID := range req.MessageIDs {
+				s.hub.BroadcastMessageRead(req.ChatID, msgID, req.UserID)
+			}
+		} else if req.MarkAll {
+			// For mark_all, we broadcast a single event with chat_id
+			// Frontend should handle this by marking all messages in that chat as read
+			// We'll use messageID=0 as a special marker for "all messages"
+			s.hub.BroadcastMessageRead(req.ChatID, 0, req.UserID)
+		}
+		s.logger.Debug().
+			Int64("chat_id", req.ChatID).
+			Int("count", markedCount).
+			Msg("message read events broadcasted via WebSocket")
+	}
 
 	return markedCount, nil
 }
@@ -966,4 +1020,72 @@ func (s *chatService) validateUserExists(ctx context.Context, userID int64) erro
 	// For now, assume user exists
 	s.logger.Debug().Int64("user_id", userID).Msg("validating user exists (stub)")
 	return nil
+}
+
+// enrichChatWithListingMetadata enriches chat with listing title and image URL
+func (s *chatService) enrichChatWithListingMetadata(ctx context.Context, chat *domain.Chat) {
+	if chat.ListingID == nil || *chat.ListingID <= 0 {
+		return
+	}
+
+	// Get listing data from listings table
+	listing, err := s.productsRepo.GetListingByID(ctx, int64(*chat.ListingID))
+	if err != nil {
+		s.logger.Debug().Err(err).Int64("listing_id", *chat.ListingID).Msg("failed to get listing for chat enrichment")
+		return
+	}
+
+	// Set listing title
+	if listing.Title != "" {
+		chat.ListingTitle = &listing.Title
+	}
+
+	// Set listing owner ID
+	if listing.UserID > 0 {
+		chat.ListingOwnerID = &listing.UserID
+	}
+
+	// Get first image URL if available
+	if listing.ID > 0 {
+		var imageURL string
+		query := `
+			SELECT url
+			FROM listing_images
+			WHERE listing_id = $1
+			ORDER BY display_order ASC
+			LIMIT 1
+		`
+		err := s.pool.QueryRow(ctx, query, listing.ID).Scan(&imageURL)
+		if err == nil && imageURL != "" {
+			chat.ListingImageURL = &imageURL
+		}
+	}
+}
+
+// enrichChatWithUserNames enriches chat with buyer and seller names from Auth Service
+func (s *chatService) enrichChatWithUserNames(ctx context.Context, chat *domain.Chat) {
+	if s.authService == nil {
+		return
+	}
+
+	userSvc := s.authService.UserService()
+	if userSvc == nil {
+		return
+	}
+
+	// Get buyer name
+	if chat.BuyerID > 0 {
+		buyerUser, err := userSvc.GetUser(ctx, int(chat.BuyerID))
+		if err == nil && buyerUser != nil && buyerUser.Name != "" {
+			chat.BuyerName = &buyerUser.Name
+		}
+	}
+
+	// Get seller name
+	if chat.SellerID > 0 {
+		sellerUser, err := userSvc.GetUser(ctx, int(chat.SellerID))
+		if err == nil && sellerUser != nil && sellerUser.Name != "" {
+			chat.SellerName = &sellerUser.Name
+		}
+	}
 }

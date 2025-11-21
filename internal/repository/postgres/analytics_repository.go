@@ -553,3 +553,108 @@ func (r *analyticsRepository) resolveListingID(ctx context.Context, uuid string)
 
 	return listingID, nil
 }
+
+// GetTrendingStats retrieves platform trending analytics from materialized view
+// This method reads pre-calculated data from analytics_trending_cache for optimal performance
+// Target: < 100ms (reading from materialized view)
+func (r *analyticsRepository) GetTrendingStats(ctx context.Context) (*domain.TrendingStats, error) {
+	r.logger.Debug().Msg("fetching trending stats from materialized view")
+
+	// Read from materialized view
+	query := `SELECT trending_data FROM analytics_trending_cache LIMIT 1`
+
+	var trendingDataJSON []byte
+	err := r.db.QueryRow(ctx, query).Scan(&trendingDataJSON)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			r.logger.Warn().Msg("trending cache is empty, returning empty stats")
+			return &domain.TrendingStats{
+				TrendingCategories: []*domain.TrendingCategory{},
+				HotListings:        []*domain.HotListing{},
+				PopularSearches:    []*domain.PopularSearch{},
+				GeneratedAt:        time.Now(),
+			}, nil
+		}
+		return nil, fmt.Errorf("failed to query trending stats: %w", err)
+	}
+
+	// Parse JSON data
+	var rawData struct {
+		TrendingCategories []struct {
+			CategoryID    int64   `json:"category_id"`
+			CategoryName  string  `json:"category_name"`
+			OrderCount30d int32   `json:"order_count_30d"`
+			OrderCount7d  int32   `json:"order_count_7d"`
+			GrowthRate    float64 `json:"growth_rate"`
+			TrendScore    float64 `json:"trend_score"`
+		} `json:"trending_categories"`
+		HotListings []struct {
+			ListingID       int64   `json:"listing_id"`
+			Title           string  `json:"title"`
+			Orders24h       int64   `json:"orders_24h"`
+			Orders7d        int64   `json:"orders_7d"`
+			OrdersGrowth    float64 `json:"orders_growth"`
+			QuantitySold24h int64   `json:"quantity_sold_24h"`
+			Price           float64 `json:"price"`
+		} `json:"hot_listings"`
+		PopularSearches []struct {
+			Query       string `json:"query"`
+			SearchCount int64  `json:"search_count"`
+		} `json:"popular_searches"`
+		GeneratedAt time.Time `json:"generated_at"`
+	}
+
+	if err := json.Unmarshal(trendingDataJSON, &rawData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal trending data: %w", err)
+	}
+
+	// Convert to domain models
+	stats := &domain.TrendingStats{
+		TrendingCategories: make([]*domain.TrendingCategory, 0, len(rawData.TrendingCategories)),
+		HotListings:        make([]*domain.HotListing, 0, len(rawData.HotListings)),
+		PopularSearches:    make([]*domain.PopularSearch, 0, len(rawData.PopularSearches)),
+		GeneratedAt:        rawData.GeneratedAt,
+	}
+
+	// Convert trending categories
+	for _, tc := range rawData.TrendingCategories {
+		stats.TrendingCategories = append(stats.TrendingCategories, &domain.TrendingCategory{
+			CategoryID:    tc.CategoryID,
+			CategoryName:  tc.CategoryName,
+			OrderCount30d: tc.OrderCount30d,
+			OrderCount7d:  tc.OrderCount7d,
+			GrowthRate:    tc.GrowthRate,
+			TrendScore:    tc.TrendScore,
+		})
+	}
+
+	// Convert hot listings
+	for _, hl := range rawData.HotListings {
+		stats.HotListings = append(stats.HotListings, &domain.HotListing{
+			ListingID:       hl.ListingID,
+			Title:           hl.Title,
+			Orders24h:       hl.Orders24h,
+			Orders7d:        hl.Orders7d,
+			OrdersGrowth:    hl.OrdersGrowth,
+			QuantitySold24h: hl.QuantitySold24h,
+			Price:           hl.Price,
+		})
+	}
+
+	// Convert popular searches
+	for _, ps := range rawData.PopularSearches {
+		stats.PopularSearches = append(stats.PopularSearches, &domain.PopularSearch{
+			Query:       ps.Query,
+			SearchCount: ps.SearchCount,
+		})
+	}
+
+	r.logger.Debug().
+		Int("trending_categories", len(stats.TrendingCategories)).
+		Int("hot_listings", len(stats.HotListings)).
+		Int("popular_searches", len(stats.PopularSearches)).
+		Time("generated_at", stats.GeneratedAt).
+		Msg("successfully fetched trending stats")
+
+	return stats, nil
+}

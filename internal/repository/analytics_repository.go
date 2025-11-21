@@ -30,4 +30,10 @@ type AnalyticsRepository interface {
 	// Should be called periodically (e.g., every 15 minutes via cron)
 	// Uses CONCURRENTLY to avoid blocking reads
 	RefreshMaterializedViews(ctx context.Context) error
+
+	// GetTrendingStats retrieves platform trending analytics
+	// Returns trending categories, hot listings, and popular searches
+	// Data is pre-calculated in materialized view for optimal performance
+	// Performance target: < 100ms (reading from materialized view)
+	GetTrendingStats(ctx context.Context) (*domain.TrendingStats, error)
 }

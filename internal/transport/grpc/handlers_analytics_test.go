@@ -23,6 +23,7 @@ import (
 type mockAnalyticsService struct {
 	getOverviewStatsFunc func(ctx context.Context, req *listingssvcv1.GetOverviewStatsRequest, userID int64, isAdmin bool) (*listingssvcv1.GetOverviewStatsResponse, error)
 	getListingStatsFunc  func(ctx context.Context, req *listingssvcv1.GetListingStatsRequest, userID int64, isAdmin bool) (*listingssvcv1.GetListingStatsResponse, error)
+	getTrendingStatsFunc func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error)
 }
 
 func (m *mockAnalyticsService) GetOverviewStats(
@@ -47,6 +48,16 @@ func (m *mockAnalyticsService) GetListingStats(
 		return m.getListingStatsFunc(ctx, req, userID, isAdmin)
 	}
 	return &listingssvcv1.GetListingStatsResponse{}, nil
+}
+
+func (m *mockAnalyticsService) GetTrendingStats(
+	ctx context.Context,
+	req *listingssvcv1.GetTrendingStatsRequest,
+) (*listingssvcv1.GetTrendingStatsResponse, error) {
+	if m.getTrendingStatsFunc != nil {
+		return m.getTrendingStatsFunc(ctx, req)
+	}
+	return &listingssvcv1.GetTrendingStatsResponse{}, nil
 }
 
 // ============================================================================
@@ -893,4 +904,263 @@ func TestGetOverviewStats_ServiceErrorWithMockedService(t *testing.T) {
 	// Assert
 	require.Error(t, err)
 	assert.Nil(t, resp)
+}
+
+// ============================================================================
+// GetTrendingStats Handler Tests
+// ============================================================================
+
+func TestGetTrendingStats_Success(t *testing.T) {
+	// Arrange
+	now := analyticsTestTimeNow()
+	mockSvc := &mockAnalyticsService{
+		getTrendingStatsFunc: func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error) {
+			return &listingssvcv1.GetTrendingStatsResponse{
+				TrendingCategories: []*listingssvcv1.TrendingCategory{
+					{
+						CategoryId:     1001,
+						CategoryName:   "Electronics",
+						OrderCount_30D: 450,
+						OrderCount_7D:  150,
+						GrowthRate:     42.8,
+						TrendScore:     1950.0,
+					},
+					{
+						CategoryId:     1002,
+						CategoryName:   "Fashion",
+						OrderCount_30D: 320,
+						OrderCount_7D:  110,
+						GrowthRate:     35.2,
+						TrendScore:     1420.0,
+					},
+				},
+				HotListings: []*listingssvcv1.HotListing{
+					{
+						ListingId:        281,
+						Title:            "iPhone 15 Pro",
+						Orders_24H:       25,
+						Orders_7D:        80,
+						OrdersGrowth:     2.19,
+						QuantitySold_24H: 30,
+						Price:            1299.99,
+					},
+				},
+				PopularSearches: []*listingssvcv1.PopularSearch{
+					{
+						Query:       "iphone",
+						SearchCount: 1250,
+					},
+					{
+						Query:       "laptop",
+						SearchCount: 890,
+					},
+				},
+				GeneratedAt: datePtr(now),
+			}, nil
+		},
+	}
+
+	// Act
+	resp, err := mockSvc.GetTrendingStats(context.Background(), &listingssvcv1.GetTrendingStatsRequest{})
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Len(t, resp.TrendingCategories, 2)
+	assert.Len(t, resp.HotListings, 1)
+	assert.Len(t, resp.PopularSearches, 2)
+	assert.Equal(t, "Electronics", resp.TrendingCategories[0].CategoryName)
+	assert.Equal(t, "iPhone 15 Pro", resp.HotListings[0].Title)
+	assert.Equal(t, "iphone", resp.PopularSearches[0].Query)
+}
+
+func TestGetTrendingStats_EmptyResults(t *testing.T) {
+	// Arrange
+	now := analyticsTestTimeNow()
+	mockSvc := &mockAnalyticsService{
+		getTrendingStatsFunc: func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error) {
+			return &listingssvcv1.GetTrendingStatsResponse{
+				TrendingCategories: []*listingssvcv1.TrendingCategory{},
+				HotListings:        []*listingssvcv1.HotListing{},
+				PopularSearches:    []*listingssvcv1.PopularSearch{},
+				GeneratedAt:        datePtr(now),
+			}, nil
+		},
+	}
+
+	// Act
+	resp, err := mockSvc.GetTrendingStats(context.Background(), &listingssvcv1.GetTrendingStatsRequest{})
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Empty(t, resp.TrendingCategories)
+	assert.Empty(t, resp.HotListings)
+	assert.Empty(t, resp.PopularSearches)
+}
+
+func TestGetTrendingStats_ServiceError(t *testing.T) {
+	// Arrange
+	mockSvc := &mockAnalyticsService{
+		getTrendingStatsFunc: func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error) {
+			return nil, errors.New("database connection failed")
+		},
+	}
+
+	// Act
+	resp, err := mockSvc.GetTrendingStats(context.Background(), &listingssvcv1.GetTrendingStatsRequest{})
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "database connection failed")
+}
+
+func TestGetTrendingStats_CacheEmpty(t *testing.T) {
+	// Arrange
+	now := analyticsTestTimeNow()
+	mockSvc := &mockAnalyticsService{
+		getTrendingStatsFunc: func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error) {
+			// Simulating empty cache - returning empty data but no error
+			return &listingssvcv1.GetTrendingStatsResponse{
+				TrendingCategories: []*listingssvcv1.TrendingCategory{},
+				HotListings:        []*listingssvcv1.HotListing{},
+				PopularSearches:    []*listingssvcv1.PopularSearch{},
+				GeneratedAt:        datePtr(now),
+			}, nil
+		},
+	}
+
+	// Act
+	resp, err := mockSvc.GetTrendingStats(context.Background(), &listingssvcv1.GetTrendingStatsRequest{})
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.NotNil(t, resp.GeneratedAt)
+}
+
+func TestGetTrendingStats_TrendingCategories_Ordering(t *testing.T) {
+	// Arrange
+	mockSvc := &mockAnalyticsService{
+		getTrendingStatsFunc: func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error) {
+			return &listingssvcv1.GetTrendingStatsResponse{
+				TrendingCategories: []*listingssvcv1.TrendingCategory{
+					{CategoryId: 1001, CategoryName: "Electronics", TrendScore: 1950.0},
+					{CategoryId: 1002, CategoryName: "Fashion", TrendScore: 1420.0},
+					{CategoryId: 1003, CategoryName: "Home", TrendScore: 1100.0},
+				},
+				HotListings:     []*listingssvcv1.HotListing{},
+				PopularSearches: []*listingssvcv1.PopularSearch{},
+				GeneratedAt:     datePtr(analyticsTestTimeNow()),
+			}, nil
+		},
+	}
+
+	// Act
+	resp, err := mockSvc.GetTrendingStats(context.Background(), &listingssvcv1.GetTrendingStatsRequest{})
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Len(t, resp.TrendingCategories, 3)
+
+	// Verify descending order by trend_score
+	assert.Greater(t, resp.TrendingCategories[0].TrendScore, resp.TrendingCategories[1].TrendScore)
+	assert.Greater(t, resp.TrendingCategories[1].TrendScore, resp.TrendingCategories[2].TrendScore)
+}
+
+func TestGetTrendingStats_HotListings_GrowthCalculation(t *testing.T) {
+	// Arrange
+	mockSvc := &mockAnalyticsService{
+		getTrendingStatsFunc: func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error) {
+			return &listingssvcv1.GetTrendingStatsResponse{
+				TrendingCategories: []*listingssvcv1.TrendingCategory{},
+				HotListings: []*listingssvcv1.HotListing{
+					{
+						ListingId:    281,
+						Title:        "Viral Product",
+						Orders_24H:   50,
+						Orders_7D:    80,
+						OrdersGrowth: 4.375, // (50 / (80/7)) = 4.375x growth
+					},
+					{
+						ListingId:    282,
+						Title:        "Steady Product",
+						Orders_24H:   10,
+						Orders_7D:    70,
+						OrdersGrowth: 1.0, // (10 / (70/7)) = 1.0x (same rate)
+					},
+				},
+				PopularSearches: []*listingssvcv1.PopularSearch{},
+				GeneratedAt:     datePtr(analyticsTestTimeNow()),
+			}, nil
+		},
+	}
+
+	// Act
+	resp, err := mockSvc.GetTrendingStats(context.Background(), &listingssvcv1.GetTrendingStatsRequest{})
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Len(t, resp.HotListings, 2)
+
+	// Verify growth rates
+	assert.Greater(t, resp.HotListings[0].OrdersGrowth, float64(4.0)) // Viral spike
+	assert.LessOrEqual(t, resp.HotListings[1].OrdersGrowth, float64(1.1)) // Steady rate
+}
+
+func TestGetTrendingStats_PopularSearches_Sorted(t *testing.T) {
+	// Arrange
+	mockSvc := &mockAnalyticsService{
+		getTrendingStatsFunc: func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error) {
+			return &listingssvcv1.GetTrendingStatsResponse{
+				TrendingCategories: []*listingssvcv1.TrendingCategory{},
+				HotListings:        []*listingssvcv1.HotListing{},
+				PopularSearches: []*listingssvcv1.PopularSearch{
+					{Query: "iphone", SearchCount: 1250},
+					{Query: "laptop", SearchCount: 890},
+					{Query: "headphones", SearchCount: 670},
+				},
+				GeneratedAt: datePtr(analyticsTestTimeNow()),
+			}, nil
+		},
+	}
+
+	// Act
+	resp, err := mockSvc.GetTrendingStats(context.Background(), &listingssvcv1.GetTrendingStatsRequest{})
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Len(t, resp.PopularSearches, 3)
+
+	// Verify descending order by search_count
+	assert.Greater(t, resp.PopularSearches[0].SearchCount, resp.PopularSearches[1].SearchCount)
+	assert.Greater(t, resp.PopularSearches[1].SearchCount, resp.PopularSearches[2].SearchCount)
+}
+
+func TestGetTrendingStats_GeneratedAtTimestamp(t *testing.T) {
+	// Arrange
+	expectedTime := analyticsTestTimeNow()
+	mockSvc := &mockAnalyticsService{
+		getTrendingStatsFunc: func(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error) {
+			return &listingssvcv1.GetTrendingStatsResponse{
+				TrendingCategories: []*listingssvcv1.TrendingCategory{},
+				HotListings:        []*listingssvcv1.HotListing{},
+				PopularSearches:    []*listingssvcv1.PopularSearch{},
+				GeneratedAt:        datePtr(expectedTime),
+			}, nil
+		},
+	}
+
+	// Act
+	resp, err := mockSvc.GetTrendingStats(context.Background(), &listingssvcv1.GetTrendingStatsRequest{})
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.NotNil(t, resp.GeneratedAt)
+	assert.Equal(t, expectedTime.Unix(), resp.GeneratedAt.AsTime().Unix())
 }

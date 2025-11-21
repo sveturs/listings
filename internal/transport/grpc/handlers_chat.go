@@ -12,6 +12,7 @@ import (
 
 	chatsvcv1 "github.com/sveturs/listings/api/proto/chat/v1"
 	"github.com/sveturs/listings/internal/domain"
+	"github.com/sveturs/listings/internal/middleware"
 	"github.com/sveturs/listings/internal/service"
 )
 
@@ -28,8 +29,8 @@ import (
 // Authorization: user_id extracted from JWT metadata (NOT in request)
 func (s *Server) GetOrCreateChat(ctx context.Context, req *chatsvcv1.GetOrCreateChatRequest) (*chatsvcv1.GetOrCreateChatResponse, error) {
 	// Extract user_id from context (set by JWT middleware)
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -72,8 +73,8 @@ func (s *Server) GetOrCreateChat(ctx context.Context, req *chatsvcv1.GetOrCreate
 // Authorization: user_id extracted from JWT metadata
 func (s *Server) ListUserChats(ctx context.Context, req *chatsvcv1.ListUserChatsRequest) (*chatsvcv1.ListUserChatsResponse, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -136,8 +137,8 @@ func (s *Server) ListUserChats(ctx context.Context, req *chatsvcv1.ListUserChats
 // Authorization: User must be buyer OR seller in the chat
 func (s *Server) GetChatByID(ctx context.Context, req *chatsvcv1.GetChatByIDRequest) (*chatsvcv1.GetChatByIDResponse, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -169,8 +170,8 @@ func (s *Server) GetChatByID(ctx context.Context, req *chatsvcv1.GetChatByIDRequ
 // Authorization: User must be buyer OR seller in the chat
 func (s *Server) ArchiveChat(ctx context.Context, req *chatsvcv1.ArchiveChatRequest) (*emptypb.Empty, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -197,8 +198,8 @@ func (s *Server) ArchiveChat(ctx context.Context, req *chatsvcv1.ArchiveChatRequ
 // Authorization: Admin role required (validated in service layer via JWT)
 func (s *Server) DeleteChat(ctx context.Context, req *chatsvcv1.DeleteChatRequest) (*emptypb.Empty, error) {
 	// Extract user_id from context (for audit logging)
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -227,8 +228,8 @@ func (s *Server) DeleteChat(ctx context.Context, req *chatsvcv1.DeleteChatReques
 // Authorization: Admin role required (validated in service layer via JWT)
 func (s *Server) GetChatStats(ctx context.Context, req *chatsvcv1.GetChatStatsRequest) (*chatsvcv1.GetChatStatsResponse, error) {
 	// Extract user_id from context (for audit logging)
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -241,12 +242,12 @@ func (s *Server) GetChatStats(ctx context.Context, req *chatsvcv1.GetChatStatsRe
 	// For now, return stub response
 
 	return &chatsvcv1.GetChatStatsResponse{
-		TotalChats:   0,
-		ActiveChats:  0,
-		TotalMessages: 0,
-		MessagesToday: 0,
+		TotalChats:         0,
+		ActiveChats:        0,
+		TotalMessages:      0,
+		MessagesToday:      0,
 		AvgMessagesPerChat: 0,
-		DailyStats:   []*chatsvcv1.DailyChatStats{},
+		DailyStats:         []*chatsvcv1.DailyChatStats{},
 	}, nil
 }
 
@@ -258,8 +259,8 @@ func (s *Server) GetChatStats(ctx context.Context, req *chatsvcv1.GetChatStatsRe
 // Authorization: User must be buyer OR seller in the chat
 func (s *Server) SendMessage(ctx context.Context, req *chatsvcv1.SendMessageRequest) (*chatsvcv1.SendMessageResponse, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -307,8 +308,8 @@ func (s *Server) SendMessage(ctx context.Context, req *chatsvcv1.SendMessageRequ
 // Authorization: User must be buyer OR seller in the chat
 func (s *Server) GetMessages(ctx context.Context, req *chatsvcv1.GetMessagesRequest) (*chatsvcv1.GetMessagesResponse, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -376,8 +377,8 @@ func (s *Server) StreamMessages(req *chatsvcv1.StreamMessagesRequest, stream cha
 	ctx := stream.Context()
 
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -393,8 +394,7 @@ func (s *Server) StreamMessages(req *chatsvcv1.StreamMessagesRequest, stream cha
 	}
 
 	// Verify user has access to this chat
-	_, err = s.chatService.GetChat(ctx, req.ChatId, userID)
-	if err != nil {
+	if _, err := s.chatService.GetChat(ctx, req.ChatId, userID); err != nil {
 		return mapServiceErrorToGRPC(err, s.logger)
 	}
 
@@ -413,8 +413,8 @@ func (s *Server) StreamMessages(req *chatsvcv1.StreamMessagesRequest, stream cha
 // Authorization: User must be receiver of the messages
 func (s *Server) MarkMessagesAsRead(ctx context.Context, req *chatsvcv1.MarkMessagesAsReadRequest) (*chatsvcv1.MarkMessagesAsReadResponse, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -453,8 +453,8 @@ func (s *Server) MarkMessagesAsRead(ctx context.Context, req *chatsvcv1.MarkMess
 // Authorization: user_id extracted from JWT metadata
 func (s *Server) GetUnreadCount(ctx context.Context, req *chatsvcv1.GetUnreadCountRequest) (*chatsvcv1.GetUnreadCountResponse, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -481,8 +481,8 @@ func (s *Server) GetUnreadCount(ctx context.Context, req *chatsvcv1.GetUnreadCou
 // Authorization: User must be sender OR admin
 func (s *Server) DeleteMessage(ctx context.Context, req *chatsvcv1.DeleteMessageRequest) (*emptypb.Empty, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -509,8 +509,8 @@ func (s *Server) DeleteMessage(ctx context.Context, req *chatsvcv1.DeleteMessage
 // Authorization: authenticated user
 func (s *Server) UploadAttachment(ctx context.Context, req *chatsvcv1.UploadAttachmentRequest) (*chatsvcv1.UploadAttachmentResponse, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -557,8 +557,8 @@ func (s *Server) UploadAttachment(ctx context.Context, req *chatsvcv1.UploadAtta
 // Authorization: User must have access to the parent message
 func (s *Server) GetAttachment(ctx context.Context, req *chatsvcv1.GetAttachmentRequest) (*chatsvcv1.GetAttachmentResponse, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -590,8 +590,8 @@ func (s *Server) GetAttachment(ctx context.Context, req *chatsvcv1.GetAttachment
 // Authorization: User must be sender of the parent message OR admin
 func (s *Server) DeleteAttachment(ctx context.Context, req *chatsvcv1.DeleteAttachmentRequest) (*emptypb.Empty, error) {
 	// Extract user_id from context
-	userID, err := extractUserIDFromContext(ctx)
-	if err != nil {
+	userID, ok := middleware.GetUserID(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
@@ -681,17 +681,17 @@ func domainChatToProtoChat(chat *domain.Chat) *chatsvcv1.Chat {
 	}
 
 	pbChat := &chatsvcv1.Chat{
-		Id:            chat.ID,
-		BuyerId:       chat.BuyerID,
-		SellerId:      chat.SellerID,
-		ListingId:     chat.ListingID,
+		Id:                  chat.ID,
+		BuyerId:             chat.BuyerID,
+		SellerId:            chat.SellerID,
+		ListingId:           chat.ListingID,
 		StorefrontProductId: chat.StorefrontProductID,
-		Status:        protoChatStatusFromDomain(chat.Status),
-		IsArchived:    chat.IsArchived,
-		LastMessageAt: timestamppb.New(chat.LastMessageAt),
-		CreatedAt:     timestamppb.New(chat.CreatedAt),
-		UpdatedAt:     timestamppb.New(chat.UpdatedAt),
-		UnreadCount:   chat.UnreadCount,
+		Status:              protoChatStatusFromDomain(chat.Status),
+		IsArchived:          chat.IsArchived,
+		LastMessageAt:       timestamppb.New(chat.LastMessageAt),
+		CreatedAt:           timestamppb.New(chat.CreatedAt),
+		UpdatedAt:           timestamppb.New(chat.UpdatedAt),
+		UnreadCount:         chat.UnreadCount,
 	}
 
 	// Optional fields
@@ -711,6 +711,14 @@ func domainChatToProtoChat(chat *domain.Chat) *chatsvcv1.Chat {
 		pbChat.ListingTitle = chat.ListingTitle
 	}
 
+	if chat.ListingImageURL != nil {
+		pbChat.ListingImageUrl = chat.ListingImageURL
+	}
+
+	if chat.ListingOwnerID != nil {
+		pbChat.ListingOwnerId = chat.ListingOwnerID
+	}
+
 	return pbChat
 }
 
@@ -721,20 +729,20 @@ func domainMessageToProtoMessage(message *domain.Message) *chatsvcv1.Message {
 	}
 
 	pbMessage := &chatsvcv1.Message{
-		Id:               message.ID,
-		ChatId:           message.ChatID,
-		SenderId:         message.SenderID,
-		ReceiverId:       message.ReceiverID,
-		Content:          message.Content,
-		OriginalLanguage: message.OriginalLanguage,
-		ListingId:        message.ListingID,
+		Id:                  message.ID,
+		ChatId:              message.ChatID,
+		SenderId:            message.SenderID,
+		ReceiverId:          message.ReceiverID,
+		Content:             message.Content,
+		OriginalLanguage:    message.OriginalLanguage,
+		ListingId:           message.ListingID,
 		StorefrontProductId: message.StorefrontProductID,
-		Status:           protoMessageStatusFromDomain(message.Status),
-		IsRead:           message.IsRead,
-		HasAttachments:   message.HasAttachments,
-		AttachmentsCount: message.AttachmentsCount,
-		CreatedAt:        timestamppb.New(message.CreatedAt),
-		UpdatedAt:        timestamppb.New(message.UpdatedAt),
+		Status:              protoMessageStatusFromDomain(message.Status),
+		IsRead:              message.IsRead,
+		HasAttachments:      message.HasAttachments,
+		AttachmentsCount:    message.AttachmentsCount,
+		CreatedAt:           timestamppb.New(message.CreatedAt),
+		UpdatedAt:           timestamppb.New(message.UpdatedAt),
 	}
 
 	// Optional fields
@@ -855,15 +863,4 @@ func protoChatAttachmentTypeToDomain(fileType chatsvcv1.AttachmentType) domain.A
 // ============================================================================
 // HELPER FUNCTIONS - Context Extraction
 // ============================================================================
-
-// extractUserIDFromContext extracts user_id from gRPC context
-// This is set by JWT middleware in github.com/sveturs/auth/pkg/grpc/middleware
-func extractUserIDFromContext(ctx context.Context) (int64, error) {
-	// Try to get user_id from context (set by JWT middleware)
-	userID, ok := ctx.Value("user_id").(int64)
-	if !ok || userID == 0 {
-		return 0, errors.New("user_id not found in context or invalid")
-	}
-
-	return userID, nil
-}
+// Note: User ID extraction now handled by middleware.GetUserID()

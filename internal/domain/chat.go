@@ -34,11 +34,13 @@ type Chat struct {
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 
 	// Relations (loaded on demand)
-	LastMessage  *Message `json:"last_message,omitempty" db:"-"`  // Most recent message (for list view)
-	UnreadCount  int32    `json:"unread_count,omitempty" db:"-"`  // Unread messages count for current user
-	BuyerName    *string  `json:"buyer_name,omitempty" db:"-"`    // Denormalized for UI
-	SellerName   *string  `json:"seller_name,omitempty" db:"-"`   // Denormalized for UI
-	ListingTitle *string  `json:"listing_title,omitempty" db:"-"` // Denormalized for UI
+	LastMessage       *Message `json:"last_message,omitempty" db:"-"`        // Most recent message (for list view)
+	UnreadCount       int32    `json:"unread_count,omitempty" db:"-"`        // Unread messages count for current user
+	BuyerName         *string  `json:"buyer_name,omitempty" db:"-"`          // Denormalized for UI
+	SellerName        *string  `json:"seller_name,omitempty" db:"-"`         // Denormalized for UI
+	ListingTitle      *string  `json:"listing_title,omitempty" db:"-"`       // Denormalized for UI
+	ListingImageURL   *string  `json:"listing_image_url,omitempty" db:"-"`   // First image of listing
+	ListingOwnerID    *int64   `json:"listing_owner_id,omitempty" db:"-"`    // Owner ID of listing
 }
 
 // IsParticipant checks if user is a participant in the chat

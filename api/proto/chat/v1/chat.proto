@@ -68,6 +68,8 @@ message Chat {
   optional string buyer_name = 13;
   optional string seller_name = 14;
   optional string listing_title = 15; // If listing_id present
+  optional string listing_image_url = 16; // First image of listing
+  optional int64 listing_owner_id = 17; // Owner ID of listing
 }
 
 // Message represents a single message in a chat

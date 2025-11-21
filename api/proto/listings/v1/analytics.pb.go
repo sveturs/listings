@@ -2281,6 +2281,653 @@ func (x *MetricSnapshot) GetUnit() string {
 	return ""
 }
 
+// GetStorefrontStatsRequest retrieves analytics for a specific storefront
+type GetStorefrontStatsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Storefront identification (required)
+	StorefrontId int64 `protobuf:"varint,1,opt,name=storefront_id,json=storefrontId,proto3" json:"storefront_id,omitempty"`
+	// Time period filter (optional, default: "30d")
+	// Allowed values: "7d", "30d", "90d", "all"
+	Period *string `protobuf:"bytes,2,opt,name=period,proto3,oneof" json:"period,omitempty"`
+	// Authorization (required)
+	UserId        int64    `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // Current user ID
+	Roles         []string `protobuf:"bytes,4,rep,name=roles,proto3" json:"roles,omitempty"`                  // User roles for authorization check
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetStorefrontStatsRequest) Reset() {
+	*x = GetStorefrontStatsRequest{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetStorefrontStatsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetStorefrontStatsRequest) ProtoMessage() {}
+
+func (x *GetStorefrontStatsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetStorefrontStatsRequest.ProtoReflect.Descriptor instead.
+func (*GetStorefrontStatsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *GetStorefrontStatsRequest) GetStorefrontId() int64 {
+	if x != nil {
+		return x.StorefrontId
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsRequest) GetPeriod() string {
+	if x != nil && x.Period != nil {
+		return *x.Period
+	}
+	return ""
+}
+
+func (x *GetStorefrontStatsRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsRequest) GetRoles() []string {
+	if x != nil {
+		return x.Roles
+	}
+	return nil
+}
+
+// TopListingInfo represents a top-performing listing
+type TopListingInfo struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ListingId      int64                  `protobuf:"varint,1,opt,name=listing_id,json=listingId,proto3" json:"listing_id,omitempty"`                 // Listing ID
+	Title          string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`                                           // Listing title
+	Revenue        float64                `protobuf:"fixed64,3,opt,name=revenue,proto3" json:"revenue,omitempty"`                                     // Total revenue from this listing
+	OrderCount     int32                  `protobuf:"varint,4,opt,name=order_count,json=orderCount,proto3" json:"order_count,omitempty"`              // Number of orders for this listing
+	ViewCount      int32                  `protobuf:"varint,5,opt,name=view_count,json=viewCount,proto3" json:"view_count,omitempty"`                 // Number of views
+	ConversionRate float64                `protobuf:"fixed64,6,opt,name=conversion_rate,json=conversionRate,proto3" json:"conversion_rate,omitempty"` // Conversion rate %
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *TopListingInfo) Reset() {
+	*x = TopListingInfo{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TopListingInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TopListingInfo) ProtoMessage() {}
+
+func (x *TopListingInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TopListingInfo.ProtoReflect.Descriptor instead.
+func (*TopListingInfo) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *TopListingInfo) GetListingId() int64 {
+	if x != nil {
+		return x.ListingId
+	}
+	return 0
+}
+
+func (x *TopListingInfo) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *TopListingInfo) GetRevenue() float64 {
+	if x != nil {
+		return x.Revenue
+	}
+	return 0
+}
+
+func (x *TopListingInfo) GetOrderCount() int32 {
+	if x != nil {
+		return x.OrderCount
+	}
+	return 0
+}
+
+func (x *TopListingInfo) GetViewCount() int32 {
+	if x != nil {
+		return x.ViewCount
+	}
+	return 0
+}
+
+func (x *TopListingInfo) GetConversionRate() float64 {
+	if x != nil {
+		return x.ConversionRate
+	}
+	return 0
+}
+
+// GetStorefrontStatsResponse returns storefront performance analytics
+type GetStorefrontStatsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// === Basic Info ===
+	StorefrontId   int64  `protobuf:"varint,1,opt,name=storefront_id,json=storefrontId,proto3" json:"storefront_id,omitempty"`
+	StorefrontName string `protobuf:"bytes,2,opt,name=storefront_name,json=storefrontName,proto3" json:"storefront_name,omitempty"`
+	// === Sales Metrics ===
+	TotalSales        int64   `protobuf:"varint,3,opt,name=total_sales,json=totalSales,proto3" json:"total_sales,omitempty"`                         // Number of completed orders (delivered status)
+	TotalRevenue      float64 `protobuf:"fixed64,4,opt,name=total_revenue,json=totalRevenue,proto3" json:"total_revenue,omitempty"`                  // Sum of order amounts (delivered orders)
+	AverageOrderValue float64 `protobuf:"fixed64,5,opt,name=average_order_value,json=averageOrderValue,proto3" json:"average_order_value,omitempty"` // Average order value
+	// === Listings Metrics ===
+	ActiveListings int32 `protobuf:"varint,6,opt,name=active_listings,json=activeListings,proto3" json:"active_listings,omitempty"` // Active listings count
+	TotalListings  int32 `protobuf:"varint,7,opt,name=total_listings,json=totalListings,proto3" json:"total_listings,omitempty"`    // Total listings (including inactive)
+	// === Performance Metrics ===
+	TotalViews     int64   `protobuf:"varint,8,opt,name=total_views,json=totalViews,proto3" json:"total_views,omitempty"`               // Sum of all listing views
+	TotalFavorites int64   `protobuf:"varint,9,opt,name=total_favorites,json=totalFavorites,proto3" json:"total_favorites,omitempty"`   // Sum of all listing favorites
+	ConversionRate float64 `protobuf:"fixed64,10,opt,name=conversion_rate,json=conversionRate,proto3" json:"conversion_rate,omitempty"` // Orders / views ratio (%)
+	// === Top Listings ===
+	TopListings []*TopListingInfo `protobuf:"bytes,11,rep,name=top_listings,json=topListings,proto3" json:"top_listings,omitempty"` // Top 10 listings by revenue
+	// === Filter Info ===
+	Period string `protobuf:"bytes,12,opt,name=period,proto3" json:"period,omitempty"` // Applied period filter ("7d", "30d", "90d", "all")
+	// === Timestamps ===
+	GeneratedAt   *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"` // When stats were generated
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetStorefrontStatsResponse) Reset() {
+	*x = GetStorefrontStatsResponse{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetStorefrontStatsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetStorefrontStatsResponse) ProtoMessage() {}
+
+func (x *GetStorefrontStatsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetStorefrontStatsResponse.ProtoReflect.Descriptor instead.
+func (*GetStorefrontStatsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetStorefrontStatsResponse) GetStorefrontId() int64 {
+	if x != nil {
+		return x.StorefrontId
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetStorefrontName() string {
+	if x != nil {
+		return x.StorefrontName
+	}
+	return ""
+}
+
+func (x *GetStorefrontStatsResponse) GetTotalSales() int64 {
+	if x != nil {
+		return x.TotalSales
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetTotalRevenue() float64 {
+	if x != nil {
+		return x.TotalRevenue
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetAverageOrderValue() float64 {
+	if x != nil {
+		return x.AverageOrderValue
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetActiveListings() int32 {
+	if x != nil {
+		return x.ActiveListings
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetTotalListings() int32 {
+	if x != nil {
+		return x.TotalListings
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetTotalViews() int64 {
+	if x != nil {
+		return x.TotalViews
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetTotalFavorites() int64 {
+	if x != nil {
+		return x.TotalFavorites
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetConversionRate() float64 {
+	if x != nil {
+		return x.ConversionRate
+	}
+	return 0
+}
+
+func (x *GetStorefrontStatsResponse) GetTopListings() []*TopListingInfo {
+	if x != nil {
+		return x.TopListings
+	}
+	return nil
+}
+
+func (x *GetStorefrontStatsResponse) GetPeriod() string {
+	if x != nil {
+		return x.Period
+	}
+	return ""
+}
+
+func (x *GetStorefrontStatsResponse) GetGeneratedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return nil
+}
+
+// GetTrendingStatsRequest retrieves platform trending analytics
+type GetTrendingStatsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTrendingStatsRequest) Reset() {
+	*x = GetTrendingStatsRequest{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTrendingStatsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTrendingStatsRequest) ProtoMessage() {}
+
+func (x *GetTrendingStatsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTrendingStatsRequest.ProtoReflect.Descriptor instead.
+func (*GetTrendingStatsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{19}
+}
+
+// TrendingCategory represents a category with growing order volume
+type TrendingCategory struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	CategoryId     int64                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`            // Category ID
+	CategoryName   string                 `protobuf:"bytes,2,opt,name=category_name,json=categoryName,proto3" json:"category_name,omitempty"`       // Category display name
+	OrderCount_30D int32                  `protobuf:"varint,3,opt,name=order_count_30d,json=orderCount30d,proto3" json:"order_count_30d,omitempty"` // Orders in last 30 days
+	OrderCount_7D  int32                  `protobuf:"varint,4,opt,name=order_count_7d,json=orderCount7d,proto3" json:"order_count_7d,omitempty"`    // Orders in last 7 days
+	GrowthRate     float64                `protobuf:"fixed64,5,opt,name=growth_rate,json=growthRate,proto3" json:"growth_rate,omitempty"`           // Percentage growth rate (7d avg vs 30d avg)
+	TrendScore     float64                `protobuf:"fixed64,6,opt,name=trend_score,json=trendScore,proto3" json:"trend_score,omitempty"`           // Combined score (volume + growth)
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *TrendingCategory) Reset() {
+	*x = TrendingCategory{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrendingCategory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrendingCategory) ProtoMessage() {}
+
+func (x *TrendingCategory) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrendingCategory.ProtoReflect.Descriptor instead.
+func (*TrendingCategory) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *TrendingCategory) GetCategoryId() int64 {
+	if x != nil {
+		return x.CategoryId
+	}
+	return 0
+}
+
+func (x *TrendingCategory) GetCategoryName() string {
+	if x != nil {
+		return x.CategoryName
+	}
+	return ""
+}
+
+func (x *TrendingCategory) GetOrderCount_30D() int32 {
+	if x != nil {
+		return x.OrderCount_30D
+	}
+	return 0
+}
+
+func (x *TrendingCategory) GetOrderCount_7D() int32 {
+	if x != nil {
+		return x.OrderCount_7D
+	}
+	return 0
+}
+
+func (x *TrendingCategory) GetGrowthRate() float64 {
+	if x != nil {
+		return x.GrowthRate
+	}
+	return 0
+}
+
+func (x *TrendingCategory) GetTrendScore() float64 {
+	if x != nil {
+		return x.TrendScore
+	}
+	return 0
+}
+
+// HotListing represents a listing with spiking order activity
+type HotListing struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ListingId        int64                  `protobuf:"varint,1,opt,name=listing_id,json=listingId,proto3" json:"listing_id,omitempty"`                     // Listing ID
+	Title            string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`                                               // Listing title
+	Orders_24H       int64                  `protobuf:"varint,3,opt,name=orders_24h,json=orders24h,proto3" json:"orders_24h,omitempty"`                     // Orders in last 24 hours
+	Orders_7D        int64                  `protobuf:"varint,4,opt,name=orders_7d,json=orders7d,proto3" json:"orders_7d,omitempty"`                        // Orders in last 7 days
+	OrdersGrowth     float64                `protobuf:"fixed64,5,opt,name=orders_growth,json=ordersGrowth,proto3" json:"orders_growth,omitempty"`           // Growth ratio (24h rate vs 7d avg)
+	QuantitySold_24H int64                  `protobuf:"varint,6,opt,name=quantity_sold_24h,json=quantitySold24h,proto3" json:"quantity_sold_24h,omitempty"` // Units sold in last 24 hours
+	Price            float64                `protobuf:"fixed64,7,opt,name=price,proto3" json:"price,omitempty"`                                             // Current price
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *HotListing) Reset() {
+	*x = HotListing{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HotListing) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HotListing) ProtoMessage() {}
+
+func (x *HotListing) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HotListing.ProtoReflect.Descriptor instead.
+func (*HotListing) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *HotListing) GetListingId() int64 {
+	if x != nil {
+		return x.ListingId
+	}
+	return 0
+}
+
+func (x *HotListing) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *HotListing) GetOrders_24H() int64 {
+	if x != nil {
+		return x.Orders_24H
+	}
+	return 0
+}
+
+func (x *HotListing) GetOrders_7D() int64 {
+	if x != nil {
+		return x.Orders_7D
+	}
+	return 0
+}
+
+func (x *HotListing) GetOrdersGrowth() float64 {
+	if x != nil {
+		return x.OrdersGrowth
+	}
+	return 0
+}
+
+func (x *HotListing) GetQuantitySold_24H() int64 {
+	if x != nil {
+		return x.QuantitySold_24H
+	}
+	return 0
+}
+
+func (x *HotListing) GetPrice() float64 {
+	if x != nil {
+		return x.Price
+	}
+	return 0
+}
+
+// PopularSearch represents frequently searched terms
+type PopularSearch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Query         string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`                                 // Search query text
+	SearchCount   int64                  `protobuf:"varint,2,opt,name=search_count,json=searchCount,proto3" json:"search_count,omitempty"` // Number of times searched (7 days)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PopularSearch) Reset() {
+	*x = PopularSearch{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PopularSearch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PopularSearch) ProtoMessage() {}
+
+func (x *PopularSearch) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PopularSearch.ProtoReflect.Descriptor instead.
+func (*PopularSearch) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *PopularSearch) GetQuery() string {
+	if x != nil {
+		return x.Query
+	}
+	return ""
+}
+
+func (x *PopularSearch) GetSearchCount() int64 {
+	if x != nil {
+		return x.SearchCount
+	}
+	return 0
+}
+
+// GetTrendingStatsResponse returns platform trending analytics
+type GetTrendingStatsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Trending categories (by order volume growth) - Top 10
+	TrendingCategories []*TrendingCategory `protobuf:"bytes,1,rep,name=trending_categories,json=trendingCategories,proto3" json:"trending_categories,omitempty"`
+	// Hot listings (order spike in last 24h) - Top 20
+	HotListings []*HotListing `protobuf:"bytes,2,rep,name=hot_listings,json=hotListings,proto3" json:"hot_listings,omitempty"`
+	// Popular searches (most searched terms) - Top 10
+	PopularSearches []*PopularSearch `protobuf:"bytes,3,rep,name=popular_searches,json=popularSearches,proto3" json:"popular_searches,omitempty"`
+	// When stats were generated (from cache or fresh)
+	GeneratedAt   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTrendingStatsResponse) Reset() {
+	*x = GetTrendingStatsResponse{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTrendingStatsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTrendingStatsResponse) ProtoMessage() {}
+
+func (x *GetTrendingStatsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTrendingStatsResponse.ProtoReflect.Descriptor instead.
+func (*GetTrendingStatsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *GetTrendingStatsResponse) GetTrendingCategories() []*TrendingCategory {
+	if x != nil {
+		return x.TrendingCategories
+	}
+	return nil
+}
+
+func (x *GetTrendingStatsResponse) GetHotListings() []*HotListing {
+	if x != nil {
+		return x.HotListings
+	}
+	return nil
+}
+
+func (x *GetTrendingStatsResponse) GetPopularSearches() []*PopularSearch {
+	if x != nil {
+		return x.PopularSearches
+	}
+	return nil
+}
+
+func (x *GetTrendingStatsResponse) GetGeneratedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return nil
+}
+
 var File_api_proto_listings_v1_analytics_proto protoreflect.FileDescriptor
 
 const file_api_proto_listings_v1_analytics_proto_rawDesc = "" +
@@ -2579,7 +3226,70 @@ const file_api_proto_listings_v1_analytics_proto_rawDesc = "" +
 	"\x0echange_percent\x18\x04 \x01(\x01H\x01R\rchangePercent\x88\x01\x01\x12\x12\n" +
 	"\x04unit\x18\x05 \x01(\tR\x04unitB\x11\n" +
 	"\x0f_previous_valueB\x11\n" +
-	"\x0f_change_percent*\x95\x01\n" +
+	"\x0f_change_percent\"\x97\x01\n" +
+	"\x19GetStorefrontStatsRequest\x12#\n" +
+	"\rstorefront_id\x18\x01 \x01(\x03R\fstorefrontId\x12\x1b\n" +
+	"\x06period\x18\x02 \x01(\tH\x00R\x06period\x88\x01\x01\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\x03R\x06userId\x12\x14\n" +
+	"\x05roles\x18\x04 \x03(\tR\x05rolesB\t\n" +
+	"\a_period\"\xc8\x01\n" +
+	"\x0eTopListingInfo\x12\x1d\n" +
+	"\n" +
+	"listing_id\x18\x01 \x01(\x03R\tlistingId\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
+	"\arevenue\x18\x03 \x01(\x01R\arevenue\x12\x1f\n" +
+	"\vorder_count\x18\x04 \x01(\x05R\n" +
+	"orderCount\x12\x1d\n" +
+	"\n" +
+	"view_count\x18\x05 \x01(\x05R\tviewCount\x12'\n" +
+	"\x0fconversion_rate\x18\x06 \x01(\x01R\x0econversionRate\"\xbd\x04\n" +
+	"\x1aGetStorefrontStatsResponse\x12#\n" +
+	"\rstorefront_id\x18\x01 \x01(\x03R\fstorefrontId\x12'\n" +
+	"\x0fstorefront_name\x18\x02 \x01(\tR\x0estorefrontName\x12\x1f\n" +
+	"\vtotal_sales\x18\x03 \x01(\x03R\n" +
+	"totalSales\x12#\n" +
+	"\rtotal_revenue\x18\x04 \x01(\x01R\ftotalRevenue\x12.\n" +
+	"\x13average_order_value\x18\x05 \x01(\x01R\x11averageOrderValue\x12'\n" +
+	"\x0factive_listings\x18\x06 \x01(\x05R\x0eactiveListings\x12%\n" +
+	"\x0etotal_listings\x18\a \x01(\x05R\rtotalListings\x12\x1f\n" +
+	"\vtotal_views\x18\b \x01(\x03R\n" +
+	"totalViews\x12'\n" +
+	"\x0ftotal_favorites\x18\t \x01(\x03R\x0etotalFavorites\x12'\n" +
+	"\x0fconversion_rate\x18\n" +
+	" \x01(\x01R\x0econversionRate\x12A\n" +
+	"\ftop_listings\x18\v \x03(\v2\x1e.listingssvc.v1.TopListingInfoR\vtopListings\x12\x16\n" +
+	"\x06period\x18\f \x01(\tR\x06period\x12=\n" +
+	"\fgenerated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\vgeneratedAt\"\x19\n" +
+	"\x17GetTrendingStatsRequest\"\xe8\x01\n" +
+	"\x10TrendingCategory\x12\x1f\n" +
+	"\vcategory_id\x18\x01 \x01(\x03R\n" +
+	"categoryId\x12#\n" +
+	"\rcategory_name\x18\x02 \x01(\tR\fcategoryName\x12&\n" +
+	"\x0forder_count_30d\x18\x03 \x01(\x05R\rorderCount30d\x12$\n" +
+	"\x0eorder_count_7d\x18\x04 \x01(\x05R\forderCount7d\x12\x1f\n" +
+	"\vgrowth_rate\x18\x05 \x01(\x01R\n" +
+	"growthRate\x12\x1f\n" +
+	"\vtrend_score\x18\x06 \x01(\x01R\n" +
+	"trendScore\"\xe4\x01\n" +
+	"\n" +
+	"HotListing\x12\x1d\n" +
+	"\n" +
+	"listing_id\x18\x01 \x01(\x03R\tlistingId\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1d\n" +
+	"\n" +
+	"orders_24h\x18\x03 \x01(\x03R\torders24h\x12\x1b\n" +
+	"\torders_7d\x18\x04 \x01(\x03R\borders7d\x12#\n" +
+	"\rorders_growth\x18\x05 \x01(\x01R\fordersGrowth\x12*\n" +
+	"\x11quantity_sold_24h\x18\x06 \x01(\x03R\x0fquantitySold24h\x12\x14\n" +
+	"\x05price\x18\a \x01(\x01R\x05price\"H\n" +
+	"\rPopularSearch\x12\x14\n" +
+	"\x05query\x18\x01 \x01(\tR\x05query\x12!\n" +
+	"\fsearch_count\x18\x02 \x01(\x03R\vsearchCount\"\xb5\x02\n" +
+	"\x18GetTrendingStatsResponse\x12Q\n" +
+	"\x13trending_categories\x18\x01 \x03(\v2 .listingssvc.v1.TrendingCategoryR\x12trendingCategories\x12=\n" +
+	"\fhot_listings\x18\x02 \x03(\v2\x1a.listingssvc.v1.HotListingR\vhotListings\x12H\n" +
+	"\x10popular_searches\x18\x03 \x03(\v2\x1d.listingssvc.v1.PopularSearchR\x0fpopularSearches\x12=\n" +
+	"\fgenerated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vgeneratedAt*\x95\x01\n" +
 	"\fMetricPeriod\x12\x1d\n" +
 	"\x19METRIC_PERIOD_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14METRIC_PERIOD_HOURLY\x10\x01\x12\x17\n" +
@@ -2592,10 +3302,12 @@ const file_api_proto_listings_v1_analytics_proto_rawDesc = "" +
 	"\x1cCONVERSION_FUNNEL_STAGE_CART\x10\x02\x12$\n" +
 	" CONVERSION_FUNNEL_STAGE_CHECKOUT\x10\x03\x12#\n" +
 	"\x1fCONVERSION_FUNNEL_STAGE_PAYMENT\x10\x04\x12%\n" +
-	"!CONVERSION_FUNNEL_STAGE_COMPLETED\x10\x052\xdd\x01\n" +
+	"!CONVERSION_FUNNEL_STAGE_COMPLETED\x10\x052\xb1\x03\n" +
 	"\x10AnalyticsService\x12e\n" +
 	"\x10GetOverviewStats\x12'.listingssvc.v1.GetOverviewStatsRequest\x1a(.listingssvc.v1.GetOverviewStatsResponse\x12b\n" +
-	"\x0fGetListingStats\x12&.listingssvc.v1.GetListingStatsRequest\x1a'.listingssvc.v1.GetListingStatsResponseBAZ?github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
+	"\x0fGetListingStats\x12&.listingssvc.v1.GetListingStatsRequest\x1a'.listingssvc.v1.GetListingStatsResponse\x12k\n" +
+	"\x12GetStorefrontStats\x12).listingssvc.v1.GetStorefrontStatsRequest\x1a*.listingssvc.v1.GetStorefrontStatsResponse\x12e\n" +
+	"\x10GetTrendingStats\x12'.listingssvc.v1.GetTrendingStatsRequest\x1a(.listingssvc.v1.GetTrendingStatsResponseBAZ?github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
 
 var (
 	file_api_proto_listings_v1_analytics_proto_rawDescOnce sync.Once
@@ -2610,38 +3322,46 @@ func file_api_proto_listings_v1_analytics_proto_rawDescGZIP() []byte {
 }
 
 var file_api_proto_listings_v1_analytics_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_api_proto_listings_v1_analytics_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_api_proto_listings_v1_analytics_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_api_proto_listings_v1_analytics_proto_goTypes = []any{
-	(MetricPeriod)(0),                // 0: listingssvc.v1.MetricPeriod
-	(ConversionFunnelStage)(0),       // 1: listingssvc.v1.ConversionFunnelStage
-	(*GetOverviewStatsRequest)(nil),  // 2: listingssvc.v1.GetOverviewStatsRequest
-	(*GetOverviewStatsResponse)(nil), // 3: listingssvc.v1.GetOverviewStatsResponse
-	(*GetListingStatsRequest)(nil),   // 4: listingssvc.v1.GetListingStatsRequest
-	(*GetListingStatsResponse)(nil),  // 5: listingssvc.v1.GetListingStatsResponse
-	(*ListingsStats)(nil),            // 6: listingssvc.v1.ListingsStats
-	(*RevenueStats)(nil),             // 7: listingssvc.v1.RevenueStats
-	(*UsersStats)(nil),               // 8: listingssvc.v1.UsersStats
-	(*OrdersStats)(nil),              // 9: listingssvc.v1.OrdersStats
-	(*EngagementMetrics)(nil),        // 10: listingssvc.v1.EngagementMetrics
-	(*ConversionFunnel)(nil),         // 11: listingssvc.v1.ConversionFunnel
-	(*TimeSeriesPoint)(nil),          // 12: listingssvc.v1.TimeSeriesPoint
-	(*ListingTimeSeriesPoint)(nil),   // 13: listingssvc.v1.ListingTimeSeriesPoint
-	(*PerformanceComparison)(nil),    // 14: listingssvc.v1.PerformanceComparison
-	(*VariantStats)(nil),             // 15: listingssvc.v1.VariantStats
-	(*GeoStats)(nil),                 // 16: listingssvc.v1.GeoStats
-	(*MetricSnapshot)(nil),           // 17: listingssvc.v1.MetricSnapshot
-	nil,                              // 18: listingssvc.v1.ListingsStats.ListingsByCategoryEntry
-	nil,                              // 19: listingssvc.v1.RevenueStats.RevenueByPaymentMethodEntry
-	nil,                              // 20: listingssvc.v1.RevenueStats.RevenueByStorefrontEntry
-	nil,                              // 21: listingssvc.v1.OrdersStats.OrdersByStatusEntry
-	nil,                              // 22: listingssvc.v1.EngagementMetrics.TopSearchTermsEntry
-	(*timestamppb.Timestamp)(nil),    // 23: google.protobuf.Timestamp
+	(MetricPeriod)(0),                  // 0: listingssvc.v1.MetricPeriod
+	(ConversionFunnelStage)(0),         // 1: listingssvc.v1.ConversionFunnelStage
+	(*GetOverviewStatsRequest)(nil),    // 2: listingssvc.v1.GetOverviewStatsRequest
+	(*GetOverviewStatsResponse)(nil),   // 3: listingssvc.v1.GetOverviewStatsResponse
+	(*GetListingStatsRequest)(nil),     // 4: listingssvc.v1.GetListingStatsRequest
+	(*GetListingStatsResponse)(nil),    // 5: listingssvc.v1.GetListingStatsResponse
+	(*ListingsStats)(nil),              // 6: listingssvc.v1.ListingsStats
+	(*RevenueStats)(nil),               // 7: listingssvc.v1.RevenueStats
+	(*UsersStats)(nil),                 // 8: listingssvc.v1.UsersStats
+	(*OrdersStats)(nil),                // 9: listingssvc.v1.OrdersStats
+	(*EngagementMetrics)(nil),          // 10: listingssvc.v1.EngagementMetrics
+	(*ConversionFunnel)(nil),           // 11: listingssvc.v1.ConversionFunnel
+	(*TimeSeriesPoint)(nil),            // 12: listingssvc.v1.TimeSeriesPoint
+	(*ListingTimeSeriesPoint)(nil),     // 13: listingssvc.v1.ListingTimeSeriesPoint
+	(*PerformanceComparison)(nil),      // 14: listingssvc.v1.PerformanceComparison
+	(*VariantStats)(nil),               // 15: listingssvc.v1.VariantStats
+	(*GeoStats)(nil),                   // 16: listingssvc.v1.GeoStats
+	(*MetricSnapshot)(nil),             // 17: listingssvc.v1.MetricSnapshot
+	(*GetStorefrontStatsRequest)(nil),  // 18: listingssvc.v1.GetStorefrontStatsRequest
+	(*TopListingInfo)(nil),             // 19: listingssvc.v1.TopListingInfo
+	(*GetStorefrontStatsResponse)(nil), // 20: listingssvc.v1.GetStorefrontStatsResponse
+	(*GetTrendingStatsRequest)(nil),    // 21: listingssvc.v1.GetTrendingStatsRequest
+	(*TrendingCategory)(nil),           // 22: listingssvc.v1.TrendingCategory
+	(*HotListing)(nil),                 // 23: listingssvc.v1.HotListing
+	(*PopularSearch)(nil),              // 24: listingssvc.v1.PopularSearch
+	(*GetTrendingStatsResponse)(nil),   // 25: listingssvc.v1.GetTrendingStatsResponse
+	nil,                                // 26: listingssvc.v1.ListingsStats.ListingsByCategoryEntry
+	nil,                                // 27: listingssvc.v1.RevenueStats.RevenueByPaymentMethodEntry
+	nil,                                // 28: listingssvc.v1.RevenueStats.RevenueByStorefrontEntry
+	nil,                                // 29: listingssvc.v1.OrdersStats.OrdersByStatusEntry
+	nil,                                // 30: listingssvc.v1.EngagementMetrics.TopSearchTermsEntry
+	(*timestamppb.Timestamp)(nil),      // 31: google.protobuf.Timestamp
 }
 var file_api_proto_listings_v1_analytics_proto_depIdxs = []int32{
-	23, // 0: listingssvc.v1.GetOverviewStatsRequest.date_from:type_name -> google.protobuf.Timestamp
-	23, // 1: listingssvc.v1.GetOverviewStatsRequest.date_to:type_name -> google.protobuf.Timestamp
-	23, // 2: listingssvc.v1.GetOverviewStatsRequest.compare_from:type_name -> google.protobuf.Timestamp
-	23, // 3: listingssvc.v1.GetOverviewStatsRequest.compare_to:type_name -> google.protobuf.Timestamp
+	31, // 0: listingssvc.v1.GetOverviewStatsRequest.date_from:type_name -> google.protobuf.Timestamp
+	31, // 1: listingssvc.v1.GetOverviewStatsRequest.date_to:type_name -> google.protobuf.Timestamp
+	31, // 2: listingssvc.v1.GetOverviewStatsRequest.compare_from:type_name -> google.protobuf.Timestamp
+	31, // 3: listingssvc.v1.GetOverviewStatsRequest.compare_to:type_name -> google.protobuf.Timestamp
 	0,  // 4: listingssvc.v1.GetOverviewStatsRequest.period:type_name -> listingssvc.v1.MetricPeriod
 	6,  // 5: listingssvc.v1.GetOverviewStatsResponse.listings:type_name -> listingssvc.v1.ListingsStats
 	7,  // 6: listingssvc.v1.GetOverviewStatsResponse.revenue:type_name -> listingssvc.v1.RevenueStats
@@ -2651,41 +3371,51 @@ var file_api_proto_listings_v1_analytics_proto_depIdxs = []int32{
 	12, // 10: listingssvc.v1.GetOverviewStatsResponse.time_series:type_name -> listingssvc.v1.TimeSeriesPoint
 	14, // 11: listingssvc.v1.GetOverviewStatsResponse.comparison:type_name -> listingssvc.v1.PerformanceComparison
 	11, // 12: listingssvc.v1.GetOverviewStatsResponse.conversion_funnel:type_name -> listingssvc.v1.ConversionFunnel
-	23, // 13: listingssvc.v1.GetOverviewStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
-	23, // 14: listingssvc.v1.GetOverviewStatsResponse.data_from:type_name -> google.protobuf.Timestamp
-	23, // 15: listingssvc.v1.GetOverviewStatsResponse.data_to:type_name -> google.protobuf.Timestamp
-	23, // 16: listingssvc.v1.GetListingStatsRequest.date_from:type_name -> google.protobuf.Timestamp
-	23, // 17: listingssvc.v1.GetListingStatsRequest.date_to:type_name -> google.protobuf.Timestamp
-	23, // 18: listingssvc.v1.GetListingStatsRequest.compare_from:type_name -> google.protobuf.Timestamp
-	23, // 19: listingssvc.v1.GetListingStatsRequest.compare_to:type_name -> google.protobuf.Timestamp
+	31, // 13: listingssvc.v1.GetOverviewStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	31, // 14: listingssvc.v1.GetOverviewStatsResponse.data_from:type_name -> google.protobuf.Timestamp
+	31, // 15: listingssvc.v1.GetOverviewStatsResponse.data_to:type_name -> google.protobuf.Timestamp
+	31, // 16: listingssvc.v1.GetListingStatsRequest.date_from:type_name -> google.protobuf.Timestamp
+	31, // 17: listingssvc.v1.GetListingStatsRequest.date_to:type_name -> google.protobuf.Timestamp
+	31, // 18: listingssvc.v1.GetListingStatsRequest.compare_from:type_name -> google.protobuf.Timestamp
+	31, // 19: listingssvc.v1.GetListingStatsRequest.compare_to:type_name -> google.protobuf.Timestamp
 	0,  // 20: listingssvc.v1.GetListingStatsRequest.period:type_name -> listingssvc.v1.MetricPeriod
 	10, // 21: listingssvc.v1.GetListingStatsResponse.engagement:type_name -> listingssvc.v1.EngagementMetrics
 	15, // 22: listingssvc.v1.GetListingStatsResponse.variant_stats:type_name -> listingssvc.v1.VariantStats
 	16, // 23: listingssvc.v1.GetListingStatsResponse.geo_stats:type_name -> listingssvc.v1.GeoStats
 	13, // 24: listingssvc.v1.GetListingStatsResponse.time_series:type_name -> listingssvc.v1.ListingTimeSeriesPoint
 	14, // 25: listingssvc.v1.GetListingStatsResponse.comparison:type_name -> listingssvc.v1.PerformanceComparison
-	23, // 26: listingssvc.v1.GetListingStatsResponse.created_at:type_name -> google.protobuf.Timestamp
-	23, // 27: listingssvc.v1.GetListingStatsResponse.updated_at:type_name -> google.protobuf.Timestamp
-	23, // 28: listingssvc.v1.GetListingStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
-	23, // 29: listingssvc.v1.GetListingStatsResponse.data_from:type_name -> google.protobuf.Timestamp
-	23, // 30: listingssvc.v1.GetListingStatsResponse.data_to:type_name -> google.protobuf.Timestamp
-	18, // 31: listingssvc.v1.ListingsStats.listings_by_category:type_name -> listingssvc.v1.ListingsStats.ListingsByCategoryEntry
-	19, // 32: listingssvc.v1.RevenueStats.revenue_by_payment_method:type_name -> listingssvc.v1.RevenueStats.RevenueByPaymentMethodEntry
-	20, // 33: listingssvc.v1.RevenueStats.revenue_by_storefront:type_name -> listingssvc.v1.RevenueStats.RevenueByStorefrontEntry
+	31, // 26: listingssvc.v1.GetListingStatsResponse.created_at:type_name -> google.protobuf.Timestamp
+	31, // 27: listingssvc.v1.GetListingStatsResponse.updated_at:type_name -> google.protobuf.Timestamp
+	31, // 28: listingssvc.v1.GetListingStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	31, // 29: listingssvc.v1.GetListingStatsResponse.data_from:type_name -> google.protobuf.Timestamp
+	31, // 30: listingssvc.v1.GetListingStatsResponse.data_to:type_name -> google.protobuf.Timestamp
+	26, // 31: listingssvc.v1.ListingsStats.listings_by_category:type_name -> listingssvc.v1.ListingsStats.ListingsByCategoryEntry
+	27, // 32: listingssvc.v1.RevenueStats.revenue_by_payment_method:type_name -> listingssvc.v1.RevenueStats.RevenueByPaymentMethodEntry
+	28, // 33: listingssvc.v1.RevenueStats.revenue_by_storefront:type_name -> listingssvc.v1.RevenueStats.RevenueByStorefrontEntry
 	14, // 34: listingssvc.v1.RevenueStats.comparison:type_name -> listingssvc.v1.PerformanceComparison
-	21, // 35: listingssvc.v1.OrdersStats.orders_by_status:type_name -> listingssvc.v1.OrdersStats.OrdersByStatusEntry
-	22, // 36: listingssvc.v1.EngagementMetrics.top_search_terms:type_name -> listingssvc.v1.EngagementMetrics.TopSearchTermsEntry
-	23, // 37: listingssvc.v1.TimeSeriesPoint.timestamp:type_name -> google.protobuf.Timestamp
-	23, // 38: listingssvc.v1.ListingTimeSeriesPoint.timestamp:type_name -> google.protobuf.Timestamp
-	2,  // 39: listingssvc.v1.AnalyticsService.GetOverviewStats:input_type -> listingssvc.v1.GetOverviewStatsRequest
-	4,  // 40: listingssvc.v1.AnalyticsService.GetListingStats:input_type -> listingssvc.v1.GetListingStatsRequest
-	3,  // 41: listingssvc.v1.AnalyticsService.GetOverviewStats:output_type -> listingssvc.v1.GetOverviewStatsResponse
-	5,  // 42: listingssvc.v1.AnalyticsService.GetListingStats:output_type -> listingssvc.v1.GetListingStatsResponse
-	41, // [41:43] is the sub-list for method output_type
-	39, // [39:41] is the sub-list for method input_type
-	39, // [39:39] is the sub-list for extension type_name
-	39, // [39:39] is the sub-list for extension extendee
-	0,  // [0:39] is the sub-list for field type_name
+	29, // 35: listingssvc.v1.OrdersStats.orders_by_status:type_name -> listingssvc.v1.OrdersStats.OrdersByStatusEntry
+	30, // 36: listingssvc.v1.EngagementMetrics.top_search_terms:type_name -> listingssvc.v1.EngagementMetrics.TopSearchTermsEntry
+	31, // 37: listingssvc.v1.TimeSeriesPoint.timestamp:type_name -> google.protobuf.Timestamp
+	31, // 38: listingssvc.v1.ListingTimeSeriesPoint.timestamp:type_name -> google.protobuf.Timestamp
+	19, // 39: listingssvc.v1.GetStorefrontStatsResponse.top_listings:type_name -> listingssvc.v1.TopListingInfo
+	31, // 40: listingssvc.v1.GetStorefrontStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	22, // 41: listingssvc.v1.GetTrendingStatsResponse.trending_categories:type_name -> listingssvc.v1.TrendingCategory
+	23, // 42: listingssvc.v1.GetTrendingStatsResponse.hot_listings:type_name -> listingssvc.v1.HotListing
+	24, // 43: listingssvc.v1.GetTrendingStatsResponse.popular_searches:type_name -> listingssvc.v1.PopularSearch
+	31, // 44: listingssvc.v1.GetTrendingStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	2,  // 45: listingssvc.v1.AnalyticsService.GetOverviewStats:input_type -> listingssvc.v1.GetOverviewStatsRequest
+	4,  // 46: listingssvc.v1.AnalyticsService.GetListingStats:input_type -> listingssvc.v1.GetListingStatsRequest
+	18, // 47: listingssvc.v1.AnalyticsService.GetStorefrontStats:input_type -> listingssvc.v1.GetStorefrontStatsRequest
+	21, // 48: listingssvc.v1.AnalyticsService.GetTrendingStats:input_type -> listingssvc.v1.GetTrendingStatsRequest
+	3,  // 49: listingssvc.v1.AnalyticsService.GetOverviewStats:output_type -> listingssvc.v1.GetOverviewStatsResponse
+	5,  // 50: listingssvc.v1.AnalyticsService.GetListingStats:output_type -> listingssvc.v1.GetListingStatsResponse
+	20, // 51: listingssvc.v1.AnalyticsService.GetStorefrontStats:output_type -> listingssvc.v1.GetStorefrontStatsResponse
+	25, // 52: listingssvc.v1.AnalyticsService.GetTrendingStats:output_type -> listingssvc.v1.GetTrendingStatsResponse
+	49, // [49:53] is the sub-list for method output_type
+	45, // [45:49] is the sub-list for method input_type
+	45, // [45:45] is the sub-list for extension type_name
+	45, // [45:45] is the sub-list for extension extendee
+	0,  // [0:45] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_listings_v1_analytics_proto_init() }
@@ -2703,13 +3433,14 @@ func file_api_proto_listings_v1_analytics_proto_init() {
 	file_api_proto_listings_v1_analytics_proto_msgTypes[4].OneofWrappers = []any{}
 	file_api_proto_listings_v1_analytics_proto_msgTypes[5].OneofWrappers = []any{}
 	file_api_proto_listings_v1_analytics_proto_msgTypes[15].OneofWrappers = []any{}
+	file_api_proto_listings_v1_analytics_proto_msgTypes[16].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_listings_v1_analytics_proto_rawDesc), len(file_api_proto_listings_v1_analytics_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   21,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -38,6 +38,7 @@ import (
 	"github.com/sveturs/listings/internal/timeout"
 	grpcTransport "github.com/sveturs/listings/internal/transport/grpc"
 	httpTransport "github.com/sveturs/listings/internal/transport/http"
+	ws "github.com/sveturs/listings/internal/websocket"
 	"github.com/sveturs/listings/internal/worker"
 )
 
@@ -349,6 +350,16 @@ func main() {
 		}
 	}
 
+	// Initialize WebSocket hub for chat
+	chatHub := ws.NewChatHub(zerologLogger)
+
+	// Start chat hub in background
+	chatHubCtx, chatHubCancel := context.WithCancel(context.Background())
+	defer chatHubCancel()
+	go chatHub.Run(chatHubCtx)
+	go chatHub.StartTypingCleanup(chatHubCtx)
+	logger.Info().Msg("Chat WebSocket hub started")
+
 	// Initialize chat service
 	chatService := service.NewChatService(
 		chatRepo,
@@ -359,6 +370,9 @@ func main() {
 		pgxPool,
 		zerologLogger,
 	)
+
+	// Connect WebSocket hub to chat service
+	chatService.SetHub(chatHub)
 
 	// Initialize health check service
 	healthConfig := &health.Config{
@@ -474,11 +488,21 @@ func main() {
 	httpHandler := httpTransport.NewMinimalHandler(listingsService, zerologLogger)
 	healthHandler := httpTransport.NewHealthHandler(healthChecker, zerologLogger)
 
+	// Initialize WebSocket handler (requires auth service)
+	var chatWSHandler *httpTransport.ChatWebSocketHandler
+	if authSvc != nil {
+		chatWSHandler = httpTransport.NewChatWebSocketHandler(chatHub, authSvc, chatRepo, zerologLogger)
+		logger.Info().Msg("Chat WebSocket handler initialized")
+	} else {
+		logger.Warn().Msg("Chat WebSocket disabled - auth service not available")
+	}
+
 	httpApp, err := httpTransport.StartMinimalServer(
 		cfg.Server.HTTPHost,
 		cfg.Server.HTTPPort,
 		httpHandler,
 		healthHandler,
+		chatWSHandler,
 		zerologLogger,
 	)
 	if err != nil {
@@ -512,6 +536,16 @@ func main() {
 		if err := indexWorker.Stop(); err != nil {
 			logger.Error().Err(err).Msg("error stopping worker")
 		}
+	}
+
+	// Stop chat hub (closes all WebSocket connections)
+	logger.Info().Msg("Stopping chat WebSocket hub...")
+	chatHubCancel()
+	time.Sleep(100 * time.Millisecond) // Give hub time to close connections gracefully
+
+	// Stop WebSocket handler (cleanup security middleware)
+	if chatWSHandler != nil {
+		chatWSHandler.Stop()
 	}
 
 	// Shutdown gRPC server

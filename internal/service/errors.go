@@ -206,6 +206,79 @@ func (e ErrStockNotAvailable) Error() string {
 		e.ListingID, e.RequestedQty, e.TotalStock, e.ReservedStock, e.AvailableStock)
 }
 
+// Chat-specific errors
+
+// ErrChatNotFound indicates that the chat was not found
+var ErrChatNotFound = errors.New("chat not found")
+
+// ErrChatBlocked indicates that the chat is blocked (spam/abuse)
+var ErrChatBlocked = errors.New("chat is blocked")
+
+// ErrChatAlreadyExists indicates that a chat already exists for this context
+type ErrChatAlreadyExists struct {
+	ChatID int64
+}
+
+func (e ErrChatAlreadyExists) Error() string {
+	return fmt.Sprintf("chat %d already exists for this context", e.ChatID)
+}
+
+// ErrChatWithSelf indicates that user is trying to chat with themselves
+var ErrChatWithSelf = errors.New("cannot chat with yourself")
+
+// ErrMessageNotFound indicates that the message was not found
+var ErrMessageNotFound = errors.New("message not found")
+
+// ErrMessageTooLong indicates that the message content exceeds maximum length
+type ErrMessageTooLong struct {
+	Length    int
+	MaxLength int
+}
+
+func (e ErrMessageTooLong) Error() string {
+	return fmt.Sprintf("message too long: %d characters (max: %d)", e.Length, e.MaxLength)
+}
+
+// ErrMessageEmpty indicates that the message content is empty
+var ErrMessageEmpty = errors.New("message content cannot be empty")
+
+// ErrAttachmentNotFound indicates that the attachment was not found
+var ErrAttachmentNotFound = errors.New("attachment not found")
+
+// ErrAttachmentTooLarge indicates that the attachment exceeds size limit
+type ErrAttachmentTooLarge struct {
+	FileType AttachmentFileType
+	Size     int64
+	MaxSize  int64
+}
+
+type AttachmentFileType string
+
+const (
+	AttachmentFileTypeImage    AttachmentFileType = "image"
+	AttachmentFileTypeVideo    AttachmentFileType = "video"
+	AttachmentFileTypeDocument AttachmentFileType = "document"
+)
+
+func (e ErrAttachmentTooLarge) Error() string {
+	return fmt.Sprintf("%s file too large: %d bytes (max: %d bytes)", e.FileType, e.Size, e.MaxSize)
+}
+
+// ErrInvalidFileType indicates that the file type is not supported
+type ErrInvalidFileType struct {
+	ContentType string
+}
+
+func (e ErrInvalidFileType) Error() string {
+	return fmt.Sprintf("invalid file type: %s", e.ContentType)
+}
+
+// ErrNotParticipant indicates that user is not a participant in the chat
+var ErrNotParticipant = errors.New("user is not a participant in this chat")
+
+// ErrNotReceiver indicates that user is not the receiver of the message
+var ErrNotReceiver = errors.New("user is not the receiver of this message")
+
 // Helper functions
 
 // IsNotFoundError checks if the error is a "not found" error
@@ -218,7 +291,10 @@ func IsNotFoundError(err error) bool {
 	if errors.Is(err, ErrNotFound) ||
 		errors.Is(err, ErrCartNotFound) ||
 		errors.Is(err, ErrOrderNotFound) ||
-		errors.Is(err, ErrReservationNotFound) {
+		errors.Is(err, ErrReservationNotFound) ||
+		errors.Is(err, ErrChatNotFound) ||
+		errors.Is(err, ErrMessageNotFound) ||
+		errors.Is(err, ErrAttachmentNotFound) {
 		return true
 	}
 

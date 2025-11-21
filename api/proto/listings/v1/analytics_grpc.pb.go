@@ -19,8 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AnalyticsService_GetOverviewStats_FullMethodName = "/listingssvc.v1.AnalyticsService/GetOverviewStats"
-	AnalyticsService_GetListingStats_FullMethodName  = "/listingssvc.v1.AnalyticsService/GetListingStats"
+	AnalyticsService_GetOverviewStats_FullMethodName   = "/listingssvc.v1.AnalyticsService/GetOverviewStats"
+	AnalyticsService_GetListingStats_FullMethodName    = "/listingssvc.v1.AnalyticsService/GetListingStats"
+	AnalyticsService_GetStorefrontStats_FullMethodName = "/listingssvc.v1.AnalyticsService/GetStorefrontStats"
+	AnalyticsService_GetTrendingStats_FullMethodName   = "/listingssvc.v1.AnalyticsService/GetTrendingStats"
 )
 
 // AnalyticsServiceClient is the client API for AnalyticsService service.
@@ -39,6 +41,16 @@ type AnalyticsServiceClient interface {
 	// Supports filtering by date range, comparison periods
 	// Cache: 5 minutes
 	GetListingStats(ctx context.Context, in *GetListingStatsRequest, opts ...grpc.CallOption) (*GetListingStatsResponse, error)
+	// GetStorefrontStats retrieves analytics for a specific storefront
+	// Includes: sales, revenue, listings metrics, engagement, top products
+	// Authorization: Admin OR Storefront Owner
+	// Cache: 15 minutes
+	GetStorefrontStats(ctx context.Context, in *GetStorefrontStatsRequest, opts ...grpc.CallOption) (*GetStorefrontStatsResponse, error)
+	// GetTrendingStats retrieves platform trending analytics
+	// Includes: trending categories, hot listings, popular searches
+	// Authorization: Admin only
+	// Cache: 1 hour (trending data doesn't need real-time)
+	GetTrendingStats(ctx context.Context, in *GetTrendingStatsRequest, opts ...grpc.CallOption) (*GetTrendingStatsResponse, error)
 }
 
 type analyticsServiceClient struct {
@@ -69,6 +81,26 @@ func (c *analyticsServiceClient) GetListingStats(ctx context.Context, in *GetLis
 	return out, nil
 }
 
+func (c *analyticsServiceClient) GetStorefrontStats(ctx context.Context, in *GetStorefrontStatsRequest, opts ...grpc.CallOption) (*GetStorefrontStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetStorefrontStatsResponse)
+	err := c.cc.Invoke(ctx, AnalyticsService_GetStorefrontStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *analyticsServiceClient) GetTrendingStats(ctx context.Context, in *GetTrendingStatsRequest, opts ...grpc.CallOption) (*GetTrendingStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTrendingStatsResponse)
+	err := c.cc.Invoke(ctx, AnalyticsService_GetTrendingStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AnalyticsServiceServer is the server API for AnalyticsService service.
 // All implementations must embed UnimplementedAnalyticsServiceServer
 // for forward compatibility.
@@ -85,6 +117,16 @@ type AnalyticsServiceServer interface {
 	// Supports filtering by date range, comparison periods
 	// Cache: 5 minutes
 	GetListingStats(context.Context, *GetListingStatsRequest) (*GetListingStatsResponse, error)
+	// GetStorefrontStats retrieves analytics for a specific storefront
+	// Includes: sales, revenue, listings metrics, engagement, top products
+	// Authorization: Admin OR Storefront Owner
+	// Cache: 15 minutes
+	GetStorefrontStats(context.Context, *GetStorefrontStatsRequest) (*GetStorefrontStatsResponse, error)
+	// GetTrendingStats retrieves platform trending analytics
+	// Includes: trending categories, hot listings, popular searches
+	// Authorization: Admin only
+	// Cache: 1 hour (trending data doesn't need real-time)
+	GetTrendingStats(context.Context, *GetTrendingStatsRequest) (*GetTrendingStatsResponse, error)
 	mustEmbedUnimplementedAnalyticsServiceServer()
 }
 
@@ -100,6 +142,12 @@ func (UnimplementedAnalyticsServiceServer) GetOverviewStats(context.Context, *Ge
 }
 func (UnimplementedAnalyticsServiceServer) GetListingStats(context.Context, *GetListingStatsRequest) (*GetListingStatsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetListingStats not implemented")
+}
+func (UnimplementedAnalyticsServiceServer) GetStorefrontStats(context.Context, *GetStorefrontStatsRequest) (*GetStorefrontStatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStorefrontStats not implemented")
+}
+func (UnimplementedAnalyticsServiceServer) GetTrendingStats(context.Context, *GetTrendingStatsRequest) (*GetTrendingStatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTrendingStats not implemented")
 }
 func (UnimplementedAnalyticsServiceServer) mustEmbedUnimplementedAnalyticsServiceServer() {}
 func (UnimplementedAnalyticsServiceServer) testEmbeddedByValue()                          {}
@@ -158,6 +206,42 @@ func _AnalyticsService_GetListingStats_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AnalyticsService_GetStorefrontStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStorefrontStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AnalyticsServiceServer).GetStorefrontStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AnalyticsService_GetStorefrontStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AnalyticsServiceServer).GetStorefrontStats(ctx, req.(*GetStorefrontStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AnalyticsService_GetTrendingStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTrendingStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AnalyticsServiceServer).GetTrendingStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AnalyticsService_GetTrendingStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AnalyticsServiceServer).GetTrendingStats(ctx, req.(*GetTrendingStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AnalyticsService_ServiceDesc is the grpc.ServiceDesc for AnalyticsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -172,6 +256,14 @@ var AnalyticsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetListingStats",
 			Handler:    _AnalyticsService_GetListingStats_Handler,
+		},
+		{
+			MethodName: "GetStorefrontStats",
+			Handler:    _AnalyticsService_GetStorefrontStats_Handler,
+		},
+		{
+			MethodName: "GetTrendingStats",
+			Handler:    _AnalyticsService_GetTrendingStats_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

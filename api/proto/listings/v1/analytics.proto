@@ -50,6 +50,18 @@ service AnalyticsService {
   // Supports filtering by date range, comparison periods
   // Cache: 5 minutes
   rpc GetListingStats(GetListingStatsRequest) returns (GetListingStatsResponse);
+
+  // GetStorefrontStats retrieves analytics for a specific storefront
+  // Includes: sales, revenue, listings metrics, engagement, top products
+  // Authorization: Admin OR Storefront Owner
+  // Cache: 15 minutes
+  rpc GetStorefrontStats(GetStorefrontStatsRequest) returns (GetStorefrontStatsResponse);
+
+  // GetTrendingStats retrieves platform trending analytics
+  // Includes: trending categories, hot listings, popular searches
+  // Authorization: Admin only
+  // Cache: 1 hour (trending data doesn't need real-time)
+  rpc GetTrendingStats(GetTrendingStatsRequest) returns (GetTrendingStatsResponse);
 }
 
 // ============================================================================
@@ -399,4 +411,114 @@ message MetricSnapshot {
   optional double previous_value = 3; // Previous period value
   optional double change_percent = 4; // Percentage change
   string unit = 5;                // Unit of measurement
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES - GetStorefrontStats
+// ============================================================================
+
+// GetStorefrontStatsRequest retrieves analytics for a specific storefront
+message GetStorefrontStatsRequest {
+  // Storefront identification (required)
+  int64 storefront_id = 1;
+
+  // Time period filter (optional, default: "30d")
+  // Allowed values: "7d", "30d", "90d", "all"
+  optional string period = 2;
+
+  // Authorization (required)
+  int64 user_id = 3;              // Current user ID
+  repeated string roles = 4;      // User roles for authorization check
+}
+
+// TopListingInfo represents a top-performing listing
+message TopListingInfo {
+  int64 listing_id = 1;           // Listing ID
+  string title = 2;               // Listing title
+  double revenue = 3;             // Total revenue from this listing
+  int32 order_count = 4;          // Number of orders for this listing
+  int32 view_count = 5;           // Number of views
+  double conversion_rate = 6;     // Conversion rate %
+}
+
+// GetStorefrontStatsResponse returns storefront performance analytics
+message GetStorefrontStatsResponse {
+  // === Basic Info ===
+  int64 storefront_id = 1;
+  string storefront_name = 2;
+
+  // === Sales Metrics ===
+  int64 total_sales = 3;          // Number of completed orders (delivered status)
+  double total_revenue = 4;       // Sum of order amounts (delivered orders)
+  double average_order_value = 5; // Average order value
+
+  // === Listings Metrics ===
+  int32 active_listings = 6;      // Active listings count
+  int32 total_listings = 7;       // Total listings (including inactive)
+
+  // === Performance Metrics ===
+  int64 total_views = 8;          // Sum of all listing views
+  int64 total_favorites = 9;      // Sum of all listing favorites
+  double conversion_rate = 10;    // Orders / views ratio (%)
+
+  // === Top Listings ===
+  repeated TopListingInfo top_listings = 11; // Top 10 listings by revenue
+
+  // === Filter Info ===
+  string period = 12;             // Applied period filter ("7d", "30d", "90d", "all")
+
+  // === Timestamps ===
+  google.protobuf.Timestamp generated_at = 13; // When stats were generated
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES - GetTrendingStats
+// ============================================================================
+
+// GetTrendingStatsRequest retrieves platform trending analytics
+message GetTrendingStatsRequest {
+  // Admin-only endpoint, no filters needed
+  // Stats are pre-calculated in materialized view and cached
+}
+
+// TrendingCategory represents a category with growing order volume
+message TrendingCategory {
+  int64 category_id = 1;          // Category ID
+  string category_name = 2;        // Category display name
+  int32 order_count_30d = 3;       // Orders in last 30 days
+  int32 order_count_7d = 4;        // Orders in last 7 days
+  double growth_rate = 5;          // Percentage growth rate (7d avg vs 30d avg)
+  double trend_score = 6;          // Combined score (volume + growth)
+}
+
+// HotListing represents a listing with spiking order activity
+message HotListing {
+  int64 listing_id = 1;            // Listing ID
+  string title = 2;                // Listing title
+  int64 orders_24h = 3;            // Orders in last 24 hours
+  int64 orders_7d = 4;             // Orders in last 7 days
+  double orders_growth = 5;        // Growth ratio (24h rate vs 7d avg)
+  int64 quantity_sold_24h = 6;     // Units sold in last 24 hours
+  double price = 7;                // Current price
+}
+
+// PopularSearch represents frequently searched terms
+message PopularSearch {
+  string query = 1;                // Search query text
+  int64 search_count = 2;          // Number of times searched (7 days)
+}
+
+// GetTrendingStatsResponse returns platform trending analytics
+message GetTrendingStatsResponse {
+  // Trending categories (by order volume growth) - Top 10
+  repeated TrendingCategory trending_categories = 1;
+
+  // Hot listings (order spike in last 24h) - Top 20
+  repeated HotListing hot_listings = 2;
+
+  // Popular searches (most searched terms) - Top 10
+  repeated PopularSearch popular_searches = 3;
+
+  // When stats were generated (from cache or fresh)
+  google.protobuf.Timestamp generated_at = 4;
 }

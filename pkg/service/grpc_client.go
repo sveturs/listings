@@ -176,47 +176,27 @@ func (c *Client) getFavoritedUsersGRPC(ctx context.Context, listingID int64) ([]
 // ============================================================================
 
 // deleteListingImageGRPC removes an image from a listing via gRPC.
+// NOTE: This method requires listing_id and user_id which are not available
+// in the current Client API signature. Returns ErrUnavailable until the
+// public DeleteListingImage method is updated to include these parameters.
+// TODO: Update Client.DeleteListingImage signature to include listingID and userID
 func (c *Client) deleteListingImageGRPC(ctx context.Context, imageID int64) error {
-	ctx, cancel := context.WithTimeout(ctx, c.config.Timeout)
-	defer cancel()
-
-	req := &pb.ImageIDRequest{
-		ImageId: imageID,
-	}
-
-	_, err := c.grpcClient.DeleteListingImage(ctx, req)
-	if err != nil {
-		return convertGRPCError(err)
-	}
-
-	c.logger.Debug().Int64("image_id", imageID).Msg("deleted listing image via gRPC")
-	return nil
+	// The new proto requires DeleteListingImageRequest with listing_id, image_id, user_id
+	// but the current public API only provides imageID.
+	// Return ErrUnavailable to fall back to HTTP transport.
+	c.logger.Debug().Int64("image_id", imageID).Msg("deleteListingImageGRPC requires listing_id and user_id - falling back to HTTP")
+	return ErrUnavailable
 }
 
 // reorderListingImagesGRPC updates display order for multiple images via gRPC.
+// NOTE: This method requires user_id for authorization which is not available
+// in the current Client API signature. Returns ErrUnavailable until the
+// public ReorderListingImages method is updated to include userID.
+// TODO: Update Client.ReorderListingImages signature to include userID
 func (c *Client) reorderListingImagesGRPC(ctx context.Context, listingID int64, imageOrders []ImageOrder) error {
-	ctx, cancel := context.WithTimeout(ctx, c.config.Timeout)
-	defer cancel()
-
-	// Convert to proto ImageOrder
-	pbOrders := make([]*pb.ImageOrder, len(imageOrders))
-	for i, order := range imageOrders {
-		pbOrders[i] = &pb.ImageOrder{
-			ImageId:      order.ImageID,
-			DisplayOrder: order.DisplayOrder,
-		}
-	}
-
-	req := &pb.ReorderImagesRequest{
-		ListingId:   listingID,
-		ImageOrders: pbOrders,
-	}
-
-	_, err := c.grpcClient.ReorderListingImages(ctx, req)
-	if err != nil {
-		return convertGRPCError(err)
-	}
-
-	c.logger.Debug().Int64("listing_id", listingID).Int("count", len(imageOrders)).Msg("reordered listing images via gRPC")
-	return nil
+	// The new proto requires ReorderImagesRequest with listing_id, user_id, image_ids
+	// but the current public API doesn't provide user_id.
+	// Return ErrUnavailable to fall back to HTTP transport.
+	c.logger.Debug().Int64("listing_id", listingID).Int("count", len(imageOrders)).Msg("reorderListingImagesGRPC requires user_id - falling back to HTTP")
+	return ErrUnavailable
 }

@@ -880,6 +880,26 @@ func mapServiceErrorToGRPC(err error, logger zerolog.Logger) error {
 		return status.Error(codes.PermissionDenied, "unauthorized")
 	}
 
+	// Check for chat-specific errors
+	if errors.Is(err, service.ErrNotParticipant) {
+		return status.Error(codes.PermissionDenied, err.Error())
+	}
+
+	if errors.Is(err, service.ErrChatBlocked) {
+		return status.Error(codes.FailedPrecondition, err.Error())
+	}
+
+	// Check for attachment validation errors (custom error types)
+	var attachmentTooLargeErr *service.ErrAttachmentTooLarge
+	if errors.As(err, &attachmentTooLargeErr) {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	var invalidFileTypeErr *service.ErrInvalidFileType
+	if errors.As(err, &invalidFileTypeErr) {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	// Default to internal error
 	return status.Error(codes.Internal, "internal server error")
 }

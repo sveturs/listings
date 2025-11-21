@@ -128,7 +128,8 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 	defer res.Body.Close()
 
 	if res.IsError() {
-		c.logger.Error().Int("status", res.StatusCode).Int64("listing_id", listing.ID).Msg("OpenSearch index error")
+		body, _ := io.ReadAll(res.Body)
+		c.logger.Error().Int("status", res.StatusCode).Int64("listing_id", listing.ID).Str("response_body", string(body)).Msg("OpenSearch index error")
 		return fmt.Errorf("OpenSearch index error: %s", res.Status())
 	}
 

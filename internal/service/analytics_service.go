@@ -27,6 +27,9 @@ type AnalyticsRepository interface {
 
 	// GetListingStats retrieves analytics for a specific listing
 	GetListingStats(ctx context.Context, filter *domain.GetListingStatsFilter) (*domain.ListingStats, error)
+
+	// GetTrendingStats retrieves platform trending analytics
+	GetTrendingStats(ctx context.Context) (*domain.TrendingStats, error)
 }
 
 // AnalyticsService defines the service interface for analytics operations
@@ -36,6 +39,9 @@ type AnalyticsService interface {
 
 	// GetListingStats retrieves analytics for a specific listing (owner or admin)
 	GetListingStats(ctx context.Context, req *listingssvcv1.GetListingStatsRequest, userID int64, isAdmin bool) (*listingssvcv1.GetListingStatsResponse, error)
+
+	// GetTrendingStats retrieves platform trending analytics (admin only)
+	GetTrendingStats(ctx context.Context, req *listingssvcv1.GetTrendingStatsRequest) (*listingssvcv1.GetTrendingStatsResponse, error)
 }
 
 // ============================================================================
@@ -44,12 +50,14 @@ type AnalyticsService interface {
 
 const (
 	// Cache keys
-	analyticsCacheKeyOverview = "analytics:overview:%s" // %s = MD5 hash of request
-	analyticsCacheKeyListing  = "analytics:listing:%s"  // %s = MD5 hash of request
+	analyticsCacheKeyOverview  = "analytics:overview:%s"  // %s = MD5 hash of request
+	analyticsCacheKeyListing   = "analytics:listing:%s"   // %s = MD5 hash of request
+	analyticsCacheKeyTrending  = "analytics:trending"     // Static key (no params)
 
 	// Cache TTLs
-	overviewStatsCacheTTL = 1 * time.Hour  // Overview stats cached for 1 hour
-	listingStatsCacheTTL  = 15 * time.Minute // Listing stats cached for 15 minutes
+	overviewStatsCacheTTL  = 1 * time.Hour      // Overview stats cached for 1 hour
+	listingStatsCacheTTL   = 15 * time.Minute   // Listing stats cached for 15 minutes
+	trendingStatsCacheTTL  = 1 * time.Hour      // Trending stats cached for 1 hour
 
 	// Validation constants
 	maxDateRangeDays = 365 // Maximum 365 days for analytics queries
@@ -684,4 +692,126 @@ func (c *AnalyticsCache) SetListingStats(ctx context.Context, key string, respon
 
 	c.logger.Debug().Str("key", key).Dur("ttl", ttl).Msg("listing stats cached successfully")
 	return nil
+}
+
+// GetTrendingStats retrieves trending stats from cache
+func (c *AnalyticsCache) GetTrendingStats(ctx context.Context) (*listingssvcv1.GetTrendingStatsResponse, error) {
+	data, err := c.client.Get(ctx, analyticsCacheKeyTrending).Bytes()
+	if err == redis.Nil {
+		return nil, nil // Cache miss
+	}
+	if err != nil {
+		c.logger.Warn().Err(err).Str("key", analyticsCacheKeyTrending).Msg("cache get error")
+		return nil, err
+	}
+
+	var response listingssvcv1.GetTrendingStatsResponse
+	if err := json.Unmarshal(data, &response); err != nil {
+		c.logger.Error().Err(err).Str("key", analyticsCacheKeyTrending).Msg("failed to unmarshal cached trending stats")
+		return nil, err
+	}
+
+	c.logger.Debug().Str("key", analyticsCacheKeyTrending).Msg("trending stats cache hit")
+	return &response, nil
+}
+
+// SetTrendingStats stores trending stats in cache
+func (c *AnalyticsCache) SetTrendingStats(ctx context.Context, response *listingssvcv1.GetTrendingStatsResponse) error {
+	data, err := json.Marshal(response)
+	if err != nil {
+		c.logger.Error().Err(err).Str("key", analyticsCacheKeyTrending).Msg("failed to marshal trending stats for cache")
+		return err
+	}
+
+	if err := c.client.Set(ctx, analyticsCacheKeyTrending, data, trendingStatsCacheTTL).Err(); err != nil {
+		c.logger.Warn().Err(err).Str("key", analyticsCacheKeyTrending).Msg("cache set error")
+		return err
+	}
+
+	c.logger.Debug().Str("key", analyticsCacheKeyTrending).Dur("ttl", trendingStatsCacheTTL).Msg("trending stats cached successfully")
+	return nil
+}
+
+// ============================================================================
+// SERVICE METHOD - GetTrendingStats
+// ============================================================================
+
+// GetTrendingStats retrieves platform trending analytics (admin only)
+// Returns trending categories, hot listings, and popular searches
+// Cache: 1 hour
+func (s *analyticsServiceImpl) GetTrendingStats(
+	ctx context.Context,
+	req *listingssvcv1.GetTrendingStatsRequest,
+) (*listingssvcv1.GetTrendingStatsResponse, error) {
+	s.logger.Debug().Msg("get trending stats requested")
+
+	// Try cache first
+	if cachedResp, err := s.cache.GetTrendingStats(ctx); err == nil && cachedResp != nil {
+		s.logger.Debug().Msg("returning trending stats from cache")
+		return cachedResp, nil
+	}
+
+	// Cache miss - fetch from repository
+	stats, err := s.repo.GetTrendingStats(ctx)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to get trending stats from repository")
+		return nil, fmt.Errorf("failed to get trending stats: %w", err)
+	}
+
+	// Convert domain models to proto
+	response := &listingssvcv1.GetTrendingStatsResponse{
+		TrendingCategories: make([]*listingssvcv1.TrendingCategory, 0, len(stats.TrendingCategories)),
+		HotListings:        make([]*listingssvcv1.HotListing, 0, len(stats.HotListings)),
+		PopularSearches:    make([]*listingssvcv1.PopularSearch, 0, len(stats.PopularSearches)),
+		GeneratedAt:        timestamppb.New(stats.GeneratedAt),
+	}
+
+	// Convert trending categories
+	for _, tc := range stats.TrendingCategories {
+		response.TrendingCategories = append(response.TrendingCategories, &listingssvcv1.TrendingCategory{
+			CategoryId:    tc.CategoryID,
+			CategoryName:  tc.CategoryName,
+			OrderCount_30D: tc.OrderCount30d,
+			OrderCount_7D:  tc.OrderCount7d,
+			GrowthRate:    tc.GrowthRate,
+			TrendScore:    tc.TrendScore,
+		})
+	}
+
+	// Convert hot listings
+	for _, hl := range stats.HotListings {
+		response.HotListings = append(response.HotListings, &listingssvcv1.HotListing{
+			ListingId:       hl.ListingID,
+			Title:           hl.Title,
+			Orders_24H:      hl.Orders24h,
+			Orders_7D:       hl.Orders7d,
+			OrdersGrowth:    hl.OrdersGrowth,
+			QuantitySold_24H: hl.QuantitySold24h,
+			Price:           hl.Price,
+		})
+	}
+
+	// Convert popular searches
+	for _, ps := range stats.PopularSearches {
+		response.PopularSearches = append(response.PopularSearches, &listingssvcv1.PopularSearch{
+			Query:       ps.Query,
+			SearchCount: ps.SearchCount,
+		})
+	}
+
+	// Cache the response asynchronously
+	go func() {
+		cacheCtx := context.Background()
+		if err := s.cache.SetTrendingStats(cacheCtx, response); err != nil {
+			s.logger.Warn().Err(err).Msg("failed to cache trending stats")
+		}
+	}()
+
+	s.logger.Info().
+		Int("trending_categories", len(response.TrendingCategories)).
+		Int("hot_listings", len(response.HotListings)).
+		Int("popular_searches", len(response.PopularSearches)).
+		Msg("trending stats retrieved successfully")
+
+	return response, nil
 }
