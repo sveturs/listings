@@ -754,6 +754,9 @@ func domainMessageToProtoMessage(message *domain.Message) *chatsvcv1.Message {
 		pbMessage.SenderName = message.SenderName
 	}
 
+	// System message flag
+	pbMessage.IsSystem = message.IsSystem
+
 	// Convert attachments
 	if len(message.Attachments) > 0 {
 		pbMessage.Attachments = make([]*chatsvcv1.MessageAttachment, 0, len(message.Attachments))

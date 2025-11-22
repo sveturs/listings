@@ -104,6 +104,10 @@ message Message {
 
   // Denormalized for UI
   optional string sender_name = 17;
+
+  // System message flag (for marketplace notifications like orders, alerts)
+  // System messages are sent by SystemUserID=1 (Svetu Marketplace)
+  bool is_system = 18;
 }
 
 // MessageAttachment represents a file attachment

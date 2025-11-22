@@ -390,7 +390,10 @@ type Message struct {
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	ReadAt    *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=read_at,json=readAt,proto3,oneof" json:"read_at,omitempty"` // When read by receiver
 	// Denormalized for UI
-	SenderName    *string `protobuf:"bytes,17,opt,name=sender_name,json=senderName,proto3,oneof" json:"sender_name,omitempty"`
+	SenderName *string `protobuf:"bytes,17,opt,name=sender_name,json=senderName,proto3,oneof" json:"sender_name,omitempty"`
+	// System message flag (for marketplace notifications like orders, alerts)
+	// System messages are sent by SystemUserID=1 (Svetu Marketplace)
+	IsSystem      bool `protobuf:"varint,18,opt,name=is_system,json=isSystem,proto3" json:"is_system,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -542,6 +545,13 @@ func (x *Message) GetSenderName() string {
 		return *x.SenderName
 	}
 	return ""
+}
+
+func (x *Message) GetIsSystem() bool {
+	if x != nil {
+		return x.IsSystem
+	}
+	return false
 }
 
 // MessageAttachment represents a file attachment
@@ -2320,7 +2330,7 @@ const file_api_proto_chat_v1_chat_proto_rawDesc = "" +
 	"\f_seller_nameB\x10\n" +
 	"\x0e_listing_titleB\x14\n" +
 	"\x12_listing_image_urlB\x13\n" +
-	"\x11_listing_owner_id\"\x92\x06\n" +
+	"\x11_listing_owner_id\"\xaf\x06\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\achat_id\x18\x02 \x01(\x03R\x06chatId\x12\x1b\n" +
@@ -2344,7 +2354,8 @@ const file_api_proto_chat_v1_chat_proto_rawDesc = "" +
 	"updated_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x128\n" +
 	"\aread_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampH\x02R\x06readAt\x88\x01\x01\x12$\n" +
 	"\vsender_name\x18\x11 \x01(\tH\x03R\n" +
-	"senderName\x88\x01\x01B\r\n" +
+	"senderName\x88\x01\x01\x12\x1b\n" +
+	"\tis_system\x18\x12 \x01(\bR\bisSystemB\r\n" +
 	"\v_listing_idB\x18\n" +
 	"\x16_storefront_product_idB\n" +
 	"\n" +
