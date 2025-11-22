@@ -135,6 +135,9 @@ message Order {
 
   // Relations (loaded on demand)
   repeated OrderItem items = 30;                // Order line items
+
+  // Storefront info (for display)
+  optional string storefront_name = 31;         // Storefront/seller name for frontend display
 }
 
 // OrderFinancials contains all money-related fields

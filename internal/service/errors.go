@@ -108,7 +108,7 @@ func (e ErrOrderCannotCancel) Error() string {
 
 // ErrOrderCannotUpdateStatus indicates that the order status cannot be updated
 type ErrOrderCannotUpdateStatus struct {
-	OrderID   int64
+	OrderID    int64
 	FromStatus string
 	ToStatus   string
 }
@@ -194,11 +194,11 @@ func (e ErrReservationCannotRelease) Error() string {
 
 // ErrStockNotAvailable indicates that stock is not available (locked by reservations)
 type ErrStockNotAvailable struct {
-	ListingID         int64
-	RequestedQty      int32
-	TotalStock        int32
-	ReservedStock     int32
-	AvailableStock    int32
+	ListingID      int64
+	RequestedQty   int32
+	TotalStock     int32
+	ReservedStock  int32
+	AvailableStock int32
 }
 
 func (e ErrStockNotAvailable) Error() string {

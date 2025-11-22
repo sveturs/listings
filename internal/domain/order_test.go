@@ -293,8 +293,8 @@ func TestOrder_CalculateFinancials_Success(t *testing.T) {
 	err := order.CalculateFinancials(items, 0.1, 15.00, 20.00, 0.05)
 	require.NoError(t, err)
 
-	assert.Equal(t, 240.00, order.Subtotal)     // 190 + 50
-	assert.Equal(t, 24.00, order.Tax)           // 240 * 0.1
+	assert.Equal(t, 240.00, order.Subtotal) // 190 + 50
+	assert.Equal(t, 24.00, order.Tax)       // 240 * 0.1
 	assert.Equal(t, 15.00, order.Shipping)
 	assert.Equal(t, 20.00, order.Discount)
 	assert.Equal(t, 259.00, order.Total)        // 240 + 24 + 15 - 20
@@ -514,18 +514,18 @@ func TestOrderFromProto_Success(t *testing.T) {
 	shippingStruct, _ := structpb.NewStruct(shippingAddress)
 
 	pbOrder := &pb.Order{
-		Id:              1,
-		OrderNumber:     "ORD-2025-000001",
-		UserId:          &userID,
-		StorefrontId:    10,
-		Status:          pb.OrderStatus_ORDER_STATUS_CONFIRMED,
-		PaymentStatus:   pb.PaymentStatus_PAYMENT_STATUS_COMPLETED,
-		PaymentMethod:   &paymentMethod,
+		Id:                   1,
+		OrderNumber:          "ORD-2025-000001",
+		UserId:               &userID,
+		StorefrontId:         10,
+		Status:               pb.OrderStatus_ORDER_STATUS_CONFIRMED,
+		PaymentStatus:        pb.PaymentStatus_PAYMENT_STATUS_COMPLETED,
+		PaymentMethod:        &paymentMethod,
 		PaymentTransactionId: &transactionID,
-		ShippingAddress: shippingStruct,
-		EscrowDays:      3,
-		CreatedAt:       timestamppb.New(now),
-		UpdatedAt:       timestamppb.New(now),
+		ShippingAddress:      shippingStruct,
+		EscrowDays:           3,
+		CreatedAt:            timestamppb.New(now),
+		UpdatedAt:            timestamppb.New(now),
 		Financials: &pb.OrderFinancials{
 			Subtotal:     100.00,
 			Tax:          10.00,

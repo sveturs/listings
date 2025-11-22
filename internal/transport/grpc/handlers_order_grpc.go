@@ -278,17 +278,18 @@ func (s *Server) CreateOrder(ctx context.Context, req *listingspb.CreateOrderReq
 
 	// Call service layer
 	order, err := s.orderService.CreateOrder(ctx, &service.CreateOrderRequest{
-		CartID:          cartID,
-		Items:           items,
-		StorefrontID:    req.StorefrontId,
-		UserID:          req.UserId,
-		ShippingAddress: shippingAddress,
-		BillingAddress:  billingAddress,
-		ShippingCost:    0, // TODO: Calculate shipping cost
-		DiscountCode:    nil,
-		DiscountAmount:  0,
-		PaymentMethod:   req.PaymentMethod,
-		CustomerNotes:   req.CustomerNotes,
+		CartID:             cartID,
+		Items:              items,
+		StorefrontID:       req.StorefrontId,
+		UserID:             req.UserId,
+		ShippingAddress:    shippingAddress,
+		BillingAddress:     billingAddress,
+		ShippingCost:       0, // TODO: Calculate shipping cost
+		DiscountCode:       nil,
+		DiscountAmount:     0,
+		PaymentMethod:      req.PaymentMethod,
+		CustomerNotes:      req.CustomerNotes,
+		AcceptPriceChanges: req.AcceptPriceChanges,
 	})
 
 	if err != nil {
@@ -602,21 +603,14 @@ func domainCartToProtoCart(cart *domain.Cart) *listingspb.Cart {
 }
 
 // domainCartItemToProtoCartItem converts domain.CartItem to proto CartItem
+// Uses domain's ToProto method to include embedded data (ListingName, ListingImage, etc.)
 func domainCartItemToProtoCartItem(item *domain.CartItem) *listingspb.CartItem {
 	if item == nil {
 		return nil
 	}
 
-	return &listingspb.CartItem{
-		Id:            item.ID,
-		CartId:        item.CartID,
-		ListingId:     item.ListingID,
-		VariantId:     item.VariantID,
-		Quantity:      item.Quantity,
-		PriceSnapshot: item.PriceSnapshot,
-		CreatedAt:     timestamppb.New(item.CreatedAt),
-		UpdatedAt:     timestamppb.New(item.UpdatedAt),
-	}
+	// Use domain's ToProto method which includes embedded data fields
+	return item.ToProto()
 }
 
 // domainOrderToProtoOrder converts domain.Order to proto Order
@@ -693,6 +687,11 @@ func domainOrderToProtoOrder(order *domain.Order) *listingspb.Order {
 
 	if order.CancelledAt != nil {
 		pbOrder.CancelledAt = timestamppb.New(*order.CancelledAt)
+	}
+
+	// Storefront name (for frontend display)
+	if order.StorefrontName != nil {
+		pbOrder.StorefrontName = order.StorefrontName
 	}
 
 	// Convert order items

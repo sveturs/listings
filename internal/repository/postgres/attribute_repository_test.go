@@ -85,12 +85,12 @@ func TestAttributeRepository_Create(t *testing.T) {
 					"ru": "Название бренда",
 					"sr": "Име бренда",
 				},
-				AttributeType:  domain.AttributeTypeText,
-				Purpose:        domain.AttributePurposeRegular,
-				IsSearchable:   true,
-				IsFilterable:   true,
-				IsRequired:     false,
-				SortOrder:      1,
+				AttributeType: domain.AttributeTypeText,
+				Purpose:       domain.AttributePurposeRegular,
+				IsSearchable:  true,
+				IsFilterable:  true,
+				IsRequired:    false,
+				SortOrder:     1,
 			},
 			wantErr: false,
 		},
@@ -173,9 +173,9 @@ func TestAttributeRepository_Create(t *testing.T) {
 		{
 			name: "empty code",
 			input: &domain.CreateAttributeInput{
-				Code: "",
-				Name: map[string]string{"en": "Test"},
-				DisplayName: map[string]string{"en": "Test"},
+				Code:          "",
+				Name:          map[string]string{"en": "Test"},
+				DisplayName:   map[string]string{"en": "Test"},
 				AttributeType: domain.AttributeTypeText,
 			},
 			wantErr:   true,
@@ -247,9 +247,9 @@ func TestAttributeRepository_GetByID(t *testing.T) {
 
 	// Create test attribute
 	input := &domain.CreateAttributeInput{
-		Code: "test_get_by_id",
-		Name: map[string]string{"en": "Test"},
-		DisplayName: map[string]string{"en": "Test Attribute"},
+		Code:          "test_get_by_id",
+		Name:          map[string]string{"en": "Test"},
+		DisplayName:   map[string]string{"en": "Test Attribute"},
 		AttributeType: domain.AttributeTypeText,
 	}
 	created, err := repo.Create(ctx, input)
@@ -301,9 +301,9 @@ func TestAttributeRepository_GetByCode(t *testing.T) {
 
 	// Create test attribute
 	input := &domain.CreateAttributeInput{
-		Code: "test_get_by_code",
-		Name: map[string]string{"en": "Test"},
-		DisplayName: map[string]string{"en": "Test Attribute"},
+		Code:          "test_get_by_code",
+		Name:          map[string]string{"en": "Test"},
+		DisplayName:   map[string]string{"en": "Test Attribute"},
 		AttributeType: domain.AttributeTypeText,
 	}
 	created, err := repo.Create(ctx, input)
@@ -355,13 +355,13 @@ func TestAttributeRepository_Update(t *testing.T) {
 
 	// Create test attribute
 	input := &domain.CreateAttributeInput{
-		Code: "test_update",
-		Name: map[string]string{"en": "Original Name"},
-		DisplayName: map[string]string{"en": "Original Display Name"},
+		Code:          "test_update",
+		Name:          map[string]string{"en": "Original Name"},
+		DisplayName:   map[string]string{"en": "Original Display Name"},
 		AttributeType: domain.AttributeTypeText,
-		IsSearchable: false,
-		IsFilterable: false,
-		SortOrder: 1,
+		IsSearchable:  false,
+		IsFilterable:  false,
+		SortOrder:     1,
 	}
 	created, err := repo.Create(ctx, input)
 	require.NoError(t, err)
@@ -470,9 +470,9 @@ func TestAttributeRepository_Delete(t *testing.T) {
 
 	// Create test attribute
 	input := &domain.CreateAttributeInput{
-		Code: "test_delete",
-		Name: map[string]string{"en": "Test Delete"},
-		DisplayName: map[string]string{"en": "Test Delete"},
+		Code:          "test_delete",
+		Name:          map[string]string{"en": "Test Delete"},
+		DisplayName:   map[string]string{"en": "Test Delete"},
 		AttributeType: domain.AttributeTypeText,
 	}
 	created, err := repo.Create(ctx, input)
@@ -530,12 +530,12 @@ func TestAttributeRepository_List(t *testing.T) {
 
 	// Create multiple test attributes
 	attributes := []struct {
-		code          string
-		attrType      domain.AttributeType
-		purpose       domain.AttributePurpose
-		isSearchable  bool
-		isFilterable  bool
-		sortOrder     int32
+		code         string
+		attrType     domain.AttributeType
+		purpose      domain.AttributePurpose
+		isSearchable bool
+		isFilterable bool
+		sortOrder    int32
 	}{
 		{"list_test_1", domain.AttributeTypeText, domain.AttributePurposeRegular, true, true, 1},
 		{"list_test_2", domain.AttributeTypeNumber, domain.AttributePurposeVariant, false, true, 2},
@@ -544,23 +544,23 @@ func TestAttributeRepository_List(t *testing.T) {
 
 	for _, attr := range attributes {
 		_, err := repo.Create(ctx, &domain.CreateAttributeInput{
-			Code: attr.code,
-			Name: map[string]string{"en": attr.code},
-			DisplayName: map[string]string{"en": attr.code},
+			Code:          attr.code,
+			Name:          map[string]string{"en": attr.code},
+			DisplayName:   map[string]string{"en": attr.code},
 			AttributeType: attr.attrType,
-			Purpose: attr.purpose,
-			IsSearchable: attr.isSearchable,
-			IsFilterable: attr.isFilterable,
-			SortOrder: attr.sortOrder,
+			Purpose:       attr.purpose,
+			IsSearchable:  attr.isSearchable,
+			IsFilterable:  attr.isFilterable,
+			SortOrder:     attr.sortOrder,
 		})
 		require.NoError(t, err)
 	}
 
 	testCases := []struct {
-		name           string
-		filter         *domain.ListAttributesFilter
-		expectedCount  int
-		wantErr        bool
+		name          string
+		filter        *domain.ListAttributesFilter
+		expectedCount int
+		wantErr       bool
 	}{
 		{
 			name: "list all attributes",
@@ -663,31 +663,31 @@ func TestAttributeRepository_LinkToCategory(t *testing.T) {
 
 	// Create test attribute
 	attr, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "link_test",
-		Name: map[string]string{"en": "Link Test"},
-		DisplayName: map[string]string{"en": "Link Test"},
+		Code:          "link_test",
+		Name:          map[string]string{"en": "Link Test"},
+		DisplayName:   map[string]string{"en": "Link Test"},
 		AttributeType: domain.AttributeTypeText,
-		IsSearchable: false,
-		IsFilterable: true,
+		IsSearchable:  false,
+		IsFilterable:  true,
 	})
 	require.NoError(t, err)
 
 	testCases := []struct {
-		name       string
-		categoryID int32
+		name        string
+		categoryID  int32
 		attributeID int32
-		settings   *domain.CategoryAttributeSettings
-		wantErr    bool
+		settings    *domain.CategoryAttributeSettings
+		wantErr     bool
 	}{
 		{
 			name:        "link attribute to category",
 			categoryID:  100,
 			attributeID: attr.ID,
 			settings: &domain.CategoryAttributeSettings{
-				IsEnabled: true,
-				IsRequired: boolPtr(true),
+				IsEnabled:    true,
+				IsRequired:   boolPtr(true),
 				IsSearchable: boolPtr(true),
-				SortOrder: 1,
+				SortOrder:    1,
 			},
 			wantErr: false,
 		},
@@ -696,9 +696,9 @@ func TestAttributeRepository_LinkToCategory(t *testing.T) {
 			categoryID:  100,
 			attributeID: attr.ID,
 			settings: &domain.CategoryAttributeSettings{
-				IsEnabled: true,
+				IsEnabled:  true,
 				IsRequired: boolPtr(false),
-				SortOrder: 2,
+				SortOrder:  2,
 			},
 			wantErr: false,
 		},
@@ -745,35 +745,35 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 
 	// Create test attributes
 	attr1, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "cat_attr_1",
-		Name: map[string]string{"en": "Category Attr 1"},
-		DisplayName: map[string]string{"en": "Category Attr 1"},
+		Code:          "cat_attr_1",
+		Name:          map[string]string{"en": "Category Attr 1"},
+		DisplayName:   map[string]string{"en": "Category Attr 1"},
 		AttributeType: domain.AttributeTypeText,
-		IsSearchable: true,
+		IsSearchable:  true,
 	})
 	require.NoError(t, err)
 
 	attr2, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "cat_attr_2",
-		Name: map[string]string{"en": "Category Attr 2"},
-		DisplayName: map[string]string{"en": "Category Attr 2"},
+		Code:          "cat_attr_2",
+		Name:          map[string]string{"en": "Category Attr 2"},
+		DisplayName:   map[string]string{"en": "Category Attr 2"},
 		AttributeType: domain.AttributeTypeNumber,
-		IsFilterable: true,
+		IsFilterable:  true,
 	})
 	require.NoError(t, err)
 
 	// Link attributes to category
 	_, err = repo.LinkToCategory(ctx, 100, attr1.ID, &domain.CategoryAttributeSettings{
-		IsEnabled: true,
+		IsEnabled:  true,
 		IsRequired: boolPtr(true),
-		SortOrder: 1,
+		SortOrder:  1,
 	})
 	require.NoError(t, err)
 
 	_, err = repo.LinkToCategory(ctx, 100, attr2.ID, &domain.CategoryAttributeSettings{
-		IsEnabled: true,
+		IsEnabled:  true,
 		IsRequired: boolPtr(false),
-		SortOrder: 2,
+		SortOrder:  2,
 	})
 	require.NoError(t, err)
 
@@ -850,9 +850,9 @@ func TestAttributeRepository_UnlinkFromCategory(t *testing.T) {
 
 	// Create and link test attribute
 	attr, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "unlink_test",
-		Name: map[string]string{"en": "Unlink Test"},
-		DisplayName: map[string]string{"en": "Unlink Test"},
+		Code:          "unlink_test",
+		Name:          map[string]string{"en": "Unlink Test"},
+		DisplayName:   map[string]string{"en": "Unlink Test"},
 		AttributeType: domain.AttributeTypeText,
 	})
 	require.NoError(t, err)
@@ -922,25 +922,25 @@ func TestAttributeRepository_SetAndGetListingValues(t *testing.T) {
 
 	// Create test attributes
 	textAttr, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "brand_for_listing",
-		Name: map[string]string{"en": "Brand"},
-		DisplayName: map[string]string{"en": "Brand"},
+		Code:          "brand_for_listing",
+		Name:          map[string]string{"en": "Brand"},
+		DisplayName:   map[string]string{"en": "Brand"},
 		AttributeType: domain.AttributeTypeText,
 	})
 	require.NoError(t, err)
 
 	numberAttr, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "weight_for_listing",
-		Name: map[string]string{"en": "Weight"},
-		DisplayName: map[string]string{"en": "Weight"},
+		Code:          "weight_for_listing",
+		Name:          map[string]string{"en": "Weight"},
+		DisplayName:   map[string]string{"en": "Weight"},
 		AttributeType: domain.AttributeTypeNumber,
 	})
 	require.NoError(t, err)
 
 	boolAttr, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "is_new_for_listing",
-		Name: map[string]string{"en": "Is New"},
-		DisplayName: map[string]string{"en": "Is New"},
+		Code:          "is_new_for_listing",
+		Name:          map[string]string{"en": "Is New"},
+		DisplayName:   map[string]string{"en": "Is New"},
 		AttributeType: domain.AttributeTypeBoolean,
 	})
 	require.NoError(t, err)
@@ -956,7 +956,7 @@ func TestAttributeRepository_SetAndGetListingValues(t *testing.T) {
 			ValueNumber: float64Ptr(1.5),
 		},
 		{
-			AttributeID: boolAttr.ID,
+			AttributeID:  boolAttr.ID,
 			ValueBoolean: boolPtr(true),
 		},
 	}
@@ -1032,9 +1032,9 @@ func TestAttributeRepository_DeleteListingValues(t *testing.T) {
 
 	// Create and set test values
 	attr, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "delete_test_attr",
-		Name: map[string]string{"en": "Delete Test"},
-		DisplayName: map[string]string{"en": "Delete Test"},
+		Code:          "delete_test_attr",
+		Name:          map[string]string{"en": "Delete Test"},
+		DisplayName:   map[string]string{"en": "Delete Test"},
 		AttributeType: domain.AttributeTypeText,
 	})
 	require.NoError(t, err)
@@ -1066,11 +1066,11 @@ func TestAttributeRepository_GetCategoryVariantAttributes(t *testing.T) {
 
 	// Create variant-compatible attribute
 	attr, err := repo.Create(ctx, &domain.CreateAttributeInput{
-		Code: "size_variant",
-		Name: map[string]string{"en": "Size"},
-		DisplayName: map[string]string{"en": "Size"},
-		AttributeType: domain.AttributeTypeSelect,
-		Purpose: domain.AttributePurposeVariant,
+		Code:                "size_variant",
+		Name:                map[string]string{"en": "Size"},
+		DisplayName:         map[string]string{"en": "Size"},
+		AttributeType:       domain.AttributeTypeSelect,
+		Purpose:             domain.AttributePurposeVariant,
 		IsVariantCompatible: true,
 	})
 	require.NoError(t, err)

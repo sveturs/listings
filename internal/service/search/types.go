@@ -509,9 +509,9 @@ type SearchHistoryResponse struct {
 
 // SearchHistoryEntry represents a single search from user's history
 type SearchHistoryEntry struct {
-	QueryText        string     `json:"query_text"`
-	CategoryID       *int64     `json:"category_id,omitempty"`
-	ResultsCount     int32      `json:"results_count"`
-	ClickedListingID *int64     `json:"clicked_listing_id,omitempty"`
-	SearchedAt       time.Time  `json:"searched_at"`
+	QueryText        string    `json:"query_text"`
+	CategoryID       *int64    `json:"category_id,omitempty"`
+	ResultsCount     int32     `json:"results_count"`
+	ClickedListingID *int64    `json:"clicked_listing_id,omitempty"`
+	SearchedAt       time.Time `json:"searched_at"`
 }

@@ -16,25 +16,25 @@ import (
 
 // CategoryAttribute представляет связь категории с атрибутом
 type CategoryAttribute struct {
-	ID                       int
-	CategoryID               int
-	AttributeID              int
-	IsEnabled                bool
-	IsRequired               bool
-	SortOrder                int
-	CategorySpecificOptions  *json.RawMessage
-	CreatedAt                time.Time
-	UpdatedAt                time.Time
+	ID                      int
+	CategoryID              int
+	AttributeID             int
+	IsEnabled               bool
+	IsRequired              bool
+	SortOrder               int
+	CategorySpecificOptions *json.RawMessage
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
 }
 
 // MigrationStats статистика миграции
 type MigrationStats struct {
-	TotalRecords     int
-	MigratedRecords  int
-	SkippedRecords   int
-	FailedRecords    int
-	StartTime        time.Time
-	EndTime          time.Time
+	TotalRecords    int
+	MigratedRecords int
+	SkippedRecords  int
+	FailedRecords   int
+	StartTime       time.Time
+	EndTime         time.Time
 }
 
 // Config конфигурация подключений
@@ -126,9 +126,9 @@ func runMigration(config *Config) error {
 
 	// Статистика
 	stats := &MigrationStats{
-		TotalRecords:    len(categoryAttrs),
-		SkippedRecords:  invalidCount,
-		StartTime:       time.Now(),
+		TotalRecords:   len(categoryAttrs),
+		SkippedRecords: invalidCount,
+		StartTime:      time.Now(),
 	}
 
 	// Миграция данных

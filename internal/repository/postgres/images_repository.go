@@ -256,7 +256,7 @@ func (r *Repository) ReorderImages(ctx context.Context, listingID int64, orders 
 		// Use explicit ::integer cast in SQL to force correct type
 		query += fmt.Sprintf("WHEN id = $%d THEN $%d::integer ", argIdx, argIdx+1)
 		// Append typed values, NOT interface{} wrapping
-		args = append(args, order.ImageID)          // int64
+		args = append(args, order.ImageID)           // int64
 		args = append(args, int(order.DisplayOrder)) // int (cast from int32)
 		imageIDsForIN = append(imageIDsForIN, order.ImageID)
 		argIdx += 2

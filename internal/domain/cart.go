@@ -13,12 +13,12 @@ import (
 
 // Cart represents a shopping cart entity (authenticated or anonymous)
 type Cart struct {
-	ID           int64      `json:"id" db:"id"`
-	UserID       *int64     `json:"user_id,omitempty" db:"user_id"`           // NULL for anonymous carts
-	SessionID    *string    `json:"session_id,omitempty" db:"session_id"`     // NULL for authenticated carts
-	StorefrontID int64      `json:"storefront_id" db:"storefront_id"`         // Required - cart belongs to one storefront
-	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
+	ID           int64     `json:"id" db:"id"`
+	UserID       *int64    `json:"user_id,omitempty" db:"user_id"`       // NULL for anonymous carts
+	SessionID    *string   `json:"session_id,omitempty" db:"session_id"` // NULL for authenticated carts
+	StorefrontID int64     `json:"storefront_id" db:"storefront_id"`     // Required - cart belongs to one storefront
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 
 	// Relations (loaded on demand)
 	Items []*CartItem `json:"items,omitempty" db:"-"`
@@ -26,21 +26,21 @@ type Cart struct {
 
 // CartItem represents a single item in shopping cart
 type CartItem struct {
-	ID            int64      `json:"id" db:"id"`
-	CartID        int64      `json:"cart_id" db:"cart_id"`
-	ListingID     int64      `json:"listing_id" db:"listing_id"`               // FK to listings
-	VariantID     *int64     `json:"variant_id,omitempty" db:"variant_id"`     // FK to listing_variants
-	Quantity      int32      `json:"quantity" db:"quantity"`                   // Quantity to purchase
-	PriceSnapshot float64    `json:"price_snapshot" db:"price_snapshot"`       // Price at add-to-cart time
-	CreatedAt     time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at" db:"updated_at"`
+	ID            int64     `json:"id" db:"id"`
+	CartID        int64     `json:"cart_id" db:"cart_id"`
+	ListingID     int64     `json:"listing_id" db:"listing_id"`           // FK to listings
+	VariantID     *int64    `json:"variant_id,omitempty" db:"variant_id"` // FK to listing_variants
+	Quantity      int32     `json:"quantity" db:"quantity"`               // Quantity to purchase
+	PriceSnapshot float64   `json:"price_snapshot" db:"price_snapshot"`   // Price at add-to-cart time
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 
 	// Embedded data (for frontend display) - loaded separately
-	ListingName    *string                `json:"listing_name,omitempty" db:"-"`      // Listing/product name
-	ListingImage   *string                `json:"listing_image,omitempty" db:"-"`     // Primary image URL
-	VariantData    map[string]interface{} `json:"variant_data,omitempty" db:"-"`      // Variant attributes (color, size, etc.)
-	AvailableStock *int32                 `json:"available_stock,omitempty" db:"-"`   // Current stock availability
-	CurrentPrice   *float64               `json:"current_price,omitempty" db:"-"`     // Current price (may differ from price_snapshot)
+	ListingName    *string                `json:"listing_name,omitempty" db:"-"`    // Listing/product name
+	ListingImage   *string                `json:"listing_image,omitempty" db:"-"`   // Primary image URL
+	VariantData    map[string]interface{} `json:"variant_data,omitempty" db:"-"`    // Variant attributes (color, size, etc.)
+	AvailableStock *int32                 `json:"available_stock,omitempty" db:"-"` // Current stock availability
+	CurrentPrice   *float64               `json:"current_price,omitempty" db:"-"`   // Current price (may differ from price_snapshot)
 }
 
 // Validate validates the Cart entity

@@ -33,18 +33,18 @@ type Server struct {
 	listingspb.UnimplementedOrderServiceServer
 	listingspb.UnimplementedAnalyticsServiceServer
 	chatsvcv1.UnimplementedChatServiceServer
-	service              *listings.Service
-	storefrontService    *listings.StorefrontService
-	attrService          service.AttributeService
-	categoryService      service.CategoryService
-	orderService                service.OrderService
-	cartService                 service.CartService
-	chatService                 service.ChatService
-	analyticsService            service.AnalyticsService
-	storefrontAnalyticsService  service.StorefrontAnalyticsService
-	minioClient                 *minioclient.Client
-	metrics                     *metrics.Metrics
-	logger                      zerolog.Logger
+	service                    *listings.Service
+	storefrontService          *listings.StorefrontService
+	attrService                service.AttributeService
+	categoryService            service.CategoryService
+	orderService               service.OrderService
+	cartService                service.CartService
+	chatService                service.ChatService
+	analyticsService           service.AnalyticsService
+	storefrontAnalyticsService service.StorefrontAnalyticsService
+	minioClient                *minioclient.Client
+	metrics                    *metrics.Metrics
+	logger                     zerolog.Logger
 }
 
 // NewServer creates a new gRPC server instance

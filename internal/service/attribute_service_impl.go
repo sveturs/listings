@@ -576,7 +576,7 @@ func (s *AttributeServiceImpl) validateAttributeUpdate(existing *domain.Attribut
 		targetType = *input.AttributeType
 	}
 
-	if (targetType == domain.AttributeTypeSelect || targetType == domain.AttributeTypeMultiselect) {
+	if targetType == domain.AttributeTypeSelect || targetType == domain.AttributeTypeMultiselect {
 		// Check if options will be empty after update
 		hasOptions := len(existing.Options) > 0
 		if input.Options != nil {

@@ -32,12 +32,12 @@ type AttributeOptionNew struct {
 
 // Stats tracks processing statistics
 type Stats struct {
-	TotalAttributes    int
-	ProcessedOptions   int
-	SkippedAttributes  int
-	SkippedOptions     int
-	Errors             int
-	ConvertedOptions   int
+	TotalAttributes   int
+	ProcessedOptions  int
+	SkippedAttributes int
+	SkippedOptions    int
+	Errors            int
+	ConvertedOptions  int
 }
 
 func main() {

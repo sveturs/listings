@@ -592,6 +592,14 @@ func ProductToProto(p *domain.Product) *listingspb.Product {
 		}
 	}
 
+	// Convert images
+	if len(p.Images) > 0 {
+		pbProduct.Images = make([]*listingspb.ProductImage, len(p.Images))
+		for i, img := range p.Images {
+			pbProduct.Images[i] = ProductImageToProto(img)
+		}
+	}
+
 	return pbProduct
 }
 
@@ -1278,6 +1286,23 @@ func ApplyTranslation(listing *domain.Listing, lang string) {
 	}
 }
 
+// ApplyProductTranslation applies translations to a product for a specific language
+func ApplyProductTranslation(product *domain.Product, lang string) {
+	if product == nil || lang == "" || lang == product.OriginalLanguage {
+		return
+	}
+
+	// Apply title translation
+	if title, ok := product.TitleTranslations[lang]; ok && title != "" {
+		product.Name = title
+	}
+
+	// Apply description translation
+	if desc, ok := product.DescriptionTranslations[lang]; ok && desc != "" {
+		product.Description = desc
+	}
+}
+
 // ========================================================================================
 // CategoryService proto converters (separate from ListingsService proto converters above)
 // ========================================================================================
@@ -1472,4 +1497,47 @@ func ProtoToCategoryServiceUpdateDomain(req *categoriespb.UpdateCategoryRequest)
 	}
 
 	return cat
+}
+
+// ProductImageToProto converts domain.ProductImage to listingspb.ProductImage
+func ProductImageToProto(img *domain.ProductImage) *listingspb.ProductImage {
+	if img == nil {
+		return nil
+	}
+
+	pbImage := &listingspb.ProductImage{
+		Id:           img.ID,
+		Url:          img.URL,
+		DisplayOrder: img.DisplayOrder,
+		IsPrimary:    img.IsPrimary,
+		CreatedAt:    img.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:    img.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}
+
+	// Product ID
+	if img.ProductID != nil {
+		pbImage.ProductId = *img.ProductID
+	}
+
+	// Optional fields
+	if img.StoragePath != nil {
+		pbImage.StoragePath = img.StoragePath
+	}
+	if img.ThumbnailURL != nil {
+		pbImage.ThumbnailUrl = img.ThumbnailURL
+	}
+	if img.Width != nil {
+		pbImage.Width = img.Width
+	}
+	if img.Height != nil {
+		pbImage.Height = img.Height
+	}
+	if img.FileSize != nil {
+		pbImage.FileSize = img.FileSize
+	}
+	if img.MimeType != nil {
+		pbImage.MimeType = img.MimeType
+	}
+
+	return pbImage
 }

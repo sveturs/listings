@@ -92,6 +92,13 @@ type Repository interface {
 	IncrementProductViews(ctx context.Context, productID int64) error
 	BatchUpdateStock(ctx context.Context, storefrontID int64, items []domain.StockUpdateItem, reason string, userID int64) (int32, int32, []domain.StockUpdateResult, error)
 
+	// Product Images operations (B2C)
+	GetProductImageByID(ctx context.Context, imageID int64) (*domain.ProductImage, error)
+	AddProductImage(ctx context.Context, image *domain.ProductImage) (*domain.ProductImage, error)
+	GetProductImages(ctx context.Context, productID int64) ([]*domain.ProductImage, error)
+	DeleteProductImage(ctx context.Context, imageID int64) error
+	ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error
+
 	// Transaction and database operations
 	BeginTx(ctx context.Context) (*sql.Tx, error)
 	GetDB() *sqlx.DB
@@ -1602,6 +1609,33 @@ func (s *Service) BulkDeleteProducts(ctx context.Context, storefrontID int64, pr
 		return 0, 0, 0, nil, err // Return as-is to preserve error details
 	}
 
+	// Async deletion from OpenSearch (non-blocking, graceful degradation)
+	if s.indexer != nil && successCount > 0 {
+		go func(productIDs []int64) {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Warn().Interface("panic", r).
+						Msg("recovered from panic during bulk OpenSearch deletion")
+				}
+			}()
+
+			indexCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			deletedCount := 0
+			for _, productID := range productIDs {
+				if err := s.indexer.DeleteListing(indexCtx, productID); err != nil {
+					s.logger.Warn().Err(err).Int64("product_id", productID).
+						Msg("OpenSearch deletion failed (non-blocking)")
+				} else {
+					deletedCount++
+				}
+			}
+			s.logger.Info().Int("deleted_from_index", deletedCount).Int("total", len(productIDs)).
+				Msg("bulk OpenSearch deletion completed")
+		}(deduplicatedIDs)
+	}
+
 	deleteType := "soft deleted"
 	if hardDelete {
 		deleteType = "hard deleted"
@@ -2111,4 +2145,66 @@ func convertProductToListing(product *domain.Product) *domain.Listing {
 	}
 
 	return listing
+}
+
+// =============================================================================
+// Product Images (B2C)
+// =============================================================================
+
+// GetProductImageByID retrieves a single product image by ID
+func (s *Service) GetProductImageByID(ctx context.Context, imageID int64) (*domain.ProductImage, error) {
+	return s.repo.GetProductImageByID(ctx, imageID)
+}
+
+// AddProductImage adds a new image to a B2C product
+func (s *Service) AddProductImage(ctx context.Context, image *domain.ProductImage) (*domain.ProductImage, error) {
+	result, err := s.repo.AddProductImage(ctx, image)
+	if err != nil {
+		return nil, err
+	}
+
+	// Reindex product in OpenSearch after image add (async)
+	if s.indexer != nil && result.ProductID != nil && *result.ProductID > 0 {
+		productID := *result.ProductID
+		go func() {
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full product with images
+			fullProduct, err := s.repo.GetProductByID(indexCtx, productID, nil)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("failed to get product for reindexing after image add (non-blocking)")
+				return
+			}
+
+			// Convert to listing for indexing
+			listing := convertProductToListing(fullProduct)
+
+			// Update in OpenSearch
+			if err := s.indexer.UpdateListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("OpenSearch reindexing failed after product image add (non-blocking)")
+			} else {
+				s.logger.Debug().Int64("product_id", productID).Msg("product reindexed in OpenSearch after image add")
+			}
+		}()
+	}
+
+	return result, nil
+}
+
+// GetProductImages retrieves all images for a B2C product
+func (s *Service) GetProductImages(ctx context.Context, productID int64) ([]*domain.ProductImage, error) {
+	return s.repo.GetProductImages(ctx, productID)
+}
+
+// DeleteProductImage removes a product image
+func (s *Service) DeleteProductImage(ctx context.Context, imageID int64) error {
+	return s.repo.DeleteProductImage(ctx, imageID)
+}
+
+// ReorderProductImages updates display order for product images
+func (s *Service) ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error {
+	return s.repo.ReorderProductImages(ctx, productID, orders)
 }

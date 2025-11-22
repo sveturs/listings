@@ -15,6 +15,10 @@ const (
 	MessageStatusFailed    MessageStatus = "failed"
 )
 
+// SystemUserID is the ID used for system messages (e.g., marketplace notifications)
+// This user should exist in the auth service with name "Svetu Marketplace"
+const SystemUserID int64 = 1
+
 // Message represents a single message in a chat
 type Message struct {
 	// Identification
@@ -22,6 +26,9 @@ type Message struct {
 	ChatID     int64 `json:"chat_id"`
 	SenderID   int64 `json:"sender_id"`
 	ReceiverID int64 `json:"receiver_id"`
+
+	// System message flag
+	IsSystem bool `json:"is_system"` // true for marketplace/system notifications
 
 	// Content
 	Content          string `json:"content"`
@@ -36,9 +43,9 @@ type Message struct {
 	IsRead bool          `json:"is_read"`
 
 	// Attachments
-	HasAttachments   bool                `json:"has_attachments"`
-	AttachmentsCount int32               `json:"attachments_count"`
-	Attachments      []*ChatAttachment   `json:"attachments,omitempty"`
+	HasAttachments   bool              `json:"has_attachments"`
+	AttachmentsCount int32             `json:"attachments_count"`
+	Attachments      []*ChatAttachment `json:"attachments,omitempty"`
 
 	// Timestamps
 	CreatedAt   time.Time  `json:"created_at"`
@@ -61,7 +68,8 @@ func (m *Message) Validate() error {
 	if m.ReceiverID == 0 {
 		return fmt.Errorf("receiver_id is required")
 	}
-	if m.SenderID == m.ReceiverID {
+	// Skip sender/receiver equality check for system messages
+	if !m.IsSystem && m.SenderID == m.ReceiverID {
 		return fmt.Errorf("sender_id and receiver_id cannot be the same")
 	}
 

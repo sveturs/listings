@@ -76,6 +76,10 @@ const (
 	ListingsService_BatchUpdateStock_FullMethodName          = "/listingssvc.v1.ListingsService/BatchUpdateStock"
 	ListingsService_GetProductStats_FullMethodName           = "/listingssvc.v1.ListingsService/GetProductStats"
 	ListingsService_IncrementProductViews_FullMethodName     = "/listingssvc.v1.ListingsService/IncrementProductViews"
+	ListingsService_AddProductImage_FullMethodName           = "/listingssvc.v1.ListingsService/AddProductImage"
+	ListingsService_GetProductImages_FullMethodName          = "/listingssvc.v1.ListingsService/GetProductImages"
+	ListingsService_DeleteProductImage_FullMethodName        = "/listingssvc.v1.ListingsService/DeleteProductImage"
+	ListingsService_ReorderProductImages_FullMethodName      = "/listingssvc.v1.ListingsService/ReorderProductImages"
 	ListingsService_ReindexAll_FullMethodName                = "/listingssvc.v1.ListingsService/ReindexAll"
 	ListingsService_CreateStorefront_FullMethodName          = "/listingssvc.v1.ListingsService/CreateStorefront"
 	ListingsService_UpdateStorefront_FullMethodName          = "/listingssvc.v1.ListingsService/UpdateStorefront"
@@ -232,6 +236,14 @@ type ListingsServiceClient interface {
 	// IncrementProductViews increments view counter for analytics
 	// Used when customer views product detail page
 	IncrementProductViews(ctx context.Context, in *IncrementProductViewsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// AddProductImage adds a new image to a B2C product
+	AddProductImage(ctx context.Context, in *AddProductImageRequest, opts ...grpc.CallOption) (*ProductImageResponse, error)
+	// GetProductImages retrieves all images for a B2C product
+	GetProductImages(ctx context.Context, in *GetProductImagesRequest, opts ...grpc.CallOption) (*ProductImagesResponse, error)
+	// DeleteProductImage removes an image from a B2C product
+	DeleteProductImage(ctx context.Context, in *DeleteProductImageRequest, opts ...grpc.CallOption) (*DeleteProductImageResponse, error)
+	// ReorderProductImages updates display order for product images
+	ReorderProductImages(ctx context.Context, in *ReorderProductImagesRequest, opts ...grpc.CallOption) (*ReorderProductImagesResponse, error)
 	// ReindexAll performs full reindexing of all products to OpenSearch
 	// Used for rebuilding search index after schema changes or data migration
 	ReindexAll(ctx context.Context, in *ReindexAllRequest, opts ...grpc.CallOption) (*ReindexAllResponse, error)
@@ -842,6 +854,46 @@ func (c *listingsServiceClient) IncrementProductViews(ctx context.Context, in *I
 	return out, nil
 }
 
+func (c *listingsServiceClient) AddProductImage(ctx context.Context, in *AddProductImageRequest, opts ...grpc.CallOption) (*ProductImageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductImageResponse)
+	err := c.cc.Invoke(ctx, ListingsService_AddProductImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetProductImages(ctx context.Context, in *GetProductImagesRequest, opts ...grpc.CallOption) (*ProductImagesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductImagesResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetProductImages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) DeleteProductImage(ctx context.Context, in *DeleteProductImageRequest, opts ...grpc.CallOption) (*DeleteProductImageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteProductImageResponse)
+	err := c.cc.Invoke(ctx, ListingsService_DeleteProductImage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) ReorderProductImages(ctx context.Context, in *ReorderProductImagesRequest, opts ...grpc.CallOption) (*ReorderProductImagesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReorderProductImagesResponse)
+	err := c.cc.Invoke(ctx, ListingsService_ReorderProductImages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *listingsServiceClient) ReindexAll(ctx context.Context, in *ReindexAllRequest, opts ...grpc.CallOption) (*ReindexAllResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReindexAllResponse)
@@ -1158,6 +1210,14 @@ type ListingsServiceServer interface {
 	// IncrementProductViews increments view counter for analytics
 	// Used when customer views product detail page
 	IncrementProductViews(context.Context, *IncrementProductViewsRequest) (*emptypb.Empty, error)
+	// AddProductImage adds a new image to a B2C product
+	AddProductImage(context.Context, *AddProductImageRequest) (*ProductImageResponse, error)
+	// GetProductImages retrieves all images for a B2C product
+	GetProductImages(context.Context, *GetProductImagesRequest) (*ProductImagesResponse, error)
+	// DeleteProductImage removes an image from a B2C product
+	DeleteProductImage(context.Context, *DeleteProductImageRequest) (*DeleteProductImageResponse, error)
+	// ReorderProductImages updates display order for product images
+	ReorderProductImages(context.Context, *ReorderProductImagesRequest) (*ReorderProductImagesResponse, error)
 	// ReindexAll performs full reindexing of all products to OpenSearch
 	// Used for rebuilding search index after schema changes or data migration
 	ReindexAll(context.Context, *ReindexAllRequest) (*ReindexAllResponse, error)
@@ -1372,6 +1432,18 @@ func (UnimplementedListingsServiceServer) GetProductStats(context.Context, *GetP
 }
 func (UnimplementedListingsServiceServer) IncrementProductViews(context.Context, *IncrementProductViewsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IncrementProductViews not implemented")
+}
+func (UnimplementedListingsServiceServer) AddProductImage(context.Context, *AddProductImageRequest) (*ProductImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddProductImage not implemented")
+}
+func (UnimplementedListingsServiceServer) GetProductImages(context.Context, *GetProductImagesRequest) (*ProductImagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductImages not implemented")
+}
+func (UnimplementedListingsServiceServer) DeleteProductImage(context.Context, *DeleteProductImageRequest) (*DeleteProductImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProductImage not implemented")
+}
+func (UnimplementedListingsServiceServer) ReorderProductImages(context.Context, *ReorderProductImagesRequest) (*ReorderProductImagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReorderProductImages not implemented")
 }
 func (UnimplementedListingsServiceServer) ReindexAll(context.Context, *ReindexAllRequest) (*ReindexAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReindexAll not implemented")
@@ -2445,6 +2517,78 @@ func _ListingsService_IncrementProductViews_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_AddProductImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddProductImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).AddProductImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_AddProductImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).AddProductImage(ctx, req.(*AddProductImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetProductImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductImagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetProductImages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetProductImages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetProductImages(ctx, req.(*GetProductImagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_DeleteProductImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProductImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).DeleteProductImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_DeleteProductImage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).DeleteProductImage(ctx, req.(*DeleteProductImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_ReorderProductImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReorderProductImagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ReorderProductImages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ReorderProductImages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ReorderProductImages(ctx, req.(*ReorderProductImagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ListingsService_ReindexAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReindexAllRequest)
 	if err := dec(in); err != nil {
@@ -2995,6 +3139,22 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "IncrementProductViews",
 			Handler:    _ListingsService_IncrementProductViews_Handler,
+		},
+		{
+			MethodName: "AddProductImage",
+			Handler:    _ListingsService_AddProductImage_Handler,
+		},
+		{
+			MethodName: "GetProductImages",
+			Handler:    _ListingsService_GetProductImages_Handler,
+		},
+		{
+			MethodName: "DeleteProductImage",
+			Handler:    _ListingsService_DeleteProductImage_Handler,
+		},
+		{
+			MethodName: "ReorderProductImages",
+			Handler:    _ListingsService_ReorderProductImages_Handler,
 		},
 		{
 			MethodName: "ReindexAll",

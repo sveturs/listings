@@ -88,9 +88,9 @@ func (r *messageRepository) Create(ctx context.Context, message *domain.Message)
 		INSERT INTO messages (
 			chat_id, sender_id, receiver_id, content, original_language,
 			listing_id, storefront_product_id, status, is_read,
-			has_attachments, attachments_count
+			has_attachments, attachments_count, is_system
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id, created_at, updated_at
 	`
 
@@ -106,6 +106,7 @@ func (r *messageRepository) Create(ctx context.Context, message *domain.Message)
 		message.IsRead,
 		message.HasAttachments,
 		message.AttachmentsCount,
+		message.IsSystem,
 	).Scan(&message.ID, &message.CreatedAt, &message.UpdatedAt)
 
 	if err != nil {
@@ -129,7 +130,7 @@ func (r *messageRepository) GetByID(ctx context.Context, messageID int64) (*doma
 	query := `
 		SELECT id, chat_id, sender_id, receiver_id, content, original_language,
 		       listing_id, storefront_product_id, status, is_read,
-		       has_attachments, attachments_count, created_at, updated_at, read_at
+		       has_attachments, attachments_count, created_at, updated_at, read_at, is_system
 		FROM messages
 		WHERE id = $1
 	`
@@ -154,6 +155,7 @@ func (r *messageRepository) GetByID(ctx context.Context, messageID int64) (*doma
 		&message.CreatedAt,
 		&message.UpdatedAt,
 		&readAt,
+		&message.IsSystem,
 	)
 
 	if err != nil {
@@ -243,7 +245,7 @@ func (r *messageRepository) GetMessages(ctx context.Context, chatID int64, befor
 		query = `
 			SELECT id, chat_id, sender_id, receiver_id, content, original_language,
 			       listing_id, storefront_product_id, status, is_read,
-			       has_attachments, attachments_count, created_at, updated_at, read_at
+			       has_attachments, attachments_count, created_at, updated_at, read_at, is_system
 			FROM messages
 			WHERE chat_id = $1 AND id < $2
 			ORDER BY id DESC
@@ -255,7 +257,7 @@ func (r *messageRepository) GetMessages(ctx context.Context, chatID int64, befor
 		query = `
 			SELECT id, chat_id, sender_id, receiver_id, content, original_language,
 			       listing_id, storefront_product_id, status, is_read,
-			       has_attachments, attachments_count, created_at, updated_at, read_at
+			       has_attachments, attachments_count, created_at, updated_at, read_at, is_system
 			FROM messages
 			WHERE chat_id = $1 AND id > $2
 			ORDER BY id ASC
@@ -267,7 +269,7 @@ func (r *messageRepository) GetMessages(ctx context.Context, chatID int64, befor
 		query = `
 			SELECT id, chat_id, sender_id, receiver_id, content, original_language,
 			       listing_id, storefront_product_id, status, is_read,
-			       has_attachments, attachments_count, created_at, updated_at, read_at
+			       has_attachments, attachments_count, created_at, updated_at, read_at, is_system
 			FROM messages
 			WHERE chat_id = $1
 			ORDER BY id DESC
@@ -305,6 +307,7 @@ func (r *messageRepository) GetMessages(ctx context.Context, chatID int64, befor
 			&message.CreatedAt,
 			&message.UpdatedAt,
 			&readAt,
+			&message.IsSystem,
 		)
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to scan message")
@@ -359,7 +362,7 @@ func (r *messageRepository) GetLatestMessage(ctx context.Context, chatID int64) 
 	query := `
 		SELECT id, chat_id, sender_id, receiver_id, content, original_language,
 		       listing_id, storefront_product_id, status, is_read,
-		       has_attachments, attachments_count, created_at, updated_at, read_at
+		       has_attachments, attachments_count, created_at, updated_at, read_at, is_system
 		FROM messages
 		WHERE chat_id = $1
 		ORDER BY id DESC
@@ -386,6 +389,7 @@ func (r *messageRepository) GetLatestMessage(ctx context.Context, chatID int64) 
 		&message.CreatedAt,
 		&message.UpdatedAt,
 		&readAt,
+		&message.IsSystem,
 	)
 
 	if err != nil {
@@ -554,7 +558,7 @@ func (r *messageRepository) GetMessagesByIDs(ctx context.Context, messageIDs []i
 	query := `
 		SELECT id, chat_id, sender_id, receiver_id, content, original_language,
 		       listing_id, storefront_product_id, status, is_read,
-		       has_attachments, attachments_count, created_at, updated_at, read_at
+		       has_attachments, attachments_count, created_at, updated_at, read_at, is_system
 		FROM messages
 		WHERE id = ANY($1)
 		ORDER BY id ASC
@@ -589,6 +593,7 @@ func (r *messageRepository) GetMessagesByIDs(ctx context.Context, messageIDs []i
 			&message.CreatedAt,
 			&message.UpdatedAt,
 			&readAt,
+			&message.IsSystem,
 		)
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to scan message")

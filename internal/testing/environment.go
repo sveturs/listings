@@ -35,10 +35,10 @@ type TestEnvironment struct {
 	Config TestEnvironmentConfig
 
 	// Repositories
-	Repo            *postgres.Repository         // main repository (sqlx-based)
-	OrderRepo       postgres.OrderRepository      // order repository (pgxpool-based)
+	Repo            *postgres.Repository           // main repository (sqlx-based)
+	OrderRepo       postgres.OrderRepository       // order repository (pgxpool-based)
 	ReservationRepo postgres.ReservationRepository // reservation repository (pgxpool-based)
-	CartRepo        postgres.CartRepository       // cart repository (sqlx-based)
+	CartRepo        postgres.CartRepository        // cart repository (sqlx-based)
 
 	// Services
 	CartService      service.CartService

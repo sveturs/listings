@@ -38,6 +38,11 @@ func (s *Server) GetProduct(ctx context.Context, req *listingspb.GetProductReque
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get product: %v", err))
 	}
 
+	// Apply translations if lang is specified
+	if req.Lang != nil && *req.Lang != "" {
+		ApplyProductTranslation(product, *req.Lang)
+	}
+
 	// Convert to proto
 	protoProduct := ProductToProto(product)
 

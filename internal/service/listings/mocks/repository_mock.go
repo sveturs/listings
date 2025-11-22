@@ -567,3 +567,44 @@ func (m *MockRepository) ListStorefronts(ctx context.Context, limit, offset int)
 	}
 	return args.Get(0).([]*domain.Storefront), args.Get(1).(int64), args.Error(2)
 }
+
+// Product Images operations (B2C)
+
+// GetProductImageByID mocks getting a product image by ID
+func (m *MockRepository) GetProductImageByID(ctx context.Context, imageID int64) (*domain.ProductImage, error) {
+	args := m.Called(ctx, imageID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ProductImage), args.Error(1)
+}
+
+// AddProductImage mocks adding a product image
+func (m *MockRepository) AddProductImage(ctx context.Context, image *domain.ProductImage) (*domain.ProductImage, error) {
+	args := m.Called(ctx, image)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ProductImage), args.Error(1)
+}
+
+// GetProductImages mocks getting product images
+func (m *MockRepository) GetProductImages(ctx context.Context, productID int64) ([]*domain.ProductImage, error) {
+	args := m.Called(ctx, productID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.ProductImage), args.Error(1)
+}
+
+// DeleteProductImage mocks deleting a product image
+func (m *MockRepository) DeleteProductImage(ctx context.Context, imageID int64) error {
+	args := m.Called(ctx, imageID)
+	return args.Error(0)
+}
+
+// ReorderProductImages mocks reordering product images
+func (m *MockRepository) ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error {
+	args := m.Called(ctx, productID, orders)
+	return args.Error(0)
+}

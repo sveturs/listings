@@ -12,8 +12,8 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/sveturs/listings/internal/domain"
 	listingssvcv1 "github.com/sveturs/listings/api/proto/listings/v1"
+	"github.com/sveturs/listings/internal/domain"
 )
 
 // ============================================================================

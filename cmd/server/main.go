@@ -374,6 +374,9 @@ func main() {
 	// Connect WebSocket hub to chat service
 	chatService.SetHub(chatHub)
 
+	// Connect chat service to order service for notifications
+	orderService.SetChatService(chatService)
+
 	// Initialize health check service
 	healthConfig := &health.Config{
 		CheckTimeout:     cfg.Health.CheckTimeout,

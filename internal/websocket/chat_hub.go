@@ -48,11 +48,11 @@ type ClientConnection struct {
 
 // WSMessage represents incoming message from client
 type WSMessage struct {
-	Type      string      `json:"type"` // ping, typing, mark_read, logout
-	ChatID    *int64      `json:"chat_id,omitempty"`
-	MessageID *int64      `json:"message_id,omitempty"`
-	IsTyping  *bool       `json:"is_typing,omitempty"`
-	Payload   *WSPayload  `json:"payload,omitempty"` // For nested payload format
+	Type      string     `json:"type"` // ping, typing, mark_read, logout
+	ChatID    *int64     `json:"chat_id,omitempty"`
+	MessageID *int64     `json:"message_id,omitempty"`
+	IsTyping  *bool      `json:"is_typing,omitempty"`
+	Payload   *WSPayload `json:"payload,omitempty"` // For nested payload format
 }
 
 // WSPayload represents nested payload in WebSocket messages
@@ -81,9 +81,9 @@ type BroadcastMessage struct {
 	Status        string             `json:"status,omitempty"`    // online, offline
 	LastSeen      string             `json:"last_seen,omitempty"` // ISO timestamp for offline
 	DeliveredAt   string             `json:"delivered_at,omitempty"`
-	OnlineUsers   []int64            `json:"online_users,omitempty"`     // For online_users_list event
+	OnlineUsers   []int64            `json:"online_users,omitempty"`    // For online_users_list event
 	UsersLastSeen []UserLastSeenInfo `json:"users_last_seen,omitempty"` // For users_last_seen event
-	TargetUserIDs []int64            `json:"-"`                          // Internal: explicit target users (not serialized)
+	TargetUserIDs []int64            `json:"-"`                         // Internal: explicit target users (not serialized)
 	Timestamp     string             `json:"timestamp"`
 }
 

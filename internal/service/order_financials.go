@@ -26,8 +26,8 @@ type FinancialConfig struct {
 // DefaultFinancialConfig returns default financial configuration
 func DefaultFinancialConfig() *FinancialConfig {
 	return &FinancialConfig{
-		TaxRate:         0.20, // 20% VAT
-		CommissionRate:  0.10, // 10% platform fee
+		TaxRate:         0.20,  // 20% VAT
+		CommissionRate:  0.10,  // 10% platform fee
 		DefaultCurrency: "RSD", // Serbian Dinar
 		EscrowDays:      3,     // 3 days escrow hold
 	}
@@ -35,14 +35,14 @@ func DefaultFinancialConfig() *FinancialConfig {
 
 // OrderFinancials contains all calculated financial values for an order
 type OrderFinancials struct {
-	Subtotal       float64 // Sum of all items (before tax/shipping)
-	Tax            float64 // Tax amount
-	ShippingCost   float64 // Shipping cost
-	Discount       float64 // Discount amount (coupons, promotions)
-	Total          float64 // Final amount to pay
-	Commission     float64 // Platform commission
-	SellerAmount   float64 // Amount seller receives (total - commission)
-	Currency       string  // ISO 4217 currency code
+	Subtotal     float64 // Sum of all items (before tax/shipping)
+	Tax          float64 // Tax amount
+	ShippingCost float64 // Shipping cost
+	Discount     float64 // Discount amount (coupons, promotions)
+	Total        float64 // Final amount to pay
+	Commission   float64 // Platform commission
+	SellerAmount float64 // Amount seller receives (total - commission)
+	Currency     string  // ISO 4217 currency code
 }
 
 // CalculateOrderFinancials calculates all financial values for an order

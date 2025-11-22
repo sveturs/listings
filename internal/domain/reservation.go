@@ -14,25 +14,25 @@ type ReservationStatus string
 
 const (
 	ReservationStatusUnspecified ReservationStatus = "unspecified"
-	ReservationStatusActive      ReservationStatus = "active"     // Reservation active, stock held
-	ReservationStatusCommitted   ReservationStatus = "committed"  // Reservation committed (order confirmed)
-	ReservationStatusReleased    ReservationStatus = "released"   // Reservation released, stock restored
-	ReservationStatusExpired     ReservationStatus = "expired"    // Reservation expired (TTL exceeded)
+	ReservationStatusActive      ReservationStatus = "active"    // Reservation active, stock held
+	ReservationStatusCommitted   ReservationStatus = "committed" // Reservation committed (order confirmed)
+	ReservationStatusReleased    ReservationStatus = "released"  // Reservation released, stock restored
+	ReservationStatusExpired     ReservationStatus = "expired"   // Reservation expired (TTL exceeded)
 )
 
 // InventoryReservation represents a temporary stock hold
 type InventoryReservation struct {
-	ID        int64             `json:"id" db:"id"`
-	ListingID int64             `json:"listing_id" db:"listing_id"`       // FK to listing or product
-	VariantID *int64            `json:"variant_id,omitempty" db:"variant_id"` // FK to variant (if applicable)
-	OrderID   int64             `json:"order_id" db:"order_id"`           // FK to order
-	Quantity  int32             `json:"quantity" db:"quantity"`           // Quantity reserved
-	Status    ReservationStatus `json:"status" db:"status"`               // Reservation state
-	ExpiresAt time.Time         `json:"expires_at" db:"expires_at"`       // TTL for reservation
-	CreatedAt time.Time         `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time         `json:"updated_at" db:"updated_at"`
-	CommittedAt *time.Time      `json:"committed_at,omitempty" db:"committed_at"` // When reservation committed
-	ReleasedAt  *time.Time      `json:"released_at,omitempty" db:"released_at"`   // When reservation released
+	ID          int64             `json:"id" db:"id"`
+	ListingID   int64             `json:"listing_id" db:"listing_id"`           // FK to listing or product
+	VariantID   *int64            `json:"variant_id,omitempty" db:"variant_id"` // FK to variant (if applicable)
+	OrderID     int64             `json:"order_id" db:"order_id"`               // FK to order
+	Quantity    int32             `json:"quantity" db:"quantity"`               // Quantity reserved
+	Status      ReservationStatus `json:"status" db:"status"`                   // Reservation state
+	ExpiresAt   time.Time         `json:"expires_at" db:"expires_at"`           // TTL for reservation
+	CreatedAt   time.Time         `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at" db:"updated_at"`
+	CommittedAt *time.Time        `json:"committed_at,omitempty" db:"committed_at"` // When reservation committed
+	ReleasedAt  *time.Time        `json:"released_at,omitempty" db:"released_at"`   // When reservation released
 }
 
 // Validate validates the InventoryReservation entity

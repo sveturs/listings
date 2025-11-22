@@ -19,8 +19,8 @@ type StorefrontStats struct {
 	OwnerID        int64  `json:"owner_id" db:"owner_id"`
 
 	// Sales metrics
-	TotalSales        int64   `json:"total_sales" db:"total_sales"`               // Number of completed orders (delivered)
-	TotalRevenue      float64 `json:"total_revenue" db:"total_revenue"`           // Sum of order amounts
+	TotalSales        int64   `json:"total_sales" db:"total_sales"`                 // Number of completed orders (delivered)
+	TotalRevenue      float64 `json:"total_revenue" db:"total_revenue"`             // Sum of order amounts
 	AverageOrderValue float64 `json:"average_order_value" db:"average_order_value"` // Avg order value
 
 	// Listings metrics

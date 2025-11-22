@@ -11,8 +11,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
 	listingssvcv1 "github.com/sveturs/listings/api/proto/listings/v1"
+	"github.com/sveturs/listings/internal/domain"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -50,14 +50,14 @@ type AnalyticsService interface {
 
 const (
 	// Cache keys
-	analyticsCacheKeyOverview  = "analytics:overview:%s"  // %s = MD5 hash of request
-	analyticsCacheKeyListing   = "analytics:listing:%s"   // %s = MD5 hash of request
-	analyticsCacheKeyTrending  = "analytics:trending"     // Static key (no params)
+	analyticsCacheKeyOverview = "analytics:overview:%s" // %s = MD5 hash of request
+	analyticsCacheKeyListing  = "analytics:listing:%s"  // %s = MD5 hash of request
+	analyticsCacheKeyTrending = "analytics:trending"    // Static key (no params)
 
 	// Cache TTLs
-	overviewStatsCacheTTL  = 1 * time.Hour      // Overview stats cached for 1 hour
-	listingStatsCacheTTL   = 15 * time.Minute   // Listing stats cached for 15 minutes
-	trendingStatsCacheTTL  = 1 * time.Hour      // Trending stats cached for 1 hour
+	overviewStatsCacheTTL = 1 * time.Hour    // Overview stats cached for 1 hour
+	listingStatsCacheTTL  = 15 * time.Minute // Listing stats cached for 15 minutes
+	trendingStatsCacheTTL = 1 * time.Hour    // Trending stats cached for 1 hour
 
 	// Validation constants
 	maxDateRangeDays = 365 // Maximum 365 days for analytics queries
@@ -444,9 +444,9 @@ func (s *analyticsServiceImpl) convertOverviewStatsToProto(stats *domain.Overvie
 			ActiveListings: int32(stats.ActiveListings),
 		},
 		Revenue: &listingssvcv1.RevenueStats{
-			TotalRevenue:    stats.TotalRevenue,
-			AvgOrderValue:   stats.AverageOrderValue,
-			Transactions:    int32(stats.TotalOrders),
+			TotalRevenue:  stats.TotalRevenue,
+			AvgOrderValue: stats.AverageOrderValue,
+			Transactions:  int32(stats.TotalOrders),
 		},
 		Users: &listingssvcv1.UsersStats{
 			ActiveUsers: int32(stats.ActiveUsers),
@@ -460,9 +460,9 @@ func (s *analyticsServiceImpl) convertOverviewStatsToProto(stats *domain.Overvie
 			FavoritesAdded: int32(stats.TotalFavorites),
 		},
 		ConversionFunnel: &listingssvcv1.ConversionFunnel{
-			StageViews:             int32(stats.TotalViews),
-			StageCompleted:         int32(stats.TotalOrders),
-			OverallConversionRate:  stats.ConversionRate,
+			StageViews:            int32(stats.TotalViews),
+			StageCompleted:        int32(stats.TotalOrders),
+			OverallConversionRate: stats.ConversionRate,
 		},
 		GeneratedAt: timestamppb.New(time.Now()),
 		DataFrom:    timestamppb.New(stats.PeriodStart),
@@ -490,15 +490,15 @@ func (s *analyticsServiceImpl) convertOverviewStatsToProto(stats *domain.Overvie
 // convertListingStatsToProto converts domain.ListingStats to proto response
 func (s *analyticsServiceImpl) convertListingStatsToProto(stats *domain.ListingStats) *listingssvcv1.GetListingStatsResponse {
 	response := &listingssvcv1.GetListingStatsResponse{
-		ListingId:       stats.ListingID,
-		ListingName:     "", // TODO: Fetch from listing table
-		ListingType:     "b2c", // TODO: Determine from listing
-		TotalViews:      int32(stats.ViewsCount),
-		FavoriteCount:   int32(stats.FavoritesCount),
-		TotalSales:      int32(stats.OrdersCount),
-		TotalRevenue:    stats.TotalRevenue,
-		AvgOrderValue:   stats.AverageOrderValue,
-		ConversionRate:  stats.ConversionRate,
+		ListingId:      stats.ListingID,
+		ListingName:    "",    // TODO: Fetch from listing table
+		ListingType:    "b2c", // TODO: Determine from listing
+		TotalViews:     int32(stats.ViewsCount),
+		FavoriteCount:  int32(stats.FavoritesCount),
+		TotalSales:     int32(stats.OrdersCount),
+		TotalRevenue:   stats.TotalRevenue,
+		AvgOrderValue:  stats.AverageOrderValue,
+		ConversionRate: stats.ConversionRate,
 		Engagement: &listingssvcv1.EngagementMetrics{
 			TotalViews:     int32(stats.ViewsCount),
 			FavoritesAdded: int32(stats.FavoritesCount),
@@ -769,25 +769,25 @@ func (s *analyticsServiceImpl) GetTrendingStats(
 	// Convert trending categories
 	for _, tc := range stats.TrendingCategories {
 		response.TrendingCategories = append(response.TrendingCategories, &listingssvcv1.TrendingCategory{
-			CategoryId:    tc.CategoryID,
-			CategoryName:  tc.CategoryName,
+			CategoryId:     tc.CategoryID,
+			CategoryName:   tc.CategoryName,
 			OrderCount_30D: tc.OrderCount30d,
 			OrderCount_7D:  tc.OrderCount7d,
-			GrowthRate:    tc.GrowthRate,
-			TrendScore:    tc.TrendScore,
+			GrowthRate:     tc.GrowthRate,
+			TrendScore:     tc.TrendScore,
 		})
 	}
 
 	// Convert hot listings
 	for _, hl := range stats.HotListings {
 		response.HotListings = append(response.HotListings, &listingssvcv1.HotListing{
-			ListingId:       hl.ListingID,
-			Title:           hl.Title,
-			Orders_24H:      hl.Orders24h,
-			Orders_7D:       hl.Orders7d,
-			OrdersGrowth:    hl.OrdersGrowth,
+			ListingId:        hl.ListingID,
+			Title:            hl.Title,
+			Orders_24H:       hl.Orders24h,
+			Orders_7D:        hl.Orders7d,
+			OrdersGrowth:     hl.OrdersGrowth,
 			QuantitySold_24H: hl.QuantitySold24h,
-			Price:           hl.Price,
+			Price:            hl.Price,
 		})
 	}
 

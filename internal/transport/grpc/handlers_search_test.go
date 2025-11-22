@@ -916,6 +916,7 @@ func TestSearchHandler_GetTrendingSearches_DefaultParams(t *testing.T) {
 func testTimeNow() time.Time {
 	return time.Date(2025, 1, 15, 12, 0, 0, 0, time.UTC)
 }
+
 // ============================================================================
 // PHASE 28: GetSearchHistory Tests
 // ============================================================================

@@ -24,7 +24,8 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 			p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address,
 			p.individual_latitude, p.individual_longitude,
-			p.location_privacy, p.show_on_map, p.has_variants
+			p.location_privacy, p.show_on_map, p.has_variants,
+			p.title_translations, p.description_translations, p.original_language
 		FROM listings p
 		WHERE p.id = $1
 		  AND ($2::bigint IS NULL OR p.storefront_id = $2)
@@ -38,6 +39,8 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 	var individualAddress, locationPrivacy sql.NullString
 	var individualLatitude, individualLongitude sql.NullFloat64
 	var attributesJSON []byte
+	var titleTranslationsJSON, descriptionTranslationsJSON []byte
+	var originalLanguage sql.NullString
 
 	err := r.db.QueryRowContext(ctx, query, productID, storefrontID).Scan(
 		&product.ID,
@@ -63,6 +66,9 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 		&locationPrivacy,
 		&product.ShowOnMap,
 		&product.HasVariants,
+		&titleTranslationsJSON,
+		&descriptionTranslationsJSON,
+		&originalLanguage,
 	)
 
 	if err != nil {
@@ -102,6 +108,32 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 			r.logger.Error().Err(err).Msg("failed to unmarshal product attributes")
 			return nil, fmt.Errorf("failed to unmarshal product attributes: %w", err)
 		}
+	}
+
+	// Parse translation fields
+	if len(titleTranslationsJSON) > 0 {
+		if err := json.Unmarshal(titleTranslationsJSON, &product.TitleTranslations); err != nil {
+			r.logger.Warn().Err(err).Msg("failed to unmarshal title_translations")
+			// Don't fail - translations are optional
+		}
+	}
+	if len(descriptionTranslationsJSON) > 0 {
+		if err := json.Unmarshal(descriptionTranslationsJSON, &product.DescriptionTranslations); err != nil {
+			r.logger.Warn().Err(err).Msg("failed to unmarshal description_translations")
+			// Don't fail - translations are optional
+		}
+	}
+	if originalLanguage.Valid {
+		product.OriginalLanguage = originalLanguage.String
+	}
+
+	// Load product images
+	images, err := r.GetProductImages(ctx, productID)
+	if err != nil {
+		r.logger.Warn().Err(err).Int64("product_id", productID).Msg("failed to load product images")
+		// Don't fail the whole request if images can't be loaded
+	} else {
+		product.Images = images
 	}
 
 	return &product, nil
@@ -458,6 +490,22 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 
 	if err := rows.Err(); err != nil {
 		return nil, 0, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	// Load images for all products in batch
+	if len(products) > 0 {
+		productIDs := make([]int64, len(products))
+		for i, p := range products {
+			productIDs[i] = p.ID
+		}
+		imagesMap, err := r.GetProductImagesBatch(ctx, productIDs)
+		if err != nil {
+			r.logger.Warn().Err(err).Msg("failed to load product images batch")
+		} else {
+			for _, p := range products {
+				p.Images = imagesMap[p.ID]
+			}
+		}
 	}
 
 	return products, total, nil
@@ -1780,10 +1828,10 @@ func (r *Repository) BulkDeleteProducts(ctx context.Context, storefrontID int64,
 				Int32("variants_deleted", totalVariantsDeleted).
 				Msg("products hard deleted in batch")
 		} else {
-			// Soft delete: Set deleted_at timestamp
+			// Soft delete: Set deleted_at timestamp and is_deleted flag
 			softDeleteQuery := `
 				UPDATE listings
-				SET deleted_at = NOW(), updated_at = NOW()
+				SET deleted_at = NOW(), updated_at = NOW(), is_deleted = true
 				WHERE id = ANY($1::bigint[]) AND storefront_id = $2 AND source_type = 'b2c' AND deleted_at IS NULL
 			`
 			result, err := tx.ExecContext(ctx, softDeleteQuery, pq.Array(validIDs), storefrontID)

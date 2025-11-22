@@ -123,16 +123,18 @@ func (r *orderRepository) Create(ctx context.Context, order *domain.Order) error
 // GetByID retrieves an order by its ID
 func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.Order, error) {
 	query := `
-		SELECT id, order_number, user_id, storefront_id, status, payment_status,
-		       subtotal, tax, shipping, discount, total, commission, seller_amount, currency,
-		       payment_method, payment_transaction_id, payment_completed_at,
-		       shipping_address, billing_address, shipping_method, shipping_provider, tracking_number, shipment_id,
-		       escrow_release_date, escrow_days,
-		       customer_name, customer_email, customer_phone,
-		       notes, admin_notes,
-		       created_at, updated_at, confirmed_at, shipped_at, delivered_at, cancelled_at
-		FROM orders
-		WHERE id = $1
+		SELECT o.id, o.order_number, o.user_id, o.storefront_id, o.status, o.payment_status,
+		       o.subtotal, o.tax, o.shipping, o.discount, o.total, o.commission, o.seller_amount, o.currency,
+		       o.payment_method, o.payment_transaction_id, o.payment_completed_at,
+		       o.shipping_address, o.billing_address, o.shipping_method, o.shipping_provider, o.tracking_number, o.shipment_id,
+		       o.escrow_release_date, o.escrow_days,
+		       o.customer_name, o.customer_email, o.customer_phone,
+		       o.notes, o.admin_notes,
+		       o.created_at, o.updated_at, o.confirmed_at, o.shipped_at, o.delivered_at, o.cancelled_at,
+		       s.name as storefront_name
+		FROM orders o
+		LEFT JOIN storefronts s ON o.storefront_id = s.id
+		WHERE o.id = $1
 	`
 
 	var order domain.Order
@@ -144,6 +146,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 	var shippingMethod, shippingProvider, trackingNumber sql.NullString
 	var shipmentID sql.NullInt64
 	var customerName, customerEmail, customerPhone, customerNotes, adminNotes sql.NullString
+	var storefrontName sql.NullString
 
 	err := r.db.QueryRow(ctx, query, orderID).Scan(
 		&order.ID, &order.OrderNumber, &userID, &order.StorefrontID, &statusStr, &paymentStatusStr,
@@ -154,6 +157,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 		&customerName, &customerEmail, &customerPhone,
 		&customerNotes, &adminNotes,
 		&order.CreatedAt, &order.UpdatedAt, &confirmedAt, &shippedAt, &deliveredAt, &cancelledAt,
+		&storefrontName,
 	)
 
 	if err != nil {
@@ -237,6 +241,9 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 	}
 	if cancelledAt.Valid {
 		order.CancelledAt = &cancelledAt.Time
+	}
+	if storefrontName.Valid {
+		order.StorefrontName = &storefrontName.String
 	}
 
 	// Load order items

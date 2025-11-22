@@ -74,9 +74,9 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		"visibility":      listing.Visibility,
 		"quantity":        listing.Quantity,
 		"sku":             listing.SKU,
-		"source_type":     listing.SourceType,     // c2c or b2c
-		"document_type":   "listing",              // Required for unified search filtering
-		"stock_status":    listing.StockStatus,    // in_stock, out_of_stock, etc
+		"source_type":     listing.SourceType,  // c2c or b2c
+		"document_type":   "listing",           // Required for unified search filtering
+		"stock_status":    listing.StockStatus, // in_stock, out_of_stock, etc
 		"views_count":     listing.ViewsCount,
 		"favorites_count": listing.FavoritesCount,
 		"created_at":      listing.CreatedAt,
@@ -438,7 +438,7 @@ func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit 
 				"_script": map[string]interface{}{
 					"type": "number",
 					"script": map[string]interface{}{
-						"lang": "painless",
+						"lang":   "painless",
 						"source": fmt.Sprintf("Math.abs(doc['price'].value - %f)", price),
 					},
 					"order": "asc",

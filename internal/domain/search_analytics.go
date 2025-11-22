@@ -13,14 +13,14 @@ import (
 
 // SearchQuery represents a tracked search query for analytics
 type SearchQuery struct {
-	ID                int64      `json:"id" db:"id"`
-	QueryText         string     `json:"query_text" db:"query_text"`
-	CategoryID        *int64     `json:"category_id,omitempty" db:"category_id"`
-	UserID            *int64     `json:"user_id,omitempty" db:"user_id"`
-	SessionID         *string    `json:"session_id,omitempty" db:"session_id"`
-	ResultsCount      int32      `json:"results_count" db:"results_count"`
-	ClickedListingID  *int64     `json:"clicked_listing_id,omitempty" db:"clicked_listing_id"`
-	CreatedAt         time.Time  `json:"created_at" db:"created_at"`
+	ID               int64     `json:"id" db:"id"`
+	QueryText        string    `json:"query_text" db:"query_text"`
+	CategoryID       *int64    `json:"category_id,omitempty" db:"category_id"`
+	UserID           *int64    `json:"user_id,omitempty" db:"user_id"`
+	SessionID        *string   `json:"session_id,omitempty" db:"session_id"`
+	ResultsCount     int32     `json:"results_count" db:"results_count"`
+	ClickedListingID *int64    `json:"clicked_listing_id,omitempty" db:"clicked_listing_id"`
+	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 }
 
 // CreateSearchQueryInput represents input for logging a search query
@@ -85,11 +85,11 @@ type TrendingSearch struct {
 
 // GetTrendingQueriesFilter represents filters for trending queries
 type GetTrendingQueriesFilter struct {
-	CategoryID       *int64 `json:"category_id,omitempty"`
-	Limit            int32  `json:"limit" validate:"required,gte=1,lte=100"`
-	DaysAgo          int32  `json:"days_ago" validate:"gte=1,lte=90"` // Time range: last N days
-	MinResultsCount  int32  `json:"min_results_count"`                // Filter: only searches with results >= N
-	IncludeZeroResults bool `json:"include_zero_results"`             // Include searches with 0 results?
+	CategoryID         *int64 `json:"category_id,omitempty"`
+	Limit              int32  `json:"limit" validate:"required,gte=1,lte=100"`
+	DaysAgo            int32  `json:"days_ago" validate:"gte=1,lte=90"` // Time range: last N days
+	MinResultsCount    int32  `json:"min_results_count"`                // Filter: only searches with results >= N
+	IncludeZeroResults bool   `json:"include_zero_results"`             // Include searches with 0 results?
 }
 
 // Validate validates GetTrendingQueriesFilter
@@ -164,9 +164,9 @@ func (filter *GetUserHistoryFilter) Validate() error {
 
 // GetPopularQueriesFilter represents filters for all-time popular searches
 type GetPopularQueriesFilter struct {
-	CategoryID      *int64 `json:"category_id,omitempty"`
-	Limit           int32  `json:"limit" validate:"required,gte=1,lte=100"`
-	MinSearchCount  int64  `json:"min_search_count"` // Filter: only queries with count >= N
+	CategoryID     *int64 `json:"category_id,omitempty"`
+	Limit          int32  `json:"limit" validate:"required,gte=1,lte=100"`
+	MinSearchCount int64  `json:"min_search_count"` // Filter: only queries with count >= N
 }
 
 // Validate validates GetPopularQueriesFilter

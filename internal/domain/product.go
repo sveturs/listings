@@ -33,6 +33,11 @@ type Product struct {
 	ShowOnMap             bool                   `json:"show_on_map" db:"show_on_map"`
 	HasVariants           bool                   `json:"has_variants" db:"has_variants"`
 
+	// Translation fields (JSONB maps: lang_code -> translated_text)
+	TitleTranslations       map[string]string `json:"title_translations,omitempty" db:"title_translations"`
+	DescriptionTranslations map[string]string `json:"description_translations,omitempty" db:"description_translations"`
+	OriginalLanguage        string            `json:"original_language,omitempty" db:"original_language"`
+
 	// Relations (loaded on demand)
 	Variants []ProductVariant `json:"variants,omitempty" db:"-"`
 	Images   []*ProductImage  `json:"images,omitempty" db:"-"`

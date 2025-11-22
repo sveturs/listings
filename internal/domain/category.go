@@ -6,26 +6,26 @@ import (
 
 // CategoryDetail represents a complete category with all fields (for gRPC)
 type CategoryDetail struct {
-	ID                 int32      `db:"id" json:"id"`
-	Name               string     `db:"name" json:"name"`
-	Slug               string     `db:"slug" json:"slug"`
-	ParentID           *int32     `db:"parent_id" json:"parent_id,omitempty"`
-	Icon               *string    `db:"icon" json:"icon,omitempty"`
-	CreatedAt          time.Time  `db:"created_at" json:"created_at"`
-	HasCustomUI        bool       `db:"has_custom_ui" json:"has_custom_ui"`
-	CustomUIComponent  *string    `db:"custom_ui_component" json:"custom_ui_component,omitempty"`
-	SortOrder          int32      `db:"sort_order" json:"sort_order"`
-	Level              int32      `db:"level" json:"level"`
-	Count              int32      `db:"count" json:"count"`
-	ExternalID         *string    `db:"external_id" json:"external_id,omitempty"`
-	Description        *string    `db:"description" json:"description,omitempty"`
-	IsActive           bool       `db:"is_active" json:"is_active"`
-	SEOTitle           *string    `db:"seo_title" json:"seo_title,omitempty"`
-	SEODescription     *string    `db:"seo_description" json:"seo_description,omitempty"`
-	SEOKeywords        *string    `db:"seo_keywords" json:"seo_keywords,omitempty"`
-	TitleEn            *string    `db:"title_en" json:"title_en,omitempty"`
-	TitleRu            *string    `db:"title_ru" json:"title_ru,omitempty"`
-	TitleSr            *string    `db:"title_sr" json:"title_sr,omitempty"`
+	ID                int32     `db:"id" json:"id"`
+	Name              string    `db:"name" json:"name"`
+	Slug              string    `db:"slug" json:"slug"`
+	ParentID          *int32    `db:"parent_id" json:"parent_id,omitempty"`
+	Icon              *string   `db:"icon" json:"icon,omitempty"`
+	CreatedAt         time.Time `db:"created_at" json:"created_at"`
+	HasCustomUI       bool      `db:"has_custom_ui" json:"has_custom_ui"`
+	CustomUIComponent *string   `db:"custom_ui_component" json:"custom_ui_component,omitempty"`
+	SortOrder         int32     `db:"sort_order" json:"sort_order"`
+	Level             int32     `db:"level" json:"level"`
+	Count             int32     `db:"count" json:"count"`
+	ExternalID        *string   `db:"external_id" json:"external_id,omitempty"`
+	Description       *string   `db:"description" json:"description,omitempty"`
+	IsActive          bool      `db:"is_active" json:"is_active"`
+	SEOTitle          *string   `db:"seo_title" json:"seo_title,omitempty"`
+	SEODescription    *string   `db:"seo_description" json:"seo_description,omitempty"`
+	SEOKeywords       *string   `db:"seo_keywords" json:"seo_keywords,omitempty"`
+	TitleEn           *string   `db:"title_en" json:"title_en,omitempty"`
+	TitleRu           *string   `db:"title_ru" json:"title_ru,omitempty"`
+	TitleSr           *string   `db:"title_sr" json:"title_sr,omitempty"`
 }
 
 // CategoryTree represents a category with its subcategories

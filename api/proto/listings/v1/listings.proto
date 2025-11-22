@@ -288,6 +288,20 @@ service ListingsService {
   // Used when customer views product detail page
   rpc IncrementProductViews(IncrementProductViewsRequest) returns (google.protobuf.Empty);
 
+  // === Product Images Management (B2C) ===
+
+  // AddProductImage adds a new image to a B2C product
+  rpc AddProductImage(AddProductImageRequest) returns (ProductImageResponse);
+
+  // GetProductImages retrieves all images for a B2C product
+  rpc GetProductImages(GetProductImagesRequest) returns (ProductImagesResponse);
+
+  // DeleteProductImage removes an image from a B2C product
+  rpc DeleteProductImage(DeleteProductImageRequest) returns (DeleteProductImageResponse);
+
+  // ReorderProductImages updates display order for product images
+  rpc ReorderProductImages(ReorderProductImagesRequest) returns (ReorderProductImagesResponse);
+
   // === OpenSearch Reindexing (ADMINISTRATIVE) ===
 
   // ReindexAll performs full reindexing of all products to OpenSearch
@@ -526,6 +540,7 @@ message Product {
   bool show_on_map = 23;
   bool has_variants = 24;
   repeated ProductVariant variants = 25;
+  repeated ProductImage images = 26;
 }
 
 // ProductVariant represents a product variant with specific attributes
@@ -988,6 +1003,7 @@ message ResetFlagsRequest {
 message GetProductRequest {
   int64 product_id = 1;
   optional int64 storefront_id = 2;
+  optional string lang = 3; // Language code for translations (en, ru, sr)
 }
 
 // ProductResponse returns a single product
@@ -999,6 +1015,7 @@ message ProductResponse {
 message GetProductsBySKUsRequest {
   repeated string skus = 1;
   optional int64 storefront_id = 2;
+  optional string lang = 3; // Language code for translations (en, ru, sr)
 }
 
 // ProductsResponse returns multiple products
@@ -1011,6 +1028,7 @@ message ProductsResponse {
 message GetProductsByIDsRequest {
   repeated int64 product_ids = 1;
   optional int64 storefront_id = 2;
+  optional string lang = 3; // Language code for translations (en, ru, sr)
 }
 
 // ListProductsRequest requests a paginated list of products
@@ -1834,4 +1852,80 @@ message DashboardStatsResponse {
   double conversion_rate = 8;
   int32 pending_orders = 9;
   int32 low_stock_products = 10;
+}
+
+// ============================================================================
+// B2C Product Images - Request/Response
+// ============================================================================
+
+// ProductImage represents an image associated with a B2C product
+message ProductImage {
+  int64 id = 1;
+  int64 product_id = 2;
+  string url = 3;
+  optional string storage_path = 4;
+  optional string thumbnail_url = 5;
+  int32 display_order = 6;
+  bool is_primary = 7;
+  optional int32 width = 8;
+  optional int32 height = 9;
+  optional int64 file_size = 10;
+  optional string mime_type = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}
+
+// AddProductImageRequest adds a new image to a B2C product
+message AddProductImageRequest {
+  int64 product_id = 1;         // Required
+  int64 storefront_id = 2;      // Required for ownership validation
+  string url = 3;               // Required: Full URL to image in MinIO/S3
+  optional string storage_path = 4;
+  optional string thumbnail_url = 5;
+  int32 display_order = 6;
+  bool is_primary = 7;
+  optional int32 width = 8;
+  optional int32 height = 9;
+  optional int64 file_size = 10;
+  optional string mime_type = 11;
+}
+
+// ProductImageResponse returns a single product image
+message ProductImageResponse {
+  ProductImage image = 1;
+}
+
+// GetProductImagesRequest retrieves images for a product
+message GetProductImagesRequest {
+  int64 product_id = 1;
+}
+
+// ProductImagesResponse returns multiple product images
+message ProductImagesResponse {
+  repeated ProductImage images = 1;
+}
+
+// DeleteProductImageRequest deletes a product image
+message DeleteProductImageRequest {
+  int64 product_id = 1;     // Required for ownership check
+  int64 image_id = 2;       // Required
+  int64 storefront_id = 3;  // Required for ownership validation
+}
+
+// DeleteProductImageResponse confirms deletion
+message DeleteProductImageResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ReorderProductImagesRequest updates display order for product images
+message ReorderProductImagesRequest {
+  int64 product_id = 1;
+  int64 storefront_id = 2;        // Required for ownership validation
+  repeated int64 image_ids = 3;   // Ordered list of image IDs (position = array index)
+}
+
+// ReorderProductImagesResponse confirms reorder operation
+message ReorderProductImagesResponse {
+  bool success = 1;
 }

@@ -29,6 +29,15 @@ const (
 	MaxDocumentSize = 20 * 1024 * 1024
 )
 
+// isChatNotFoundError checks if an error indicates that the chat was not found.
+// Repository returns fmt.Errorf("chat not found") which doesn't match errors.Is(err, ErrChatNotFound).
+func isChatNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return err == ErrChatNotFound || strings.Contains(err.Error(), "chat not found")
+}
+
 // ChatRepository defines data access operations for chats
 // This will be implemented by the repository layer
 type ChatRepository interface {
@@ -91,6 +100,7 @@ type ChatService interface {
 
 	// Message operations
 	SendMessage(ctx context.Context, req *SendMessageRequest) (*domain.Message, error)
+	SendSystemMessage(ctx context.Context, req *SendSystemMessageRequest) (*domain.Message, error)
 	GetMessages(ctx context.Context, req *GetMessagesRequest) ([]*domain.Message, bool, error)
 	MarkMessagesAsRead(ctx context.Context, req *MarkMessagesAsReadRequest) (int, error)
 	GetUnreadCount(ctx context.Context, userID int64, chatID *int64) (int, error)
@@ -125,11 +135,11 @@ type GetOrCreateChatRequest struct {
 
 // GetUserChatsRequest contains parameters for listing user chats
 type GetUserChatsRequest struct {
-	UserID       int64  // Authenticated user
-	Archived     bool   // Show archived chats
-	ListingID    *int64 // Filter by listing
-	Limit        int    // Page size (default: 20, max: 100)
-	Offset       int    // Page offset
+	UserID    int64  // Authenticated user
+	Archived  bool   // Show archived chats
+	ListingID *int64 // Filter by listing
+	Limit     int    // Page size (default: 20, max: 100)
+	Offset    int    // Page offset
 }
 
 // SendMessageRequest contains parameters for sending a message
@@ -139,6 +149,14 @@ type SendMessageRequest struct {
 	Content          string  // Message text (1-10000 chars)
 	OriginalLanguage string  // ISO 639-1 code (en, ru, sr)
 	AttachmentIDs    []int64 // Pre-uploaded attachments
+}
+
+// SendSystemMessageRequest contains parameters for sending a system message
+// System messages are sent from the marketplace to notify users about events
+type SendSystemMessageRequest struct {
+	ReceiverID       int64  // User ID to send the message to
+	Content          string // Message text
+	OriginalLanguage string // ISO 639-1 code (en, ru, sr)
 }
 
 // GetMessagesRequest contains parameters for retrieving messages
@@ -341,7 +359,9 @@ func (s *chatService) GetOrCreateChat(ctx context.Context, req *GetOrCreateChatR
 		existingChat, err = s.chatRepo.GetByParticipantsDirect(ctx, req.UserID, *req.OtherUserID)
 	}
 
-	if err != nil && err != ErrChatNotFound {
+	// Check for chat not found error - repository returns fmt.Errorf("chat not found")
+	// which doesn't match ErrChatNotFound, so we need to check the error message
+	if err != nil && !isChatNotFoundError(err) {
 		s.logger.Error().Err(err).Msg("failed to get existing chat")
 		return nil, false, fmt.Errorf("failed to get existing chat: %w", err)
 	}
@@ -537,19 +557,19 @@ func (s *chatService) SendMessage(ctx context.Context, req *SendMessageRequest) 
 
 	// Create message
 	message := &domain.Message{
-		ChatID:           req.ChatID,
-		SenderID:         req.SenderID,
-		ReceiverID:       receiverID,
-		Content:          strings.TrimSpace(req.Content),
-		OriginalLanguage: req.OriginalLanguage,
-		ListingID:        chat.ListingID,
+		ChatID:              req.ChatID,
+		SenderID:            req.SenderID,
+		ReceiverID:          receiverID,
+		Content:             strings.TrimSpace(req.Content),
+		OriginalLanguage:    req.OriginalLanguage,
+		ListingID:           chat.ListingID,
 		StorefrontProductID: chat.StorefrontProductID,
-		Status:           domain.MessageStatusSent,
-		IsRead:           false,
-		HasAttachments:   len(req.AttachmentIDs) > 0,
-		AttachmentsCount: int32(len(req.AttachmentIDs)),
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
+		Status:              domain.MessageStatusSent,
+		IsRead:              false,
+		HasAttachments:      len(req.AttachmentIDs) > 0,
+		AttachmentsCount:    int32(len(req.AttachmentIDs)),
+		CreatedAt:           time.Now(),
+		UpdatedAt:           time.Now(),
 	}
 
 	// Start transaction for message creation + chat update
@@ -593,6 +613,103 @@ func (s *chatService) SendMessage(ctx context.Context, req *SendMessageRequest) 
 			Int64("message_id", message.ID).
 			Int64("chat_id", req.ChatID).
 			Msg("message broadcasted via WebSocket")
+	}
+
+	return message, nil
+}
+
+// SendSystemMessage sends a system message from the marketplace to a user
+// It creates a direct chat between the system user and the receiver if it doesn't exist
+func (s *chatService) SendSystemMessage(ctx context.Context, req *SendSystemMessageRequest) (*domain.Message, error) {
+	s.logger.Debug().
+		Int64("receiver_id", req.ReceiverID).
+		Int("content_length", len(req.Content)).
+		Msg("sending system message")
+
+	// Validate input
+	if req.ReceiverID <= 0 {
+		return nil, fmt.Errorf("%w: receiver_id must be greater than 0", ErrInvalidInput)
+	}
+	content := strings.TrimSpace(req.Content)
+	if len(content) == 0 {
+		return nil, ErrMessageEmpty
+	}
+	if len(content) > MaxMessageLength {
+		return nil, &ErrMessageTooLong{Length: len(content), MaxLength: MaxMessageLength}
+	}
+
+	// Default language
+	if req.OriginalLanguage == "" {
+		req.OriginalLanguage = "en"
+	}
+
+	// Get or create direct chat between system user and receiver
+	chat, _, err := s.GetOrCreateChat(ctx, &GetOrCreateChatRequest{
+		UserID:      domain.SystemUserID,
+		OtherUserID: &req.ReceiverID,
+	})
+	if err != nil {
+		s.logger.Error().Err(err).Int64("receiver_id", req.ReceiverID).Msg("failed to get or create system chat")
+		return nil, fmt.Errorf("failed to get or create system chat: %w", err)
+	}
+
+	// Create system message
+	message := &domain.Message{
+		ChatID:           chat.ID,
+		SenderID:         domain.SystemUserID,
+		ReceiverID:       req.ReceiverID,
+		IsSystem:         true,
+		Content:          content,
+		OriginalLanguage: req.OriginalLanguage,
+		Status:           domain.MessageStatusSent,
+		IsRead:           false,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}
+
+	// Start transaction
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to begin transaction")
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Create message
+	if err := s.messageRepo.Create(ctx, message); err != nil {
+		s.logger.Error().Err(err).Msg("failed to create system message")
+		return nil, fmt.Errorf("failed to create system message: %w", err)
+	}
+
+	// Update chat's last_message_at
+	chat.LastMessageAt = message.CreatedAt
+	if err := s.chatRepo.Update(ctx, chat); err != nil {
+		s.logger.Warn().Err(err).Msg("failed to update chat last_message_at")
+	}
+
+	// Commit transaction
+	if err := tx.Commit(ctx); err != nil {
+		s.logger.Error().Err(err).Msg("failed to commit transaction")
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Set sender name for UI
+	senderName := "Svetu Marketplace"
+	message.SenderName = &senderName
+
+	s.logger.Info().
+		Int64("message_id", message.ID).
+		Int64("chat_id", chat.ID).
+		Int64("receiver_id", req.ReceiverID).
+		Msg("system message sent successfully")
+
+	// Broadcast through WebSocket if hub is available
+	if s.hub != nil {
+		s.hub.BroadcastNewMessage(chat.ID, message)
+		s.logger.Debug().
+			Int64("message_id", message.ID).
+			Int64("chat_id", chat.ID).
+			Msg("system message broadcasted via WebSocket")
 	}
 
 	return message, nil

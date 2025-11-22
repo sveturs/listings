@@ -34,12 +34,12 @@ type ChatRepository interface {
 
 // ChatWebSocketHandler handles WebSocket connections for chat
 type ChatWebSocketHandler struct {
-	hub              *ws.ChatHub
-	authService      *authservice.AuthService
-	chatRepo         ChatRepository
-	securityMW       *ws.SecurityMiddleware
-	logger           zerolog.Logger
-	startTime        time.Time
+	hub         *ws.ChatHub
+	authService *authservice.AuthService
+	chatRepo    ChatRepository
+	securityMW  *ws.SecurityMiddleware
+	logger      zerolog.Logger
+	startTime   time.Time
 }
 
 // NewChatWebSocketHandler creates a new chat WebSocket handler
@@ -453,13 +453,13 @@ func (h *ChatWebSocketHandler) HealthCheck(c *fiber.Ctx) error {
 	uptime := time.Since(h.startTime)
 
 	return c.JSON(fiber.Map{
-		"status": "ok",
-		"service": "chat-websocket",
+		"status":         "ok",
+		"service":        "chat-websocket",
 		"uptime_seconds": int64(uptime.Seconds()),
-		"uptime_human": uptime.String(),
-		"metrics": stats,
+		"uptime_human":   uptime.String(),
+		"metrics":        stats,
 		"config": fiber.Map{
-			"max_message_size": MaxMessageSize,
+			"max_message_size":      MaxMessageSize,
 			"rate_limit_per_minute": 60,
 		},
 	})

@@ -538,11 +538,11 @@ func TestValidateAttributeValues_Success(t *testing.T) {
 			AttributeID: 1,
 			IsEnabled:   true,
 			Attribute: &domain.Attribute{
-				ID:               1,
-				Code:             "text_attr",
-				AttributeType:    domain.AttributeTypeText,
-				ValidationRules:  map[string]interface{}{},
-				Options:          []domain.AttributeOption{},
+				ID:              1,
+				Code:            "text_attr",
+				AttributeType:   domain.AttributeTypeText,
+				ValidationRules: map[string]interface{}{},
+				Options:         []domain.AttributeOption{},
 			},
 		},
 		{
@@ -551,11 +551,11 @@ func TestValidateAttributeValues_Success(t *testing.T) {
 			AttributeID: 2,
 			IsEnabled:   true,
 			Attribute: &domain.Attribute{
-				ID:               2,
-				Code:             "number_attr",
-				AttributeType:    domain.AttributeTypeNumber,
-				ValidationRules:  map[string]interface{}{},
-				Options:          []domain.AttributeOption{},
+				ID:              2,
+				Code:            "number_attr",
+				AttributeType:   domain.AttributeTypeNumber,
+				ValidationRules: map[string]interface{}{},
+				Options:         []domain.AttributeOption{},
 			},
 		},
 	}
@@ -663,11 +663,11 @@ func TestSetListingAttributes_Success(t *testing.T) {
 	}
 
 	attr := &domain.Attribute{
-		ID:               1,
-		Code:             "test_attr",
-		AttributeType:    domain.AttributeTypeText,
-		ValidationRules:  map[string]interface{}{},
-		Options:          []domain.AttributeOption{},
+		ID:              1,
+		Code:            "test_attr",
+		AttributeType:   domain.AttributeTypeText,
+		ValidationRules: map[string]interface{}{},
+		Options:         []domain.AttributeOption{},
 	}
 
 	// Mock: Get attribute for validation (cache miss)

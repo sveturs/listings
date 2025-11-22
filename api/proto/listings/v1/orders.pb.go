@@ -485,9 +485,11 @@ type Order struct {
 	DeliveredAt *timestamppb.Timestamp `protobuf:"bytes,28,opt,name=delivered_at,json=deliveredAt,proto3,oneof" json:"delivered_at,omitempty"`
 	CancelledAt *timestamppb.Timestamp `protobuf:"bytes,29,opt,name=cancelled_at,json=cancelledAt,proto3,oneof" json:"cancelled_at,omitempty"`
 	// Relations (loaded on demand)
-	Items         []*OrderItem `protobuf:"bytes,30,rep,name=items,proto3" json:"items,omitempty"` // Order line items
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Items []*OrderItem `protobuf:"bytes,30,rep,name=items,proto3" json:"items,omitempty"` // Order line items
+	// Storefront info (for display)
+	StorefrontName *string `protobuf:"bytes,31,opt,name=storefront_name,json=storefrontName,proto3,oneof" json:"storefront_name,omitempty"` // Storefront/seller name for frontend display
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Order) Reset() {
@@ -728,6 +730,13 @@ func (x *Order) GetItems() []*OrderItem {
 		return x.Items
 	}
 	return nil
+}
+
+func (x *Order) GetStorefrontName() string {
+	if x != nil && x.StorefrontName != nil {
+		return *x.StorefrontName
+	}
+	return ""
 }
 
 // OrderFinancials contains all money-related fields
@@ -3093,7 +3102,7 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\x0e_listing_imageB\x0f\n" +
 	"\r_variant_dataB\x12\n" +
 	"\x10_available_stockB\x10\n" +
-	"\x0e_current_price\"\xfc\x0e\n" +
+	"\x0e_current_price\"\xbe\x0f\n" +
 	"\x05Order\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\forder_number\x18\x02 \x01(\tR\vorderNumber\x12\x1c\n" +
@@ -3134,7 +3143,8 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"shipped_at\x18\x1b \x01(\v2\x1a.google.protobuf.TimestampH\x0fR\tshippedAt\x88\x01\x01\x12B\n" +
 	"\fdelivered_at\x18\x1c \x01(\v2\x1a.google.protobuf.TimestampH\x10R\vdeliveredAt\x88\x01\x01\x12B\n" +
 	"\fcancelled_at\x18\x1d \x01(\v2\x1a.google.protobuf.TimestampH\x11R\vcancelledAt\x88\x01\x01\x12/\n" +
-	"\x05items\x18\x1e \x03(\v2\x19.listingssvc.v1.OrderItemR\x05itemsB\n" +
+	"\x05items\x18\x1e \x03(\v2\x19.listingssvc.v1.OrderItemR\x05items\x12,\n" +
+	"\x0fstorefront_name\x18\x1f \x01(\tH\x12R\x0estorefrontName\x88\x01\x01B\n" +
 	"\n" +
 	"\b_user_idB\x11\n" +
 	"\x0f_payment_methodB\x19\n" +
@@ -3153,7 +3163,8 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\r_confirmed_atB\r\n" +
 	"\v_shipped_atB\x0f\n" +
 	"\r_delivered_atB\x0f\n" +
-	"\r_cancelled_at\"\xf7\x01\n" +
+	"\r_cancelled_atB\x12\n" +
+	"\x10_storefront_name\"\xf7\x01\n" +
 	"\x0fOrderFinancials\x12\x1a\n" +
 	"\bsubtotal\x18\x01 \x01(\x01R\bsubtotal\x12\x10\n" +
 	"\x03tax\x18\x02 \x01(\x01R\x03tax\x12#\n" +

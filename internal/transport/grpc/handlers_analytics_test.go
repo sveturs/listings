@@ -450,11 +450,11 @@ func TestValidateListingStatsRequest_InvalidDateRange(t *testing.T) {
 
 func TestMapAnalyticsError_PermissionErrors(t *testing.T) {
 	tests := []struct {
-		name              string
-		err               error
-		operation         string
-		expectedCode      codes.Code
-		expectedContains  string
+		name             string
+		err              error
+		operation        string
+		expectedCode     codes.Code
+		expectedContains string
 	}{
 		{
 			name:             "admin authorization error",
@@ -496,11 +496,11 @@ func TestMapAnalyticsError_PermissionErrors(t *testing.T) {
 
 func TestMapAnalyticsError_ValidationErrors(t *testing.T) {
 	tests := []struct {
-		name              string
-		err               error
-		operation         string
-		expectedCode      codes.Code
-		expectedContains  string
+		name             string
+		err              error
+		operation        string
+		expectedCode     codes.Code
+		expectedContains string
 	}{
 		{
 			name:             "invalid input",
@@ -550,11 +550,11 @@ func TestMapAnalyticsError_NotFoundErrors(t *testing.T) {
 
 func TestMapAnalyticsError_InternalErrors(t *testing.T) {
 	tests := []struct {
-		name              string
-		err               error
-		operation         string
-		expectedCode      codes.Code
-		expectedContains  string
+		name             string
+		err              error
+		operation        string
+		expectedCode     codes.Code
+		expectedContains string
 	}{
 		{
 			name:             "database connection error",
@@ -770,7 +770,7 @@ func TestGetOverviewStats_SuccessWithMockedService(t *testing.T) {
 				Revenue: &listingssvcv1.RevenueStats{
 					TotalRevenue:  15000.00,
 					AvgOrderValue: 150.00,
-					Transactions: int32(100),
+					Transactions:  int32(100),
 				},
 				Orders: &listingssvcv1.OrdersStats{
 					TotalOrders:     int32(100),
@@ -1107,7 +1107,7 @@ func TestGetTrendingStats_HotListings_GrowthCalculation(t *testing.T) {
 	require.Len(t, resp.HotListings, 2)
 
 	// Verify growth rates
-	assert.Greater(t, resp.HotListings[0].OrdersGrowth, float64(4.0)) // Viral spike
+	assert.Greater(t, resp.HotListings[0].OrdersGrowth, float64(4.0))     // Viral spike
 	assert.LessOrEqual(t, resp.HotListings[1].OrdersGrowth, float64(1.1)) // Steady rate
 }
 

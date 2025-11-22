@@ -27,10 +27,10 @@ type ChatAttachment struct {
 	ContentType string         `json:"content_type"`
 
 	// Storage
-	StorageType   string `json:"storage_type"`
-	StorageBucket string `json:"storage_bucket"`
-	FilePath      string `json:"file_path"`
-	PublicURL     string `json:"public_url"`
+	StorageType   string  `json:"storage_type"`
+	StorageBucket string  `json:"storage_bucket"`
+	FilePath      string  `json:"file_path"`
+	PublicURL     string  `json:"public_url"`
 	ThumbnailURL  *string `json:"thumbnail_url,omitempty"`
 
 	// Metadata (JSON object for dimensions, duration, etc.)
@@ -64,9 +64,9 @@ func (a *ChatAttachment) Validate() error {
 
 	// Validate file size limits per type
 	const (
-		maxImageSize    = 10 * 1024 * 1024  // 10MB
-		maxVideoSize    = 50 * 1024 * 1024  // 50MB
-		maxDocumentSize = 20 * 1024 * 1024  // 20MB
+		maxImageSize    = 10 * 1024 * 1024 // 10MB
+		maxVideoSize    = 50 * 1024 * 1024 // 50MB
+		maxDocumentSize = 20 * 1024 * 1024 // 20MB
 	)
 
 	switch a.FileType {

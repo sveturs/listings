@@ -30,10 +30,10 @@ type InventoryService interface {
 
 // CreateReservationRequest contains parameters for creating a reservation
 type CreateReservationRequest struct {
-	ListingID int64
-	VariantID *int64
-	OrderID   int64
-	Quantity  int32
+	ListingID  int64
+	VariantID  *int64
+	OrderID    int64
+	Quantity   int32
 	TTLMinutes int // Optional, defaults to 30
 }
 

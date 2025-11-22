@@ -55,10 +55,10 @@ func (j *JSONB) UnmarshalJSON(data []byte) error {
 // Storefront represents B2C store entity (storefronts table)
 type Storefront struct {
 	// Identification
-	ID     int64  `db:"id" json:"id"`
-	UserID int64  `db:"user_id" json:"user_id"`
-	Slug   string `db:"slug" json:"slug"`
-	Name   string `db:"name" json:"name"`
+	ID          int64   `db:"id" json:"id"`
+	UserID      int64   `db:"user_id" json:"user_id"`
+	Slug        string  `db:"slug" json:"slug"`
+	Name        string  `db:"name" json:"name"`
 	Description *string `db:"description" json:"description,omitempty"`
 
 	// Branding
@@ -72,16 +72,16 @@ type Storefront struct {
 	Website *string `db:"website" json:"website,omitempty"`
 
 	// Location
-	Address           *string  `db:"address" json:"address,omitempty"`
-	City              *string  `db:"city" json:"city,omitempty"`
-	PostalCode        *string  `db:"postal_code" json:"postal_code,omitempty"`
-	Country           *string  `db:"country" json:"country,omitempty"`
-	Latitude          *float64 `db:"latitude" json:"latitude,omitempty"`
-	Longitude         *float64 `db:"longitude" json:"longitude,omitempty"`
-	FormattedAddress  *string  `db:"formatted_address" json:"formatted_address,omitempty"`
-	GeoStrategy       string   `db:"geo_strategy" json:"geo_strategy"`
-	DefaultPrivacyLevel string `db:"default_privacy_level" json:"default_privacy_level"`
-	AddressVerified   bool     `db:"address_verified" json:"address_verified"`
+	Address             *string  `db:"address" json:"address,omitempty"`
+	City                *string  `db:"city" json:"city,omitempty"`
+	PostalCode          *string  `db:"postal_code" json:"postal_code,omitempty"`
+	Country             *string  `db:"country" json:"country,omitempty"`
+	Latitude            *float64 `db:"latitude" json:"latitude,omitempty"`
+	Longitude           *float64 `db:"longitude" json:"longitude,omitempty"`
+	FormattedAddress    *string  `db:"formatted_address" json:"formatted_address,omitempty"`
+	GeoStrategy         string   `db:"geo_strategy" json:"geo_strategy"`
+	DefaultPrivacyLevel string   `db:"default_privacy_level" json:"default_privacy_level"`
+	AddressVerified     bool     `db:"address_verified" json:"address_verified"`
 
 	// Settings
 	Settings JSONB `db:"settings" json:"settings,omitempty"`
@@ -98,11 +98,11 @@ type Storefront struct {
 	ViewsCount       int32      `db:"views_count" json:"views_count"`
 
 	// Subscription (Monetization)
-	SubscriptionPlan       string     `db:"subscription_plan" json:"subscription_plan"`
-	SubscriptionExpiresAt  *time.Time `db:"subscription_expires_at" json:"subscription_expires_at,omitempty"`
-	CommissionRate         float64    `db:"commission_rate" json:"commission_rate"`
-	SubscriptionID         *int64     `db:"subscription_id" json:"subscription_id,omitempty"`
-	IsSubscriptionActive   bool       `db:"is_subscription_active" json:"is_subscription_active"`
+	SubscriptionPlan      string     `db:"subscription_plan" json:"subscription_plan"`
+	SubscriptionExpiresAt *time.Time `db:"subscription_expires_at" json:"subscription_expires_at,omitempty"`
+	CommissionRate        float64    `db:"commission_rate" json:"commission_rate"`
+	SubscriptionID        *int64     `db:"subscription_id" json:"subscription_id,omitempty"`
+	IsSubscriptionActive  bool       `db:"is_subscription_active" json:"is_subscription_active"`
 
 	// AI and Killer Features
 	AIAgentEnabled      bool  `db:"ai_agent_enabled" json:"ai_agent_enabled"`
@@ -119,9 +119,9 @@ type Storefront struct {
 	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at,omitempty"` // Soft delete support
 
 	// Related entities (loaded separately)
-	Staff           []StorefrontStaff       `db:"-" json:"staff,omitempty"`
-	Hours           []StorefrontHours       `db:"-" json:"hours,omitempty"`
-	PaymentMethods  []PaymentMethod         `db:"-" json:"payment_methods,omitempty"`
+	Staff           []StorefrontStaff          `db:"-" json:"staff,omitempty"`
+	Hours           []StorefrontHours          `db:"-" json:"hours,omitempty"`
+	PaymentMethods  []PaymentMethod            `db:"-" json:"payment_methods,omitempty"`
 	DeliveryOptions []StorefrontDeliveryOption `db:"-" json:"delivery_options,omitempty"`
 }
 
@@ -186,28 +186,28 @@ type PaymentMethod struct {
 
 // StorefrontDeliveryOption represents delivery option (storefront_delivery_options table)
 type StorefrontDeliveryOption struct {
-	ID                int64      `db:"id" json:"id"`
-	StorefrontID      int64      `db:"storefront_id" json:"storefront_id"`
-	Name              string     `db:"name" json:"name"`
-	Description       *string    `db:"description" json:"description,omitempty"`
-	BasePrice         float64    `db:"base_price" json:"base_price"`
-	PricePerKm        float64    `db:"price_per_km" json:"price_per_km"`
-	PricePerKg        float64    `db:"price_per_kg" json:"price_per_kg"`
-	FreeAboveAmount   *float64   `db:"free_above_amount" json:"free_above_amount,omitempty"`
-	MinOrderAmount    *float64   `db:"min_order_amount" json:"min_order_amount,omitempty"`
-	MaxWeightKg       *float64   `db:"max_weight_kg" json:"max_weight_kg,omitempty"`
-	MaxDistanceKm     *float64   `db:"max_distance_km" json:"max_distance_km,omitempty"`
-	EstimatedDaysMin  int32      `db:"estimated_days_min" json:"estimated_days_min"`
-	EstimatedDaysMax  int32      `db:"estimated_days_max" json:"estimated_days_max"`
-	Zones             JSONB      `db:"zones" json:"zones,omitempty"`
-	AvailableDays     JSONB      `db:"available_days" json:"available_days,omitempty"`
-	CutoffTime        *string    `db:"cutoff_time" json:"cutoff_time,omitempty"`
-	Provider          *string    `db:"provider" json:"provider,omitempty"`
-	ProviderConfig    JSONB      `db:"provider_config" json:"provider_config,omitempty"`
-	IsActive          bool       `db:"is_active" json:"is_active"`
-	DisplayOrder      int32      `db:"display_order" json:"display_order"`
-	CreatedAt         time.Time  `db:"created_at" json:"created_at"`
-	UpdatedAt         time.Time  `db:"updated_at" json:"updated_at"`
+	ID               int64     `db:"id" json:"id"`
+	StorefrontID     int64     `db:"storefront_id" json:"storefront_id"`
+	Name             string    `db:"name" json:"name"`
+	Description      *string   `db:"description" json:"description,omitempty"`
+	BasePrice        float64   `db:"base_price" json:"base_price"`
+	PricePerKm       float64   `db:"price_per_km" json:"price_per_km"`
+	PricePerKg       float64   `db:"price_per_kg" json:"price_per_kg"`
+	FreeAboveAmount  *float64  `db:"free_above_amount" json:"free_above_amount,omitempty"`
+	MinOrderAmount   *float64  `db:"min_order_amount" json:"min_order_amount,omitempty"`
+	MaxWeightKg      *float64  `db:"max_weight_kg" json:"max_weight_kg,omitempty"`
+	MaxDistanceKm    *float64  `db:"max_distance_km" json:"max_distance_km,omitempty"`
+	EstimatedDaysMin int32     `db:"estimated_days_min" json:"estimated_days_min"`
+	EstimatedDaysMax int32     `db:"estimated_days_max" json:"estimated_days_max"`
+	Zones            JSONB     `db:"zones" json:"zones,omitempty"`
+	AvailableDays    JSONB     `db:"available_days" json:"available_days,omitempty"`
+	CutoffTime       *string   `db:"cutoff_time" json:"cutoff_time,omitempty"`
+	Provider         *string   `db:"provider" json:"provider,omitempty"`
+	ProviderConfig   JSONB     `db:"provider_config" json:"provider_config,omitempty"`
+	IsActive         bool      `db:"is_active" json:"is_active"`
+	DisplayOrder     int32     `db:"display_order" json:"display_order"`
+	CreatedAt        time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt        time.Time `db:"updated_at" json:"updated_at"`
 }
 
 // StorefrontUpdate represents fields that can be updated
@@ -243,27 +243,27 @@ type StaffUpdate struct {
 
 // ListStorefrontsFilter represents filter parameters for listing storefronts
 type ListStorefrontsFilter struct {
-	UserID             *int64   `json:"user_id,omitempty"`
-	IsActive           *bool    `json:"is_active,omitempty"`
-	IsVerified         *bool    `json:"is_verified,omitempty"`
-	City               *string  `json:"city,omitempty"`
-	Country            *string  `json:"country,omitempty"`
-	Latitude           *float64 `json:"latitude,omitempty"`
-	Longitude          *float64 `json:"longitude,omitempty"`
-	RadiusKm           *float64 `json:"radius_km,omitempty"`
-	MinRating          *float64 `json:"min_rating,omitempty"`
-	SubscriptionPlans  []string `json:"subscription_plans,omitempty"`
-	PaymentMethods     []string `json:"payment_methods,omitempty"`
-	DeliveryProviders  []string `json:"delivery_providers,omitempty"`
-	SupportsCOD        *bool    `json:"supports_cod,omitempty"`
-	HasAIAgent         *bool    `json:"has_ai_agent,omitempty"`
-	HasLiveShopping    *bool    `json:"has_live_shopping,omitempty"`
-	HasGroupBuying     *bool    `json:"has_group_buying,omitempty"`
-	Search             *string  `json:"search,omitempty"`
-	SortBy             string   `json:"sort_by"`
-	SortOrder          string   `json:"sort_order"`
-	Page               int32    `json:"page"`
-	Limit              int32    `json:"limit"`
+	UserID            *int64   `json:"user_id,omitempty"`
+	IsActive          *bool    `json:"is_active,omitempty"`
+	IsVerified        *bool    `json:"is_verified,omitempty"`
+	City              *string  `json:"city,omitempty"`
+	Country           *string  `json:"country,omitempty"`
+	Latitude          *float64 `json:"latitude,omitempty"`
+	Longitude         *float64 `json:"longitude,omitempty"`
+	RadiusKm          *float64 `json:"radius_km,omitempty"`
+	MinRating         *float64 `json:"min_rating,omitempty"`
+	SubscriptionPlans []string `json:"subscription_plans,omitempty"`
+	PaymentMethods    []string `json:"payment_methods,omitempty"`
+	DeliveryProviders []string `json:"delivery_providers,omitempty"`
+	SupportsCOD       *bool    `json:"supports_cod,omitempty"`
+	HasAIAgent        *bool    `json:"has_ai_agent,omitempty"`
+	HasLiveShopping   *bool    `json:"has_live_shopping,omitempty"`
+	HasGroupBuying    *bool    `json:"has_group_buying,omitempty"`
+	Search            *string  `json:"search,omitempty"`
+	SortBy            string   `json:"sort_by"`
+	SortOrder         string   `json:"sort_order"`
+	Page              int32    `json:"page"`
+	Limit             int32    `json:"limit"`
 }
 
 // MapBounds represents geographical bounds for map queries
@@ -276,35 +276,35 @@ type MapBounds struct {
 
 // StorefrontMapData represents minimal data for map display
 type StorefrontMapData struct {
-	ID              int64   `db:"id" json:"id"`
-	Slug            string  `db:"slug" json:"slug"`
-	Name            string  `db:"name" json:"name"`
-	Latitude        float64 `db:"latitude" json:"latitude"`
-	Longitude       float64 `db:"longitude" json:"longitude"`
-	Rating          float64 `db:"rating" json:"rating"`
-	LogoURL         *string `db:"logo_url" json:"logo_url,omitempty"`
-	Address         *string `db:"address" json:"address,omitempty"`
-	Phone           *string `db:"phone" json:"phone,omitempty"`
-	WorkingNow      bool    `db:"working_now" json:"working_now"`
-	ProductsCount   int32   `db:"products_count" json:"products_count"`
-	SupportsCOD     bool    `db:"supports_cod" json:"supports_cod"`
-	HasDelivery     bool    `db:"has_delivery" json:"has_delivery"`
-	HasSelfPickup   bool    `db:"has_self_pickup" json:"has_self_pickup"`
-	AcceptsCards    bool    `db:"accepts_cards" json:"accepts_cards"`
+	ID            int64   `db:"id" json:"id"`
+	Slug          string  `db:"slug" json:"slug"`
+	Name          string  `db:"name" json:"name"`
+	Latitude      float64 `db:"latitude" json:"latitude"`
+	Longitude     float64 `db:"longitude" json:"longitude"`
+	Rating        float64 `db:"rating" json:"rating"`
+	LogoURL       *string `db:"logo_url" json:"logo_url,omitempty"`
+	Address       *string `db:"address" json:"address,omitempty"`
+	Phone         *string `db:"phone" json:"phone,omitempty"`
+	WorkingNow    bool    `db:"working_now" json:"working_now"`
+	ProductsCount int32   `db:"products_count" json:"products_count"`
+	SupportsCOD   bool    `db:"supports_cod" json:"supports_cod"`
+	HasDelivery   bool    `db:"has_delivery" json:"has_delivery"`
+	HasSelfPickup bool    `db:"has_self_pickup" json:"has_self_pickup"`
+	AcceptsCards  bool    `db:"accepts_cards" json:"accepts_cards"`
 }
 
 // StorefrontDashboardStats represents storefront dashboard statistics
 type StorefrontDashboardStats struct {
-	TotalProducts      int32   `json:"total_products"`
-	ActiveProducts     int32   `json:"active_products"`
-	OrdersCount        int32   `json:"orders_count"`
-	Revenue            float64 `json:"revenue"`
-	AvgOrderValue      float64 `json:"avg_order_value"`
-	ViewsCount         int32   `json:"views_count"`
-	UniqueVisitors     int32   `json:"unique_visitors"`
-	ConversionRate     float64 `json:"conversion_rate"`
-	PendingOrders      int32   `json:"pending_orders"`
-	LowStockProducts   int32   `json:"low_stock_products"`
+	TotalProducts    int32   `json:"total_products"`
+	ActiveProducts   int32   `json:"active_products"`
+	OrdersCount      int32   `json:"orders_count"`
+	Revenue          float64 `json:"revenue"`
+	AvgOrderValue    float64 `json:"avg_order_value"`
+	ViewsCount       int32   `json:"views_count"`
+	UniqueVisitors   int32   `json:"unique_visitors"`
+	ConversionRate   float64 `json:"conversion_rate"`
+	PendingOrders    int32   `json:"pending_orders"`
+	LowStockProducts int32   `json:"low_stock_products"`
 }
 
 // Includes represents which related entities to include

@@ -60,11 +60,11 @@ type ListingStats struct {
 	InquiriesCount int64 `json:"inquiries_count" db:"inquiries_count"`
 
 	// Conversion & revenue metrics
-	OrdersCount      int64   `json:"orders_count" db:"orders_count"`
-	TotalRevenue     float64 `json:"total_revenue" db:"total_revenue"`
-	ConversionRate   float64 `json:"conversion_rate" db:"-"`       // (orders / views) * 100
-	FavoritesRate    float64 `json:"favorites_rate" db:"-"`        // (favorites / views) * 100
-	AverageOrderValue float64 `json:"average_order_value" db:"-"`  // total_revenue / orders_count
+	OrdersCount       int64   `json:"orders_count" db:"orders_count"`
+	TotalRevenue      float64 `json:"total_revenue" db:"total_revenue"`
+	ConversionRate    float64 `json:"conversion_rate" db:"-"`     // (orders / views) * 100
+	FavoritesRate     float64 `json:"favorites_rate" db:"-"`      // (favorites / views) * 100
+	AverageOrderValue float64 `json:"average_order_value" db:"-"` // total_revenue / orders_count
 
 	// Engagement tracking
 	FirstViewedAt   *time.Time `json:"first_viewed_at,omitempty" db:"first_viewed_at"`
@@ -165,13 +165,13 @@ func (filter *GetOverviewStatsFilter) Validate() error {
 // GetListingStatsFilter represents filters for listing statistics queries
 type GetListingStatsFilter struct {
 	// Identification (one required)
-	ListingID *int64  `json:"listing_id,omitempty"`
+	ListingID   *int64  `json:"listing_id,omitempty"`
 	ListingUUID *string `json:"listing_uuid,omitempty"`
 
 	// Time range (optional, defaults to all-time)
-	StartDate *time.Time `json:"start_date,omitempty"`
-	EndDate   *time.Time `json:"end_date,omitempty"`
-	Granularity string    `json:"granularity" validate:"omitempty,oneof=hourly daily"` // For time series
+	StartDate   *time.Time `json:"start_date,omitempty"`
+	EndDate     *time.Time `json:"end_date,omitempty"`
+	Granularity string     `json:"granularity" validate:"omitempty,oneof=hourly daily"` // For time series
 
 	// Include time series data
 	IncludeTimeSeries bool  `json:"include_time_series"`
@@ -589,12 +589,12 @@ const (
 
 // TrendingCategory represents a category with growing order volume
 type TrendingCategory struct {
-	CategoryID     int64   `json:"category_id" db:"category_id"`
-	CategoryName   string  `json:"category_name" db:"category_name"`
-	OrderCount30d  int32   `json:"order_count_30d" db:"order_count_30d"`
-	OrderCount7d   int32   `json:"order_count_7d" db:"order_count_7d"`
-	GrowthRate     float64 `json:"growth_rate" db:"growth_rate"`      // Percentage change
-	TrendScore     float64 `json:"trend_score" db:"trend_score"`      // Weighted score
+	CategoryID    int64   `json:"category_id" db:"category_id"`
+	CategoryName  string  `json:"category_name" db:"category_name"`
+	OrderCount30d int32   `json:"order_count_30d" db:"order_count_30d"`
+	OrderCount7d  int32   `json:"order_count_7d" db:"order_count_7d"`
+	GrowthRate    float64 `json:"growth_rate" db:"growth_rate"` // Percentage change
+	TrendScore    float64 `json:"trend_score" db:"trend_score"` // Weighted score
 }
 
 // HotListing represents a listing with spiking order activity
@@ -603,7 +603,7 @@ type HotListing struct {
 	Title           string  `json:"title" db:"title"`
 	Orders24h       int64   `json:"orders_24h" db:"orders_24h"`
 	Orders7d        int64   `json:"orders_7d" db:"orders_7d"`
-	OrdersGrowth    float64 `json:"orders_growth" db:"orders_growth"`  // Spike ratio
+	OrdersGrowth    float64 `json:"orders_growth" db:"orders_growth"` // Spike ratio
 	QuantitySold24h int64   `json:"quantity_sold_24h" db:"quantity_sold_24h"`
 	Price           float64 `json:"price" db:"price"`
 }

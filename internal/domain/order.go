@@ -16,14 +16,14 @@ type OrderStatus string
 
 const (
 	OrderStatusUnspecified OrderStatus = "unspecified"
-	OrderStatusPending     OrderStatus = "pending"     // Order created, awaiting payment
-	OrderStatusConfirmed   OrderStatus = "confirmed"   // Payment successful, ready for processing
-	OrderStatusProcessing  OrderStatus = "processing"  // Order being prepared
-	OrderStatusShipped     OrderStatus = "shipped"     // Order shipped to customer
-	OrderStatusDelivered   OrderStatus = "delivered"   // Order delivered successfully
-	OrderStatusCancelled   OrderStatus = "cancelled"   // Order cancelled (by user or admin)
-	OrderStatusRefunded    OrderStatus = "refunded"    // Payment refunded
-	OrderStatusFailed      OrderStatus = "failed"      // Order processing failed
+	OrderStatusPending     OrderStatus = "pending"    // Order created, awaiting payment
+	OrderStatusConfirmed   OrderStatus = "confirmed"  // Payment successful, ready for processing
+	OrderStatusProcessing  OrderStatus = "processing" // Order being prepared
+	OrderStatusShipped     OrderStatus = "shipped"    // Order shipped to customer
+	OrderStatusDelivered   OrderStatus = "delivered"  // Order delivered successfully
+	OrderStatusCancelled   OrderStatus = "cancelled"  // Order cancelled (by user or admin)
+	OrderStatusRefunded    OrderStatus = "refunded"   // Payment refunded
+	OrderStatusFailed      OrderStatus = "failed"     // Order processing failed
 )
 
 // PaymentStatus represents the current state of payment
@@ -31,11 +31,11 @@ type PaymentStatus string
 
 const (
 	PaymentStatusUnspecified PaymentStatus = "unspecified"
-	PaymentStatusPending     PaymentStatus = "pending"     // Payment initiated, awaiting confirmation
-	PaymentStatusProcessing  PaymentStatus = "processing"  // Payment being processed
-	PaymentStatusCompleted   PaymentStatus = "completed"   // Payment successful
-	PaymentStatusFailed      PaymentStatus = "failed"      // Payment failed
-	PaymentStatusRefunded    PaymentStatus = "refunded"    // Payment refunded to customer
+	PaymentStatusPending     PaymentStatus = "pending"    // Payment initiated, awaiting confirmation
+	PaymentStatusProcessing  PaymentStatus = "processing" // Payment being processed
+	PaymentStatusCompleted   PaymentStatus = "completed"  // Payment successful
+	PaymentStatusFailed      PaymentStatus = "failed"     // Payment failed
+	PaymentStatusRefunded    PaymentStatus = "refunded"   // Payment refunded to customer
 )
 
 // Address represents a flexible address structure stored as JSONB
@@ -65,10 +65,11 @@ type OrderFinancials struct {
 // Order represents a customer order
 type Order struct {
 	// Identification
-	ID           int64  `json:"id" db:"id"`
-	OrderNumber  string `json:"order_number" db:"order_number"`     // Unique order number (e.g., ORD-2025-001234)
-	UserID       *int64 `json:"user_id,omitempty" db:"user_id"`     // NULL for guest orders
-	StorefrontID int64  `json:"storefront_id" db:"storefront_id"`   // Storefront that fulfills the order
+	ID             int64   `json:"id" db:"id"`
+	OrderNumber    string  `json:"order_number" db:"order_number"`     // Unique order number (e.g., ORD-2025-001234)
+	UserID         *int64  `json:"user_id,omitempty" db:"user_id"`     // NULL for guest orders
+	StorefrontID   int64   `json:"storefront_id" db:"storefront_id"`   // Storefront that fulfills the order
+	StorefrontName *string `json:"storefront_name,omitempty" db:"-"`   // Storefront name (joined, not in DB)
 
 	// Order status
 	Status OrderStatus `json:"status" db:"status"` // Order lifecycle status
@@ -84,18 +85,18 @@ type Order struct {
 	Currency     string  `json:"currency" db:"currency"`
 
 	// Payment information
-	PaymentMethod        *string        `json:"payment_method,omitempty" db:"payment_method"`               // cash, card, bank_transfer, paypal, etc.
-	PaymentStatus        PaymentStatus  `json:"payment_status" db:"payment_status"`                         // Payment processing status
-	PaymentTransactionID *string        `json:"payment_transaction_id,omitempty" db:"payment_transaction_id"` // External payment ID
-	PaymentCompletedAt   *time.Time     `json:"payment_completed_at,omitempty" db:"payment_completed_at"`
+	PaymentMethod        *string       `json:"payment_method,omitempty" db:"payment_method"`                 // cash, card, bank_transfer, paypal, etc.
+	PaymentStatus        PaymentStatus `json:"payment_status" db:"payment_status"`                           // Payment processing status
+	PaymentTransactionID *string       `json:"payment_transaction_id,omitempty" db:"payment_transaction_id"` // External payment ID
+	PaymentCompletedAt   *time.Time    `json:"payment_completed_at,omitempty" db:"payment_completed_at"`
 
 	// Shipping information
-	ShippingAddress  map[string]interface{} `json:"shipping_address,omitempty" db:"shipping_address"` // JSONB
-	BillingAddress   map[string]interface{} `json:"billing_address,omitempty" db:"billing_address"`   // JSONB
-	ShippingMethod   *string                `json:"shipping_method,omitempty" db:"shipping_method"`   // standard, express, overnight
+	ShippingAddress  map[string]interface{} `json:"shipping_address,omitempty" db:"shipping_address"`   // JSONB
+	BillingAddress   map[string]interface{} `json:"billing_address,omitempty" db:"billing_address"`     // JSONB
+	ShippingMethod   *string                `json:"shipping_method,omitempty" db:"shipping_method"`     // standard, express, overnight
 	ShippingProvider *string                `json:"shipping_provider,omitempty" db:"shipping_provider"` // Post Express, AKS, DHL, etc.
-	TrackingNumber   *string                `json:"tracking_number,omitempty" db:"tracking_number"`   // Shipment tracking number
-	ShipmentID       *int64                 `json:"shipment_id,omitempty" db:"shipment_id"`           // FK to Delivery Service shipment
+	TrackingNumber   *string                `json:"tracking_number,omitempty" db:"tracking_number"`     // Shipment tracking number
+	ShipmentID       *int64                 `json:"shipment_id,omitempty" db:"shipment_id"`             // FK to Delivery Service shipment
 
 	// Escrow (platform holds funds)
 	EscrowReleaseDate *time.Time `json:"escrow_release_date,omitempty" db:"escrow_release_date"` // When funds released to seller
@@ -107,8 +108,8 @@ type Order struct {
 	CustomerPhone *string `json:"customer_phone,omitempty" db:"customer_phone"`
 
 	// Notes
-	CustomerNotes *string `json:"customer_notes,omitempty" db:"notes"`         // Customer instructions
-	AdminNotes    *string `json:"admin_notes,omitempty" db:"admin_notes"`      // Internal admin notes
+	CustomerNotes *string `json:"customer_notes,omitempty" db:"notes"`    // Customer instructions
+	AdminNotes    *string `json:"admin_notes,omitempty" db:"admin_notes"` // Internal admin notes
 
 	// Timestamps
 	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
@@ -126,21 +127,21 @@ type Order struct {
 type OrderItem struct {
 	ID        int64  `json:"id" db:"id"`
 	OrderID   int64  `json:"order_id" db:"order_id"`
-	ListingID int64  `json:"listing_id" db:"listing_id"` // FK to listings or products
+	ListingID int64  `json:"listing_id" db:"listing_id"`           // FK to listings or products
 	VariantID *int64 `json:"variant_id,omitempty" db:"variant_id"` // FK to listing_variants or product_variants
 
 	// Snapshot data (immutable after order creation)
-	ListingName string                 `json:"listing_name" db:"listing_name"`         // Product name at purchase time
-	SKU         *string                `json:"sku,omitempty" db:"sku"`                 // SKU at purchase time
+	ListingName string                 `json:"listing_name" db:"listing_name"`           // Product name at purchase time
+	SKU         *string                `json:"sku,omitempty" db:"sku"`                   // SKU at purchase time
 	VariantData map[string]interface{} `json:"variant_data,omitempty" db:"variant_data"` // Variant attributes snapshot
-	Attributes  map[string]interface{} `json:"attributes,omitempty" db:"attributes"`   // Product attributes snapshot
+	Attributes  map[string]interface{} `json:"attributes,omitempty" db:"attributes"`     // Product attributes snapshot
 
 	// Quantity and pricing
-	Quantity  int32   `json:"quantity" db:"quantity"`   // Quantity ordered
-	UnitPrice float64 `json:"unit_price" db:"price"`    // Price per item
-	Subtotal  float64 `json:"subtotal" db:"subtotal"`   // quantity * unit_price
-	Discount  float64 `json:"discount" db:"discount"`   // Item-level discount
-	Total     float64 `json:"total" db:"total"`         // subtotal - discount
+	Quantity  int32   `json:"quantity" db:"quantity"` // Quantity ordered
+	UnitPrice float64 `json:"unit_price" db:"price"`  // Price per item
+	Subtotal  float64 `json:"subtotal" db:"subtotal"` // quantity * unit_price
+	Discount  float64 `json:"discount" db:"discount"` // Item-level discount
+	Total     float64 `json:"total" db:"total"`       // subtotal - discount
 
 	// Product snapshot
 	ImageURL *string `json:"image_url,omitempty" db:"image_url"` // Primary image at purchase time
@@ -393,13 +394,13 @@ func OrderFromProto(pb *pb.Order) *Order {
 	}
 
 	order := &Order{
-		ID:           pb.Id,
-		OrderNumber:  pb.OrderNumber,
-		StorefrontID: pb.StorefrontId,
-		Status:       OrderStatusFromProto(pb.Status),
+		ID:            pb.Id,
+		OrderNumber:   pb.OrderNumber,
+		StorefrontID:  pb.StorefrontId,
+		Status:        OrderStatusFromProto(pb.Status),
 		PaymentStatus: PaymentStatusFromProto(pb.PaymentStatus),
-		EscrowDays:   pb.EscrowDays,
-		Currency:     pb.Financials.Currency,
+		EscrowDays:    pb.EscrowDays,
+		Currency:      pb.Financials.Currency,
 	}
 
 	if pb.UserId != nil {

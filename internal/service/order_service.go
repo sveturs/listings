@@ -29,52 +29,56 @@ type OrderService interface {
 	// Internal helpers (called by Payment Service webhooks)
 	ConfirmOrderPayment(ctx context.Context, orderID int64, transactionID string) error
 	ProcessRefund(ctx context.Context, orderID int64) error
+
+	// Configuration
+	SetChatService(chatService ChatService)
 }
 
 // OrderItemInput represents a single item for direct checkout
 type OrderItemInput struct {
-	ProductID  int64  // Required - product/listing ID
-	VariantID  *int64 // Optional - variant ID
-	Quantity   int    // Required - quantity to order
+	ProductID int64  // Required - product/listing ID
+	VariantID *int64 // Optional - variant ID
+	Quantity  int    // Required - quantity to order
 }
 
 // CreateOrderRequest contains parameters for creating an order
 type CreateOrderRequest struct {
 	// Cart-based checkout (existing flow)
-	CartID          int64                  // Cart to convert to order (0 if using Items)
+	CartID int64 // Cart to convert to order (0 if using Items)
 
 	// Direct checkout (new flow)
-	Items           []OrderItemInput       // Alternative to CartID for direct checkout
-	StorefrontID    int64                  // Required for direct checkout (not needed for cart-based)
+	Items        []OrderItemInput // Alternative to CartID for direct checkout
+	StorefrontID int64            // Required for direct checkout (not needed for cart-based)
 
 	// Common fields
-	UserID          *int64                 // NULL for guest orders
-	ShippingAddress map[string]interface{} // Required JSONB
-	BillingAddress  map[string]interface{} // Optional (defaults to shipping)
-	ShippingCost    float64                // Calculated shipping cost
-	DiscountCode    *string                // Optional discount code
-	DiscountAmount  float64                // Discount amount (if applicable)
-	PaymentMethod   string                 // payment method (card, cash, etc.)
-	CustomerNotes   *string                // Optional customer notes
+	UserID             *int64                 // NULL for guest orders
+	ShippingAddress    map[string]interface{} // Required JSONB
+	BillingAddress     map[string]interface{} // Optional (defaults to shipping)
+	ShippingCost       float64                // Calculated shipping cost
+	DiscountCode       *string                // Optional discount code
+	DiscountAmount     float64                // Discount amount (if applicable)
+	PaymentMethod      string                 // payment method (card, cash, etc.)
+	CustomerNotes      *string                // Optional customer notes
+	AcceptPriceChanges bool                   // If true, skip price validation (for direct checkout)
 }
 
 // ListOrdersRequest contains parameters for listing orders
 type ListOrdersRequest struct {
-	UserID       *int64             // Filter by user
-	StorefrontID *int64             // Filter by storefront
+	UserID       *int64              // Filter by user
+	StorefrontID *int64              // Filter by storefront
 	Status       *domain.OrderStatus // Filter by status
-	Limit        int                // Page size
-	Offset       int                // Page offset
+	Limit        int                 // Page size
+	Offset       int                 // Page offset
 }
 
 // OrderStats contains statistics for orders
 type OrderStats struct {
-	TotalOrders      int64
-	PendingOrders    int64
-	ConfirmedOrders  int64
-	CompletedOrders  int64
-	CancelledOrders  int64
-	TotalRevenue     float64
+	TotalOrders       int64
+	PendingOrders     int64
+	ConfirmedOrders   int64
+	CompletedOrders   int64
+	CancelledOrders   int64
+	TotalRevenue      float64
 	AverageOrderValue float64
 }
 
@@ -87,6 +91,7 @@ type orderService struct {
 	pool            *pgxpool.Pool
 	config          *FinancialConfig
 	logger          zerolog.Logger
+	chatService     ChatService // For sending order notifications
 }
 
 // NewOrderService creates a new order service
@@ -112,6 +117,12 @@ func NewOrderService(
 		config:          config,
 		logger:          logger.With().Str("component", "order_service").Logger(),
 	}
+}
+
+// SetChatService sets the chat service for sending order notifications
+// This allows delayed initialization to avoid circular dependencies
+func (s *orderService) SetChatService(chatService ChatService) {
+	s.chatService = chatService
 }
 
 // CreateOrder creates a new order from a cart OR direct items (ACID transaction)
@@ -184,9 +195,21 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 	}
 
 	// 6. Validate prices (current price matches cart snapshot)
-	priceChanges := s.validatePrices(cart.Items, listings)
-	if len(priceChanges) > 0 {
-		return nil, &ErrPriceChanged{Changes: priceChanges}
+	// Skip price validation for direct checkout when AcceptPriceChanges is true
+	// This is necessary because direct checkout doesn't have price snapshots in cart
+	if !req.AcceptPriceChanges {
+		priceChanges := s.validatePrices(cart.Items, listings)
+		if len(priceChanges) > 0 {
+			return nil, &ErrPriceChanged{Changes: priceChanges}
+		}
+	} else {
+		// For direct checkout with AcceptPriceChanges=true,
+		// update cart item price snapshots to current prices
+		for _, item := range cart.Items {
+			if listing, ok := listings[item.ListingID]; ok {
+				item.PriceSnapshot = listing.Price
+			}
+		}
 	}
 
 	// 7. Build temporary order items for financial calculations
@@ -211,19 +234,19 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 
 	// 10. Create order
 	order := &domain.Order{
-		OrderNumber:  orderNumber,
-		UserID:       req.UserID,
-		StorefrontID: cart.StorefrontID,
-		Status:       domain.OrderStatusPending,
-		PaymentStatus: domain.PaymentStatusPending,
-		Subtotal:     financials.Subtotal,
-		Tax:          financials.Tax,
-		Shipping:     financials.ShippingCost,
-		Discount:     financials.Discount,
-		Total:        financials.Total,
-		Commission:   financials.Commission,
-		SellerAmount: financials.SellerAmount,
-		Currency:     financials.Currency,
+		OrderNumber:     orderNumber,
+		UserID:          req.UserID,
+		StorefrontID:    cart.StorefrontID,
+		Status:          domain.OrderStatusPending,
+		PaymentStatus:   domain.PaymentStatusPending,
+		Subtotal:        financials.Subtotal,
+		Tax:             financials.Tax,
+		Shipping:        financials.ShippingCost,
+		Discount:        financials.Discount,
+		Total:           financials.Total,
+		Commission:      financials.Commission,
+		SellerAmount:    financials.SellerAmount,
+		Currency:        financials.Currency,
 		ShippingAddress: req.ShippingAddress,
 		BillingAddress:  req.BillingAddress,
 		EscrowDays:      s.config.EscrowDays,
@@ -309,6 +332,9 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 		s.logger.Error().Err(err).Msg("failed to reload order")
 		return nil, fmt.Errorf("failed to reload order: %w", err)
 	}
+
+	// Send system notification to storefront owner about new order
+	s.notifyStorefrontOwnerAboutOrder(ctx, order)
 
 	s.logger.Info().Int64("order_id", order.ID).Str("order_number", order.OrderNumber).Msg("order created successfully")
 	return order, nil
@@ -612,4 +638,61 @@ func (s *orderService) createTemporaryCartFromItems(req *CreateOrderRequest) *do
 	}
 
 	return cart
+}
+
+// notifyStorefrontOwnerAboutOrder sends a system message to the storefront owner
+// notifying them about a new order. This is a non-blocking async operation.
+func (s *orderService) notifyStorefrontOwnerAboutOrder(ctx context.Context, order *domain.Order) {
+	if s.chatService == nil {
+		s.logger.Warn().Msg("chat service not configured, skipping order notification")
+		return
+	}
+
+	// Get storefront to find owner
+	storefront, err := s.productsRepo.GetStorefrontByID(ctx, order.StorefrontID, nil)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("storefront_id", order.StorefrontID).Msg("failed to get storefront for notification")
+		return
+	}
+
+	// Build notification message (multilingual - will use buyer's language if available)
+	itemCount := len(order.Items)
+	message := fmt.Sprintf(
+		"🛒 New order #%s!\n\n"+
+			"Items: %d\n"+
+			"Total: %.2f %s\n\n"+
+			"Please prepare the order for shipping.",
+		order.OrderNumber,
+		itemCount,
+		order.Total,
+		order.Currency,
+	)
+
+	// Send system message asynchronously to not block order creation
+	go func() {
+		// Create new context since parent context may be cancelled
+		notifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		req := &SendSystemMessageRequest{
+			ReceiverID:       storefront.UserID,
+			Content:          message,
+			OriginalLanguage: "en", // Default to English, could be improved with user preferences
+		}
+
+		_, err := s.chatService.SendSystemMessage(notifyCtx, req)
+		if err != nil {
+			s.logger.Error().Err(err).
+				Int64("storefront_id", order.StorefrontID).
+				Int64("owner_id", storefront.UserID).
+				Str("order_number", order.OrderNumber).
+				Msg("failed to send order notification to storefront owner")
+		} else {
+			s.logger.Info().
+				Int64("storefront_id", order.StorefrontID).
+				Int64("owner_id", storefront.UserID).
+				Str("order_number", order.OrderNumber).
+				Msg("order notification sent to storefront owner")
+		}
+	}()
 }

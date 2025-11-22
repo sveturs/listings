@@ -122,6 +122,7 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 		"/listingssvc.v1.ListingsService/GetSimilarListings",
 		"/listingssvc.v1.ListingsService/GetProduct",
 		"/listingssvc.v1.ListingsService/GetProductBySKU",
+		"/listingssvc.v1.ListingsService/ListProducts",
 		// Storefront public methods
 		"/listingssvc.v1.ListingsService/GetStorefront",
 		"/listingssvc.v1.ListingsService/GetStorefrontBySlug",
@@ -133,6 +134,15 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 		"/listingssvc.v1.ListingsService/GetPaymentMethods",
 		"/listingssvc.v1.ListingsService/GetDeliveryOptions",
 		"/listingssvc.v1.ListingsService/GetMapData",
+		// Attributes public methods (no auth required for viewing category attributes)
+		"/listingssvc.v1.AttributeService/GetCategoryAttributes",
+		"/listingssvc.v1.AttributeService/GetCategoryVariantAttributes",
+		// Category service public methods
+		"/categoriessvc.v1.CategoryService/GetCategories",
+		"/categoriessvc.v1.CategoryService/GetCategoryBySlug",
+		"/categoriessvc.v1.CategoryService/GetRootCategories",
+		"/categoriessvc.v1.CategoryService/GetCategoryChildren",
+		"/categoriessvc.v1.CategoryService/GetCategoryPath",
 	}
 
 	for _, publicMethod := range publicMethods {
