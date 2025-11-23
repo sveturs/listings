@@ -26,6 +26,12 @@ type OrderService interface {
 	UpdateOrderStatus(ctx context.Context, orderID int64, status domain.OrderStatus) (*domain.Order, error)
 	GetOrderStats(ctx context.Context, userID *int64, storefrontID *int64) (*OrderStats, error)
 
+	// Seller shipment workflow
+	AcceptOrder(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error)
+	CreateOrderShipment(ctx context.Context, req *CreateShipmentRequest) (*CreateShipmentResult, error)
+	MarkOrderShipped(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error)
+	GetOrderTracking(ctx context.Context, orderID int64, userID int64) (*TrackingInfo, error)
+
 	// Internal helpers (called by Payment Service webhooks)
 	ConfirmOrderPayment(ctx context.Context, orderID int64, transactionID string) error
 	ProcessRefund(ctx context.Context, orderID int64) error
@@ -80,6 +86,57 @@ type OrderStats struct {
 	CancelledOrders   int64
 	TotalRevenue      float64
 	AverageOrderValue float64
+}
+
+// CreateShipmentRequest contains parameters for creating a shipment
+type CreateShipmentRequest struct {
+	OrderID        int64
+	SellerID       int64
+	ProviderCode   string      // post_express, bex_express, aks, d_express, city_express
+	PackageInfo    PackageInfo // Package dimensions and weight
+	UseCOD         bool        // Cash on delivery
+	CODAmount      float64     // COD amount (if UseCOD = true)
+	UseInsurance   bool        // Insurance for package
+	InsuranceValue float64     // Declared value for insurance
+}
+
+// PackageInfo contains package dimensions and weight
+type PackageInfo struct {
+	WeightKg    float64 // Weight in kg
+	LengthCm    float64 // Length in cm
+	WidthCm     float64 // Width in cm
+	HeightCm    float64 // Height in cm
+	IsFragile   bool    // Fragile goods flag
+	Description string  // Package contents description
+}
+
+// CreateShipmentResult contains the result of creating a shipment
+type CreateShipmentResult struct {
+	Order             *domain.Order
+	ShipmentID        int64
+	TrackingNumber    string
+	Provider          string
+	Status            string
+	DeliveryCost      float64
+	EstimatedDelivery string // RFC3339 formatted date
+	LabelURL          string // URL to shipping label PDF
+}
+
+// TrackingInfo contains tracking information for an order
+type TrackingInfo struct {
+	TrackingNumber    string
+	Provider          string
+	Status            string
+	EstimatedDelivery string          // RFC3339 formatted date
+	Events            []TrackingEvent // Timeline of events
+}
+
+// TrackingEvent represents a single tracking event
+type TrackingEvent struct {
+	Status      string    // pending, picked_up, in_transit, delivered, etc.
+	Location    string    // Location description
+	Description string    // Event description
+	Timestamp   time.Time // Event time
 }
 
 // orderService implements OrderService
@@ -695,4 +752,359 @@ func (s *orderService) notifyStorefrontOwnerAboutOrder(ctx context.Context, orde
 				Msg("order notification sent to storefront owner")
 		}
 	}()
+}
+
+// ============================================================================
+// SELLER SHIPMENT WORKFLOW METHODS
+// ============================================================================
+
+// AcceptOrder handles seller accepting an order
+// Flow: confirmed -> accepted
+// Validates: order status, seller is storefront owner
+func (s *orderService) AcceptOrder(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error) {
+	s.logger.Info().
+		Int64("order_id", orderID).
+		Int64("seller_id", sellerID).
+		Msg("accepting order")
+
+	// Get order
+	order, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		if err.Error() == "order not found" {
+			return nil, ErrOrderNotFound
+		}
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+
+	// Verify seller is storefront owner
+	storefront, err := s.productsRepo.GetStorefrontByID(ctx, order.StorefrontID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get storefront: %w", err)
+	}
+	if storefront.UserID != sellerID {
+		s.logger.Warn().
+			Int64("order_id", orderID).
+			Int64("seller_id", sellerID).
+			Int64("storefront_owner_id", storefront.UserID).
+			Msg("seller is not storefront owner")
+		return nil, ErrUnauthorized
+	}
+
+	// Check if order can be accepted
+	if !order.CanAccept() {
+		return nil, &ErrOrderInvalidStatus{
+			OrderID:        orderID,
+			CurrentStatus:  string(order.Status),
+			ExpectedStatus: string(domain.OrderStatusConfirmed),
+			Action:         "accept",
+		}
+	}
+
+	// Update order
+	now := time.Now()
+	order.Status = domain.OrderStatusAccepted
+	order.AcceptedAt = &now
+	if sellerNotes != "" {
+		order.SellerNotes = &sellerNotes
+	}
+
+	if err := s.orderRepo.Update(ctx, order); err != nil {
+		return nil, fmt.Errorf("failed to update order: %w", err)
+	}
+
+	// Reload order with items
+	order, err = s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reload order: %w", err)
+	}
+
+	// TODO: Send notification to buyer about order acceptance
+
+	s.logger.Info().Int64("order_id", orderID).Msg("order accepted successfully")
+	return order, nil
+}
+
+// CreateOrderShipment creates shipment via Delivery Service
+// Flow: accepted -> processing
+// Validates: order status, seller is storefront owner, package info
+func (s *orderService) CreateOrderShipment(ctx context.Context, req *CreateShipmentRequest) (*CreateShipmentResult, error) {
+	s.logger.Info().
+		Int64("order_id", req.OrderID).
+		Int64("seller_id", req.SellerID).
+		Str("provider_code", req.ProviderCode).
+		Msg("creating order shipment")
+
+	// Get order
+	order, err := s.orderRepo.GetByID(ctx, req.OrderID)
+	if err != nil {
+		if err.Error() == "order not found" {
+			return nil, ErrOrderNotFound
+		}
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+
+	// Verify seller is storefront owner
+	storefront, err := s.productsRepo.GetStorefrontByID(ctx, order.StorefrontID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get storefront: %w", err)
+	}
+	if storefront.UserID != req.SellerID {
+		s.logger.Warn().
+			Int64("order_id", req.OrderID).
+			Int64("seller_id", req.SellerID).
+			Int64("storefront_owner_id", storefront.UserID).
+			Msg("seller is not storefront owner")
+		return nil, ErrUnauthorized
+	}
+
+	// Check if order can have shipment created
+	if !order.CanCreateShipment() {
+		return nil, &ErrOrderInvalidStatus{
+			OrderID:        req.OrderID,
+			CurrentStatus:  string(order.Status),
+			ExpectedStatus: string(domain.OrderStatusAccepted),
+			Action:         "create shipment",
+		}
+	}
+
+	// TODO: Call Delivery Service gRPC to create shipment
+	// For now, generate mock shipment data
+	shipmentID := time.Now().UnixNano() / 1000000 % 10000000
+	trackingNumber := fmt.Sprintf("TRK%d%06d", time.Now().Year(), shipmentID%1000000)
+	labelURL := fmt.Sprintf("https://delivery.svetu.rs/labels/%s.pdf", trackingNumber)
+	estimatedDelivery := time.Now().Add(72 * time.Hour).Format(time.RFC3339)
+
+	// Update order with shipment info
+	order.Status = domain.OrderStatusProcessing
+	order.TrackingNumber = &trackingNumber
+	order.ShippingProvider = &req.ProviderCode
+	shipmentIDVal := shipmentID
+	order.ShipmentID = &shipmentIDVal
+	order.LabelURL = &labelURL
+
+	if err := s.orderRepo.Update(ctx, order); err != nil {
+		return nil, fmt.Errorf("failed to update order: %w", err)
+	}
+
+	// Reload order with items
+	order, err = s.orderRepo.GetByID(ctx, req.OrderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reload order: %w", err)
+	}
+
+	// TODO: Send notification to buyer about shipment creation
+
+	s.logger.Info().
+		Int64("order_id", req.OrderID).
+		Str("tracking_number", trackingNumber).
+		Msg("order shipment created successfully")
+
+	return &CreateShipmentResult{
+		Order:             order,
+		ShipmentID:        shipmentID,
+		TrackingNumber:    trackingNumber,
+		Provider:          req.ProviderCode,
+		Status:            "label_created",
+		DeliveryCost:      order.Shipping,
+		EstimatedDelivery: estimatedDelivery,
+		LabelURL:          labelURL,
+	}, nil
+}
+
+// MarkOrderShipped marks order as shipped
+// Flow: processing -> shipped
+// Validates: order status, tracking number exists
+func (s *orderService) MarkOrderShipped(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error) {
+	s.logger.Info().
+		Int64("order_id", orderID).
+		Int64("seller_id", sellerID).
+		Msg("marking order as shipped")
+
+	// Get order
+	order, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		if err.Error() == "order not found" {
+			return nil, ErrOrderNotFound
+		}
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+
+	// Verify seller is storefront owner
+	storefront, err := s.productsRepo.GetStorefrontByID(ctx, order.StorefrontID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get storefront: %w", err)
+	}
+	if storefront.UserID != sellerID {
+		s.logger.Warn().
+			Int64("order_id", orderID).
+			Int64("seller_id", sellerID).
+			Int64("storefront_owner_id", storefront.UserID).
+			Msg("seller is not storefront owner")
+		return nil, ErrUnauthorized
+	}
+
+	// Check if order can be marked as shipped
+	if !order.CanMarkShipped() {
+		// Provide more specific error message
+		if order.Status != domain.OrderStatusProcessing {
+			return nil, &ErrOrderInvalidStatus{
+				OrderID:        orderID,
+				CurrentStatus:  string(order.Status),
+				ExpectedStatus: string(domain.OrderStatusProcessing),
+				Action:         "mark shipped",
+			}
+		}
+		if order.TrackingNumber == nil {
+			return nil, &ErrOrderMissingTrackingNumber{OrderID: orderID}
+		}
+	}
+
+	// Update order
+	now := time.Now()
+	order.Status = domain.OrderStatusShipped
+	order.ShippedAt = &now
+	if sellerNotes != "" {
+		if order.SellerNotes != nil {
+			combinedNotes := *order.SellerNotes + "\n" + sellerNotes
+			order.SellerNotes = &combinedNotes
+		} else {
+			order.SellerNotes = &sellerNotes
+		}
+	}
+
+	if err := s.orderRepo.Update(ctx, order); err != nil {
+		return nil, fmt.Errorf("failed to update order: %w", err)
+	}
+
+	// Reload order with items
+	order, err = s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reload order: %w", err)
+	}
+
+	// TODO: Send notification to buyer about shipment dispatch
+
+	s.logger.Info().Int64("order_id", orderID).Msg("order marked as shipped successfully")
+	return order, nil
+}
+
+// GetOrderTracking gets tracking info from Delivery Service
+// Returns: tracking events timeline
+func (s *orderService) GetOrderTracking(ctx context.Context, orderID int64, userID int64) (*TrackingInfo, error) {
+	s.logger.Debug().
+		Int64("order_id", orderID).
+		Int64("user_id", userID).
+		Msg("getting order tracking")
+
+	// Get order
+	order, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		if err.Error() == "order not found" {
+			return nil, ErrOrderNotFound
+		}
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+
+	// Verify user has access (either buyer or seller)
+	hasAccess := false
+	if order.UserID != nil && *order.UserID == userID {
+		hasAccess = true
+	} else {
+		// Check if user is storefront owner
+		storefront, err := s.productsRepo.GetStorefrontByID(ctx, order.StorefrontID, nil)
+		if err == nil && storefront.UserID == userID {
+			hasAccess = true
+		}
+	}
+
+	if !hasAccess {
+		s.logger.Warn().
+			Int64("order_id", orderID).
+			Int64("user_id", userID).
+			Msg("user does not have access to order tracking")
+		return nil, ErrUnauthorized
+	}
+
+	// Check if order has tracking info
+	if order.TrackingNumber == nil {
+		return nil, &ErrOrderMissingTrackingNumber{OrderID: orderID}
+	}
+
+	// TODO: Call Delivery Service gRPC to get tracking info
+	// For now, return mock tracking data based on order status
+	tracking := &TrackingInfo{
+		TrackingNumber: *order.TrackingNumber,
+		Provider:       "delivery_service",
+		Status:         string(order.Status),
+		Events:         []TrackingEvent{},
+	}
+
+	if order.ShippingProvider != nil {
+		tracking.Provider = *order.ShippingProvider
+	}
+
+	// Build events based on order timestamps
+	if order.CreatedAt.Unix() > 0 {
+		tracking.Events = append(tracking.Events, TrackingEvent{
+			Status:      "order_created",
+			Location:    "System",
+			Description: "Order created",
+			Timestamp:   order.CreatedAt,
+		})
+	}
+
+	if order.ConfirmedAt != nil {
+		tracking.Events = append(tracking.Events, TrackingEvent{
+			Status:      "payment_confirmed",
+			Location:    "System",
+			Description: "Payment confirmed",
+			Timestamp:   *order.ConfirmedAt,
+		})
+	}
+
+	if order.AcceptedAt != nil {
+		tracking.Events = append(tracking.Events, TrackingEvent{
+			Status:      "accepted",
+			Location:    "Seller",
+			Description: "Order accepted by seller",
+			Timestamp:   *order.AcceptedAt,
+		})
+	}
+
+	if order.Status == domain.OrderStatusProcessing || order.Status == domain.OrderStatusShipped || order.Status == domain.OrderStatusDelivered {
+		// Add shipment created event (estimate based on accepted_at + 1 hour)
+		shipmentCreatedTime := order.UpdatedAt
+		if order.AcceptedAt != nil {
+			shipmentCreatedTime = order.AcceptedAt.Add(time.Hour)
+		}
+		tracking.Events = append(tracking.Events, TrackingEvent{
+			Status:      "shipment_created",
+			Location:    "Seller",
+			Description: "Shipment label created",
+			Timestamp:   shipmentCreatedTime,
+		})
+	}
+
+	if order.ShippedAt != nil {
+		tracking.Events = append(tracking.Events, TrackingEvent{
+			Status:      "shipped",
+			Location:    "Courier",
+			Description: "Package handed to courier",
+			Timestamp:   *order.ShippedAt,
+		})
+		// Estimate delivery 2-3 days after shipping
+		tracking.EstimatedDelivery = order.ShippedAt.Add(72 * time.Hour).Format(time.RFC3339)
+	}
+
+	if order.DeliveredAt != nil {
+		tracking.Events = append(tracking.Events, TrackingEvent{
+			Status:      "delivered",
+			Location:    "Destination",
+			Description: "Package delivered",
+			Timestamp:   *order.DeliveredAt,
+		})
+		tracking.Status = "delivered"
+	}
+
+	return tracking, nil
 }

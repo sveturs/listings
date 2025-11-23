@@ -117,6 +117,28 @@ func (e ErrOrderCannotUpdateStatus) Error() string {
 	return fmt.Sprintf("order %d cannot transition from '%s' to '%s'", e.OrderID, e.FromStatus, e.ToStatus)
 }
 
+// ErrOrderInvalidStatus indicates that the order is in invalid status for the requested action
+type ErrOrderInvalidStatus struct {
+	OrderID        int64
+	CurrentStatus  string
+	ExpectedStatus string
+	Action         string
+}
+
+func (e ErrOrderInvalidStatus) Error() string {
+	return fmt.Sprintf("cannot %s order %d: current status '%s', expected '%s'",
+		e.Action, e.OrderID, e.CurrentStatus, e.ExpectedStatus)
+}
+
+// ErrOrderMissingTrackingNumber indicates that the order doesn't have a tracking number
+type ErrOrderMissingTrackingNumber struct {
+	OrderID int64
+}
+
+func (e ErrOrderMissingTrackingNumber) Error() string {
+	return fmt.Sprintf("order %d does not have a tracking number", e.OrderID)
+}
+
 // ErrInsufficientStock indicates that there is not enough stock for an item
 type ErrInsufficientStock struct {
 	ListingID      int64
@@ -325,12 +347,16 @@ func IsConflictError(err error) bool {
 	var insufficientStock *ErrInsufficientStock
 	var orderCannotCancel *ErrOrderCannotCancel
 	var orderCannotUpdateStatus *ErrOrderCannotUpdateStatus
+	var orderInvalidStatus *ErrOrderInvalidStatus
+	var orderMissingTrackingNumber *ErrOrderMissingTrackingNumber
 
 	return errors.As(err, &priceChanged) ||
 		errors.As(err, &storefrontMismatch) ||
 		errors.As(err, &insufficientStock) ||
 		errors.As(err, &orderCannotCancel) ||
-		errors.As(err, &orderCannotUpdateStatus)
+		errors.As(err, &orderCannotUpdateStatus) ||
+		errors.As(err, &orderInvalidStatus) ||
+		errors.As(err, &orderMissingTrackingNumber)
 }
 
 // IsValidationError checks if the error is a validation error

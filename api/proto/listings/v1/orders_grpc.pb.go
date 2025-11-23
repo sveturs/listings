@@ -20,18 +20,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OrderService_AddToCart_FullMethodName         = "/listingssvc.v1.OrderService/AddToCart"
-	OrderService_UpdateCartItem_FullMethodName    = "/listingssvc.v1.OrderService/UpdateCartItem"
-	OrderService_RemoveFromCart_FullMethodName    = "/listingssvc.v1.OrderService/RemoveFromCart"
-	OrderService_GetCart_FullMethodName           = "/listingssvc.v1.OrderService/GetCart"
-	OrderService_ClearCart_FullMethodName         = "/listingssvc.v1.OrderService/ClearCart"
-	OrderService_GetUserCarts_FullMethodName      = "/listingssvc.v1.OrderService/GetUserCarts"
-	OrderService_CreateOrder_FullMethodName       = "/listingssvc.v1.OrderService/CreateOrder"
-	OrderService_GetOrder_FullMethodName          = "/listingssvc.v1.OrderService/GetOrder"
-	OrderService_ListOrders_FullMethodName        = "/listingssvc.v1.OrderService/ListOrders"
-	OrderService_CancelOrder_FullMethodName       = "/listingssvc.v1.OrderService/CancelOrder"
-	OrderService_UpdateOrderStatus_FullMethodName = "/listingssvc.v1.OrderService/UpdateOrderStatus"
-	OrderService_GetOrderStats_FullMethodName     = "/listingssvc.v1.OrderService/GetOrderStats"
+	OrderService_AddToCart_FullMethodName           = "/listingssvc.v1.OrderService/AddToCart"
+	OrderService_UpdateCartItem_FullMethodName      = "/listingssvc.v1.OrderService/UpdateCartItem"
+	OrderService_RemoveFromCart_FullMethodName      = "/listingssvc.v1.OrderService/RemoveFromCart"
+	OrderService_GetCart_FullMethodName             = "/listingssvc.v1.OrderService/GetCart"
+	OrderService_ClearCart_FullMethodName           = "/listingssvc.v1.OrderService/ClearCart"
+	OrderService_GetUserCarts_FullMethodName        = "/listingssvc.v1.OrderService/GetUserCarts"
+	OrderService_CreateOrder_FullMethodName         = "/listingssvc.v1.OrderService/CreateOrder"
+	OrderService_GetOrder_FullMethodName            = "/listingssvc.v1.OrderService/GetOrder"
+	OrderService_ListOrders_FullMethodName          = "/listingssvc.v1.OrderService/ListOrders"
+	OrderService_CancelOrder_FullMethodName         = "/listingssvc.v1.OrderService/CancelOrder"
+	OrderService_UpdateOrderStatus_FullMethodName   = "/listingssvc.v1.OrderService/UpdateOrderStatus"
+	OrderService_GetOrderStats_FullMethodName       = "/listingssvc.v1.OrderService/GetOrderStats"
+	OrderService_AcceptOrder_FullMethodName         = "/listingssvc.v1.OrderService/AcceptOrder"
+	OrderService_CreateOrderShipment_FullMethodName = "/listingssvc.v1.OrderService/CreateOrderShipment"
+	OrderService_MarkOrderShipped_FullMethodName    = "/listingssvc.v1.OrderService/MarkOrderShipped"
+	OrderService_GetOrderTracking_FullMethodName    = "/listingssvc.v1.OrderService/GetOrderTracking"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -94,6 +98,21 @@ type OrderServiceClient interface {
 	// GetOrderStats retrieves order statistics (admin)
 	// Returns: aggregated stats, status breakdown, daily trends
 	GetOrderStats(ctx context.Context, in *GetOrderStatsRequest, opts ...grpc.CallOption) (*GetOrderStatsResponse, error)
+	// AcceptOrder - seller accepts the order for processing
+	// Validates: order.status == confirmed, caller is storefront owner
+	// Actions: status → accepted, set accepted_at, notify buyer
+	AcceptOrder(ctx context.Context, in *AcceptOrderRequest, opts ...grpc.CallOption) (*AcceptOrderResponse, error)
+	// CreateOrderShipment - create shipment via Delivery Service
+	// Validates: order.status == accepted, caller is storefront owner
+	// Actions: call Delivery.CreateShipment, status → processing, set tracking_number, label_url
+	CreateOrderShipment(ctx context.Context, in *CreateOrderShipmentRequest, opts ...grpc.CallOption) (*CreateOrderShipmentResponse, error)
+	// MarkOrderShipped - seller marks order as shipped
+	// Validates: order.status == processing, tracking_number exists
+	// Actions: status → shipped, set shipped_at, notify buyer
+	MarkOrderShipped(ctx context.Context, in *MarkOrderShippedRequest, opts ...grpc.CallOption) (*MarkOrderShippedResponse, error)
+	// GetOrderTracking - get tracking info from Delivery Service
+	// Returns: tracking events timeline from delivery provider
+	GetOrderTracking(ctx context.Context, in *GetOrderTrackingRequest, opts ...grpc.CallOption) (*GetOrderTrackingResponse, error)
 }
 
 type orderServiceClient struct {
@@ -224,6 +243,46 @@ func (c *orderServiceClient) GetOrderStats(ctx context.Context, in *GetOrderStat
 	return out, nil
 }
 
+func (c *orderServiceClient) AcceptOrder(ctx context.Context, in *AcceptOrderRequest, opts ...grpc.CallOption) (*AcceptOrderResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AcceptOrderResponse)
+	err := c.cc.Invoke(ctx, OrderService_AcceptOrder_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) CreateOrderShipment(ctx context.Context, in *CreateOrderShipmentRequest, opts ...grpc.CallOption) (*CreateOrderShipmentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateOrderShipmentResponse)
+	err := c.cc.Invoke(ctx, OrderService_CreateOrderShipment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) MarkOrderShipped(ctx context.Context, in *MarkOrderShippedRequest, opts ...grpc.CallOption) (*MarkOrderShippedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MarkOrderShippedResponse)
+	err := c.cc.Invoke(ctx, OrderService_MarkOrderShipped_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) GetOrderTracking(ctx context.Context, in *GetOrderTrackingRequest, opts ...grpc.CallOption) (*GetOrderTrackingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOrderTrackingResponse)
+	err := c.cc.Invoke(ctx, OrderService_GetOrderTracking_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
@@ -284,6 +343,21 @@ type OrderServiceServer interface {
 	// GetOrderStats retrieves order statistics (admin)
 	// Returns: aggregated stats, status breakdown, daily trends
 	GetOrderStats(context.Context, *GetOrderStatsRequest) (*GetOrderStatsResponse, error)
+	// AcceptOrder - seller accepts the order for processing
+	// Validates: order.status == confirmed, caller is storefront owner
+	// Actions: status → accepted, set accepted_at, notify buyer
+	AcceptOrder(context.Context, *AcceptOrderRequest) (*AcceptOrderResponse, error)
+	// CreateOrderShipment - create shipment via Delivery Service
+	// Validates: order.status == accepted, caller is storefront owner
+	// Actions: call Delivery.CreateShipment, status → processing, set tracking_number, label_url
+	CreateOrderShipment(context.Context, *CreateOrderShipmentRequest) (*CreateOrderShipmentResponse, error)
+	// MarkOrderShipped - seller marks order as shipped
+	// Validates: order.status == processing, tracking_number exists
+	// Actions: status → shipped, set shipped_at, notify buyer
+	MarkOrderShipped(context.Context, *MarkOrderShippedRequest) (*MarkOrderShippedResponse, error)
+	// GetOrderTracking - get tracking info from Delivery Service
+	// Returns: tracking events timeline from delivery provider
+	GetOrderTracking(context.Context, *GetOrderTrackingRequest) (*GetOrderTrackingResponse, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -329,6 +403,18 @@ func (UnimplementedOrderServiceServer) UpdateOrderStatus(context.Context, *Updat
 }
 func (UnimplementedOrderServiceServer) GetOrderStats(context.Context, *GetOrderStatsRequest) (*GetOrderStatsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrderStats not implemented")
+}
+func (UnimplementedOrderServiceServer) AcceptOrder(context.Context, *AcceptOrderRequest) (*AcceptOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptOrder not implemented")
+}
+func (UnimplementedOrderServiceServer) CreateOrderShipment(context.Context, *CreateOrderShipmentRequest) (*CreateOrderShipmentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrderShipment not implemented")
+}
+func (UnimplementedOrderServiceServer) MarkOrderShipped(context.Context, *MarkOrderShippedRequest) (*MarkOrderShippedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkOrderShipped not implemented")
+}
+func (UnimplementedOrderServiceServer) GetOrderTracking(context.Context, *GetOrderTrackingRequest) (*GetOrderTrackingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrderTracking not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
 func (UnimplementedOrderServiceServer) testEmbeddedByValue()                      {}
@@ -567,6 +653,78 @@ func _OrderService_GetOrderStats_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrderService_AcceptOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).AcceptOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_AcceptOrder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).AcceptOrder(ctx, req.(*AcceptOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_CreateOrderShipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOrderShipmentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).CreateOrderShipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_CreateOrderShipment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).CreateOrderShipment(ctx, req.(*CreateOrderShipmentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_MarkOrderShipped_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkOrderShippedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).MarkOrderShipped(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_MarkOrderShipped_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).MarkOrderShipped(ctx, req.(*MarkOrderShippedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_GetOrderTracking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOrderTrackingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetOrderTracking(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetOrderTracking_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetOrderTracking(ctx, req.(*GetOrderTrackingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrderService_ServiceDesc is the grpc.ServiceDesc for OrderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -621,6 +779,22 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOrderStats",
 			Handler:    _OrderService_GetOrderStats_Handler,
+		},
+		{
+			MethodName: "AcceptOrder",
+			Handler:    _OrderService_AcceptOrder_Handler,
+		},
+		{
+			MethodName: "CreateOrderShipment",
+			Handler:    _OrderService_CreateOrderShipment_Handler,
+		},
+		{
+			MethodName: "MarkOrderShipped",
+			Handler:    _OrderService_MarkOrderShipped_Handler,
+		},
+		{
+			MethodName: "GetOrderTracking",
+			Handler:    _OrderService_GetOrderTracking_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

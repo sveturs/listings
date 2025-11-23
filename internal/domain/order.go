@@ -18,7 +18,8 @@ const (
 	OrderStatusUnspecified OrderStatus = "unspecified"
 	OrderStatusPending     OrderStatus = "pending"    // Order created, awaiting payment
 	OrderStatusConfirmed   OrderStatus = "confirmed"  // Payment successful, ready for processing
-	OrderStatusProcessing  OrderStatus = "processing" // Order being prepared
+	OrderStatusAccepted    OrderStatus = "accepted"   // Seller accepted the order
+	OrderStatusProcessing  OrderStatus = "processing" // Order being prepared (shipment created)
 	OrderStatusShipped     OrderStatus = "shipped"    // Order shipped to customer
 	OrderStatusDelivered   OrderStatus = "delivered"  // Order delivered successfully
 	OrderStatusCancelled   OrderStatus = "cancelled"  // Order cancelled (by user or admin)
@@ -66,10 +67,10 @@ type OrderFinancials struct {
 type Order struct {
 	// Identification
 	ID             int64   `json:"id" db:"id"`
-	OrderNumber    string  `json:"order_number" db:"order_number"`     // Unique order number (e.g., ORD-2025-001234)
-	UserID         *int64  `json:"user_id,omitempty" db:"user_id"`     // NULL for guest orders
-	StorefrontID   int64   `json:"storefront_id" db:"storefront_id"`   // Storefront that fulfills the order
-	StorefrontName *string `json:"storefront_name,omitempty" db:"-"`   // Storefront name (joined, not in DB)
+	OrderNumber    string  `json:"order_number" db:"order_number"`   // Unique order number (e.g., ORD-2025-001234)
+	UserID         *int64  `json:"user_id,omitempty" db:"user_id"`   // NULL for guest orders
+	StorefrontID   int64   `json:"storefront_id" db:"storefront_id"` // Storefront that fulfills the order
+	StorefrontName *string `json:"storefront_name,omitempty" db:"-"` // Storefront name (joined, not in DB)
 
 	// Order status
 	Status OrderStatus `json:"status" db:"status"` // Order lifecycle status
@@ -108,16 +109,21 @@ type Order struct {
 	CustomerPhone *string `json:"customer_phone,omitempty" db:"customer_phone"`
 
 	// Notes
-	CustomerNotes *string `json:"customer_notes,omitempty" db:"notes"`    // Customer instructions
-	AdminNotes    *string `json:"admin_notes,omitempty" db:"admin_notes"` // Internal admin notes
+	CustomerNotes *string `json:"customer_notes,omitempty" db:"notes"`      // Customer instructions
+	AdminNotes    *string `json:"admin_notes,omitempty" db:"admin_notes"`   // Internal admin notes
+	SellerNotes   *string `json:"seller_notes,omitempty" db:"seller_notes"` // Seller notes about the order
 
 	// Timestamps
 	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 	ConfirmedAt *time.Time `json:"confirmed_at,omitempty" db:"confirmed_at"`
+	AcceptedAt  *time.Time `json:"accepted_at,omitempty" db:"accepted_at"` // When seller accepted
 	ShippedAt   *time.Time `json:"shipped_at,omitempty" db:"shipped_at"`
 	DeliveredAt *time.Time `json:"delivered_at,omitempty" db:"delivered_at"`
 	CancelledAt *time.Time `json:"cancelled_at,omitempty" db:"cancelled_at"`
+
+	// Shipping label
+	LabelURL *string `json:"label_url,omitempty" db:"label_url"` // URL to shipping label PDF
 
 	// Relations (loaded on demand)
 	Items []*OrderItem `json:"items,omitempty" db:"-"`
@@ -221,13 +227,29 @@ func (o *Order) CalculateFinancials(items []*OrderItem, taxRate float64, shippin
 
 // CanCancel checks if order can be cancelled
 func (o *Order) CanCancel() bool {
-	// Can only cancel pending or confirmed orders
-	return o.Status == OrderStatusPending || o.Status == OrderStatusConfirmed
+	// Can only cancel pending, confirmed or accepted orders
+	return o.Status == OrderStatusPending || o.Status == OrderStatusConfirmed || o.Status == OrderStatusAccepted
+}
+
+// CanAccept checks if order can be accepted by seller
+func (o *Order) CanAccept() bool {
+	return o.Status == OrderStatusConfirmed
+}
+
+// CanCreateShipment checks if shipment can be created for this order
+func (o *Order) CanCreateShipment() bool {
+	return o.Status == OrderStatusAccepted
+}
+
+// CanMarkShipped checks if order can be marked as shipped
+func (o *Order) CanMarkShipped() bool {
+	return o.Status == OrderStatusProcessing && o.TrackingNumber != nil
 }
 
 // CanUpdateStatus checks if order status can be updated to newStatus
 func (o *Order) CanUpdateStatus(newStatus OrderStatus) bool {
 	// Define valid state transitions
+	// Flow: pending → confirmed → accepted → processing → shipped → delivered
 	validTransitions := map[OrderStatus][]OrderStatus{
 		OrderStatusPending: {
 			OrderStatusConfirmed,
@@ -235,7 +257,11 @@ func (o *Order) CanUpdateStatus(newStatus OrderStatus) bool {
 			OrderStatusFailed,
 		},
 		OrderStatusConfirmed: {
-			OrderStatusProcessing,
+			OrderStatusAccepted, // Seller accepts
+			OrderStatusCancelled,
+		},
+		OrderStatusAccepted: {
+			OrderStatusProcessing, // Shipment created
 			OrderStatusCancelled,
 		},
 		OrderStatusProcessing: {
@@ -310,6 +336,8 @@ func OrderStatusFromProto(pbStatus pb.OrderStatus) OrderStatus {
 		return OrderStatusPending
 	case pb.OrderStatus_ORDER_STATUS_CONFIRMED:
 		return OrderStatusConfirmed
+	case pb.OrderStatus_ORDER_STATUS_ACCEPTED:
+		return OrderStatusAccepted
 	case pb.OrderStatus_ORDER_STATUS_PROCESSING:
 		return OrderStatusProcessing
 	case pb.OrderStatus_ORDER_STATUS_SHIPPED:
@@ -334,6 +362,8 @@ func (s OrderStatus) ToProtoOrderStatus() pb.OrderStatus {
 		return pb.OrderStatus_ORDER_STATUS_PENDING
 	case OrderStatusConfirmed:
 		return pb.OrderStatus_ORDER_STATUS_CONFIRMED
+	case OrderStatusAccepted:
+		return pb.OrderStatus_ORDER_STATUS_ACCEPTED
 	case OrderStatusProcessing:
 		return pb.OrderStatus_ORDER_STATUS_PROCESSING
 	case OrderStatusShipped:
@@ -478,6 +508,9 @@ func OrderFromProto(pb *pb.Order) *Order {
 	if pb.AdminNotes != nil {
 		order.AdminNotes = pb.AdminNotes
 	}
+	if pb.SellerNotes != nil {
+		order.SellerNotes = pb.SellerNotes
+	}
 
 	// Timestamps
 	if pb.CreatedAt != nil {
@@ -490,6 +523,10 @@ func OrderFromProto(pb *pb.Order) *Order {
 		t := pb.ConfirmedAt.AsTime()
 		order.ConfirmedAt = &t
 	}
+	if pb.AcceptedAt != nil {
+		t := pb.AcceptedAt.AsTime()
+		order.AcceptedAt = &t
+	}
 	if pb.ShippedAt != nil {
 		t := pb.ShippedAt.AsTime()
 		order.ShippedAt = &t
@@ -501,6 +538,11 @@ func OrderFromProto(pb *pb.Order) *Order {
 	if pb.CancelledAt != nil {
 		t := pb.CancelledAt.AsTime()
 		order.CancelledAt = &t
+	}
+
+	// Shipping label
+	if pb.LabelUrl != nil {
+		order.LabelURL = pb.LabelUrl
 	}
 
 	// Convert items
@@ -609,10 +651,16 @@ func (o *Order) ToProto() *pb.Order {
 	if o.AdminNotes != nil {
 		pbOrder.AdminNotes = o.AdminNotes
 	}
+	if o.SellerNotes != nil {
+		pbOrder.SellerNotes = o.SellerNotes
+	}
 
 	// Timestamps
 	if o.ConfirmedAt != nil {
 		pbOrder.ConfirmedAt = timestamppb.New(*o.ConfirmedAt)
+	}
+	if o.AcceptedAt != nil {
+		pbOrder.AcceptedAt = timestamppb.New(*o.AcceptedAt)
 	}
 	if o.ShippedAt != nil {
 		pbOrder.ShippedAt = timestamppb.New(*o.ShippedAt)
@@ -622,6 +670,11 @@ func (o *Order) ToProto() *pb.Order {
 	}
 	if o.CancelledAt != nil {
 		pbOrder.CancelledAt = timestamppb.New(*o.CancelledAt)
+	}
+
+	// Shipping label
+	if o.LabelURL != nil {
+		pbOrder.LabelUrl = o.LabelURL
 	}
 
 	// Convert items

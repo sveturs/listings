@@ -852,6 +852,217 @@ func mapToProtoStruct(m map[string]interface{}) *structpb.Struct {
 // HELPER FUNCTIONS - Error Mapping
 // ============================================================================
 
+// ============================================================================
+// SHIPMENT OPERATIONS (4 methods)
+// ============================================================================
+
+// AcceptOrder handles seller accepting an order
+// Flow: confirmed -> accepted
+// Validates: order status, seller is storefront owner
+func (s *Server) AcceptOrder(ctx context.Context, req *listingspb.AcceptOrderRequest) (*listingspb.AcceptOrderResponse, error) {
+	s.logger.Info().
+		Int64("order_id", req.OrderId).
+		Int64("seller_id", req.SellerId).
+		Msg("AcceptOrder called")
+
+	// Validate input
+	if req.OrderId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "order_id must be greater than 0")
+	}
+	if req.SellerId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "seller_id must be greater than 0")
+	}
+
+	// Get seller notes (optional)
+	var sellerNotes string
+	if req.SellerNotes != nil {
+		sellerNotes = *req.SellerNotes
+	}
+
+	// Call service layer
+	order, err := s.orderService.AcceptOrder(ctx, req.OrderId, req.SellerId, sellerNotes)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Convert domain.Order to proto Order
+	pbOrder := domainOrderToProtoOrder(order)
+
+	return &listingspb.AcceptOrderResponse{
+		Order:   pbOrder,
+		Message: "Order accepted successfully",
+	}, nil
+}
+
+// CreateOrderShipment creates shipment via Delivery Service
+// Flow: accepted -> processing
+// Validates: order status, seller is storefront owner, package info
+func (s *Server) CreateOrderShipment(ctx context.Context, req *listingspb.CreateOrderShipmentRequest) (*listingspb.CreateOrderShipmentResponse, error) {
+	s.logger.Info().
+		Int64("order_id", req.OrderId).
+		Int64("seller_id", req.SellerId).
+		Str("provider_code", req.ProviderCode).
+		Msg("CreateOrderShipment called")
+
+	// Validate input
+	if req.OrderId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "order_id must be greater than 0")
+	}
+	if req.SellerId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "seller_id must be greater than 0")
+	}
+	if req.ProviderCode == "" {
+		return nil, status.Error(codes.InvalidArgument, "provider_code is required")
+	}
+
+	// Validate package info
+	if req.PackageInfo == nil {
+		return nil, status.Error(codes.InvalidArgument, "package_info is required")
+	}
+	if req.PackageInfo.WeightKg <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "package weight must be greater than 0")
+	}
+
+	// Build service request
+	shipmentReq := &service.CreateShipmentRequest{
+		OrderID:      req.OrderId,
+		SellerID:     req.SellerId,
+		ProviderCode: req.ProviderCode,
+		PackageInfo: service.PackageInfo{
+			WeightKg:    req.PackageInfo.WeightKg,
+			LengthCm:    req.PackageInfo.LengthCm,
+			WidthCm:     req.PackageInfo.WidthCm,
+			HeightCm:    req.PackageInfo.HeightCm,
+			IsFragile:   req.PackageInfo.IsFragile,
+			Description: req.PackageInfo.Description,
+		},
+		UseCOD:         req.UseCod,
+		CODAmount:      req.CodAmount,
+		UseInsurance:   req.UseInsurance,
+		InsuranceValue: req.InsuranceValue,
+	}
+
+	// Call service layer
+	result, err := s.orderService.CreateOrderShipment(ctx, shipmentReq)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Convert domain.Order to proto Order
+	pbOrder := domainOrderToProtoOrder(result.Order)
+
+	// Build shipment info
+	pbShipment := &listingspb.ShipmentInfo{
+		ShipmentId:     result.ShipmentID,
+		TrackingNumber: result.TrackingNumber,
+		Provider:       result.Provider,
+		Status:         result.Status,
+		DeliveryCost:   result.DeliveryCost,
+	}
+	if result.EstimatedDelivery != "" {
+		pbShipment.EstimatedDelivery = &result.EstimatedDelivery
+	}
+
+	return &listingspb.CreateOrderShipmentResponse{
+		Order:    pbOrder,
+		Shipment: pbShipment,
+		LabelUrl: result.LabelURL,
+		Message:  "Shipment created successfully",
+	}, nil
+}
+
+// MarkOrderShipped marks order as shipped
+// Flow: processing -> shipped
+// Validates: order status, tracking number exists
+func (s *Server) MarkOrderShipped(ctx context.Context, req *listingspb.MarkOrderShippedRequest) (*listingspb.MarkOrderShippedResponse, error) {
+	s.logger.Info().
+		Int64("order_id", req.OrderId).
+		Int64("seller_id", req.SellerId).
+		Msg("MarkOrderShipped called")
+
+	// Validate input
+	if req.OrderId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "order_id must be greater than 0")
+	}
+	if req.SellerId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "seller_id must be greater than 0")
+	}
+
+	// Get seller notes (optional)
+	var sellerNotes string
+	if req.SellerNotes != nil {
+		sellerNotes = *req.SellerNotes
+	}
+
+	// Call service layer
+	order, err := s.orderService.MarkOrderShipped(ctx, req.OrderId, req.SellerId, sellerNotes)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Convert domain.Order to proto Order
+	pbOrder := domainOrderToProtoOrder(order)
+
+	return &listingspb.MarkOrderShippedResponse{
+		Order:   pbOrder,
+		Message: "Order marked as shipped successfully",
+	}, nil
+}
+
+// GetOrderTracking gets tracking info from Delivery Service
+// Returns: tracking events timeline
+func (s *Server) GetOrderTracking(ctx context.Context, req *listingspb.GetOrderTrackingRequest) (*listingspb.GetOrderTrackingResponse, error) {
+	s.logger.Debug().
+		Int64("order_id", req.OrderId).
+		Int64("user_id", req.UserId).
+		Msg("GetOrderTracking called")
+
+	// Validate input
+	if req.OrderId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "order_id must be greater than 0")
+	}
+	if req.UserId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "user_id must be greater than 0")
+	}
+
+	// Call service layer
+	tracking, err := s.orderService.GetOrderTracking(ctx, req.OrderId, req.UserId)
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Build response
+	resp := &listingspb.GetOrderTrackingResponse{
+		TrackingNumber: tracking.TrackingNumber,
+		Provider:       tracking.Provider,
+		Status:         tracking.Status,
+	}
+
+	if tracking.EstimatedDelivery != "" {
+		resp.EstimatedDelivery = &tracking.EstimatedDelivery
+	}
+
+	// Convert tracking events
+	if len(tracking.Events) > 0 {
+		resp.Events = make([]*listingspb.TrackingEvent, 0, len(tracking.Events))
+		for _, event := range tracking.Events {
+			pbEvent := &listingspb.TrackingEvent{
+				Status:      event.Status,
+				Location:    event.Location,
+				Description: event.Description,
+				Timestamp:   timestamppb.New(event.Timestamp),
+			}
+			resp.Events = append(resp.Events, pbEvent)
+		}
+	}
+
+	return resp, nil
+}
+
+// ============================================================================
+// HELPER FUNCTIONS - Error Mapping
+// ============================================================================
+
 // mapServiceErrorToGRPC maps service layer errors to gRPC status codes
 func mapServiceErrorToGRPC(err error, logger zerolog.Logger) error {
 	if err == nil {

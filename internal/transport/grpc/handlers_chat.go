@@ -71,15 +71,45 @@ func (s *Server) GetOrCreateChat(ctx context.Context, req *chatsvcv1.GetOrCreate
 
 // ListUserChats retrieves all chats for authenticated user
 // Authorization: user_id extracted from JWT metadata
+// Admin override: if req.UserId is set and caller is admin, use req.UserId instead
 func (s *Server) ListUserChats(ctx context.Context, req *chatsvcv1.ListUserChatsRequest) (*chatsvcv1.ListUserChatsResponse, error) {
-	// Extract user_id from context
-	userID, ok := middleware.GetUserID(ctx)
+	// Extract user_id from context (JWT)
+	callerUserID, ok := middleware.GetUserID(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
+	// Determine the target user_id (admin override or self)
+	targetUserID := callerUserID
+
+	// Check for admin override: if UserId is set in request
+	if req.UserId != nil && *req.UserId != callerUserID {
+		// Verify caller is admin
+		roles, hasRoles := middleware.GetRoles(ctx)
+		isAdmin := false
+		if hasRoles {
+			for _, role := range roles {
+				if role == "admin" {
+					isAdmin = true
+					break
+				}
+			}
+		}
+
+		if isAdmin {
+			targetUserID = *req.UserId
+			s.logger.Debug().
+				Int64("caller_id", callerUserID).
+				Int64("target_user_id", targetUserID).
+				Msg("Admin override: listing chats for another user")
+		} else {
+			// Non-admin trying to query another user's chats
+			return nil, status.Error(codes.PermissionDenied, "admin role required to query other user's chats")
+		}
+	}
+
 	s.logger.Debug().
-		Int64("user_id", userID).
+		Int64("user_id", targetUserID).
 		Bool("archived_only", req.ArchivedOnly).
 		Int32("limit", req.Limit).
 		Int32("offset", req.Offset).
@@ -101,7 +131,7 @@ func (s *Server) ListUserChats(ctx context.Context, req *chatsvcv1.ListUserChats
 
 	// Build service request
 	serviceReq := &service.GetUserChatsRequest{
-		UserID:    userID,
+		UserID:    targetUserID,
 		Archived:  req.ArchivedOnly,
 		ListingID: req.ListingId,
 		Limit:     int(limit),
@@ -113,6 +143,12 @@ func (s *Server) ListUserChats(ctx context.Context, req *chatsvcv1.ListUserChats
 	if err != nil {
 		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
+
+	s.logger.Debug().
+		Int("chats_count", len(chats)).
+		Int("total_count", totalCount).
+		Int64("target_user_id", targetUserID).
+		Msg("ListUserChats result from service")
 
 	// Convert domain.Chat slice to proto Chat slice
 	pbChats := make([]*chatsvcv1.Chat, 0, len(chats))

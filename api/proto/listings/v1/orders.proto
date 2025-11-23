@@ -13,11 +13,13 @@ option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingss
 // ============================================================================
 
 // OrderStatus represents the current state of an order
+// Flow: pending → confirmed → accepted → processing → shipped → delivered
 enum OrderStatus {
   ORDER_STATUS_UNSPECIFIED = 0;
   ORDER_STATUS_PENDING = 1;       // Order created, awaiting payment
-  ORDER_STATUS_CONFIRMED = 2;     // Payment successful, ready for processing
-  ORDER_STATUS_PROCESSING = 3;    // Order being prepared
+  ORDER_STATUS_CONFIRMED = 2;     // Payment successful, ready for seller
+  ORDER_STATUS_ACCEPTED = 9;      // Seller accepted the order (NEW)
+  ORDER_STATUS_PROCESSING = 3;    // Order being prepared (shipment created)
   ORDER_STATUS_SHIPPED = 4;       // Order shipped to customer
   ORDER_STATUS_DELIVERED = 5;     // Order delivered successfully
   ORDER_STATUS_CANCELLED = 6;     // Order cancelled (by user or admin)
@@ -124,14 +126,19 @@ message Order {
   // Notes
   optional string customer_notes = 22;          // Customer instructions
   optional string admin_notes = 23;             // Internal admin notes
+  optional string seller_notes = 32;            // Seller notes about the order
 
   // Timestamps
   google.protobuf.Timestamp created_at = 24;
   google.protobuf.Timestamp updated_at = 25;
   optional google.protobuf.Timestamp confirmed_at = 26;
+  optional google.protobuf.Timestamp accepted_at = 33;   // When seller accepted (NEW)
   optional google.protobuf.Timestamp shipped_at = 27;
   optional google.protobuf.Timestamp delivered_at = 28;
   optional google.protobuf.Timestamp cancelled_at = 29;
+
+  // Shipping label
+  optional string label_url = 34;               // URL to shipping label PDF (NEW)
 
   // Relations (loaded on demand)
   repeated OrderItem items = 30;                // Order line items
@@ -446,6 +453,95 @@ message DailyOrderStats {
 }
 
 // ============================================================================
+// SHIPMENT WORKFLOW MESSAGES (NEW)
+// ============================================================================
+
+// AcceptOrderRequest - seller accepts the order
+message AcceptOrderRequest {
+  int64 order_id = 1;
+  int64 seller_id = 2;               // User ID of seller (for authorization)
+  optional string seller_notes = 3;  // Optional notes from seller
+}
+
+message AcceptOrderResponse {
+  Order order = 1;
+  string message = 2;
+}
+
+// CreateOrderShipmentRequest - create shipment with delivery provider
+message CreateOrderShipmentRequest {
+  int64 order_id = 1;
+  int64 seller_id = 2;                    // User ID of seller
+  string provider_code = 3;               // post_express, bex_express, aks, d_express, city_express
+  PackageInfo package_info = 4;           // Package dimensions and weight
+  bool use_cod = 5;                       // Cash on delivery
+  double cod_amount = 6;                  // COD amount (if use_cod = true)
+  bool use_insurance = 7;                 // Insurance for package
+  double insurance_value = 8;             // Declared value for insurance
+}
+
+// PackageInfo contains package dimensions and weight
+message PackageInfo {
+  double weight_kg = 1;                   // Weight in kg
+  double length_cm = 2;                   // Length in cm
+  double width_cm = 3;                    // Width in cm
+  double height_cm = 4;                   // Height in cm
+  bool is_fragile = 5;                    // Fragile goods flag
+  string description = 6;                 // Package contents description
+}
+
+message CreateOrderShipmentResponse {
+  Order order = 1;                        // Updated order with tracking info
+  ShipmentInfo shipment = 2;              // Shipment details from delivery service
+  string label_url = 3;                   // URL to shipping label PDF
+  string message = 4;
+}
+
+// ShipmentInfo contains shipment details
+message ShipmentInfo {
+  int64 shipment_id = 1;                  // ID from delivery service
+  string tracking_number = 2;             // Tracking number
+  string provider = 3;                    // Provider name
+  string status = 4;                      // Current shipment status
+  double delivery_cost = 5;               // Delivery cost
+  optional string estimated_delivery = 6; // Estimated delivery date (RFC3339)
+}
+
+// MarkOrderShippedRequest - mark order as shipped
+message MarkOrderShippedRequest {
+  int64 order_id = 1;
+  int64 seller_id = 2;                    // User ID of seller
+  optional string seller_notes = 3;       // Optional notes
+}
+
+message MarkOrderShippedResponse {
+  Order order = 1;
+  string message = 2;
+}
+
+// GetOrderTrackingRequest - get tracking info
+message GetOrderTrackingRequest {
+  int64 order_id = 1;
+  int64 user_id = 2;                      // Can be seller or buyer
+}
+
+message GetOrderTrackingResponse {
+  string tracking_number = 1;
+  string provider = 2;
+  string status = 3;
+  optional string estimated_delivery = 4; // RFC3339
+  repeated TrackingEvent events = 5;      // Timeline of events
+}
+
+// TrackingEvent represents a single tracking event
+message TrackingEvent {
+  string status = 1;                      // pending, picked_up, in_transit, delivered, etc.
+  string location = 2;                    // Location description
+  string description = 3;                 // Event description
+  google.protobuf.Timestamp timestamp = 4; // Event time
+}
+
+// ============================================================================
 // SERVICE DEFINITION - OrderService
 // ============================================================================
 
@@ -524,6 +620,29 @@ service OrderService {
   // GetOrderStats retrieves order statistics (admin)
   // Returns: aggregated stats, status breakdown, daily trends
   rpc GetOrderStats(GetOrderStatsRequest) returns (GetOrderStatsResponse);
+
+  // =========================================
+  // Seller Shipment Operations (4 methods) - NEW
+  // =========================================
+
+  // AcceptOrder - seller accepts the order for processing
+  // Validates: order.status == confirmed, caller is storefront owner
+  // Actions: status → accepted, set accepted_at, notify buyer
+  rpc AcceptOrder(AcceptOrderRequest) returns (AcceptOrderResponse);
+
+  // CreateOrderShipment - create shipment via Delivery Service
+  // Validates: order.status == accepted, caller is storefront owner
+  // Actions: call Delivery.CreateShipment, status → processing, set tracking_number, label_url
+  rpc CreateOrderShipment(CreateOrderShipmentRequest) returns (CreateOrderShipmentResponse);
+
+  // MarkOrderShipped - seller marks order as shipped
+  // Validates: order.status == processing, tracking_number exists
+  // Actions: status → shipped, set shipped_at, notify buyer
+  rpc MarkOrderShipped(MarkOrderShippedRequest) returns (MarkOrderShippedResponse);
+
+  // GetOrderTracking - get tracking info from Delivery Service
+  // Returns: tracking events timeline from delivery provider
+  rpc GetOrderTracking(GetOrderTrackingRequest) returns (GetOrderTrackingResponse);
 }
 
 // ============================================================================

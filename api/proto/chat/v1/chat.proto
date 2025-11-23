@@ -156,6 +156,7 @@ message GetOrCreateChatResponse {
 
 // ListUserChatsRequest retrieves all chats for a user
 // AUTHORIZATION: user_id extracted from JWT metadata (NOT in request)
+// ADMIN OVERRIDE: Admins can specify user_id to query chats for another user
 message ListUserChatsRequest {
   // Filters
   optional ChatStatus status = 1;   // Filter by status
@@ -169,6 +170,11 @@ message ListUserChatsRequest {
   // Sorting
   string sort_by = 6;               // "last_message_at" (default), "created_at"
   string sort_order = 7;            // "desc" (default), "asc"
+
+  // Admin override: allows admins to query chats for a specific user
+  // If set and caller is admin, use this user_id instead of JWT user_id
+  // Used for dashboard notifications when admin views storefront owner's data
+  optional int64 user_id = 8;
 }
 
 message ListUserChatsResponse {

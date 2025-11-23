@@ -818,6 +818,7 @@ func (x *GetOrCreateChatResponse) GetCreated() bool {
 
 // ListUserChatsRequest retrieves all chats for a user
 // AUTHORIZATION: user_id extracted from JWT metadata (NOT in request)
+// ADMIN OVERRIDE: Admins can specify user_id to query chats for another user
 type ListUserChatsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Filters
@@ -828,8 +829,12 @@ type ListUserChatsRequest struct {
 	Limit  int32 `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`   // Max items per page (default: 20, max: 100)
 	Offset int32 `protobuf:"varint,5,opt,name=offset,proto3" json:"offset,omitempty"` // Offset for pagination
 	// Sorting
-	SortBy        string `protobuf:"bytes,6,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`          // "last_message_at" (default), "created_at"
-	SortOrder     string `protobuf:"bytes,7,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"` // "desc" (default), "asc"
+	SortBy    string `protobuf:"bytes,6,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`          // "last_message_at" (default), "created_at"
+	SortOrder string `protobuf:"bytes,7,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"` // "desc" (default), "asc"
+	// Admin override: allows admins to query chats for a specific user
+	// If set and caller is admin, use this user_id instead of JWT user_id
+	// Used for dashboard notifications when admin views storefront owner's data
+	UserId        *int64 `protobuf:"varint,8,opt,name=user_id,json=userId,proto3,oneof" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -911,6 +916,13 @@ func (x *ListUserChatsRequest) GetSortOrder() string {
 		return x.SortOrder
 	}
 	return ""
+}
+
+func (x *ListUserChatsRequest) GetUserId() int64 {
+	if x != nil && x.UserId != nil {
+		return *x.UserId
+	}
+	return 0
 }
 
 type ListUserChatsResponse struct {
@@ -2390,7 +2402,7 @@ const file_api_proto_chat_v1_chat_proto_rawDesc = "" +
 	"\x0e_other_user_id\"Y\n" +
 	"\x17GetOrCreateChatResponse\x12$\n" +
 	"\x04chat\x18\x01 \x01(\v2\x10.chatsvc.v1.ChatR\x04chat\x12\x18\n" +
-	"\acreated\x18\x02 \x01(\bR\acreated\"\x94\x02\n" +
+	"\acreated\x18\x02 \x01(\bR\acreated\"\xbe\x02\n" +
 	"\x14ListUserChatsRequest\x123\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x16.chatsvc.v1.ChatStatusH\x00R\x06status\x88\x01\x01\x12#\n" +
 	"\rarchived_only\x18\x02 \x01(\bR\farchivedOnly\x12\"\n" +
@@ -2400,9 +2412,12 @@ const file_api_proto_chat_v1_chat_proto_rawDesc = "" +
 	"\x06offset\x18\x05 \x01(\x05R\x06offset\x12\x17\n" +
 	"\asort_by\x18\x06 \x01(\tR\x06sortBy\x12\x1d\n" +
 	"\n" +
-	"sort_order\x18\a \x01(\tR\tsortOrderB\t\n" +
+	"sort_order\x18\a \x01(\tR\tsortOrder\x12\x1c\n" +
+	"\auser_id\x18\b \x01(\x03H\x02R\x06userId\x88\x01\x01B\t\n" +
 	"\a_statusB\r\n" +
-	"\v_listing_id\"\x83\x01\n" +
+	"\v_listing_idB\n" +
+	"\n" +
+	"\b_user_id\"\x83\x01\n" +
 	"\x15ListUserChatsResponse\x12&\n" +
 	"\x05chats\x18\x01 \x03(\v2\x10.chatsvc.v1.ChatR\x05chats\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +

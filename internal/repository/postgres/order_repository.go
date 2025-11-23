@@ -129,8 +129,9 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 		       o.shipping_address, o.billing_address, o.shipping_method, o.shipping_provider, o.tracking_number, o.shipment_id,
 		       o.escrow_release_date, o.escrow_days,
 		       o.customer_name, o.customer_email, o.customer_phone,
-		       o.notes, o.admin_notes,
-		       o.created_at, o.updated_at, o.confirmed_at, o.shipped_at, o.delivered_at, o.cancelled_at,
+		       o.notes, o.admin_notes, o.seller_notes,
+		       o.created_at, o.updated_at, o.confirmed_at, o.accepted_at, o.shipped_at, o.delivered_at, o.cancelled_at,
+		       o.label_url,
 		       s.name as storefront_name
 		FROM orders o
 		LEFT JOIN storefronts s ON o.storefront_id = s.id
@@ -141,11 +142,12 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 	var userID sql.NullInt64
 	var statusStr, paymentStatusStr string
 	var paymentMethod, paymentTransactionID sql.NullString
-	var paymentCompletedAt, escrowReleaseDate, confirmedAt, shippedAt, deliveredAt, cancelledAt sql.NullTime
+	var paymentCompletedAt, escrowReleaseDate, confirmedAt, acceptedAt, shippedAt, deliveredAt, cancelledAt sql.NullTime
 	var shippingAddressJSON, billingAddressJSON []byte
 	var shippingMethod, shippingProvider, trackingNumber sql.NullString
 	var shipmentID sql.NullInt64
-	var customerName, customerEmail, customerPhone, customerNotes, adminNotes sql.NullString
+	var customerName, customerEmail, customerPhone, customerNotes, adminNotes, sellerNotes sql.NullString
+	var labelURL sql.NullString
 	var storefrontName sql.NullString
 
 	err := r.db.QueryRow(ctx, query, orderID).Scan(
@@ -155,8 +157,9 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 		&shippingAddressJSON, &billingAddressJSON, &shippingMethod, &shippingProvider, &trackingNumber, &shipmentID,
 		&escrowReleaseDate, &order.EscrowDays,
 		&customerName, &customerEmail, &customerPhone,
-		&customerNotes, &adminNotes,
-		&order.CreatedAt, &order.UpdatedAt, &confirmedAt, &shippedAt, &deliveredAt, &cancelledAt,
+		&customerNotes, &adminNotes, &sellerNotes,
+		&order.CreatedAt, &order.UpdatedAt, &confirmedAt, &acceptedAt, &shippedAt, &deliveredAt, &cancelledAt,
+		&labelURL,
 		&storefrontName,
 	)
 
@@ -229,9 +232,15 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 	if adminNotes.Valid {
 		order.AdminNotes = &adminNotes.String
 	}
+	if sellerNotes.Valid {
+		order.SellerNotes = &sellerNotes.String
+	}
 
 	if confirmedAt.Valid {
 		order.ConfirmedAt = &confirmedAt.Time
+	}
+	if acceptedAt.Valid {
+		order.AcceptedAt = &acceptedAt.Time
 	}
 	if shippedAt.Valid {
 		order.ShippedAt = &shippedAt.Time
@@ -241,6 +250,9 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 	}
 	if cancelledAt.Valid {
 		order.CancelledAt = &cancelledAt.Time
+	}
+	if labelURL.Valid {
+		order.LabelURL = &labelURL.String
 	}
 	if storefrontName.Valid {
 		order.StorefrontName = &storefrontName.String
@@ -395,9 +407,10 @@ func (r *orderRepository) Update(ctx context.Context, order *domain.Order) error
 			shipping_address = $13, billing_address = $14, shipping_method = $15, shipping_provider = $16, tracking_number = $17, shipment_id = $18,
 			escrow_release_date = $19, escrow_days = $20,
 			customer_name = $21, customer_email = $22, customer_phone = $23,
-			notes = $24, admin_notes = $25,
-			confirmed_at = $26, shipped_at = $27, delivered_at = $28, cancelled_at = $29
-		WHERE id = $30
+			notes = $24, admin_notes = $25, seller_notes = $26,
+			confirmed_at = $27, accepted_at = $28, shipped_at = $29, delivered_at = $30, cancelled_at = $31,
+			label_url = $32
+		WHERE id = $33
 		RETURNING updated_at
 	`
 
@@ -408,8 +421,9 @@ func (r *orderRepository) Update(ctx context.Context, order *domain.Order) error
 		shippingAddressJSON, billingAddressJSON, order.ShippingMethod, order.ShippingProvider, order.TrackingNumber, order.ShipmentID,
 		order.EscrowReleaseDate, order.EscrowDays,
 		order.CustomerName, order.CustomerEmail, order.CustomerPhone,
-		order.CustomerNotes, order.AdminNotes,
-		order.ConfirmedAt, order.ShippedAt, order.DeliveredAt, order.CancelledAt,
+		order.CustomerNotes, order.AdminNotes, order.SellerNotes,
+		order.ConfirmedAt, order.AcceptedAt, order.ShippedAt, order.DeliveredAt, order.CancelledAt,
+		order.LabelURL,
 		order.ID,
 	).Scan(&order.UpdatedAt)
 

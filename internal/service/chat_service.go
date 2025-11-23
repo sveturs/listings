@@ -68,6 +68,7 @@ type MessageRepository interface {
 	// Message listing with cursor pagination
 	GetMessagesByCursor(ctx context.Context, chatID int64, beforeMessageID *int64, limit int) ([]*domain.Message, bool, error)
 	GetMessages(ctx context.Context, chatID int64, beforeMessageID, afterMessageID *int64, limit int) ([]*domain.Message, error)
+	GetLatestMessage(ctx context.Context, chatID int64) (*domain.Message, error)
 
 	// Read status management
 	MarkMessagesAsRead(ctx context.Context, chatID, receiverID int64, messageIDs []int64) (int, error)
@@ -456,7 +457,7 @@ func (s *chatService) GetUserChats(ctx context.Context, req *GetUserChatsRequest
 		return nil, 0, fmt.Errorf("failed to list user chats: %w", err)
 	}
 
-	// Load unread counts and enrich metadata for each chat
+	// Load unread counts, last message and enrich metadata for each chat
 	for _, chat := range chats {
 		// Load unread count
 		unreadCount, err := s.messageRepo.GetUnreadCount(ctx, chat.ID, req.UserID)
@@ -464,6 +465,14 @@ func (s *chatService) GetUserChats(ctx context.Context, req *GetUserChatsRequest
 			s.logger.Warn().Err(err).Int64("chat_id", chat.ID).Msg("failed to count unread messages")
 		} else {
 			chat.UnreadCount = unreadCount
+		}
+
+		// Load last message (needed for notifications and chat preview)
+		lastMessage, err := s.messageRepo.GetLatestMessage(ctx, chat.ID)
+		if err != nil {
+			s.logger.Warn().Err(err).Int64("chat_id", chat.ID).Msg("failed to get latest message")
+		} else {
+			chat.LastMessage = lastMessage
 		}
 
 		// Enrich with listing metadata
