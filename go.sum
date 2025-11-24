@@ -243,6 +243,8 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/sveturs/auth v1.18.0 h1:DiBNUPTuOoP1g7f4buSrBhlSdw60CQN3EhkG9ESd0IY=
 github.com/sveturs/auth v1.18.0/go.mod h1:l0k7nU4oG/FVdm3yVPbBHvpBBHYuJSmdDLf+JJggFtU=
+github.com/sveturs/delivery v0.1.0 h1:+kEZDCzgDQfNWv5lOSAbqy3etcKjIcQiDT1Zt8ySmis=
+github.com/sveturs/delivery v0.1.0/go.mod h1:TXxK0TOEZRWMoBWzQKJeqKn+7Fyval+JvEaf02+EnTI=
 github.com/sveturs/lib v1.2.1 h1:N7bmDHw6swav3d/g1e36C6VJBIZCVeU0NyJ5uYbln4M=
 github.com/sveturs/lib v1.2.1/go.mod h1:jangZGggLMg3Y2B56ZHYzdsbk1V3Tn3T1D25iyqNUgw=
 github.com/tinylib/msgp v1.3.0 h1:ULuf7GPooDaIlbyvgAxBV/FI7ynli6LZ1/nVUNu+0ww=
