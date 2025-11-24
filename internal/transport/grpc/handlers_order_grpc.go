@@ -290,6 +290,9 @@ func (s *Server) CreateOrder(ctx context.Context, req *listingspb.CreateOrderReq
 		PaymentMethod:      req.PaymentMethod,
 		CustomerNotes:      req.CustomerNotes,
 		AcceptPriceChanges: req.AcceptPriceChanges,
+		CustomerName:       req.CustomerName,
+		CustomerEmail:      req.CustomerEmail,
+		CustomerPhone:      req.CustomerPhone,
 	})
 
 	if err != nil {
@@ -569,7 +572,22 @@ func validateCreateOrderRequest(req *listingspb.CreateOrderRequest) error {
 		return errors.New("payment_method is required")
 	}
 
+	// Validate payment method is one of allowed values
+	if !isValidPaymentMethod(req.PaymentMethod) {
+		return fmt.Errorf("invalid payment_method: %s (allowed: card, cash_on_delivery, cod, cash, bank_transfer)", req.PaymentMethod)
+	}
+
 	return nil
+}
+
+// isValidPaymentMethod checks if payment method is valid
+func isValidPaymentMethod(method string) bool {
+	switch method {
+	case "card", "cash_on_delivery", "cod", "cash", "bank_transfer", "pouzecem", "pouzećem":
+		return true
+	default:
+		return false
+	}
 }
 
 // ============================================================================
@@ -689,9 +707,41 @@ func domainOrderToProtoOrder(order *domain.Order) *listingspb.Order {
 		pbOrder.CancelledAt = timestamppb.New(*order.CancelledAt)
 	}
 
+	// Shipment workflow fields
+	if order.AcceptedAt != nil {
+		pbOrder.AcceptedAt = timestamppb.New(*order.AcceptedAt)
+	}
+
+	if order.SellerNotes != nil {
+		pbOrder.SellerNotes = order.SellerNotes
+	}
+
+	if order.LabelURL != nil {
+		pbOrder.LabelUrl = order.LabelURL
+	}
+
+	if order.ShipmentID != nil {
+		pbOrder.ShipmentId = order.ShipmentID
+	}
+
+	if order.ShippingProvider != nil {
+		pbOrder.ShippingProvider = order.ShippingProvider
+	}
+
 	// Storefront name (for frontend display)
 	if order.StorefrontName != nil {
 		pbOrder.StorefrontName = order.StorefrontName
+	}
+
+	// Customer info (for seller's sales page display)
+	if order.CustomerName != nil {
+		pbOrder.CustomerName = order.CustomerName
+	}
+	if order.CustomerEmail != nil {
+		pbOrder.CustomerEmail = order.CustomerEmail
+	}
+	if order.CustomerPhone != nil {
+		pbOrder.CustomerPhone = order.CustomerPhone
 	}
 
 	// Convert order items
@@ -711,7 +761,7 @@ func domainOrderItemToProtoOrderItem(item *domain.OrderItem) *listingspb.OrderIt
 		return nil
 	}
 
-	return &listingspb.OrderItem{
+	pbItem := &listingspb.OrderItem{
 		Id:          item.ID,
 		OrderId:     item.OrderID,
 		ListingId:   item.ListingID,
@@ -724,6 +774,13 @@ func domainOrderItemToProtoOrderItem(item *domain.OrderItem) *listingspb.OrderIt
 		Total:       item.Total,
 		CreatedAt:   timestamppb.New(item.CreatedAt),
 	}
+
+	// Add image URL if present
+	if item.ImageURL != nil {
+		pbItem.ImageUrl = item.ImageURL
+	}
+
+	return pbItem
 }
 
 // calculateCartSummary calculates cart summary (totals, warnings)
@@ -759,6 +816,8 @@ func protoOrderStatusFromDomain(status domain.OrderStatus) listingspb.OrderStatu
 		return listingspb.OrderStatus_ORDER_STATUS_PENDING
 	case domain.OrderStatusConfirmed:
 		return listingspb.OrderStatus_ORDER_STATUS_CONFIRMED
+	case domain.OrderStatusAccepted:
+		return listingspb.OrderStatus_ORDER_STATUS_ACCEPTED
 	case domain.OrderStatusProcessing:
 		return listingspb.OrderStatus_ORDER_STATUS_PROCESSING
 	case domain.OrderStatusShipped:
@@ -788,6 +847,8 @@ func domainOrderStatusFromProto(status *listingspb.OrderStatus) *domain.OrderSta
 		domainStatus = domain.OrderStatusPending
 	case listingspb.OrderStatus_ORDER_STATUS_CONFIRMED:
 		domainStatus = domain.OrderStatusConfirmed
+	case listingspb.OrderStatus_ORDER_STATUS_ACCEPTED:
+		domainStatus = domain.OrderStatusAccepted
 	case listingspb.OrderStatus_ORDER_STATUS_PROCESSING:
 		domainStatus = domain.OrderStatusProcessing
 	case listingspb.OrderStatus_ORDER_STATUS_SHIPPED:
@@ -816,6 +877,8 @@ func protoPaymentStatusFromDomain(status domain.PaymentStatus) listingspb.Paymen
 		return listingspb.PaymentStatus_PAYMENT_STATUS_PROCESSING
 	case domain.PaymentStatusCompleted:
 		return listingspb.PaymentStatus_PAYMENT_STATUS_COMPLETED
+	case domain.PaymentStatusCODPending:
+		return listingspb.PaymentStatus_PAYMENT_STATUS_COD_PENDING
 	case domain.PaymentStatusFailed:
 		return listingspb.PaymentStatus_PAYMENT_STATUS_FAILED
 	case domain.PaymentStatusRefunded:

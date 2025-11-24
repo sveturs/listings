@@ -106,6 +106,7 @@ const (
 	PaymentStatus_PAYMENT_STATUS_COMPLETED   PaymentStatus = 3 // Payment successful
 	PaymentStatus_PAYMENT_STATUS_FAILED      PaymentStatus = 4 // Payment failed
 	PaymentStatus_PAYMENT_STATUS_REFUNDED    PaymentStatus = 5 // Payment refunded to customer
+	PaymentStatus_PAYMENT_STATUS_COD_PENDING PaymentStatus = 6 // Cash on Delivery - payment will be collected at delivery
 )
 
 // Enum value maps for PaymentStatus.
@@ -117,6 +118,7 @@ var (
 		3: "PAYMENT_STATUS_COMPLETED",
 		4: "PAYMENT_STATUS_FAILED",
 		5: "PAYMENT_STATUS_REFUNDED",
+		6: "PAYMENT_STATUS_COD_PENDING",
 	}
 	PaymentStatus_value = map[string]int32{
 		"PAYMENT_STATUS_UNSPECIFIED": 0,
@@ -125,6 +127,7 @@ var (
 		"PAYMENT_STATUS_COMPLETED":   3,
 		"PAYMENT_STATUS_FAILED":      4,
 		"PAYMENT_STATUS_REFUNDED":    5,
+		"PAYMENT_STATUS_COD_PENDING": 6,
 	}
 )
 
@@ -4310,14 +4313,15 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\x16ORDER_STATUS_DELIVERED\x10\x05\x12\x1a\n" +
 	"\x16ORDER_STATUS_CANCELLED\x10\x06\x12\x19\n" +
 	"\x15ORDER_STATUS_REFUNDED\x10\a\x12\x17\n" +
-	"\x13ORDER_STATUS_FAILED\x10\b*\xc0\x01\n" +
+	"\x13ORDER_STATUS_FAILED\x10\b*\xe0\x01\n" +
 	"\rPaymentStatus\x12\x1e\n" +
 	"\x1aPAYMENT_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16PAYMENT_STATUS_PENDING\x10\x01\x12\x1d\n" +
 	"\x19PAYMENT_STATUS_PROCESSING\x10\x02\x12\x1c\n" +
 	"\x18PAYMENT_STATUS_COMPLETED\x10\x03\x12\x19\n" +
 	"\x15PAYMENT_STATUS_FAILED\x10\x04\x12\x1b\n" +
-	"\x17PAYMENT_STATUS_REFUNDED\x10\x05*\xb9\x01\n" +
+	"\x17PAYMENT_STATUS_REFUNDED\x10\x05\x12\x1e\n" +
+	"\x1aPAYMENT_STATUS_COD_PENDING\x10\x06*\xb9\x01\n" +
 	"\x11ReservationStatus\x12\"\n" +
 	"\x1eRESERVATION_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19RESERVATION_STATUS_ACTIVE\x10\x01\x12 \n" +

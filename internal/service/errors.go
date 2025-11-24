@@ -370,3 +370,40 @@ func IsValidationError(err error) bool {
 		errors.Is(err, ErrInvalidAddress) ||
 		errors.Is(err, ErrInvalidPaymentMethod)
 }
+
+// Shipment-specific errors
+
+// ErrDeliveryClientNotConfigured indicates that delivery client is not set
+var ErrDeliveryClientNotConfigured = errors.New("delivery client not configured")
+
+// ErrInvalidDeliveryProvider indicates that the delivery provider code is invalid
+type ErrInvalidDeliveryProvider struct {
+	ProviderCode string
+}
+
+func (e ErrInvalidDeliveryProvider) Error() string {
+	return fmt.Sprintf("invalid delivery provider: %s", e.ProviderCode)
+}
+
+// ErrShipmentCreationFailed indicates that shipment creation failed
+type ErrShipmentCreationFailed struct {
+	OrderID int64
+	Reason  string
+}
+
+func (e ErrShipmentCreationFailed) Error() string {
+	return fmt.Sprintf("failed to create shipment for order %d: %s", e.OrderID, e.Reason)
+}
+
+// ErrTrackingInfoNotAvailable indicates that tracking info is not available
+type ErrTrackingInfoNotAvailable struct {
+	OrderID int64
+	Reason  string
+}
+
+func (e ErrTrackingInfoNotAvailable) Error() string {
+	if e.Reason != "" {
+		return fmt.Sprintf("tracking info not available for order %d: %s", e.OrderID, e.Reason)
+	}
+	return fmt.Sprintf("tracking info not available for order %d", e.OrderID)
+}

@@ -38,6 +38,7 @@ type OrderService interface {
 
 	// Configuration
 	SetChatService(chatService ChatService)
+	SetDeliveryClient(client DeliveryClient)
 }
 
 // OrderItemInput represents a single item for direct checkout
@@ -66,6 +67,11 @@ type CreateOrderRequest struct {
 	PaymentMethod      string                 // payment method (card, cash, etc.)
 	CustomerNotes      *string                // Optional customer notes
 	AcceptPriceChanges bool                   // If true, skip price validation (for direct checkout)
+
+	// Customer contact info (for seller to see on sales page)
+	CustomerName  *string // Customer full name
+	CustomerEmail *string // Customer email
+	CustomerPhone *string // Customer phone
 }
 
 // ListOrdersRequest contains parameters for listing orders
@@ -139,6 +145,13 @@ type TrackingEvent struct {
 	Timestamp   time.Time // Event time
 }
 
+// DeliveryClient defines the interface for delivery microservice client
+type DeliveryClient interface {
+	CreateShipment(ctx context.Context, req *DeliveryCreateShipmentRequest) (*DeliveryShipment, error)
+	TrackShipment(ctx context.Context, trackingNumber string) (*DeliveryTrackingInfo, error)
+	CalculateRate(ctx context.Context, req *DeliveryCalculateRateRequest) (*DeliveryRateInfo, error)
+}
+
 // orderService implements OrderService
 type orderService struct {
 	orderRepo       postgres.OrderRepository
@@ -148,7 +161,8 @@ type orderService struct {
 	pool            *pgxpool.Pool
 	config          *FinancialConfig
 	logger          zerolog.Logger
-	chatService     ChatService // For sending order notifications
+	chatService     ChatService    // For sending order notifications
+	deliveryClient  DeliveryClient // For delivery microservice integration
 }
 
 // NewOrderService creates a new order service
@@ -180,6 +194,12 @@ func NewOrderService(
 // This allows delayed initialization to avoid circular dependencies
 func (s *orderService) SetChatService(chatService ChatService) {
 	s.chatService = chatService
+}
+
+// SetDeliveryClient sets the delivery microservice client
+// This allows delayed initialization to avoid circular dependencies
+func (s *orderService) SetDeliveryClient(client DeliveryClient) {
+	s.deliveryClient = client
 }
 
 // CreateOrder creates a new order from a cart OR direct items (ACID transaction)
@@ -319,6 +339,32 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 		order.CustomerNotes = req.CustomerNotes
 	}
 
+	// Set customer contact info (for seller display on sales page)
+	// First try from explicit fields, then fallback to shipping_address
+	if req.CustomerName != nil && *req.CustomerName != "" {
+		order.CustomerName = req.CustomerName
+	} else if req.ShippingAddress != nil {
+		if fullName, ok := req.ShippingAddress["full_name"].(string); ok && fullName != "" {
+			order.CustomerName = &fullName
+		}
+	}
+
+	if req.CustomerEmail != nil && *req.CustomerEmail != "" {
+		order.CustomerEmail = req.CustomerEmail
+	} else if req.ShippingAddress != nil {
+		if email, ok := req.ShippingAddress["email"].(string); ok && email != "" {
+			order.CustomerEmail = &email
+		}
+	}
+
+	if req.CustomerPhone != nil && *req.CustomerPhone != "" {
+		order.CustomerPhone = req.CustomerPhone
+	} else if req.ShippingAddress != nil {
+		if phone, ok := req.ShippingAddress["phone"].(string); ok && phone != "" {
+			order.CustomerPhone = &phone
+		}
+	}
+
 	// Use billing address = shipping address if not provided
 	if order.BillingAddress == nil && order.ShippingAddress != nil {
 		order.BillingAddress = order.ShippingAddress
@@ -392,6 +438,33 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 
 	// Send system notification to storefront owner about new order
 	s.notifyStorefrontOwnerAboutOrder(ctx, order)
+
+	// Auto-confirm order for cash-on-delivery (COD) orders
+	// COD orders should immediately move to "confirmed" status since payment
+	// will be collected upon delivery, not upfront.
+	// Payment status is set to "cod_pending" - NOT "completed" because payment hasn't happened yet!
+	if order.PaymentMethod != nil && isCashOnDeliveryMethod(*order.PaymentMethod) {
+		if err := s.confirmCODOrder(ctx, order); err != nil {
+			s.logger.Error().Err(err).
+				Int64("order_id", order.ID).
+				Str("payment_method", *order.PaymentMethod).
+				Msg("failed to auto-confirm COD order")
+			// Don't fail the order creation, just log the error
+			// The order is still valid, seller can manually confirm
+		} else {
+			// Reload order with updated status
+			order, err = s.orderRepo.GetByID(ctx, order.ID)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("order_id", order.ID).Msg("failed to reload order after COD confirmation")
+			}
+			s.logger.Info().
+				Int64("order_id", order.ID).
+				Str("order_number", order.OrderNumber).
+				Str("payment_method", *order.PaymentMethod).
+				Str("payment_status", string(order.PaymentStatus)).
+				Msg("COD order auto-confirmed successfully")
+		}
+	}
 
 	s.logger.Info().Int64("order_id", order.ID).Str("order_number", order.OrderNumber).Msg("order created successfully")
 	return order, nil
@@ -818,7 +891,8 @@ func (s *orderService) AcceptOrder(ctx context.Context, orderID int64, sellerID 
 		return nil, fmt.Errorf("failed to reload order: %w", err)
 	}
 
-	// TODO: Send notification to buyer about order acceptance
+	// Send notification to buyer about order acceptance
+	s.notifyBuyerAboutOrderAccepted(ctx, order, storefront)
 
 	s.logger.Info().Int64("order_id", orderID).Msg("order accepted successfully")
 	return order, nil
@@ -867,20 +941,80 @@ func (s *orderService) CreateOrderShipment(ctx context.Context, req *CreateShipm
 		}
 	}
 
-	// TODO: Call Delivery Service gRPC to create shipment
-	// For now, generate mock shipment data
-	shipmentID := time.Now().UnixNano() / 1000000 % 10000000
-	trackingNumber := fmt.Sprintf("TRK%d%06d", time.Now().Year(), shipmentID%1000000)
-	labelURL := fmt.Sprintf("https://delivery.svetu.rs/labels/%s.pdf", trackingNumber)
-	estimatedDelivery := time.Now().Add(72 * time.Hour).Format(time.RFC3339)
+	// Parse delivery provider from code
+	provider, err := s.parseDeliveryProvider(req.ProviderCode)
+	if err != nil {
+		return nil, &ErrInvalidDeliveryProvider{ProviderCode: req.ProviderCode}
+	}
+
+	// Prepare shipment data
+	var shipmentID int64
+	var trackingNumber, labelURL, estimatedDelivery string
+	var deliveryCost float64
+
+	// Call Delivery Service if configured
+	if s.deliveryClient != nil {
+		// Build addresses from order data
+		fromAddress := s.buildSellerAddress(storefront)
+		toAddress := s.buildBuyerAddress(order)
+
+		// Build package info
+		pkg := s.buildDeliveryPackage(&req.PackageInfo, order, req.UseCOD, req.CODAmount, req.UseInsurance, req.InsuranceValue)
+
+		// Create shipment via Delivery Service
+		deliveryReq := &DeliveryCreateShipmentRequest{
+			Provider:    provider,
+			FromAddress: fromAddress,
+			ToAddress:   toAddress,
+			Package:     pkg,
+			UserID:      fmt.Sprintf("%d", req.SellerID),
+		}
+
+		shipment, err := s.deliveryClient.CreateShipment(ctx, deliveryReq)
+		if err != nil {
+			s.logger.Error().Err(err).
+				Int64("order_id", req.OrderID).
+				Str("provider_code", req.ProviderCode).
+				Msg("failed to create shipment via delivery service")
+			return nil, &ErrShipmentCreationFailed{
+				OrderID: req.OrderID,
+				Reason:  err.Error(),
+			}
+		}
+
+		// Parse shipment ID from string to int64
+		shipmentID, _ = parseShipmentID(shipment.ID)
+		trackingNumber = shipment.TrackingNumber
+		labelURL = "" // Will be provided when label is generated
+		if !shipment.EstimatedDelivery.IsZero() {
+			estimatedDelivery = shipment.EstimatedDelivery.Format(time.RFC3339)
+		} else {
+			estimatedDelivery = time.Now().Add(72 * time.Hour).Format(time.RFC3339)
+		}
+		deliveryCost = parseCost(shipment.Cost)
+
+		s.logger.Info().
+			Str("shipment_id", shipment.ID).
+			Str("tracking_number", trackingNumber).
+			Msg("shipment created via delivery service")
+	} else {
+		// Fallback: generate mock shipment data if delivery client not configured
+		s.logger.Warn().Msg("delivery client not configured, using mock shipment data")
+		shipmentID = time.Now().UnixNano() / 1000000 % 10000000
+		trackingNumber = fmt.Sprintf("TRK%d%06d", time.Now().Year(), shipmentID%1000000)
+		labelURL = fmt.Sprintf("https://delivery.svetu.rs/labels/%s.pdf", trackingNumber)
+		estimatedDelivery = time.Now().Add(72 * time.Hour).Format(time.RFC3339)
+		deliveryCost = order.Shipping
+	}
 
 	// Update order with shipment info
 	order.Status = domain.OrderStatusProcessing
 	order.TrackingNumber = &trackingNumber
 	order.ShippingProvider = &req.ProviderCode
-	shipmentIDVal := shipmentID
-	order.ShipmentID = &shipmentIDVal
-	order.LabelURL = &labelURL
+	order.ShipmentID = &shipmentID
+	if labelURL != "" {
+		order.LabelURL = &labelURL
+	}
 
 	if err := s.orderRepo.Update(ctx, order); err != nil {
 		return nil, fmt.Errorf("failed to update order: %w", err)
@@ -892,7 +1026,8 @@ func (s *orderService) CreateOrderShipment(ctx context.Context, req *CreateShipm
 		return nil, fmt.Errorf("failed to reload order: %w", err)
 	}
 
-	// TODO: Send notification to buyer about shipment creation
+	// Send notification to buyer about shipment creation
+	s.notifyBuyerAboutShipmentCreated(ctx, order, storefront, trackingNumber)
 
 	s.logger.Info().
 		Int64("order_id", req.OrderID).
@@ -905,7 +1040,7 @@ func (s *orderService) CreateOrderShipment(ctx context.Context, req *CreateShipm
 		TrackingNumber:    trackingNumber,
 		Provider:          req.ProviderCode,
 		Status:            "label_created",
-		DeliveryCost:      order.Shipping,
+		DeliveryCost:      deliveryCost,
 		EstimatedDelivery: estimatedDelivery,
 		LabelURL:          labelURL,
 	}, nil
@@ -982,7 +1117,8 @@ func (s *orderService) MarkOrderShipped(ctx context.Context, orderID int64, sell
 		return nil, fmt.Errorf("failed to reload order: %w", err)
 	}
 
-	// TODO: Send notification to buyer about shipment dispatch
+	// Send notification to buyer about shipment dispatch
+	s.notifyBuyerAboutOrderShipped(ctx, order, storefront)
 
 	s.logger.Info().Int64("order_id", orderID).Msg("order marked as shipped successfully")
 	return order, nil
@@ -1030,8 +1166,21 @@ func (s *orderService) GetOrderTracking(ctx context.Context, orderID int64, user
 		return nil, &ErrOrderMissingTrackingNumber{OrderID: orderID}
 	}
 
-	// TODO: Call Delivery Service gRPC to get tracking info
-	// For now, return mock tracking data based on order status
+	// Try to get tracking from Delivery Service
+	if s.deliveryClient != nil {
+		deliveryInfo, err := s.deliveryClient.TrackShipment(ctx, *order.TrackingNumber)
+		if err == nil && deliveryInfo != nil {
+			// Convert delivery tracking info to service tracking info
+			return s.convertDeliveryTrackingToService(order, deliveryInfo), nil
+		}
+		// Log error but continue with fallback
+		s.logger.Warn().Err(err).
+			Int64("order_id", orderID).
+			Str("tracking_number", *order.TrackingNumber).
+			Msg("failed to get tracking from delivery service, using local data")
+	}
+
+	// Fallback: build tracking data from order timestamps
 	tracking := &TrackingInfo{
 		TrackingNumber: *order.TrackingNumber,
 		Provider:       "delivery_service",
@@ -1107,4 +1256,424 @@ func (s *orderService) GetOrderTracking(ctx context.Context, orderID int64, user
 	}
 
 	return tracking, nil
+}
+
+// isCashOnDeliveryMethod checks if payment method is cash-on-delivery (COD)
+// COD orders should be auto-confirmed since payment is collected upon delivery
+func isCashOnDeliveryMethod(method string) bool {
+	switch method {
+	case "cash_on_delivery", "cod", "cash", "pouzecem", "pouzećem":
+		return true
+	default:
+		return false
+	}
+}
+
+// confirmCODOrder confirms a Cash-on-Delivery order without marking payment as completed.
+// COD orders move to "confirmed" status but payment_status stays as "cod_pending"
+// because actual payment will happen at delivery time.
+func (s *orderService) confirmCODOrder(ctx context.Context, order *domain.Order) error {
+	s.logger.Info().
+		Int64("order_id", order.ID).
+		Str("order_number", order.OrderNumber).
+		Msg("confirming COD order")
+
+	// Start transaction
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Update order status to confirmed, but payment_status to cod_pending (NOT completed!)
+	now := time.Now()
+	order.Status = domain.OrderStatusConfirmed
+	order.PaymentStatus = domain.PaymentStatusCODPending
+	order.ConfirmedAt = &now
+
+	// Set escrow release date (for when payment is actually collected at delivery)
+	escrowReleaseDate := now.Add(time.Duration(order.EscrowDays) * 24 * time.Hour)
+	order.EscrowReleaseDate = &escrowReleaseDate
+
+	// COD transaction ID for tracking
+	codTransactionID := "COD-" + order.OrderNumber
+	order.PaymentTransactionID = &codTransactionID
+
+	orderRepoTx := s.orderRepo.WithTx(tx)
+	if err := orderRepoTx.Update(ctx, order); err != nil {
+		return fmt.Errorf("failed to update order: %w", err)
+	}
+
+	// Commit reservations (stock already deducted, now mark as committed)
+	reservationRepoTx := s.reservationRepo.WithTx(tx)
+	if err := reservationRepoTx.CommitReservations(ctx, order.ID); err != nil {
+		s.logger.Warn().Err(err).Int64("order_id", order.ID).Msg("failed to commit reservations for COD order")
+		// Don't fail - reservations are not critical for COD
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("order_id", order.ID).
+		Str("payment_status", string(order.PaymentStatus)).
+		Str("order_status", string(order.Status)).
+		Msg("COD order confirmed successfully")
+
+	return nil
+}
+
+// ============================================================================
+// SHIPMENT WORKFLOW HELPER METHODS
+// ============================================================================
+
+// parseDeliveryProvider converts provider code string to DeliveryProvider enum
+func (s *orderService) parseDeliveryProvider(code string) (DeliveryProvider, error) {
+	switch code {
+	case "post_express":
+		return DeliveryProviderPostExpress, nil
+	case "bex_express":
+		return DeliveryProviderBexExpress, nil
+	case "aks", "aks_express":
+		return DeliveryProviderAksExpress, nil
+	case "d_express":
+		return DeliveryProviderDExpress, nil
+	case "city_express":
+		return DeliveryProviderCityExpress, nil
+	default:
+		return DeliveryProviderUnspecified, fmt.Errorf("unknown provider: %s", code)
+	}
+}
+
+// buildSellerAddress builds DeliveryAddress from storefront data
+func (s *orderService) buildSellerAddress(storefront *domain.Storefront) *DeliveryAddress {
+	addr := &DeliveryAddress{
+		Country: "RS", // Default to Serbia
+	}
+
+	// Set contact name from storefront
+	if storefront.Name != "" {
+		addr.ContactName = storefront.Name
+	}
+
+	// Get contact phone from storefront
+	if storefront.Phone != nil {
+		addr.ContactPhone = *storefront.Phone
+	}
+
+	// Get address fields from storefront
+	if storefront.Address != nil {
+		addr.Street = *storefront.Address
+	}
+	if storefront.City != nil {
+		addr.City = *storefront.City
+	}
+	if storefront.PostalCode != nil {
+		addr.PostalCode = *storefront.PostalCode
+	}
+	if storefront.Country != nil && *storefront.Country != "" {
+		addr.Country = *storefront.Country
+	}
+
+	return addr
+}
+
+// buildBuyerAddress builds DeliveryAddress from order shipping address
+func (s *orderService) buildBuyerAddress(order *domain.Order) *DeliveryAddress {
+	addr := &DeliveryAddress{
+		Country: "RS", // Default to Serbia
+	}
+
+	if order.ShippingAddress == nil {
+		return addr
+	}
+
+	// Extract address components from shipping_address JSONB
+	if street, ok := order.ShippingAddress["street"].(string); ok {
+		addr.Street = street
+	}
+	if city, ok := order.ShippingAddress["city"].(string); ok {
+		addr.City = city
+	}
+	if postalCode, ok := order.ShippingAddress["postal_code"].(string); ok {
+		addr.PostalCode = postalCode
+	}
+	if country, ok := order.ShippingAddress["country"].(string); ok && country != "" {
+		addr.Country = country
+	}
+	if state, ok := order.ShippingAddress["state"].(string); ok {
+		addr.State = state
+	}
+
+	// Get contact info
+	if order.CustomerName != nil {
+		addr.ContactName = *order.CustomerName
+	} else if fullName, ok := order.ShippingAddress["full_name"].(string); ok {
+		addr.ContactName = fullName
+	}
+
+	if order.CustomerPhone != nil {
+		addr.ContactPhone = *order.CustomerPhone
+	} else if phone, ok := order.ShippingAddress["phone"].(string); ok {
+		addr.ContactPhone = phone
+	}
+
+	return addr
+}
+
+// buildDeliveryPackage builds DeliveryPackage from package info and order
+func (s *orderService) buildDeliveryPackage(info *PackageInfo, order *domain.Order, useCOD bool, codAmount float64, useInsurance bool, insuranceValue float64) *DeliveryPackage {
+	pkg := &DeliveryPackage{
+		Description: info.Description,
+	}
+
+	// Format dimensions as strings (delivery service expects strings)
+	if info.WeightKg > 0 {
+		pkg.Weight = fmt.Sprintf("%.2f", info.WeightKg)
+	} else {
+		pkg.Weight = "1.0" // Default 1kg
+	}
+
+	if info.LengthCm > 0 {
+		pkg.Length = fmt.Sprintf("%.0f", info.LengthCm)
+	}
+	if info.WidthCm > 0 {
+		pkg.Width = fmt.Sprintf("%.0f", info.WidthCm)
+	}
+	if info.HeightCm > 0 {
+		pkg.Height = fmt.Sprintf("%.0f", info.HeightCm)
+	}
+
+	// Set declared value for insurance
+	if useInsurance && insuranceValue > 0 {
+		pkg.DeclaredValue = fmt.Sprintf("%.2f", insuranceValue)
+	} else if useCOD && codAmount > 0 {
+		pkg.DeclaredValue = fmt.Sprintf("%.2f", codAmount)
+	} else {
+		pkg.DeclaredValue = fmt.Sprintf("%.2f", order.Total)
+	}
+
+	// Add description if not provided
+	if pkg.Description == "" {
+		itemCount := len(order.Items)
+		if itemCount > 0 {
+			pkg.Description = fmt.Sprintf("Order #%s (%d items)", order.OrderNumber, itemCount)
+		} else {
+			pkg.Description = fmt.Sprintf("Order #%s", order.OrderNumber)
+		}
+	}
+
+	return pkg
+}
+
+// convertDeliveryTrackingToService converts delivery tracking info to service tracking info
+func (s *orderService) convertDeliveryTrackingToService(order *domain.Order, deliveryInfo *DeliveryTrackingInfo) *TrackingInfo {
+	tracking := &TrackingInfo{
+		TrackingNumber: *order.TrackingNumber,
+		Status:         string(order.Status),
+		Events:         []TrackingEvent{},
+	}
+
+	// Set provider from shipment info
+	if deliveryInfo.Shipment != nil {
+		tracking.Provider = deliveryProviderToString(deliveryInfo.Shipment.Provider)
+		if !deliveryInfo.Shipment.EstimatedDelivery.IsZero() {
+			tracking.EstimatedDelivery = deliveryInfo.Shipment.EstimatedDelivery.Format(time.RFC3339)
+		}
+	} else if order.ShippingProvider != nil {
+		tracking.Provider = *order.ShippingProvider
+	}
+
+	// Convert delivery events to service events
+	for _, e := range deliveryInfo.Events {
+		tracking.Events = append(tracking.Events, TrackingEvent{
+			Status:      e.Status,
+			Location:    e.Location,
+			Description: e.Description,
+			Timestamp:   e.Timestamp,
+		})
+	}
+
+	// Add order-level events at the beginning
+	orderEvents := []TrackingEvent{}
+
+	if order.CreatedAt.Unix() > 0 {
+		orderEvents = append(orderEvents, TrackingEvent{
+			Status:      "order_created",
+			Location:    "System",
+			Description: "Order created",
+			Timestamp:   order.CreatedAt,
+		})
+	}
+
+	if order.ConfirmedAt != nil {
+		orderEvents = append(orderEvents, TrackingEvent{
+			Status:      "payment_confirmed",
+			Location:    "System",
+			Description: "Payment confirmed",
+			Timestamp:   *order.ConfirmedAt,
+		})
+	}
+
+	if order.AcceptedAt != nil {
+		orderEvents = append(orderEvents, TrackingEvent{
+			Status:      "accepted",
+			Location:    "Seller",
+			Description: "Order accepted by seller",
+			Timestamp:   *order.AcceptedAt,
+		})
+	}
+
+	// Prepend order events to delivery events
+	tracking.Events = append(orderEvents, tracking.Events...)
+
+	return tracking
+}
+
+// deliveryProviderToString converts DeliveryProvider enum to human-readable string
+func deliveryProviderToString(p DeliveryProvider) string {
+	switch p {
+	case DeliveryProviderPostExpress:
+		return "Post Express"
+	case DeliveryProviderBexExpress:
+		return "BEX Express"
+	case DeliveryProviderAksExpress:
+		return "AKS Express"
+	case DeliveryProviderDExpress:
+		return "D Express"
+	case DeliveryProviderCityExpress:
+		return "City Express"
+	default:
+		return "Unknown"
+	}
+}
+
+// parseShipmentID parses shipment ID from string to int64
+func parseShipmentID(id string) (int64, error) {
+	var shipmentID int64
+	_, err := fmt.Sscanf(id, "%d", &shipmentID)
+	return shipmentID, err
+}
+
+// parseCost parses cost from string to float64
+func parseCost(cost string) float64 {
+	var c float64
+	fmt.Sscanf(cost, "%f", &c)
+	return c
+}
+
+// ============================================================================
+// BUYER NOTIFICATION METHODS
+// ============================================================================
+
+// notifyBuyerAboutOrderAccepted sends notification to buyer about order acceptance
+func (s *orderService) notifyBuyerAboutOrderAccepted(ctx context.Context, order *domain.Order, storefront *domain.Storefront) {
+	if s.chatService == nil || order.UserID == nil {
+		return
+	}
+
+	storefrontName := storefront.Name
+	if storefrontName == "" && order.StorefrontName != nil {
+		storefrontName = *order.StorefrontName
+	}
+
+	message := fmt.Sprintf(
+		"Your order #%s has been accepted by %s.\n\n"+
+			"The seller is preparing your items for shipment. "+
+			"You will receive tracking information once the package is shipped.",
+		order.OrderNumber,
+		storefrontName,
+	)
+
+	s.sendBuyerNotification(ctx, *order.UserID, message, order.OrderNumber)
+}
+
+// notifyBuyerAboutShipmentCreated sends notification to buyer about shipment creation
+func (s *orderService) notifyBuyerAboutShipmentCreated(ctx context.Context, order *domain.Order, storefront *domain.Storefront, trackingNumber string) {
+	if s.chatService == nil || order.UserID == nil {
+		return
+	}
+
+	storefrontName := storefront.Name
+	if storefrontName == "" && order.StorefrontName != nil {
+		storefrontName = *order.StorefrontName
+	}
+
+	provider := "the courier"
+	if order.ShippingProvider != nil {
+		provider = *order.ShippingProvider
+	}
+
+	message := fmt.Sprintf(
+		"A shipping label has been created for your order #%s.\n\n"+
+			"Tracking Number: %s\n"+
+			"Carrier: %s\n\n"+
+			"The seller will hand over your package to the courier soon.",
+		order.OrderNumber,
+		trackingNumber,
+		provider,
+	)
+
+	s.sendBuyerNotification(ctx, *order.UserID, message, order.OrderNumber)
+}
+
+// notifyBuyerAboutOrderShipped sends notification to buyer about order shipment
+func (s *orderService) notifyBuyerAboutOrderShipped(ctx context.Context, order *domain.Order, storefront *domain.Storefront) {
+	if s.chatService == nil || order.UserID == nil {
+		return
+	}
+
+	storefrontName := storefront.Name
+	if storefrontName == "" && order.StorefrontName != nil {
+		storefrontName = *order.StorefrontName
+	}
+
+	trackingInfo := ""
+	if order.TrackingNumber != nil {
+		provider := "courier"
+		if order.ShippingProvider != nil {
+			provider = *order.ShippingProvider
+		}
+		trackingInfo = fmt.Sprintf("\nTracking Number: %s\nCarrier: %s", *order.TrackingNumber, provider)
+	}
+
+	message := fmt.Sprintf(
+		"Great news! Your order #%s has been shipped by %s.\n%s\n\n"+
+			"You can track your package status in the order details page. "+
+			"Expected delivery: 2-3 business days.",
+		order.OrderNumber,
+		storefrontName,
+		trackingInfo,
+	)
+
+	s.sendBuyerNotification(ctx, *order.UserID, message, order.OrderNumber)
+}
+
+// sendBuyerNotification sends a system message to the buyer
+func (s *orderService) sendBuyerNotification(ctx context.Context, buyerID int64, message, orderNumber string) {
+	go func() {
+		// Create new context since parent context may be cancelled
+		notifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		req := &SendSystemMessageRequest{
+			ReceiverID:       buyerID,
+			Content:          message,
+			OriginalLanguage: "en",
+		}
+
+		_, err := s.chatService.SendSystemMessage(notifyCtx, req)
+		if err != nil {
+			s.logger.Error().Err(err).
+				Int64("buyer_id", buyerID).
+				Str("order_number", orderNumber).
+				Msg("failed to send order notification to buyer")
+		} else {
+			s.logger.Debug().
+				Int64("buyer_id", buyerID).
+				Str("order_number", orderNumber).
+				Msg("order notification sent to buyer")
+		}
+	}()
 }

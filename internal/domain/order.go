@@ -32,11 +32,12 @@ type PaymentStatus string
 
 const (
 	PaymentStatusUnspecified PaymentStatus = "unspecified"
-	PaymentStatusPending     PaymentStatus = "pending"    // Payment initiated, awaiting confirmation
-	PaymentStatusProcessing  PaymentStatus = "processing" // Payment being processed
-	PaymentStatusCompleted   PaymentStatus = "completed"  // Payment successful
-	PaymentStatusFailed      PaymentStatus = "failed"     // Payment failed
-	PaymentStatusRefunded    PaymentStatus = "refunded"   // Payment refunded to customer
+	PaymentStatusPending     PaymentStatus = "pending"     // Payment initiated, awaiting confirmation
+	PaymentStatusProcessing  PaymentStatus = "processing"  // Payment being processed
+	PaymentStatusCompleted   PaymentStatus = "completed"   // Payment successful
+	PaymentStatusCODPending  PaymentStatus = "cod_pending" // Cash on Delivery - payment will be collected at delivery
+	PaymentStatusFailed      PaymentStatus = "failed"      // Payment failed
+	PaymentStatusRefunded    PaymentStatus = "refunded"    // Payment refunded to customer
 )
 
 // Address represents a flexible address structure stored as JSONB
@@ -390,6 +391,8 @@ func PaymentStatusFromProto(pbStatus pb.PaymentStatus) PaymentStatus {
 		return PaymentStatusProcessing
 	case pb.PaymentStatus_PAYMENT_STATUS_COMPLETED:
 		return PaymentStatusCompleted
+	case pb.PaymentStatus_PAYMENT_STATUS_COD_PENDING:
+		return PaymentStatusCODPending
 	case pb.PaymentStatus_PAYMENT_STATUS_FAILED:
 		return PaymentStatusFailed
 	case pb.PaymentStatus_PAYMENT_STATUS_REFUNDED:
@@ -408,6 +411,8 @@ func (s PaymentStatus) ToProtoPaymentStatus() pb.PaymentStatus {
 		return pb.PaymentStatus_PAYMENT_STATUS_PROCESSING
 	case PaymentStatusCompleted:
 		return pb.PaymentStatus_PAYMENT_STATUS_COMPLETED
+	case PaymentStatusCODPending:
+		return pb.PaymentStatus_PAYMENT_STATUS_COD_PENDING
 	case PaymentStatusFailed:
 		return pb.PaymentStatus_PAYMENT_STATUS_FAILED
 	case PaymentStatusRefunded:

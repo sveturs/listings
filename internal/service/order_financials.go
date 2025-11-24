@@ -250,9 +250,20 @@ func BuildOrderItems(cartItems []*domain.CartItem, listings map[int64]*domain.Pr
 			orderItem.Attributes = listing.Attributes
 		}
 
-		// Snapshot image URL (get from listing images if available)
-		// For now, we'll leave this nil and populate later from images service
-		// orderItem.ImageURL = nil
+		// Snapshot image URL (get primary image or first available)
+		if len(listing.Images) > 0 {
+			// Find primary image first
+			for _, img := range listing.Images {
+				if img.IsPrimary {
+					orderItem.ImageURL = &img.URL
+					break
+				}
+			}
+			// If no primary image found, use first image
+			if orderItem.ImageURL == nil {
+				orderItem.ImageURL = &listing.Images[0].URL
+			}
+		}
 
 		orderItems = append(orderItems, orderItem)
 	}

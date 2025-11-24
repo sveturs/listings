@@ -23,6 +23,7 @@ import (
 	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	searchv1 "github.com/sveturs/listings/api/proto/search/v1"
 	"github.com/sveturs/listings/internal/cache"
+	deliveryclient "github.com/sveturs/listings/internal/client/delivery"
 	"github.com/sveturs/listings/internal/config"
 	"github.com/sveturs/listings/internal/health"
 	"github.com/sveturs/listings/internal/metrics"
@@ -331,6 +332,39 @@ func main() {
 		nil, // Use default financial config
 		zerologLogger,
 	)
+
+	// Initialize delivery client (if enabled)
+	var deliveryClient *deliveryclient.Client
+	if cfg.Delivery.Enabled {
+		deliveryCfg := &deliveryclient.Config{
+			Address:    cfg.Delivery.GRPCAddress,
+			Timeout:    cfg.Delivery.Timeout,
+			MaxRetries: cfg.Delivery.MaxRetries,
+			RetryDelay: cfg.Delivery.RetryDelay,
+		}
+		deliveryClient, err = deliveryclient.NewClient(deliveryCfg, zerologLogger)
+		if err != nil {
+			logger.Warn().Err(err).Msg("failed to create delivery client - delivery features will be unavailable")
+		} else {
+			logger.Info().
+				Str("address", cfg.Delivery.GRPCAddress).
+				Msg("Delivery client initialized")
+			defer func() {
+				if err := deliveryClient.Close(); err != nil {
+					logger.Error().Err(err).Msg("failed to close delivery client")
+				}
+			}()
+		}
+	} else {
+		logger.Warn().Msg("Delivery client DISABLED")
+	}
+
+	// Set delivery client on order service (optional integration)
+	if deliveryClient != nil {
+		// Wrap client with adapter to satisfy service.DeliveryClient interface
+		deliveryAdapter := deliveryclient.NewServiceAdapter(deliveryClient)
+		orderService.SetDeliveryClient(deliveryAdapter)
+	}
 
 	// Initialize chat service dependencies
 	chatRepo := postgres.NewChatRepository(pgxPool, zerologLogger)
