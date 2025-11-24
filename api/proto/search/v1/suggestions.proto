@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package search.v1;
+
+option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+
+// GetSuggestionsRequest requests autocomplete suggestions
+message GetSuggestionsRequest {
+  // Search prefix (minimum 2 characters required)
+  string prefix = 1;
+
+  // Optional category filter (only suggest from this category)
+  optional int64 category_id = 2;
+
+  // Maximum number of suggestions (default: 10, max: 20)
+  int32 limit = 3;
+}
+
+// GetSuggestionsResponse contains autocomplete suggestions
+message GetSuggestionsResponse {
+  // List of suggestions ordered by relevance/score
+  repeated Suggestion suggestions = 1;
+
+  // Query execution time in milliseconds
+  int32 took_ms = 2;
+
+  // Whether result was served from cache
+  bool cached = 3;
+}
+
+// Suggestion represents a single autocomplete suggestion
+message Suggestion {
+  // Suggested text (complete phrase)
+  string text = 1;
+
+  // Relevance score (higher is better)
+  double score = 2;
+
+  // Optional listing ID if suggestion comes from specific listing
+  optional int64 listing_id = 3;
+}

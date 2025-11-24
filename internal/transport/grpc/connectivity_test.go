@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	listingsv1 "github.com/sveturs/listings/api/proto/listings/v1"
+	pb "github.com/sveturs/listings/api/proto/listings/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -28,10 +28,10 @@ func TestGRPCConnectivity(t *testing.T) {
 	require.NoError(t, err, "Failed to connect to gRPC server")
 	defer conn.Close()
 
-	client := listingsv1.NewListingsServiceClient(conn)
+	client := pb.NewListingsServiceClient(conn)
 
 	// Test ListListings (should work even with no data)
-	resp, err := client.ListListings(ctx, &listingsv1.ListListingsRequest{
+	resp, err := client.ListListings(ctx, &pb.ListListingsRequest{
 		Limit:  10,
 		Offset: 0,
 	})

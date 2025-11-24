@@ -17,6 +17,7 @@ type Config struct {
 	Search   SearchConfig
 	Storage  StorageConfig
 	Auth     AuthConfig
+	Delivery DeliveryConfig
 	Worker   WorkerConfig
 	Features FeatureFlags
 	Tracing  TracingConfig
@@ -109,6 +110,15 @@ type AuthConfig struct {
 	PublicKeyPath string        `envconfig:"SVETULISTINGS_AUTH_PUBLIC_KEY_PATH" default:"/keys/public.pem"`
 	Timeout       time.Duration `envconfig:"SVETULISTINGS_AUTH_TIMEOUT" default:"10s"`
 	Enabled       bool          `envconfig:"SVETULISTINGS_AUTH_ENABLED" default:"false"` // Disabled for Phase 13.1.15.8 until logger adapter is fixed
+}
+
+// DeliveryConfig contains Delivery microservice integration settings
+type DeliveryConfig struct {
+	GRPCAddress string        `envconfig:"SVETULISTINGS_DELIVERY_GRPC_ADDRESS" default:"localhost:50052"`
+	Timeout     time.Duration `envconfig:"SVETULISTINGS_DELIVERY_TIMEOUT" default:"10s"`
+	MaxRetries  int           `envconfig:"SVETULISTINGS_DELIVERY_MAX_RETRIES" default:"3"`
+	RetryDelay  time.Duration `envconfig:"SVETULISTINGS_DELIVERY_RETRY_DELAY" default:"100ms"`
+	Enabled     bool          `envconfig:"SVETULISTINGS_DELIVERY_ENABLED" default:"false"`
 }
 
 // WorkerConfig contains async worker settings

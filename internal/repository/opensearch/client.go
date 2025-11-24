@@ -52,6 +52,11 @@ func NewClient(addresses []string, username, password, index string, logger zero
 	}, nil
 }
 
+// NewClientSimple creates a simple OpenSearch client with just a URL (for CLI tools)
+func NewClientSimple(url string, logger zerolog.Logger) (*Client, error) {
+	return NewClient([]string{url}, "", "", "marketplace_listings", logger)
+}
+
 // IndexListing indexes a listing document in OpenSearch
 func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) error {
 	// Prepare document for indexing
@@ -69,15 +74,24 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		"visibility":      listing.Visibility,
 		"quantity":        listing.Quantity,
 		"sku":             listing.SKU,
-		"source_type":     listing.SourceType,     // c2c or b2c
-		"document_type":   "listing",              // Required for unified search filtering
-		"stock_status":    listing.StockStatus,    // in_stock, out_of_stock, etc
-		"attributes":      listing.AttributesJSON, // JSONB attributes as string
+		"source_type":     listing.SourceType,  // c2c or b2c
+		"document_type":   "listing",           // Required for unified search filtering
+		"stock_status":    listing.StockStatus, // in_stock, out_of_stock, etc
 		"views_count":     listing.ViewsCount,
 		"favorites_count": listing.FavoritesCount,
 		"created_at":      listing.CreatedAt,
 		"updated_at":      listing.UpdatedAt,
 		"published_at":    listing.PublishedAt,
+	}
+
+	// Add attributes from cache if available
+	attributes, searchableText, err := c.getAttributesFromCache(ctx, int32(listing.ID))
+	if err != nil {
+		// Log but don't fail - attributes are optional
+		c.logger.Debug().Err(err).Int64("listing_id", listing.ID).Msg("no attributes cache found")
+	} else {
+		doc["attributes"] = attributes
+		doc["attributes_searchable_text"] = searchableText
 	}
 
 	// Add images if present
@@ -114,7 +128,8 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 	defer res.Body.Close()
 
 	if res.IsError() {
-		c.logger.Error().Int("status", res.StatusCode).Int64("listing_id", listing.ID).Msg("OpenSearch index error")
+		body, _ := io.ReadAll(res.Body)
+		c.logger.Error().Int("status", res.StatusCode).Int64("listing_id", listing.ID).Str("response_body", string(body)).Msg("OpenSearch index error")
 		return fmt.Errorf("OpenSearch index error: %s", res.Status())
 	}
 
@@ -326,6 +341,251 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 	return listings, totalHits, nil
 }
 
+// GetSimilarListings finds listings similar to the given listing
+// Similarity is based on:
+// 1. Same category (must match)
+// 2. Similar price range (±20%)
+// 3. Status = active, Visibility = public
+// 4. Excludes the source listing itself
+func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error) {
+	// First, fetch the source listing to get its properties
+	res, err := c.client.Get(
+		c.index,
+		fmt.Sprintf("%d", listingID),
+		c.client.Get.WithContext(ctx),
+	)
+	if err != nil {
+		c.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to fetch source listing")
+		return nil, 0, fmt.Errorf("failed to fetch source listing: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		if res.StatusCode == 404 {
+			c.logger.Warn().Int64("listing_id", listingID).Msg("source listing not found")
+			return []*domain.Listing{}, 0, nil // Return empty array if listing not found
+		}
+		return nil, 0, fmt.Errorf("failed to get listing: %s", res.Status())
+	}
+
+	var getResult map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&getResult); err != nil {
+		return nil, 0, fmt.Errorf("failed to parse get response: %w", err)
+	}
+
+	source, ok := getResult["_source"].(map[string]interface{})
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid source structure in get response")
+	}
+
+	// Extract category_id and price
+	categoryID, ok := source["category_id"].(float64)
+	if !ok {
+		c.logger.Warn().Int64("listing_id", listingID).Msg("source listing has no category_id")
+		return []*domain.Listing{}, 0, nil
+	}
+
+	price, ok := source["price"].(float64)
+	if !ok {
+		c.logger.Warn().Int64("listing_id", listingID).Msg("source listing has no price")
+		price = 0 // Use 0 as default if price is missing
+	}
+
+	// Calculate price range (±20%)
+	minPrice := price * 0.8
+	maxPrice := price * 1.2
+	if price == 0 {
+		// If price is 0, don't apply price filter
+		minPrice = 0
+		maxPrice = 0
+	}
+
+	// Build similarity search query
+	filters := []interface{}{
+		// Must match same category
+		map[string]interface{}{"term": map[string]interface{}{"category_id": int64(categoryID)}},
+		// Only active, visible listings
+		map[string]interface{}{"term": map[string]interface{}{"status": "active"}},
+		map[string]interface{}{"term": map[string]interface{}{"visibility": "public"}},
+	}
+
+	// Add price range filter if price > 0
+	if price > 0 {
+		filters = append(filters, map[string]interface{}{
+			"range": map[string]interface{}{
+				"price": map[string]interface{}{
+					"gte": minPrice,
+					"lte": maxPrice,
+				},
+			},
+		})
+	}
+
+	searchQuery := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must": filters,
+				"must_not": []interface{}{
+					// Exclude the source listing itself
+					map[string]interface{}{"term": map[string]interface{}{"id": listingID}},
+				},
+			},
+		},
+		"size": limit,
+		"sort": []interface{}{
+			// Sort by relevance (closest price match first)
+			map[string]interface{}{
+				"_script": map[string]interface{}{
+					"type": "number",
+					"script": map[string]interface{}{
+						"lang":   "painless",
+						"source": fmt.Sprintf("Math.abs(doc['price'].value - %f)", price),
+					},
+					"order": "asc",
+				},
+			},
+			// Secondary sort by creation date (newer first)
+			map[string]interface{}{"created_at": "desc"},
+		},
+	}
+
+	body, err := json.Marshal(searchQuery)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to marshal similarity query: %w", err)
+	}
+
+	searchRes, err := c.client.Search(
+		c.client.Search.WithContext(ctx),
+		c.client.Search.WithIndex(c.index),
+		c.client.Search.WithBody(bytes.NewReader(body)),
+	)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("similarity search failed")
+		return nil, 0, fmt.Errorf("similarity search failed: %w", err)
+	}
+	defer searchRes.Body.Close()
+
+	if searchRes.IsError() {
+		return nil, 0, fmt.Errorf("similarity search error: %s", searchRes.Status())
+	}
+
+	// Parse search results (reuse existing parsing logic)
+	var result map[string]interface{}
+	if err := json.NewDecoder(searchRes.Body).Decode(&result); err != nil {
+		return nil, 0, fmt.Errorf("failed to parse similarity search response: %w", err)
+	}
+
+	hits, ok := result["hits"].(map[string]interface{})
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid hits structure in similarity response")
+	}
+
+	total, ok := hits["total"].(map[string]interface{})
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid total structure in similarity response")
+	}
+
+	totalValue, ok := total["value"].(float64)
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid total value in similarity response")
+	}
+	totalHits := int64(totalValue)
+
+	hitsArray, ok := hits["hits"].([]interface{})
+	if !ok {
+		return nil, 0, fmt.Errorf("invalid hits array in similarity response")
+	}
+
+	var listings []*domain.Listing
+	for _, hit := range hitsArray {
+		hitMap, ok := hit.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		hitSource, ok := hitMap["_source"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// Extract fields (same as SearchListings)
+		//nolint:errcheck
+		id, _ := hitSource["id"].(float64)
+		//nolint:errcheck
+		uuid, _ := hitSource["uuid"].(string)
+		//nolint:errcheck
+		userID, _ := hitSource["user_id"].(float64)
+		//nolint:errcheck
+		title, _ := hitSource["title"].(string)
+		//nolint:errcheck
+		listingPrice, _ := hitSource["price"].(float64)
+		//nolint:errcheck
+		currency, _ := hitSource["currency"].(string)
+		//nolint:errcheck
+		catID, _ := hitSource["category_id"].(float64)
+		//nolint:errcheck
+		status, _ := hitSource["status"].(string)
+		//nolint:errcheck
+		visibility, _ := hitSource["visibility"].(string)
+		//nolint:errcheck
+		quantity, _ := hitSource["quantity"].(float64)
+		//nolint:errcheck
+		sourceType, _ := hitSource["source_type"].(string)
+		//nolint:errcheck
+		viewsCount, _ := hitSource["views_count"].(float64)
+		//nolint:errcheck
+		favoritesCount, _ := hitSource["favorites_count"].(float64)
+
+		listing := &domain.Listing{
+			ID:             int64(id),
+			UUID:           uuid,
+			UserID:         int64(userID),
+			Title:          title,
+			Price:          listingPrice,
+			Currency:       currency,
+			CategoryID:     int64(catID),
+			Status:         status,
+			Visibility:     visibility,
+			Quantity:       int32(quantity),
+			SourceType:     sourceType,
+			ViewsCount:     int32(viewsCount),
+			FavoritesCount: int32(favoritesCount),
+		}
+
+		// Optional fields
+		if desc, ok := hitSource["description"].(string); ok {
+			listing.Description = &desc
+		}
+		if sfID, ok := hitSource["storefront_id"].(float64); ok {
+			id := int64(sfID)
+			listing.StorefrontID = &id
+		}
+		if sku, ok := hitSource["sku"].(string); ok {
+			listing.SKU = &sku
+		}
+		if stockStatus, ok := hitSource["stock_status"].(string); ok {
+			listing.StockStatus = &stockStatus
+		}
+		if attributes, ok := hitSource["attributes"].(string); ok {
+			listing.AttributesJSON = &attributes
+		}
+
+		listings = append(listings, listing)
+	}
+
+	c.logger.Debug().
+		Int64("listing_id", listingID).
+		Int64("category_id", int64(categoryID)).
+		Float64("price", price).
+		Float64("min_price", minPrice).
+		Float64("max_price", maxPrice).
+		Int("results", len(listings)).
+		Int64("total", totalHits).
+		Msg("similarity search completed")
+
+	return listings, int32(totalHits), nil
+}
+
 // buildFilters constructs filter clauses for search query
 func buildFilters(query *domain.SearchListingsQuery) []interface{} {
 	filters := []interface{}{
@@ -358,6 +618,29 @@ func buildFilters(query *domain.SearchListingsQuery) []interface{} {
 		filters = append(filters, map[string]interface{}{
 			"range": map[string]interface{}{"price": priceRange},
 		})
+	}
+
+	// Add attribute filters
+	if len(query.AttributeFilters) > 0 {
+		for _, attrFilter := range query.AttributeFilters {
+			// Build nested query for each attribute filter
+			if attrFilter.MinNumber != nil || attrFilter.MaxNumber != nil {
+				// Range query for numeric attributes
+				filters = append(filters, GetAttributeRangeQuery(
+					attrFilter.Code,
+					attrFilter.MinNumber,
+					attrFilter.MaxNumber,
+				))
+			} else {
+				// Exact match query
+				filters = append(filters, GetAttributeNestedQuery(
+					attrFilter.Code,
+					attrFilter.ValueText,
+					attrFilter.ValueNumber,
+					attrFilter.ValueBool,
+				))
+			}
+		}
 	}
 
 	return filters
@@ -688,4 +971,92 @@ func (c *Client) GetClient() *opensearch.Client {
 func (c *Client) Close() error {
 	// opensearch-go client doesn't require explicit closing
 	return nil
+}
+
+// getAttributesFromCache retrieves cached attributes for a listing from attribute_search_cache
+// Returns: attributes array, searchable text, error
+func (c *Client) getAttributesFromCache(ctx context.Context, listingID int32) ([]interface{}, string, error) {
+	// This method requires database connection which Client doesn't have
+	// It should be called from a higher level service that has both OpenSearch and DB access
+	// For now, return empty to avoid breaking changes
+	// TODO: Refactor to pass attributes from service layer
+	return nil, "", fmt.Errorf("attributes cache not implemented in client")
+}
+
+// DeleteIndex deletes an OpenSearch index
+func (c *Client) DeleteIndex(ctx context.Context, indexName string) error {
+	res, err := c.client.Indices.Delete(
+		[]string{indexName},
+		c.client.Indices.Delete.WithContext(ctx),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete index %s: %w", indexName, err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		if res.StatusCode == 404 {
+			// Index doesn't exist - not an error
+			c.logger.Debug().Str("index", indexName).Msg("index does not exist")
+			return nil
+		}
+		return fmt.Errorf("failed to delete index %s: %s", indexName, res.Status())
+	}
+
+	c.logger.Info().Str("index", indexName).Msg("index deleted successfully")
+	return nil
+}
+
+// CreateIndex creates an OpenSearch index with the given mapping
+func (c *Client) CreateIndex(ctx context.Context, indexName string, mapping map[string]interface{}) error {
+	body, err := json.Marshal(mapping)
+	if err != nil {
+		return fmt.Errorf("failed to marshal mapping: %w", err)
+	}
+
+	res, err := c.client.Indices.Create(
+		indexName,
+		c.client.Indices.Create.WithContext(ctx),
+		c.client.Indices.Create.WithBody(bytes.NewReader(body)),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create index %s: %w", indexName, err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("failed to create index %s: %s - %s", indexName, res.Status(), string(bodyBytes))
+	}
+
+	c.logger.Info().Str("index", indexName).Msg("index created successfully")
+	return nil
+}
+
+// CountDocuments returns the number of documents in an index
+func (c *Client) CountDocuments(ctx context.Context, indexName string) (int, error) {
+	res, err := c.client.Count(
+		c.client.Count.WithContext(ctx),
+		c.client.Count.WithIndex(indexName),
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count documents in %s: %w", indexName, err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return 0, fmt.Errorf("failed to count documents in %s: %s", indexName, res.Status())
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return 0, fmt.Errorf("failed to parse count response: %w", err)
+	}
+
+	count, ok := result["count"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("invalid count response format")
+	}
+
+	return int(count), nil
 }

@@ -5,10 +5,12 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver registration
 	"github.com/rs/zerolog"
@@ -71,6 +73,54 @@ func InitDB(dsn string, maxOpenConns, maxIdleConns int, connMaxLifetime, connMax
 	return db, nil
 }
 
+// InitPgxPool initializes pgxpool connection pool for pgx-based repositories
+func InitPgxPool(ctx context.Context, dsn string, maxConns, minConns int32, logger zerolog.Logger) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse DSN: %w", err)
+	}
+
+	// Configure connection pool
+	config.MaxConns = maxConns
+	config.MinConns = minConns
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pgxpool: %w", err)
+	}
+
+	// Test connection
+	pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := pool.Ping(pingCtx); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	logger.Info().
+		Int32("max_conns", maxConns).
+		Int32("min_conns", minConns).
+		Msg("PgxPool connection pool initialized")
+
+	return pool, nil
+}
+
+// extractFieldTranslations extracts translations for a specific field from the translations map
+func extractFieldTranslations(translations map[string]map[string]string, field string) map[string]string {
+	result := make(map[string]string)
+	if translations == nil {
+		return result
+	}
+
+	for lang, fields := range translations {
+		if value, ok := fields[field]; ok && value != "" {
+			result[lang] = value
+		}
+	}
+	return result
+}
+
 // validateCreateListingInput validates input before creating a listing
 func validateCreateListingInput(input *domain.CreateListingInput) error {
 	if input == nil {
@@ -128,16 +178,57 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		return nil, fmt.Errorf("failed to generate slug: %w", err)
 	}
 
+	// Prepare translation JSONB data
+	titleTranslations := extractFieldTranslations(input.Translations, "title")
+	descriptionTranslations := extractFieldTranslations(input.Translations, "description")
+	locationTranslations := extractFieldTranslations(input.Translations, "location")
+	cityTranslations := extractFieldTranslations(input.Translations, "city")
+	countryTranslations := extractFieldTranslations(input.Translations, "country")
+
+	// Marshal translations to JSON for PostgreSQL JSONB columns
+	titleTranslationsJSON, err := json.Marshal(titleTranslations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal title translations: %w", err)
+	}
+	descriptionTranslationsJSON, err := json.Marshal(descriptionTranslations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal description translations: %w", err)
+	}
+	locationTranslationsJSON, err := json.Marshal(locationTranslations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal location translations: %w", err)
+	}
+	cityTranslationsJSON, err := json.Marshal(cityTranslations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal city translations: %w", err)
+	}
+	countryTranslationsJSON, err := json.Marshal(countryTranslations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal country translations: %w", err)
+	}
+
+	// Default original language to "sr" if not provided
+	originalLanguage := input.OriginalLanguage
+	if originalLanguage == "" {
+		originalLanguage = "sr"
+	}
+
 	query := `
-		INSERT INTO listings (user_id, storefront_id, title, description, price, currency, category_id, quantity, sku, source_type, slug)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO listings (
+			user_id, storefront_id, title, description, price, currency, category_id, quantity, sku, source_type, slug,
+			title_translations, description_translations, location_translations, city_translations, country_translations, original_language
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 		RETURNING id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		          status, visibility, quantity, sku, source_type, view_count, favorites_count,
+		          title_translations, description_translations, location_translations, city_translations, country_translations, original_language,
 		          created_at, updated_at, published_at, deleted_at, is_deleted
 	`
 
 	var listing domain.Listing
-	err = r.db.QueryRowxContext(
+	var titleTranslationsBytes, descriptionTranslationsBytes, locationTranslationsBytes, cityTranslationsBytes, countryTranslationsBytes []byte
+
+	err = r.db.QueryRowContext(
 		ctx,
 		query,
 		input.UserID,
@@ -151,11 +242,73 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		input.SKU,
 		input.SourceType,
 		slug,
-	).StructScan(&listing)
+		titleTranslationsJSON,
+		descriptionTranslationsJSON,
+		locationTranslationsJSON,
+		cityTranslationsJSON,
+		countryTranslationsJSON,
+		originalLanguage,
+	).Scan(
+		&listing.ID,
+		&listing.UUID,
+		&listing.Slug,
+		&listing.UserID,
+		&listing.StorefrontID,
+		&listing.Title,
+		&listing.Description,
+		&listing.Price,
+		&listing.Currency,
+		&listing.CategoryID,
+		&listing.Status,
+		&listing.Visibility,
+		&listing.Quantity,
+		&listing.SKU,
+		&listing.SourceType,
+		&listing.ViewsCount,
+		&listing.FavoritesCount,
+		&titleTranslationsBytes,
+		&descriptionTranslationsBytes,
+		&locationTranslationsBytes,
+		&cityTranslationsBytes,
+		&countryTranslationsBytes,
+		&listing.OriginalLanguage,
+		&listing.CreatedAt,
+		&listing.UpdatedAt,
+		&listing.PublishedAt,
+		&listing.DeletedAt,
+		&listing.IsDeleted,
+	)
 
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to create listing")
 		return nil, fmt.Errorf("failed to create listing: %w", err)
+	}
+
+	// Unmarshal JSONB translations back into maps
+	if len(titleTranslationsBytes) > 0 {
+		if err := json.Unmarshal(titleTranslationsBytes, &listing.TitleTranslations); err != nil {
+			r.logger.Error().Err(err).Msg("failed to unmarshal title translations")
+		}
+	}
+	if len(descriptionTranslationsBytes) > 0 {
+		if err := json.Unmarshal(descriptionTranslationsBytes, &listing.DescriptionTranslations); err != nil {
+			r.logger.Error().Err(err).Msg("failed to unmarshal description translations")
+		}
+	}
+	if len(locationTranslationsBytes) > 0 {
+		if err := json.Unmarshal(locationTranslationsBytes, &listing.LocationTranslations); err != nil {
+			r.logger.Error().Err(err).Msg("failed to unmarshal location translations")
+		}
+	}
+	if len(cityTranslationsBytes) > 0 {
+		if err := json.Unmarshal(cityTranslationsBytes, &listing.CityTranslations); err != nil {
+			r.logger.Error().Err(err).Msg("failed to unmarshal city translations")
+		}
+	}
+	if len(countryTranslationsBytes) > 0 {
+		if err := json.Unmarshal(countryTranslationsBytes, &listing.CountryTranslations); err != nil {
+			r.logger.Error().Err(err).Msg("failed to unmarshal country translations")
+		}
 	}
 
 	r.logger.Info().Int64("listing_id", listing.ID).Str("title", listing.Title).Str("slug", slug).Msg("listing created")
@@ -167,19 +320,80 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 	query := `
 		SELECT id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
+		       title_translations, description_translations, location_translations, city_translations, country_translations, original_language,
 		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE id = $1 AND is_deleted = false
 	`
 
 	var listing domain.Listing
-	err := r.db.GetContext(ctx, &listing, query, id)
+	var titleTranslationsJSON, descriptionTranslationsJSON, locationTranslationsJSON, cityTranslationsJSON, countryTranslationsJSON []byte
+
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&listing.ID,
+		&listing.UUID,
+		&listing.Slug,
+		&listing.UserID,
+		&listing.StorefrontID,
+		&listing.Title,
+		&listing.Description,
+		&listing.Price,
+		&listing.Currency,
+		&listing.CategoryID,
+		&listing.Status,
+		&listing.Visibility,
+		&listing.Quantity,
+		&listing.SKU,
+		&listing.SourceType,
+		&listing.ViewsCount,
+		&listing.FavoritesCount,
+		&titleTranslationsJSON,
+		&descriptionTranslationsJSON,
+		&locationTranslationsJSON,
+		&cityTranslationsJSON,
+		&countryTranslationsJSON,
+		&listing.OriginalLanguage,
+		&listing.ExpiresAt,
+		&listing.CreatedAt,
+		&listing.UpdatedAt,
+		&listing.PublishedAt,
+		&listing.DeletedAt,
+		&listing.IsDeleted,
+	)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("listing not found: %w", err)
 		}
 		r.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to get listing")
 		return nil, fmt.Errorf("failed to get listing: %w", err)
+	}
+
+	// Unmarshal JSONB translations into maps
+	if len(titleTranslationsJSON) > 0 {
+		if err := json.Unmarshal(titleTranslationsJSON, &listing.TitleTranslations); err != nil {
+			r.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to unmarshal title translations")
+		}
+	}
+	if len(descriptionTranslationsJSON) > 0 {
+		if err := json.Unmarshal(descriptionTranslationsJSON, &listing.DescriptionTranslations); err != nil {
+			r.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to unmarshal description translations")
+		}
+	}
+	if len(locationTranslationsJSON) > 0 {
+		if err := json.Unmarshal(locationTranslationsJSON, &listing.LocationTranslations); err != nil {
+			r.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to unmarshal location translations")
+		}
+	}
+	if len(cityTranslationsJSON) > 0 {
+		if err := json.Unmarshal(cityTranslationsJSON, &listing.CityTranslations); err != nil {
+			r.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to unmarshal city translations")
+		}
+	}
+	if len(countryTranslationsJSON) > 0 {
+		if err := json.Unmarshal(countryTranslationsJSON, &listing.CountryTranslations); err != nil {
+			r.logger.Error().Err(err).Int64("listing_id", id).Msg("failed to unmarshal country translations")
+		}
 	}
 
 	// Load images for indexing and API responses

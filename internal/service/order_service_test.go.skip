@@ -1,0 +1,204 @@
+// Package service provides business logic layer for the listings microservice.
+package service
+
+import (
+	"context"
+	"testing"
+
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	"github.com/sveturs/listings/internal/domain"
+)
+
+// Mock OrderRepository
+type MockOrderRepository struct {
+	mock.Mock
+}
+
+func (m *MockOrderRepository) Create(ctx context.Context, order *domain.Order) error {
+	args := m.Called(ctx, order)
+	if args.Error(0) == nil {
+		order.ID = 1
+	}
+	return args.Error(0)
+}
+
+func (m *MockOrderRepository) GetByID(ctx context.Context, orderID int64) (*domain.Order, error) {
+	args := m.Called(ctx, orderID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Order), args.Error(1)
+}
+
+func (m *MockOrderRepository) GetByOrderNumber(ctx context.Context, orderNumber string) (*domain.Order, error) {
+	args := m.Called(ctx, orderNumber)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Order), args.Error(1)
+}
+
+func (m *MockOrderRepository) ListByUser(ctx context.Context, userID int64, limit, offset int) ([]*domain.Order, int, error) {
+	args := m.Called(ctx, userID, limit, offset)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]*domain.Order), args.Int(1), args.Error(2)
+}
+
+func (m *MockOrderRepository) ListByStorefront(ctx context.Context, storefrontID int64, limit, offset int) ([]*domain.Order, int, error) {
+	args := m.Called(ctx, storefrontID, limit, offset)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]*domain.Order), args.Int(1), args.Error(2)
+}
+
+func (m *MockOrderRepository) Update(ctx context.Context, order *domain.Order) error {
+	args := m.Called(ctx, order)
+	return args.Error(0)
+}
+
+func (m *MockOrderRepository) UpdateStatus(ctx context.Context, orderID int64, status domain.OrderStatus) error {
+	args := m.Called(ctx, orderID, status)
+	return args.Error(0)
+}
+
+func (m *MockOrderRepository) Delete(ctx context.Context, orderID int64) error {
+	args := m.Called(ctx, orderID)
+	return args.Error(0)
+}
+
+func (m *MockOrderRepository) CreateItems(ctx context.Context, orderID int64, items []*domain.OrderItem) error {
+	args := m.Called(ctx, orderID, items)
+	return args.Error(0)
+}
+
+func (m *MockOrderRepository) GetItems(ctx context.Context, orderID int64) ([]*domain.OrderItem, error) {
+	args := m.Called(ctx, orderID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.OrderItem), args.Error(1)
+}
+
+func (m *MockOrderRepository) LockListingsByIDs(ctx context.Context, listingIDs []int64) error {
+	args := m.Called(ctx, listingIDs)
+	return args.Error(0)
+}
+
+func (m *MockOrderRepository) WithTx(tx interface{}) interface{} {
+	args := m.Called(tx)
+	return args.Get(0)
+}
+
+// Test GetOrder
+func TestGetOrder_Success(t *testing.T) {
+	mockOrderRepo := new(MockOrderRepository)
+	logger := zerolog.Nop()
+
+	order := &domain.Order{
+		ID:          1,
+		OrderNumber: "ORD-2025-000001",
+		Status:      domain.OrderStatusPending,
+	}
+
+	mockOrderRepo.On("GetByID", mock.Anything, int64(1)).Return(order, nil)
+
+	service := &orderService{
+		orderRepo: mockOrderRepo,
+		logger:    logger,
+	}
+
+	result, err := service.GetOrder(context.Background(), 1)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "ORD-2025-000001", result.OrderNumber)
+	mockOrderRepo.AssertExpectations(t)
+}
+
+// Test GetOrder_NotFound
+func TestGetOrder_NotFound(t *testing.T) {
+	mockOrderRepo := new(MockOrderRepository)
+	logger := zerolog.Nop()
+
+	mockOrderRepo.On("GetByID", mock.Anything, int64(999)).
+		Return(nil, assert.AnError)
+
+	service := &orderService{
+		orderRepo: mockOrderRepo,
+		logger:    logger,
+	}
+
+	result, err := service.GetOrder(context.Background(), 999)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	mockOrderRepo.AssertExpectations(t)
+}
+
+// Test UpdateOrderStatus
+func TestUpdateOrderStatus_Success(t *testing.T) {
+	mockOrderRepo := new(MockOrderRepository)
+	logger := zerolog.Nop()
+
+	order := &domain.Order{
+		ID:          1,
+		OrderNumber: "ORD-2025-000001",
+		Status:      domain.OrderStatusPending,
+	}
+
+	updatedOrder := &domain.Order{
+		ID:          1,
+		OrderNumber: "ORD-2025-000001",
+		Status:      domain.OrderStatusConfirmed,
+	}
+
+	mockOrderRepo.On("GetByID", mock.Anything, int64(1)).Return(order, nil).Once()
+	mockOrderRepo.On("UpdateStatus", mock.Anything, int64(1), domain.OrderStatusConfirmed).Return(nil).Once()
+	mockOrderRepo.On("GetByID", mock.Anything, int64(1)).Return(updatedOrder, nil).Once()
+
+	service := &orderService{
+		orderRepo: mockOrderRepo,
+		logger:    logger,
+	}
+
+	result, err := service.UpdateOrderStatus(context.Background(), 1, domain.OrderStatusConfirmed)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, domain.OrderStatusConfirmed, result.Status)
+	mockOrderRepo.AssertExpectations(t)
+}
+
+// Test UpdateOrderStatus_InvalidTransition
+func TestUpdateOrderStatus_InvalidTransition(t *testing.T) {
+	mockOrderRepo := new(MockOrderRepository)
+	logger := zerolog.Nop()
+
+	order := &domain.Order{
+		ID:          1,
+		OrderNumber: "ORD-2025-000001",
+		Status:      domain.OrderStatusDelivered, // Already delivered
+	}
+
+	mockOrderRepo.On("GetByID", mock.Anything, int64(1)).Return(order, nil).Once()
+
+	service := &orderService{
+		orderRepo: mockOrderRepo,
+		logger:    logger,
+	}
+
+	// Try to move back to pending (invalid transition)
+	result, err := service.UpdateOrderStatus(context.Background(), 1, domain.OrderStatusPending)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	var orderCannotUpdateErr *ErrOrderCannotUpdateStatus
+	assert.ErrorAs(t, err, &orderCannotUpdateErr)
+	mockOrderRepo.AssertExpectations(t)
+}

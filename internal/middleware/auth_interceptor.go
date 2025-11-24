@@ -112,15 +112,37 @@ func (a *AuthInterceptor) enrichContext(ctx context.Context, validationResp *ent
 func (a *AuthInterceptor) isPublicMethod(method string) bool {
 	// Public methods that don't require authentication
 	publicMethods := []string{
-		"/listings.v1.ListingsService/GetRootCategories",
-		"/listings.v1.ListingsService/GetAllCategories",
-		"/listings.v1.ListingsService/GetCategory",
-		"/listings.v1.ListingsService/GetCategoryBySlug",
-		"/listings.v1.ListingsService/SearchListings",
-		"/listings.v1.ListingsService/ListListings",
-		"/listings.v1.ListingsService/GetListing",
-		"/listings.v1.ListingsService/GetProduct",
-		"/listings.v1.ListingsService/GetProductBySKU",
+		"/listingssvc.v1.ListingsService/GetRootCategories",
+		"/listingssvc.v1.ListingsService/GetAllCategories",
+		"/listingssvc.v1.ListingsService/GetCategory",
+		"/listingssvc.v1.ListingsService/GetCategoryBySlug",
+		"/listingssvc.v1.ListingsService/SearchListings",
+		"/listingssvc.v1.ListingsService/ListListings",
+		"/listingssvc.v1.ListingsService/GetListing",
+		"/listingssvc.v1.ListingsService/GetSimilarListings",
+		"/listingssvc.v1.ListingsService/GetProduct",
+		"/listingssvc.v1.ListingsService/GetProductBySKU",
+		"/listingssvc.v1.ListingsService/ListProducts",
+		// Storefront public methods
+		"/listingssvc.v1.ListingsService/GetStorefront",
+		"/listingssvc.v1.ListingsService/GetStorefrontBySlug",
+		"/listingssvc.v1.ListingsService/ListStorefronts",
+		"/listingssvc.v1.ListingsService/GetMyStorefronts",
+		"/listingssvc.v1.ListingsService/GetWorkingHours",
+		"/listingssvc.v1.ListingsService/IsOpenNow",
+		"/listingssvc.v1.ListingsService/GetStaff",
+		"/listingssvc.v1.ListingsService/GetPaymentMethods",
+		"/listingssvc.v1.ListingsService/GetDeliveryOptions",
+		"/listingssvc.v1.ListingsService/GetMapData",
+		// Attributes public methods (no auth required for viewing category attributes)
+		"/listingssvc.v1.AttributeService/GetCategoryAttributes",
+		"/listingssvc.v1.AttributeService/GetCategoryVariantAttributes",
+		// Category service public methods
+		"/categoriessvc.v1.CategoryService/GetCategories",
+		"/categoriessvc.v1.CategoryService/GetCategoryBySlug",
+		"/categoriessvc.v1.CategoryService/GetRootCategories",
+		"/categoriessvc.v1.CategoryService/GetCategoryChildren",
+		"/categoriessvc.v1.CategoryService/GetCategoryPath",
 	}
 
 	for _, publicMethod := range publicMethods {

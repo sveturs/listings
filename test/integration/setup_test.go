@@ -13,8 +13,11 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 
 	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	"github.com/sveturs/listings/internal/domain"
 	"github.com/sveturs/listings/internal/metrics"
+	miniorepo "github.com/sveturs/listings/internal/repository/minio"
 	"github.com/sveturs/listings/internal/repository/postgres"
+	"github.com/sveturs/listings/internal/service"
 	"github.com/sveturs/listings/internal/service/listings"
 	testutils "github.com/sveturs/listings/internal/testing"
 	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
@@ -30,6 +33,99 @@ const (
 
 	// defaultTimeout is the default timeout for test contexts
 )
+
+// =============================================================================
+// Mock OrderService for Integration Tests
+// =============================================================================
+
+// mockOrderService is a minimal implementation of OrderService for testing
+type mockOrderService struct{}
+
+func (m *mockOrderService) CreateOrder(ctx context.Context, req *service.CreateOrderRequest) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) GetOrder(ctx context.Context, orderID int64) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) GetOrderByNumber(ctx context.Context, orderNumber string) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) ListOrders(ctx context.Context, req *service.ListOrdersRequest) ([]*domain.Order, int64, error) {
+	return nil, 0, nil
+}
+
+func (m *mockOrderService) CancelOrder(ctx context.Context, orderID int64, userID int64, reason string) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) UpdateOrderStatus(ctx context.Context, orderID int64, status domain.OrderStatus) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) GetOrderStats(ctx context.Context, userID *int64, storefrontID *int64) (*service.OrderStats, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) ConfirmOrderPayment(ctx context.Context, orderID int64, transactionID string) error {
+	return nil
+}
+
+func (m *mockOrderService) ProcessRefund(ctx context.Context, orderID int64) error {
+	return nil
+}
+
+// =============================================================================
+// Mock Cart Service
+// =============================================================================
+
+type mockCartService struct{}
+
+func (m *mockCartService) AddToCart(ctx context.Context, req *service.AddToCartRequest) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) UpdateCartItem(ctx context.Context, req *service.UpdateCartItemRequest) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) UpdateCartItemByItemID(ctx context.Context, cartItemID int64, quantity int32, userID *int64, sessionID *string) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) RemoveFromCart(ctx context.Context, cartID, itemID int64) error {
+	return nil
+}
+
+func (m *mockCartService) RemoveFromCartByItemID(ctx context.Context, cartItemID int64, userID *int64, sessionID *string) error {
+	return nil
+}
+
+func (m *mockCartService) GetCart(ctx context.Context, userID *int64, sessionID *string, storefrontID int64) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) ClearCart(ctx context.Context, cartID int64) error {
+	return nil
+}
+
+func (m *mockCartService) GetUserCarts(ctx context.Context, userID int64) ([]*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) MergeSessionCartToUser(ctx context.Context, sessionID string, userID int64) error {
+	return nil
+}
+
+func (m *mockCartService) RecalculateCart(ctx context.Context, cartID int64) (*domain.Cart, error) {
+	return nil, nil
+}
+
+func (m *mockCartService) ValidateCartItems(ctx context.Context, cartID int64) ([]service.PriceChangeItem, error) {
+	return nil, nil
+}
 
 // =============================================================================
 // Global Metrics Singleton
@@ -144,13 +240,46 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 	repo := postgres.NewRepository(db, logger)
 
 	// Create service (no Redis and no indexer for integration tests)
-	service := listings.NewService(repo, nil, nil, logger)
+	listingsService := listings.NewService(repo, nil, nil, logger)
+
+	// Create storefront service
+	storefrontService := listings.NewStorefrontService(repo, &logger)
+
+	// Create attribute service (uses dedicated AttributeRepository)
+	attrRepo := postgres.NewAttributeRepository(db, logger)
+	attrService := service.NewAttributeService(attrRepo, nil, logger)
+
+	// Create category service (uses main Repository which implements CategoryRepository interface)
+	categoryService := service.NewCategoryService(repo, nil, logger)
+
+	// Create mock order service for integration tests
+	orderService := &mockOrderService{}
+
+	// Create mock cart service for integration tests
+	cartService := &mockCartService{}
+
+	// Mock analytics service (nil is OK for integration tests that don't need analytics)
+	var analyticsService service.AnalyticsService = nil
+
+	// Mock minio client (nil is OK for integration tests that don't need image operations)
+	var minioClient *miniorepo.Client = nil
 
 	// Get singleton metrics instance
 	m := getTestMetrics()
 
 	// Create gRPC server
-	grpcServer := grpchandlers.NewServer(service, m, logger)
+	grpcServer := grpchandlers.NewServer(
+		listingsService,
+		storefrontService,
+		attrService,
+		categoryService,
+		orderService,
+		cartService,
+		analyticsService,
+		minioClient,
+		m,
+		logger,
+	)
 
 	// Setup in-memory gRPC connection using bufconn
 	listener := bufconn.Listen(bufSize)

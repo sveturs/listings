@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package search.v1;
+
+option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+
+// GetPopularSearchesRequest requests trending/popular search queries
+message GetPopularSearchesRequest {
+  // Optional category filter (popular searches in this category only)
+  optional int64 category_id = 1;
+
+  // Maximum number of results (default: 10, max: 20)
+  int32 limit = 2;
+
+  // Time range for popularity calculation
+  // Values: "24h" | "7d" | "30d"
+  // Default: "24h"
+  optional string time_range = 3;
+}
+
+// GetPopularSearchesResponse contains popular search queries
+message GetPopularSearchesResponse {
+  // List of popular searches ordered by trend score
+  repeated PopularSearch searches = 1;
+
+  // Query execution time in milliseconds
+  int32 took_ms = 2;
+}
+
+// PopularSearch represents a trending search query
+message PopularSearch {
+  // Search query text
+  string query = 1;
+
+  // Number of times this query was searched
+  int64 search_count = 2;
+
+  // Trend score (combines frequency + recency)
+  // Higher score = more trending
+  double trend_score = 3;
+}

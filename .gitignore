@@ -65,3 +65,4 @@ coverage.html
 
 # Migration tool state
 .migrate.lock
+/main

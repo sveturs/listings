@@ -10,11 +10,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 
 // GetProduct retrieves a single product by ID
-func (s *Server) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.ProductResponse, error) {
+func (s *Server) GetProduct(ctx context.Context, req *listingspb.GetProductRequest) (*listingspb.ProductResponse, error) {
 	s.logger.Debug().Int64("product_id", req.ProductId).Msg("GetProduct called")
 
 	// Validation
@@ -38,14 +38,19 @@ func (s *Server) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get product: %v", err))
 	}
 
+	// Apply translations if lang is specified
+	if req.Lang != nil && *req.Lang != "" {
+		ApplyProductTranslation(product, *req.Lang)
+	}
+
 	// Convert to proto
 	protoProduct := ProductToProto(product)
 
-	return &pb.ProductResponse{Product: protoProduct}, nil
+	return &listingspb.ProductResponse{Product: protoProduct}, nil
 }
 
 // GetProductsBySKUs retrieves products by list of SKUs
-func (s *Server) GetProductsBySKUs(ctx context.Context, req *pb.GetProductsBySKUsRequest) (*pb.ProductsResponse, error) {
+func (s *Server) GetProductsBySKUs(ctx context.Context, req *listingspb.GetProductsBySKUsRequest) (*listingspb.ProductsResponse, error) {
 	s.logger.Debug().Int("sku_count", len(req.Skus)).Msg("GetProductsBySKUs called")
 
 	// Validation
@@ -71,20 +76,20 @@ func (s *Server) GetProductsBySKUs(ctx context.Context, req *pb.GetProductsBySKU
 	}
 
 	// Convert to proto
-	protoProducts := make([]*pb.Product, 0, len(products))
+	protoProducts := make([]*listingspb.Product, 0, len(products))
 	for _, p := range products {
 		protoProducts = append(protoProducts, ProductToProto(p))
 	}
 
 	s.logger.Debug().Int("found_count", len(products)).Msg("products retrieved by SKUs")
-	return &pb.ProductsResponse{
+	return &listingspb.ProductsResponse{
 		Products:   protoProducts,
 		TotalCount: int32(len(products)),
 	}, nil
 }
 
 // GetProductsByIDs retrieves products by list of IDs
-func (s *Server) GetProductsByIDs(ctx context.Context, req *pb.GetProductsByIDsRequest) (*pb.ProductsResponse, error) {
+func (s *Server) GetProductsByIDs(ctx context.Context, req *listingspb.GetProductsByIDsRequest) (*listingspb.ProductsResponse, error) {
 	s.logger.Debug().Int("id_count", len(req.ProductIds)).Msg("GetProductsByIDs called")
 
 	// Validation
@@ -116,20 +121,20 @@ func (s *Server) GetProductsByIDs(ctx context.Context, req *pb.GetProductsByIDsR
 	}
 
 	// Convert to proto
-	protoProducts := make([]*pb.Product, 0, len(products))
+	protoProducts := make([]*listingspb.Product, 0, len(products))
 	for _, p := range products {
 		protoProducts = append(protoProducts, ProductToProto(p))
 	}
 
 	s.logger.Debug().Int("found_count", len(products)).Msg("products retrieved by IDs")
-	return &pb.ProductsResponse{
+	return &listingspb.ProductsResponse{
 		Products:   protoProducts,
 		TotalCount: int32(len(products)),
 	}, nil
 }
 
 // ListProducts retrieves paginated list of products
-func (s *Server) ListProducts(ctx context.Context, req *pb.ListProductsRequest) (*pb.ProductsResponse, error) {
+func (s *Server) ListProducts(ctx context.Context, req *listingspb.ListProductsRequest) (*listingspb.ProductsResponse, error) {
 	s.logger.Debug().Int64("storefront_id", req.StorefrontId).Int32("page", req.Page).Int32("page_size", req.PageSize).Msg("ListProducts called")
 
 	// Validation
@@ -159,20 +164,20 @@ func (s *Server) ListProducts(ctx context.Context, req *pb.ListProductsRequest) 
 	}
 
 	// Convert to proto
-	protoProducts := make([]*pb.Product, 0, len(products))
+	protoProducts := make([]*listingspb.Product, 0, len(products))
 	for _, p := range products {
 		protoProducts = append(protoProducts, ProductToProto(p))
 	}
 
 	s.logger.Debug().Int("count", len(products)).Int("total", totalCount).Msg("products listed")
-	return &pb.ProductsResponse{
+	return &listingspb.ProductsResponse{
 		Products:   protoProducts,
 		TotalCount: int32(totalCount),
 	}, nil
 }
 
 // GetVariant retrieves a single variant by ID
-func (s *Server) GetVariant(ctx context.Context, req *pb.GetVariantRequest) (*pb.VariantResponse, error) {
+func (s *Server) GetVariant(ctx context.Context, req *listingspb.GetVariantRequest) (*listingspb.VariantResponse, error) {
 	s.logger.Debug().Int64("variant_id", req.VariantId).Msg("GetVariant called")
 
 	// Validation
@@ -199,11 +204,11 @@ func (s *Server) GetVariant(ctx context.Context, req *pb.GetVariantRequest) (*pb
 	// Convert to proto
 	protoVariant := ProductVariantToProto(variant)
 
-	return &pb.VariantResponse{Variant: protoVariant}, nil
+	return &listingspb.VariantResponse{Variant: protoVariant}, nil
 }
 
 // GetVariantsByProductID retrieves all variants for a product
-func (s *Server) GetVariantsByProductID(ctx context.Context, req *pb.GetVariantsByProductIDRequest) (*pb.ProductVariantsResponse, error) {
+func (s *Server) GetVariantsByProductID(ctx context.Context, req *listingspb.GetVariantsByProductIDRequest) (*listingspb.ProductVariantsResponse, error) {
 	s.logger.Debug().Int64("product_id", req.ProductId).Msg("GetVariantsByProductID called")
 
 	// Validation
@@ -225,19 +230,19 @@ func (s *Server) GetVariantsByProductID(ctx context.Context, req *pb.GetVariants
 	}
 
 	// Convert to proto
-	protoVariants := make([]*pb.ProductVariant, 0, len(variants))
+	protoVariants := make([]*listingspb.ProductVariant, 0, len(variants))
 	for _, v := range variants {
 		protoVariants = append(protoVariants, ProductVariantToProto(v))
 	}
 
 	s.logger.Debug().Int("count", len(variants)).Msg("variants retrieved")
-	return &pb.ProductVariantsResponse{
+	return &listingspb.ProductVariantsResponse{
 		Variants: protoVariants,
 	}, nil
 }
 
 // CreateProduct creates a new product
-func (s *Server) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.ProductResponse, error) {
+func (s *Server) CreateProduct(ctx context.Context, req *listingspb.CreateProductRequest) (*listingspb.ProductResponse, error) {
 	s.logger.Debug().
 		Int64("storefront_id", req.StorefrontId).
 		Str("name", req.Name).
@@ -295,11 +300,11 @@ func (s *Server) CreateProduct(ctx context.Context, req *pb.CreateProductRequest
 	protoProduct := ProductToProto(product)
 
 	s.logger.Info().Int64("product_id", product.ID).Msg("product created successfully")
-	return &pb.ProductResponse{Product: protoProduct}, nil
+	return &listingspb.ProductResponse{Product: protoProduct}, nil
 }
 
 // BulkCreateProducts creates multiple products in a single atomic operation
-func (s *Server) BulkCreateProducts(ctx context.Context, req *pb.BulkCreateProductsRequest) (*pb.BulkCreateProductsResponse, error) {
+func (s *Server) BulkCreateProducts(ctx context.Context, req *listingspb.BulkCreateProductsRequest) (*listingspb.BulkCreateProductsResponse, error) {
 	s.logger.Debug().
 		Int64("storefront_id", req.StorefrontId).
 		Int("product_count", len(req.Products)).
@@ -332,14 +337,14 @@ func (s *Server) BulkCreateProducts(ctx context.Context, req *pb.BulkCreateProdu
 	products, errors, err := s.service.BulkCreateProducts(ctx, req.StorefrontId, inputs)
 
 	// Build response
-	response := &pb.BulkCreateProductsResponse{
+	response := &listingspb.BulkCreateProductsResponse{
 		SuccessfulCount: int32(len(products)),
 		FailedCount:     int32(len(errors)),
 	}
 
 	// Convert created products to proto
 	if len(products) > 0 {
-		response.Products = make([]*pb.Product, len(products))
+		response.Products = make([]*listingspb.Product, len(products))
 		for i, p := range products {
 			response.Products[i] = ProductToProto(p)
 		}
@@ -347,9 +352,9 @@ func (s *Server) BulkCreateProducts(ctx context.Context, req *pb.BulkCreateProdu
 
 	// Convert errors to proto
 	if len(errors) > 0 {
-		response.Errors = make([]*pb.BulkOperationError, len(errors))
+		response.Errors = make([]*listingspb.BulkOperationError, len(errors))
 		for i, e := range errors {
-			protoError := &pb.BulkOperationError{
+			protoError := &listingspb.BulkOperationError{
 				Index:        e.Index,
 				ErrorCode:    e.ErrorCode,
 				ErrorMessage: e.ErrorMessage,
@@ -399,7 +404,7 @@ func (s *Server) BulkCreateProducts(ctx context.Context, req *pb.BulkCreateProdu
 }
 
 // UpdateProduct updates an existing product
-func (s *Server) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.ProductResponse, error) {
+func (s *Server) UpdateProduct(ctx context.Context, req *listingspb.UpdateProductRequest) (*listingspb.ProductResponse, error) {
 	s.logger.Debug().
 		Int64("product_id", req.ProductId).
 		Int64("storefront_id", req.StorefrontId).
@@ -455,11 +460,11 @@ func (s *Server) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest
 	protoProduct := ProductToProto(product)
 
 	s.logger.Info().Int64("product_id", product.ID).Msg("product updated successfully")
-	return &pb.ProductResponse{Product: protoProduct}, nil
+	return &listingspb.ProductResponse{Product: protoProduct}, nil
 }
 
 // DeleteProduct deletes a product (soft or hard delete)
-func (s *Server) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest) (*pb.DeleteProductResponse, error) {
+func (s *Server) DeleteProduct(ctx context.Context, req *listingspb.DeleteProductRequest) (*listingspb.DeleteProductResponse, error) {
 	s.logger.Debug().
 		Int64("product_id", req.ProductId).
 		Int64("storefront_id", req.StorefrontId).
@@ -503,7 +508,7 @@ func (s *Server) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest
 		Int32("variants_deleted", variantsDeleted).
 		Msg("product deleted successfully")
 
-	return &pb.DeleteProductResponse{
+	return &listingspb.DeleteProductResponse{
 		Success:         true,
 		Message:         &deleteMsg,
 		VariantsDeleted: variantsDeleted,
@@ -511,7 +516,7 @@ func (s *Server) DeleteProduct(ctx context.Context, req *pb.DeleteProductRequest
 }
 
 // CreateProductVariant creates a new product variant
-func (s *Server) CreateProductVariant(ctx context.Context, req *pb.CreateProductVariantRequest) (*pb.VariantResponse, error) {
+func (s *Server) CreateProductVariant(ctx context.Context, req *listingspb.CreateProductVariantRequest) (*listingspb.VariantResponse, error) {
 	s.logger.Debug().
 		Int64("product_id", req.ProductId).
 		Msg("CreateProductVariant called")
@@ -556,11 +561,11 @@ func (s *Server) CreateProductVariant(ctx context.Context, req *pb.CreateProduct
 	protoVariant := ProductVariantToProto(variant)
 
 	s.logger.Info().Int64("variant_id", variant.ID).Msg("variant created successfully")
-	return &pb.VariantResponse{Variant: protoVariant}, nil
+	return &listingspb.VariantResponse{Variant: protoVariant}, nil
 }
 
 // UpdateProductVariant updates an existing product variant
-func (s *Server) UpdateProductVariant(ctx context.Context, req *pb.UpdateProductVariantRequest) (*pb.VariantResponse, error) {
+func (s *Server) UpdateProductVariant(ctx context.Context, req *listingspb.UpdateProductVariantRequest) (*listingspb.VariantResponse, error) {
 	s.logger.Debug().
 		Int64("variant_id", req.VariantId).
 		Int64("product_id", req.ProductId).
@@ -606,11 +611,11 @@ func (s *Server) UpdateProductVariant(ctx context.Context, req *pb.UpdateProduct
 	protoVariant := ProductVariantToProto(variant)
 
 	s.logger.Info().Int64("variant_id", variant.ID).Msg("variant updated successfully")
-	return &pb.VariantResponse{Variant: protoVariant}, nil
+	return &listingspb.VariantResponse{Variant: protoVariant}, nil
 }
 
 // DeleteProductVariant deletes a product variant
-func (s *Server) DeleteProductVariant(ctx context.Context, req *pb.DeleteProductVariantRequest) (*pb.DeleteProductVariantResponse, error) {
+func (s *Server) DeleteProductVariant(ctx context.Context, req *listingspb.DeleteProductVariantRequest) (*listingspb.DeleteProductVariantResponse, error) {
 	s.logger.Debug().
 		Int64("variant_id", req.VariantId).
 		Int64("product_id", req.ProductId).
@@ -650,11 +655,11 @@ func (s *Server) DeleteProductVariant(ctx context.Context, req *pb.DeleteProduct
 		Int64("product_id", req.ProductId).
 		Msg("variant deleted successfully")
 
-	return &pb.DeleteProductVariantResponse{Success: true}, nil
+	return &listingspb.DeleteProductVariantResponse{Success: true}, nil
 }
 
 // BulkCreateProductVariants creates multiple product variants in one atomic operation
-func (s *Server) BulkCreateProductVariants(ctx context.Context, req *pb.BulkCreateProductVariantsRequest) (*pb.BulkCreateProductVariantsResponse, error) {
+func (s *Server) BulkCreateProductVariants(ctx context.Context, req *listingspb.BulkCreateProductVariantsRequest) (*listingspb.BulkCreateProductVariantsResponse, error) {
 	s.logger.Debug().
 		Int64("product_id", req.ProductId).
 		Int("count", len(req.Variants)).
@@ -726,7 +731,7 @@ func (s *Server) BulkCreateProductVariants(ctx context.Context, req *pb.BulkCrea
 	}
 
 	// Convert domain variants to proto
-	protoVariants := make([]*pb.ProductVariant, 0, len(variants))
+	protoVariants := make([]*listingspb.ProductVariant, 0, len(variants))
 	for _, v := range variants {
 		protoVariants = append(protoVariants, ProductVariantToProto(v))
 	}
@@ -736,7 +741,7 @@ func (s *Server) BulkCreateProductVariants(ctx context.Context, req *pb.BulkCrea
 		Int64("product_id", req.ProductId).
 		Msg("variants bulk created successfully")
 
-	return &pb.BulkCreateProductVariantsResponse{
+	return &listingspb.BulkCreateProductVariantsResponse{
 		Variants:        protoVariants,
 		SuccessfulCount: int32(len(variants)),
 		FailedCount:     0,
@@ -745,7 +750,7 @@ func (s *Server) BulkCreateProductVariants(ctx context.Context, req *pb.BulkCrea
 }
 
 // BulkUpdateProducts updates multiple products in a single atomic operation
-func (s *Server) BulkUpdateProducts(ctx context.Context, req *pb.BulkUpdateProductsRequest) (*pb.BulkUpdateProductsResponse, error) {
+func (s *Server) BulkUpdateProducts(ctx context.Context, req *listingspb.BulkUpdateProductsRequest) (*listingspb.BulkUpdateProductsResponse, error) {
 	s.logger.Debug().
 		Int64("storefront_id", req.StorefrontId).
 		Int("update_count", len(req.Updates)).
@@ -757,11 +762,11 @@ func (s *Server) BulkUpdateProducts(ctx context.Context, req *pb.BulkUpdateProdu
 	}
 
 	if len(req.Updates) == 0 {
-		return &pb.BulkUpdateProductsResponse{
-			Products:        []*pb.Product{},
+		return &listingspb.BulkUpdateProductsResponse{
+			Products:        []*listingspb.Product{},
 			SuccessfulCount: 0,
 			FailedCount:     0,
-			Errors:          []*pb.BulkOperationError{},
+			Errors:          []*listingspb.BulkOperationError{},
 		}, nil
 	}
 
@@ -802,15 +807,15 @@ func (s *Server) BulkUpdateProducts(ctx context.Context, req *pb.BulkUpdateProdu
 	}
 
 	// Convert successful products to proto
-	protoProducts := make([]*pb.Product, 0, len(result.SuccessfulProducts))
+	protoProducts := make([]*listingspb.Product, 0, len(result.SuccessfulProducts))
 	for _, p := range result.SuccessfulProducts {
 		protoProducts = append(protoProducts, ProductToProto(p))
 	}
 
 	// Convert errors to proto
-	protoErrors := make([]*pb.BulkOperationError, 0, len(result.FailedUpdates))
+	protoErrors := make([]*listingspb.BulkOperationError, 0, len(result.FailedUpdates))
 	for _, e := range result.FailedUpdates {
-		protoError := &pb.BulkOperationError{
+		protoError := &listingspb.BulkOperationError{
 			ErrorCode:    e.ErrorCode,
 			ErrorMessage: e.ErrorMessage,
 		}
@@ -824,7 +829,7 @@ func (s *Server) BulkUpdateProducts(ctx context.Context, req *pb.BulkUpdateProdu
 		Int32("failed_count", int32(len(result.FailedUpdates))).
 		Msg("bulk update products completed")
 
-	return &pb.BulkUpdateProductsResponse{
+	return &listingspb.BulkUpdateProductsResponse{
 		Products:        protoProducts,
 		SuccessfulCount: int32(len(result.SuccessfulProducts)),
 		FailedCount:     int32(len(result.FailedUpdates)),

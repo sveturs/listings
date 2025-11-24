@@ -47,11 +47,19 @@ type Repository interface {
 	GetUserFavorites(ctx context.Context, userID int64) ([]int64, error)
 	IsFavorite(ctx context.Context, userID, listingID int64) (bool, error)
 
-	// Variant operations
+	// Variant operations (old ListingVariant - deprecated)
 	CreateVariants(ctx context.Context, variants []*domain.ListingVariant) error
 	GetVariants(ctx context.Context, listingID int64) ([]*domain.ListingVariant, error)
 	UpdateVariant(ctx context.Context, variant *domain.ListingVariant) error
 	DeleteVariant(ctx context.Context, variantID int64) error
+
+	// B2C Variant operations (new domain.Variant for b2c_product_variants table)
+	// Repository methods for postgres implementation
+	CreateVariant(ctx context.Context, variant *domain.Variant) (*domain.Variant, error)
+	GetVariant(ctx context.Context, id int64) (*domain.Variant, error)
+	UpdateB2CVariant(ctx context.Context, id int64, update *domain.VariantUpdate) (*domain.Variant, error)
+	DeleteB2CVariant(ctx context.Context, id int64) error
+	ListVariants(ctx context.Context, filters *domain.VariantFilters) ([]*domain.Variant, error)
 
 	// Reindexing operations
 	GetListingsForReindex(ctx context.Context, limit int) ([]*domain.Listing, error)
@@ -84,10 +92,12 @@ type Repository interface {
 	IncrementProductViews(ctx context.Context, productID int64) error
 	BatchUpdateStock(ctx context.Context, storefrontID int64, items []domain.StockUpdateItem, reason string, userID int64) (int32, int32, []domain.StockUpdateResult, error)
 
-	// Storefront operations
-	GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error)
-	GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error)
-	ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error)
+	// Product Images operations (B2C)
+	GetProductImageByID(ctx context.Context, imageID int64) (*domain.ProductImage, error)
+	AddProductImage(ctx context.Context, image *domain.ProductImage) (*domain.ProductImage, error)
+	GetProductImages(ctx context.Context, productID int64) ([]*domain.ProductImage, error)
+	DeleteProductImage(ctx context.Context, imageID int64) error
+	ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error
 
 	// Transaction and database operations
 	BeginTx(ctx context.Context) (*sql.Tx, error)
@@ -106,6 +116,7 @@ type IndexingService interface {
 	IndexListing(ctx context.Context, listing *domain.Listing) error
 	UpdateListing(ctx context.Context, listing *domain.Listing) error
 	DeleteListing(ctx context.Context, listingID int64) error
+	GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error)
 }
 
 // Service implements business logic for listings
@@ -529,6 +540,74 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 	}
 
 	s.logger.Debug().Str("query", query.Query).Int("count", len(listings)).Int32("total", total).Msg("search completed")
+	return listings, total, nil
+}
+
+// GetSimilarListings finds listings similar to the given listing
+func (s *Service) GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error) {
+	// Apply business rules for limit
+	if limit <= 0 {
+		limit = 10 // Default to 10 similar items
+	}
+	if limit > 20 {
+		limit = 20 // Cap at 20 items max
+	}
+
+	// Try cache first (1-hour TTL for similar listings)
+	cacheKey := fmt.Sprintf("similar:%d:%d", listingID, limit)
+
+	if s.cache != nil {
+		var cached struct {
+			Listings []*domain.Listing
+			Total    int32
+		}
+		if err := s.cache.Get(ctx, cacheKey, &cached); err == nil {
+			s.logger.Debug().Int64("listing_id", listingID).Msg("similar listings found in cache")
+			return cached.Listings, cached.Total, nil
+		}
+	}
+
+	// Cache miss - query OpenSearch via indexer
+	listings, total, err := s.indexer.GetSimilarListings(ctx, listingID, limit)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to get similar listings")
+		// Graceful degradation: return empty array instead of error
+		return []*domain.Listing{}, 0, nil
+	}
+
+	// Load images for each similar listing (eager loading)
+	for _, listing := range listings {
+		images, err := s.repo.GetImages(ctx, listing.ID)
+		if err != nil {
+			// Log error but don't fail the request
+			s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to load images for similar listing")
+		} else {
+			listing.Images = images
+		}
+	}
+
+	// Cache results (non-blocking, 1-hour TTL)
+	if s.cache != nil {
+		go func() {
+			cached := struct {
+				Listings []*domain.Listing
+				Total    int32
+			}{
+				Listings: listings,
+				Total:    total,
+			}
+			if err := s.cache.Set(context.Background(), cacheKey, cached); err != nil {
+				s.logger.Warn().Err(err).Int64("listing_id", listingID).Msg("failed to cache similar listings")
+			}
+		}()
+	}
+
+	s.logger.Debug().
+		Int64("listing_id", listingID).
+		Int("count", len(listings)).
+		Int32("total", total).
+		Msg("similar listings search completed")
+
 	return listings, total, nil
 }
 
@@ -1530,6 +1609,33 @@ func (s *Service) BulkDeleteProducts(ctx context.Context, storefrontID int64, pr
 		return 0, 0, 0, nil, err // Return as-is to preserve error details
 	}
 
+	// Async deletion from OpenSearch (non-blocking, graceful degradation)
+	if s.indexer != nil && successCount > 0 {
+		go func(productIDs []int64) {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Warn().Interface("panic", r).
+						Msg("recovered from panic during bulk OpenSearch deletion")
+				}
+			}()
+
+			indexCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			deletedCount := 0
+			for _, productID := range productIDs {
+				if err := s.indexer.DeleteListing(indexCtx, productID); err != nil {
+					s.logger.Warn().Err(err).Int64("product_id", productID).
+						Msg("OpenSearch deletion failed (non-blocking)")
+				} else {
+					deletedCount++
+				}
+			}
+			s.logger.Info().Int("deleted_from_index", deletedCount).Int("total", len(productIDs)).
+				Msg("bulk OpenSearch deletion completed")
+		}(deduplicatedIDs)
+	}
+
 	deleteType := "soft deleted"
 	if hardDelete {
 		deleteType = "hard deleted"
@@ -1827,36 +1933,6 @@ func (s *Service) BatchUpdateStock(ctx context.Context, storefrontID int64, item
 	return successCount, failedCount, results, nil
 }
 
-// GetStorefront retrieves a storefront by ID
-func (s *Service) GetStorefront(ctx context.Context, storefrontID int64) (*domain.Storefront, error) {
-	sf, err := s.repo.GetStorefront(ctx, storefrontID)
-	if err != nil {
-		s.logger.Error().Err(err).Int64("storefront_id", storefrontID).Msg("failed to get storefront")
-		return nil, fmt.Errorf("failed to get storefront: %w", err)
-	}
-	return sf, nil
-}
-
-// GetStorefrontBySlug retrieves a storefront by slug
-func (s *Service) GetStorefrontBySlug(ctx context.Context, slug string) (*domain.Storefront, error) {
-	sf, err := s.repo.GetStorefrontBySlug(ctx, slug)
-	if err != nil {
-		s.logger.Error().Err(err).Str("slug", slug).Msg("failed to get storefront by slug")
-		return nil, fmt.Errorf("failed to get storefront by slug: %w", err)
-	}
-	return sf, nil
-}
-
-// ListStorefronts returns a paginated list of storefronts
-func (s *Service) ListStorefronts(ctx context.Context, limit, offset int) ([]*domain.Storefront, int64, error) {
-	storefronts, total, err := s.repo.ListStorefronts(ctx, limit, offset)
-	if err != nil {
-		s.logger.Error().Err(err).Int("limit", limit).Int("offset", offset).Msg("failed to list storefronts")
-		return nil, 0, fmt.Errorf("failed to list storefronts: %w", err)
-	}
-	return storefronts, total, nil
-}
-
 // ============================================================================
 // Helper Functions for OpenSearch Integration
 // ============================================================================
@@ -2069,4 +2145,66 @@ func convertProductToListing(product *domain.Product) *domain.Listing {
 	}
 
 	return listing
+}
+
+// =============================================================================
+// Product Images (B2C)
+// =============================================================================
+
+// GetProductImageByID retrieves a single product image by ID
+func (s *Service) GetProductImageByID(ctx context.Context, imageID int64) (*domain.ProductImage, error) {
+	return s.repo.GetProductImageByID(ctx, imageID)
+}
+
+// AddProductImage adds a new image to a B2C product
+func (s *Service) AddProductImage(ctx context.Context, image *domain.ProductImage) (*domain.ProductImage, error) {
+	result, err := s.repo.AddProductImage(ctx, image)
+	if err != nil {
+		return nil, err
+	}
+
+	// Reindex product in OpenSearch after image add (async)
+	if s.indexer != nil && result.ProductID != nil && *result.ProductID > 0 {
+		productID := *result.ProductID
+		go func() {
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full product with images
+			fullProduct, err := s.repo.GetProductByID(indexCtx, productID, nil)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("failed to get product for reindexing after image add (non-blocking)")
+				return
+			}
+
+			// Convert to listing for indexing
+			listing := convertProductToListing(fullProduct)
+
+			// Update in OpenSearch
+			if err := s.indexer.UpdateListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("OpenSearch reindexing failed after product image add (non-blocking)")
+			} else {
+				s.logger.Debug().Int64("product_id", productID).Msg("product reindexed in OpenSearch after image add")
+			}
+		}()
+	}
+
+	return result, nil
+}
+
+// GetProductImages retrieves all images for a B2C product
+func (s *Service) GetProductImages(ctx context.Context, productID int64) ([]*domain.ProductImage, error) {
+	return s.repo.GetProductImages(ctx, productID)
+}
+
+// DeleteProductImage removes a product image
+func (s *Service) DeleteProductImage(ctx context.Context, imageID int64) error {
+	return s.repo.DeleteProductImage(ctx, imageID)
+}
+
+// ReorderProductImages updates display order for product images
+func (s *Service) ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error {
+	return s.repo.ReorderProductImages(ctx, productID, orders)
 }

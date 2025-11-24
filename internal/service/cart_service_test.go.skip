@@ -1,0 +1,462 @@
+// Package service provides business logic layer for the listings microservice.
+package service
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"testing"
+
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
+	"github.com/sveturs/listings/internal/domain"
+	"github.com/sveturs/listings/internal/repository/postgres"
+)
+
+// Mock CartRepository
+type MockCartRepository struct {
+	mock.Mock
+}
+
+func (m *MockCartRepository) Create(ctx context.Context, cart *domain.Cart) error {
+	args := m.Called(ctx, cart)
+	if args.Get(0) != nil {
+		// Simulate setting ID
+		cart.ID = 1
+	}
+	return args.Error(0)
+}
+
+func (m *MockCartRepository) GetByID(ctx context.Context, cartID int64) (*domain.Cart, error) {
+	args := m.Called(ctx, cartID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Cart), args.Error(1)
+}
+
+func (m *MockCartRepository) GetByUserAndStorefront(ctx context.Context, userID, storefrontID int64) (*domain.Cart, error) {
+	args := m.Called(ctx, userID, storefrontID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Cart), args.Error(1)
+}
+
+func (m *MockCartRepository) GetBySessionAndStorefront(ctx context.Context, sessionID string, storefrontID int64) (*domain.Cart, error) {
+	args := m.Called(ctx, sessionID, storefrontID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Cart), args.Error(1)
+}
+
+func (m *MockCartRepository) GetUserCarts(ctx context.Context, userID int64) ([]*domain.Cart, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Cart), args.Error(1)
+}
+
+func (m *MockCartRepository) Update(ctx context.Context, cart *domain.Cart) error {
+	args := m.Called(ctx, cart)
+	return args.Error(0)
+}
+
+func (m *MockCartRepository) Delete(ctx context.Context, cartID int64) error {
+	args := m.Called(ctx, cartID)
+	return args.Error(0)
+}
+
+func (m *MockCartRepository) AddItem(ctx context.Context, item *domain.CartItem) error {
+	args := m.Called(ctx, item)
+	if args.Error(0) == nil {
+		// Simulate setting ID
+		item.ID = 1
+	}
+	return args.Error(0)
+}
+
+func (m *MockCartRepository) UpdateItem(ctx context.Context, item *domain.CartItem) error {
+	args := m.Called(ctx, item)
+	return args.Error(0)
+}
+
+func (m *MockCartRepository) RemoveItem(ctx context.Context, cartID, itemID int64) error {
+	args := m.Called(ctx, cartID, itemID)
+	return args.Error(0)
+}
+
+func (m *MockCartRepository) ClearItems(ctx context.Context, cartID int64) error {
+	args := m.Called(ctx, cartID)
+	return args.Error(0)
+}
+
+func (m *MockCartRepository) GetItemsByCartID(ctx context.Context, cartID int64) ([]*domain.CartItem, error) {
+	args := m.Called(ctx, cartID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.CartItem), args.Error(1)
+}
+
+func (m *MockCartRepository) WithTx(tx *sql.Tx) postgres.CartRepository {
+	args := m.Called(tx)
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(postgres.CartRepository)
+}
+
+// Mock ProductsRepository
+type MockProductsRepository struct {
+	mock.Mock
+}
+
+func (m *MockProductsRepository) GetProductByID(ctx context.Context, productID int64, storefrontID *int64) (*domain.Product, error) {
+	args := m.Called(ctx, productID, storefrontID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Product), args.Error(1)
+}
+
+// Test AddToCart
+func TestAddToCart_Success(t *testing.T) {
+	// Setup
+	mockCartRepo := new(MockCartRepository)
+	mockProductsRepo := new(MockProductsRepository)
+	logger := zerolog.Nop()
+
+	userID := int64(100)
+	storefrontID := int64(1)
+	listingID := int64(200)
+
+	service := &cartService{
+		cartRepo:     mockCartRepo,
+		productsRepo: nil, // Will be mocked directly in test
+		logger:       logger,
+	}
+
+	// Mock listing
+	listing := &domain.Product{
+		ID:             listingID,
+		StorefrontID:   storefrontID,
+		Name:           "Test Product",
+		Price:          100.0,
+		StockQuantity:  10,
+		IsActive:       true,
+	}
+
+	// Mock cart (not found initially)
+	mockCartRepo.On("GetByUserAndStorefront", mock.Anything, userID, storefrontID).
+		Return(nil, errors.New("cart not found")).Once()
+
+	// Mock cart creation
+	mockCartRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Cart")).
+		Return(nil).Once()
+
+	// Mock add item
+	mockCartRepo.On("AddItem", mock.Anything, mock.AnythingOfType("*domain.CartItem")).
+		Return(nil).Once()
+
+	// Mock get items
+	mockCartRepo.On("GetItemsByCartID", mock.Anything, int64(1)).
+		Return([]*domain.CartItem{
+			{
+				ID:            1,
+				CartID:        1,
+				ListingID:     listingID,
+				Quantity:      2,
+				PriceSnapshot: 100.0,
+			},
+		}, nil).Once()
+
+	// Create a wrapper for products repo
+	service.productsRepo = &mockProductsRepoWrapper{listing: listing}
+
+	// Execute
+	req := &AddToCartRequest{
+		UserID:       &userID,
+		SessionID:    nil,
+		StorefrontID: storefrontID,
+		ListingID:    listingID,
+		Quantity:     2,
+	}
+
+	cart, err := service.AddToCart(context.Background(), req)
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, cart)
+	assert.Equal(t, storefrontID, cart.StorefrontID)
+	assert.Equal(t, 1, len(cart.Items))
+	assert.Equal(t, int32(2), cart.Items[0].Quantity)
+
+	mockCartRepo.AssertExpectations(t)
+}
+
+func TestAddToCart_ListingNotFound(t *testing.T) {
+	// Setup
+	mockCartRepo := new(MockCartRepository)
+	logger := zerolog.Nop()
+
+	userID := int64(100)
+	storefrontID := int64(1)
+	listingID := int64(999)
+
+	service := &cartService{
+		cartRepo:     mockCartRepo,
+		productsRepo: &mockProductsRepoWrapper{listing: nil}, // No listing
+		logger:       logger,
+	}
+
+	// Execute
+	req := &AddToCartRequest{
+		UserID:       &userID,
+		SessionID:    nil,
+		StorefrontID: storefrontID,
+		ListingID:    listingID,
+		Quantity:     1,
+	}
+
+	cart, err := service.AddToCart(context.Background(), req)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, cart)
+	var listingNotFoundErr *ErrListingNotFound
+	assert.ErrorAs(t, err, &listingNotFoundErr)
+}
+
+func TestAddToCart_InsufficientStock(t *testing.T) {
+	// Setup
+	mockCartRepo := new(MockCartRepository)
+	logger := zerolog.Nop()
+
+	userID := int64(100)
+	storefrontID := int64(1)
+	listingID := int64(200)
+
+	// Mock listing with low stock
+	listing := &domain.Product{
+		ID:             listingID,
+		StorefrontID:   storefrontID,
+		Name:           "Test Product",
+		Price:          100.0,
+		StockQuantity:  1, // Only 1 in stock
+		IsActive:       true,
+	}
+
+	service := &cartService{
+		cartRepo:     mockCartRepo,
+		productsRepo: &mockProductsRepoWrapper{listing: listing},
+		logger:       logger,
+	}
+
+	// Execute
+	req := &AddToCartRequest{
+		UserID:       &userID,
+		SessionID:    nil,
+		StorefrontID: storefrontID,
+		ListingID:    listingID,
+		Quantity:     5, // Request more than available
+	}
+
+	cart, err := service.AddToCart(context.Background(), req)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Nil(t, cart)
+	var insufficientStockErr *ErrInsufficientStock
+	assert.ErrorAs(t, err, &insufficientStockErr)
+	assert.Equal(t, int32(5), insufficientStockErr.RequestedQty)
+	assert.Equal(t, int32(1), insufficientStockErr.AvailableStock)
+}
+
+// Test UpdateCartItem
+func TestUpdateCartItem_Success(t *testing.T) {
+	// Setup
+	mockCartRepo := new(MockCartRepository)
+	logger := zerolog.Nop()
+
+	cartID := int64(1)
+	itemID := int64(10)
+	storefrontID := int64(1)
+	listingID := int64(200)
+
+	existingItem := &domain.CartItem{
+		ID:            itemID,
+		CartID:        cartID,
+		ListingID:     listingID,
+		Quantity:      2,
+		PriceSnapshot: 100.0,
+	}
+
+	cart := &domain.Cart{
+		ID:           cartID,
+		StorefrontID: storefrontID,
+		Items:        []*domain.CartItem{existingItem},
+	}
+
+	listing := &domain.Product{
+		ID:             listingID,
+		StorefrontID:   storefrontID,
+		Name:           "Test Product",
+		Price:          100.0,
+		StockQuantity:  10,
+		IsActive:       true,
+	}
+
+	mockCartRepo.On("GetByID", mock.Anything, cartID).Return(cart, nil).Times(2)
+	mockCartRepo.On("UpdateItem", mock.Anything, mock.AnythingOfType("*domain.CartItem")).Return(nil).Once()
+
+	service := &cartService{
+		cartRepo:     mockCartRepo,
+		productsRepo: &mockProductsRepoWrapper{listing: listing},
+		logger:       logger,
+	}
+
+	// Execute
+	req := &UpdateCartItemRequest{
+		CartID:   cartID,
+		ItemID:   itemID,
+		Quantity: 5,
+	}
+
+	updatedCart, err := service.UpdateCartItem(context.Background(), req)
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, updatedCart)
+	mockCartRepo.AssertExpectations(t)
+}
+
+// Test RemoveFromCart
+func TestRemoveFromCart_Success(t *testing.T) {
+	// Setup
+	mockCartRepo := new(MockCartRepository)
+	logger := zerolog.Nop()
+
+	cartID := int64(1)
+	itemID := int64(10)
+
+	cart := &domain.Cart{
+		ID: cartID,
+		Items: []*domain.CartItem{
+			{ID: itemID, CartID: cartID},
+		},
+	}
+
+	mockCartRepo.On("GetByID", mock.Anything, cartID).Return(cart, nil).Once()
+	mockCartRepo.On("RemoveItem", mock.Anything, cartID, itemID).Return(nil).Once()
+
+	service := &cartService{
+		cartRepo: mockCartRepo,
+		logger:   logger,
+	}
+
+	// Execute
+	err := service.RemoveFromCart(context.Background(), cartID, itemID)
+
+	// Assert
+	require.NoError(t, err)
+	mockCartRepo.AssertExpectations(t)
+}
+
+// Test ClearCart
+func TestClearCart_Success(t *testing.T) {
+	// Setup
+	mockCartRepo := new(MockCartRepository)
+	logger := zerolog.Nop()
+
+	cartID := int64(1)
+	cart := &domain.Cart{ID: cartID}
+
+	mockCartRepo.On("GetByID", mock.Anything, cartID).Return(cart, nil).Once()
+	mockCartRepo.On("ClearItems", mock.Anything, cartID).Return(nil).Once()
+
+	service := &cartService{
+		cartRepo: mockCartRepo,
+		logger:   logger,
+	}
+
+	// Execute
+	err := service.ClearCart(context.Background(), cartID)
+
+	// Assert
+	require.NoError(t, err)
+	mockCartRepo.AssertExpectations(t)
+}
+
+// Test ValidateCartItems
+func TestValidateCartItems_PriceChanges(t *testing.T) {
+	// Setup
+	mockCartRepo := new(MockCartRepository)
+	logger := zerolog.Nop()
+
+	cartID := int64(1)
+	storefrontID := int64(1)
+	listingID := int64(200)
+
+	cart := &domain.Cart{
+		ID:           cartID,
+		StorefrontID: storefrontID,
+		Items: []*domain.CartItem{
+			{
+				ID:            1,
+				CartID:        cartID,
+				ListingID:     listingID,
+				Quantity:      2,
+				PriceSnapshot: 100.0, // Old price
+			},
+		},
+	}
+
+	// Listing with new price
+	listing := &domain.Product{
+		ID:             listingID,
+		StorefrontID:   storefrontID,
+		Name:           "Test Product",
+		Price:          120.0, // Price increased
+		StockQuantity:  10,
+		IsActive:       true,
+	}
+
+	mockCartRepo.On("GetByID", mock.Anything, cartID).Return(cart, nil).Once()
+
+	service := &cartService{
+		cartRepo:     mockCartRepo,
+		productsRepo: &mockProductsRepoWrapper{listing: listing},
+		logger:       logger,
+	}
+
+	// Execute
+	priceChanges, err := service.ValidateCartItems(context.Background(), cartID)
+
+	// Assert
+	require.NoError(t, err)
+	require.Len(t, priceChanges, 1)
+	assert.Equal(t, listingID, priceChanges[0].ListingID)
+	assert.Equal(t, 100.0, priceChanges[0].OldPrice)
+	assert.Equal(t, 120.0, priceChanges[0].NewPrice)
+	assert.True(t, priceChanges[0].PriceIncrease)
+
+	mockCartRepo.AssertExpectations(t)
+}
+
+// Helper: Mock products repository wrapper
+type mockProductsRepoWrapper struct {
+	listing *domain.Product
+}
+
+func (m *mockProductsRepoWrapper) GetProductByID(ctx context.Context, productID int64, storefrontID *int64) (*domain.Product, error) {
+	if m.listing == nil {
+		return nil, errors.New("product not found")
+	}
+	return m.listing, nil
+}

@@ -1,13 +1,78 @@
 syntax = "proto3";
 
-package listings.v1;
+package listingssvc.v1;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingsv1";
+option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1";
+
+// ============================================================================
+// ENUMS - Storefront Management
+// ============================================================================
+
+// StorefrontGeoStrategy defines product geolocation strategy
+enum StorefrontGeoStrategy {
+  STOREFRONT_GEO_STRATEGY_UNSPECIFIED = 0;
+  STOREFRONT_GEO_STRATEGY_STOREFRONT_LOCATION = 1; // Use storefront address
+  STOREFRONT_GEO_STRATEGY_INDIVIDUAL_LOCATION = 2; // Use individual product addresses
+}
+
+// LocationPrivacyLevel defines address privacy level
+enum LocationPrivacyLevel {
+  LOCATION_PRIVACY_LEVEL_UNSPECIFIED = 0;
+  LOCATION_PRIVACY_LEVEL_EXACT = 1;    // Exact address
+  LOCATION_PRIVACY_LEVEL_STREET = 2;   // Street only
+  LOCATION_PRIVACY_LEVEL_DISTRICT = 3; // District only
+  LOCATION_PRIVACY_LEVEL_CITY = 4;     // City only
+}
+
+// SubscriptionPlanType subscription plan types
+enum SubscriptionPlanType {
+  SUBSCRIPTION_PLAN_TYPE_UNSPECIFIED = 0;
+  SUBSCRIPTION_PLAN_TYPE_STARTER = 1;
+  SUBSCRIPTION_PLAN_TYPE_PROFESSIONAL = 2;
+  SUBSCRIPTION_PLAN_TYPE_BUSINESS = 3;
+  SUBSCRIPTION_PLAN_TYPE_ENTERPRISE = 4;
+}
+
+// StaffRole storefront staff roles
+enum StaffRole {
+  STAFF_ROLE_UNSPECIFIED = 0;
+  STAFF_ROLE_OWNER = 1;     // Storefront owner
+  STAFF_ROLE_MANAGER = 2;   // Manager
+  STAFF_ROLE_CASHIER = 3;   // Cashier
+  STAFF_ROLE_SUPPORT = 4;   // Support
+  STAFF_ROLE_MODERATOR = 5; // Moderator
+}
+
+// PaymentMethodType payment method types
+enum PaymentMethodType {
+  PAYMENT_METHOD_TYPE_UNSPECIFIED = 0;
+  PAYMENT_METHOD_TYPE_CASH = 1;
+  PAYMENT_METHOD_TYPE_COD = 2;             // Cash on delivery
+  PAYMENT_METHOD_TYPE_CARD = 3;
+  PAYMENT_METHOD_TYPE_BANK_TRANSFER = 4;
+  PAYMENT_METHOD_TYPE_PAYPAL = 5;
+  PAYMENT_METHOD_TYPE_CRYPTO = 6;
+  PAYMENT_METHOD_TYPE_POSTANSKA = 7;
+  PAYMENT_METHOD_TYPE_KEKS_PAY = 8;
+  PAYMENT_METHOD_TYPE_IPS = 9;
+}
+
+// DeliveryProvider delivery provider types
+enum DeliveryProvider {
+  DELIVERY_PROVIDER_UNSPECIFIED = 0;
+  DELIVERY_PROVIDER_POSTA_SRBIJE = 1;
+  DELIVERY_PROVIDER_AKS = 2;
+  DELIVERY_PROVIDER_BEX = 3;
+  DELIVERY_PROVIDER_D_EXPRESS = 4;
+  DELIVERY_PROVIDER_CITY_EXPRESS = 5;
+  DELIVERY_PROVIDER_SELF_PICKUP = 6;
+  DELIVERY_PROVIDER_OWN_DELIVERY = 7;
+}
 
 // ListingsService provides RPC methods for managing marketplace listings
 service ListingsService {
@@ -31,13 +96,16 @@ service ListingsService {
   // ListListings returns a paginated list of listings
   rpc ListListings(ListListingsRequest) returns (ListListingsResponse);
 
+  // GetSimilarListings retrieves similar listings based on category and price
+  rpc GetSimilarListings(GetSimilarListingsRequest) returns (GetSimilarListingsResponse);
+
   // === Image Management (HIGH PRIORITY) ===
 
   // GetListingImage retrieves a single image by ID
   rpc GetListingImage(ImageIDRequest) returns (ImageResponse);
 
-  // DeleteListingImage removes an image from a listing
-  rpc DeleteListingImage(ImageIDRequest) returns (google.protobuf.Empty);
+  // DeleteListingImage removes an image from a listing (with authorization)
+  rpc DeleteListingImage(DeleteListingImageRequest) returns (DeleteListingImageResponse);
 
   // AddListingImage adds a new image to a listing
   rpc AddListingImage(AddImageRequest) returns (ImageResponse);
@@ -46,7 +114,12 @@ service ListingsService {
   rpc GetListingImages(ListingIDRequest) returns (ImagesResponse);
 
   // ReorderListingImages updates display order for multiple images
-  rpc ReorderListingImages(ReorderImagesRequest) returns (google.protobuf.Empty);
+  rpc ReorderListingImages(ReorderImagesRequest) returns (ReorderImagesResponse);
+
+  // UploadListingImages uploads images via streaming (Phase 24 - TRUE MICROSERVICE)
+  // Client streams: metadata first, then chunks for each image
+  // Server returns: uploaded images with URLs + errors for failed uploads
+  rpc UploadListingImages(stream UploadImageChunkRequest) returns (UploadImagesResponse);
 
   // === Category Management (HIGH PRIORITY) ===
 
@@ -84,11 +157,11 @@ service ListingsService {
 
   // === Storefronts Management (HIGH PRIORITY) ===
 
-  // GetStorefront retrieves a single storefront by ID
-  rpc GetStorefront(GetStorefrontRequest) returns (StorefrontResponse);
+  // GetStorefront retrieves a single storefront by ID or slug
+  rpc GetStorefront(GetStorefrontRequest) returns (GetStorefrontResponse);
 
-  // GetStorefrontBySlug retrieves a storefront by slug
-  rpc GetStorefrontBySlug(GetStorefrontBySlugRequest) returns (StorefrontResponse);
+  // GetStorefrontBySlug retrieves a storefront by slug (legacy)
+  rpc GetStorefrontBySlug(GetStorefrontBySlugRequest) returns (GetStorefrontResponse);
 
   // ListStorefronts returns a paginated list of storefronts
   rpc ListStorefronts(ListStorefrontsRequest) returns (ListStorefrontsResponse);
@@ -215,16 +288,104 @@ service ListingsService {
   // Used when customer views product detail page
   rpc IncrementProductViews(IncrementProductViewsRequest) returns (google.protobuf.Empty);
 
+  // === Product Images Management (B2C) ===
+
+  // AddProductImage adds a new image to a B2C product
+  rpc AddProductImage(AddProductImageRequest) returns (ProductImageResponse);
+
+  // GetProductImages retrieves all images for a B2C product
+  rpc GetProductImages(GetProductImagesRequest) returns (ProductImagesResponse);
+
+  // DeleteProductImage removes an image from a B2C product
+  rpc DeleteProductImage(DeleteProductImageRequest) returns (DeleteProductImageResponse);
+
+  // ReorderProductImages updates display order for product images
+  rpc ReorderProductImages(ReorderProductImagesRequest) returns (ReorderProductImagesResponse);
+
   // === OpenSearch Reindexing (ADMINISTRATIVE) ===
 
   // ReindexAll performs full reindexing of all products to OpenSearch
   // Used for rebuilding search index after schema changes or data migration
   rpc ReindexAll(ReindexAllRequest) returns (ReindexAllResponse);
+
+  // === Storefront Management (Extended) ===
+
+  // CreateStorefront creates a new B2C storefront
+  rpc CreateStorefront(CreateStorefrontRequest) returns (StorefrontFull);
+
+  // UpdateStorefront updates an existing storefront
+  rpc UpdateStorefront(UpdateStorefrontRequest) returns (StorefrontFull);
+
+  // DeleteStorefront removes a storefront (soft or hard delete)
+  rpc DeleteStorefront(DeleteStorefrontRequest) returns (DeleteStorefrontResponse);
+
+  // GetMyStorefronts retrieves storefronts owned by user
+  rpc GetMyStorefronts(ListStorefrontsRequest) returns (ListStorefrontsResponse);
+
+  // === Staff Management ===
+
+  // AddStaff adds a new staff member to storefront
+  rpc AddStaff(AddStaffRequest) returns (StorefrontStaff);
+
+  // UpdateStaff updates staff member role/permissions
+  rpc UpdateStaff(UpdateStaffRequest) returns (StorefrontStaff);
+
+  // RemoveStaff removes a staff member from storefront
+  rpc RemoveStaff(RemoveStaffRequest) returns (DeleteStorefrontResponse);
+
+  // GetStaff retrieves all staff members for storefront
+  rpc GetStaff(GetStaffRequest) returns (GetStaffResponse);
+
+  // === Working Hours Management ===
+
+  // SetWorkingHours sets operating hours for storefront
+  rpc SetWorkingHours(SetWorkingHoursRequest) returns (GetWorkingHoursResponse);
+
+  // GetWorkingHours retrieves operating hours
+  rpc GetWorkingHours(GetWorkingHoursRequest) returns (GetWorkingHoursResponse);
+
+  // IsOpenNow checks if storefront is currently open
+  rpc IsOpenNow(IsOpenNowRequest) returns (IsOpenNowResponse);
+
+  // === Payment Methods Management ===
+
+  // SetPaymentMethods configures payment methods for storefront
+  rpc SetPaymentMethods(SetPaymentMethodsRequest) returns (GetPaymentMethodsResponse);
+
+  // GetPaymentMethods retrieves payment methods
+  rpc GetPaymentMethods(GetPaymentMethodsRequest) returns (GetPaymentMethodsResponse);
+
+  // === Delivery Options Management ===
+
+  // SetDeliveryOptions configures delivery options for storefront
+  rpc SetDeliveryOptions(SetDeliveryOptionsRequest) returns (GetDeliveryOptionsResponse);
+
+  // GetDeliveryOptions retrieves delivery options
+  rpc GetDeliveryOptions(GetDeliveryOptionsRequest) returns (GetDeliveryOptionsResponse);
+
+  // === Map & Geo ===
+
+  // GetMapData retrieves storefront map data for viewport bounds
+  rpc GetMapData(GetMapDataRequest) returns (GetMapDataResponse);
+
+  // === Analytics ===
+
+  // GetDashboardStats retrieves storefront dashboard statistics
+  rpc GetDashboardStats(DashboardStatsRequest) returns (DashboardStatsResponse);
 }
 
 // ============================================================================
 // Core Entity Messages
 // ============================================================================
+
+// ListingFieldTranslations represents translations for individual fields of a listing
+message ListingFieldTranslations {
+  optional string title = 1;
+  optional string description = 2;
+  optional string location = 3;
+  optional string city = 4;
+  optional string country = 5;
+}
 
 // Listing represents a marketplace listing
 message Listing {
@@ -255,6 +416,10 @@ message Listing {
   repeated string tags = 23;
   optional ListingLocation location = 24;
   repeated ListingVariant variants = 25;
+
+  // Translations
+  map<string, ListingFieldTranslations> translations = 30;  // {"en": {...}, "ru": {...}, "sr": {...}}
+  string original_language = 31;  // "sr", "en", "ru"
 }
 
 // ListingImage represents an image associated with a listing
@@ -375,6 +540,7 @@ message Product {
   bool show_on_map = 23;
   bool has_variants = 24;
   repeated ProductVariant variants = 25;
+  repeated ProductImage images = 26;
 }
 
 // ProductVariant represents a product variant with specific attributes
@@ -407,6 +573,7 @@ message ProductVariant {
 // GetListing messages
 message GetListingRequest {
   int64 id = 1;
+  optional string lang = 2;  // "en", "ru", "sr" - if provided, returns translated fields
 }
 
 message GetListingResponse {
@@ -424,6 +591,10 @@ message CreateListingRequest {
   int64 category_id = 7;
   int32 quantity = 8;
   optional string sku = 9;
+
+  // Translations
+  map<string, ListingFieldTranslations> translations = 20;
+  optional string original_language = 21;  // "sr", "en", "ru" - defaults to "sr"
 }
 
 message CreateListingResponse {
@@ -488,6 +659,17 @@ message ListListingsResponse {
   int32 total = 2;
 }
 
+// GetSimilarListings messages
+message GetSimilarListingsRequest {
+  int64 listing_id = 1; // Listing ID to find similar items for
+  optional int32 limit = 2; // Maximum results (default: 10, max: 20)
+}
+
+message GetSimilarListingsResponse {
+  repeated Listing listings = 1;
+  int32 total = 2;
+}
+
 // ============================================================================
 // Request/Response Messages - Image Management
 // ============================================================================
@@ -529,13 +711,60 @@ message ImagesResponse {
 // ReorderImagesRequest updates display order for multiple images
 message ReorderImagesRequest {
   int64 listing_id = 1;
-  repeated ImageOrder image_orders = 2;
+  int64 user_id = 2;        // For authorization check
+  repeated int64 image_ids = 3;  // Ordered list of image IDs (position = array index + 1)
 }
 
-// ImageOrder represents display order for a single image
+// ReorderImagesResponse confirms reorder operation
+message ReorderImagesResponse {
+  bool success = 1;
+}
+
+// ImageOrder represents display order for a single image (DEPRECATED - use ReorderImagesRequest.image_ids)
 message ImageOrder {
   int64 image_id = 1;
   int32 display_order = 2;
+}
+
+// DeleteListingImageRequest deletes an image with authorization
+message DeleteListingImageRequest {
+  int64 listing_id = 1;  // Required: Listing ID for authorization check
+  int64 image_id = 2;    // Required: Image ID to delete
+  int64 user_id = 3;     // Required: User ID for ownership verification
+}
+
+// DeleteListingImageResponse confirms deletion
+message DeleteListingImageResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// UploadImageChunkRequest represents streaming upload request (Phase 24)
+// Client streams: metadata first, then chunks for each file
+message UploadImageChunkRequest {
+  oneof data {
+    UploadImageMetadata metadata = 1;  // Sent first for each file
+    bytes chunk = 2;                   // Followed by file chunks (1MB each)
+  }
+}
+
+// UploadImageMetadata contains file metadata (sent before chunks)
+message UploadImageMetadata {
+  int64 listing_id = 1;          // Required
+  int64 user_id = 2;             // Required for authorization
+  string filename = 3;           // Original filename
+  string content_type = 4;       // MIME type (image/jpeg, image/png, etc.)
+  int64 file_size = 5;           // Total file size in bytes
+  int32 display_order = 6;       // Display order (0-indexed)
+  bool is_primary = 7;           // Mark as primary image
+}
+
+// UploadImagesResponse returns upload results
+message UploadImagesResponse {
+  repeated ListingImage images = 1;  // Successfully uploaded images
+  int32 uploaded_count = 2;          // Number of successful uploads
+  int32 failed_count = 3;            // Number of failed uploads
+  repeated string errors = 4;        // Error messages for failed uploads
 }
 
 // ============================================================================
@@ -646,9 +875,16 @@ message Storefront {
   string updated_at = 26;
 }
 
-// GetStorefrontRequest requests a storefront by ID
+// GetStorefrontRequest requests a storefront by ID or slug
 message GetStorefrontRequest {
-  int64 id = 1;
+  oneof identifier {
+    int64 id = 1;
+    string slug = 2;
+  }
+  bool include_staff = 3;            // Load staff members
+  bool include_hours = 4;            // Load working hours
+  bool include_payment_methods = 5;  // Load payment methods
+  bool include_delivery_options = 6; // Load delivery options
 }
 
 // GetStorefrontBySlugRequest requests a storefront by slug
@@ -656,9 +892,14 @@ message GetStorefrontBySlugRequest {
   string slug = 1;
 }
 
-// StorefrontResponse returns a single storefront
+// StorefrontResponse returns a single storefront (simple version)
 message StorefrontResponse {
   Storefront storefront = 1;
+}
+
+// GetStorefrontResponse returns a storefront with optional related entities
+message GetStorefrontResponse {
+  StorefrontFull storefront = 1;
 }
 
 // ListStorefrontsRequest requests a list of storefronts
@@ -667,15 +908,27 @@ message ListStorefrontsRequest {
   optional bool is_active = 2;
   optional bool is_verified = 3;
   optional string city = 4;
-  int32 limit = 5;
-  int32 offset = 6;
-  optional string sort_by = 7;
-  optional string sort_order = 8;
+  optional string country = 5;
+  optional double latitude = 6;
+  optional double longitude = 7;
+  optional double radius_km = 8;
+  optional double min_rating = 9;
+  repeated SubscriptionPlanType subscription_plans = 10;
+  repeated PaymentMethodType payment_methods = 11;
+  optional bool supports_cod = 12;
+  optional bool has_ai_agent = 13;
+  optional bool has_live_shopping = 14;
+  optional bool has_group_buying = 15;
+  optional string search = 16;
+  optional string sort_by = 17;
+  optional string sort_order = 18;
+  int32 page = 19;
+  int32 limit = 20;
 }
 
 // ListStorefrontsResponse returns multiple storefronts
 message ListStorefrontsResponse {
-  repeated Storefront storefronts = 1;
+  repeated StorefrontFull storefronts = 1;
   int32 total = 2;
 }
 
@@ -750,6 +1003,7 @@ message ResetFlagsRequest {
 message GetProductRequest {
   int64 product_id = 1;
   optional int64 storefront_id = 2;
+  optional string lang = 3; // Language code for translations (en, ru, sr)
 }
 
 // ProductResponse returns a single product
@@ -761,6 +1015,7 @@ message ProductResponse {
 message GetProductsBySKUsRequest {
   repeated string skus = 1;
   optional int64 storefront_id = 2;
+  optional string lang = 3; // Language code for translations (en, ru, sr)
 }
 
 // ProductsResponse returns multiple products
@@ -773,6 +1028,7 @@ message ProductsResponse {
 message GetProductsByIDsRequest {
   repeated int64 product_ids = 1;
   optional int64 storefront_id = 2;
+  optional string lang = 3; // Language code for translations (en, ru, sr)
 }
 
 // ListProductsRequest requests a paginated list of products
@@ -1044,45 +1300,48 @@ message BulkOperationError {
 // CreateProductVariantRequest creates a new variant
 message CreateProductVariantRequest {
   int64 product_id = 1; // Parent product
-  optional string sku = 2; // Optional, unique within product
-  optional string barcode = 3;
-  optional double price = 4; // If null, inherits from product
-  optional double compare_at_price = 5; // "Was" price for discounts
-  optional double cost_price = 6; // For profit calculations
-  int32 stock_quantity = 7;
-  optional int32 low_stock_threshold = 8;
-  google.protobuf.Struct variant_attributes = 9; // {"color": "red", "size": "XL"}
-  optional double weight = 10; // In grams
-  google.protobuf.Struct dimensions = 11; // {"length": 10, "width": 5, "height": 3}
-  bool is_active = 12; // Default true
-  bool is_default = 13; // Default false
+  int64 user_id = 2; // Required for ownership validation (storefront owner check)
+  optional string sku = 3; // Optional, unique within product
+  optional string barcode = 4;
+  optional double price = 5; // If null, inherits from product
+  optional double compare_at_price = 6; // "Was" price for discounts
+  optional double cost_price = 7; // For profit calculations
+  int32 stock_quantity = 8;
+  optional int32 low_stock_threshold = 9;
+  google.protobuf.Struct variant_attributes = 10; // {"color": "red", "size": "XL"}
+  optional double weight = 11; // In grams
+  google.protobuf.Struct dimensions = 12; // {"length": 10, "width": 5, "height": 3}
+  bool is_active = 13; // Default true
+  bool is_default = 14; // Default false
 }
 
 // UpdateProductVariantRequest updates variant fields
 message UpdateProductVariantRequest {
   int64 variant_id = 1;
   int64 product_id = 2; // For validation
+  int64 user_id = 3; // Required for ownership validation (storefront owner check)
 
-  optional string sku = 3;
-  optional string barcode = 4;
-  optional double price = 5;
-  optional double compare_at_price = 6;
-  optional double cost_price = 7;
-  optional int32 stock_quantity = 8;
-  optional int32 low_stock_threshold = 9;
-  optional google.protobuf.Struct variant_attributes = 10;
-  optional double weight = 11;
-  optional google.protobuf.Struct dimensions = 12;
-  optional bool is_active = 13;
-  optional bool is_default = 14;
+  optional string sku = 4;
+  optional string barcode = 5;
+  optional double price = 6;
+  optional double compare_at_price = 7;
+  optional double cost_price = 8;
+  optional int32 stock_quantity = 9;
+  optional int32 low_stock_threshold = 10;
+  optional google.protobuf.Struct variant_attributes = 11;
+  optional double weight = 12;
+  optional google.protobuf.Struct dimensions = 13;
+  optional bool is_active = 14;
+  optional bool is_default = 15;
 
-  optional google.protobuf.FieldMask update_mask = 15;
+  optional google.protobuf.FieldMask update_mask = 16;
 }
 
 // DeleteProductVariantRequest removes a variant
 message DeleteProductVariantRequest {
   int64 variant_id = 1;
   int64 product_id = 2; // For validation
+  int64 user_id = 3; // Required for ownership validation (storefront owner check)
 }
 
 // DeleteProductVariantResponse confirms deletion
@@ -1110,7 +1369,8 @@ message ProductVariantInput {
 // BulkCreateProductVariantsRequest creates multiple variants
 message BulkCreateProductVariantsRequest {
   int64 product_id = 1;
-  repeated ProductVariantInput variants = 2; // Max 1000 items
+  int64 user_id = 2; // Required for ownership validation (storefront owner check)
+  repeated ProductVariantInput variants = 3; // Max 1000 items
 }
 
 // BulkCreateProductVariantsResponse returns created variants
@@ -1219,4 +1479,453 @@ message ReindexAllResponse {
   int32 total_failed = 2;      // Total failed products
   int32 duration_seconds = 3;  // Total operation duration in seconds
   repeated string errors = 4;  // Sample error messages (max 10)
+}
+
+// ============================================================================
+// Storefront Management - Core Entities (Extended)
+// ============================================================================
+
+// StorefrontFull represents complete storefront entity (45 fields from b2c_stores)
+message StorefrontFull {
+  // Identification
+  int64 id = 1;
+  int64 user_id = 2; // Owner
+  string slug = 3;   // Unique URL-slug
+  string name = 4;
+  optional string description = 5;
+
+  // Branding
+  optional string logo_url = 6;
+  optional string banner_url = 7;
+  optional google.protobuf.Struct theme = 8; // JSON: {"layout": "grid", "primaryColor": "#1976d2"}
+
+  // Contact information
+  optional string phone = 9;
+  optional string email = 10;
+  optional string website = 11;
+
+  // Location (address)
+  optional string address = 12;
+  optional string city = 13;
+  optional string postal_code = 14;
+  optional string country = 15;               // VARCHAR(100), default 'RS'
+  optional double latitude = 16;              // NUMERIC(10,8)
+  optional double longitude = 17;             // NUMERIC(11,8)
+  optional string formatted_address = 18;
+  StorefrontGeoStrategy geo_strategy = 19;    // default: storefront_location
+  LocationPrivacyLevel default_privacy_level = 20; // default: exact
+  bool address_verified = 21;                 // default: false
+
+  // Settings
+  optional google.protobuf.Struct settings = 22; // JSON
+  optional google.protobuf.Struct seo_meta = 23; // JSON
+
+  // Status and statistics
+  bool is_active = 24;                        // default: true
+  bool is_verified = 25;                      // default: false
+  optional google.protobuf.Timestamp verification_date = 26;
+  double rating = 27;                         // NUMERIC(3,2), default: 0.00
+  int32 reviews_count = 28;                   // default: 0
+  int32 products_count = 29;                  // default: 0
+  int32 sales_count = 30;                     // default: 0
+  int32 views_count = 31;                     // default: 0
+
+  // Subscription (monetization)
+  SubscriptionPlanType subscription_plan = 32; // default: starter
+  optional google.protobuf.Timestamp subscription_expires_at = 33;
+  double commission_rate = 34;                 // NUMERIC(5,2), default: 3.00
+  optional int64 subscription_id = 35;
+  bool is_subscription_active = 36;            // default: true
+
+  // AI and killer features
+  bool ai_agent_enabled = 37;                  // default: false
+  optional google.protobuf.Struct ai_agent_config = 38; // JSON
+  bool live_shopping_enabled = 39;             // default: false
+  bool group_buying_enabled = 40;              // default: false
+
+  // Social features
+  int32 followers_count = 41;                  // default: 0
+
+  // Timestamps
+  google.protobuf.Timestamp created_at = 42;
+  google.protobuf.Timestamp updated_at = 43;
+
+  // Related entities (optionally loaded)
+  repeated StorefrontStaff staff = 44;
+  repeated StorefrontHours hours = 45;
+  repeated StorefrontPaymentMethod payment_methods = 46;
+  repeated StorefrontDeliveryOption delivery_options = 47;
+}
+
+// StorefrontStaff represents staff member (b2c_store_staff table)
+message StorefrontStaff {
+  int64 id = 1;
+  int64 storefront_id = 2;
+  int64 user_id = 3;
+  StaffRole role = 4; // default: staff
+  optional google.protobuf.Struct permissions = 5; // JSON: {canAddProducts, canEditProducts, ...}
+  optional google.protobuf.Timestamp last_active_at = 6;
+  int32 actions_count = 7; // default: 0
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+// StorefrontHours represents working hours (b2c_store_hours table)
+message StorefrontHours {
+  int64 id = 1;
+  int64 storefront_id = 2;
+  int32 day_of_week = 3; // 0=Sunday, 6=Saturday (CHECK: 0-6)
+  optional string open_time = 4;  // TIME (HH:MM:SS format)
+  optional string close_time = 5; // TIME (HH:MM:SS format)
+  bool is_closed = 6; // default: false
+  optional string special_date = 7; // DATE (YYYY-MM-DD format)
+  optional string special_note = 8;
+}
+
+// StorefrontPaymentMethod represents payment method (b2c_payment_methods table)
+message StorefrontPaymentMethod {
+  int64 id = 1;
+  int64 storefront_id = 2;
+  PaymentMethodType method_type = 3;
+  bool is_enabled = 4; // default: true
+  optional string provider = 5;
+  optional google.protobuf.Struct settings = 6; // JSON
+  double transaction_fee = 7; // NUMERIC(5,2), default: 0.00
+  optional double min_amount = 8; // NUMERIC(10,2)
+  optional double max_amount = 9; // NUMERIC(10,2)
+  google.protobuf.Timestamp created_at = 10;
+}
+
+// StorefrontDeliveryOption represents delivery option (b2c_delivery_options table)
+message StorefrontDeliveryOption {
+  int64 id = 1;
+  int64 storefront_id = 2;
+  string name = 3;
+  optional string description = 4;
+  double base_price = 5;        // NUMERIC(10,2), default: 0.00
+  double price_per_km = 6;      // NUMERIC(10,2), default: 0.00
+  double price_per_kg = 7;      // NUMERIC(10,2), default: 0.00
+  optional double free_above_amount = 8; // NUMERIC(10,2)
+  optional double min_order_amount = 9;  // NUMERIC(10,2)
+  optional double max_weight_kg = 10;    // NUMERIC(10,2)
+  optional double max_distance_km = 11;  // NUMERIC(10,2)
+  int32 estimated_days_min = 12; // default: 1
+  int32 estimated_days_max = 13; // default: 3
+  optional google.protobuf.Struct zones = 14; // JSON array
+  optional google.protobuf.Struct available_days = 15; // JSON array: [1,2,3,4,5]
+  optional string cutoff_time = 16; // TIME (HH:MM:SS)
+  optional string provider = 17;    // DeliveryProvider as string
+  optional google.protobuf.Struct provider_config = 18; // JSON
+  bool is_active = 19; // default: true
+  int32 display_order = 20; // default: 0
+  google.protobuf.Timestamp created_at = 21;
+  google.protobuf.Timestamp updated_at = 22;
+}
+
+// ============================================================================
+// Storefront Management - Request/Response DTOs
+// ============================================================================
+
+// Location helper structure for address
+message Location {
+  double user_lat = 1;        // latitude
+  double user_lng = 2;        // longitude
+  string full_address = 3;
+  string city = 4;
+  optional string postal_code = 5;
+  string country = 6; // default: "RS"
+}
+
+// CreateStorefrontRequest creates a new storefront
+message CreateStorefrontRequest {
+  int64 user_id = 1; // Owner (from JWT token)
+  string name = 2;   // Required
+  optional string slug = 3; // Auto-generated if empty
+  optional string description = 4;
+  optional bytes logo = 5;   // File content for upload
+  optional bytes banner = 6; // File content for upload
+  optional google.protobuf.Struct theme = 7;
+  optional string phone = 8;
+  optional string email = 9;   // Validated
+  optional string website = 10; // Validated
+  Location location = 11; // Required
+  optional google.protobuf.Struct settings = 12;
+  optional google.protobuf.Struct seo_meta = 13;
+}
+
+// UpdateStorefrontRequest updates an existing storefront
+message UpdateStorefrontRequest {
+  int64 id = 1; // Required
+  optional string name = 2;
+  optional string description = 3;
+  optional bool is_active = 4;
+  optional string logo_url = 5;
+  optional string banner_url = 6;
+  optional google.protobuf.Struct theme = 7;
+  optional string phone = 8;
+  optional string email = 9;
+  optional string website = 10;
+  optional Location location = 11;
+  optional google.protobuf.Struct settings = 12;
+  optional google.protobuf.Struct seo_meta = 13;
+  optional bool ai_agent_enabled = 14;
+  optional bool live_shopping_enabled = 15;
+  optional bool group_buying_enabled = 16;
+}
+
+// DeleteStorefrontRequest deletes a storefront
+message DeleteStorefrontRequest {
+  int64 id = 1;
+  bool hard_delete = 2; // false = soft delete (is_active=false), true = hard delete
+}
+
+// DeleteStorefrontResponse confirms deletion
+message DeleteStorefrontResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================================
+// Staff Management - Request/Response
+// ============================================================================
+
+// AddStaffRequest adds a staff member
+message AddStaffRequest {
+  int64 storefront_id = 1;
+  int64 user_id = 2;
+  StaffRole role = 3;
+  optional google.protobuf.Struct permissions = 4;
+}
+
+// UpdateStaffRequest updates staff member
+message UpdateStaffRequest {
+  int64 id = 1;
+  optional StaffRole role = 2;
+  optional google.protobuf.Struct permissions = 3;
+}
+
+// RemoveStaffRequest removes staff member
+message RemoveStaffRequest {
+  int64 storefront_id = 1;
+  int64 user_id = 2;
+}
+
+// GetStaffRequest retrieves staff list
+message GetStaffRequest {
+  int64 storefront_id = 1;
+}
+
+// GetStaffResponse returns staff list
+message GetStaffResponse {
+  repeated StorefrontStaff staff = 1;
+}
+
+// ============================================================================
+// Working Hours Management - Request/Response
+// ============================================================================
+
+// SetWorkingHoursRequest sets working hours
+message SetWorkingHoursRequest {
+  int64 storefront_id = 1;
+  repeated StorefrontHours hours = 2;
+}
+
+// GetWorkingHoursRequest retrieves working hours
+message GetWorkingHoursRequest {
+  int64 storefront_id = 1;
+}
+
+// GetWorkingHoursResponse returns working hours
+message GetWorkingHoursResponse {
+  repeated StorefrontHours hours = 1;
+}
+
+// IsOpenNowRequest checks if storefront is open
+message IsOpenNowRequest {
+  int64 storefront_id = 1;
+}
+
+// IsOpenNowResponse returns open status
+message IsOpenNowResponse {
+  bool is_open = 1;
+  optional string next_open_time = 2;  // If closed, when will it open
+  optional string next_close_time = 3; // If open, when will it close
+}
+
+// ============================================================================
+// Payment Methods Management - Request/Response
+// ============================================================================
+
+// SetPaymentMethodsRequest sets payment methods
+message SetPaymentMethodsRequest {
+  int64 storefront_id = 1;
+  repeated StorefrontPaymentMethod methods = 2;
+}
+
+// GetPaymentMethodsRequest retrieves payment methods
+message GetPaymentMethodsRequest {
+  int64 storefront_id = 1;
+}
+
+// GetPaymentMethodsResponse returns payment methods
+message GetPaymentMethodsResponse {
+  repeated StorefrontPaymentMethod methods = 1;
+}
+
+// ============================================================================
+// Delivery Options Management - Request/Response
+// ============================================================================
+
+// SetDeliveryOptionsRequest sets delivery options
+message SetDeliveryOptionsRequest {
+  int64 storefront_id = 1;
+  repeated StorefrontDeliveryOption options = 2;
+}
+
+// GetDeliveryOptionsRequest retrieves delivery options
+message GetDeliveryOptionsRequest {
+  int64 storefront_id = 1;
+}
+
+// GetDeliveryOptionsResponse returns delivery options
+message GetDeliveryOptionsResponse {
+  repeated StorefrontDeliveryOption options = 1;
+}
+
+// ============================================================================
+// Map & Geo - Request/Response
+// ============================================================================
+
+// StorefrontMapData represents storefront data for map display
+message StorefrontMapData {
+  int64 id = 1;
+  string slug = 2;
+  string name = 3;
+  double latitude = 4;
+  double longitude = 5;
+  double rating = 6;
+  string logo_url = 7;
+  string address = 8;
+  string phone = 9;
+  bool working_now = 10;
+  int32 products_count = 11;
+  bool supports_cod = 12;
+  bool has_delivery = 13;
+  bool has_self_pickup = 14;
+  bool accepts_cards = 15;
+}
+
+// GetMapDataRequest retrieves map data
+message GetMapDataRequest {
+  double north = 1; // Bounds
+  double south = 2;
+  double east = 3;
+  double west = 4;
+  optional ListStorefrontsRequest filter = 5; // Additional filters
+}
+
+// GetMapDataResponse returns map data
+message GetMapDataResponse {
+  repeated StorefrontMapData storefronts = 1;
+}
+
+// ============================================================================
+// Analytics - Request/Response
+// ============================================================================
+
+// DashboardStatsRequest retrieves dashboard statistics
+message DashboardStatsRequest {
+  int64 storefront_id = 1;
+  optional google.protobuf.Timestamp date_from = 2;
+  optional google.protobuf.Timestamp date_to = 3;
+}
+
+// DashboardStatsResponse returns dashboard statistics
+message DashboardStatsResponse {
+  int32 total_products = 1;
+  int32 active_products = 2;
+  int32 orders_count = 3;
+  double revenue = 4;
+  double avg_order_value = 5;
+  int32 views_count = 6;
+  int32 unique_visitors = 7;
+  double conversion_rate = 8;
+  int32 pending_orders = 9;
+  int32 low_stock_products = 10;
+}
+
+// ============================================================================
+// B2C Product Images - Request/Response
+// ============================================================================
+
+// ProductImage represents an image associated with a B2C product
+message ProductImage {
+  int64 id = 1;
+  int64 product_id = 2;
+  string url = 3;
+  optional string storage_path = 4;
+  optional string thumbnail_url = 5;
+  int32 display_order = 6;
+  bool is_primary = 7;
+  optional int32 width = 8;
+  optional int32 height = 9;
+  optional int64 file_size = 10;
+  optional string mime_type = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}
+
+// AddProductImageRequest adds a new image to a B2C product
+message AddProductImageRequest {
+  int64 product_id = 1;         // Required
+  int64 storefront_id = 2;      // Required for ownership validation
+  string url = 3;               // Required: Full URL to image in MinIO/S3
+  optional string storage_path = 4;
+  optional string thumbnail_url = 5;
+  int32 display_order = 6;
+  bool is_primary = 7;
+  optional int32 width = 8;
+  optional int32 height = 9;
+  optional int64 file_size = 10;
+  optional string mime_type = 11;
+}
+
+// ProductImageResponse returns a single product image
+message ProductImageResponse {
+  ProductImage image = 1;
+}
+
+// GetProductImagesRequest retrieves images for a product
+message GetProductImagesRequest {
+  int64 product_id = 1;
+}
+
+// ProductImagesResponse returns multiple product images
+message ProductImagesResponse {
+  repeated ProductImage images = 1;
+}
+
+// DeleteProductImageRequest deletes a product image
+message DeleteProductImageRequest {
+  int64 product_id = 1;     // Required for ownership check
+  int64 image_id = 2;       // Required
+  int64 storefront_id = 3;  // Required for ownership validation
+}
+
+// DeleteProductImageResponse confirms deletion
+message DeleteProductImageResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ReorderProductImagesRequest updates display order for product images
+message ReorderProductImagesRequest {
+  int64 product_id = 1;
+  int64 storefront_id = 2;        // Required for ownership validation
+  repeated int64 image_ids = 3;   // Ordered list of image IDs (position = array index)
+}
+
+// ReorderProductImagesResponse confirms reorder operation
+message ReorderProductImagesResponse {
+  bool success = 1;
 }

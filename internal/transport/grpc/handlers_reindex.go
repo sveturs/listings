@@ -7,12 +7,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 )
 
 // ReindexAll performs full reindexing of all products to OpenSearch
 // This is an administrative operation used for rebuilding search index after schema changes or data migration
-func (s *Server) ReindexAll(ctx context.Context, req *pb.ReindexAllRequest) (*pb.ReindexAllResponse, error) {
+func (s *Server) ReindexAll(ctx context.Context, req *listingspb.ReindexAllRequest) (*listingspb.ReindexAllResponse, error) {
 	// Get source type and batch size from request (with defaults)
 	sourceType := ""
 	if req.SourceType != nil {
@@ -83,7 +83,7 @@ func (s *Server) ReindexAll(ctx context.Context, req *pb.ReindexAllRequest) (*pb
 		Int("error_count", len(errors)).
 		Msg("ReindexAll operation completed successfully")
 
-	return &pb.ReindexAllResponse{
+	return &listingspb.ReindexAllResponse{
 		TotalIndexed:    totalIndexed,
 		TotalFailed:     totalFailed,
 		DurationSeconds: actualDuration,

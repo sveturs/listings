@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package search.v1;
+
+import "api/proto/search/v1/common.proto";
+import "api/proto/search/v1/facets.proto";
+
+option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+
+// SearchWithFiltersRequest performs advanced search with filters and sorting
+message SearchWithFiltersRequest {
+  // Search query text (required)
+  string query = 1;
+
+  // Filter by category ID (optional)
+  optional int64 category_id = 2;
+
+  // Results per page (1-100, default: 20)
+  int32 limit = 3;
+
+  // Pagination offset (default: 0)
+  int32 offset = 4;
+
+  // Advanced filters
+  optional Filters filters = 5;
+
+  // Sort configuration
+  optional SortConfig sort = 6;
+
+  // Use Redis cache for results (default: true)
+  bool use_cache = 7;
+
+  // Include facets in response (default: false)
+  // When true, response includes facets for dynamic filter UI
+  bool include_facets = 8;
+}
+
+// SortConfig defines sorting parameters
+message SortConfig {
+  // Sort field: "price" | "created_at" | "relevance" | "views_count" | "favorites_count"
+  // Default: "relevance" (when query is provided), "created_at" (when no query)
+  string field = 1;
+
+  // Sort order: "asc" | "desc"
+  // Default: "desc"
+  string order = 2;
+}
+
+// SearchWithFiltersResponse contains filtered and sorted search results
+message SearchWithFiltersResponse {
+  // List of matching listings
+  repeated Listing listings = 1;
+
+  // Total number of matching documents
+  int64 total = 2;
+
+  // Search duration in milliseconds
+  int32 took_ms = 3;
+
+  // Whether result was served from cache
+  bool cached = 4;
+
+  // Optional facets (only included if include_facets=true)
+  optional GetSearchFacetsResponse facets = 5;
+}

@@ -34,6 +34,14 @@ type Listing struct {
 	DeletedAt      *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 	IsDeleted      bool       `json:"is_deleted" db:"is_deleted"`
 
+	// Translations
+	TitleTranslations       map[string]string `json:"title_translations" db:"title_translations"`
+	DescriptionTranslations map[string]string `json:"description_translations" db:"description_translations"`
+	LocationTranslations    map[string]string `json:"location_translations" db:"location_translations"`
+	CityTranslations        map[string]string `json:"city_translations" db:"city_translations"`
+	CountryTranslations     map[string]string `json:"country_translations" db:"country_translations"`
+	OriginalLanguage        string            `json:"original_language" db:"original_language"`
+
 	// Relations (loaded on demand)
 	Attributes []*ListingAttribute `json:"attributes,omitempty" db:"-"`
 	Images     []*ListingImage     `json:"images,omitempty" db:"-"`
@@ -82,8 +90,9 @@ type ListingLocation struct {
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
 
-// ListingStats represents cached statistics for a listing
-type ListingStats struct {
+// ListingCachedStats represents cached statistics for a listing (lightweight version)
+// For comprehensive analytics, use ListingStats from analytics.go
+type ListingCachedStats struct {
 	ListingID      int64      `json:"listing_id" db:"listing_id"`
 	ViewsCount     int32      `json:"views_count" db:"view_count"`
 	FavoritesCount int32      `json:"favorites_count" db:"favorites_count"`
@@ -118,6 +127,10 @@ type CreateListingInput struct {
 	Quantity     int32   `json:"quantity" validate:"required,gte=0"`
 	SKU          *string `json:"sku,omitempty"`
 	SourceType   string  `json:"source_type" validate:"required,oneof=c2c b2c"`
+
+	// Translations
+	Translations     map[string]map[string]string `json:"translations,omitempty"`
+	OriginalLanguage string                       `json:"original_language,omitempty"`
 }
 
 // UpdateListingInput represents input for updating an existing listing
@@ -143,14 +156,25 @@ type ListListingsFilter struct {
 }
 
 // SearchListingsQuery represents a search query for listings
+// AttributeFilter represents a single attribute filter for search
+type AttributeFilter struct {
+	Code        string   `json:"code" validate:"required"`
+	ValueText   *string  `json:"value_text,omitempty"`
+	ValueNumber *float64 `json:"value_number,omitempty"`
+	ValueBool   *bool    `json:"value_bool,omitempty"`
+	MinNumber   *float64 `json:"min_number,omitempty"` // For range queries
+	MaxNumber   *float64 `json:"max_number,omitempty"` // For range queries
+}
+
 type SearchListingsQuery struct {
-	Query      string   `json:"query" validate:"required,min=2"`
-	CategoryID *int64   `json:"category_id,omitempty"`
-	SourceType *string  `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"` // Filter by c2c or b2c listings
-	MinPrice   *float64 `json:"min_price,omitempty"`
-	MaxPrice   *float64 `json:"max_price,omitempty"`
-	Limit      int32    `json:"limit" validate:"required,gte=1,lte=100"`
-	Offset     int32    `json:"offset" validate:"gte=0"`
+	Query            string            `json:"query" validate:"required,min=2"`
+	CategoryID       *int64            `json:"category_id,omitempty"`
+	SourceType       *string           `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"` // Filter by c2c or b2c listings
+	MinPrice         *float64          `json:"min_price,omitempty"`
+	MaxPrice         *float64          `json:"max_price,omitempty"`
+	AttributeFilters []AttributeFilter `json:"attribute_filters,omitempty"` // Filter by attributes
+	Limit            int32             `json:"limit" validate:"required,gte=1,lte=100"`
+	Offset           int32             `json:"offset" validate:"gte=0"`
 }
 
 // Constants for listing statuses
@@ -204,7 +228,16 @@ type Category struct {
 	Level             int32     `json:"level" db:"level"`
 	HasCustomUI       bool      `json:"has_custom_ui" db:"has_custom_ui"`
 	CustomUIComponent *string   `json:"custom_ui_component,omitempty" db:"custom_ui_component"`
+	ExternalID        *string   `json:"external_id,omitempty" db:"external_id"`
 	CreatedAt         time.Time `json:"created_at" db:"created_at"`
+	// SEO fields
+	SEOTitle       *string `json:"seo_title,omitempty" db:"seo_title"`
+	SEODescription *string `json:"seo_description,omitempty" db:"seo_description"`
+	SEOKeywords    *string `json:"seo_keywords,omitempty" db:"seo_keywords"`
+	// Localized titles
+	TitleEn *string `json:"title_en,omitempty" db:"title_en"`
+	TitleRu *string `json:"title_ru,omitempty" db:"title_ru"`
+	TitleSr *string `json:"title_sr,omitempty" db:"title_sr"`
 }
 
 // CategoryTreeNode represents a category with its children in a tree structure

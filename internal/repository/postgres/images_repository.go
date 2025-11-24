@@ -248,27 +248,30 @@ func (r *Repository) ReorderImages(ctx context.Context, listingID int64, orders 
 	// WHERE listing_id = $N AND id IN ($1, $3, ...)
 
 	query := `UPDATE listing_images SET display_order = CASE `
-	args := make([]interface{}, 0, len(orders)*2+1)
-	imageIDs := make([]interface{}, 0, len(orders))
+	args := make([]interface{}, 0, len(orders)*3+1) // Preallocate for CASE + WHERE + IN
+	imageIDsForIN := make([]int64, 0, len(orders))
 
 	argIdx := 1
 	for _, order := range orders {
-		query += fmt.Sprintf("WHEN id = $%d THEN $%d ", argIdx, argIdx+1)
-		args = append(args, order.ImageID, order.DisplayOrder)
-		imageIDs = append(imageIDs, order.ImageID)
+		// Use explicit ::integer cast in SQL to force correct type
+		query += fmt.Sprintf("WHEN id = $%d THEN $%d::integer ", argIdx, argIdx+1)
+		// Append typed values, NOT interface{} wrapping
+		args = append(args, order.ImageID)           // int64
+		args = append(args, int(order.DisplayOrder)) // int (cast from int32)
+		imageIDsForIN = append(imageIDsForIN, order.ImageID)
 		argIdx += 2
 	}
 
 	query += fmt.Sprintf("END WHERE listing_id = $%d AND id IN (", argIdx)
-	args = append(args, listingID)
+	args = append(args, listingID) // int64
 
 	// Add placeholders for IN clause
-	for i := range imageIDs {
+	for i, imageID := range imageIDsForIN {
 		if i > 0 {
 			query += ", "
 		}
 		query += fmt.Sprintf("$%d", argIdx+1+i)
-		args = append(args, imageIDs[i])
+		args = append(args, imageID) // int64 directly, not interface{}
 	}
 	query += ")"
 

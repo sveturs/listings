@@ -9,13 +9,13 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
 	"github.com/sveturs/listings/internal/domain"
 	"github.com/sveturs/listings/internal/timeout"
 )
 
 // RecordInventoryMovement records a stock change with movement tracking
-func (s *Server) RecordInventoryMovement(ctx context.Context, req *pb.RecordInventoryMovementRequest) (*pb.RecordInventoryMovementResponse, error) {
+func (s *Server) RecordInventoryMovement(ctx context.Context, req *listingspb.RecordInventoryMovementRequest) (*listingspb.RecordInventoryMovementResponse, error) {
 	variantIDLog := int64(0)
 	if req.VariantId != nil {
 		variantIDLog = *req.VariantId
@@ -130,7 +130,7 @@ func (s *Server) RecordInventoryMovement(ctx context.Context, req *pb.RecordInve
 		Int32("stock_after", stockAfter).
 		Msg("inventory movement recorded successfully")
 
-	return &pb.RecordInventoryMovementResponse{
+	return &listingspb.RecordInventoryMovementResponse{
 		Success:     true,
 		StockBefore: stockBefore,
 		StockAfter:  stockAfter,
@@ -139,7 +139,7 @@ func (s *Server) RecordInventoryMovement(ctx context.Context, req *pb.RecordInve
 }
 
 // BatchUpdateStock updates stock for multiple products/variants atomically
-func (s *Server) BatchUpdateStock(ctx context.Context, req *pb.BatchUpdateStockRequest) (*pb.BatchUpdateStockResponse, error) {
+func (s *Server) BatchUpdateStock(ctx context.Context, req *listingspb.BatchUpdateStockRequest) (*listingspb.BatchUpdateStockResponse, error) {
 	s.logger.Debug().
 		Int64("storefront_id", req.StorefrontId).
 		Int("item_count", len(req.Items)).
@@ -238,9 +238,9 @@ func (s *Server) BatchUpdateStock(ctx context.Context, req *pb.BatchUpdateStockR
 	}
 
 	// Convert domain results to proto
-	protoResults := make([]*pb.StockUpdateResult, len(results))
+	protoResults := make([]*listingspb.StockUpdateResult, len(results))
 	for i, result := range results {
-		protoResult := &pb.StockUpdateResult{
+		protoResult := &listingspb.StockUpdateResult{
 			ProductId:   result.ProductID,
 			StockBefore: result.StockBefore,
 			StockAfter:  result.StockAfter,
@@ -263,7 +263,7 @@ func (s *Server) BatchUpdateStock(ctx context.Context, req *pb.BatchUpdateStockR
 		Int32("failed_count", failedCount).
 		Msg("batch stock update completed")
 
-	return &pb.BatchUpdateStockResponse{
+	return &listingspb.BatchUpdateStockResponse{
 		SuccessfulCount: successCount,
 		FailedCount:     failedCount,
 		Results:         protoResults,
@@ -271,7 +271,7 @@ func (s *Server) BatchUpdateStock(ctx context.Context, req *pb.BatchUpdateStockR
 }
 
 // GetProductStats retrieves statistics for storefront products
-func (s *Server) GetProductStats(ctx context.Context, req *pb.GetProductStatsRequest) (*pb.GetProductStatsResponse, error) {
+func (s *Server) GetProductStats(ctx context.Context, req *listingspb.GetProductStatsRequest) (*listingspb.GetProductStatsResponse, error) {
 	s.logger.Debug().
 		Int64("storefront_id", req.StorefrontId).
 		Msg("GetProductStats called")
@@ -289,7 +289,7 @@ func (s *Server) GetProductStats(ctx context.Context, req *pb.GetProductStatsReq
 	}
 
 	// Convert domain stats to proto
-	protoStats := &pb.ProductStats{
+	protoStats := &listingspb.ProductStats{
 		TotalProducts:  stats.TotalProducts,
 		ActiveProducts: stats.ActiveProducts,
 		OutOfStock:     stats.OutOfStock,
@@ -304,11 +304,11 @@ func (s *Server) GetProductStats(ctx context.Context, req *pb.GetProductStatsReq
 		Float64("total_value", stats.TotalValue).
 		Msg("product stats retrieved successfully")
 
-	return &pb.GetProductStatsResponse{Stats: protoStats}, nil
+	return &listingspb.GetProductStatsResponse{Stats: protoStats}, nil
 }
 
 // IncrementProductViews increments view counter for analytics
-func (s *Server) IncrementProductViews(ctx context.Context, req *pb.IncrementProductViewsRequest) (*emptypb.Empty, error) {
+func (s *Server) IncrementProductViews(ctx context.Context, req *listingspb.IncrementProductViewsRequest) (*emptypb.Empty, error) {
 	s.logger.Debug().
 		Int64("product_id", req.ProductId).
 		Msg("IncrementProductViews called")

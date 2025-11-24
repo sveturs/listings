@@ -1,0 +1,524 @@
+syntax = "proto3";
+
+package listingssvc.v1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1";
+
+// ============================================================================
+// ENUMS - Analytics
+// ============================================================================
+
+// MetricPeriod defines the granularity of time-series data
+enum MetricPeriod {
+  METRIC_PERIOD_UNSPECIFIED = 0;
+  METRIC_PERIOD_HOURLY = 1;   // Hour-level aggregation
+  METRIC_PERIOD_DAILY = 2;    // Day-level aggregation
+  METRIC_PERIOD_WEEKLY = 3;   // Week-level aggregation
+  METRIC_PERIOD_MONTHLY = 4;  // Month-level aggregation
+}
+
+// ConversionFunnelStage represents stages of the purchase funnel
+enum ConversionFunnelStage {
+  CONVERSION_FUNNEL_STAGE_UNSPECIFIED = 0;
+  CONVERSION_FUNNEL_STAGE_VIEWS = 1;       // Product viewed
+  CONVERSION_FUNNEL_STAGE_CART = 2;        // Added to cart
+  CONVERSION_FUNNEL_STAGE_CHECKOUT = 3;    // Initiated checkout
+  CONVERSION_FUNNEL_STAGE_PAYMENT = 4;     // Payment started
+  CONVERSION_FUNNEL_STAGE_COMPLETED = 5;   // Order completed
+}
+
+// ============================================================================
+// ANALYTICS SERVICE
+// ============================================================================
+
+// AnalyticsService provides RPC methods for analytics and reporting
+service AnalyticsService {
+  // === High-Level Analytics ===
+
+  // GetOverviewStats retrieves high-level platform analytics (admin dashboard)
+  // Includes: total listings, revenue, users, orders, conversion metrics
+  // Supports time-series data for trend analysis
+  // Cache: 15 minutes
+  rpc GetOverviewStats(GetOverviewStatsRequest) returns (GetOverviewStatsResponse);
+
+  // GetListingStats retrieves analytics for a specific listing or product
+  // Includes: views, clicks, cart adds, sales, engagement metrics
+  // Supports filtering by date range, comparison periods
+  // Cache: 5 minutes
+  rpc GetListingStats(GetListingStatsRequest) returns (GetListingStatsResponse);
+
+  // GetStorefrontStats retrieves analytics for a specific storefront
+  // Includes: sales, revenue, listings metrics, engagement, top products
+  // Authorization: Admin OR Storefront Owner
+  // Cache: 15 minutes
+  rpc GetStorefrontStats(GetStorefrontStatsRequest) returns (GetStorefrontStatsResponse);
+
+  // GetTrendingStats retrieves platform trending analytics
+  // Includes: trending categories, hot listings, popular searches
+  // Authorization: Admin only
+  // Cache: 1 hour (trending data doesn't need real-time)
+  rpc GetTrendingStats(GetTrendingStatsRequest) returns (GetTrendingStatsResponse);
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES - GetOverviewStats
+// ============================================================================
+
+// GetOverviewStatsRequest retrieves platform-wide analytics
+message GetOverviewStatsRequest {
+  // Time range (required)
+  google.protobuf.Timestamp date_from = 1; // Start of period (inclusive)
+  google.protobuf.Timestamp date_to = 2;   // End of period (inclusive)
+
+  // Optional: comparison period for growth calculation
+  optional google.protobuf.Timestamp compare_from = 3;
+  optional google.protobuf.Timestamp compare_to = 4;
+
+  // Granularity for time-series data (default: METRIC_PERIOD_DAILY)
+  optional MetricPeriod period = 5;
+
+  // Admin only: filter by specific storefront (NULL = all storefronts)
+  optional int64 storefront_id = 6;
+
+  // Optional: filter by category
+  optional int64 category_id = 7;
+
+  // Optional: filter by listing type ("b2c", "c2c", or empty for both)
+  optional string listing_type = 8;
+}
+
+// GetOverviewStatsResponse returns comprehensive platform analytics
+message GetOverviewStatsResponse {
+  // === Core Metrics ===
+  ListingsStats listings = 1;     // Listing-related metrics
+  RevenueStats revenue = 2;       // Financial metrics
+  UsersStats users = 3;          // User-related metrics
+  OrdersStats orders = 4;        // Order-related metrics
+  EngagementMetrics engagement = 5; // User engagement metrics
+
+  // === Time-Series Data ===
+  // Time-series breakdown of key metrics (if period requested)
+  repeated TimeSeriesPoint time_series = 6;
+
+  // === Comparison Data ===
+  // Growth metrics comparing current period to comparison period
+  optional PerformanceComparison comparison = 7;
+
+  // === Conversion Funnel ===
+  ConversionFunnel conversion_funnel = 8;
+
+  // === Timestamps ===
+  google.protobuf.Timestamp generated_at = 9; // When stats were generated
+  google.protobuf.Timestamp data_from = 10;   // Actual start date used
+  google.protobuf.Timestamp data_to = 11;     // Actual end date used
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES - GetListingStats
+// ============================================================================
+
+// GetListingStatsRequest retrieves analytics for a specific listing or product
+message GetListingStatsRequest {
+  // Identification (one required)
+  oneof identifier {
+    int64 listing_id = 1;  // For C2C listings
+    int64 product_id = 2;  // For B2C products
+  }
+
+  // Time range (required)
+  google.protobuf.Timestamp date_from = 3; // Start of period (inclusive)
+  google.protobuf.Timestamp date_to = 4;   // End of period (inclusive)
+
+  // Optional: comparison period for growth calculation
+  optional google.protobuf.Timestamp compare_from = 5;
+  optional google.protobuf.Timestamp compare_to = 6;
+
+  // Granularity for time-series data (default: METRIC_PERIOD_DAILY)
+  optional MetricPeriod period = 7;
+
+  // Optional: include variant-level breakdown (for products with variants)
+  optional bool include_variants = 8;
+
+  // Optional: include geo breakdown (for mapped products)
+  optional bool include_geo = 9;
+
+  // Authorization (required for non-admin)
+  optional int64 user_id = 10; // Must match listing/product owner or admin
+  optional bool is_admin = 11;
+}
+
+// GetListingStatsResponse returns analytics for a specific listing or product
+message GetListingStatsResponse {
+  // === Basic Info ===
+  int64 listing_id = 1;              // Listing/product ID
+  string listing_name = 2;           // Display name
+  string listing_type = 3;           // "b2c" or "c2c"
+  optional int64 storefront_id = 4;  // Storefront ID (for B2C)
+
+  // === Performance Metrics ===
+  int32 total_views = 5;             // Total page views
+  int32 unique_visitors = 6;         // Unique user count
+  int32 favorite_count = 7;          // Total times favorited
+  int32 cart_adds = 8;               // Times added to cart
+  int32 total_sales = 9;             // Number of completed orders
+  double total_revenue = 10;         // Total revenue from sales
+  double avg_order_value = 11;       // Average order value
+  double conversion_rate = 12;       // (total_sales / total_views) %
+
+  // === Stock & Inventory ===
+  int32 current_stock = 13;          // Current stock level
+  int32 stock_sold = 14;             // Total sold
+  optional int32 stock_reserved = 15; // Items in active carts/reservations
+  double inventory_turnover = 16;    // Times sold per period
+
+  // === Engagement ===
+  EngagementMetrics engagement = 17;
+
+  // === Variants Breakdown ===
+  // Only included if include_variants=true and product has variants
+  repeated VariantStats variant_stats = 18;
+
+  // === Geographic Breakdown ===
+  // Only included if include_geo=true
+  repeated GeoStats geo_stats = 19;
+
+  // === Time-Series Data ===
+  // Time-series breakdown of key metrics
+  repeated ListingTimeSeriesPoint time_series = 20;
+
+  // === Comparison Data ===
+  // Growth metrics comparing current period to comparison period
+  optional PerformanceComparison comparison = 21;
+
+  // === Price & Discount ===
+  double current_price = 22;          // Current listing price
+  optional double original_price = 23; // Original price (if on discount)
+  double discount_percent = 24;       // Discount % (0 if no discount)
+
+  // === Timestamps ===
+  google.protobuf.Timestamp created_at = 25;   // Listing creation date
+  google.protobuf.Timestamp updated_at = 26;   // Last update date
+  google.protobuf.Timestamp generated_at = 27; // When stats were generated
+  google.protobuf.Timestamp data_from = 28;    // Actual start date used
+  google.protobuf.Timestamp data_to = 29;      // Actual end date used
+}
+
+// ============================================================================
+// SUPPORTING MESSAGES - Metrics
+// ============================================================================
+
+// ListingsStats represents statistics about listings on the platform
+message ListingsStats {
+  int32 total_listings = 1;      // All listings (including inactive)
+  int32 active_listings = 2;     // Active listings only
+  int32 new_listings = 3;        // Created in period
+  int32 deleted_listings = 4;    // Deleted in period
+  int32 out_of_stock = 5;        // Count of out-of-stock listings
+  int32 low_stock = 6;           // Count of low-stock listings
+  double avg_price = 7;          // Average listing price
+  int32 listings_with_variants = 8; // Listings/products with variants
+  int32 avg_images_per_listing = 9; // Average images per listing
+
+  // Breakdown by type (B2C vs C2C)
+  optional int32 b2c_listings = 10;
+  optional int32 c2c_listings = 11;
+
+  // Category breakdown
+  map<int64, int32> listings_by_category = 12; // {category_id: count}
+}
+
+// RevenueStats represents financial metrics
+message RevenueStats {
+  double total_revenue = 1;           // Total revenue in period
+  double avg_daily_revenue = 2;       // Average per day
+  double avg_order_value = 3;         // Average transaction amount
+  double median_order_value = 4;      // Median transaction amount
+  double revenue_from_new_customers = 5; // Revenue attributed to new users
+  double revenue_from_repeat_customers = 6; // Revenue from returning users
+  int32 transactions = 7;             // Total completed transactions
+  int32 failed_transactions = 8;      // Failed payment attempts
+
+  // Payment method breakdown
+  map<string, double> revenue_by_payment_method = 9; // {method: revenue}
+
+  // Storefront breakdown (if available)
+  map<int64, double> revenue_by_storefront = 10; // {storefront_id: revenue}
+
+  // Growth calculation
+  optional PerformanceComparison comparison = 11;
+}
+
+// UsersStats represents user-related metrics
+message UsersStats {
+  int32 total_users = 1;         // Total registered users
+  int32 active_users = 2;        // Users with activity in period
+  int32 new_users = 3;           // Registered in period
+  int32 new_sellers = 4;         // New storefront/seller accounts
+  int32 returning_users = 5;     // Users with repeat purchases
+  double user_retention_rate = 6; // Retention % (users active in current and previous period)
+  int32 users_with_favorites = 7; // Users who favorited at least one item
+  int32 users_with_purchases = 8; // Users who completed at least one purchase
+  double avg_user_ltv = 9;       // Average lifetime value per user
+  int32 users_with_reviews = 10; // Users who left reviews (if available)
+}
+
+// OrdersStats represents order-related metrics
+message OrdersStats {
+  int32 total_orders = 1;        // All orders including cancelled
+  int32 completed_orders = 2;    // Successfully completed
+  int32 pending_orders = 3;      // Awaiting payment/processing
+  int32 cancelled_orders = 4;    // Cancelled by user or admin
+  int32 refunded_orders = 5;     // Orders with refunds
+  double cancellation_rate = 6;  // Percentage of cancelled orders
+  double refund_rate = 7;        // Percentage of refunded orders
+  int32 avg_processing_time_hours = 8; // Average time from order to shipment
+  int32 avg_delivery_time_days = 9; // Average time from shipment to delivery
+
+  // Status breakdown (more detailed)
+  map<string, int32> orders_by_status = 10; // {status: count}
+
+  // Fulfillment metrics
+  int32 orders_on_time = 11;     // Delivered on time
+  int32 orders_late = 12;        // Delivered late
+  double on_time_rate = 13;      // Percentage of on-time deliveries
+}
+
+// EngagementMetrics represents user engagement
+message EngagementMetrics {
+  int32 total_views = 1;           // Total page views
+  int32 unique_visitors = 2;       // Unique users
+  double avg_session_duration = 3; // Average session length in seconds
+  double bounce_rate = 4;          // % of sessions with single page view
+  int32 favorites_added = 5;       // Times items favorited
+  int32 favorites_removed = 6;     // Times items unfavorited
+  int32 cart_adds = 7;             // Items added to cart
+  int32 cart_removals = 8;         // Items removed from cart
+  double cart_abandonment_rate = 9; // % of carts not converted to orders
+  int32 checkout_initiations = 10; // Checkout sessions started
+  int32 search_queries = 11;       // Search operations performed
+  map<string, int32> top_search_terms = 12; // Most searched terms
+}
+
+// ConversionFunnel represents the purchase funnel breakdown
+message ConversionFunnel {
+  int32 stage_views = 1;       // Unique sessions that viewed products
+  int32 stage_cart = 2;        // Sessions that added items to cart
+  int32 stage_checkout = 3;    // Sessions that initiated checkout
+  int32 stage_payment = 4;     // Sessions that started payment
+  int32 stage_completed = 5;   // Sessions that completed payment
+
+  // Conversion rates at each stage
+  double view_to_cart_rate = 6;       // % of viewers who added to cart
+  double cart_to_checkout_rate = 7;   // % of cart users who started checkout
+  double checkout_to_payment_rate = 8; // % who started payment
+  double payment_to_completion_rate = 9; // % who completed payment
+  double overall_conversion_rate = 10; // Views to completion %
+
+  // Dropout analysis
+  int32 dropped_at_cart = 11;        // Abandoned cart (added but didn't checkout)
+  int32 dropped_at_checkout = 12;    // Abandoned checkout (started but didn't pay)
+  int32 dropped_at_payment = 13;     // Failed payment attempt
+}
+
+// TimeSeriesPoint represents a single data point in time-series
+message TimeSeriesPoint {
+  google.protobuf.Timestamp timestamp = 1; // Period start time
+  int32 views = 2;                        // Views in period
+  int32 unique_visitors = 3;              // Unique visitors in period
+  int32 orders = 4;                       // Orders in period
+  double revenue = 5;                     // Revenue in period
+  int32 favorites = 6;                    // Times favorited in period
+  int32 cart_adds = 7;                    // Items added to cart in period
+  double conversion_rate = 8;             // Conversion % in period
+  int32 new_users = 9;                    // New users in period (if tracking)
+}
+
+// ListingTimeSeriesPoint represents time-series data for a specific listing
+message ListingTimeSeriesPoint {
+  google.protobuf.Timestamp timestamp = 1; // Period start time
+  int32 views = 2;                        // Page views in period
+  int32 unique_visitors = 3;              // Unique visitors in period
+  int32 sales = 4;                        // Orders completed in period
+  double revenue = 5;                     // Revenue in period
+  int32 stock_sold = 6;                   // Units sold in period
+  int32 favorites = 7;                    // Times favorited in period
+  int32 cart_adds = 8;                    // Times added to cart in period
+  double conversion_rate = 9;             // Conversion % in period
+  int32 new_visitors = 10;                // New unique visitors in period
+}
+
+// PerformanceComparison represents metrics comparison between two periods
+message PerformanceComparison {
+  // Absolute changes
+  double revenue_change = 1;              // Absolute revenue difference
+  int32 orders_change = 2;                // Absolute orders difference
+  int32 views_change = 3;                 // Absolute views difference
+  int32 users_change = 4;                 // Absolute new users difference
+
+  // Percentage changes
+  double revenue_growth_percent = 5;      // Revenue growth %
+  double orders_growth_percent = 6;       // Orders growth %
+  double views_growth_percent = 7;        // Views growth %
+  double users_growth_percent = 8;        // Users growth %
+
+  // Conversion metrics
+  double conversion_rate_change = 9;      // Conversion rate difference in percentage points
+
+  // Analysis
+  string trend = 10;                      // "up", "down", or "flat"
+  string trend_summary = 11;              // Human-readable trend description
+}
+
+// VariantStats represents analytics for a product variant
+message VariantStats {
+  int64 variant_id = 1;           // Product variant ID
+  string variant_name = 2;        // Variant identifier (e.g., "Red / XL")
+  int32 views = 3;                // Views of this variant
+  int32 sales = 4;                // Orders of this variant
+  int32 stock_sold = 5;           // Total units sold
+  double revenue = 6;             // Revenue from this variant
+  double conversion_rate = 7;     // Sales / views %
+  int32 current_stock = 8;        // Current stock level
+  double price = 9;               // Current variant price
+  int32 cart_adds = 10;           // Times added to cart
+  double avg_rating = 11;         // Average rating (if reviews available)
+  int32 review_count = 12;        // Number of reviews
+}
+
+// GeoStats represents geographic breakdown of analytics
+message GeoStats {
+  string country = 1;             // Country code
+  string city = 2;                // City name
+  int32 views = 3;                // Views from location
+  int32 sales = 4;                // Orders from location
+  double revenue = 5;             // Revenue from location
+  int32 unique_visitors = 6;      // Unique visitors from location
+  double conversion_rate = 7;     // Conversion % for location
+}
+
+// ============================================================================
+// Additional Supporting Types
+// ============================================================================
+
+// MetricSnapshot represents a single metric value with context
+message MetricSnapshot {
+  string metric_name = 1;         // Name of metric
+  double value = 2;               // Current value
+  optional double previous_value = 3; // Previous period value
+  optional double change_percent = 4; // Percentage change
+  string unit = 5;                // Unit of measurement
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES - GetStorefrontStats
+// ============================================================================
+
+// GetStorefrontStatsRequest retrieves analytics for a specific storefront
+message GetStorefrontStatsRequest {
+  // Storefront identification (required)
+  int64 storefront_id = 1;
+
+  // Time period filter (optional, default: "30d")
+  // Allowed values: "7d", "30d", "90d", "all"
+  optional string period = 2;
+
+  // Authorization (required)
+  int64 user_id = 3;              // Current user ID
+  repeated string roles = 4;      // User roles for authorization check
+}
+
+// TopListingInfo represents a top-performing listing
+message TopListingInfo {
+  int64 listing_id = 1;           // Listing ID
+  string title = 2;               // Listing title
+  double revenue = 3;             // Total revenue from this listing
+  int32 order_count = 4;          // Number of orders for this listing
+  int32 view_count = 5;           // Number of views
+  double conversion_rate = 6;     // Conversion rate %
+}
+
+// GetStorefrontStatsResponse returns storefront performance analytics
+message GetStorefrontStatsResponse {
+  // === Basic Info ===
+  int64 storefront_id = 1;
+  string storefront_name = 2;
+
+  // === Sales Metrics ===
+  int64 total_sales = 3;          // Number of completed orders (delivered status)
+  double total_revenue = 4;       // Sum of order amounts (delivered orders)
+  double average_order_value = 5; // Average order value
+
+  // === Listings Metrics ===
+  int32 active_listings = 6;      // Active listings count
+  int32 total_listings = 7;       // Total listings (including inactive)
+
+  // === Performance Metrics ===
+  int64 total_views = 8;          // Sum of all listing views
+  int64 total_favorites = 9;      // Sum of all listing favorites
+  double conversion_rate = 10;    // Orders / views ratio (%)
+
+  // === Top Listings ===
+  repeated TopListingInfo top_listings = 11; // Top 10 listings by revenue
+
+  // === Filter Info ===
+  string period = 12;             // Applied period filter ("7d", "30d", "90d", "all")
+
+  // === Timestamps ===
+  google.protobuf.Timestamp generated_at = 13; // When stats were generated
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES - GetTrendingStats
+// ============================================================================
+
+// GetTrendingStatsRequest retrieves platform trending analytics
+message GetTrendingStatsRequest {
+  // Admin-only endpoint, no filters needed
+  // Stats are pre-calculated in materialized view and cached
+}
+
+// TrendingCategory represents a category with growing order volume
+message TrendingCategory {
+  int64 category_id = 1;          // Category ID
+  string category_name = 2;        // Category display name
+  int32 order_count_30d = 3;       // Orders in last 30 days
+  int32 order_count_7d = 4;        // Orders in last 7 days
+  double growth_rate = 5;          // Percentage growth rate (7d avg vs 30d avg)
+  double trend_score = 6;          // Combined score (volume + growth)
+}
+
+// HotListing represents a listing with spiking order activity
+message HotListing {
+  int64 listing_id = 1;            // Listing ID
+  string title = 2;                // Listing title
+  int64 orders_24h = 3;            // Orders in last 24 hours
+  int64 orders_7d = 4;             // Orders in last 7 days
+  double orders_growth = 5;        // Growth ratio (24h rate vs 7d avg)
+  int64 quantity_sold_24h = 6;     // Units sold in last 24 hours
+  double price = 7;                // Current price
+}
+
+// PopularSearch represents frequently searched terms
+message PopularSearch {
+  string query = 1;                // Search query text
+  int64 search_count = 2;          // Number of times searched (7 days)
+}
+
+// GetTrendingStatsResponse returns platform trending analytics
+message GetTrendingStatsResponse {
+  // Trending categories (by order volume growth) - Top 10
+  repeated TrendingCategory trending_categories = 1;
+
+  // Hot listings (order spike in last 24h) - Top 20
+  repeated HotListing hot_listings = 2;
+
+  // Popular searches (most searched terms) - Top 10
+  repeated PopularSearch popular_searches = 3;
+
+  // When stats were generated (from cache or fresh)
+  google.protobuf.Timestamp generated_at = 4;
+}
