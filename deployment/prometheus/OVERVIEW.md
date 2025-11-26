@@ -419,4 +419,4 @@ prometheus/
 - **Documentation**: [README.md](README.md)
 - **Issues**: Check logs with `make logs`
 - **Testing**: Use `test-alerts.sh`
-- **Team**: platform-team@svetu.rs
+- **Team**: platform-team@vondi.rs

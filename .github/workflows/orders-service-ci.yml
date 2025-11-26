@@ -81,13 +81,13 @@ jobs:
 
       - name: Run unit tests with coverage
         env:
-          SVETULISTINGS_DB_HOST: localhost
-          SVETULISTINGS_DB_PORT: 5432
-          SVETULISTINGS_DB_USER: listings_user
-          SVETULISTINGS_DB_PASSWORD: listings_password
-          SVETULISTINGS_DB_NAME: listings_db_test
-          SVETULISTINGS_REDIS_HOST: localhost
-          SVETULISTINGS_REDIS_PORT: 6379
+          VONDILISTINGS_DB_HOST: localhost
+          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_USER: listings_user
+          VONDILISTINGS_DB_PASSWORD: listings_password
+          VONDILISTINGS_DB_NAME: listings_db_test
+          VONDILISTINGS_REDIS_HOST: localhost
+          VONDILISTINGS_REDIS_PORT: 6379
         run: |
           go test -v -race -coverprofile=coverage.txt -covermode=atomic -short \
             ./internal/... \
@@ -181,11 +181,11 @@ jobs:
 
       - name: Run database migrations
         env:
-          SVETULISTINGS_DB_HOST: localhost
-          SVETULISTINGS_DB_PORT: 5432
-          SVETULISTINGS_DB_USER: listings_user
-          SVETULISTINGS_DB_PASSWORD: listings_password
-          SVETULISTINGS_DB_NAME: listings_db_test
+          VONDILISTINGS_DB_HOST: localhost
+          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_USER: listings_user
+          VONDILISTINGS_DB_PASSWORD: listings_password
+          VONDILISTINGS_DB_NAME: listings_db_test
         run: |
           # Run migrations using golang-migrate or your migrator
           # For now, using go test which handles migrations
@@ -193,15 +193,15 @@ jobs:
 
       - name: Run E2E tests (Orders)
         env:
-          SVETULISTINGS_DB_HOST: localhost
-          SVETULISTINGS_DB_PORT: 5432
-          SVETULISTINGS_DB_USER: listings_user
-          SVETULISTINGS_DB_PASSWORD: listings_password
-          SVETULISTINGS_DB_NAME: listings_db_test
-          SVETULISTINGS_REDIS_HOST: localhost
-          SVETULISTINGS_REDIS_PORT: 6379
-          SVETULISTINGS_OPENSEARCH_HOST: localhost
-          SVETULISTINGS_OPENSEARCH_PORT: 9200
+          VONDILISTINGS_DB_HOST: localhost
+          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_USER: listings_user
+          VONDILISTINGS_DB_PASSWORD: listings_password
+          VONDILISTINGS_DB_NAME: listings_db_test
+          VONDILISTINGS_REDIS_HOST: localhost
+          VONDILISTINGS_REDIS_PORT: 6379
+          VONDILISTINGS_OPENSEARCH_HOST: localhost
+          VONDILISTINGS_OPENSEARCH_PORT: 9200
         run: |
           # Run integration tests for Orders domain
           go test -v -timeout=10m -tags=integration \
@@ -269,13 +269,13 @@ jobs:
 
       - name: Run benchmark tests
         env:
-          SVETULISTINGS_DB_HOST: localhost
-          SVETULISTINGS_DB_PORT: 5432
-          SVETULISTINGS_DB_USER: listings_user
-          SVETULISTINGS_DB_PASSWORD: listings_password
-          SVETULISTINGS_DB_NAME: listings_db_test
-          SVETULISTINGS_REDIS_HOST: localhost
-          SVETULISTINGS_REDIS_PORT: 6379
+          VONDILISTINGS_DB_HOST: localhost
+          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_USER: listings_user
+          VONDILISTINGS_DB_PASSWORD: listings_password
+          VONDILISTINGS_DB_NAME: listings_db_test
+          VONDILISTINGS_REDIS_HOST: localhost
+          VONDILISTINGS_REDIS_PORT: 6379
         run: |
           # Run Go benchmarks
           go test -bench=. -benchmem -benchtime=10s \
@@ -386,7 +386,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     environment:
       name: development
-      url: https://dev.svetu.rs
+      url: https://dev.vondi.rs
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

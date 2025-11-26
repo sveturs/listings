@@ -1002,7 +1002,7 @@ func (s *orderService) CreateOrderShipment(ctx context.Context, req *CreateShipm
 		s.logger.Warn().Msg("delivery client not configured, using mock shipment data")
 		shipmentID = time.Now().UnixNano() / 1000000 % 10000000
 		trackingNumber = fmt.Sprintf("TRK%d%06d", time.Now().Year(), shipmentID%1000000)
-		labelURL = fmt.Sprintf("https://delivery.svetu.rs/labels/%s.pdf", trackingNumber)
+		labelURL = fmt.Sprintf("https://delivery.vondi.rs/labels/%s.pdf", trackingNumber)
 		estimatedDelivery = time.Now().Add(72 * time.Hour).Format(time.RFC3339)
 		deliveryCost = order.Shipping
 	}

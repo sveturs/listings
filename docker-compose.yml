@@ -6,9 +6,9 @@ services:
     container_name: listings_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${SVETULISTINGS_DB_NAME:-listings_dev_db}
-      POSTGRES_USER: ${SVETULISTINGS_DB_USER:-listings_user}
-      POSTGRES_PASSWORD: ${SVETULISTINGS_DB_PASSWORD:-listings_secret}
+      POSTGRES_DB: ${VONDILISTINGS_DB_NAME:-listings_dev_db}
+      POSTGRES_USER: ${VONDILISTINGS_DB_USER:-listings_user}
+      POSTGRES_PASSWORD: ${VONDILISTINGS_DB_PASSWORD:-listings_secret}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
     ports:
       - "35434:5432"  # Changed to 35434 (35433 used by SSH tunnel)
@@ -16,7 +16,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d/migrations:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${SVETULISTINGS_DB_USER:-listings_user} -d ${SVETULISTINGS_DB_NAME:-listings_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${VONDILISTINGS_DB_USER:-listings_user} -d ${VONDILISTINGS_DB_NAME:-listings_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,9 +27,9 @@ services:
     image: redis:7-alpine
     container_name: listings_redis
     restart: unless-stopped
-    command: redis-server --requirepass ${SVETULISTINGS_REDIS_PASSWORD:-redis_password} --appendonly yes
+    command: redis-server --requirepass ${VONDILISTINGS_REDIS_PASSWORD:-redis_password} --appendonly yes
     ports:
-      - "${SVETULISTINGS_REDIS_PORT:-36380}:6379"
+      - "${VONDILISTINGS_REDIS_PORT:-36380}:6379"
     volumes:
       - redis_data:/data
     healthcheck:

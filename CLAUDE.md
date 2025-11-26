@@ -2,7 +2,7 @@
 
 ## 🎯 О микросервисе
 
-**Listings Service** - микросервис для управления объявлениями, заказами, корзиной, избранным и чатами.
+**Vondi Listings Service** - микросервис для управления объявлениями, заказами, корзиной, избранным и чатами.
 
 - **Порт gRPC:** 50053
 - **Порт HTTP:** 8086
@@ -20,21 +20,21 @@
 
 ```bash
 # Database - Отдельная БД микросервиса (НЕ монолит!)
-SVETULISTINGS_DB_HOST=localhost
-SVETULISTINGS_DB_PORT=35434              # НЕ 5433!
-SVETULISTINGS_DB_USER=listings_user      # НЕ postgres!
-SVETULISTINGS_DB_PASSWORD=listings_secret
-SVETULISTINGS_DB_NAME=listings_dev_db    # НЕ svetubd!
-SVETULISTINGS_DB_SSLMODE=disable
+VONDILISTINGS_DB_HOST=localhost
+VONDILISTINGS_DB_PORT=35434              # НЕ 5433!
+VONDILISTINGS_DB_USER=listings_user      # НЕ postgres!
+VONDILISTINGS_DB_PASSWORD=listings_secret
+VONDILISTINGS_DB_NAME=listings_dev_db    # НЕ svetubd!
+VONDILISTINGS_DB_SSLMODE=disable
 ```
 
 ### ❌ НЕПРАВИЛЬНАЯ конфигурация:
 
 ```bash
 # НЕ ДЕЛАЙ ТАК - это монолитная БД!
-SVETULISTINGS_DB_PORT=5433     # ❌ Это монолит!
-SVETULISTINGS_DB_NAME=svetubd  # ❌ Это монолит!
-SVETULISTINGS_DB_USER=postgres # ❌ Это монолит!
+VONDILISTINGS_DB_PORT=5433     # ❌ Это монолит!
+VONDILISTINGS_DB_NAME=svetubd  # ❌ Это монолит!
+VONDILISTINGS_DB_USER=postgres # ❌ Это монолит!
 ```
 
 ### 🐳 Docker контейнер БД:
@@ -215,7 +215,7 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
 1. Проверь `.env`:
    ```bash
    cat .env | grep DB_PORT
-   # Должно быть: SVETULISTINGS_DB_PORT=35434
+   # Должно быть: VONDILISTINGS_DB_PORT=35434
    ```
 
 2. Исправь конфигурацию (см. раздел "База данных" выше)
@@ -257,7 +257,7 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
 - [ ] Таблица `listing_favorites` существует
 - [ ] Redis доступен на порту 36380
 - [ ] OpenSearch доступен на порту 9200
-- [ ] MinIO доступен на `s3.svetu.rs`
+- [ ] MinIO доступен на `s3.vondi.rs`
 
 ---
 

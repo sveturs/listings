@@ -80,13 +80,13 @@ jobs:
 
       - name: Run unit tests
         env:
-          SVETULISTINGS_DB_HOST: localhost
-          SVETULISTINGS_DB_PORT: 5432
-          SVETULISTINGS_DB_USER: listings_user
-          SVETULISTINGS_DB_PASSWORD: listings_password
-          SVETULISTINGS_DB_NAME: listings_db_test
-          SVETULISTINGS_REDIS_HOST: localhost
-          SVETULISTINGS_REDIS_PORT: 6379
+          VONDILISTINGS_DB_HOST: localhost
+          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_USER: listings_user
+          VONDILISTINGS_DB_PASSWORD: listings_password
+          VONDILISTINGS_DB_NAME: listings_db_test
+          VONDILISTINGS_REDIS_HOST: localhost
+          VONDILISTINGS_REDIS_PORT: 6379
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic -short ./...
 
       - name: Check coverage threshold
@@ -210,11 +210,11 @@ jobs:
 
       - name: Run integration tests
         env:
-          SVETULISTINGS_DB_HOST: localhost
-          SVETULISTINGS_DB_PORT: 5432
-          SVETULISTINGS_DB_USER: listings_user
-          SVETULISTINGS_DB_PASSWORD: listings_password
-          SVETULISTINGS_DB_NAME: listings_db_test
-          SVETULISTINGS_REDIS_HOST: localhost
-          SVETULISTINGS_REDIS_PORT: 6379
+          VONDILISTINGS_DB_HOST: localhost
+          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_USER: listings_user
+          VONDILISTINGS_DB_PASSWORD: listings_password
+          VONDILISTINGS_DB_NAME: listings_db_test
+          VONDILISTINGS_REDIS_HOST: localhost
+          VONDILISTINGS_REDIS_PORT: 6379
         run: go test -v -tags=integration ./...

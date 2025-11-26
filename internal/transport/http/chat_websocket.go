@@ -48,8 +48,8 @@ func NewChatWebSocketHandler(hub *ws.ChatHub, authService *authservice.AuthServi
 	// For now, allow common development and production origins
 	allowedOrigins := []string{
 		"http://localhost:3001",
-		"https://dev.svetu.rs",
-		"https://svetu.rs",
+		"https://dev.vondi.rs",
+		"https://vondi.rs",
 	}
 
 	return &ChatWebSocketHandler{

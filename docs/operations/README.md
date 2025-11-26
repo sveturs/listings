@@ -250,8 +250,8 @@ curl http://localhost:8086/metrics | grep listings_
 
 - **SSH:** Production servers
 - **PagerDuty:** Alert management
-- **Grafana:** Dashboards (https://grafana.svetu.rs)
-- **Prometheus:** Metrics (http://prometheus.svetu.rs:9090)
+- **Grafana:** Dashboards (https://grafana.vondi.rs)
+- **Prometheus:** Metrics (http://prometheus.vondi.rs:9090)
 - **Slack:** Communication channels
 - **GitHub:** Repository access
 - **Database:** psql credentials
@@ -261,8 +261,8 @@ curl http://localhost:8086/metrics | grep listings_
 
 | Service | URL | Purpose |
 |---------|-----|---------|
-| Grafana | https://grafana.svetu.rs | Monitoring dashboards |
-| Prometheus | http://prometheus.svetu.rs:9090 | Metrics and queries |
+| Grafana | https://grafana.vondi.rs | Monitoring dashboards |
+| Prometheus | http://prometheus.vondi.rs:9090 | Metrics and queries |
 | PagerDuty | https://svetu.pagerduty.com | Alert management |
 | Slack | https://svetu.slack.com | Communication |
 | GitHub | https://github.com/sveturs/listings | Source code |
@@ -478,7 +478,7 @@ A: Create PR with changes, tag Platform Team for review. See "Contributing" abov
 
 **Need help with operations documentation?**
 - **Slack:** #listings-team or #platform-team
-- **Email:** platform@svetu.rs
+- **Email:** platform@vondi.rs
 - **On-Call:** PagerDuty escalation
 
 **Found an error or have suggestions?**

@@ -83,7 +83,7 @@ top -p $(pgrep listings-service)
 | On-Call Engineer | PagerDuty: listings-oncall | All alerts |
 | Database SRE | PagerDuty: db-team | DB connection issues, slow queries |
 | Platform Team Lead | Slack: #listings-incidents | SLO breach, data loss |
-| Security Team | security@svetu.rs | Security incidents, DDoS |
+| Security Team | security@vondi.rs | Security incidents, DDoS |
 
 ---
 
@@ -465,9 +465,9 @@ watch -n 1 'curl -s http://localhost:8086/metrics | grep listings_db_connections
 sudo nano /opt/listings-dev/.env
 
 # Increase pool size (if system can handle it)
-SVETULISTINGS_DB_MAX_OPEN_CONNS=50
-SVETULISTINGS_DB_MAX_IDLE_CONNS=20
-SVETULISTINGS_DB_CONN_MAX_LIFETIME=3m
+VONDILISTINGS_DB_MAX_OPEN_CONNS=50
+VONDILISTINGS_DB_MAX_IDLE_CONNS=20
+VONDILISTINGS_DB_CONN_MAX_LIFETIME=3m
 
 # Restart service
 sudo systemctl restart listings-service
@@ -1281,9 +1281,9 @@ security-team       # Security Team (parallel)
 #platform-team       # Platform team channel
 
 # Email (tertiary)
-oncall@svetu.rs     # On-call rotation
-platform@svetu.rs   # Platform team
-security@svetu.rs   # Security team
+oncall@vondi.rs     # On-call rotation
+platform@vondi.rs   # Platform team
+security@vondi.rs   # Security team
 ```
 
 ### Incident Communication Template

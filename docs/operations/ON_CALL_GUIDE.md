@@ -113,8 +113,8 @@ As the on-call engineer for the Listings microservice, you are the first respond
 https://svetu.pagerduty.com/incidents
 
 # Check current service health
-# Grafana: https://grafana.svetu.rs/d/listings-overview
-# Prometheus: http://prometheus.svetu.rs:9090
+# Grafana: https://grafana.vondi.rs/d/listings-overview
+# Prometheus: http://prometheus.vondi.rs:9090
 
 # Read this guide
 # Review RUNBOOK.md and TROUBLESHOOTING.md
@@ -127,7 +127,7 @@ https://svetu.pagerduty.com/incidents
 # Verify: Email, SMS, phone call working
 
 # Test SSH access
-ssh svetu@svetu.rs
+ssh svetu@vondi.rs
 
 # Test database access
 psql "postgres://listings_user:listings_password@localhost:35433/listings_db" -c "SELECT 1;"
@@ -229,10 +229,10 @@ make build
 - Weekly on-call summaries
 
 **Mailing Lists:**
-- `oncall@svetu.rs` - On-call engineers
-- `platform@svetu.rs` - Platform team
-- `engineering@svetu.rs` - All engineering
-- `incidents@svetu.rs` - Incident notifications
+- `oncall@vondi.rs` - On-call engineers
+- `platform@vondi.rs` - Platform team
+- `engineering@vondi.rs` - All engineering
+- `incidents@vondi.rs` - Incident notifications
 
 ### Phone
 
@@ -359,7 +359,7 @@ SLACK THREAD: [Link]
 **Check service status:**
 ```bash
 # SSH to server
-ssh svetu@svetu.rs
+ssh svetu@vondi.rs
 
 # Check service
 sudo systemctl status listings-service
@@ -1095,8 +1095,8 @@ alias ls-db-slow='psql "postgres://listings_user:listings_password@localhost:354
 
 **Essential URLs:**
 - PagerDuty: https://svetu.pagerduty.com
-- Grafana: https://grafana.svetu.rs/d/listings-overview
-- Prometheus: http://prometheus.svetu.rs:9090
+- Grafana: https://grafana.vondi.rs/d/listings-overview
+- Prometheus: http://prometheus.vondi.rs:9090
 - GitHub: https://github.com/sveturs/listings
 - RUNBOOK: `file:///p/github.com/sveturs/listings/docs/operations/RUNBOOK.md`
 - Slack: https://svetu.slack.com/messages/listings-incidents
@@ -1271,7 +1271,7 @@ A: If you've been investigating for 30 minutes (P1) or 1 hour (P2) without progr
 Have suggestions for improving the on-call experience?
 - Create ticket: [JIRA project]
 - Post in: #listings-team
-- Email: platform@svetu.rs
+- Email: platform@vondi.rs
 
 ---
 

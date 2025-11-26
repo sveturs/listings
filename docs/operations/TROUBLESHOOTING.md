@@ -454,14 +454,14 @@ go tool pprof -top /tmp/mutex-*.prof
 
 ### Tracing
 
-**Note:** Distributed tracing with Jaeger is currently disabled by default (`SVETULISTINGS_TRACING_ENABLED=false`).
+**Note:** Distributed tracing with Jaeger is currently disabled by default (`VONDILISTINGS_TRACING_ENABLED=false`).
 
 #### Enable Tracing (Development)
 
 ```bash
 # In .env file
-SVETULISTINGS_TRACING_ENABLED=true
-SVETULISTINGS_JAEGER_ENDPOINT=http://localhost:14268/api/traces
+VONDILISTINGS_TRACING_ENABLED=true
+VONDILISTINGS_JAEGER_ENDPOINT=http://localhost:14268/api/traces
 
 # Restart service
 sudo systemctl restart listings-service
@@ -747,7 +747,7 @@ sudo journalctl -u listings-service -n 100 | grep configuration
 cat /opt/listings-dev/.env
 
 # Check required variables
-env | grep SVETULISTINGS_
+env | grep VONDILISTINGS_
 ```
 
 **Solution:**
@@ -1121,7 +1121,7 @@ netstat -tlnp | grep 50053
 sudo lsof -i :50053
 
 # Verify gRPC port in config
-env | grep SVETULISTINGS_GRPC_PORT
+env | grep VONDILISTINGS_GRPC_PORT
 
 # Test gRPC manually
 grpcurl -plaintext localhost:50053 list
@@ -1181,7 +1181,7 @@ curl -s http://localhost:8086/metrics | grep listings_indexing_queue_size
 curl -s http://localhost:8086/metrics | grep listings_indexing_jobs_processed_total
 
 # Verify worker enabled
-env | grep SVETULISTINGS_WORKER_ENABLED
+env | grep VONDILISTINGS_WORKER_ENABLED
 ```
 
 ---

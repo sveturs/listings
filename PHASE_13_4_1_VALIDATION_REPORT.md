@@ -285,7 +285,7 @@ Each alert includes:
 - `annotations`:
   - `summary`: ✅ (one-line description)
   - `description`: ✅ (detailed context)
-  - `runbook_url`: ✅ (https://wiki.svetu.rs/runbooks/*)
+  - `runbook_url`: ✅ (https://wiki.vondi.rs/runbooks/*)
 
 **Expression Analysis:** ✅
 - All expressions use histogram_quantile correctly

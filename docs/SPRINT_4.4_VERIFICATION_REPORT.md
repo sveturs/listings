@@ -2,7 +2,7 @@
 
 **Date**: 2025-10-31
 **Verified By**: Test Engineer
-**Sprint**: Phase 4.4 - dev.svetu.rs Deployment Setup
+**Sprint**: Phase 4.4 - dev.vondi.rs Deployment Setup
 **Status**: COMPLETE
 
 ---
@@ -35,7 +35,7 @@ Comprehensive verification of Sprint 4.4 deliverables has been completed. All 5 
 Clean working directory (no uncommitted changes)
 Recent commits:
   2451555 docs: add Sprint 4.4 completion report
-  4a06bbe feat: add dev.svetu.rs deployment infrastructure (Sprint 4.4)
+  4a06bbe feat: add dev.vondi.rs deployment infrastructure (Sprint 4.4)
   6726ce7 fix: linter issues - format code and fix unused variables
 ```
 
@@ -290,12 +290,12 @@ Recent commits:
 
 ### 4.3 Domain Name Consistency
 
-**Domain**: `listings.dev.svetu.rs`
+**Domain**: `listings.dev.vondi.rs`
 
 **References**:
-- ✅ `deploy-to-dev.sh:305` - "HTTP API: https://listings.dev.svetu.rs"
-- ✅ `nginx-listings.conf:13` - server_name listings.dev.svetu.rs (HTTP)
-- ✅ `nginx-listings.conf:22` - server_name listings.dev.svetu.rs (HTTPS)
+- ✅ `deploy-to-dev.sh:305` - "HTTP API: https://listings.dev.vondi.rs"
+- ✅ `nginx-listings.conf:13` - server_name listings.dev.vondi.rs (HTTP)
+- ✅ `nginx-listings.conf:22` - server_name listings.dev.vondi.rs (HTTPS)
 - ✅ `docs/SPRINT_4.4_DEPLOYMENT.md:600` - Deployment URL
 
 **Result**: ✅ **PASS** - Perfect domain consistency
@@ -364,11 +364,11 @@ Recent commits:
 
 **Placeholders in .env.prod.example**:
 ```
-SVETULISTINGS_DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD
-SVETULISTINGS_REDIS_PASSWORD=CHANGE_ME_REDIS_PASSWORD
-SVETULISTINGS_OPENSEARCH_PASSWORD=CHANGE_ME_OPENSEARCH_PASSWORD
-SVETULISTINGS_MINIO_ACCESS_KEY=CHANGE_ME_MINIO_ACCESS_KEY
-SVETULISTINGS_MINIO_SECRET_KEY=CHANGE_ME_MINIO_SECRET_KEY
+VONDILISTINGS_DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD
+VONDILISTINGS_REDIS_PASSWORD=CHANGE_ME_REDIS_PASSWORD
+VONDILISTINGS_OPENSEARCH_PASSWORD=CHANGE_ME_OPENSEARCH_PASSWORD
+VONDILISTINGS_MINIO_ACCESS_KEY=CHANGE_ME_MINIO_ACCESS_KEY
+VONDILISTINGS_MINIO_SECRET_KEY=CHANGE_ME_MINIO_SECRET_KEY
 ```
 
 **Result**: ✅ **PASS** - All passwords are placeholders
@@ -382,7 +382,7 @@ SVETULISTINGS_MINIO_SECRET_KEY=CHANGE_ME_MINIO_SECRET_KEY
 **Recent Commits**:
 ```
 2451555 docs: add Sprint 4.4 completion report
-4a06bbe feat: add dev.svetu.rs deployment infrastructure (Sprint 4.4)
+4a06bbe feat: add dev.vondi.rs deployment infrastructure (Sprint 4.4)
 6726ce7 fix: linter issues - format code and fix unused variables
 ```
 
@@ -407,7 +407,7 @@ SVETULISTINGS_MINIO_SECRET_KEY=CHANGE_ME_MINIO_SECRET_KEY
 - ✅ X-XSS-Protection: 1; mode=block
 
 **Port Exposure**:
-- ✅ HTTP API: Public via HTTPS (listings.dev.svetu.rs)
+- ✅ HTTP API: Public via HTTPS (listings.dev.vondi.rs)
 - ✅ gRPC: Internal only (localhost:50053)
 - ✅ Metrics: Internal only (localhost:9093)
 
@@ -527,8 +527,8 @@ No major issues found.
 **Issue**: SSL certificate paths are commented out (placeholder for certbot)
 
 ```nginx
-# ssl_certificate /etc/letsencrypt/live/listings.dev.svetu.rs/fullchain.pem;
-# ssl_certificate_key /etc/letsencrypt/live/listings.dev.svetu.rs/privkey.pem;
+# ssl_certificate /etc/letsencrypt/live/listings.dev.vondi.rs/fullchain.pem;
+# ssl_certificate_key /etc/letsencrypt/live/listings.dev.vondi.rs/privkey.pem;
 ```
 
 **Severity**: Minor (expected behavior)
@@ -757,19 +757,19 @@ Sprint 4.4 deliverables have been thoroughly verified and meet all requirements 
 
 **Confidence Level**: **Very High** (95%)
 
-**Recommendation**: **Deploy to dev.svetu.rs immediately**
+**Recommendation**: **Deploy to dev.vondi.rs immediately**
 
 ### 12.5 Next Steps
 
 1. ✅ Sprint 4.4 verification complete
-2. ⏭️ Ready for deployment to dev.svetu.rs
+2. ⏭️ Ready for deployment to dev.vondi.rs
 3. ⏭️ Ready to begin Phase 5 (Production Hardening)
 
 ---
 
 **Verified By**: Test Engineer (Claude Code)
 **Date**: 2025-10-31
-**Sprint**: Phase 4.4 - dev.svetu.rs Deployment Setup
+**Sprint**: Phase 4.4 - dev.vondi.rs Deployment Setup
 **Status**: ✅ COMPLETE
 **Grade**: **A (95/100)**
 

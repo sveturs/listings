@@ -141,9 +141,9 @@ message SearchListingsResponse {
 
 ### Environment (Already in .env.example)
 ```bash
-SVETULISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
-SVETULISTINGS_OPENSEARCH_INDEX=marketplace_listings
-SVETULISTINGS_CACHE_SEARCH_TTL=5m
+VONDILISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
+VONDILISTINGS_OPENSEARCH_INDEX=marketplace_listings
+VONDILISTINGS_CACHE_SEARCH_TTL=5m
 ```
 
 ### Circuit Breaker Defaults
