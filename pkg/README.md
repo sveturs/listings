@@ -352,7 +352,7 @@ For questions or issues, contact the team or open an issue on GitHub.
 
 ## License
 
-Internal use only - Svetu Platform
+Internal use only - Vondi Platform
 
 ---
 

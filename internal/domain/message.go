@@ -16,7 +16,7 @@ const (
 )
 
 // SystemUserID is the ID used for system messages (e.g., marketplace notifications)
-// This user should exist in the auth service with name "Svetu Marketplace"
+// This user should exist in the auth service with name "Vondi Marketplace"
 const SystemUserID int64 = 1
 
 // Message represents a single message in a chat

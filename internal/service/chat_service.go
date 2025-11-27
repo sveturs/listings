@@ -703,7 +703,7 @@ func (s *chatService) SendSystemMessage(ctx context.Context, req *SendSystemMess
 	}
 
 	// Set sender name for UI
-	senderName := "Svetu Marketplace"
+	senderName := "Vondi Marketplace"
 	message.SenderName = &senderName
 
 	s.logger.Info().

@@ -392,7 +392,7 @@ type Message struct {
 	// Denormalized for UI
 	SenderName *string `protobuf:"bytes,17,opt,name=sender_name,json=senderName,proto3,oneof" json:"sender_name,omitempty"`
 	// System message flag (for marketplace notifications like orders, alerts)
-	// System messages are sent by SystemUserID=1 (Svetu Marketplace)
+	// System messages are sent by SystemUserID=1 (Vondi Marketplace)
 	IsSystem      bool `protobuf:"varint,18,opt,name=is_system,json=isSystem,proto3" json:"is_system,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

@@ -106,7 +106,7 @@ message Message {
   optional string sender_name = 17;
 
   // System message flag (for marketplace notifications like orders, alerts)
-  // System messages are sent by SystemUserID=1 (Svetu Marketplace)
+  // System messages are sent by SystemUserID=1 (Vondi Marketplace)
   bool is_system = 18;
 }
 

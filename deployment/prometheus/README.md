@@ -756,4 +756,4 @@ For issues or questions:
 
 ## License
 
-Internal use only - Svetu Platform Team
+Internal use only - Vondi Platform Team
