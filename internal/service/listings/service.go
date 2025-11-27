@@ -568,6 +568,12 @@ func (s *Service) GetSimilarListings(ctx context.Context, listingID int64, limit
 	}
 
 	// Cache miss - query OpenSearch via indexer
+	// Check if indexer is available (nil when AsyncIndexing is disabled)
+	if s.indexer == nil {
+		s.logger.Debug().Int64("listing_id", listingID).Msg("indexer not available, returning empty similar listings")
+		return []*domain.Listing{}, 0, nil
+	}
+
 	listings, total, err := s.indexer.GetSimilarListings(ctx, listingID, limit)
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to get similar listings")
