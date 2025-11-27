@@ -15,12 +15,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/metrics"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service/listings"
-	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
-	"github.com/sveturs/listings/tests"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/metrics"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service/listings"
+	grpchandlers "github.com/vondi-global/listings/internal/transport/grpc"
+	"github.com/vondi-global/listings/tests"
 )
 
 // ============================================================================

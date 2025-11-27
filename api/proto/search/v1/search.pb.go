@@ -602,7 +602,7 @@ const file_api_proto_search_v1_search_proto_rawDesc = "" +
 	"\x0eGetSuggestions\x12 .search.v1.GetSuggestionsRequest\x1a!.search.v1.GetSuggestionsResponse\x12a\n" +
 	"\x12GetPopularSearches\x12$.search.v1.GetPopularSearchesRequest\x1a%.search.v1.GetPopularSearchesResponse\x12a\n" +
 	"\x13GetTrendingSearches\x12%.search.v1.GetTrendingSearchesRequest\x1a#.search.v1.TrendingSearchesResponse\x12X\n" +
-	"\x10GetSearchHistory\x12\".search.v1.GetSearchHistoryRequest\x1a .search.v1.SearchHistoryResponseB:Z8github.com/sveturs/listings/api/proto/search/v1;searchv1b\x06proto3"
+	"\x10GetSearchHistory\x12\".search.v1.GetSearchHistoryRequest\x1a .search.v1.SearchHistoryResponseB:Z8github.com/vondi-global/listings/api/proto/search/v1;searchv1b\x06proto3"
 
 var (
 	file_api_proto_search_v1_search_proto_rawDescOnce sync.Once

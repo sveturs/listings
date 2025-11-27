@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/tests"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/tests"
 )
 
 func setupTestRepo(t *testing.T) (*Repository, *tests.TestDB) {

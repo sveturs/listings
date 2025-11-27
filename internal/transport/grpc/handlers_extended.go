@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
 // GetListingImage retrieves a single image by ID

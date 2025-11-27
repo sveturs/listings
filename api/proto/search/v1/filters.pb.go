@@ -299,7 +299,7 @@ const file_api_proto_search_v1_filters_proto_rawDesc = "" +
 	"\atook_ms\x18\x03 \x01(\x05R\x06tookMs\x12\x16\n" +
 	"\x06cached\x18\x04 \x01(\bR\x06cached\x12?\n" +
 	"\x06facets\x18\x05 \x01(\v2\".search.v1.GetSearchFacetsResponseH\x00R\x06facets\x88\x01\x01B\t\n" +
-	"\a_facetsB:Z8github.com/sveturs/listings/api/proto/search/v1;searchv1b\x06proto3"
+	"\a_facetsB:Z8github.com/vondi-global/listings/api/proto/search/v1;searchv1b\x06proto3"
 
 var (
 	file_api_proto_search_v1_filters_proto_rawDescOnce sync.Once

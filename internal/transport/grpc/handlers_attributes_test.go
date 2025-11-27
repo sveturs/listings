@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/sveturs/listings/api/proto/attributes/v1"
-	"github.com/sveturs/listings/internal/domain"
+	pb "github.com/vondi-global/listings/api/proto/attributes/v1"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // MockAttributeService is a mock for service.AttributeService

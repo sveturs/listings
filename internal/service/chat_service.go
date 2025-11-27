@@ -10,9 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
-	authservice "github.com/sveturs/auth/pkg/service"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
+	authservice "github.com/vondi-global/auth/pkg/service"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
 const (

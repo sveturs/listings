@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository"
 )
 
 // searchQueriesRepository implements repository.SearchQueriesRepository

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // AttributeValidator provides validation logic for attribute values

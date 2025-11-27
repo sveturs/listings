@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package search.v1;
 
-option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+option go_package = "github.com/vondi-global/listings/api/proto/search/v1;searchv1";
 
 // GetPopularSearchesRequest requests trending/popular search queries
 message GetPopularSearchesRequest {

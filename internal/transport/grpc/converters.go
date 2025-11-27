@@ -3,9 +3,9 @@ package grpc
 import (
 	"time"
 
-	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
+	categoriespb "github.com/vondi-global/listings/api/proto/categories/v1"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

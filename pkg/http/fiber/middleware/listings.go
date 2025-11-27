@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/pkg/service"
+	"github.com/vondi-global/listings/pkg/service"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // BulkUpdateProducts updates multiple products atomically within a transaction

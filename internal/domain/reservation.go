@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

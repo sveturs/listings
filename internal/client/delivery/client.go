@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	deliveryv1 "github.com/sveturs/delivery/gen/go/delivery/v1"
+	deliveryv1 "github.com/vondi-global/delivery/gen/go/delivery/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"

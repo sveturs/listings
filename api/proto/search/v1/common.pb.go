@@ -578,7 +578,7 @@ const file_api_proto_search_v1_common_proto_rawDesc = "" +
 	"\x0eLocationFilter\x12\x10\n" +
 	"\x03lat\x18\x01 \x01(\x01R\x03lat\x12\x10\n" +
 	"\x03lon\x18\x02 \x01(\x01R\x03lon\x12\x1b\n" +
-	"\tradius_km\x18\x03 \x01(\x01R\bradiusKmB:Z8github.com/sveturs/listings/api/proto/search/v1;searchv1b\x06proto3"
+	"\tradius_km\x18\x03 \x01(\x01R\bradiusKmB:Z8github.com/vondi-global/listings/api/proto/search/v1;searchv1b\x06proto3"
 
 var (
 	file_api_proto_search_v1_common_proto_rawDescOnce sync.Once

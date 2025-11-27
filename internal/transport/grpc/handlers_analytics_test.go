@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	listingssvcv1 "github.com/sveturs/listings/api/proto/listings/v1"
+	listingssvcv1 "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // ============================================================================

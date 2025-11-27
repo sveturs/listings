@@ -7,10 +7,10 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/cache"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/opensearch"
-	"github.com/sveturs/listings/internal/repository"
+	"github.com/vondi-global/listings/internal/cache"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/opensearch"
+	"github.com/vondi-global/listings/internal/repository"
 )
 
 // Service provides search functionality for listings

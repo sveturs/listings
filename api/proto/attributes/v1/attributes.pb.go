@@ -3314,7 +3314,7 @@ const file_api_proto_attributes_v1_attributes_proto_rawDesc = "" +
 	"\x14GetListingAttributes\x12*.attributes.v1.GetListingAttributesRequest\x1a+.attributes.v1.GetListingAttributesResponse\x12o\n" +
 	"\x14SetListingAttributes\x12*.attributes.v1.SetListingAttributesRequest\x1a+.attributes.v1.SetListingAttributesResponse\x12x\n" +
 	"\x17ValidateAttributeValues\x12-.attributes.v1.ValidateAttributeValuesRequest\x1a..attributes.v1.ValidateAttributeValuesResponse\x12o\n" +
-	"\x14BulkImportAttributes\x12*.attributes.v1.BulkImportAttributesRequest\x1a+.attributes.v1.BulkImportAttributesResponseBBZ@github.com/sveturs/listings/api/proto/attributes/v1;attributesv1b\x06proto3"
+	"\x14BulkImportAttributes\x12*.attributes.v1.BulkImportAttributesRequest\x1a+.attributes.v1.BulkImportAttributesResponseBBZ@github.com/vondi-global/listings/api/proto/attributes/v1;attributesv1b\x06proto3"
 
 var (
 	file_api_proto_attributes_v1_attributes_proto_rawDescOnce sync.Once

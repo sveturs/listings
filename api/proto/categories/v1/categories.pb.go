@@ -1331,7 +1331,7 @@ const file_api_proto_categories_v1_categories_proto_rawDesc = "" +
 	"\x11GetCategoryBySlug\x12*.categoriessvc.v1.GetCategoryBySlugRequest\x1a+.categoriessvc.v1.GetCategoryBySlugResponse\x12c\n" +
 	"\x0eCreateCategory\x12'.categoriessvc.v1.CreateCategoryRequest\x1a(.categoriessvc.v1.CreateCategoryResponse\x12c\n" +
 	"\x0eUpdateCategory\x12'.categoriessvc.v1.UpdateCategoryRequest\x1a(.categoriessvc.v1.UpdateCategoryResponse\x12c\n" +
-	"\x0eDeleteCategory\x12'.categoriessvc.v1.DeleteCategoryRequest\x1a(.categoriessvc.v1.DeleteCategoryResponseBEZCgithub.com/sveturs/listings/api/proto/categories/v1;categoriessvcv1b\x06proto3"
+	"\x0eDeleteCategory\x12'.categoriessvc.v1.DeleteCategoryRequest\x1a(.categoriessvc.v1.DeleteCategoryResponseBEZCgithub.com/vondi-global/listings/api/proto/categories/v1;categoriessvcv1b\x06proto3"
 
 var (
 	file_api_proto_categories_v1_categories_proto_rawDescOnce sync.Once

@@ -5,7 +5,7 @@ package chatsvc.v1;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/sveturs/listings/api/proto/chat/v1;chatsvcv1";
+option go_package = "github.com/vondi-global/listings/api/proto/chat/v1;chatsvcv1";
 
 // ============================================================================
 // ENUMS
@@ -374,7 +374,7 @@ message DailyChatStats {
 // - Ownership validation happens in service layer
 //
 // INTEGRATION:
-// - Auth Service: JWT validation (via github.com/sveturs/auth/pkg/grpc/middleware)
+// - Auth Service: JWT validation (via github.com/vondi-global/auth/pkg/grpc/middleware)
 // - Listings Service: Validate listing_id, get seller_id, listing title
 // - Storefronts Service: Validate storefront_product_id, get seller_id, product title
 // - MinIO: Upload/download attachments
@@ -521,7 +521,7 @@ service ChatService {
 // AUTHORIZATION PATTERNS
 // ============================================================================
 //
-// JWT Middleware (github.com/sveturs/auth/pkg/grpc/middleware):
+// JWT Middleware (github.com/vondi-global/auth/pkg/grpc/middleware):
 // 1. Extract JWT from gRPC metadata: md.Get("authorization")
 // 2. Validate JWT signature using public key from Auth Service
 // 3. Extract user_id, email, roles from JWT claims
@@ -624,12 +624,12 @@ service ChatService {
 // INTEGRATION WITH OTHER SERVICES
 // ============================================================================
 //
-// Auth Service (github.com/sveturs/auth):
+// Auth Service (github.com/vondi-global/auth):
 // - JWT validation (public key verification)
 // - User lookup (GetUserByID for denormalization)
 // - Role-based authorization (admin checks)
 //
-// Listings Service (github.com/sveturs/listings):
+// Listings Service (github.com/vondi-global/listings):
 // - Validate listing_id exists
 // - Get listing owner (seller_id)
 // - Get listing title for chat context

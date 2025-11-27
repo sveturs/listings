@@ -9,7 +9,7 @@ import "api/proto/search/v1/filters.proto";
 import "api/proto/search/v1/suggestions.proto";
 import "api/proto/search/v1/popular.proto";
 
-option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+option go_package = "github.com/vondi-global/listings/api/proto/search/v1;searchv1";
 
 // SearchService provides search functionality for marketplace listings
 service SearchService {

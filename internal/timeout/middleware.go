@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/sveturs/listings/internal/metrics"
+	"github.com/vondi-global/listings/internal/metrics"
 )
 
 // UnaryServerInterceptor creates a gRPC interceptor that enforces timeouts on handlers.

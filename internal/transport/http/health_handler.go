@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/health"
+	"github.com/vondi-global/listings/internal/health"
 )
 
 // HealthHandler provides health check HTTP endpoints

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sveturs/listings/internal/opensearch"
+	"github.com/vondi-global/listings/internal/opensearch"
 )
 
 func TestSearchRequest_Validate(t *testing.T) {

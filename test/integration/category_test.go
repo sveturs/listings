@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	testutils "github.com/sveturs/listings/internal/testing"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	testutils "github.com/vondi-global/listings/internal/testing"
 )
 
 // =============================================================================

@@ -234,7 +234,7 @@ const file_api_proto_search_v1_suggestions_proto_rawDesc = "" +
 	"\x05score\x18\x02 \x01(\x01R\x05score\x12\"\n" +
 	"\n" +
 	"listing_id\x18\x03 \x01(\x03H\x00R\tlistingId\x88\x01\x01B\r\n" +
-	"\v_listing_idB:Z8github.com/sveturs/listings/api/proto/search/v1;searchv1b\x06proto3"
+	"\v_listing_idB:Z8github.com/vondi-global/listings/api/proto/search/v1;searchv1b\x06proto3"
 
 var (
 	file_api_proto_search_v1_suggestions_proto_rawDescOnce sync.Once

@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // TestFixtures holds pre-configured test data for protobuf messages.

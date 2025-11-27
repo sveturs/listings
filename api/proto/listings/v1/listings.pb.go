@@ -14286,7 +14286,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x12GetDeliveryOptions\x12).listingssvc.v1.GetDeliveryOptionsRequest\x1a*.listingssvc.v1.GetDeliveryOptionsResponse\x12S\n" +
 	"\n" +
 	"GetMapData\x12!.listingssvc.v1.GetMapDataRequest\x1a\".listingssvc.v1.GetMapDataResponse\x12b\n" +
-	"\x11GetDashboardStats\x12%.listingssvc.v1.DashboardStatsRequest\x1a&.listingssvc.v1.DashboardStatsResponseBAZ?github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
+	"\x11GetDashboardStats\x12%.listingssvc.v1.DashboardStatsRequest\x1a&.listingssvc.v1.DashboardStatsResponseBAZ?github.com/vondi-global/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
 
 var (
 	file_api_proto_listings_v1_listings_proto_rawDescOnce sync.Once

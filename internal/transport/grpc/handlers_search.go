@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	searchv1 "github.com/sveturs/listings/api/proto/search/v1"
-	"github.com/sveturs/listings/internal/service/search"
+	searchv1 "github.com/vondi-global/listings/api/proto/search/v1"
+	"github.com/vondi-global/listings/internal/service/search"
 )
 
 // SearchServiceInterface defines the interface for search service

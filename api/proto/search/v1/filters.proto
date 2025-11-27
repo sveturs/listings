@@ -5,7 +5,7 @@ package search.v1;
 import "api/proto/search/v1/common.proto";
 import "api/proto/search/v1/facets.proto";
 
-option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+option go_package = "github.com/vondi-global/listings/api/proto/search/v1;searchv1";
 
 // SearchWithFiltersRequest performs advanced search with filters and sorting
 message SearchWithFiltersRequest {

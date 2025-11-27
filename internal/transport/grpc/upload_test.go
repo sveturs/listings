@@ -3,7 +3,7 @@ package grpc
 import (
 	"testing"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // TestValidateImageMetadata tests metadata validation

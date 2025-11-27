@@ -50,7 +50,7 @@ const (
 // - Ownership validation happens in service layer
 //
 // INTEGRATION:
-// - Auth Service: JWT validation (via github.com/sveturs/auth/pkg/grpc/middleware)
+// - Auth Service: JWT validation (via github.com/vondi-global/auth/pkg/grpc/middleware)
 // - Listings Service: Validate listing_id, get seller_id, listing title
 // - Storefronts Service: Validate storefront_product_id, get seller_id, product title
 // - MinIO: Upload/download attachments
@@ -307,7 +307,7 @@ func (c *chatServiceClient) DeleteAttachment(ctx context.Context, in *DeleteAtta
 // - Ownership validation happens in service layer
 //
 // INTEGRATION:
-// - Auth Service: JWT validation (via github.com/sveturs/auth/pkg/grpc/middleware)
+// - Auth Service: JWT validation (via github.com/vondi-global/auth/pkg/grpc/middleware)
 // - Listings Service: Validate listing_id, get seller_id, listing title
 // - Storefronts Service: Validate storefront_product_id, get seller_id, product title
 // - MinIO: Upload/download attachments

@@ -515,7 +515,7 @@ const file_api_proto_search_v1_facets_proto_rawDesc = "" +
 	"\x05count\x18\x02 \x01(\x03R\x05count\"/\n" +
 	"\x05Facet\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x03R\x05countB:Z8github.com/sveturs/listings/api/proto/search/v1;searchv1b\x06proto3"
+	"\x05count\x18\x02 \x01(\x03R\x05countB:Z8github.com/vondi-global/listings/api/proto/search/v1;searchv1b\x06proto3"
 
 var (
 	file_api_proto_search_v1_facets_proto_rawDescOnce sync.Once

@@ -3307,7 +3307,7 @@ const file_api_proto_listings_v1_analytics_proto_rawDesc = "" +
 	"\x10GetOverviewStats\x12'.listingssvc.v1.GetOverviewStatsRequest\x1a(.listingssvc.v1.GetOverviewStatsResponse\x12b\n" +
 	"\x0fGetListingStats\x12&.listingssvc.v1.GetListingStatsRequest\x1a'.listingssvc.v1.GetListingStatsResponse\x12k\n" +
 	"\x12GetStorefrontStats\x12).listingssvc.v1.GetStorefrontStatsRequest\x1a*.listingssvc.v1.GetStorefrontStatsResponse\x12e\n" +
-	"\x10GetTrendingStats\x12'.listingssvc.v1.GetTrendingStatsRequest\x1a(.listingssvc.v1.GetTrendingStatsResponseBAZ?github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
+	"\x10GetTrendingStats\x12'.listingssvc.v1.GetTrendingStatsRequest\x1a(.listingssvc.v1.GetTrendingStatsResponseBAZ?github.com/vondi-global/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
 
 var (
 	file_api_proto_listings_v1_analytics_proto_rawDescOnce sync.Once

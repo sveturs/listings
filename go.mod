@@ -1,4 +1,4 @@
-module github.com/sveturs/listings
+module github.com/vondi-global/listings
 
 go 1.25.0
 
@@ -23,8 +23,8 @@ require (
 	github.com/redis/go-redis/v9 v9.16.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
-	github.com/sveturs/auth v1.18.0
-	github.com/sveturs/delivery v0.1.0
+	github.com/vondi-global/auth v1.18.0
+	github.com/vondi-global/delivery v0.1.0
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
 )
@@ -96,7 +96,7 @@ require (
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/sveturs/lib v1.2.1 // indirect
+	github.com/vondi-global/lib v1.2.1 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect

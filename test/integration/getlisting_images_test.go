@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	testutils "github.com/sveturs/listings/internal/testing"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	testutils "github.com/vondi-global/listings/internal/testing"
 )
 
 // TestGetListing_WithImages verifies that GetListing loads and returns images

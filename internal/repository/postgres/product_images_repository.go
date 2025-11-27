@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // GetProductImageByID retrieves a single product image by ID

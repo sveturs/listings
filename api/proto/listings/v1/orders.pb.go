@@ -4345,7 +4345,7 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\vAcceptOrder\x12\".listingssvc.v1.AcceptOrderRequest\x1a#.listingssvc.v1.AcceptOrderResponse\x12n\n" +
 	"\x13CreateOrderShipment\x12*.listingssvc.v1.CreateOrderShipmentRequest\x1a+.listingssvc.v1.CreateOrderShipmentResponse\x12e\n" +
 	"\x10MarkOrderShipped\x12'.listingssvc.v1.MarkOrderShippedRequest\x1a(.listingssvc.v1.MarkOrderShippedResponse\x12e\n" +
-	"\x10GetOrderTracking\x12'.listingssvc.v1.GetOrderTrackingRequest\x1a(.listingssvc.v1.GetOrderTrackingResponseBAZ?github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
+	"\x10GetOrderTracking\x12'.listingssvc.v1.GetOrderTrackingRequest\x1a(.listingssvc.v1.GetOrderTrackingResponseBAZ?github.com/vondi-global/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
 
 var (
 	file_api_proto_listings_v1_orders_proto_rawDescOnce sync.Once

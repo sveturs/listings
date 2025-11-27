@@ -227,7 +227,7 @@ const file_api_proto_search_v1_popular_proto_rawDesc = "" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12!\n" +
 	"\fsearch_count\x18\x02 \x01(\x03R\vsearchCount\x12\x1f\n" +
 	"\vtrend_score\x18\x03 \x01(\x01R\n" +
-	"trendScoreB:Z8github.com/sveturs/listings/api/proto/search/v1;searchv1b\x06proto3"
+	"trendScoreB:Z8github.com/vondi-global/listings/api/proto/search/v1;searchv1b\x06proto3"
 
 var (
 	file_api_proto_search_v1_popular_proto_rawDescOnce sync.Once

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // CreateStorefront creates a new storefront

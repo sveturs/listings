@@ -2553,7 +2553,7 @@ const file_api_proto_chat_v1_chat_proto_rawDesc = "" +
 	"\rDeleteMessage\x12 .chatsvc.v1.DeleteMessageRequest\x1a\x16.google.protobuf.Empty\x12]\n" +
 	"\x10UploadAttachment\x12#.chatsvc.v1.UploadAttachmentRequest\x1a$.chatsvc.v1.UploadAttachmentResponse\x12T\n" +
 	"\rGetAttachment\x12 .chatsvc.v1.GetAttachmentRequest\x1a!.chatsvc.v1.GetAttachmentResponse\x12O\n" +
-	"\x10DeleteAttachment\x12#.chatsvc.v1.DeleteAttachmentRequest\x1a\x16.google.protobuf.EmptyB9Z7github.com/sveturs/listings/api/proto/chat/v1;chatsvcv1b\x06proto3"
+	"\x10DeleteAttachment\x12#.chatsvc.v1.DeleteAttachmentRequest\x1a\x16.google.protobuf.EmptyB9Z7github.com/vondi-global/listings/api/proto/chat/v1;chatsvcv1b\x06proto3"
 
 var (
 	file_api_proto_chat_v1_chat_proto_rawDescOnce sync.Once

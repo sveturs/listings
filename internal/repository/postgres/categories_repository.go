@@ -8,7 +8,7 @@ import (
 
 	"github.com/gosimple/slug"
 	"github.com/lib/pq"
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // GetRootCategories retrieves all top-level categories (no parent)

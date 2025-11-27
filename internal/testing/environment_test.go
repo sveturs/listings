@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	testingpkg "github.com/sveturs/listings/internal/testing"
+	testingpkg "github.com/vondi-global/listings/internal/testing"
 )
 
 // TestNewTestEnvironment_Docker tests environment creation with Docker containers

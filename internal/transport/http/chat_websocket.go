@@ -9,10 +9,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 	"github.com/rs/zerolog"
-	authservice "github.com/sveturs/auth/pkg/service"
+	authservice "github.com/vondi-global/auth/pkg/service"
 
-	"github.com/sveturs/listings/internal/domain"
-	ws "github.com/sveturs/listings/internal/websocket"
+	"github.com/vondi-global/listings/internal/domain"
+	ws "github.com/vondi-global/listings/internal/websocket"
 )
 
 const (

@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
-	"github.com/sveturs/auth/pkg/entity"
-	authservice "github.com/sveturs/auth/pkg/service"
+	"github.com/vondi-global/auth/pkg/entity"
+	authservice "github.com/vondi-global/auth/pkg/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
