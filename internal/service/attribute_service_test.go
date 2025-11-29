@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -132,9 +133,19 @@ func (m *MockAttributeRepository) GetVariantValues(ctx context.Context, variantI
 func setupTestService(t *testing.T) (*AttributeServiceImpl, *MockAttributeRepository, redis.UniversalClient) {
 	mockRepo := new(MockAttributeRepository)
 
-	// Use miniredis for testing (lightweight Redis mock)
+	// Use miniredis for testing (in-memory Redis mock)
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("failed to start miniredis: %v", err)
+	}
+
+	// Clean up miniredis when test completes
+	t.Cleanup(func() {
+		mr.Close()
+	})
+
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379", // Will fail gracefully in tests
+		Addr: mr.Addr(),
 	})
 
 	logger := zerolog.New(nil).Level(zerolog.Disabled)
@@ -446,7 +457,8 @@ func TestLinkAttributeToCategory_Success(t *testing.T) {
 	}
 
 	// Mock: Get attribute (cache miss will call repository)
-	mockRepo.On("GetByID", ctx, int32(1)).Return(attr, nil).Once()
+	// Note: May be called multiple times due to caching attempts
+	mockRepo.On("GetByID", ctx, int32(1)).Return(attr, nil)
 
 	// Mock: Link
 	mockRepo.On("LinkToCategory", ctx, int32(100), int32(1), settings).Return(catAttr, nil).Once()
@@ -597,9 +609,9 @@ func TestValidateAttributeValues_AttributeNotLinked(t *testing.T) {
 		},
 	}
 
-	// Mock: Get category attributes (cache miss)
+	// Mock: Get category attributes (cache will miss and call repository)
 	mockRepo.On("GetCategoryAttributes", ctx, int32(100), (*domain.GetCategoryAttributesFilter)(nil)).
-		Return(catAttrs, nil).Once()
+		Return(catAttrs, nil)
 
 	// Execute
 	err := service.ValidateAttributeValues(ctx, 100, values)
@@ -632,9 +644,9 @@ func TestValidateAttributeValues_MissingRequiredAttribute(t *testing.T) {
 		},
 	}
 
-	// Mock: Get category attributes (cache miss)
+	// Mock: Get category attributes (cache will miss and call repository)
 	mockRepo.On("GetCategoryAttributes", ctx, int32(100), (*domain.GetCategoryAttributesFilter)(nil)).
-		Return(catAttrs, nil).Once()
+		Return(catAttrs, nil)
 
 	// Execute
 	err := service.ValidateAttributeValues(ctx, 100, values)
@@ -665,13 +677,13 @@ func TestSetListingAttributes_Success(t *testing.T) {
 	attr := &domain.Attribute{
 		ID:              1,
 		Code:            "test_attr",
-		AttributeType:   domain.AttributeTypeText,
+		AttributeType:   domain.AttributeTypeText, // IMPORTANT: Must set type!
 		ValidationRules: map[string]interface{}{},
 		Options:         []domain.AttributeOption{},
 	}
 
-	// Mock: Get attribute for validation (cache miss)
-	mockRepo.On("GetByID", ctx, int32(1)).Return(attr, nil).Once()
+	// Mock: Get attribute for validation (cache will miss and call repository)
+	mockRepo.On("GetByID", ctx, int32(1)).Return(attr, nil)
 
 	// Mock: Set values
 	mockRepo.On("SetListingValues", ctx, int32(100), values).Return(nil).Once()

@@ -3,7 +3,6 @@ package service
 
 import (
 	"context"
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"time"

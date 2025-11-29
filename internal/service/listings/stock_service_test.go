@@ -56,7 +56,7 @@ func TestDecrementStock_Success_SingleProduct(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c' FOR UPDATE`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity - \$1`).
 		WithArgs(int32(5), int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
@@ -98,7 +98,7 @@ func TestDecrementStock_Success_MultipleProducts(t *testing.T) {
 	// First product
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c' FOR UPDATE`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(20))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(20))
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity - \$1`).
 		WithArgs(int32(3), int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
@@ -106,7 +106,7 @@ func TestDecrementStock_Success_MultipleProducts(t *testing.T) {
 	// Second product
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c' FOR UPDATE`).
 		WithArgs(int64(200)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(15))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(15))
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity - \$1`).
 		WithArgs(int32(2), int64(200)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
@@ -142,10 +142,10 @@ func TestDecrementStock_Success_SingleVariant(t *testing.T) {
 
 	// Mock transaction
 	mock.ExpectBegin()
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2 FOR UPDATE`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2 FOR UPDATE`).
 		WithArgs(variantID, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(12))
-	mock.ExpectExec(`UPDATE product_variants SET quantity = quantity - \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(12))
+	mock.ExpectExec(`UPDATE b2c_product_variants SET stock_quantity = stock_quantity - \$1`).
 		WithArgs(int32(4), variantID, int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
@@ -185,18 +185,18 @@ func TestDecrementStock_Success_MultipleVariants(t *testing.T) {
 	mock.ExpectBegin()
 
 	// First variant
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2 FOR UPDATE`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2 FOR UPDATE`).
 		WithArgs(variantID1, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
-	mock.ExpectExec(`UPDATE product_variants SET quantity = quantity - \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
+	mock.ExpectExec(`UPDATE b2c_product_variants SET stock_quantity = stock_quantity - \$1`).
 		WithArgs(int32(2), variantID1, int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	// Second variant
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2 FOR UPDATE`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2 FOR UPDATE`).
 		WithArgs(variantID2, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(15))
-	mock.ExpectExec(`UPDATE product_variants SET quantity = quantity - \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(15))
+	mock.ExpectExec(`UPDATE b2c_product_variants SET stock_quantity = stock_quantity - \$1`).
 		WithArgs(int32(3), variantID2, int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
@@ -234,16 +234,16 @@ func TestDecrementStock_Success_MixedProductsAndVariants(t *testing.T) {
 	// Product
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c' FOR UPDATE`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity - \$1`).
 		WithArgs(int32(2), int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	// Variant
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2 FOR UPDATE`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2 FOR UPDATE`).
 		WithArgs(variantID, int64(200)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(12))
-	mock.ExpectExec(`UPDATE product_variants SET quantity = quantity - \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(12))
+	mock.ExpectExec(`UPDATE b2c_product_variants SET stock_quantity = stock_quantity - \$1`).
 		WithArgs(int32(3), variantID, int64(200)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
@@ -277,7 +277,7 @@ func TestDecrementStock_Error_InsufficientStock_Product(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c' FOR UPDATE`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 	mock.ExpectRollback()
 
 	mockRepo.On("BeginTx", ctx).Return(db.Begin())
@@ -308,9 +308,9 @@ func TestDecrementStock_Error_InsufficientStock_Variant(t *testing.T) {
 
 	// Mock transaction
 	mock.ExpectBegin()
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2 FOR UPDATE`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2 FOR UPDATE`).
 		WithArgs(variantID, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(8))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(8))
 	mock.ExpectRollback()
 
 	mockRepo.On("BeginTx", ctx).Return(db.Begin())
@@ -373,7 +373,7 @@ func TestDecrementStock_Error_NotFound_Variant(t *testing.T) {
 
 	// Mock transaction
 	mock.ExpectBegin()
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2 FOR UPDATE`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2 FOR UPDATE`).
 		WithArgs(variantID, int64(100)).
 		WillReturnError(sql.ErrNoRows)
 	mock.ExpectRollback()
@@ -407,7 +407,7 @@ func TestDecrementStock_Error_TransactionRollback(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c' FOR UPDATE`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity - \$1`).
 		WithArgs(int32(5), int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
@@ -440,7 +440,7 @@ func TestDecrementStock_Concurrency_StockChangedDuringTransaction_Product(t *tes
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c' FOR UPDATE`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity - \$1`).
 		WithArgs(int32(5), int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 0)) // 0 rows affected
@@ -474,10 +474,10 @@ func TestDecrementStock_Concurrency_StockChangedDuringTransaction_Variant(t *tes
 
 	// Mock transaction - stock sufficient but update affects 0 rows (race condition)
 	mock.ExpectBegin()
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2 FOR UPDATE`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2 FOR UPDATE`).
 		WithArgs(variantID, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
-	mock.ExpectExec(`UPDATE product_variants SET quantity = quantity - \$1`).
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
+	mock.ExpectExec(`UPDATE b2c_product_variants SET stock_quantity = stock_quantity - \$1`).
 		WithArgs(int32(3), variantID, int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 0)) // 0 rows affected
 	mock.ExpectRollback()
@@ -537,14 +537,14 @@ func TestRollbackStock_Success_SingleProduct(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Check rollback doesn't exist
-	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND listing_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND product_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
 		WithArgs(orderID, int64(100)).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
 	// Get current stock
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(5))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(5))
 
 	// Update stock
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity \+ \$1`).
@@ -588,12 +588,12 @@ func TestRollbackStock_Success_MultipleProducts(t *testing.T) {
 	mock.ExpectBegin()
 
 	// First product
-	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND listing_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND product_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
 		WithArgs(orderID, int64(100)).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(17))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(17))
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity \+ \$1`).
 		WithArgs(int32(3), int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
@@ -601,12 +601,12 @@ func TestRollbackStock_Success_MultipleProducts(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Second product
-	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND listing_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND product_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
 		WithArgs(orderID, int64(200)).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(200)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(13))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(13))
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity \+ \$1`).
 		WithArgs(int32(2), int64(200)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
@@ -649,12 +649,12 @@ func TestRollbackStock_Success_SingleVariant(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
 	// Get current stock
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2`).
 		WithArgs(variantID, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(8))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(8))
 
 	// Update stock
-	mock.ExpectExec(`UPDATE product_variants SET quantity = quantity \+ \$1, updated_at = NOW\(\) WHERE id = \$2 AND listing_id = \$3`).
+	mock.ExpectExec(`UPDATE b2c_product_variants SET stock_quantity = stock_quantity \+ \$1, updated_at = NOW\(\) WHERE id = \$2 AND product_id = \$3`).
 		WithArgs(int32(4), variantID, int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
@@ -702,10 +702,10 @@ func TestRollbackStock_Success_MultipleVariants(t *testing.T) {
 	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND variant_id = \$2 AND movement_type = 'rollback'`).
 		WithArgs(orderID, variantID1).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2`).
 		WithArgs(variantID1, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(8))
-	mock.ExpectExec(`UPDATE product_variants SET quantity = quantity \+ \$1, updated_at = NOW\(\) WHERE id = \$2 AND listing_id = \$3`).
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(8))
+	mock.ExpectExec(`UPDATE b2c_product_variants SET stock_quantity = stock_quantity \+ \$1, updated_at = NOW\(\) WHERE id = \$2 AND product_id = \$3`).
 		WithArgs(int32(2), variantID1, int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectExec(`INSERT INTO inventory_movements`).
@@ -715,10 +715,10 @@ func TestRollbackStock_Success_MultipleVariants(t *testing.T) {
 	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND variant_id = \$2 AND movement_type = 'rollback'`).
 		WithArgs(orderID, variantID2).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2`).
 		WithArgs(variantID2, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(12))
-	mock.ExpectExec(`UPDATE product_variants SET quantity = quantity \+ \$1, updated_at = NOW\(\) WHERE id = \$2 AND listing_id = \$3`).
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(12))
+	mock.ExpectExec(`UPDATE b2c_product_variants SET stock_quantity = stock_quantity \+ \$1, updated_at = NOW\(\) WHERE id = \$2 AND product_id = \$3`).
 		WithArgs(int32(3), variantID2, int64(100)).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectExec(`INSERT INTO inventory_movements`).
@@ -754,14 +754,14 @@ func TestRollbackStock_Idempotent_MultipleCallsSameOrder_Product(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Check rollback exists (idempotency)
-	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND listing_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND product_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
 		WithArgs(orderID, int64(100)).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 	// Get current stock (no update)
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 
 	mock.ExpectCommit()
 
@@ -800,9 +800,9 @@ func TestRollbackStock_Idempotent_MultipleCallsSameOrder_Variant(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 	// Get current stock (no update)
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2`).
 		WithArgs(variantID, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(12))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(12))
 
 	mock.ExpectCommit()
 
@@ -872,7 +872,7 @@ func TestRollbackStock_Error_NotFound_Product(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Check rollback doesn't exist
-	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND listing_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND product_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
 		WithArgs(orderID, int64(999)).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
@@ -918,7 +918,7 @@ func TestRollbackStock_Error_NotFound_Variant(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
 	// Variant not found
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2`).
 		WithArgs(variantID, int64(100)).
 		WillReturnError(sql.ErrNoRows)
 
@@ -953,14 +953,14 @@ func TestRollbackStock_Audit_RecordCreated(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Check rollback doesn't exist
-	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND listing_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND product_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
 		WithArgs(orderID, int64(100)).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
 	// Get current stock
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(5))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(5))
 
 	// Update stock
 	mock.ExpectExec(`UPDATE listings SET quantity = quantity \+ \$1`).
@@ -1001,14 +1001,14 @@ func TestRollbackStock_Audit_PreventsDuplicateRecord(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Rollback already recorded (count > 0)
-	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND listing_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM inventory_movements WHERE order_id = \$1 AND product_id = \$2 AND variant_id IS NULL AND movement_type = 'rollback'`).
 		WithArgs(orderID, int64(100)).
 		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 	// Should skip update and audit insert
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 
 	// NO update or insert expected
 	mock.ExpectCommit()
@@ -1043,7 +1043,7 @@ func TestCheckStockAvailability_Available_Product(t *testing.T) {
 	// Mock stock query
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 
 	// Create sqlx.DB wrapper for GetDB mock
 	sqlxDB := sqlx.NewDb(db, "postgres")
@@ -1074,9 +1074,9 @@ func TestCheckStockAvailability_Available_Variant(t *testing.T) {
 	}
 
 	// Mock variant stock query
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2`).
 		WithArgs(variantID, int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(12))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(12))
 
 	sqlxDB := sqlx.NewDb(db, "postgres")
 	mockRepo.On("GetDB").Return(sqlxDB)
@@ -1107,7 +1107,7 @@ func TestCheckStockAvailability_Unavailable_InsufficientStock(t *testing.T) {
 	// Mock insufficient stock
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 
 	sqlxDB := sqlx.NewDb(db, "postgres")
 	mockRepo.On("GetDB").Return(sqlxDB)
@@ -1167,7 +1167,7 @@ func TestCheckStockAvailability_Unavailable_NotFound_Variant(t *testing.T) {
 	}
 
 	// Mock variant not found
-	mock.ExpectQuery(`SELECT quantity FROM product_variants WHERE id = \$1 AND listing_id = \$2`).
+	mock.ExpectQuery(`SELECT stock_quantity FROM b2c_product_variants WHERE id = \$1 AND product_id = \$2`).
 		WithArgs(variantID, int64(100)).
 		WillReturnError(sql.ErrNoRows)
 
@@ -1200,12 +1200,12 @@ func TestCheckStockAvailability_Mixed_SomeAvailableSomeNot(t *testing.T) {
 	// First product - available
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(100)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(10))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(10))
 
 	// Second product - insufficient
 	mock.ExpectQuery(`SELECT quantity FROM listings WHERE id = \$1 AND source_type = 'b2c'`).
 		WithArgs(int64(200)).
-		WillReturnRows(sqlmock.NewRows([]string{"quantity"}).AddRow(15))
+		WillReturnRows(sqlmock.NewRows([]string{"stock_quantity"}).AddRow(15))
 
 	sqlxDB := sqlx.NewDb(db, "postgres")
 	mockRepo.On("GetDB").Return(sqlxDB)

@@ -334,6 +334,12 @@ func TestChatService_GetUserChats_Success(t *testing.T) {
 	messageRepo.On("GetUnreadCount", ctx, int64(1), userID).Return(int32(3), nil)
 	messageRepo.On("GetUnreadCount", ctx, int64(2), userID).Return(int32(0), nil)
 
+	// Mock latest message for each chat
+	messageRepo.On("GetLatestMessage", ctx, int64(1)).
+		Return(&domain.Message{ID: 1, Content: "Test message 1"}, nil)
+	messageRepo.On("GetLatestMessage", ctx, int64(2)).
+		Return(&domain.Message{ID: 2, Content: "Test message 2"}, nil)
+
 	result, total, err := service.GetUserChats(ctx, req)
 
 	assert.NoError(t, err)

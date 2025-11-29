@@ -343,9 +343,14 @@ func TestOrder_CanUpdateStatus_ValidTransitions(t *testing.T) {
 		{"pending -> processing", OrderStatusPending, OrderStatusProcessing, false},
 
 		// From Confirmed
-		{"confirmed -> processing", OrderStatusConfirmed, OrderStatusProcessing, true},
+		{"confirmed -> accepted", OrderStatusConfirmed, OrderStatusAccepted, true},
+		{"confirmed -> processing", OrderStatusConfirmed, OrderStatusProcessing, false},
 		{"confirmed -> cancelled", OrderStatusConfirmed, OrderStatusCancelled, true},
 		{"confirmed -> shipped", OrderStatusConfirmed, OrderStatusShipped, false},
+
+		// From Accepted
+		{"accepted -> processing", OrderStatusAccepted, OrderStatusProcessing, true},
+		{"accepted -> cancelled", OrderStatusAccepted, OrderStatusCancelled, true},
 
 		// From Processing
 		{"processing -> shipped", OrderStatusProcessing, OrderStatusShipped, true},

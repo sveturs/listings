@@ -9,7 +9,6 @@ import (
 
 	pb "github.com/vondi-global/listings/api/proto/attributes/v1"
 	"github.com/vondi-global/listings/internal/domain"
-	"github.com/vondi-global/listings/internal/service"
 )
 
 // AttributeServer implements gRPC AttributeServiceServer
