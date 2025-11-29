@@ -1595,11 +1595,6 @@ func (s *orderService) notifyBuyerAboutShipmentCreated(ctx context.Context, orde
 		return
 	}
 
-	storefrontName := storefront.Name
-	if storefrontName == "" && order.StorefrontName != nil {
-		storefrontName = *order.StorefrontName
-	}
-
 	provider := "the courier"
 	if order.ShippingProvider != nil {
 		provider = *order.ShippingProvider

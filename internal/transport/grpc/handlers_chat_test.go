@@ -115,6 +115,18 @@ func (m *MockChatService) DeleteAttachment(ctx context.Context, attachmentID, us
 	return args.Error(0)
 }
 
+func (m *MockChatService) SendSystemMessage(ctx context.Context, req *service.SendSystemMessageRequest) (*domain.Message, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Message), args.Error(1)
+}
+
+func (m *MockChatService) SetHub(hub service.ChatHub) {
+	m.Called(hub)
+}
+
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================

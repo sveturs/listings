@@ -77,6 +77,26 @@ func (m *mockOrderService) ProcessRefund(ctx context.Context, orderID int64) err
 	return nil
 }
 
+func (m *mockOrderService) AcceptOrder(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) CreateOrderShipment(ctx context.Context, req *service.CreateShipmentRequest) (*service.CreateShipmentResult, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) MarkOrderShipped(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) GetOrderTracking(ctx context.Context, orderID int64, userID int64) (*service.TrackingInfo, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) SetChatService(chatService service.ChatService) {}
+
+func (m *mockOrderService) SetDeliveryClient(client service.DeliveryClient) {}
+
 // =============================================================================
 // Mock Cart Service
 // =============================================================================
@@ -261,6 +281,12 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 	// Mock analytics service (nil is OK for integration tests that don't need analytics)
 	var analyticsService service.AnalyticsService = nil
 
+	// Mock chat service (nil is OK for integration tests that don't need chat)
+	var chatService service.ChatService = nil
+
+	// Mock storefront analytics service (nil is OK for integration tests)
+	var storefrontAnalyticsService service.StorefrontAnalyticsService = nil
+
 	// Mock minio client (nil is OK for integration tests that don't need image operations)
 	var minioClient *miniorepo.Client = nil
 
@@ -275,7 +301,9 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		categoryService,
 		orderService,
 		cartService,
+		chatService,
 		analyticsService,
+		storefrontAnalyticsService,
 		minioClient,
 		m,
 		logger,

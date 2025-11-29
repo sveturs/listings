@@ -1,7 +1,6 @@
 package search
 
 import (
-	"encoding/json"
 	"testing"
 )
 
@@ -571,14 +570,3 @@ func TestValidateQuery(t *testing.T) {
 }
 
 // Helper functions are in test_helpers.go
-
-// prettyPrint prints JSON for debugging (use in development only)
-func prettyPrint(t *testing.T, query map[string]interface{}) {
-	t.Helper()
-	jsonBytes, err := json.MarshalIndent(query, "", "  ")
-	if err != nil {
-		t.Logf("Failed to marshal query: %v", err)
-		return
-	}
-	t.Logf("Query DSL:\n%s", string(jsonBytes))
-}

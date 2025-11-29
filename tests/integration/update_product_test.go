@@ -93,7 +93,20 @@ func setupUpdateProductTest(t *testing.T) (pb.ListingsServiceClient, *tests.Test
 	service := listings.NewService(repo, nil, nil, logger)
 
 	// Create gRPC server (with nil metrics for testing)
-	server := grpchandlers.NewServer(service, nil, logger)
+	server := grpchandlers.NewServer(
+		service,
+		nil, // storefrontService
+		nil, // attrService
+		nil, // categoryService
+		nil, // orderService
+		nil, // cartService
+		nil, // chatService
+		nil, // analyticsService
+		nil, // storefrontAnalyticsService
+		nil, // minioClient
+		nil, // metrics
+		logger,
+	)
 
 	// Setup in-memory gRPC connection using bufconn
 	const bufSize = 1024 * 1024

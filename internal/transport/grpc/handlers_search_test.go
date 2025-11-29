@@ -103,10 +103,6 @@ func int64PtrTest(v int64) *int64 {
 	return &v
 }
 
-func stringPtrTest(v string) *string {
-	return &v
-}
-
 // ============================================================================
 // Test GetSearchFacets Handler
 // ============================================================================

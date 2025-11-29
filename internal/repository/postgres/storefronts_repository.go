@@ -319,7 +319,6 @@ func (r *Repository) ListStorefronts(ctx context.Context, filter *domain.ListSto
 		where = append(where, fmt.Sprintf("(name ILIKE $%d OR description ILIKE $%d)", argIdx, argIdx))
 		searchPattern := "%" + *filter.Search + "%"
 		args = append(args, searchPattern)
-		argIdx++
 	}
 
 	whereClause := strings.Join(where, " AND ")
@@ -684,7 +683,6 @@ func (r *Repository) GetMapData(ctx context.Context, bounds *domain.MapBounds, f
 		if filter.IsVerified != nil {
 			where = append(where, fmt.Sprintf("is_verified = $%d", argIdx))
 			args = append(args, *filter.IsVerified)
-			argIdx++
 		}
 	}
 

@@ -16,7 +16,6 @@ import (
 // This is embedded in the main Server struct which implements both ListingsService and AttributeService
 type AttributeServer struct {
 	pb.UnimplementedAttributeServiceServer
-	attrService service.AttributeService
 }
 
 // CreateAttribute creates a new attribute definition

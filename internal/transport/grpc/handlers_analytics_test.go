@@ -76,14 +76,6 @@ func analyticsTestTimeDaysAgo(days int) time.Time {
 	return analyticsTestTimeNow().AddDate(0, 0, -days)
 }
 
-// analyticsContainsError checks if error message contains a substring (case-insensitive)
-func analyticsContainsError(err error, substr string) bool {
-	if err == nil {
-		return false
-	}
-	return contains(err.Error(), substr)
-}
-
 // ============================================================================
 // Validation Tests for GetOverviewStatsRequest
 // ============================================================================

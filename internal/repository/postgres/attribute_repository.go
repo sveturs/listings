@@ -927,7 +927,6 @@ func (r *AttributeRepository) GetCategoryAttributes(ctx context.Context, categor
 		if filter.IsFilterable != nil {
 			whereConditions = append(whereConditions, fmt.Sprintf("COALESCE(ca.is_filterable, a.is_filterable) = $%d", argPos))
 			args = append(args, *filter.IsFilterable)
-			argPos++
 		}
 	}
 

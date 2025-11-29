@@ -509,13 +509,6 @@ func validateCoordinates(lat, lng float64) error {
 	return nil
 }
 
-func validateCommissionRate(rate float64) error {
-	if rate < 0 || rate > 100 {
-		return fmt.Errorf("commission rate must be between 0 and 100")
-	}
-	return nil
-}
-
 func validateStaffRole(role string) error {
 	validRoles := map[string]bool{
 		"owner":     true,

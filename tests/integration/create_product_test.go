@@ -61,7 +61,20 @@ func setupCreateProductTest(t *testing.T) (pb.ListingsServiceClient, *tests.Test
 
 	// Create gRPC server (with singleton metrics)
 	m := getTestMetrics()
-	server := grpchandlers.NewServer(service, m, logger)
+	server := grpchandlers.NewServer(
+		service,
+		nil, // storefrontService
+		nil, // attrService
+		nil, // categoryService
+		nil, // orderService
+		nil, // cartService
+		nil, // chatService
+		nil, // analyticsService
+		nil, // storefrontAnalyticsService
+		nil, // minioClient
+		m,
+		logger,
+	)
 
 	// Setup in-memory gRPC connection using bufconn
 	lis := bufconn.Listen(bufSize)

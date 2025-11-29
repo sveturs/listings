@@ -316,10 +316,3 @@ func (c *StorefrontAnalyticsCache) Set(ctx context.Context, key string, stats *l
 
 	return nil
 }
-
-// generateCacheKey generates a deterministic cache key from request parameters
-func generateCacheKey(prefix string, params interface{}) string {
-	data, _ := json.Marshal(params)
-	hash := md5.Sum(data)
-	return fmt.Sprintf("%s:%x", prefix, hash)
-}

@@ -319,11 +319,11 @@ func (s *chatService) GetOrCreateChat(ctx context.Context, req *GetOrCreateChatR
 	// Try to find existing chat based on context
 	if req.ListingID != nil {
 		// Try to get as C2C listing first
-		listing, err := s.productsRepo.GetListingByID(ctx, *req.ListingID)
+		listing, listingErr := s.productsRepo.GetListingByID(ctx, *req.ListingID)
 
 		var buyerID, sellerID int64
 
-		if err == nil {
+		if listingErr == nil {
 			// C2C listing found - UserID is the seller
 			if listing.UserID == req.UserID {
 				// Current user is seller, other user must be buyer

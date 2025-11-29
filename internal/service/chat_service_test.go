@@ -170,6 +170,14 @@ func (m *MockMessageRepository) GetUnreadCountByUser(ctx context.Context, receiv
 	return args.Get(0).(int32), args.Error(1)
 }
 
+func (m *MockMessageRepository) GetLatestMessage(ctx context.Context, chatID int64) (*domain.Message, error) {
+	args := m.Called(ctx, chatID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Message), args.Error(1)
+}
+
 // MockAttachmentRepository is a mock for AttachmentRepository
 type MockAttachmentRepository struct {
 	mock.Mock

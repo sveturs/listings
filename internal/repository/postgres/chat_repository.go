@@ -463,7 +463,6 @@ func (r *chatRepository) GetUserChatsCount(ctx context.Context, userID int64, st
 	if status != nil {
 		query += fmt.Sprintf(" AND status = $%d", argIndex)
 		args = append(args, *status)
-		argIndex++
 	}
 
 	if archivedOnly {

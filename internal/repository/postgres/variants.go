@@ -329,7 +329,6 @@ func (r *Repository) ListVariants(ctx context.Context, filters *domain.VariantFi
 	if filters.StockStatus != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("stock_status = $%d", argPos))
 		args = append(args, *filters.StockStatus)
-		argPos++
 	}
 
 	whereClause := strings.Join(whereConditions, " AND ")

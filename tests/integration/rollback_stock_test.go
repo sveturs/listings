@@ -74,7 +74,20 @@ func setupRollbackTestServer(t *testing.T) (pb.ListingsServiceClient, *tests.Tes
 
 	// Create gRPC server with metrics
 	metricsInstance := getTestMetrics()
-	server := grpchandlers.NewServer(service, metricsInstance, logger)
+	server := grpchandlers.NewServer(
+		service,
+		nil, // storefrontService
+		nil, // attrService
+		nil, // categoryService
+		nil, // orderService
+		nil, // cartService
+		nil, // chatService
+		nil, // analyticsService
+		nil, // storefrontAnalyticsService
+		nil, // minioClient
+		metricsInstance,
+		logger,
+	)
 
 	// Setup in-memory gRPC connection
 	lis := bufconn.Listen(rollbackBufSize)

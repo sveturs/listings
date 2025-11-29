@@ -366,7 +366,20 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 
 	// Create gRPC server
 	m := getTestMetrics()
-	server := grpchandlers.NewServer(service, m, logger)
+	server := grpchandlers.NewServer(
+		service,
+		nil, // storefrontService
+		nil, // attrService
+		nil, // categoryService
+		nil, // orderService
+		nil, // cartService
+		nil, // chatService
+		nil, // analyticsService
+		nil, // storefrontAnalyticsService
+		nil, // minioClient
+		m,
+		logger,
+	)
 
 	// Setup gRPC connection
 	lis := bufconn.Listen(bufSize)
