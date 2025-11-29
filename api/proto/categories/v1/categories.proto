@@ -4,7 +4,7 @@ package categoriessvc.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/sveturs/listings/api/proto/categories/v1;categoriessvcv1";
+option go_package = "github.com/vondi-global/listings/api/proto/categories/v1;categoriessvcv1";
 
 // ============================================================================
 // MESSAGES - Category

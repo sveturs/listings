@@ -572,6 +572,6 @@ deriv(process_resident_memory_bytes[10m])
 ---
 
 **Document Owner:** Development Team
-**Contact:** devops@svetu.rs
+**Contact:** devops@vondi.rs
 **Version History:**
 - v1.0.0 (2025-11-14): Initial version

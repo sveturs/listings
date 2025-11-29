@@ -10,14 +10,14 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
-	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
-	chatsvcv1 "github.com/sveturs/listings/api/proto/chat/v1"
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/metrics"
-	minioclient "github.com/sveturs/listings/internal/repository/minio"
-	"github.com/sveturs/listings/internal/service"
-	"github.com/sveturs/listings/internal/service/listings"
+	attributespb "github.com/vondi-global/listings/api/proto/attributes/v1"
+	categoriespb "github.com/vondi-global/listings/api/proto/categories/v1"
+	chatsvcv1 "github.com/vondi-global/listings/api/proto/chat/v1"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/metrics"
+	minioclient "github.com/vondi-global/listings/internal/repository/minio"
+	"github.com/vondi-global/listings/internal/service"
+	"github.com/vondi-global/listings/internal/service/listings"
 )
 
 // contains checks if substring is in string (case-insensitive helper)

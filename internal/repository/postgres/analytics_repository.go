@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // analyticsRepository implements AnalyticsRepository using PostgreSQL with optimized queries
@@ -72,7 +72,6 @@ func (r *analyticsRepository) GetOverviewStats(ctx context.Context, filter *doma
 	if filter.SourceType != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("metadata->>'source_type' = $%d", argIdx))
 		args = append(args, *filter.SourceType)
-		argIdx++
 	}
 
 	whereClause := whereConditions[0]
@@ -198,7 +197,6 @@ func (r *analyticsRepository) GetListingStats(ctx context.Context, filter *domai
 	if filter.StartDate != nil && filter.EndDate != nil {
 		timeFilter = fmt.Sprintf("AND created_at >= $%d AND created_at <= $%d", argIdx, argIdx+1)
 		args = append(args, *filter.StartDate, *filter.EndDate)
-		argIdx += 2
 	}
 
 	// Main aggregation query
@@ -484,7 +482,6 @@ func (r *analyticsRepository) getListingTimeSeries(ctx context.Context, listingI
 	if filter.StartDate != nil && filter.EndDate != nil {
 		timeFilter = fmt.Sprintf("AND created_at >= $%d AND created_at <= $%d", argIdx, argIdx+1)
 		args = append(args, *filter.StartDate, *filter.EndDate)
-		argIdx += 2
 	}
 
 	query := fmt.Sprintf(`

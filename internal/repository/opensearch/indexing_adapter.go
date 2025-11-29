@@ -3,7 +3,7 @@ package opensearch
 import (
 	"context"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // IndexingAdapter adapts OpenSearch Client to IndexingService interface

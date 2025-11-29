@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // =============================================================================

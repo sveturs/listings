@@ -103,7 +103,7 @@ if cfg.Features.RateLimitEnabled {
 **Benefits:**
 - Allows disabling rate limiting for load testing
 - Maintains backward compatibility
-- Controlled via `SVETULISTINGS_RATE_LIMIT_ENABLED` environment variable
+- Controlled via `VONDILISTINGS_RATE_LIMIT_ENABLED` environment variable
 
 ### 3. Comprehensive Documentation ✅
 
@@ -213,7 +213,7 @@ The service is **approved for production** with these characteristics:
 
 **Problem:**
 - Rate limiter always enabled, enforcing 100-300 req/min per endpoint
-- `SVETULISTINGS_RATE_LIMIT_ENABLED` env var was not checked
+- `VONDILISTINGS_RATE_LIMIT_ENABLED` env var was not checked
 
 **Impact:**
 - Initial baseline test: Only 100 OK, 5,896 ResourceExhausted errors
@@ -228,7 +228,7 @@ The service is **approved for production** with these characteristics:
 ```bash
 # Disabled
 docker exec listings_app env | grep RATE_LIMIT_ENABLED
-# Output: SVETULISTINGS_RATE_LIMIT_ENABLED=false
+# Output: VONDILISTINGS_RATE_LIMIT_ENABLED=false
 
 docker logs listings_app | grep "Rate limiting DISABLED"
 # Output: Rate limiting DISABLED - not recommended for production

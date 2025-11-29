@@ -1029,7 +1029,7 @@ Phase 9.8 has successfully delivered a **production-grade operations infrastruct
 
 **✅ APPROVED FOR PRODUCTION DEPLOYMENT**
 
-The Listings microservice is **ready for production deployment** to dev.svetu.rs with the following **minor enhancements recommended before launch**:
+The Listings microservice is **ready for production deployment** to dev.vondi.rs with the following **minor enhancements recommended before launch**:
 
 1. **Integrate secrets manager** (Vault/AWS Secrets Manager) - 3 days
 2. **Set up log aggregation** (Loki/ELK) - 2 days

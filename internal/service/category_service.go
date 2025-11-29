@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // CategoryService defines the interface for category business logic operations

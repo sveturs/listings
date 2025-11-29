@@ -11,8 +11,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
 // OrderService defines business logic operations for order management
@@ -1002,7 +1002,7 @@ func (s *orderService) CreateOrderShipment(ctx context.Context, req *CreateShipm
 		s.logger.Warn().Msg("delivery client not configured, using mock shipment data")
 		shipmentID = time.Now().UnixNano() / 1000000 % 10000000
 		trackingNumber = fmt.Sprintf("TRK%d%06d", time.Now().Year(), shipmentID%1000000)
-		labelURL = fmt.Sprintf("https://delivery.svetu.rs/labels/%s.pdf", trackingNumber)
+		labelURL = fmt.Sprintf("https://delivery.vondi.rs/labels/%s.pdf", trackingNumber)
 		estimatedDelivery = time.Now().Add(72 * time.Hour).Format(time.RFC3339)
 		deliveryCost = order.Shipping
 	}
@@ -1593,11 +1593,6 @@ func (s *orderService) notifyBuyerAboutOrderAccepted(ctx context.Context, order 
 func (s *orderService) notifyBuyerAboutShipmentCreated(ctx context.Context, order *domain.Order, storefront *domain.Storefront, trackingNumber string) {
 	if s.chatService == nil || order.UserID == nil {
 		return
-	}
-
-	storefrontName := storefront.Name
-	if storefrontName == "" && order.StorefrontName != nil {
-		storefrontName = *order.StorefrontName
 	}
 
 	provider := "the courier"

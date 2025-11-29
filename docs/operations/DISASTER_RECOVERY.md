@@ -365,7 +365,7 @@ ETA FOR FULL RECOVERY: 15:05 UTC
 
 ```bash
 # Single-region deployment
-# Primary: /opt/listings-dev on svetu.rs server
+# Primary: /opt/listings-dev on vondi.rs server
 
 # Future: Multi-region architecture
 # Primary: us-east-1
@@ -575,7 +575,7 @@ psql "postgres://listings_user:listings_password@localhost:35433/listings_db" -c
 # Regular data integrity audits (weekly cron)
 0 0 * * 0 psql "postgres://listings_user:listings_password@localhost:35433/listings_db" \
   -f /p/github.com/sveturs/listings/scripts/weekly_data_audit.sql | \
-  mail -s "Weekly Data Integrity Report" platform@svetu.rs
+  mail -s "Weekly Data Integrity Report" platform@vondi.rs
 ```
 
 ---
@@ -627,7 +627,7 @@ sudo systemctl stop nginx
 ```bash
 # Page security team immediately
 # PagerDuty: security-team
-# Email: security@svetu.rs
+# Email: security@vondi.rs
 # Slack: #security-incidents
 
 # Do not discuss publicly
@@ -722,7 +722,7 @@ psql "postgres://postgres:current_password@localhost:35433/postgres" -c \
   "ALTER USER listings_user WITH PASSWORD '$NEW_DB_PASSWORD';"
 
 # Update .env file
-sudo sed -i "s/SVETULISTINGS_DB_PASSWORD=.*/SVETULISTINGS_DB_PASSWORD=$NEW_DB_PASSWORD/" \
+sudo sed -i "s/VONDILISTINGS_DB_PASSWORD=.*/VONDILISTINGS_DB_PASSWORD=$NEW_DB_PASSWORD/" \
   /opt/listings-dev/.env
 
 # Generate new Redis password
@@ -732,7 +732,7 @@ NEW_REDIS_PASSWORD=$(openssl rand -base64 32)
 redis-cli -h localhost -p 36380 -a old_password CONFIG SET requirepass "$NEW_REDIS_PASSWORD"
 
 # Update .env file
-sudo sed -i "s/SVETULISTINGS_REDIS_PASSWORD=.*/SVETULISTINGS_REDIS_PASSWORD=$NEW_REDIS_PASSWORD/" \
+sudo sed -i "s/VONDILISTINGS_REDIS_PASSWORD=.*/VONDILISTINGS_REDIS_PASSWORD=$NEW_REDIS_PASSWORD/" \
   /opt/listings-dev/.env
 
 # Rotate OpenSearch credentials (contact OpenSearch admin)
@@ -757,8 +757,8 @@ sudo cp bin/listings-service /opt/listings-dev/bin/
 # Update configuration with security hardening
 sudo nano /opt/listings-dev/.env
 # Add:
-# SVETULISTINGS_SECURITY_ENHANCED=true
-# SVETULISTINGS_AUDIT_LOGGING=true
+# VONDILISTINGS_SECURITY_ENHANCED=true
+# VONDILISTINGS_AUDIT_LOGGING=true
 ```
 
 **Step 8: Restore from Clean Backup (if compromised)**
@@ -912,7 +912,7 @@ DO NOT SHARE OUTSIDE SECURITY TEAM
 # If bare metal: Physical access
 
 # Check SSH access
-ssh svetu@svetu.rs
+ssh svetu@vondi.rs
 
 # If accessible, check service
 sudo systemctl status listings-service
@@ -1167,13 +1167,13 @@ fi
 **P1 (Critical):**
 - PagerDuty: `listings-oncall`, `platform-team-lead`, `security-team`
 - Slack: `#listings-incidents` (public), `#platform-team` (private)
-- Email: `engineering-all@svetu.rs`, `exec-team@svetu.rs`
+- Email: `engineering-all@vondi.rs`, `exec-team@vondi.rs`
 - Status Page: Update immediately
 
 **P2 (High):**
 - PagerDuty: `listings-oncall`, `platform-team-lead`
 - Slack: `#listings-incidents`, `#platform-team`
-- Email: `engineering@svetu.rs`
+- Email: `engineering@vondi.rs`
 
 **P3 (Medium):**
 - PagerDuty: `listings-oncall`
@@ -1422,10 +1422,10 @@ git push origin update-dr-procedures
 
 | Role | Name | PagerDuty | Phone | Email |
 |------|------|-----------|-------|-------|
-| Incident Commander | Platform Team Lead | `platform-team-lead` | +XXX | platform@svetu.rs |
-| On-Call Engineer | Rotation | `listings-oncall` | Via PagerDuty | oncall@svetu.rs |
-| Database SRE | DB Team | `db-team` | Via PagerDuty | db-sre@svetu.rs |
-| Security Lead | Security Team | `security-team` | +XXX | security@svetu.rs |
+| Incident Commander | Platform Team Lead | `platform-team-lead` | +XXX | platform@vondi.rs |
+| On-Call Engineer | Rotation | `listings-oncall` | Via PagerDuty | oncall@vondi.rs |
+| Database SRE | DB Team | `db-team` | Via PagerDuty | db-sre@vondi.rs |
+| Security Lead | Security Team | `security-team` | +XXX | security@vondi.rs |
 
 ### Escalation Path
 

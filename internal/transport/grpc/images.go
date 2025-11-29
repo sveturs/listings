@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // DeleteListingImage implements TRUE MICROSERVICE pattern for image deletion

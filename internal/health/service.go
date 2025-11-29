@@ -11,9 +11,9 @@ import (
 	opensearchapi "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/cache"
-	"github.com/sveturs/listings/internal/repository/minio"
-	"github.com/sveturs/listings/internal/repository/opensearch"
+	"github.com/vondi-global/listings/internal/cache"
+	"github.com/vondi-global/listings/internal/repository/minio"
+	"github.com/vondi-global/listings/internal/repository/opensearch"
 )
 
 // Service implements health checking for all dependencies

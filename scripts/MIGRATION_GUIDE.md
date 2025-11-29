@@ -168,7 +168,7 @@ Found 5 C2C listings to migrate
 PHASE 6: Migrating B2C Stores
 ================================================================================
 Found 1 B2C stores to migrate
-  ✓ Migrated store 1 → 1: Svetur's Store
+  ✓ Migrated store 1 → 1: Vondiur's Store
 
 ✓ B2C Stores migration completed: 1/1 successful
 

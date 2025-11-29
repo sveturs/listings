@@ -53,12 +53,12 @@ docker exec -it listings_postgres psql -U listings_user -d listings_dev_db
 
 ```bash
 # ВАЖНО: Микросервис использует ОТДЕЛЬНУЮ БД (НЕ монолит svetubd!)
-SVETULISTINGS_DB_HOST=localhost
-SVETULISTINGS_DB_PORT=35434              # НЕ 5433!
-SVETULISTINGS_DB_USER=listings_user       # НЕ postgres!
-SVETULISTINGS_DB_PASSWORD=listings_secret
-SVETULISTINGS_DB_NAME=listings_dev_db     # НЕ svetubd!
-SVETULISTINGS_DB_SSLMODE=disable
+VONDILISTINGS_DB_HOST=localhost
+VONDILISTINGS_DB_PORT=35434              # НЕ 5433!
+VONDILISTINGS_DB_USER=listings_user       # НЕ postgres!
+VONDILISTINGS_DB_PASSWORD=listings_secret
+VONDILISTINGS_DB_NAME=listings_dev_db     # НЕ svetubd!
+VONDILISTINGS_DB_SSLMODE=disable
 ```
 
 ### Docker Container
@@ -134,7 +134,7 @@ cd /p/github.com/sveturs/listings
 1. Проверить `.env`:
    ```bash
    cat /p/github.com/sveturs/listings/.env | grep DB_PORT
-   # Должно быть: SVETULISTINGS_DB_PORT=35434
+   # Должно быть: VONDILISTINGS_DB_PORT=35434
    ```
 
 2. Перезапустить микросервис:

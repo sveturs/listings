@@ -19,8 +19,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 const (

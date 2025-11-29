@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // NOTE: Chat service tests are limited because the service depends on *postgres.Repository (concrete type)
@@ -168,6 +168,14 @@ func (m *MockMessageRepository) GetUnreadCount(ctx context.Context, chatID, rece
 func (m *MockMessageRepository) GetUnreadCountByUser(ctx context.Context, receiverID int64) (int32, error) {
 	args := m.Called(ctx, receiverID)
 	return args.Get(0).(int32), args.Error(1)
+}
+
+func (m *MockMessageRepository) GetLatestMessage(ctx context.Context, chatID int64) (*domain.Message, error) {
+	args := m.Called(ctx, chatID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Message), args.Error(1)
 }
 
 // MockAttachmentRepository is a mock for AttachmentRepository

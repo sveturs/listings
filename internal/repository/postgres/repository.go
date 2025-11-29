@@ -15,7 +15,7 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL driver registration
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // Repository implements PostgreSQL data access

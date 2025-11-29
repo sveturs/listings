@@ -355,20 +355,20 @@ rich             # Terminal UI (progress bars, tables)
 
 **Before (Monolith):**
 ```env
-SVETULISTINGS_OPENSEARCH_INDEX=marketplace_listings
+VONDILISTINGS_OPENSEARCH_INDEX=marketplace_listings
 ```
 
 **After (Microservice):**
 ```env
-SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
+VONDILISTINGS_OPENSEARCH_INDEX=listings_microservice
 ```
 
 **Complete Configuration:**
 ```env
-SVETULISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
-SVETULISTINGS_OPENSEARCH_USERNAME=admin
-SVETULISTINGS_OPENSEARCH_PASSWORD=admin
-SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
+VONDILISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
+VONDILISTINGS_OPENSEARCH_USERNAME=admin
+VONDILISTINGS_OPENSEARCH_PASSWORD=admin
+VONDILISTINGS_OPENSEARCH_INDEX=listings_microservice
 ```
 
 ---
@@ -395,7 +395,7 @@ SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
 4. **Update Config:**
    ```bash
    # Update .env
-   SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
+   VONDILISTINGS_OPENSEARCH_INDEX=listings_microservice
    ```
 
 5. **Restart Service:**
@@ -403,10 +403,10 @@ SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
    make restart
    ```
 
-### Production Deployment (dev.svetu.rs)
+### Production Deployment (dev.vondi.rs)
 
 **Prerequisites:**
-- SSH access: `ssh svetu@svetu.rs`
+- SSH access: `ssh svetu@vondi.rs`
 - Service directory: `/opt/svetu-listingsdev`
 - Database credentials from .env
 
@@ -414,13 +414,13 @@ SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
 
 1. **Upload Scripts:**
    ```bash
-   scp scripts/*.py svetu@svetu.rs:/opt/svetu-listingsdev/scripts/
-   scp scripts/opensearch_schema.json svetu@svetu.rs:/opt/svetu-listingsdev/scripts/
+   scp scripts/*.py svetu@vondi.rs:/opt/svetu-listingsdev/scripts/
+   scp scripts/opensearch_schema.json svetu@vondi.rs:/opt/svetu-listingsdev/scripts/
    ```
 
 2. **SSH to Server:**
    ```bash
-   ssh svetu@svetu.rs
+   ssh svetu@vondi.rs
    cd /opt/svetu-listingsdev
    ```
 
@@ -432,7 +432,7 @@ SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
 4. **Reindex Data:**
    ```bash
    # Get password from .env
-   DB_PASSWORD=$(grep SVETULISTINGS_DB_PASSWORD .env | cut -d= -f2)
+   DB_PASSWORD=$(grep VONDILISTINGS_DB_PASSWORD .env | cut -d= -f2)
 
    python3 scripts/reindex_listings.py \
      --target-host localhost \
@@ -451,12 +451,12 @@ SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
    ```bash
    # Edit .env
    nano .env
-   # Change: SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
+   # Change: VONDILISTINGS_OPENSEARCH_INDEX=listings_microservice
    ```
 
 7. **Restart Service:**
    ```bash
-   systemctl restart svetulistings-dev
+   systemctl restart vondilistings-dev
    ```
 
 8. **Verify:**
@@ -624,7 +624,7 @@ Sprint 5.2 successfully delivered a complete OpenSearch reindexing infrastructur
 ✅ **Production-ready documentation**
 
 **Next Steps:**
-- Execute reindex on dev.svetu.rs
+- Execute reindex on dev.vondi.rs
 - Integrate with service startup
 - Implement async indexing worker (Sprint 5.3)
 - Add monitoring and alerting

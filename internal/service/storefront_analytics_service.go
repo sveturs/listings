@@ -12,8 +12,8 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	listingssvcv1 "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
+	listingssvcv1 "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // ============================================================================
@@ -315,11 +315,4 @@ func (c *StorefrontAnalyticsCache) Set(ctx context.Context, key string, stats *l
 		Msg("stats cached successfully")
 
 	return nil
-}
-
-// generateCacheKey generates a deterministic cache key from request parameters
-func generateCacheKey(prefix string, params interface{}) string {
-	data, _ := json.Marshal(params)
-	hash := md5.Sum(data)
-	return fmt.Sprintf("%s:%x", prefix, hash)
 }

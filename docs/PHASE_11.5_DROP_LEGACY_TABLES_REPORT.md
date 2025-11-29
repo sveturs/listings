@@ -243,8 +243,8 @@ user_id | listing_id | title | source_type
 | Table | Records | Used By | Why Preserved |
 |-------|---------|---------|---------------|
 | `c2c_favorites` | 2 | Listings microservice | Active favorites system |
-| `c2c_chats` | 2 | Svetu backend | Active chat system |
-| `c2c_messages` | 8 | Svetu backend | Chat messages |
+| `c2c_chats` | 2 | Vondi backend | Active chat system |
+| `c2c_messages` | 8 | Vondi backend | Chat messages |
 
 ### Usage Evidence
 

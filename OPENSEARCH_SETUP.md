@@ -205,10 +205,10 @@ Update the microservice environment variables:
 
 ```bash
 # .env or deployment config
-SVETULISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
-SVETULISTINGS_OPENSEARCH_USERNAME=admin
-SVETULISTINGS_OPENSEARCH_PASSWORD=admin
-SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
+VONDILISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
+VONDILISTINGS_OPENSEARCH_USERNAME=admin
+VONDILISTINGS_OPENSEARCH_PASSWORD=admin
+VONDILISTINGS_OPENSEARCH_INDEX=listings_microservice
 ```
 
 **Important:** Change the index name from `marketplace_listings` (monolith) to `listings_microservice` (microservice).
@@ -354,7 +354,7 @@ grep "search completed" /var/log/listings-service.log
      -H 'Content-Type: application/json' \
      -d '{"query": {"match_all": {}}, "size": 1}'
    ```
-4. Verify microservice uses correct index name (check SVETULISTINGS_OPENSEARCH_INDEX)
+4. Verify microservice uses correct index name (check VONDILISTINGS_OPENSEARCH_INDEX)
 
 ---
 

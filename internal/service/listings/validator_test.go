@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/service/listings/mocks"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/service/listings/mocks"
 )
 
 func TestValidator_ValidatePrice(t *testing.T) {

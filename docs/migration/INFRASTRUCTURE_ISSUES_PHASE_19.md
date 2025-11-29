@@ -28,7 +28,7 @@ During Phase 19 CreateOrder endpoint testing, multiple infrastructure issues wer
 
 **Solution Applied:**
 ```bash
-ssh svetu@svetu.rs "cd /opt/svetu-authpreprod && sed 's|/data/auth_svetu/keys/private.pem|./keys/private.pem|g' cmd/scripts/create_admin_jwt/create_admin_jwt.go > /tmp/create_jwt_fixed.go && go run /tmp/create_jwt_fixed.go" > /tmp/jwt_token.txt
+ssh svetu@vondi.rs "cd /opt/svetu-authpreprod && sed 's|/data/auth_svetu/keys/private.pem|./keys/private.pem|g' cmd/scripts/create_admin_jwt/create_admin_jwt.go > /tmp/create_jwt_fixed.go && go run /tmp/create_jwt_fixed.go" > /tmp/jwt_token.txt
 ```
 
 **Prevention:**

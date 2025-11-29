@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // CategoryRepository defines the interface for category data access operations

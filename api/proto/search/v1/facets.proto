@@ -4,7 +4,7 @@ package search.v1;
 
 import "api/proto/search/v1/common.proto";
 
-option go_package = "github.com/sveturs/listings/api/proto/search/v1;searchv1";
+option go_package = "github.com/vondi-global/listings/api/proto/search/v1;searchv1";
 
 // GetSearchFacetsRequest requests aggregations for search filters
 message GetSearchFacetsRequest {

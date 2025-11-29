@@ -236,7 +236,7 @@ curl -X GET "http://localhost:9200/listings_microservice/_mapping" | \
 {
   "id": 1,
   "listing_id": 1070,
-  "url": "https://s3.svetu.rs/dimalocal-listings/1070/1760204327235449195.jpg",
+  "url": "https://s3.vondi.rs/dimalocal-listings/1070/1760204327235449195.jpg",
   "display_order": 0,
   "is_primary": true
 }

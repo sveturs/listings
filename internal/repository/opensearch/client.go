@@ -10,7 +10,7 @@ import (
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // Client handles OpenSearch operations for listings

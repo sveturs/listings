@@ -10,9 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
-	authservice "github.com/sveturs/auth/pkg/service"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
+	authservice "github.com/vondi-global/auth/pkg/service"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
 const (
@@ -319,11 +319,11 @@ func (s *chatService) GetOrCreateChat(ctx context.Context, req *GetOrCreateChatR
 	// Try to find existing chat based on context
 	if req.ListingID != nil {
 		// Try to get as C2C listing first
-		listing, err := s.productsRepo.GetListingByID(ctx, *req.ListingID)
+		listing, listingErr := s.productsRepo.GetListingByID(ctx, *req.ListingID)
 
 		var buyerID, sellerID int64
 
-		if err == nil {
+		if listingErr == nil {
 			// C2C listing found - UserID is the seller
 			if listing.UserID == req.UserID {
 				// Current user is seller, other user must be buyer
@@ -703,7 +703,7 @@ func (s *chatService) SendSystemMessage(ctx context.Context, req *SendSystemMess
 	}
 
 	// Set sender name for UI
-	senderName := "Svetu Marketplace"
+	senderName := "Vondi Marketplace"
 	message.SenderName = &senderName
 
 	s.logger.Info().
@@ -1194,14 +1194,9 @@ func (s *chatService) enrichChatWithUserNames(ctx context.Context, chat *domain.
 		return
 	}
 
-	userSvc := s.authService.UserService()
-	if userSvc == nil {
-		return
-	}
-
 	// Get buyer name
 	if chat.BuyerID > 0 {
-		buyerUser, err := userSvc.GetUser(ctx, int(chat.BuyerID))
+		buyerUser, err := s.authService.GetUser(ctx, int(chat.BuyerID))
 		if err == nil && buyerUser != nil && buyerUser.Name != "" {
 			chat.BuyerName = &buyerUser.Name
 		}
@@ -1209,7 +1204,7 @@ func (s *chatService) enrichChatWithUserNames(ctx context.Context, chat *domain.
 
 	// Get seller name
 	if chat.SellerID > 0 {
-		sellerUser, err := userSvc.GetUser(ctx, int(chat.SellerID))
+		sellerUser, err := s.authService.GetUser(ctx, int(chat.SellerID))
 		if err == nil && sellerUser != nil && sellerUser.Name != "" {
 			chat.SellerName = &sellerUser.Name
 		}

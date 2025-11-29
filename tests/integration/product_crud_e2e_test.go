@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/tests"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/tests"
 )
 
 // ============================================================================

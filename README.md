@@ -231,31 +231,31 @@ This runs:
 
 ## Configuration
 
-All configuration is done via environment variables with the prefix `SVETULISTINGS_`.
+All configuration is done via environment variables with the prefix `VONDILISTINGS_`.
 
 Key configuration sections:
 
 ### Server Ports
 ```env
-SVETULISTINGS_GRPC_PORT=50052          # gRPC internal API
-SVETULISTINGS_HTTP_PORT=8086           # HTTP REST API
-SVETULISTINGS_METRICS_PORT=9093        # Prometheus metrics
+VONDILISTINGS_GRPC_PORT=50052          # gRPC internal API
+VONDILISTINGS_HTTP_PORT=8086           # HTTP REST API
+VONDILISTINGS_METRICS_PORT=9093        # Prometheus metrics
 ```
 
 ### Database
 ```env
-SVETULISTINGS_DB_HOST=localhost
-SVETULISTINGS_DB_PORT=35433
-SVETULISTINGS_DB_USER=listings_user
-SVETULISTINGS_DB_PASSWORD=listings_password
-SVETULISTINGS_DB_NAME=listings_db
+VONDILISTINGS_DB_HOST=localhost
+VONDILISTINGS_DB_PORT=35433
+VONDILISTINGS_DB_USER=listings_user
+VONDILISTINGS_DB_PASSWORD=listings_password
+VONDILISTINGS_DB_NAME=listings_db
 ```
 
 ### Redis
 ```env
-SVETULISTINGS_REDIS_HOST=localhost
-SVETULISTINGS_REDIS_PORT=36380
-SVETULISTINGS_REDIS_PASSWORD=redis_password
+VONDILISTINGS_REDIS_HOST=localhost
+VONDILISTINGS_REDIS_PORT=36380
+VONDILISTINGS_REDIS_PASSWORD=redis_password
 ```
 
 See `.env.example` for complete configuration.
@@ -344,10 +344,10 @@ The microservice uses OpenSearch for full-text search, faceted filtering, and ge
 ### Configuration
 
 ```env
-SVETULISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
-SVETULISTINGS_OPENSEARCH_USERNAME=admin
-SVETULISTINGS_OPENSEARCH_PASSWORD=admin
-SVETULISTINGS_OPENSEARCH_INDEX=listings_microservice
+VONDILISTINGS_OPENSEARCH_ADDRESSES=http://localhost:9200
+VONDILISTINGS_OPENSEARCH_USERNAME=admin
+VONDILISTINGS_OPENSEARCH_PASSWORD=admin
+VONDILISTINGS_OPENSEARCH_INDEX=listings_microservice
 ```
 
 **Note:** Change index name from `marketplace_listings` (monolith) to `listings_microservice` (microservice).
@@ -375,7 +375,7 @@ See [OPENSEARCH_SETUP.md](./OPENSEARCH_SETUP.md) for comprehensive guide includi
 ### Quick Start (Production)
 
 **Prerequisites:**
-- Production server (dev.svetu.rs) access
+- Production server (dev.vondi.rs) access
 - All dependencies running (PostgreSQL, Redis, OpenSearch, MinIO, Auth service)
 - Production secrets configured in `.env.prod`
 
@@ -391,9 +391,9 @@ cd /p/github.com/sveturs/listings
 ```
 
 **Step 3: Monitor Deployment**
-- **Grafana:** https://grafana.svetu.rs/d/listings-overview
-- **Prometheus:** http://prometheus.svetu.rs:9090
-- **Service Health:** https://listings.dev.svetu.rs/health
+- **Grafana:** https://grafana.vondi.rs/d/listings-overview
+- **Prometheus:** http://prometheus.vondi.rs:9090
+- **Service Health:** https://listings.dev.vondi.rs/health
 
 **Step 4: Verify Success**
 ```bash
@@ -411,11 +411,11 @@ cd /p/github.com/sveturs/listings
 ### Production Operations
 
 **Monitoring Dashboards:**
-- **Overview Dashboard:** Service health and SLO tracking → [Grafana Link](https://grafana.svetu.rs/d/listings-overview)
-- **Details Dashboard:** Performance deep-dive → [Grafana Link](https://grafana.svetu.rs/d/listings-details)
-- **Database Dashboard:** PostgreSQL monitoring → [Grafana Link](https://grafana.svetu.rs/d/listings-database)
-- **Redis Dashboard:** Cache performance → [Grafana Link](https://grafana.svetu.rs/d/listings-redis)
-- **SLO Dashboard:** Error budget tracking → [Grafana Link](https://grafana.svetu.rs/d/listings-slo)
+- **Overview Dashboard:** Service health and SLO tracking → [Grafana Link](https://grafana.vondi.rs/d/listings-overview)
+- **Details Dashboard:** Performance deep-dive → [Grafana Link](https://grafana.vondi.rs/d/listings-details)
+- **Database Dashboard:** PostgreSQL monitoring → [Grafana Link](https://grafana.vondi.rs/d/listings-database)
+- **Redis Dashboard:** Cache performance → [Grafana Link](https://grafana.vondi.rs/d/listings-redis)
+- **SLO Dashboard:** Error budget tracking → [Grafana Link](https://grafana.vondi.rs/d/listings-slo)
 
 **Key Metrics:**
 - **Availability SLO:** 99.9% (43 minutes downtime/month allowed)
@@ -462,11 +462,11 @@ cd /p/github.com/sveturs/listings
 - **Retention:** 30 days
 
 **Access:**
-- **Grafana:** https://grafana.svetu.rs (company SSO)
-- **Prometheus:** http://prometheus.svetu.rs:9090 (internal only)
-- **AlertManager:** http://alertmanager.svetu.rs:9093 (internal only)
-- **Service API:** https://listings.dev.svetu.rs
-- **Metrics:** https://listings.dev.svetu.rs/metrics
+- **Grafana:** https://grafana.vondi.rs (company SSO)
+- **Prometheus:** http://prometheus.vondi.rs:9090 (internal only)
+- **AlertManager:** http://alertmanager.vondi.rs:9093 (internal only)
+- **Service API:** https://listings.dev.vondi.rs
+- **Metrics:** https://listings.dev.vondi.rs/metrics
 
 ---
 
@@ -708,7 +708,7 @@ For issues and questions:
 
 **Overall Grade:** A- (9.55/10) = 95.5/100
 
-**Next:** Sprint 5.3 - Production Migration (dev.svetu.rs deployment)
+**Next:** Sprint 5.3 - Production Migration (dev.vondi.rs deployment)
 
 ---
 
@@ -751,7 +751,7 @@ See `migrations/000001_initial_schema.up.sql` for complete schema.
 - [x] Project structure and setup (Sprint 4.1)
 - [x] Core infrastructure (Sprint 4.2)
 - [x] Public pkg library (Sprint 4.3)
-- [x] Production deployment to dev.svetu.rs (Sprint 4.4)
+- [x] Production deployment to dev.vondi.rs (Sprint 4.4)
 - [x] Database migration from monolith (Sprint 5.1)
 - [x] OpenSearch reindex (Sprint 5.2)
 - [x] Production operations infrastructure (Phase 9.8)

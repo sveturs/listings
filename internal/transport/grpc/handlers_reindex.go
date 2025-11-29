@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // ReindexAll performs full reindexing of all products to OpenSearch

@@ -9,7 +9,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // StorefrontRepository defines the interface for storefront data access
@@ -505,13 +505,6 @@ func validateCoordinates(lat, lng float64) error {
 	}
 	if lng < -180 || lng > 180 {
 		return fmt.Errorf("longitude must be between -180 and 180")
-	}
-	return nil
-}
-
-func validateCommissionRate(rate float64) error {
-	if rate < 0 || rate > 100 {
-		return fmt.Errorf("commission rate must be between 0 and 100")
 	}
 	return nil
 }

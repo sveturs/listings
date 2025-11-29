@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // SearchQueriesRepository defines the interface for search query analytics data access

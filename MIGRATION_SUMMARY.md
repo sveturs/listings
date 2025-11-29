@@ -246,7 +246,7 @@ SELECT COUNT(*) FROM listings WHERE source_type='c2c';
   "id": 123,
   "listing_id": 1080,
   "file_path": "/uploads/images/vacuum.jpg",
-  "public_url": "https://svetu.rs/images/vacuum.jpg",
+  "public_url": "https://vondi.rs/images/vacuum.jpg",
   "is_main": true,
   "display_order": 0,
   "content_type": "image/jpeg",
@@ -259,7 +259,7 @@ SELECT COUNT(*) FROM listings WHERE source_type='c2c';
 {
   "id": 456,
   "listing_id": 62,
-  "url": "https://svetu.rs/images/vacuum.jpg",
+  "url": "https://vondi.rs/images/vacuum.jpg",
   "storage_path": "/uploads/images/vacuum.jpg",
   "is_primary": true,
   "display_order": 0,
@@ -336,7 +336,7 @@ SELECT id, listing_id, url, storage_path FROM listing_images LIMIT 5;
 "
 
 # Verify MinIO/S3 storage
-curl -I https://svetu.rs/images/vacuum.jpg
+curl -I https://vondi.rs/images/vacuum.jpg
 ```
 
 ### Issue: Search not working

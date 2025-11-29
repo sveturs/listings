@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
-	"github.com/sveturs/listings/internal/domain"
+	categoriespb "github.com/vondi-global/listings/api/proto/categories/v1"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // GetCategories retrieves a list of categories with pagination

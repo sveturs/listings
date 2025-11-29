@@ -1,4 +1,4 @@
-module github.com/sveturs/listings
+module github.com/vondi-global/listings
 
 go 1.25.0
 
@@ -23,8 +23,8 @@ require (
 	github.com/redis/go-redis/v9 v9.16.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
-	github.com/sveturs/auth v1.18.0
-	github.com/sveturs/delivery v0.1.0
+	github.com/vondi-global/auth v1.18.0
+	github.com/vondi-global/delivery v0.1.0
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
 )
@@ -96,11 +96,11 @@ require (
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/sveturs/lib v1.2.1 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
+	github.com/vondi-global/lib v1.2.1 // indirect
 	github.com/woodsbury/decimal128 v1.3.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
@@ -114,4 +114,10 @@ require (
 	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+replace (
+	github.com/vondi-global/auth => /p/github.com/sveturs/auth
+	github.com/vondi-global/delivery => /p/github.com/sveturs/delivery
+	github.com/vondi-global/lib => /p/github.com/sveturs/lib
 )

@@ -7,8 +7,8 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pb "github.com/sveturs/listings/api/proto/attributes/v1"
-	"github.com/sveturs/listings/internal/domain"
+	pb "github.com/vondi-global/listings/api/proto/attributes/v1"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // ============================================================================

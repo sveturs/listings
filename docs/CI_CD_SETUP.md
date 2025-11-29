@@ -310,9 +310,9 @@ docker push sveturs/listings-service:$SHA
 
 | Branch | Environment | Auto-Deploy | URL |
 |--------|-------------|-------------|-----|
-| `develop` | Development | Yes | https://dev.svetu.rs |
-| `main` | Staging | Yes | https://staging.svetu.rs |
-| `main` (manual) | Production | No | https://api.svetu.rs |
+| `develop` | Development | Yes | https://dev.vondi.rs |
+| `main` | Staging | Yes | https://staging.vondi.rs |
+| `main` (manual) | Production | No | https://api.vondi.rs |
 
 **Deployment Strategy:** Blue-Green
 
@@ -356,14 +356,14 @@ kubectl rollout undo deployment/listings-service
 **Automated Smoke Tests:**
 ```bash
 # 1. Health check
-grpcurl -plaintext api.svetu.rs:50052 grpc.health.v1.Health/Check
+grpcurl -plaintext api.vondi.rs:50052 grpc.health.v1.Health/Check
 
 # 2. Basic operations
 grpcurl -plaintext -d '{"user_id": 1}' \
-  api.svetu.rs:50052 listings.v1.OrdersService/GetCart
+  api.vondi.rs:50052 listings.v1.OrdersService/GetCart
 
 # 3. Check metrics
-curl https://api.svetu.rs/metrics | grep grpc_server_started_total
+curl https://api.vondi.rs/metrics | grep grpc_server_started_total
 ```
 
 **Manual Verification:**

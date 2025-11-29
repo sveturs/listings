@@ -6,8 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/service/listings"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/service/listings"
 )
 
 // DecrementStock atomically decrements stock for multiple products/variants

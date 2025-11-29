@@ -20,11 +20,11 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service/listings"
-	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
-	"github.com/sveturs/listings/tests"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service/listings"
+	grpchandlers "github.com/vondi-global/listings/internal/transport/grpc"
+	"github.com/vondi-global/listings/tests"
 )
 
 // ============================================================================
@@ -93,7 +93,20 @@ func setupUpdateProductTest(t *testing.T) (pb.ListingsServiceClient, *tests.Test
 	service := listings.NewService(repo, nil, nil, logger)
 
 	// Create gRPC server (with nil metrics for testing)
-	server := grpchandlers.NewServer(service, nil, logger)
+	server := grpchandlers.NewServer(
+		service,
+		nil, // storefrontService
+		nil, // attrService
+		nil, // categoryService
+		nil, // orderService
+		nil, // cartService
+		nil, // chatService
+		nil, // analyticsService
+		nil, // storefrontAnalyticsService
+		nil, // minioClient
+		nil, // metrics
+		logger,
+	)
 
 	// Setup in-memory gRPC connection using bufconn
 	const bufSize = 1024 * 1024

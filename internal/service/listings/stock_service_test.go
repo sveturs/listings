@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sveturs/listings/internal/service/listings/mocks"
+	"github.com/vondi-global/listings/internal/service/listings/mocks"
 )
 
 // ============================================================================

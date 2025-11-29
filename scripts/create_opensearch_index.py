@@ -234,7 +234,7 @@ def main():
     console.print(f"\nNext steps:")
     console.print(f"  1. Run reindex script: python3 scripts/reindex_listings.py")
     console.print(f"  2. Verify data: python3 scripts/validate_opensearch.py")
-    console.print(f"  3. Update service config: SVETULISTINGS_OPENSEARCH_INDEX={INDEX_NAME}")
+    console.print(f"  3. Update service config: VONDILISTINGS_OPENSEARCH_INDEX={INDEX_NAME}")
 
 
 if __name__ == "__main__":

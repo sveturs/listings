@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	deliveryv1 "github.com/sveturs/delivery/gen/go/delivery/v1"
+	deliveryv1 "github.com/vondi-global/delivery/gen/go/delivery/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -18,23 +18,23 @@ import (
 
 // Domain errors for delivery operations
 var (
-	ErrDeliveryUnavailable  = errors.New("delivery service unavailable")
-	ErrShipmentNotFound     = errors.New("shipment not found")
-	ErrInvalidAddress       = errors.New("invalid address")
-	ErrInvalidPackage       = errors.New("invalid package dimensions")
-	ErrProviderUnavailable  = errors.New("delivery provider unavailable")
+	ErrDeliveryUnavailable   = errors.New("delivery service unavailable")
+	ErrShipmentNotFound      = errors.New("shipment not found")
+	ErrInvalidAddress        = errors.New("invalid address")
+	ErrInvalidPackage        = errors.New("invalid package dimensions")
+	ErrProviderUnavailable   = errors.New("delivery provider unavailable")
 	ErrRateCalculationFailed = errors.New("rate calculation failed")
-	ErrShipmentCancelled    = errors.New("shipment already cancelled")
-	ErrTimeout              = errors.New("delivery service timeout")
+	ErrShipmentCancelled     = errors.New("shipment already cancelled")
+	ErrTimeout               = errors.New("delivery service timeout")
 )
 
 // Config holds delivery client configuration
 type Config struct {
-	Address     string
-	Timeout     time.Duration
-	MaxRetries  int
-	RetryDelay  time.Duration
-	PoolSize    int
+	Address    string
+	Timeout    time.Duration
+	MaxRetries int
+	RetryDelay time.Duration
+	PoolSize   int
 }
 
 // DefaultConfig returns default configuration
@@ -50,10 +50,10 @@ func DefaultConfig() *Config {
 
 // Client provides methods to interact with Delivery microservice
 type Client struct {
-	conn    *grpc.ClientConn
-	client  deliveryv1.DeliveryServiceClient
-	config  *Config
-	logger  zerolog.Logger
+	conn   *grpc.ClientConn
+	client deliveryv1.DeliveryServiceClient
+	config *Config
+	logger zerolog.Logger
 }
 
 // NewClient creates a new delivery gRPC client

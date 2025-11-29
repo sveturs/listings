@@ -374,5 +374,5 @@ For detailed technical information, see:
 - **Monitoring Guide:** `docs/operations/MONITORING_GUIDE.md` (dashboard guide)
 
 **Contact:**
-- Platform Team: platform@svetu.rs
+- Platform Team: platform@vondi.rs
 - On-Call Emergency: PagerDuty escalation

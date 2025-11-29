@@ -10,10 +10,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	chatsvcv1 "github.com/sveturs/listings/api/proto/chat/v1"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/middleware"
-	"github.com/sveturs/listings/internal/service"
+	chatsvcv1 "github.com/vondi-global/listings/api/proto/chat/v1"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/middleware"
+	"github.com/vondi-global/listings/internal/service"
 )
 
 // ============================================================================

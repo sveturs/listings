@@ -11,8 +11,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/opensearch"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/opensearch"
 )
 
 // ListingIndexer handles listing indexing operations combining data from DB and OpenSearch

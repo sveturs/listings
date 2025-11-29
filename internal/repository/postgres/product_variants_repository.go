@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // CreateProductVariant creates a new product variant

@@ -2,7 +2,7 @@
 
 **Service:** Listings Microservice
 **Version:** 0.1.0
-**Target Environment:** dev.svetu.rs (Production)
+**Target Environment:** dev.vondi.rs (Production)
 **Date:** 2025-11-05
 **Checklist Owner:** Platform Team
 
@@ -47,9 +47,9 @@ This checklist ensures all production requirements are met before deploying the 
 ### 1.2 Network Configuration
 
 - [ ] **DNS records configured**
-  - **Check:** `listings.dev.svetu.rs` resolves to correct IP
-  - **Command:** `nslookup listings.dev.svetu.rs`
-  - **Expected:** Resolves to dev.svetu.rs IP
+  - **Check:** `listings.dev.vondi.rs` resolves to correct IP
+  - **Command:** `nslookup listings.dev.vondi.rs`
+  - **Expected:** Resolves to dev.vondi.rs IP
   - **Owner:** DevOps
 
 - [ ] **Nginx reverse proxy configured**
@@ -59,8 +59,8 @@ This checklist ensures all production requirements are met before deploying the 
   - **Owner:** DevOps
 
 - [ ] **SSL/TLS certificates valid**
-  - **Check:** Certificate for listings.dev.svetu.rs not expired
-  - **Command:** `sudo certbot certificates | grep listings.dev.svetu.rs`
+  - **Check:** Certificate for listings.dev.vondi.rs not expired
+  - **Command:** `sudo certbot certificates | grep listings.dev.vondi.rs`
   - **Expected:** Valid until date > 30 days from now
   - **Owner:** DevOps
 
@@ -136,13 +136,13 @@ This checklist ensures all production requirements are met before deploying the 
 
 - [ ] **Database password strength verified**
   - **Check:** Password ≥32 characters, random
-  - **Command:** `echo $SVETULISTINGS_DB_PASSWORD | wc -c`
+  - **Command:** `echo $VONDILISTINGS_DB_PASSWORD | wc -c`
   - **Expected:** ≥33 (32 chars + newline)
   - **Owner:** Security
 
 - [ ] **Redis password strength verified**
   - **Check:** Password ≥32 characters, random
-  - **Command:** `echo $SVETULISTINGS_REDIS_PASSWORD | wc -c`
+  - **Command:** `echo $VONDILISTINGS_REDIS_PASSWORD | wc -c`
   - **Expected:** ≥33
   - **Owner:** Security
 
@@ -168,7 +168,7 @@ This checklist ensures all production requirements are met before deploying the 
 
 - [ ] **Auth public key accessible**
   - **Check:** JWT public key exists and readable by service
-  - **Command:** `sudo -u listings cat $SVETULISTINGS_AUTH_PUBLIC_KEY_PATH | head -1`
+  - **Command:** `sudo -u listings cat $VONDILISTINGS_AUTH_PUBLIC_KEY_PATH | head -1`
   - **Expected:** "-----BEGIN PUBLIC KEY-----"
   - **Owner:** Security
 
@@ -177,19 +177,19 @@ This checklist ensures all production requirements are met before deploying the 
 - [ ] **CORS origins restricted**
   - **Check:** No wildcards (*) in CORS configuration
   - **Command:** `grep CORS_ALLOWED_ORIGINS /opt/listings-service/.env.prod`
-  - **Expected:** Specific origins only (dev.svetu.rs, devapi.svetu.rs)
+  - **Expected:** Specific origins only (dev.vondi.rs, devapi.vondi.rs)
   - **Owner:** Security
 
 - [ ] **Rate limiting enabled**
   - **Check:** Rate limit enabled in production config
   - **Command:** `grep RATE_LIMIT_ENABLED /opt/listings-service/.env.prod`
-  - **Expected:** SVETULISTINGS_RATE_LIMIT_ENABLED=true
+  - **Expected:** VONDILISTINGS_RATE_LIMIT_ENABLED=true
   - **Owner:** Security
 
 - [ ] **Security headers enabled**
   - **Check:** Security headers enabled in config
   - **Command:** `grep SECURITY_HEADERS_ENABLED /opt/listings-service/.env.prod`
-  - **Expected:** SVETULISTINGS_SECURITY_HEADERS_ENABLED=true
+  - **Expected:** VONDILISTINGS_SECURITY_HEADERS_ENABLED=true
   - **Owner:** Security
 
 ---
@@ -308,7 +308,7 @@ This checklist ensures all production requirements are met before deploying the 
 
 - [ ] **Prometheus scraping service metrics**
   - **Check:** Listings target in Prometheus
-  - **Command:** `curl -s http://prometheus.svetu.rs:9090/api/v1/targets | jq '.data.activeTargets[] | select(.labels.job == "listings")'`
+  - **Command:** `curl -s http://prometheus.vondi.rs:9090/api/v1/targets | jq '.data.activeTargets[] | select(.labels.job == "listings")'`
   - **Expected:** Target exists, state="up"
   - **Owner:** DevOps
 
@@ -320,7 +320,7 @@ This checklist ensures all production requirements are met before deploying the 
 
 - [ ] **Recording rules loaded**
   - **Check:** Prometheus has listings recording rules
-  - **Command:** `curl -s http://prometheus.svetu.rs:9090/api/v1/rules | jq '.data.groups[] | select(.name == "listings_recording_rules")'`
+  - **Command:** `curl -s http://prometheus.vondi.rs:9090/api/v1/rules | jq '.data.groups[] | select(.name == "listings_recording_rules")'`
   - **Expected:** Group exists with rules
   - **Owner:** DevOps
 
@@ -328,13 +328,13 @@ This checklist ensures all production requirements are met before deploying the 
 
 - [ ] **Alert rules loaded**
   - **Check:** Prometheus has listings alert rules
-  - **Command:** `curl -s http://prometheus.svetu.rs:9090/api/v1/rules | jq '.data.groups[] | select(.name == "listings_alerts")'`
+  - **Command:** `curl -s http://prometheus.vondi.rs:9090/api/v1/rules | jq '.data.groups[] | select(.name == "listings_alerts")'`
   - **Expected:** Group exists with alerts
   - **Owner:** DevOps
 
 - [ ] **AlertManager configured**
   - **Check:** AlertManager has routing for listings alerts
-  - **Command:** `curl -s http://alertmanager.svetu.rs:9093/api/v2/status | jq .config.route`
+  - **Command:** `curl -s http://alertmanager.vondi.rs:9093/api/v2/status | jq .config.route`
   - **Expected:** Route exists for service="listings"
   - **Owner:** DevOps
 

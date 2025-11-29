@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	searchv1 "github.com/sveturs/listings/api/proto/search/v1"
-	"github.com/sveturs/listings/internal/service/search"
+	searchv1 "github.com/vondi-global/listings/api/proto/search/v1"
+	"github.com/vondi-global/listings/internal/service/search"
 )
 
 // ============================================================================
@@ -100,10 +100,6 @@ func newTestSearchHandler(mockSvc *mockSearchService) *SearchHandler {
 }
 
 func int64PtrTest(v int64) *int64 {
-	return &v
-}
-
-func stringPtrTest(v string) *string {
 	return &v
 }
 

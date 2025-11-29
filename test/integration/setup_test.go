@@ -12,15 +12,15 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/metrics"
-	miniorepo "github.com/sveturs/listings/internal/repository/minio"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service"
-	"github.com/sveturs/listings/internal/service/listings"
-	testutils "github.com/sveturs/listings/internal/testing"
-	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/metrics"
+	miniorepo "github.com/vondi-global/listings/internal/repository/minio"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service"
+	"github.com/vondi-global/listings/internal/service/listings"
+	testutils "github.com/vondi-global/listings/internal/testing"
+	grpchandlers "github.com/vondi-global/listings/internal/transport/grpc"
 )
 
 // =============================================================================
@@ -76,6 +76,26 @@ func (m *mockOrderService) ConfirmOrderPayment(ctx context.Context, orderID int6
 func (m *mockOrderService) ProcessRefund(ctx context.Context, orderID int64) error {
 	return nil
 }
+
+func (m *mockOrderService) AcceptOrder(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) CreateOrderShipment(ctx context.Context, req *service.CreateShipmentRequest) (*service.CreateShipmentResult, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) MarkOrderShipped(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) GetOrderTracking(ctx context.Context, orderID int64, userID int64) (*service.TrackingInfo, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) SetChatService(chatService service.ChatService) {}
+
+func (m *mockOrderService) SetDeliveryClient(client service.DeliveryClient) {}
 
 // =============================================================================
 // Mock Cart Service
@@ -261,6 +281,12 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 	// Mock analytics service (nil is OK for integration tests that don't need analytics)
 	var analyticsService service.AnalyticsService = nil
 
+	// Mock chat service (nil is OK for integration tests that don't need chat)
+	var chatService service.ChatService = nil
+
+	// Mock storefront analytics service (nil is OK for integration tests)
+	var storefrontAnalyticsService service.StorefrontAnalyticsService = nil
+
 	// Mock minio client (nil is OK for integration tests that don't need image operations)
 	var minioClient *miniorepo.Client = nil
 
@@ -275,7 +301,9 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		categoryService,
 		orderService,
 		cartService,
+		chatService,
 		analyticsService,
+		storefrontAnalyticsService,
 		minioClient,
 		m,
 		logger,

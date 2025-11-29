@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sveturs/listings/internal/service"
+	"github.com/vondi-global/listings/internal/service"
 )
 
 // ServiceAdapter adapts the delivery Client to service.DeliveryClient interface

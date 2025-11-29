@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/service/listings/mocks"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/service/listings/mocks"
 )
 
 // TestSetupServiceTest verifies that test setup works correctly

@@ -3,7 +3,7 @@ package integration
 import (
 	"testing"
 
-	testutils "github.com/sveturs/listings/internal/testing"
+	testutils "github.com/vondi-global/listings/internal/testing"
 )
 
 // =============================================================================

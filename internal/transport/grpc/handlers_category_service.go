@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 
-	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
+	categoriespb "github.com/vondi-global/listings/api/proto/categories/v1"
 )
 
 // CategoryServiceServer is a separate handler for CategoryService gRPC interface

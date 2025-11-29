@@ -15,8 +15,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service"
 )
 
 // TestEnvironment provides a complete testing environment with all dependencies.

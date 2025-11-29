@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // ChatRepository defines operations for chat management
@@ -463,7 +463,6 @@ func (r *chatRepository) GetUserChatsCount(ctx context.Context, userID int64, st
 	if status != nil {
 		query += fmt.Sprintf(" AND status = $%d", argIndex)
 		args = append(args, *status)
-		argIndex++
 	}
 
 	if archivedOnly {

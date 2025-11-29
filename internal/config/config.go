@@ -27,35 +27,35 @@ type Config struct {
 
 // AppConfig contains general application settings
 type AppConfig struct {
-	Env       string `envconfig:"SVETULISTINGS_ENV" default:"development"`
-	LogLevel  string `envconfig:"SVETULISTINGS_LOG_LEVEL" default:"info"`
-	LogFormat string `envconfig:"SVETULISTINGS_LOG_FORMAT" default:"json"`
+	Env       string `envconfig:"VONDILISTINGS_ENV" default:"development"`
+	LogLevel  string `envconfig:"VONDILISTINGS_LOG_LEVEL" default:"info"`
+	LogFormat string `envconfig:"VONDILISTINGS_LOG_FORMAT" default:"json"`
 }
 
 // ServerConfig contains server ports and settings
 type ServerConfig struct {
-	GRPCHost    string `envconfig:"SVETULISTINGS_GRPC_HOST" default:"0.0.0.0"`
-	GRPCPort    int    `envconfig:"SVETULISTINGS_GRPC_PORT" default:"50053"`
-	HTTPHost    string `envconfig:"SVETULISTINGS_HTTP_HOST" default:"0.0.0.0"`
-	HTTPPort    int    `envconfig:"SVETULISTINGS_HTTP_PORT" default:"8086"`
-	MetricsHost string `envconfig:"SVETULISTINGS_METRICS_HOST" default:"0.0.0.0"`
-	MetricsPort int    `envconfig:"SVETULISTINGS_METRICS_PORT" default:"9093"`
+	GRPCHost    string `envconfig:"VONDILISTINGS_GRPC_HOST" default:"0.0.0.0"`
+	GRPCPort    int    `envconfig:"VONDILISTINGS_GRPC_PORT" default:"50053"`
+	HTTPHost    string `envconfig:"VONDILISTINGS_HTTP_HOST" default:"0.0.0.0"`
+	HTTPPort    int    `envconfig:"VONDILISTINGS_HTTP_PORT" default:"8086"`
+	MetricsHost string `envconfig:"VONDILISTINGS_METRICS_HOST" default:"0.0.0.0"`
+	MetricsPort int    `envconfig:"VONDILISTINGS_METRICS_PORT" default:"9093"`
 }
 
 // DBConfig contains PostgreSQL database configuration
 type DBConfig struct {
-	Host     string `envconfig:"SVETULISTINGS_DB_HOST" default:"localhost"`
-	Port     int    `envconfig:"SVETULISTINGS_DB_PORT" default:"35434"`
-	User     string `envconfig:"SVETULISTINGS_DB_USER" default:"listings_user"`
-	Password string `envconfig:"SVETULISTINGS_DB_PASSWORD" default:"listings_password"`
-	Name     string `envconfig:"SVETULISTINGS_DB_NAME" default:"listings_db"`
-	SSLMode  string `envconfig:"SVETULISTINGS_DB_SSLMODE" default:"disable"`
+	Host     string `envconfig:"VONDILISTINGS_DB_HOST" default:"localhost"`
+	Port     int    `envconfig:"VONDILISTINGS_DB_PORT" default:"35434"`
+	User     string `envconfig:"VONDILISTINGS_DB_USER" default:"listings_user"`
+	Password string `envconfig:"VONDILISTINGS_DB_PASSWORD" default:"listings_password"`
+	Name     string `envconfig:"VONDILISTINGS_DB_NAME" default:"listings_db"`
+	SSLMode  string `envconfig:"VONDILISTINGS_DB_SSLMODE" default:"disable"`
 
 	// Connection pool settings
-	MaxOpenConns    int           `envconfig:"SVETULISTINGS_DB_MAX_OPEN_CONNS" default:"25"`
-	MaxIdleConns    int           `envconfig:"SVETULISTINGS_DB_MAX_IDLE_CONNS" default:"10"`
-	ConnMaxLifetime time.Duration `envconfig:"SVETULISTINGS_DB_CONN_MAX_LIFETIME" default:"5m"`
-	ConnMaxIdleTime time.Duration `envconfig:"SVETULISTINGS_DB_CONN_MAX_IDLE_TIME" default:"10m"`
+	MaxOpenConns    int           `envconfig:"VONDILISTINGS_DB_MAX_OPEN_CONNS" default:"25"`
+	MaxIdleConns    int           `envconfig:"VONDILISTINGS_DB_MAX_IDLE_CONNS" default:"10"`
+	ConnMaxLifetime time.Duration `envconfig:"VONDILISTINGS_DB_CONN_MAX_LIFETIME" default:"5m"`
+	ConnMaxIdleTime time.Duration `envconfig:"VONDILISTINGS_DB_CONN_MAX_IDLE_TIME" default:"10m"`
 }
 
 // DSN returns PostgreSQL connection string
@@ -68,18 +68,18 @@ func (c DBConfig) DSN() string {
 
 // RedisConfig contains Redis configuration
 type RedisConfig struct {
-	Host     string `envconfig:"SVETULISTINGS_REDIS_HOST" default:"localhost"`
-	Port     int    `envconfig:"SVETULISTINGS_REDIS_PORT" default:"36380"`
-	Password string `envconfig:"SVETULISTINGS_REDIS_PASSWORD" default:""`
-	DB       int    `envconfig:"SVETULISTINGS_REDIS_DB" default:"0"`
+	Host     string `envconfig:"VONDILISTINGS_REDIS_HOST" default:"localhost"`
+	Port     int    `envconfig:"VONDILISTINGS_REDIS_PORT" default:"36380"`
+	Password string `envconfig:"VONDILISTINGS_REDIS_PASSWORD" default:""`
+	DB       int    `envconfig:"VONDILISTINGS_REDIS_DB" default:"0"`
 
 	// Connection pool
-	PoolSize     int `envconfig:"SVETULISTINGS_REDIS_POOL_SIZE" default:"10"`
-	MinIdleConns int `envconfig:"SVETULISTINGS_REDIS_MIN_IDLE_CONNS" default:"5"`
+	PoolSize     int `envconfig:"VONDILISTINGS_REDIS_POOL_SIZE" default:"10"`
+	MinIdleConns int `envconfig:"VONDILISTINGS_REDIS_MIN_IDLE_CONNS" default:"5"`
 
 	// Cache TTL
-	ListingTTL time.Duration `envconfig:"SVETULISTINGS_CACHE_LISTING_TTL" default:"5m"`
-	SearchTTL  time.Duration `envconfig:"SVETULISTINGS_CACHE_SEARCH_TTL" default:"2m"`
+	ListingTTL time.Duration `envconfig:"VONDILISTINGS_CACHE_LISTING_TTL" default:"5m"`
+	SearchTTL  time.Duration `envconfig:"VONDILISTINGS_CACHE_SEARCH_TTL" default:"2m"`
 }
 
 // Addr returns Redis address
@@ -89,75 +89,75 @@ func (c RedisConfig) Addr() string {
 
 // SearchConfig contains OpenSearch configuration
 type SearchConfig struct {
-	Addresses []string `envconfig:"SVETULISTINGS_OPENSEARCH_ADDRESSES" default:"http://localhost:9200"`
-	Username  string   `envconfig:"SVETULISTINGS_OPENSEARCH_USERNAME" default:"admin"`
-	Password  string   `envconfig:"SVETULISTINGS_OPENSEARCH_PASSWORD" default:"admin"`
-	Index     string   `envconfig:"SVETULISTINGS_OPENSEARCH_INDEX" default:"marketplace_listings"`
+	Addresses []string `envconfig:"VONDILISTINGS_OPENSEARCH_ADDRESSES" default:"http://localhost:9200"`
+	Username  string   `envconfig:"VONDILISTINGS_OPENSEARCH_USERNAME" default:"admin"`
+	Password  string   `envconfig:"VONDILISTINGS_OPENSEARCH_PASSWORD" default:"admin"`
+	Index     string   `envconfig:"VONDILISTINGS_OPENSEARCH_INDEX" default:"marketplace_listings"`
 }
 
 // StorageConfig contains MinIO (S3-compatible) configuration
 type StorageConfig struct {
-	Endpoint  string `envconfig:"SVETULISTINGS_MINIO_ENDPOINT" default:"localhost:9000"`
-	AccessKey string `envconfig:"SVETULISTINGS_MINIO_ACCESS_KEY" default:"minioadmin"`
-	SecretKey string `envconfig:"SVETULISTINGS_MINIO_SECRET_KEY" default:"minioadmin"`
-	UseSSL    bool   `envconfig:"SVETULISTINGS_MINIO_USE_SSL" default:"false"`
-	Bucket    string `envconfig:"SVETULISTINGS_MINIO_BUCKET" default:"listings-images"`
+	Endpoint  string `envconfig:"VONDILISTINGS_MINIO_ENDPOINT" default:"localhost:9000"`
+	AccessKey string `envconfig:"VONDILISTINGS_MINIO_ACCESS_KEY" default:"minioadmin"`
+	SecretKey string `envconfig:"VONDILISTINGS_MINIO_SECRET_KEY" default:"minioadmin"`
+	UseSSL    bool   `envconfig:"VONDILISTINGS_MINIO_USE_SSL" default:"false"`
+	Bucket    string `envconfig:"VONDILISTINGS_MINIO_BUCKET" default:"listings-images"`
 }
 
 // AuthConfig contains Auth Service integration settings
 type AuthConfig struct {
-	ServiceURL    string        `envconfig:"SVETULISTINGS_AUTH_SERVICE_URL" default:"http://localhost:8081"`
-	PublicKeyPath string        `envconfig:"SVETULISTINGS_AUTH_PUBLIC_KEY_PATH" default:"/keys/public.pem"`
-	Timeout       time.Duration `envconfig:"SVETULISTINGS_AUTH_TIMEOUT" default:"10s"`
-	Enabled       bool          `envconfig:"SVETULISTINGS_AUTH_ENABLED" default:"false"` // Disabled for Phase 13.1.15.8 until logger adapter is fixed
+	ServiceURL    string        `envconfig:"VONDILISTINGS_AUTH_SERVICE_URL" default:"http://localhost:8081"`
+	PublicKeyPath string        `envconfig:"VONDILISTINGS_AUTH_PUBLIC_KEY_PATH" default:"/keys/public.pem"`
+	Timeout       time.Duration `envconfig:"VONDILISTINGS_AUTH_TIMEOUT" default:"10s"`
+	Enabled       bool          `envconfig:"VONDILISTINGS_AUTH_ENABLED" default:"false"` // Disabled for Phase 13.1.15.8 until logger adapter is fixed
 }
 
 // DeliveryConfig contains Delivery microservice integration settings
 type DeliveryConfig struct {
-	GRPCAddress string        `envconfig:"SVETULISTINGS_DELIVERY_GRPC_ADDRESS" default:"localhost:50052"`
-	Timeout     time.Duration `envconfig:"SVETULISTINGS_DELIVERY_TIMEOUT" default:"10s"`
-	MaxRetries  int           `envconfig:"SVETULISTINGS_DELIVERY_MAX_RETRIES" default:"3"`
-	RetryDelay  time.Duration `envconfig:"SVETULISTINGS_DELIVERY_RETRY_DELAY" default:"100ms"`
-	Enabled     bool          `envconfig:"SVETULISTINGS_DELIVERY_ENABLED" default:"false"`
+	GRPCAddress string        `envconfig:"VONDILISTINGS_DELIVERY_GRPC_ADDRESS" default:"localhost:50052"`
+	Timeout     time.Duration `envconfig:"VONDILISTINGS_DELIVERY_TIMEOUT" default:"10s"`
+	MaxRetries  int           `envconfig:"VONDILISTINGS_DELIVERY_MAX_RETRIES" default:"3"`
+	RetryDelay  time.Duration `envconfig:"VONDILISTINGS_DELIVERY_RETRY_DELAY" default:"100ms"`
+	Enabled     bool          `envconfig:"VONDILISTINGS_DELIVERY_ENABLED" default:"false"`
 }
 
 // WorkerConfig contains async worker settings
 type WorkerConfig struct {
-	Enabled     bool   `envconfig:"SVETULISTINGS_WORKER_ENABLED" default:"true"`
-	Concurrency int    `envconfig:"SVETULISTINGS_WORKER_CONCURRENCY" default:"5"`
-	QueueName   string `envconfig:"SVETULISTINGS_WORKER_QUEUE_NAME" default:"listings_indexing"`
+	Enabled     bool   `envconfig:"VONDILISTINGS_WORKER_ENABLED" default:"true"`
+	Concurrency int    `envconfig:"VONDILISTINGS_WORKER_CONCURRENCY" default:"5"`
+	QueueName   string `envconfig:"VONDILISTINGS_WORKER_QUEUE_NAME" default:"listings_indexing"`
 }
 
 // FeatureFlags contains feature toggle settings
 type FeatureFlags struct {
-	AsyncIndexing     bool `envconfig:"SVETULISTINGS_FEATURE_ASYNC_INDEXING" default:"true"`
-	ImageOptimization bool `envconfig:"SVETULISTINGS_FEATURE_IMAGE_OPTIMIZATION" default:"true"`
-	CacheEnabled      bool `envconfig:"SVETULISTINGS_FEATURE_CACHE_ENABLED" default:"true"`
-	RateLimitEnabled  bool `envconfig:"SVETULISTINGS_RATE_LIMIT_ENABLED" default:"true"`
-	RateLimitRPS      int  `envconfig:"SVETULISTINGS_RATE_LIMIT_RPS" default:"100"`
-	RateLimitBurst    int  `envconfig:"SVETULISTINGS_RATE_LIMIT_BURST" default:"200"`
+	AsyncIndexing     bool `envconfig:"VONDILISTINGS_FEATURE_ASYNC_INDEXING" default:"true"`
+	ImageOptimization bool `envconfig:"VONDILISTINGS_FEATURE_IMAGE_OPTIMIZATION" default:"true"`
+	CacheEnabled      bool `envconfig:"VONDILISTINGS_FEATURE_CACHE_ENABLED" default:"true"`
+	RateLimitEnabled  bool `envconfig:"VONDILISTINGS_RATE_LIMIT_ENABLED" default:"true"`
+	RateLimitRPS      int  `envconfig:"VONDILISTINGS_RATE_LIMIT_RPS" default:"100"`
+	RateLimitBurst    int  `envconfig:"VONDILISTINGS_RATE_LIMIT_BURST" default:"200"`
 }
 
 // TracingConfig contains tracing and monitoring settings
 type TracingConfig struct {
-	Enabled        bool   `envconfig:"SVETULISTINGS_TRACING_ENABLED" default:"false"`
-	JaegerEndpoint string `envconfig:"SVETULISTINGS_JAEGER_ENDPOINT" default:"http://localhost:14268/api/traces"`
+	Enabled        bool   `envconfig:"VONDILISTINGS_TRACING_ENABLED" default:"false"`
+	JaegerEndpoint string `envconfig:"VONDILISTINGS_JAEGER_ENDPOINT" default:"http://localhost:14268/api/traces"`
 }
 
 // CORSConfig contains CORS configuration
 type CORSConfig struct {
-	AllowedOrigins []string `envconfig:"SVETULISTINGS_CORS_ALLOWED_ORIGINS" default:"http://localhost:3001,http://localhost:3000"`
-	AllowedMethods []string `envconfig:"SVETULISTINGS_CORS_ALLOWED_METHODS" default:"GET,POST,PUT,DELETE,OPTIONS"`
-	AllowedHeaders []string `envconfig:"SVETULISTINGS_CORS_ALLOWED_HEADERS" default:"Content-Type,Authorization"`
+	AllowedOrigins []string `envconfig:"VONDILISTINGS_CORS_ALLOWED_ORIGINS" default:"http://localhost:3001,http://localhost:3000"`
+	AllowedMethods []string `envconfig:"VONDILISTINGS_CORS_ALLOWED_METHODS" default:"GET,POST,PUT,DELETE,OPTIONS"`
+	AllowedHeaders []string `envconfig:"VONDILISTINGS_CORS_ALLOWED_HEADERS" default:"Content-Type,Authorization"`
 }
 
 // HealthConfig contains health check configuration
 type HealthConfig struct {
-	CheckTimeout     time.Duration `envconfig:"SVETULISTINGS_HEALTH_CHECK_TIMEOUT" default:"5s"`
-	CheckInterval    time.Duration `envconfig:"SVETULISTINGS_HEALTH_CHECK_INTERVAL" default:"30s"`
-	StartupTimeout   time.Duration `envconfig:"SVETULISTINGS_HEALTH_STARTUP_TIMEOUT" default:"60s"`
-	CacheDuration    time.Duration `envconfig:"SVETULISTINGS_HEALTH_CACHE_DURATION" default:"10s"`
-	EnableDeepChecks bool          `envconfig:"SVETULISTINGS_HEALTH_ENABLE_DEEP_CHECKS" default:"true"`
+	CheckTimeout     time.Duration `envconfig:"VONDILISTINGS_HEALTH_CHECK_TIMEOUT" default:"5s"`
+	CheckInterval    time.Duration `envconfig:"VONDILISTINGS_HEALTH_CHECK_INTERVAL" default:"30s"`
+	StartupTimeout   time.Duration `envconfig:"VONDILISTINGS_HEALTH_STARTUP_TIMEOUT" default:"60s"`
+	CacheDuration    time.Duration `envconfig:"VONDILISTINGS_HEALTH_CACHE_DURATION" default:"10s"`
+	EnableDeepChecks bool          `envconfig:"VONDILISTINGS_HEALTH_ENABLE_DEEP_CHECKS" default:"true"`
 }
 
 // Load reads configuration from environment variables
