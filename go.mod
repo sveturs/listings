@@ -25,7 +25,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	github.com/vondi-global/auth v1.21.6
-	github.com/vondi-global/delivery v0.1.0
+	github.com/vondi-global/delivery v0.1.6
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
 )
