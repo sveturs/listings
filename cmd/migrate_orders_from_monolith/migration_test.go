@@ -21,7 +21,7 @@ import (
 
 const (
 	// Migration timeframes
-	activeCarts        = 30 * 24 * time.Hour // 30 days
+	activeCarts        = 30 * 24 * time.Hour  // 30 days
 	recentOrders       = 365 * 24 * time.Hour // 12 months
 	activeReservations = 24 * time.Hour       // 24 hours
 )

@@ -23,16 +23,16 @@ type MigrationStats struct {
 
 // Config holds database connection strings
 type Config struct {
-	MonolithDSN    string
+	MonolithDSN     string
 	MicroserviceDSN string
-	DryRun         bool
-	Verbose        bool
+	DryRun          bool
+	Verbose         bool
 }
 
 // InventoryReservation represents a reservation record
 type InventoryReservation struct {
 	ID        int64
-	ProductID int64  // source: monolith uses product_id
+	ProductID int64 // source: monolith uses product_id
 	VariantID *int64
 	OrderID   *int64 // nullable: order may not exist yet
 	Quantity  int
