@@ -10,8 +10,8 @@ RUN apk add --no-cache git make gcc musl-dev
 # Set working directory
 WORKDIR /build
 
-# Set GOPRIVATE for sveturs modules
-ENV GOPRIVATE=github.com/sveturs/*
+# Set GOPRIVATE for vondi-global modules
+ENV GOPRIVATE=github.com/vondi-global/*
 
 # Configure Git credentials if token provided (for private repos)
 RUN if [ -n "$GITHUB_TOKEN" ]; then \
