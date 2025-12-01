@@ -24,7 +24,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Configure git for private modules
-        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
@@ -70,7 +70,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Configure git for private modules
-        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -136,7 +136,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Configure git for private modules
-        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -219,7 +219,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Configure git for private modules
-        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Run integration tests
         env:
