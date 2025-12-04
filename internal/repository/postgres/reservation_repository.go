@@ -18,14 +18,14 @@ type ReservationRepository interface {
 	// CRUD operations
 	Create(ctx context.Context, reservation *domain.InventoryReservation) error
 	GetByID(ctx context.Context, reservationID int64) (*domain.InventoryReservation, error)
-	GetByOrderID(ctx context.Context, orderID int64) ([]*domain.InventoryReservation, error)
+	GetByReference(ctx context.Context, refType domain.ReferenceType, refID int64) ([]*domain.InventoryReservation, error)
 	GetActiveByListing(ctx context.Context, listingID, variantID int64) ([]*domain.InventoryReservation, error)
 	Update(ctx context.Context, reservation *domain.InventoryReservation) error
 	Delete(ctx context.Context, reservationID int64) error
 
 	// Batch operations
-	CommitReservations(ctx context.Context, orderID int64) error
-	ReleaseReservations(ctx context.Context, orderID int64) error
+	CommitReservations(ctx context.Context, refType domain.ReferenceType, refID int64) error
+	ReleaseReservations(ctx context.Context, refType domain.ReferenceType, refID int64) error
 
 	// Cleanup
 	ExpireStaleReservations(ctx context.Context) (int, error)
@@ -64,16 +64,17 @@ func (r *reservationRepository) Create(ctx context.Context, reservation *domain.
 
 	query := `
 		INSERT INTO inventory_reservations (
-			listing_id, variant_id, order_id, quantity, status, expires_at
+			listing_id, variant_id, reference_type, reference_id, quantity, status, expires_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at, updated_at
 	`
 
 	err := r.db.QueryRow(ctx, query,
 		reservation.ListingID,
 		reservation.VariantID,
-		reservation.OrderID,
+		string(reservation.ReferenceType),
+		reservation.ReferenceID,
 		reservation.Quantity,
 		string(reservation.Status),
 		reservation.ExpiresAt,
@@ -82,7 +83,8 @@ func (r *reservationRepository) Create(ctx context.Context, reservation *domain.
 	if err != nil {
 		r.logger.Error().Err(err).
 			Int64("listing_id", reservation.ListingID).
-			Int64("order_id", reservation.OrderID).
+			Str("reference_type", string(reservation.ReferenceType)).
+			Int64("reference_id", reservation.ReferenceID).
 			Msg("failed to create reservation")
 		return fmt.Errorf("failed to create reservation: %w", err)
 	}
@@ -90,7 +92,8 @@ func (r *reservationRepository) Create(ctx context.Context, reservation *domain.
 	r.logger.Info().
 		Int64("reservation_id", reservation.ID).
 		Int64("listing_id", reservation.ListingID).
-		Int64("order_id", reservation.OrderID).
+		Str("reference_type", string(reservation.ReferenceType)).
+		Int64("reference_id", reservation.ReferenceID).
 		Int32("quantity", reservation.Quantity).
 		Msg("reservation created")
 	return nil
@@ -99,7 +102,7 @@ func (r *reservationRepository) Create(ctx context.Context, reservation *domain.
 // GetByID retrieves a reservation by its ID
 func (r *reservationRepository) GetByID(ctx context.Context, reservationID int64) (*domain.InventoryReservation, error) {
 	query := `
-		SELECT id, listing_id, variant_id, order_id, quantity, status,
+		SELECT id, listing_id, variant_id, reference_type, reference_id, quantity, status,
 		       expires_at, created_at, updated_at, committed_at, released_at
 		FROM inventory_reservations
 		WHERE id = $1
@@ -107,14 +110,15 @@ func (r *reservationRepository) GetByID(ctx context.Context, reservationID int64
 
 	var reservation domain.InventoryReservation
 	var variantID sql.NullInt64
-	var statusStr string
+	var refTypeStr, statusStr string
 	var committedAt, releasedAt sql.NullTime
 
 	err := r.db.QueryRow(ctx, query, reservationID).Scan(
 		&reservation.ID,
 		&reservation.ListingID,
 		&variantID,
-		&reservation.OrderID,
+		&refTypeStr,
+		&reservation.ReferenceID,
 		&reservation.Quantity,
 		&statusStr,
 		&reservation.ExpiresAt,
@@ -136,6 +140,7 @@ func (r *reservationRepository) GetByID(ctx context.Context, reservationID int64
 	if variantID.Valid {
 		reservation.VariantID = &variantID.Int64
 	}
+	reservation.ReferenceType = domain.ReferenceType(refTypeStr)
 	reservation.Status = domain.ReservationStatus(statusStr)
 	if committedAt.Valid {
 		reservation.CommittedAt = &committedAt.Time
@@ -147,20 +152,23 @@ func (r *reservationRepository) GetByID(ctx context.Context, reservationID int64
 	return &reservation, nil
 }
 
-// GetByOrderID retrieves all reservations for an order
-func (r *reservationRepository) GetByOrderID(ctx context.Context, orderID int64) ([]*domain.InventoryReservation, error) {
+// GetByReference retrieves all reservations for a reference (order or transfer)
+func (r *reservationRepository) GetByReference(ctx context.Context, refType domain.ReferenceType, refID int64) ([]*domain.InventoryReservation, error) {
 	query := `
-		SELECT id, listing_id, variant_id, order_id, quantity, status,
+		SELECT id, listing_id, variant_id, reference_type, reference_id, quantity, status,
 		       expires_at, created_at, updated_at, committed_at, released_at
 		FROM inventory_reservations
-		WHERE order_id = $1
+		WHERE reference_type = $1 AND reference_id = $2
 		ORDER BY created_at ASC
 	`
 
-	rows, err := r.db.Query(ctx, query, orderID)
+	rows, err := r.db.Query(ctx, query, string(refType), refID)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get reservations by order ID")
-		return nil, fmt.Errorf("failed to get reservations by order ID: %w", err)
+		r.logger.Error().Err(err).
+			Str("reference_type", string(refType)).
+			Int64("reference_id", refID).
+			Msg("failed to get reservations by reference")
+		return nil, fmt.Errorf("failed to get reservations by reference: %w", err)
 	}
 	defer rows.Close()
 
@@ -168,14 +176,15 @@ func (r *reservationRepository) GetByOrderID(ctx context.Context, orderID int64)
 	for rows.Next() {
 		var reservation domain.InventoryReservation
 		var variantID sql.NullInt64
-		var statusStr string
+		var refTypeStr, statusStr string
 		var committedAt, releasedAt sql.NullTime
 
 		err := rows.Scan(
 			&reservation.ID,
 			&reservation.ListingID,
 			&variantID,
-			&reservation.OrderID,
+			&refTypeStr,
+			&reservation.ReferenceID,
 			&reservation.Quantity,
 			&statusStr,
 			&reservation.ExpiresAt,
@@ -193,6 +202,7 @@ func (r *reservationRepository) GetByOrderID(ctx context.Context, orderID int64)
 		if variantID.Valid {
 			reservation.VariantID = &variantID.Int64
 		}
+		reservation.ReferenceType = domain.ReferenceType(refTypeStr)
 		reservation.Status = domain.ReservationStatus(statusStr)
 		if committedAt.Valid {
 			reservation.CommittedAt = &committedAt.Time
@@ -220,7 +230,7 @@ func (r *reservationRepository) GetActiveByListing(ctx context.Context, listingI
 
 	if variantID > 0 {
 		query = `
-			SELECT id, listing_id, variant_id, order_id, quantity, status,
+			SELECT id, listing_id, variant_id, reference_type, reference_id, quantity, status,
 			       expires_at, created_at, updated_at, committed_at, released_at
 			FROM inventory_reservations
 			WHERE listing_id = $1 AND variant_id = $2 AND status = 'active' AND expires_at > NOW()
@@ -229,7 +239,7 @@ func (r *reservationRepository) GetActiveByListing(ctx context.Context, listingI
 		rows, err = r.db.Query(ctx, query, listingID, variantID)
 	} else {
 		query = `
-			SELECT id, listing_id, variant_id, order_id, quantity, status,
+			SELECT id, listing_id, variant_id, reference_type, reference_id, quantity, status,
 			       expires_at, created_at, updated_at, committed_at, released_at
 			FROM inventory_reservations
 			WHERE listing_id = $1 AND variant_id IS NULL AND status = 'active' AND expires_at > NOW()
@@ -248,14 +258,15 @@ func (r *reservationRepository) GetActiveByListing(ctx context.Context, listingI
 	for rows.Next() {
 		var reservation domain.InventoryReservation
 		var varID sql.NullInt64
-		var statusStr string
+		var refTypeStr, statusStr string
 		var committedAt, releasedAt sql.NullTime
 
 		err := rows.Scan(
 			&reservation.ID,
 			&reservation.ListingID,
 			&varID,
-			&reservation.OrderID,
+			&refTypeStr,
+			&reservation.ReferenceID,
 			&reservation.Quantity,
 			&statusStr,
 			&reservation.ExpiresAt,
@@ -273,6 +284,7 @@ func (r *reservationRepository) GetActiveByListing(ctx context.Context, listingI
 		if varID.Valid {
 			reservation.VariantID = &varID.Int64
 		}
+		reservation.ReferenceType = domain.ReferenceType(refTypeStr)
 		reservation.Status = domain.ReservationStatus(statusStr)
 		if committedAt.Valid {
 			reservation.CommittedAt = &committedAt.Time
@@ -344,18 +356,21 @@ func (r *reservationRepository) Delete(ctx context.Context, reservationID int64)
 	return nil
 }
 
-// CommitReservations commits all reservations for an order
-func (r *reservationRepository) CommitReservations(ctx context.Context, orderID int64) error {
+// CommitReservations commits all reservations for a reference (order or transfer)
+func (r *reservationRepository) CommitReservations(ctx context.Context, refType domain.ReferenceType, refID int64) error {
 	query := `
 		UPDATE inventory_reservations
 		SET status = 'committed', committed_at = NOW(), updated_at = NOW()
-		WHERE order_id = $1 AND status = 'active'
+		WHERE reference_type = $1 AND reference_id = $2 AND status = 'active'
 		RETURNING id
 	`
 
-	rows, err := r.db.Query(ctx, query, orderID)
+	rows, err := r.db.Query(ctx, query, string(refType), refID)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to commit reservations")
+		r.logger.Error().Err(err).
+			Str("reference_type", string(refType)).
+			Int64("reference_id", refID).
+			Msg("failed to commit reservations")
 		return fmt.Errorf("failed to commit reservations: %w", err)
 	}
 	defer rows.Close()
@@ -373,22 +388,29 @@ func (r *reservationRepository) CommitReservations(ctx context.Context, orderID 
 		return fmt.Errorf("error iterating committed reservations: %w", err)
 	}
 
-	r.logger.Info().Int64("order_id", orderID).Int("committed_count", committedCount).Msg("reservations committed")
+	r.logger.Info().
+		Str("reference_type", string(refType)).
+		Int64("reference_id", refID).
+		Int("committed_count", committedCount).
+		Msg("reservations committed")
 	return nil
 }
 
-// ReleaseReservations releases all reservations for an order
-func (r *reservationRepository) ReleaseReservations(ctx context.Context, orderID int64) error {
+// ReleaseReservations releases all reservations for a reference (order or transfer)
+func (r *reservationRepository) ReleaseReservations(ctx context.Context, refType domain.ReferenceType, refID int64) error {
 	query := `
 		UPDATE inventory_reservations
 		SET status = 'released', released_at = NOW(), updated_at = NOW()
-		WHERE order_id = $1 AND status = 'active'
+		WHERE reference_type = $1 AND reference_id = $2 AND status = 'active'
 		RETURNING id
 	`
 
-	rows, err := r.db.Query(ctx, query, orderID)
+	rows, err := r.db.Query(ctx, query, string(refType), refID)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to release reservations")
+		r.logger.Error().Err(err).
+			Str("reference_type", string(refType)).
+			Int64("reference_id", refID).
+			Msg("failed to release reservations")
 		return fmt.Errorf("failed to release reservations: %w", err)
 	}
 	defer rows.Close()
@@ -406,7 +428,11 @@ func (r *reservationRepository) ReleaseReservations(ctx context.Context, orderID
 		return fmt.Errorf("error iterating released reservations: %w", err)
 	}
 
-	r.logger.Info().Int64("order_id", orderID).Int("released_count", releasedCount).Msg("reservations released")
+	r.logger.Info().
+		Str("reference_type", string(refType)).
+		Int64("reference_id", refID).
+		Int("released_count", releasedCount).
+		Msg("reservations released")
 	return nil
 }
 

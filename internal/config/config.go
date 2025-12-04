@@ -23,6 +23,7 @@ type Config struct {
 	Tracing  TracingConfig
 	CORS     CORSConfig
 	Health   HealthConfig
+	WMS      WMSConfig
 }
 
 // AppConfig contains general application settings
@@ -158,6 +159,12 @@ type HealthConfig struct {
 	StartupTimeout   time.Duration `envconfig:"VONDILISTINGS_HEALTH_STARTUP_TIMEOUT" default:"60s"`
 	CacheDuration    time.Duration `envconfig:"VONDILISTINGS_HEALTH_CACHE_DURATION" default:"10s"`
 	EnableDeepChecks bool          `envconfig:"VONDILISTINGS_HEALTH_ENABLE_DEEP_CHECKS" default:"true"`
+}
+
+// WMSConfig contains WMS (Warehouse Management System) integration settings
+type WMSConfig struct {
+	Enabled            bool  `envconfig:"VONDILISTINGS_WMS_ENABLED" default:"true"`
+	DefaultWarehouseID int64 `envconfig:"VONDILISTINGS_WMS_DEFAULT_WAREHOUSE_ID" default:"1"`
 }
 
 // Load reads configuration from environment variables

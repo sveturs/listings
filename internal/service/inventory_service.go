@@ -16,9 +16,12 @@ import (
 type InventoryService interface {
 	// Reservation management
 	CreateReservation(ctx context.Context, req *CreateReservationRequest) (*domain.InventoryReservation, error)
-	GetReservationsByOrder(ctx context.Context, orderID int64) ([]*domain.InventoryReservation, error)
+	GetReservationsByReference(ctx context.Context, refType domain.ReferenceType, refID int64) ([]*domain.InventoryReservation, error)
+	GetReservationByID(ctx context.Context, reservationID int64) (*domain.InventoryReservation, error)
 	CommitReservation(ctx context.Context, reservationID int64) error
 	ReleaseReservation(ctx context.Context, reservationID int64) error
+	CommitReservationsByReference(ctx context.Context, refType domain.ReferenceType, refID int64) error
+	ReleaseReservationsByReference(ctx context.Context, refType domain.ReferenceType, refID int64) error
 
 	// Cleanup (called by cron job)
 	CleanupExpiredReservations(ctx context.Context) (int, error)
@@ -30,11 +33,12 @@ type InventoryService interface {
 
 // CreateReservationRequest contains parameters for creating a reservation
 type CreateReservationRequest struct {
-	ListingID  int64
-	VariantID  *int64
-	OrderID    int64
-	Quantity   int32
-	TTLMinutes int // Optional, defaults to 30
+	ListingID     int64
+	VariantID     *int64
+	ReferenceType domain.ReferenceType
+	ReferenceID   int64
+	Quantity      int32
+	TTLMinutes    int // Optional, defaults to 30
 }
 
 // inventoryService implements InventoryService
@@ -67,7 +71,8 @@ func NewInventoryService(
 func (s *inventoryService) CreateReservation(ctx context.Context, req *CreateReservationRequest) (*domain.InventoryReservation, error) {
 	s.logger.Debug().
 		Int64("listing_id", req.ListingID).
-		Int64("order_id", req.OrderID).
+		Str("reference_type", string(req.ReferenceType)).
+		Int64("reference_id", req.ReferenceID).
 		Int32("quantity", req.Quantity).
 		Msg("creating reservation")
 
@@ -104,7 +109,8 @@ func (s *inventoryService) CreateReservation(ctx context.Context, req *CreateRes
 		reservation = domain.NewInventoryReservationWithTTL(
 			req.ListingID,
 			req.VariantID,
-			req.OrderID,
+			req.ReferenceType,
+			req.ReferenceID,
 			req.Quantity,
 			req.TTLMinutes,
 		)
@@ -112,7 +118,8 @@ func (s *inventoryService) CreateReservation(ctx context.Context, req *CreateRes
 		reservation = domain.NewInventoryReservation(
 			req.ListingID,
 			req.VariantID,
-			req.OrderID,
+			req.ReferenceType,
+			req.ReferenceID,
 			req.Quantity,
 		)
 	}
@@ -126,14 +133,100 @@ func (s *inventoryService) CreateReservation(ctx context.Context, req *CreateRes
 	return reservation, nil
 }
 
-// GetReservationsByOrder retrieves all reservations for an order
-func (s *inventoryService) GetReservationsByOrder(ctx context.Context, orderID int64) ([]*domain.InventoryReservation, error) {
-	reservations, err := s.reservationRepo.GetByOrderID(ctx, orderID)
+// GetReservationsByReference retrieves all reservations for a reference (order or transfer)
+func (s *inventoryService) GetReservationsByReference(ctx context.Context, refType domain.ReferenceType, refID int64) ([]*domain.InventoryReservation, error) {
+	reservations, err := s.reservationRepo.GetByReference(ctx, refType, refID)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get reservations")
+		s.logger.Error().Err(err).
+			Str("reference_type", string(refType)).
+			Int64("reference_id", refID).
+			Msg("failed to get reservations")
 		return nil, fmt.Errorf("failed to get reservations: %w", err)
 	}
 	return reservations, nil
+}
+
+// GetReservationByID retrieves a reservation by ID
+func (s *inventoryService) GetReservationByID(ctx context.Context, reservationID int64) (*domain.InventoryReservation, error) {
+	reservation, err := s.reservationRepo.GetByID(ctx, reservationID)
+	if err != nil {
+		if err.Error() == "reservation not found" {
+			return nil, ErrReservationNotFound
+		}
+		s.logger.Error().Err(err).Int64("reservation_id", reservationID).Msg("failed to get reservation")
+		return nil, fmt.Errorf("failed to get reservation: %w", err)
+	}
+	return reservation, nil
+}
+
+// CommitReservationsByReference commits all reservations for a reference
+func (s *inventoryService) CommitReservationsByReference(ctx context.Context, refType domain.ReferenceType, refID int64) error {
+	s.logger.Debug().
+		Str("reference_type", string(refType)).
+		Int64("reference_id", refID).
+		Msg("committing reservations by reference")
+
+	if err := s.reservationRepo.CommitReservations(ctx, refType, refID); err != nil {
+		s.logger.Error().Err(err).
+			Str("reference_type", string(refType)).
+			Int64("reference_id", refID).
+			Msg("failed to commit reservations")
+		return fmt.Errorf("failed to commit reservations: %w", err)
+	}
+
+	s.logger.Info().
+		Str("reference_type", string(refType)).
+		Int64("reference_id", refID).
+		Msg("reservations committed by reference")
+	return nil
+}
+
+// ReleaseReservationsByReference releases all reservations for a reference
+func (s *inventoryService) ReleaseReservationsByReference(ctx context.Context, refType domain.ReferenceType, refID int64) error {
+	s.logger.Debug().
+		Str("reference_type", string(refType)).
+		Int64("reference_id", refID).
+		Msg("releasing reservations by reference")
+
+	// Start transaction
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Get active reservations to restore stock
+	reservations, err := s.reservationRepo.GetByReference(ctx, refType, refID)
+	if err != nil {
+		return fmt.Errorf("failed to get reservations: %w", err)
+	}
+
+	// Release reservations
+	reservationRepoTx := s.reservationRepo.WithTx(tx)
+	if err := reservationRepoTx.ReleaseReservations(ctx, refType, refID); err != nil {
+		return fmt.Errorf("failed to release reservations: %w", err)
+	}
+
+	// Restore stock for each reservation
+	for _, res := range reservations {
+		if res.Status == domain.ReservationStatusActive {
+			if err := s.productsRepo.RestoreStockWithPgxTx(ctx, tx, res.ListingID, res.Quantity); err != nil {
+				s.logger.Error().Err(err).Int64("listing_id", res.ListingID).Msg("failed to restore stock")
+				return fmt.Errorf("failed to restore stock: %w", err)
+			}
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	s.logger.Info().
+		Str("reference_type", string(refType)).
+		Int64("reference_id", refID).
+		Msg("reservations released by reference")
+	return nil
 }
 
 // CommitReservation commits a reservation (marks it as committed, stock already deducted)

@@ -42,6 +42,7 @@ type Server struct {
 	chatService                service.ChatService
 	analyticsService           service.AnalyticsService
 	storefrontAnalyticsService service.StorefrontAnalyticsService
+	inventoryService           service.InventoryService
 	minioClient                *minioclient.Client
 	metrics                    *metrics.Metrics
 	logger                     zerolog.Logger
@@ -58,6 +59,7 @@ func NewServer(
 	chatService service.ChatService,
 	analyticsService service.AnalyticsService,
 	storefrontAnalyticsService service.StorefrontAnalyticsService,
+	inventoryService service.InventoryService,
 	minioClient *minioclient.Client,
 	m *metrics.Metrics,
 	logger zerolog.Logger,
@@ -72,6 +74,7 @@ func NewServer(
 		chatService:                chatService,
 		analyticsService:           analyticsService,
 		storefrontAnalyticsService: storefrontAnalyticsService,
+		inventoryService:           inventoryService,
 		minioClient:                minioClient,
 		metrics:                    m,
 		logger:                     logger.With().Str("component", "grpc_handler").Logger(),

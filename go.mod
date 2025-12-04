@@ -117,3 +117,9 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace (
+	github.com/vondi-global/auth => /p/github.com/sveturs/auth
+	github.com/vondi-global/delivery => /p/github.com/sveturs/delivery
+	github.com/vondi-global/lib => /p/github.com/sveturs/lib
+)

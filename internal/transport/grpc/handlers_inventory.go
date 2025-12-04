@@ -8,9 +8,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/service"
 	"github.com/vondi-global/listings/internal/timeout"
 )
 
@@ -337,4 +339,238 @@ func (s *Server) IncrementProductViews(ctx context.Context, req *listingspb.Incr
 
 	s.logger.Debug().Int64("product_id", req.ProductId).Msg("product views incremented successfully")
 	return &emptypb.Empty{}, nil
+}
+
+// ============================================================================
+// Inventory Reservation Handlers (for Transfers and other use cases)
+// ============================================================================
+
+// CreateReservation creates a temporary stock hold for transfers
+func (s *Server) CreateReservation(ctx context.Context, req *listingspb.CreateReservationRequest) (*listingspb.CreateReservationResponse, error) {
+	s.logger.Debug().
+		Str("reference_type", req.ReferenceType).
+		Int64("reference_id", req.ReferenceId).
+		Msg("CreateReservation called")
+
+	// Validation
+	if req.Item == nil {
+		return nil, status.Error(codes.InvalidArgument, "item is required")
+	}
+
+	if req.Item.ListingId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "listing_id must be greater than 0")
+	}
+
+	if req.Item.Quantity <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "quantity must be greater than 0")
+	}
+
+	if req.ReferenceType == "" {
+		return nil, status.Error(codes.InvalidArgument, "reference_type is required")
+	}
+
+	if req.ReferenceId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "reference_id must be greater than 0")
+	}
+
+	// Validate reference type
+	refType := domain.ReferenceType(req.ReferenceType)
+	if refType != domain.ReferenceTypeOrder && refType != domain.ReferenceTypeTransfer {
+		return nil, status.Error(codes.InvalidArgument, "reference_type must be 'order' or 'transfer'")
+	}
+
+	// Prepare TTL
+	ttlMinutes := 30 // default
+	if req.TtlMinutes != nil {
+		ttlMinutes = int(*req.TtlMinutes)
+	}
+
+	// Create reservation request
+	createReq := &service.CreateReservationRequest{
+		ListingID:     req.Item.ListingId,
+		VariantID:     req.Item.VariantId,
+		ReferenceType: refType,
+		ReferenceID:   req.ReferenceId,
+		Quantity:      req.Item.Quantity,
+		TTLMinutes:    ttlMinutes,
+	}
+
+	// Call inventory service
+	reservation, err := s.inventoryService.CreateReservation(ctx, createReq)
+	if err != nil {
+		s.logger.Error().Err(err).
+			Int64("listing_id", req.Item.ListingId).
+			Str("reference_type", req.ReferenceType).
+			Int64("reference_id", req.ReferenceId).
+			Msg("failed to create reservation")
+
+		errMsg := err.Error()
+		errStr := errMsg
+
+		// Check for specific errors
+		switch {
+		case contains(errMsg, "not found"):
+			return &listingspb.CreateReservationResponse{
+				Success: false,
+				Error:   &errStr,
+			}, nil
+		case contains(errMsg, "stock") || contains(errMsg, "available"):
+			return &listingspb.CreateReservationResponse{
+				Success: false,
+				Error:   &errStr,
+			}, nil
+		default:
+			return nil, status.Error(codes.Internal, "reservation.create_failed")
+		}
+	}
+
+	s.logger.Info().
+		Int64("reservation_id", reservation.ID).
+		Int64("listing_id", req.Item.ListingId).
+		Str("reference_type", req.ReferenceType).
+		Int64("reference_id", req.ReferenceId).
+		Msg("reservation created successfully")
+
+	return &listingspb.CreateReservationResponse{
+		Success:       true,
+		ReservationId: reservation.ID,
+		ExpiresAt:     timestamppb.New(reservation.ExpiresAt),
+	}, nil
+}
+
+// ReleaseReservation releases a previously created reservation
+func (s *Server) ReleaseReservation(ctx context.Context, req *listingspb.ReleaseReservationRequest) (*listingspb.ReleaseReservationResponse, error) {
+	s.logger.Debug().
+		Int64("reservation_id", req.ReservationId).
+		Msg("ReleaseReservation called")
+
+	// Validation
+	if req.ReservationId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "reservation_id must be greater than 0")
+	}
+
+	// Get reservation first to get quantity for response
+	reservation, err := s.inventoryService.GetReservationByID(ctx, req.ReservationId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("reservation_id", req.ReservationId).Msg("failed to get reservation")
+		errStr := err.Error()
+		return &listingspb.ReleaseReservationResponse{
+			Success: false,
+			Error:   &errStr,
+		}, nil
+	}
+
+	quantityToRelease := reservation.Quantity
+
+	// Call inventory service to release
+	if err := s.inventoryService.ReleaseReservation(ctx, req.ReservationId); err != nil {
+		s.logger.Error().Err(err).Int64("reservation_id", req.ReservationId).Msg("failed to release reservation")
+		errStr := err.Error()
+		return &listingspb.ReleaseReservationResponse{
+			Success: false,
+			Error:   &errStr,
+		}, nil
+	}
+
+	s.logger.Info().
+		Int64("reservation_id", req.ReservationId).
+		Int32("quantity_released", quantityToRelease).
+		Msg("reservation released successfully")
+
+	return &listingspb.ReleaseReservationResponse{
+		Success:          true,
+		QuantityReleased: quantityToRelease,
+	}, nil
+}
+
+// CommitReservation commits reservation (decrements actual stock)
+func (s *Server) CommitReservation(ctx context.Context, req *listingspb.CommitReservationRequest) (*listingspb.CommitReservationResponse, error) {
+	s.logger.Debug().
+		Int64("reservation_id", req.ReservationId).
+		Msg("CommitReservation called")
+
+	// Validation
+	if req.ReservationId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "reservation_id must be greater than 0")
+	}
+
+	// Get reservation first to get quantity for response
+	reservation, err := s.inventoryService.GetReservationByID(ctx, req.ReservationId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("reservation_id", req.ReservationId).Msg("failed to get reservation")
+		errStr := err.Error()
+		return &listingspb.CommitReservationResponse{
+			Success: false,
+			Error:   &errStr,
+		}, nil
+	}
+
+	quantityToCommit := reservation.Quantity
+
+	// Call inventory service to commit
+	if err := s.inventoryService.CommitReservation(ctx, req.ReservationId); err != nil {
+		s.logger.Error().Err(err).Int64("reservation_id", req.ReservationId).Msg("failed to commit reservation")
+		errStr := err.Error()
+		return &listingspb.CommitReservationResponse{
+			Success: false,
+			Error:   &errStr,
+		}, nil
+	}
+
+	s.logger.Info().
+		Int64("reservation_id", req.ReservationId).
+		Int32("quantity_committed", quantityToCommit).
+		Msg("reservation committed successfully")
+
+	return &listingspb.CommitReservationResponse{
+		Success:           true,
+		QuantityCommitted: quantityToCommit,
+	}, nil
+}
+
+// GetReservation retrieves reservation details by ID
+func (s *Server) GetReservation(ctx context.Context, req *listingspb.GetReservationRequest) (*listingspb.GetReservationResponse, error) {
+	s.logger.Debug().
+		Int64("reservation_id", req.ReservationId).
+		Msg("GetReservation called")
+
+	// Validation
+	if req.ReservationId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "reservation_id must be greater than 0")
+	}
+
+	// Call inventory service
+	reservation, err := s.inventoryService.GetReservationByID(ctx, req.ReservationId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("reservation_id", req.ReservationId).Msg("failed to get reservation")
+		errStr := err.Error()
+		return &listingspb.GetReservationResponse{
+			Success: false,
+			Error:   &errStr,
+		}, nil
+	}
+
+	// Convert to proto ReservationDetails
+	details := &listingspb.ReservationDetails{
+		Id:            reservation.ID,
+		ListingId:     reservation.ListingID,
+		VariantId:     reservation.VariantID,
+		Quantity:      reservation.Quantity,
+		Status:        string(reservation.Status),
+		ReferenceType: string(reservation.ReferenceType),
+		ReferenceId:   reservation.ReferenceID,
+		ExpiresAt:     timestamppb.New(reservation.ExpiresAt),
+		CreatedAt:     timestamppb.New(reservation.CreatedAt),
+		UpdatedAt:     timestamppb.New(reservation.UpdatedAt),
+	}
+
+	s.logger.Debug().
+		Int64("reservation_id", req.ReservationId).
+		Str("status", string(reservation.Status)).
+		Msg("reservation retrieved successfully")
+
+	return &listingspb.GetReservationResponse{
+		Success:     true,
+		Reservation: details,
+	}, nil
 }

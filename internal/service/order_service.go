@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/events"
 	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
@@ -39,6 +40,7 @@ type OrderService interface {
 	// Configuration
 	SetChatService(chatService ChatService)
 	SetDeliveryClient(client DeliveryClient)
+	SetEventPublisher(publisher events.OrderEventPublisher)
 }
 
 // OrderItemInput represents a single item for direct checkout
@@ -161,8 +163,9 @@ type orderService struct {
 	pool            *pgxpool.Pool
 	config          *FinancialConfig
 	logger          zerolog.Logger
-	chatService     ChatService    // For sending order notifications
-	deliveryClient  DeliveryClient // For delivery microservice integration
+	chatService     ChatService                // For sending order notifications
+	deliveryClient  DeliveryClient             // For delivery microservice integration
+	eventPublisher  events.OrderEventPublisher // For WMS integration
 }
 
 // NewOrderService creates a new order service
@@ -200,6 +203,11 @@ func (s *orderService) SetChatService(chatService ChatService) {
 // This allows delayed initialization to avoid circular dependencies
 func (s *orderService) SetDeliveryClient(client DeliveryClient) {
 	s.deliveryClient = client
+}
+
+// SetEventPublisher sets the event publisher for WMS integration
+func (s *orderService) SetEventPublisher(publisher events.OrderEventPublisher) {
+	s.eventPublisher = publisher
 }
 
 // CreateOrder creates a new order from a cart OR direct items (ACID transaction)
@@ -549,7 +557,7 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 	}
 
 	// Get reservations before releasing (needed for stock restoration)
-	reservations, err := s.reservationRepo.GetByOrderID(ctx, orderID)
+	reservations, err := s.reservationRepo.GetByReference(ctx, domain.ReferenceTypeOrder, orderID)
 	if err != nil {
 		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get reservations")
 		return nil, fmt.Errorf("failed to get reservations: %w", err)
@@ -563,7 +571,7 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 
 	// Release all reservations for this order (batch operation)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
-	if err := reservationRepoTx.ReleaseReservations(ctx, orderID); err != nil {
+	if err := reservationRepoTx.ReleaseReservations(ctx, domain.ReferenceTypeOrder, orderID); err != nil {
 		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to release reservations")
 		return nil, fmt.Errorf("failed to release reservations: %w", err)
 	}
@@ -581,7 +589,12 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	// TODO: Publish OrderCancelledEvent to message queue for Payment Service to process refund
+	// Publish order.cancelled event for WMS
+	if s.eventPublisher != nil {
+		if err := s.eventPublisher.PublishOrderCancelled(ctx, orderID, reason); err != nil {
+			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to publish order.cancelled event (non-critical)")
+		}
+	}
 
 	// Reload order
 	order, err = s.orderRepo.GetByID(ctx, orderID)
@@ -673,7 +686,7 @@ func (s *orderService) ConfirmOrderPayment(ctx context.Context, orderID int64, t
 
 	// Commit all reservations for this order (batch operation)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
-	if err := reservationRepoTx.CommitReservations(ctx, orderID); err != nil {
+	if err := reservationRepoTx.CommitReservations(ctx, domain.ReferenceTypeOrder, orderID); err != nil {
 		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to commit reservations")
 		return fmt.Errorf("failed to commit reservations: %w", err)
 	}
@@ -683,7 +696,23 @@ func (s *orderService) ConfirmOrderPayment(ctx context.Context, orderID int64, t
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	// TODO: Publish OrderConfirmedEvent to message queue for Delivery Service to create shipment
+	// Publish order.confirmed event for WMS
+	if s.eventPublisher != nil {
+		// Build items for event
+		items := make([]events.OrderItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			items = append(items, events.OrderItem{
+				ListingID:   item.ListingID,
+				Quantity:    int32(item.Quantity),
+				WarehouseID: 0, // Will use default from publisher
+			})
+		}
+
+		if err := s.eventPublisher.PublishOrderConfirmed(ctx, orderID, order.StorefrontID, items); err != nil {
+			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to publish order.confirmed event (non-critical)")
+			// Don't fail the operation - event publishing is best-effort
+		}
+	}
 
 	s.logger.Info().Int64("order_id", orderID).Msg("order payment confirmed successfully")
 	return nil
@@ -739,6 +768,7 @@ func (s *orderService) buildReservations(orderID int64, cartItems []*domain.Cart
 		reservation := domain.NewInventoryReservation(
 			item.ListingID,
 			item.VariantID,
+			domain.ReferenceTypeOrder,
 			orderID,
 			item.Quantity,
 		)
@@ -1306,13 +1336,31 @@ func (s *orderService) confirmCODOrder(ctx context.Context, order *domain.Order)
 
 	// Commit reservations (stock already deducted, now mark as committed)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
-	if err := reservationRepoTx.CommitReservations(ctx, order.ID); err != nil {
+	if err := reservationRepoTx.CommitReservations(ctx, domain.ReferenceTypeOrder, order.ID); err != nil {
 		s.logger.Warn().Err(err).Int64("order_id", order.ID).Msg("failed to commit reservations for COD order")
 		// Don't fail - reservations are not critical for COD
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Publish order.confirmed event for WMS
+	if s.eventPublisher != nil {
+		// Build items for event
+		items := make([]events.OrderItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			items = append(items, events.OrderItem{
+				ListingID:   item.ListingID,
+				Quantity:    int32(item.Quantity),
+				WarehouseID: 0, // Will use default from publisher
+			})
+		}
+
+		if err := s.eventPublisher.PublishOrderConfirmed(ctx, order.ID, order.StorefrontID, items); err != nil {
+			s.logger.Error().Err(err).Int64("order_id", order.ID).Msg("failed to publish order.confirmed event (non-critical)")
+			// Don't fail the operation - event publishing is best-effort
+		}
 	}
 
 	s.logger.Info().

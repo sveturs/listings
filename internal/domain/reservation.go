@@ -20,19 +20,28 @@ const (
 	ReservationStatusExpired     ReservationStatus = "expired"   // Reservation expired (TTL exceeded)
 )
 
+// ReferenceType defines the type of entity that owns the reservation
+type ReferenceType string
+
+const (
+	ReferenceTypeOrder    ReferenceType = "order"
+	ReferenceTypeTransfer ReferenceType = "transfer"
+)
+
 // InventoryReservation represents a temporary stock hold
 type InventoryReservation struct {
-	ID          int64             `json:"id" db:"id"`
-	ListingID   int64             `json:"listing_id" db:"listing_id"`           // FK to listing or product
-	VariantID   *int64            `json:"variant_id,omitempty" db:"variant_id"` // FK to variant (if applicable)
-	OrderID     int64             `json:"order_id" db:"order_id"`               // FK to order
-	Quantity    int32             `json:"quantity" db:"quantity"`               // Quantity reserved
-	Status      ReservationStatus `json:"status" db:"status"`                   // Reservation state
-	ExpiresAt   time.Time         `json:"expires_at" db:"expires_at"`           // TTL for reservation
-	CreatedAt   time.Time         `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at" db:"updated_at"`
-	CommittedAt *time.Time        `json:"committed_at,omitempty" db:"committed_at"` // When reservation committed
-	ReleasedAt  *time.Time        `json:"released_at,omitempty" db:"released_at"`   // When reservation released
+	ID            int64             `json:"id" db:"id"`
+	ListingID     int64             `json:"listing_id" db:"listing_id"`           // FK to listing or product
+	VariantID     *int64            `json:"variant_id,omitempty" db:"variant_id"` // FK to variant (if applicable)
+	ReferenceType ReferenceType     `json:"reference_type" db:"reference_type"`   // Type: "order", "transfer"
+	ReferenceID   int64             `json:"reference_id" db:"reference_id"`       // FK to order or transfer
+	Quantity      int32             `json:"quantity" db:"quantity"`               // Quantity reserved
+	Status        ReservationStatus `json:"status" db:"status"`                   // Reservation state
+	ExpiresAt     time.Time         `json:"expires_at" db:"expires_at"`           // TTL for reservation
+	CreatedAt     time.Time         `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time         `json:"updated_at" db:"updated_at"`
+	CommittedAt   *time.Time        `json:"committed_at,omitempty" db:"committed_at"` // When reservation committed
+	ReleasedAt    *time.Time        `json:"released_at,omitempty" db:"released_at"`   // When reservation released
 }
 
 // Validate validates the InventoryReservation entity
@@ -45,8 +54,12 @@ func (r *InventoryReservation) Validate() error {
 		return errors.New("listing_id must be greater than 0")
 	}
 
-	if r.OrderID <= 0 {
-		return errors.New("order_id must be greater than 0")
+	if r.ReferenceType != ReferenceTypeOrder && r.ReferenceType != ReferenceTypeTransfer {
+		return errors.New("reference_type must be 'order' or 'transfer'")
+	}
+
+	if r.ReferenceID <= 0 {
+		return errors.New("reference_id must be greater than 0")
 	}
 
 	if r.Quantity <= 0 {
@@ -149,36 +162,38 @@ func (r *InventoryReservation) CalculateTTL() int64 {
 }
 
 // NewInventoryReservation creates a new inventory reservation with default TTL (30 minutes)
-func NewInventoryReservation(listingID int64, variantID *int64, orderID int64, quantity int32) *InventoryReservation {
+func NewInventoryReservation(listingID int64, variantID *int64, refType ReferenceType, refID int64, quantity int32) *InventoryReservation {
 	now := time.Now()
 	expiresAt := now.Add(30 * time.Minute) // Default TTL: 30 minutes
 
 	return &InventoryReservation{
-		ListingID: listingID,
-		VariantID: variantID,
-		OrderID:   orderID,
-		Quantity:  quantity,
-		Status:    ReservationStatusActive,
-		ExpiresAt: expiresAt,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ListingID:     listingID,
+		VariantID:     variantID,
+		ReferenceType: refType,
+		ReferenceID:   refID,
+		Quantity:      quantity,
+		Status:        ReservationStatusActive,
+		ExpiresAt:     expiresAt,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 }
 
 // NewInventoryReservationWithTTL creates a new inventory reservation with custom TTL
-func NewInventoryReservationWithTTL(listingID int64, variantID *int64, orderID int64, quantity int32, ttlMinutes int) *InventoryReservation {
+func NewInventoryReservationWithTTL(listingID int64, variantID *int64, refType ReferenceType, refID int64, quantity int32, ttlMinutes int) *InventoryReservation {
 	now := time.Now()
 	expiresAt := now.Add(time.Duration(ttlMinutes) * time.Minute)
 
 	return &InventoryReservation{
-		ListingID: listingID,
-		VariantID: variantID,
-		OrderID:   orderID,
-		Quantity:  quantity,
-		Status:    ReservationStatusActive,
-		ExpiresAt: expiresAt,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ListingID:     listingID,
+		VariantID:     variantID,
+		ReferenceType: refType,
+		ReferenceID:   refID,
+		Quantity:      quantity,
+		Status:        ReservationStatusActive,
+		ExpiresAt:     expiresAt,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 }
 
@@ -214,78 +229,62 @@ func (s ReservationStatus) ToProtoReservationStatus() pb.ReservationStatus {
 	}
 }
 
-// InventoryReservationFromProto converts proto InventoryReservation to domain InventoryReservation
-func InventoryReservationFromProto(pb *pb.InventoryReservation) *InventoryReservation {
-	if pb == nil {
+// InventoryReservationFromProto converts proto ReservationDetails to domain InventoryReservation
+func InventoryReservationFromProto(details *pb.ReservationDetails) *InventoryReservation {
+	if details == nil {
 		return nil
 	}
 
 	reservation := &InventoryReservation{
-		ID:        pb.Id,
-		ListingID: pb.ListingId,
-		OrderID:   pb.OrderId,
-		Quantity:  pb.Quantity,
-		Status:    ReservationStatusFromProto(pb.Status),
+		ID:            details.Id,
+		ListingID:     details.ListingId,
+		ReferenceType: ReferenceType(details.ReferenceType),
+		ReferenceID:   details.ReferenceId,
+		Quantity:      details.Quantity,
+		Status:        ReservationStatus(details.Status),
 	}
 
-	if pb.VariantId != nil {
-		variantID := *pb.VariantId
+	if details.VariantId != nil {
+		variantID := *details.VariantId
 		reservation.VariantID = &variantID
 	}
 
-	if pb.ExpiresAt != nil {
-		reservation.ExpiresAt = pb.ExpiresAt.AsTime()
+	if details.ExpiresAt != nil {
+		reservation.ExpiresAt = details.ExpiresAt.AsTime()
 	}
 
-	if pb.CreatedAt != nil {
-		reservation.CreatedAt = pb.CreatedAt.AsTime()
+	if details.CreatedAt != nil {
+		reservation.CreatedAt = details.CreatedAt.AsTime()
 	}
 
-	if pb.UpdatedAt != nil {
-		reservation.UpdatedAt = pb.UpdatedAt.AsTime()
-	}
-
-	if pb.CommittedAt != nil {
-		t := pb.CommittedAt.AsTime()
-		reservation.CommittedAt = &t
-	}
-
-	if pb.ReleasedAt != nil {
-		t := pb.ReleasedAt.AsTime()
-		reservation.ReleasedAt = &t
+	if details.UpdatedAt != nil {
+		reservation.UpdatedAt = details.UpdatedAt.AsTime()
 	}
 
 	return reservation
 }
 
-// ToProto converts domain InventoryReservation to proto InventoryReservation
-func (r *InventoryReservation) ToProto() *pb.InventoryReservation {
+// ToProto converts domain InventoryReservation to proto ReservationDetails
+func (r *InventoryReservation) ToProto() *pb.ReservationDetails {
 	if r == nil {
 		return nil
 	}
 
-	pbReservation := &pb.InventoryReservation{
-		Id:        r.ID,
-		ListingId: r.ListingID,
-		OrderId:   r.OrderID,
-		Quantity:  r.Quantity,
-		Status:    r.Status.ToProtoReservationStatus(),
-		ExpiresAt: timestamppb.New(r.ExpiresAt),
-		CreatedAt: timestamppb.New(r.CreatedAt),
-		UpdatedAt: timestamppb.New(r.UpdatedAt),
+	details := &pb.ReservationDetails{
+		Id:            r.ID,
+		ListingId:     r.ListingID,
+		Quantity:      r.Quantity,
+		Status:        string(r.Status),
+		ReferenceType: string(r.ReferenceType),
+		ReferenceId:   r.ReferenceID,
+		ExpiresAt:     timestamppb.New(r.ExpiresAt),
+		CreatedAt:     timestamppb.New(r.CreatedAt),
+		UpdatedAt:     timestamppb.New(r.UpdatedAt),
 	}
 
 	if r.VariantID != nil {
-		pbReservation.VariantId = r.VariantID
+		details.VariantId = r.VariantID
 	}
 
-	if r.CommittedAt != nil {
-		pbReservation.CommittedAt = timestamppb.New(*r.CommittedAt)
-	}
-
-	if r.ReleasedAt != nil {
-		pbReservation.ReleasedAt = timestamppb.New(*r.ReleasedAt)
-	}
-
-	return pbReservation
+	return details
 }

@@ -8,7 +8,6 @@ package listingssvcv1
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -63,6 +62,10 @@ const (
 	ListingsService_DecrementStock_FullMethodName            = "/listingssvc.v1.ListingsService/DecrementStock"
 	ListingsService_RollbackStock_FullMethodName             = "/listingssvc.v1.ListingsService/RollbackStock"
 	ListingsService_CheckStockAvailability_FullMethodName    = "/listingssvc.v1.ListingsService/CheckStockAvailability"
+	ListingsService_CreateReservation_FullMethodName         = "/listingssvc.v1.ListingsService/CreateReservation"
+	ListingsService_ReleaseReservation_FullMethodName        = "/listingssvc.v1.ListingsService/ReleaseReservation"
+	ListingsService_CommitReservation_FullMethodName         = "/listingssvc.v1.ListingsService/CommitReservation"
+	ListingsService_GetReservation_FullMethodName            = "/listingssvc.v1.ListingsService/GetReservation"
 	ListingsService_CreateProduct_FullMethodName             = "/listingssvc.v1.ListingsService/CreateProduct"
 	ListingsService_UpdateProduct_FullMethodName             = "/listingssvc.v1.ListingsService/UpdateProduct"
 	ListingsService_DeleteProduct_FullMethodName             = "/listingssvc.v1.ListingsService/DeleteProduct"
@@ -196,6 +199,17 @@ type ListingsServiceClient interface {
 	// CheckStockAvailability verifies if requested quantities are available
 	// Used for validation before order creation
 	CheckStockAvailability(ctx context.Context, in *CheckStockAvailabilityRequest, opts ...grpc.CallOption) (*CheckStockAvailabilityResponse, error)
+	// CreateReservation creates a temporary stock hold for transfers
+	// Stock is blocked until committed or released
+	CreateReservation(ctx context.Context, in *CreateReservationRequest, opts ...grpc.CallOption) (*CreateReservationResponse, error)
+	// ReleaseReservation releases a previously created reservation
+	// Stock becomes available again
+	ReleaseReservation(ctx context.Context, in *ReleaseReservationRequest, opts ...grpc.CallOption) (*ReleaseReservationResponse, error)
+	// CommitReservation commits reservation (decrements actual stock)
+	// Used when transfer is completed
+	CommitReservation(ctx context.Context, in *CommitReservationRequest, opts ...grpc.CallOption) (*CommitReservationResponse, error)
+	// GetReservation retrieves reservation details by ID
+	GetReservation(ctx context.Context, in *GetReservationRequest, opts ...grpc.CallOption) (*GetReservationResponse, error)
 	// CreateProduct creates a new B2C product
 	// Transaction: Creates product + initializes stock record
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductResponse, error)
@@ -715,6 +729,46 @@ func (c *listingsServiceClient) CheckStockAvailability(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *listingsServiceClient) CreateReservation(ctx context.Context, in *CreateReservationRequest, opts ...grpc.CallOption) (*CreateReservationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateReservationResponse)
+	err := c.cc.Invoke(ctx, ListingsService_CreateReservation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) ReleaseReservation(ctx context.Context, in *ReleaseReservationRequest, opts ...grpc.CallOption) (*ReleaseReservationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReleaseReservationResponse)
+	err := c.cc.Invoke(ctx, ListingsService_ReleaseReservation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) CommitReservation(ctx context.Context, in *CommitReservationRequest, opts ...grpc.CallOption) (*CommitReservationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommitReservationResponse)
+	err := c.cc.Invoke(ctx, ListingsService_CommitReservation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetReservation(ctx context.Context, in *GetReservationRequest, opts ...grpc.CallOption) (*GetReservationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetReservationResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetReservation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *listingsServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ProductResponse)
@@ -1170,6 +1224,17 @@ type ListingsServiceServer interface {
 	// CheckStockAvailability verifies if requested quantities are available
 	// Used for validation before order creation
 	CheckStockAvailability(context.Context, *CheckStockAvailabilityRequest) (*CheckStockAvailabilityResponse, error)
+	// CreateReservation creates a temporary stock hold for transfers
+	// Stock is blocked until committed or released
+	CreateReservation(context.Context, *CreateReservationRequest) (*CreateReservationResponse, error)
+	// ReleaseReservation releases a previously created reservation
+	// Stock becomes available again
+	ReleaseReservation(context.Context, *ReleaseReservationRequest) (*ReleaseReservationResponse, error)
+	// CommitReservation commits reservation (decrements actual stock)
+	// Used when transfer is completed
+	CommitReservation(context.Context, *CommitReservationRequest) (*CommitReservationResponse, error)
+	// GetReservation retrieves reservation details by ID
+	GetReservation(context.Context, *GetReservationRequest) (*GetReservationResponse, error)
 	// CreateProduct creates a new B2C product
 	// Transaction: Creates product + initializes stock record
 	CreateProduct(context.Context, *CreateProductRequest) (*ProductResponse, error)
@@ -1391,6 +1456,18 @@ func (UnimplementedListingsServiceServer) RollbackStock(context.Context, *Rollba
 }
 func (UnimplementedListingsServiceServer) CheckStockAvailability(context.Context, *CheckStockAvailabilityRequest) (*CheckStockAvailabilityResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CheckStockAvailability not implemented")
+}
+func (UnimplementedListingsServiceServer) CreateReservation(context.Context, *CreateReservationRequest) (*CreateReservationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateReservation not implemented")
+}
+func (UnimplementedListingsServiceServer) ReleaseReservation(context.Context, *ReleaseReservationRequest) (*ReleaseReservationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReleaseReservation not implemented")
+}
+func (UnimplementedListingsServiceServer) CommitReservation(context.Context, *CommitReservationRequest) (*CommitReservationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CommitReservation not implemented")
+}
+func (UnimplementedListingsServiceServer) GetReservation(context.Context, *GetReservationRequest) (*GetReservationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetReservation not implemented")
 }
 func (UnimplementedListingsServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*ProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateProduct not implemented")
@@ -2266,6 +2343,78 @@ func _ListingsService_CheckStockAvailability_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_CreateReservation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateReservationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CreateReservation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CreateReservation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CreateReservation(ctx, req.(*CreateReservationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_ReleaseReservation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReleaseReservationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ReleaseReservation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ReleaseReservation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ReleaseReservation(ctx, req.(*ReleaseReservationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_CommitReservation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommitReservationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CommitReservation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CommitReservation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CommitReservation(ctx, req.(*CommitReservationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetReservation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReservationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetReservation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetReservation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetReservation(ctx, req.(*GetReservationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ListingsService_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateProductRequest)
 	if err := dec(in); err != nil {
@@ -3084,6 +3233,22 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckStockAvailability",
 			Handler:    _ListingsService_CheckStockAvailability_Handler,
+		},
+		{
+			MethodName: "CreateReservation",
+			Handler:    _ListingsService_CreateReservation_Handler,
+		},
+		{
+			MethodName: "ReleaseReservation",
+			Handler:    _ListingsService_ReleaseReservation_Handler,
+		},
+		{
+			MethodName: "CommitReservation",
+			Handler:    _ListingsService_CommitReservation_Handler,
+		},
+		{
+			MethodName: "GetReservation",
+			Handler:    _ListingsService_GetReservation_Handler,
 		},
 		{
 			MethodName: "CreateProduct",

@@ -25,6 +25,7 @@ import (
 	"github.com/vondi-global/listings/internal/cache"
 	deliveryclient "github.com/vondi-global/listings/internal/client/delivery"
 	"github.com/vondi-global/listings/internal/config"
+	"github.com/vondi-global/listings/internal/events"
 	"github.com/vondi-global/listings/internal/health"
 	"github.com/vondi-global/listings/internal/metrics"
 	"github.com/vondi-global/listings/internal/middleware"
@@ -333,6 +334,15 @@ func main() {
 		zerologLogger,
 	)
 
+	// Initialize inventory service (for reservations)
+	inventoryService := service.NewInventoryService(
+		reservationRepo,
+		pgRepo,
+		orderRepo,
+		pgxPool,
+		zerologLogger,
+	)
+
 	// Initialize delivery client (if enabled)
 	var deliveryClient *deliveryclient.Client
 	if cfg.Delivery.Enabled {
@@ -365,6 +375,19 @@ func main() {
 		deliveryAdapter := deliveryclient.NewServiceAdapter(deliveryClient)
 		orderService.SetDeliveryClient(deliveryAdapter)
 	}
+
+	// Initialize order event publisher for WMS integration
+	eventPublisher := events.NewRedisOrderEventPublisher(
+		redisCache.GetClient(),
+		zerologLogger,
+		events.OrdersStream,
+		cfg.WMS.DefaultWarehouseID,
+	)
+	orderService.SetEventPublisher(eventPublisher)
+	logger.Info().
+		Str("stream", events.OrdersStream).
+		Int64("default_warehouse_id", cfg.WMS.DefaultWarehouseID).
+		Msg("Order event publisher initialized for WMS integration")
 
 	// Initialize chat service dependencies
 	chatRepo := postgres.NewChatRepository(pgxPool, zerologLogger)
@@ -480,7 +503,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, minioClient, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, inventoryService, minioClient, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
 

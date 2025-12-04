@@ -227,6 +227,23 @@ service ListingsService {
   // Used for validation before order creation
   rpc CheckStockAvailability(CheckStockAvailabilityRequest) returns (CheckStockAvailabilityResponse);
 
+  // === Inventory Reservation (for Transfers) ===
+
+  // CreateReservation creates a temporary stock hold for transfers
+  // Stock is blocked until committed or released
+  rpc CreateReservation(CreateReservationRequest) returns (CreateReservationResponse);
+
+  // ReleaseReservation releases a previously created reservation
+  // Stock becomes available again
+  rpc ReleaseReservation(ReleaseReservationRequest) returns (ReleaseReservationResponse);
+
+  // CommitReservation commits reservation (decrements actual stock)
+  // Used when transfer is completed
+  rpc CommitReservation(CommitReservationRequest) returns (CommitReservationResponse);
+
+  // GetReservation retrieves reservation details by ID
+  rpc GetReservation(GetReservationRequest) returns (GetReservationResponse);
+
   // === Product CRUD Operations (Phase 9.5.2) ===
 
   // CreateProduct creates a new B2C product
@@ -1126,6 +1143,83 @@ message StockAvailability {
 message CheckStockAvailabilityResponse {
   bool all_available = 1; // True if ALL items available
   repeated StockAvailability items = 2;
+}
+
+// ============================================================================
+// Request/Response Messages - Inventory Reservation (for Transfers)
+// ============================================================================
+
+// ReservationItem represents a single item to reserve
+message ReservationItem {
+  int64 listing_id = 1;      // Product/listing ID
+  optional int64 variant_id = 2;  // Optional variant ID
+  int32 quantity = 3;        // Quantity to reserve
+}
+
+// CreateReservationRequest creates a stock reservation
+message CreateReservationRequest {
+  ReservationItem item = 1;           // Item to reserve
+  string reference_type = 2;          // Reference type: "transfer", "order", etc.
+  int64 reference_id = 3;             // Reference ID (transfer_id, order_id, etc.)
+  optional int32 ttl_minutes = 4;     // TTL in minutes (default: 30)
+}
+
+// CreateReservationResponse returns the created reservation
+message CreateReservationResponse {
+  bool success = 1;
+  optional string error = 2;
+  int64 reservation_id = 3;           // ID of created reservation
+  google.protobuf.Timestamp expires_at = 4;  // When reservation expires
+}
+
+// ReleaseReservationRequest releases a reservation by ID
+message ReleaseReservationRequest {
+  int64 reservation_id = 1;
+}
+
+// ReleaseReservationResponse confirms release
+message ReleaseReservationResponse {
+  bool success = 1;
+  optional string error = 2;
+  int32 quantity_released = 3;        // How much stock was released
+}
+
+// CommitReservationRequest commits reservation (decrements stock)
+message CommitReservationRequest {
+  int64 reservation_id = 1;
+}
+
+// CommitReservationResponse confirms commit
+message CommitReservationResponse {
+  bool success = 1;
+  optional string error = 2;
+  int32 quantity_committed = 3;       // How much stock was decremented
+}
+
+// GetReservationRequest retrieves reservation by ID
+message GetReservationRequest {
+  int64 reservation_id = 1;
+}
+
+// ReservationDetails contains full reservation info
+message ReservationDetails {
+  int64 id = 1;
+  int64 listing_id = 2;
+  optional int64 variant_id = 3;
+  int32 quantity = 4;
+  string status = 5;                  // "active", "committed", "released", "expired"
+  string reference_type = 6;
+  int64 reference_id = 7;
+  google.protobuf.Timestamp expires_at = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// GetReservationResponse returns reservation details
+message GetReservationResponse {
+  bool success = 1;
+  optional string error = 2;
+  ReservationDetails reservation = 3;
 }
 
 // ============================================================================
