@@ -434,6 +434,10 @@ func main() {
 	// Connect chat service to order service for notifications
 	orderService.SetChatService(chatService)
 
+	// Initialize invitation service
+	invitationService := service.NewInvitationService(db.DB, db, zerologLogger)
+	logger.Info().Msg("Invitation service initialized successfully")
+
 	// Initialize health check service
 	healthConfig := &health.Config{
 		CheckTimeout:     cfg.Health.CheckTimeout,
@@ -503,7 +507,7 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, inventoryService, minioClient, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, inventoryService, invitationService, minioClient, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
 

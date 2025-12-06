@@ -244,6 +244,10 @@ service ListingsService {
   // GetReservation retrieves reservation details by ID
   rpc GetReservation(GetReservationRequest) returns (GetReservationResponse);
 
+  // GetReservedQuantityForListing returns total reserved quantity for a listing
+  // Used by inventory display to show how much stock is reserved
+  rpc GetReservedQuantityForListing(GetReservedQuantityRequest) returns (GetReservedQuantityResponse);
+
   // === Product CRUD Operations (Phase 9.5.2) ===
 
   // CreateProduct creates a new B2C product
@@ -389,6 +393,35 @@ service ListingsService {
 
   // GetDashboardStats retrieves storefront dashboard statistics
   rpc GetDashboardStats(DashboardStatsRequest) returns (DashboardStatsResponse);
+
+  // === Storefront Invitations ===
+
+  // CreateStorefrontEmailInvitation creates an email invitation
+  rpc CreateStorefrontEmailInvitation(CreateStorefrontEmailInvitationRequest) returns (StorefrontInvitation);
+
+  // CreateStorefrontLinkInvitation creates a shareable link invitation
+  rpc CreateStorefrontLinkInvitation(CreateStorefrontLinkInvitationRequest) returns (StorefrontInvitation);
+
+  // ListStorefrontInvitations lists invitations for a storefront
+  rpc ListStorefrontInvitations(ListStorefrontInvitationsRequest) returns (ListStorefrontInvitationsResponse);
+
+  // RevokeStorefrontInvitation revokes an invitation
+  rpc RevokeStorefrontInvitation(RevokeStorefrontInvitationRequest) returns (google.protobuf.Empty);
+
+  // GetMyStorefrontInvitations gets pending invitations for a user
+  rpc GetMyStorefrontInvitations(GetMyStorefrontInvitationsRequest) returns (ListStorefrontInvitationsResponse);
+
+  // AcceptStorefrontInvitation accepts an invitation
+  rpc AcceptStorefrontInvitation(AcceptStorefrontInvitationRequest) returns (google.protobuf.Empty);
+
+  // DeclineStorefrontInvitation declines an invitation
+  rpc DeclineStorefrontInvitation(DeclineStorefrontInvitationRequest) returns (google.protobuf.Empty);
+
+  // ValidateStorefrontInviteCode validates an invite code
+  rpc ValidateStorefrontInviteCode(ValidateStorefrontInviteCodeRequest) returns (ValidateStorefrontInviteCodeResponse);
+
+  // AcceptStorefrontInviteCode accepts an invitation via code
+  rpc AcceptStorefrontInviteCode(AcceptStorefrontInviteCodeRequest) returns (google.protobuf.Empty);
 }
 
 // ============================================================================
@@ -1222,6 +1255,28 @@ message GetReservationResponse {
   ReservationDetails reservation = 3;
 }
 
+// GetReservedQuantityRequest gets total reserved quantity for a listing
+message GetReservedQuantityRequest {
+  int64 listing_id = 1;
+  optional string reference_type = 2;  // Optional filter by type: "order", "transfer"
+}
+
+// ReservedQuantityByType shows reserved quantity breakdown by reference type
+message ReservedQuantityByType {
+  string reference_type = 1;           // "order", "transfer"
+  int32 quantity = 2;                  // Total reserved for this type
+  int32 count = 3;                     // Number of active reservations
+}
+
+// GetReservedQuantityResponse returns reserved quantity info
+message GetReservedQuantityResponse {
+  bool success = 1;
+  optional string error = 2;
+  int64 listing_id = 3;
+  int32 total_reserved = 4;            // Total reserved quantity (all types)
+  repeated ReservedQuantityByType by_type = 5;  // Breakdown by reference type
+}
+
 // ============================================================================
 // Request/Response Messages - Product CRUD Operations (Phase 9.5.2)
 // ============================================================================
@@ -2022,4 +2077,125 @@ message ReorderProductImagesRequest {
 // ReorderProductImagesResponse confirms reorder operation
 message ReorderProductImagesResponse {
   bool success = 1;
+}
+
+// ============================================================================
+// Storefront Invitations - Enums and Messages
+// ============================================================================
+
+// StorefrontInvitationType represents the type of invitation
+enum StorefrontInvitationType {
+  STOREFRONT_INVITATION_TYPE_UNSPECIFIED = 0;
+  STOREFRONT_INVITATION_TYPE_EMAIL = 1; // One-time email invitation
+  STOREFRONT_INVITATION_TYPE_LINK = 2;  // Shareable link invitation
+}
+
+// StorefrontInvitationStatus represents the invitation status
+enum StorefrontInvitationStatus {
+  STOREFRONT_INVITATION_STATUS_UNSPECIFIED = 0;
+  STOREFRONT_INVITATION_STATUS_PENDING = 1;
+  STOREFRONT_INVITATION_STATUS_ACCEPTED = 2;
+  STOREFRONT_INVITATION_STATUS_DECLINED = 3;
+  STOREFRONT_INVITATION_STATUS_EXPIRED = 4;
+  STOREFRONT_INVITATION_STATUS_REVOKED = 5;
+}
+
+// StorefrontInvitation represents an invitation to join a storefront staff
+message StorefrontInvitation {
+  int64 id = 1;
+  int64 storefront_id = 2;
+  StorefrontInvitationType type = 3;
+  string role = 4; // owner, manager, staff, cashier
+  StorefrontInvitationStatus status = 5;
+
+  optional string invited_email = 6;
+  optional int64 invited_user_id = 7;
+  optional string invite_code = 8;
+  optional string invite_url = 9;
+  optional google.protobuf.Timestamp expires_at = 10;
+  optional int32 max_uses = 11;
+  int32 current_uses = 12;
+
+  int64 invited_by_id = 13;
+  optional string comment = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+  optional google.protobuf.Timestamp accepted_at = 17;
+  optional google.protobuf.Timestamp declined_at = 18;
+}
+
+// CreateStorefrontEmailInvitationRequest creates an email invitation
+message CreateStorefrontEmailInvitationRequest {
+  int64 storefront_id = 1;
+  string email = 2;
+  string role = 3; // owner, manager, staff, cashier
+  int64 invited_by_id = 4;
+  optional string comment = 5;
+}
+
+// CreateStorefrontLinkInvitationRequest creates a shareable link invitation
+message CreateStorefrontLinkInvitationRequest {
+  int64 storefront_id = 1;
+  string role = 2; // owner, manager, staff, cashier
+  int64 invited_by_id = 3;
+  int32 expires_in_days = 4; // Expiration in days from now
+  int32 max_uses = 5; // Maximum number of times the link can be used (0 = unlimited)
+  optional string comment = 6;
+}
+
+// ListStorefrontInvitationsRequest lists invitations for a storefront
+message ListStorefrontInvitationsRequest {
+  int64 storefront_id = 1;
+  optional StorefrontInvitationStatus status_filter = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+// ListStorefrontInvitationsResponse returns list of invitations
+message ListStorefrontInvitationsResponse {
+  repeated StorefrontInvitation invitations = 1;
+  int32 total = 2;
+}
+
+// RevokeStorefrontInvitationRequest revokes an invitation
+message RevokeStorefrontInvitationRequest {
+  int64 invitation_id = 1;
+  int64 revoked_by_id = 2;
+}
+
+// GetMyStorefrontInvitationsRequest gets pending invitations for a user
+message GetMyStorefrontInvitationsRequest {
+  int64 user_id = 1;
+  optional string email = 2;
+}
+
+// AcceptStorefrontInvitationRequest accepts an invitation
+message AcceptStorefrontInvitationRequest {
+  int64 invitation_id = 1;
+  int64 user_id = 2;
+}
+
+// DeclineStorefrontInvitationRequest declines an invitation
+message DeclineStorefrontInvitationRequest {
+  int64 invitation_id = 1;
+  int64 user_id = 2;
+}
+
+// ValidateStorefrontInviteCodeRequest validates an invite code
+message ValidateStorefrontInviteCodeRequest {
+  string code = 1;
+}
+
+// ValidateStorefrontInviteCodeResponse returns validation result
+message ValidateStorefrontInviteCodeResponse {
+  StorefrontInvitation invitation = 1;
+  string storefront_name = 2;
+  bool is_valid = 3;
+  optional string error_code = 4; // "expired", "revoked", "max_uses_reached", "not_found"
+}
+
+// AcceptStorefrontInviteCodeRequest accepts an invitation via code
+message AcceptStorefrontInviteCodeRequest {
+  string code = 1;
+  int64 user_id = 2;
 }

@@ -154,6 +154,7 @@ type StorefrontStaff struct {
 	Permissions  JSONB      `db:"permissions" json:"permissions,omitempty"`
 	LastActiveAt *time.Time `db:"last_active_at" json:"last_active_at,omitempty"`
 	ActionsCount int32      `db:"actions_count" json:"actions_count"`
+	InvitationID *int64     `db:"invitation_id" json:"invitation_id,omitempty"`
 	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
 	UpdatedAt    time.Time  `db:"updated_at" json:"updated_at"`
 }

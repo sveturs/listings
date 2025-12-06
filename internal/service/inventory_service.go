@@ -29,6 +29,21 @@ type InventoryService interface {
 	// Stock checks
 	CheckStockAvailability(ctx context.Context, listingID int64, quantity int) (bool, error)
 	GetAvailableStock(ctx context.Context, listingID int64) (int, error)
+	GetReservedQuantityForListing(ctx context.Context, listingID int64, referenceType *string) (*ReservedQuantityResult, error)
+}
+
+// ReservedQuantityByType represents reserved quantity breakdown by reference type
+type ReservedQuantityByType struct {
+	ReferenceType string
+	Quantity      int32
+	Count         int32
+}
+
+// ReservedQuantityResult contains detailed reservation information for a listing
+type ReservedQuantityResult struct {
+	ListingID     int64
+	TotalReserved int32
+	ByType        []ReservedQuantityByType
 }
 
 // CreateReservationRequest contains parameters for creating a reservation
@@ -229,9 +244,21 @@ func (s *inventoryService) ReleaseReservationsByReference(ctx context.Context, r
 	return nil
 }
 
-// CommitReservation commits a reservation (marks it as committed, stock already deducted)
+// CommitReservation commits a reservation (deducts stock and marks as committed)
+// This is the CORRECTED version that:
+// 1. Deducts quantity from listings table
+// 2. Creates inventory_movement record
+// 3. Updates reservation status to committed
+// All within a single transaction for atomicity.
 func (s *inventoryService) CommitReservation(ctx context.Context, reservationID int64) error {
 	s.logger.Debug().Int64("reservation_id", reservationID).Msg("committing reservation")
+
+	// Start transaction for atomicity
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
 
 	// Get reservation
 	reservation, err := s.reservationRepo.GetByID(ctx, reservationID)
@@ -253,14 +280,69 @@ func (s *inventoryService) CommitReservation(ctx context.Context, reservationID 
 		}
 	}
 
-	// Commit reservation using domain method + Update
+	// STEP 1: Deduct stock from listings table
+	// This is the CRITICAL fix - previously this was NOT done!
+	if err := s.productsRepo.DeductStockWithPgxTx(ctx, tx, reservation.ListingID, reservation.Quantity); err != nil {
+		s.logger.Error().Err(err).
+			Int64("reservation_id", reservationID).
+			Int64("listing_id", reservation.ListingID).
+			Int32("quantity", reservation.Quantity).
+			Msg("failed to deduct stock during commit")
+		return fmt.Errorf("failed to deduct stock: %w", err)
+	}
+
+	// STEP 2: Create inventory_movement record for audit trail
+	// movement_type = 'out' because stock is leaving storefront inventory
+	// reason = dynamic based on reference_type (order or transfer)
+	movementReason := fmt.Sprintf("%s_committed", reservation.ReferenceType)
+	movementNotes := fmt.Sprintf("Reservation %d committed for %s #%d",
+		reservationID, reservation.ReferenceType, reservation.ReferenceID)
+
+	// Use system user_id (0) for automatic commits
+	// TODO: Extract user_id from context when auth is integrated
+	userID := int64(0)
+
+	movementQuery := `
+		INSERT INTO inventory_movements (
+			listing_id, variant_id, movement_type, quantity, reason, notes, user_id, created_at
+		) VALUES ($1, $2, 'out', $3, $4, $5, $6, NOW())
+	`
+	_, err = tx.Exec(ctx, movementQuery,
+		reservation.ListingID,
+		reservation.VariantID, // can be nil
+		reservation.Quantity,  // positive number, movement_type='out' indicates direction
+		movementReason,
+		movementNotes,
+		userID,
+	)
+	if err != nil {
+		s.logger.Error().Err(err).
+			Int64("reservation_id", reservationID).
+			Msg("failed to create inventory movement")
+		return fmt.Errorf("failed to create inventory movement: %w", err)
+	}
+
+	// STEP 3: Update reservation status to committed
 	reservation.Commit()
-	if err := s.reservationRepo.Update(ctx, reservation); err != nil {
-		s.logger.Error().Err(err).Int64("reservation_id", reservationID).Msg("failed to commit reservation")
+	reservationRepoTx := s.reservationRepo.WithTx(tx)
+	if err := reservationRepoTx.Update(ctx, reservation); err != nil {
+		s.logger.Error().Err(err).Int64("reservation_id", reservationID).Msg("failed to update reservation status")
 		return fmt.Errorf("failed to commit reservation: %w", err)
 	}
 
-	s.logger.Info().Int64("reservation_id", reservationID).Msg("reservation committed")
+	// STEP 4: Commit transaction
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("reservation_id", reservationID).
+		Int64("listing_id", reservation.ListingID).
+		Int32("quantity_deducted", reservation.Quantity).
+		Str("reference_type", string(reservation.ReferenceType)).
+		Int64("reference_id", reservation.ReferenceID).
+		Msg("reservation committed successfully with stock deducted")
+
 	return nil
 }
 
@@ -402,4 +484,65 @@ func (s *inventoryService) GetAvailableStock(ctx context.Context, listingID int6
 	}
 
 	return availableStock, nil
+}
+
+// GetReservedQuantityForListing returns total reserved quantity with breakdown by type
+func (s *inventoryService) GetReservedQuantityForListing(ctx context.Context, listingID int64, referenceType *string) (*ReservedQuantityResult, error) {
+	s.logger.Debug().
+		Int64("listing_id", listingID).
+		Msg("getting reserved quantity for listing")
+
+	// Get active reservations for this listing
+	reservations, err := s.reservationRepo.GetActiveByListing(ctx, listingID, 0)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to get active reservations")
+		return nil, fmt.Errorf("failed to get active reservations: %w", err)
+	}
+
+	// Group by reference type
+	byTypeMap := make(map[string]*ReservedQuantityByType)
+	var totalReserved int32
+
+	for _, res := range reservations {
+		if res.Status != domain.ReservationStatusActive {
+			continue
+		}
+
+		// If filter by reference type is specified, skip non-matching
+		if referenceType != nil && string(res.ReferenceType) != *referenceType {
+			continue
+		}
+
+		refType := string(res.ReferenceType)
+		if _, exists := byTypeMap[refType]; !exists {
+			byTypeMap[refType] = &ReservedQuantityByType{
+				ReferenceType: refType,
+				Quantity:      0,
+				Count:         0,
+			}
+		}
+		byTypeMap[refType].Quantity += res.Quantity
+		byTypeMap[refType].Count++
+		totalReserved += res.Quantity
+	}
+
+	// Convert map to slice
+	byType := make([]ReservedQuantityByType, 0, len(byTypeMap))
+	for _, v := range byTypeMap {
+		byType = append(byType, *v)
+	}
+
+	result := &ReservedQuantityResult{
+		ListingID:     listingID,
+		TotalReserved: totalReserved,
+		ByType:        byType,
+	}
+
+	s.logger.Debug().
+		Int64("listing_id", listingID).
+		Int32("total_reserved", totalReserved).
+		Int("types_count", len(byType)).
+		Msg("reserved quantity retrieved")
+
+	return result, nil
 }

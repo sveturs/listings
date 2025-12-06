@@ -574,3 +574,54 @@ func (s *Server) GetReservation(ctx context.Context, req *listingspb.GetReservat
 		Reservation: details,
 	}, nil
 }
+
+// GetReservedQuantityForListing returns total reserved quantity for a listing
+func (s *Server) GetReservedQuantityForListing(ctx context.Context, req *listingspb.GetReservedQuantityRequest) (*listingspb.GetReservedQuantityResponse, error) {
+	s.logger.Debug().
+		Int64("listing_id", req.ListingId).
+		Msg("GetReservedQuantityForListing called")
+
+	// Validation
+	if req.ListingId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "listing_id must be greater than 0")
+	}
+
+	// Prepare optional reference type filter
+	var refType *string
+	if req.ReferenceType != nil && *req.ReferenceType != "" {
+		refType = req.ReferenceType
+	}
+
+	// Call inventory service
+	result, err := s.inventoryService.GetReservedQuantityForListing(ctx, req.ListingId, refType)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("listing_id", req.ListingId).Msg("failed to get reserved quantity")
+		errStr := err.Error()
+		return &listingspb.GetReservedQuantityResponse{
+			Success: false,
+			Error:   &errStr,
+		}, nil
+	}
+
+	// Convert service result to proto
+	byType := make([]*listingspb.ReservedQuantityByType, 0, len(result.ByType))
+	for _, bt := range result.ByType {
+		byType = append(byType, &listingspb.ReservedQuantityByType{
+			ReferenceType: bt.ReferenceType,
+			Quantity:      bt.Quantity,
+			Count:         bt.Count,
+		})
+	}
+
+	s.logger.Info().
+		Int64("listing_id", req.ListingId).
+		Int32("total_reserved", result.TotalReserved).
+		Msg("reserved quantity retrieved successfully")
+
+	return &listingspb.GetReservedQuantityResponse{
+		Success:       true,
+		ListingId:     result.ListingID,
+		TotalReserved: result.TotalReserved,
+		ByType:        byType,
+	}, nil
+}

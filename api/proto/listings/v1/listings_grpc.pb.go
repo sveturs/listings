@@ -20,88 +20,98 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ListingsService_GetListing_FullMethodName                = "/listingssvc.v1.ListingsService/GetListing"
-	ListingsService_CreateListing_FullMethodName             = "/listingssvc.v1.ListingsService/CreateListing"
-	ListingsService_UpdateListing_FullMethodName             = "/listingssvc.v1.ListingsService/UpdateListing"
-	ListingsService_DeleteListing_FullMethodName             = "/listingssvc.v1.ListingsService/DeleteListing"
-	ListingsService_SearchListings_FullMethodName            = "/listingssvc.v1.ListingsService/SearchListings"
-	ListingsService_ListListings_FullMethodName              = "/listingssvc.v1.ListingsService/ListListings"
-	ListingsService_GetSimilarListings_FullMethodName        = "/listingssvc.v1.ListingsService/GetSimilarListings"
-	ListingsService_GetListingImage_FullMethodName           = "/listingssvc.v1.ListingsService/GetListingImage"
-	ListingsService_DeleteListingImage_FullMethodName        = "/listingssvc.v1.ListingsService/DeleteListingImage"
-	ListingsService_AddListingImage_FullMethodName           = "/listingssvc.v1.ListingsService/AddListingImage"
-	ListingsService_GetListingImages_FullMethodName          = "/listingssvc.v1.ListingsService/GetListingImages"
-	ListingsService_ReorderListingImages_FullMethodName      = "/listingssvc.v1.ListingsService/ReorderListingImages"
-	ListingsService_UploadListingImages_FullMethodName       = "/listingssvc.v1.ListingsService/UploadListingImages"
-	ListingsService_GetRootCategories_FullMethodName         = "/listingssvc.v1.ListingsService/GetRootCategories"
-	ListingsService_GetAllCategories_FullMethodName          = "/listingssvc.v1.ListingsService/GetAllCategories"
-	ListingsService_GetPopularCategories_FullMethodName      = "/listingssvc.v1.ListingsService/GetPopularCategories"
-	ListingsService_GetCategory_FullMethodName               = "/listingssvc.v1.ListingsService/GetCategory"
-	ListingsService_GetCategoryTree_FullMethodName           = "/listingssvc.v1.ListingsService/GetCategoryTree"
-	ListingsService_GetFavoritedUsers_FullMethodName         = "/listingssvc.v1.ListingsService/GetFavoritedUsers"
-	ListingsService_AddToFavorites_FullMethodName            = "/listingssvc.v1.ListingsService/AddToFavorites"
-	ListingsService_RemoveFromFavorites_FullMethodName       = "/listingssvc.v1.ListingsService/RemoveFromFavorites"
-	ListingsService_GetUserFavorites_FullMethodName          = "/listingssvc.v1.ListingsService/GetUserFavorites"
-	ListingsService_IsFavorite_FullMethodName                = "/listingssvc.v1.ListingsService/IsFavorite"
-	ListingsService_GetStorefront_FullMethodName             = "/listingssvc.v1.ListingsService/GetStorefront"
-	ListingsService_GetStorefrontBySlug_FullMethodName       = "/listingssvc.v1.ListingsService/GetStorefrontBySlug"
-	ListingsService_ListStorefronts_FullMethodName           = "/listingssvc.v1.ListingsService/ListStorefronts"
-	ListingsService_CreateVariants_FullMethodName            = "/listingssvc.v1.ListingsService/CreateVariants"
-	ListingsService_GetVariants_FullMethodName               = "/listingssvc.v1.ListingsService/GetVariants"
-	ListingsService_UpdateVariant_FullMethodName             = "/listingssvc.v1.ListingsService/UpdateVariant"
-	ListingsService_DeleteVariant_FullMethodName             = "/listingssvc.v1.ListingsService/DeleteVariant"
-	ListingsService_GetListingsForReindex_FullMethodName     = "/listingssvc.v1.ListingsService/GetListingsForReindex"
-	ListingsService_ResetReindexFlags_FullMethodName         = "/listingssvc.v1.ListingsService/ResetReindexFlags"
-	ListingsService_SyncDiscounts_FullMethodName             = "/listingssvc.v1.ListingsService/SyncDiscounts"
-	ListingsService_GetProduct_FullMethodName                = "/listingssvc.v1.ListingsService/GetProduct"
-	ListingsService_GetProductsBySKUs_FullMethodName         = "/listingssvc.v1.ListingsService/GetProductsBySKUs"
-	ListingsService_GetProductsByIDs_FullMethodName          = "/listingssvc.v1.ListingsService/GetProductsByIDs"
-	ListingsService_ListProducts_FullMethodName              = "/listingssvc.v1.ListingsService/ListProducts"
-	ListingsService_GetVariant_FullMethodName                = "/listingssvc.v1.ListingsService/GetVariant"
-	ListingsService_GetVariantsByProductID_FullMethodName    = "/listingssvc.v1.ListingsService/GetVariantsByProductID"
-	ListingsService_DecrementStock_FullMethodName            = "/listingssvc.v1.ListingsService/DecrementStock"
-	ListingsService_RollbackStock_FullMethodName             = "/listingssvc.v1.ListingsService/RollbackStock"
-	ListingsService_CheckStockAvailability_FullMethodName    = "/listingssvc.v1.ListingsService/CheckStockAvailability"
-	ListingsService_CreateReservation_FullMethodName         = "/listingssvc.v1.ListingsService/CreateReservation"
-	ListingsService_ReleaseReservation_FullMethodName        = "/listingssvc.v1.ListingsService/ReleaseReservation"
-	ListingsService_CommitReservation_FullMethodName         = "/listingssvc.v1.ListingsService/CommitReservation"
-	ListingsService_GetReservation_FullMethodName            = "/listingssvc.v1.ListingsService/GetReservation"
-	ListingsService_CreateProduct_FullMethodName             = "/listingssvc.v1.ListingsService/CreateProduct"
-	ListingsService_UpdateProduct_FullMethodName             = "/listingssvc.v1.ListingsService/UpdateProduct"
-	ListingsService_DeleteProduct_FullMethodName             = "/listingssvc.v1.ListingsService/DeleteProduct"
-	ListingsService_BulkCreateProducts_FullMethodName        = "/listingssvc.v1.ListingsService/BulkCreateProducts"
-	ListingsService_BulkUpdateProducts_FullMethodName        = "/listingssvc.v1.ListingsService/BulkUpdateProducts"
-	ListingsService_BulkDeleteProducts_FullMethodName        = "/listingssvc.v1.ListingsService/BulkDeleteProducts"
-	ListingsService_CreateProductVariant_FullMethodName      = "/listingssvc.v1.ListingsService/CreateProductVariant"
-	ListingsService_UpdateProductVariant_FullMethodName      = "/listingssvc.v1.ListingsService/UpdateProductVariant"
-	ListingsService_DeleteProductVariant_FullMethodName      = "/listingssvc.v1.ListingsService/DeleteProductVariant"
-	ListingsService_BulkCreateProductVariants_FullMethodName = "/listingssvc.v1.ListingsService/BulkCreateProductVariants"
-	ListingsService_RecordInventoryMovement_FullMethodName   = "/listingssvc.v1.ListingsService/RecordInventoryMovement"
-	ListingsService_BatchUpdateStock_FullMethodName          = "/listingssvc.v1.ListingsService/BatchUpdateStock"
-	ListingsService_GetProductStats_FullMethodName           = "/listingssvc.v1.ListingsService/GetProductStats"
-	ListingsService_IncrementProductViews_FullMethodName     = "/listingssvc.v1.ListingsService/IncrementProductViews"
-	ListingsService_AddProductImage_FullMethodName           = "/listingssvc.v1.ListingsService/AddProductImage"
-	ListingsService_GetProductImages_FullMethodName          = "/listingssvc.v1.ListingsService/GetProductImages"
-	ListingsService_DeleteProductImage_FullMethodName        = "/listingssvc.v1.ListingsService/DeleteProductImage"
-	ListingsService_ReorderProductImages_FullMethodName      = "/listingssvc.v1.ListingsService/ReorderProductImages"
-	ListingsService_ReindexAll_FullMethodName                = "/listingssvc.v1.ListingsService/ReindexAll"
-	ListingsService_CreateStorefront_FullMethodName          = "/listingssvc.v1.ListingsService/CreateStorefront"
-	ListingsService_UpdateStorefront_FullMethodName          = "/listingssvc.v1.ListingsService/UpdateStorefront"
-	ListingsService_DeleteStorefront_FullMethodName          = "/listingssvc.v1.ListingsService/DeleteStorefront"
-	ListingsService_GetMyStorefronts_FullMethodName          = "/listingssvc.v1.ListingsService/GetMyStorefronts"
-	ListingsService_AddStaff_FullMethodName                  = "/listingssvc.v1.ListingsService/AddStaff"
-	ListingsService_UpdateStaff_FullMethodName               = "/listingssvc.v1.ListingsService/UpdateStaff"
-	ListingsService_RemoveStaff_FullMethodName               = "/listingssvc.v1.ListingsService/RemoveStaff"
-	ListingsService_GetStaff_FullMethodName                  = "/listingssvc.v1.ListingsService/GetStaff"
-	ListingsService_SetWorkingHours_FullMethodName           = "/listingssvc.v1.ListingsService/SetWorkingHours"
-	ListingsService_GetWorkingHours_FullMethodName           = "/listingssvc.v1.ListingsService/GetWorkingHours"
-	ListingsService_IsOpenNow_FullMethodName                 = "/listingssvc.v1.ListingsService/IsOpenNow"
-	ListingsService_SetPaymentMethods_FullMethodName         = "/listingssvc.v1.ListingsService/SetPaymentMethods"
-	ListingsService_GetPaymentMethods_FullMethodName         = "/listingssvc.v1.ListingsService/GetPaymentMethods"
-	ListingsService_SetDeliveryOptions_FullMethodName        = "/listingssvc.v1.ListingsService/SetDeliveryOptions"
-	ListingsService_GetDeliveryOptions_FullMethodName        = "/listingssvc.v1.ListingsService/GetDeliveryOptions"
-	ListingsService_GetMapData_FullMethodName                = "/listingssvc.v1.ListingsService/GetMapData"
-	ListingsService_GetDashboardStats_FullMethodName         = "/listingssvc.v1.ListingsService/GetDashboardStats"
+	ListingsService_GetListing_FullMethodName                      = "/listingssvc.v1.ListingsService/GetListing"
+	ListingsService_CreateListing_FullMethodName                   = "/listingssvc.v1.ListingsService/CreateListing"
+	ListingsService_UpdateListing_FullMethodName                   = "/listingssvc.v1.ListingsService/UpdateListing"
+	ListingsService_DeleteListing_FullMethodName                   = "/listingssvc.v1.ListingsService/DeleteListing"
+	ListingsService_SearchListings_FullMethodName                  = "/listingssvc.v1.ListingsService/SearchListings"
+	ListingsService_ListListings_FullMethodName                    = "/listingssvc.v1.ListingsService/ListListings"
+	ListingsService_GetSimilarListings_FullMethodName              = "/listingssvc.v1.ListingsService/GetSimilarListings"
+	ListingsService_GetListingImage_FullMethodName                 = "/listingssvc.v1.ListingsService/GetListingImage"
+	ListingsService_DeleteListingImage_FullMethodName              = "/listingssvc.v1.ListingsService/DeleteListingImage"
+	ListingsService_AddListingImage_FullMethodName                 = "/listingssvc.v1.ListingsService/AddListingImage"
+	ListingsService_GetListingImages_FullMethodName                = "/listingssvc.v1.ListingsService/GetListingImages"
+	ListingsService_ReorderListingImages_FullMethodName            = "/listingssvc.v1.ListingsService/ReorderListingImages"
+	ListingsService_UploadListingImages_FullMethodName             = "/listingssvc.v1.ListingsService/UploadListingImages"
+	ListingsService_GetRootCategories_FullMethodName               = "/listingssvc.v1.ListingsService/GetRootCategories"
+	ListingsService_GetAllCategories_FullMethodName                = "/listingssvc.v1.ListingsService/GetAllCategories"
+	ListingsService_GetPopularCategories_FullMethodName            = "/listingssvc.v1.ListingsService/GetPopularCategories"
+	ListingsService_GetCategory_FullMethodName                     = "/listingssvc.v1.ListingsService/GetCategory"
+	ListingsService_GetCategoryTree_FullMethodName                 = "/listingssvc.v1.ListingsService/GetCategoryTree"
+	ListingsService_GetFavoritedUsers_FullMethodName               = "/listingssvc.v1.ListingsService/GetFavoritedUsers"
+	ListingsService_AddToFavorites_FullMethodName                  = "/listingssvc.v1.ListingsService/AddToFavorites"
+	ListingsService_RemoveFromFavorites_FullMethodName             = "/listingssvc.v1.ListingsService/RemoveFromFavorites"
+	ListingsService_GetUserFavorites_FullMethodName                = "/listingssvc.v1.ListingsService/GetUserFavorites"
+	ListingsService_IsFavorite_FullMethodName                      = "/listingssvc.v1.ListingsService/IsFavorite"
+	ListingsService_GetStorefront_FullMethodName                   = "/listingssvc.v1.ListingsService/GetStorefront"
+	ListingsService_GetStorefrontBySlug_FullMethodName             = "/listingssvc.v1.ListingsService/GetStorefrontBySlug"
+	ListingsService_ListStorefronts_FullMethodName                 = "/listingssvc.v1.ListingsService/ListStorefronts"
+	ListingsService_CreateVariants_FullMethodName                  = "/listingssvc.v1.ListingsService/CreateVariants"
+	ListingsService_GetVariants_FullMethodName                     = "/listingssvc.v1.ListingsService/GetVariants"
+	ListingsService_UpdateVariant_FullMethodName                   = "/listingssvc.v1.ListingsService/UpdateVariant"
+	ListingsService_DeleteVariant_FullMethodName                   = "/listingssvc.v1.ListingsService/DeleteVariant"
+	ListingsService_GetListingsForReindex_FullMethodName           = "/listingssvc.v1.ListingsService/GetListingsForReindex"
+	ListingsService_ResetReindexFlags_FullMethodName               = "/listingssvc.v1.ListingsService/ResetReindexFlags"
+	ListingsService_SyncDiscounts_FullMethodName                   = "/listingssvc.v1.ListingsService/SyncDiscounts"
+	ListingsService_GetProduct_FullMethodName                      = "/listingssvc.v1.ListingsService/GetProduct"
+	ListingsService_GetProductsBySKUs_FullMethodName               = "/listingssvc.v1.ListingsService/GetProductsBySKUs"
+	ListingsService_GetProductsByIDs_FullMethodName                = "/listingssvc.v1.ListingsService/GetProductsByIDs"
+	ListingsService_ListProducts_FullMethodName                    = "/listingssvc.v1.ListingsService/ListProducts"
+	ListingsService_GetVariant_FullMethodName                      = "/listingssvc.v1.ListingsService/GetVariant"
+	ListingsService_GetVariantsByProductID_FullMethodName          = "/listingssvc.v1.ListingsService/GetVariantsByProductID"
+	ListingsService_DecrementStock_FullMethodName                  = "/listingssvc.v1.ListingsService/DecrementStock"
+	ListingsService_RollbackStock_FullMethodName                   = "/listingssvc.v1.ListingsService/RollbackStock"
+	ListingsService_CheckStockAvailability_FullMethodName          = "/listingssvc.v1.ListingsService/CheckStockAvailability"
+	ListingsService_CreateReservation_FullMethodName               = "/listingssvc.v1.ListingsService/CreateReservation"
+	ListingsService_ReleaseReservation_FullMethodName              = "/listingssvc.v1.ListingsService/ReleaseReservation"
+	ListingsService_CommitReservation_FullMethodName               = "/listingssvc.v1.ListingsService/CommitReservation"
+	ListingsService_GetReservation_FullMethodName                  = "/listingssvc.v1.ListingsService/GetReservation"
+	ListingsService_GetReservedQuantityForListing_FullMethodName   = "/listingssvc.v1.ListingsService/GetReservedQuantityForListing"
+	ListingsService_CreateProduct_FullMethodName                   = "/listingssvc.v1.ListingsService/CreateProduct"
+	ListingsService_UpdateProduct_FullMethodName                   = "/listingssvc.v1.ListingsService/UpdateProduct"
+	ListingsService_DeleteProduct_FullMethodName                   = "/listingssvc.v1.ListingsService/DeleteProduct"
+	ListingsService_BulkCreateProducts_FullMethodName              = "/listingssvc.v1.ListingsService/BulkCreateProducts"
+	ListingsService_BulkUpdateProducts_FullMethodName              = "/listingssvc.v1.ListingsService/BulkUpdateProducts"
+	ListingsService_BulkDeleteProducts_FullMethodName              = "/listingssvc.v1.ListingsService/BulkDeleteProducts"
+	ListingsService_CreateProductVariant_FullMethodName            = "/listingssvc.v1.ListingsService/CreateProductVariant"
+	ListingsService_UpdateProductVariant_FullMethodName            = "/listingssvc.v1.ListingsService/UpdateProductVariant"
+	ListingsService_DeleteProductVariant_FullMethodName            = "/listingssvc.v1.ListingsService/DeleteProductVariant"
+	ListingsService_BulkCreateProductVariants_FullMethodName       = "/listingssvc.v1.ListingsService/BulkCreateProductVariants"
+	ListingsService_RecordInventoryMovement_FullMethodName         = "/listingssvc.v1.ListingsService/RecordInventoryMovement"
+	ListingsService_BatchUpdateStock_FullMethodName                = "/listingssvc.v1.ListingsService/BatchUpdateStock"
+	ListingsService_GetProductStats_FullMethodName                 = "/listingssvc.v1.ListingsService/GetProductStats"
+	ListingsService_IncrementProductViews_FullMethodName           = "/listingssvc.v1.ListingsService/IncrementProductViews"
+	ListingsService_AddProductImage_FullMethodName                 = "/listingssvc.v1.ListingsService/AddProductImage"
+	ListingsService_GetProductImages_FullMethodName                = "/listingssvc.v1.ListingsService/GetProductImages"
+	ListingsService_DeleteProductImage_FullMethodName              = "/listingssvc.v1.ListingsService/DeleteProductImage"
+	ListingsService_ReorderProductImages_FullMethodName            = "/listingssvc.v1.ListingsService/ReorderProductImages"
+	ListingsService_ReindexAll_FullMethodName                      = "/listingssvc.v1.ListingsService/ReindexAll"
+	ListingsService_CreateStorefront_FullMethodName                = "/listingssvc.v1.ListingsService/CreateStorefront"
+	ListingsService_UpdateStorefront_FullMethodName                = "/listingssvc.v1.ListingsService/UpdateStorefront"
+	ListingsService_DeleteStorefront_FullMethodName                = "/listingssvc.v1.ListingsService/DeleteStorefront"
+	ListingsService_GetMyStorefronts_FullMethodName                = "/listingssvc.v1.ListingsService/GetMyStorefronts"
+	ListingsService_AddStaff_FullMethodName                        = "/listingssvc.v1.ListingsService/AddStaff"
+	ListingsService_UpdateStaff_FullMethodName                     = "/listingssvc.v1.ListingsService/UpdateStaff"
+	ListingsService_RemoveStaff_FullMethodName                     = "/listingssvc.v1.ListingsService/RemoveStaff"
+	ListingsService_GetStaff_FullMethodName                        = "/listingssvc.v1.ListingsService/GetStaff"
+	ListingsService_SetWorkingHours_FullMethodName                 = "/listingssvc.v1.ListingsService/SetWorkingHours"
+	ListingsService_GetWorkingHours_FullMethodName                 = "/listingssvc.v1.ListingsService/GetWorkingHours"
+	ListingsService_IsOpenNow_FullMethodName                       = "/listingssvc.v1.ListingsService/IsOpenNow"
+	ListingsService_SetPaymentMethods_FullMethodName               = "/listingssvc.v1.ListingsService/SetPaymentMethods"
+	ListingsService_GetPaymentMethods_FullMethodName               = "/listingssvc.v1.ListingsService/GetPaymentMethods"
+	ListingsService_SetDeliveryOptions_FullMethodName              = "/listingssvc.v1.ListingsService/SetDeliveryOptions"
+	ListingsService_GetDeliveryOptions_FullMethodName              = "/listingssvc.v1.ListingsService/GetDeliveryOptions"
+	ListingsService_GetMapData_FullMethodName                      = "/listingssvc.v1.ListingsService/GetMapData"
+	ListingsService_GetDashboardStats_FullMethodName               = "/listingssvc.v1.ListingsService/GetDashboardStats"
+	ListingsService_CreateStorefrontEmailInvitation_FullMethodName = "/listingssvc.v1.ListingsService/CreateStorefrontEmailInvitation"
+	ListingsService_CreateStorefrontLinkInvitation_FullMethodName  = "/listingssvc.v1.ListingsService/CreateStorefrontLinkInvitation"
+	ListingsService_ListStorefrontInvitations_FullMethodName       = "/listingssvc.v1.ListingsService/ListStorefrontInvitations"
+	ListingsService_RevokeStorefrontInvitation_FullMethodName      = "/listingssvc.v1.ListingsService/RevokeStorefrontInvitation"
+	ListingsService_GetMyStorefrontInvitations_FullMethodName      = "/listingssvc.v1.ListingsService/GetMyStorefrontInvitations"
+	ListingsService_AcceptStorefrontInvitation_FullMethodName      = "/listingssvc.v1.ListingsService/AcceptStorefrontInvitation"
+	ListingsService_DeclineStorefrontInvitation_FullMethodName     = "/listingssvc.v1.ListingsService/DeclineStorefrontInvitation"
+	ListingsService_ValidateStorefrontInviteCode_FullMethodName    = "/listingssvc.v1.ListingsService/ValidateStorefrontInviteCode"
+	ListingsService_AcceptStorefrontInviteCode_FullMethodName      = "/listingssvc.v1.ListingsService/AcceptStorefrontInviteCode"
 )
 
 // ListingsServiceClient is the client API for ListingsService service.
@@ -210,6 +220,9 @@ type ListingsServiceClient interface {
 	CommitReservation(ctx context.Context, in *CommitReservationRequest, opts ...grpc.CallOption) (*CommitReservationResponse, error)
 	// GetReservation retrieves reservation details by ID
 	GetReservation(ctx context.Context, in *GetReservationRequest, opts ...grpc.CallOption) (*GetReservationResponse, error)
+	// GetReservedQuantityForListing returns total reserved quantity for a listing
+	// Used by inventory display to show how much stock is reserved
+	GetReservedQuantityForListing(ctx context.Context, in *GetReservedQuantityRequest, opts ...grpc.CallOption) (*GetReservedQuantityResponse, error)
 	// CreateProduct creates a new B2C product
 	// Transaction: Creates product + initializes stock record
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductResponse, error)
@@ -296,6 +309,24 @@ type ListingsServiceClient interface {
 	GetMapData(ctx context.Context, in *GetMapDataRequest, opts ...grpc.CallOption) (*GetMapDataResponse, error)
 	// GetDashboardStats retrieves storefront dashboard statistics
 	GetDashboardStats(ctx context.Context, in *DashboardStatsRequest, opts ...grpc.CallOption) (*DashboardStatsResponse, error)
+	// CreateStorefrontEmailInvitation creates an email invitation
+	CreateStorefrontEmailInvitation(ctx context.Context, in *CreateStorefrontEmailInvitationRequest, opts ...grpc.CallOption) (*StorefrontInvitation, error)
+	// CreateStorefrontLinkInvitation creates a shareable link invitation
+	CreateStorefrontLinkInvitation(ctx context.Context, in *CreateStorefrontLinkInvitationRequest, opts ...grpc.CallOption) (*StorefrontInvitation, error)
+	// ListStorefrontInvitations lists invitations for a storefront
+	ListStorefrontInvitations(ctx context.Context, in *ListStorefrontInvitationsRequest, opts ...grpc.CallOption) (*ListStorefrontInvitationsResponse, error)
+	// RevokeStorefrontInvitation revokes an invitation
+	RevokeStorefrontInvitation(ctx context.Context, in *RevokeStorefrontInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// GetMyStorefrontInvitations gets pending invitations for a user
+	GetMyStorefrontInvitations(ctx context.Context, in *GetMyStorefrontInvitationsRequest, opts ...grpc.CallOption) (*ListStorefrontInvitationsResponse, error)
+	// AcceptStorefrontInvitation accepts an invitation
+	AcceptStorefrontInvitation(ctx context.Context, in *AcceptStorefrontInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// DeclineStorefrontInvitation declines an invitation
+	DeclineStorefrontInvitation(ctx context.Context, in *DeclineStorefrontInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ValidateStorefrontInviteCode validates an invite code
+	ValidateStorefrontInviteCode(ctx context.Context, in *ValidateStorefrontInviteCodeRequest, opts ...grpc.CallOption) (*ValidateStorefrontInviteCodeResponse, error)
+	// AcceptStorefrontInviteCode accepts an invitation via code
+	AcceptStorefrontInviteCode(ctx context.Context, in *AcceptStorefrontInviteCodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type listingsServiceClient struct {
@@ -769,6 +800,16 @@ func (c *listingsServiceClient) GetReservation(ctx context.Context, in *GetReser
 	return out, nil
 }
 
+func (c *listingsServiceClient) GetReservedQuantityForListing(ctx context.Context, in *GetReservedQuantityRequest, opts ...grpc.CallOption) (*GetReservedQuantityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetReservedQuantityResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetReservedQuantityForListing_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *listingsServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ProductResponse)
@@ -1129,6 +1170,96 @@ func (c *listingsServiceClient) GetDashboardStats(ctx context.Context, in *Dashb
 	return out, nil
 }
 
+func (c *listingsServiceClient) CreateStorefrontEmailInvitation(ctx context.Context, in *CreateStorefrontEmailInvitationRequest, opts ...grpc.CallOption) (*StorefrontInvitation, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StorefrontInvitation)
+	err := c.cc.Invoke(ctx, ListingsService_CreateStorefrontEmailInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) CreateStorefrontLinkInvitation(ctx context.Context, in *CreateStorefrontLinkInvitationRequest, opts ...grpc.CallOption) (*StorefrontInvitation, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StorefrontInvitation)
+	err := c.cc.Invoke(ctx, ListingsService_CreateStorefrontLinkInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) ListStorefrontInvitations(ctx context.Context, in *ListStorefrontInvitationsRequest, opts ...grpc.CallOption) (*ListStorefrontInvitationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListStorefrontInvitationsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_ListStorefrontInvitations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) RevokeStorefrontInvitation(ctx context.Context, in *RevokeStorefrontInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_RevokeStorefrontInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) GetMyStorefrontInvitations(ctx context.Context, in *GetMyStorefrontInvitationsRequest, opts ...grpc.CallOption) (*ListStorefrontInvitationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListStorefrontInvitationsResponse)
+	err := c.cc.Invoke(ctx, ListingsService_GetMyStorefrontInvitations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) AcceptStorefrontInvitation(ctx context.Context, in *AcceptStorefrontInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_AcceptStorefrontInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) DeclineStorefrontInvitation(ctx context.Context, in *DeclineStorefrontInvitationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_DeclineStorefrontInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) ValidateStorefrontInviteCode(ctx context.Context, in *ValidateStorefrontInviteCodeRequest, opts ...grpc.CallOption) (*ValidateStorefrontInviteCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ValidateStorefrontInviteCodeResponse)
+	err := c.cc.Invoke(ctx, ListingsService_ValidateStorefrontInviteCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *listingsServiceClient) AcceptStorefrontInviteCode(ctx context.Context, in *AcceptStorefrontInviteCodeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ListingsService_AcceptStorefrontInviteCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ListingsServiceServer is the server API for ListingsService service.
 // All implementations must embed UnimplementedListingsServiceServer
 // for forward compatibility.
@@ -1235,6 +1366,9 @@ type ListingsServiceServer interface {
 	CommitReservation(context.Context, *CommitReservationRequest) (*CommitReservationResponse, error)
 	// GetReservation retrieves reservation details by ID
 	GetReservation(context.Context, *GetReservationRequest) (*GetReservationResponse, error)
+	// GetReservedQuantityForListing returns total reserved quantity for a listing
+	// Used by inventory display to show how much stock is reserved
+	GetReservedQuantityForListing(context.Context, *GetReservedQuantityRequest) (*GetReservedQuantityResponse, error)
 	// CreateProduct creates a new B2C product
 	// Transaction: Creates product + initializes stock record
 	CreateProduct(context.Context, *CreateProductRequest) (*ProductResponse, error)
@@ -1321,6 +1455,24 @@ type ListingsServiceServer interface {
 	GetMapData(context.Context, *GetMapDataRequest) (*GetMapDataResponse, error)
 	// GetDashboardStats retrieves storefront dashboard statistics
 	GetDashboardStats(context.Context, *DashboardStatsRequest) (*DashboardStatsResponse, error)
+	// CreateStorefrontEmailInvitation creates an email invitation
+	CreateStorefrontEmailInvitation(context.Context, *CreateStorefrontEmailInvitationRequest) (*StorefrontInvitation, error)
+	// CreateStorefrontLinkInvitation creates a shareable link invitation
+	CreateStorefrontLinkInvitation(context.Context, *CreateStorefrontLinkInvitationRequest) (*StorefrontInvitation, error)
+	// ListStorefrontInvitations lists invitations for a storefront
+	ListStorefrontInvitations(context.Context, *ListStorefrontInvitationsRequest) (*ListStorefrontInvitationsResponse, error)
+	// RevokeStorefrontInvitation revokes an invitation
+	RevokeStorefrontInvitation(context.Context, *RevokeStorefrontInvitationRequest) (*emptypb.Empty, error)
+	// GetMyStorefrontInvitations gets pending invitations for a user
+	GetMyStorefrontInvitations(context.Context, *GetMyStorefrontInvitationsRequest) (*ListStorefrontInvitationsResponse, error)
+	// AcceptStorefrontInvitation accepts an invitation
+	AcceptStorefrontInvitation(context.Context, *AcceptStorefrontInvitationRequest) (*emptypb.Empty, error)
+	// DeclineStorefrontInvitation declines an invitation
+	DeclineStorefrontInvitation(context.Context, *DeclineStorefrontInvitationRequest) (*emptypb.Empty, error)
+	// ValidateStorefrontInviteCode validates an invite code
+	ValidateStorefrontInviteCode(context.Context, *ValidateStorefrontInviteCodeRequest) (*ValidateStorefrontInviteCodeResponse, error)
+	// AcceptStorefrontInviteCode accepts an invitation via code
+	AcceptStorefrontInviteCode(context.Context, *AcceptStorefrontInviteCodeRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedListingsServiceServer()
 }
 
@@ -1469,6 +1621,9 @@ func (UnimplementedListingsServiceServer) CommitReservation(context.Context, *Co
 func (UnimplementedListingsServiceServer) GetReservation(context.Context, *GetReservationRequest) (*GetReservationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetReservation not implemented")
 }
+func (UnimplementedListingsServiceServer) GetReservedQuantityForListing(context.Context, *GetReservedQuantityRequest) (*GetReservedQuantityResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetReservedQuantityForListing not implemented")
+}
 func (UnimplementedListingsServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*ProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateProduct not implemented")
 }
@@ -1576,6 +1731,33 @@ func (UnimplementedListingsServiceServer) GetMapData(context.Context, *GetMapDat
 }
 func (UnimplementedListingsServiceServer) GetDashboardStats(context.Context, *DashboardStatsRequest) (*DashboardStatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDashboardStats not implemented")
+}
+func (UnimplementedListingsServiceServer) CreateStorefrontEmailInvitation(context.Context, *CreateStorefrontEmailInvitationRequest) (*StorefrontInvitation, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateStorefrontEmailInvitation not implemented")
+}
+func (UnimplementedListingsServiceServer) CreateStorefrontLinkInvitation(context.Context, *CreateStorefrontLinkInvitationRequest) (*StorefrontInvitation, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateStorefrontLinkInvitation not implemented")
+}
+func (UnimplementedListingsServiceServer) ListStorefrontInvitations(context.Context, *ListStorefrontInvitationsRequest) (*ListStorefrontInvitationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListStorefrontInvitations not implemented")
+}
+func (UnimplementedListingsServiceServer) RevokeStorefrontInvitation(context.Context, *RevokeStorefrontInvitationRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevokeStorefrontInvitation not implemented")
+}
+func (UnimplementedListingsServiceServer) GetMyStorefrontInvitations(context.Context, *GetMyStorefrontInvitationsRequest) (*ListStorefrontInvitationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMyStorefrontInvitations not implemented")
+}
+func (UnimplementedListingsServiceServer) AcceptStorefrontInvitation(context.Context, *AcceptStorefrontInvitationRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method AcceptStorefrontInvitation not implemented")
+}
+func (UnimplementedListingsServiceServer) DeclineStorefrontInvitation(context.Context, *DeclineStorefrontInvitationRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeclineStorefrontInvitation not implemented")
+}
+func (UnimplementedListingsServiceServer) ValidateStorefrontInviteCode(context.Context, *ValidateStorefrontInviteCodeRequest) (*ValidateStorefrontInviteCodeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ValidateStorefrontInviteCode not implemented")
+}
+func (UnimplementedListingsServiceServer) AcceptStorefrontInviteCode(context.Context, *AcceptStorefrontInviteCodeRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method AcceptStorefrontInviteCode not implemented")
 }
 func (UnimplementedListingsServiceServer) mustEmbedUnimplementedListingsServiceServer() {}
 func (UnimplementedListingsServiceServer) testEmbeddedByValue()                         {}
@@ -2415,6 +2597,24 @@ func _ListingsService_GetReservation_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_GetReservedQuantityForListing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReservedQuantityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetReservedQuantityForListing(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetReservedQuantityForListing_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetReservedQuantityForListing(ctx, req.(*GetReservedQuantityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ListingsService_CreateProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateProductRequest)
 	if err := dec(in); err != nil {
@@ -3063,6 +3263,168 @@ func _ListingsService_GetDashboardStats_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_CreateStorefrontEmailInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateStorefrontEmailInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CreateStorefrontEmailInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CreateStorefrontEmailInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CreateStorefrontEmailInvitation(ctx, req.(*CreateStorefrontEmailInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_CreateStorefrontLinkInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateStorefrontLinkInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).CreateStorefrontLinkInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_CreateStorefrontLinkInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).CreateStorefrontLinkInvitation(ctx, req.(*CreateStorefrontLinkInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_ListStorefrontInvitations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListStorefrontInvitationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ListStorefrontInvitations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ListStorefrontInvitations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ListStorefrontInvitations(ctx, req.(*ListStorefrontInvitationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_RevokeStorefrontInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeStorefrontInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).RevokeStorefrontInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_RevokeStorefrontInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).RevokeStorefrontInvitation(ctx, req.(*RevokeStorefrontInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_GetMyStorefrontInvitations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMyStorefrontInvitationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).GetMyStorefrontInvitations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_GetMyStorefrontInvitations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).GetMyStorefrontInvitations(ctx, req.(*GetMyStorefrontInvitationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_AcceptStorefrontInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptStorefrontInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).AcceptStorefrontInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_AcceptStorefrontInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).AcceptStorefrontInvitation(ctx, req.(*AcceptStorefrontInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_DeclineStorefrontInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeclineStorefrontInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).DeclineStorefrontInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_DeclineStorefrontInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).DeclineStorefrontInvitation(ctx, req.(*DeclineStorefrontInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_ValidateStorefrontInviteCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ValidateStorefrontInviteCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).ValidateStorefrontInviteCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_ValidateStorefrontInviteCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).ValidateStorefrontInviteCode(ctx, req.(*ValidateStorefrontInviteCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ListingsService_AcceptStorefrontInviteCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptStorefrontInviteCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).AcceptStorefrontInviteCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_AcceptStorefrontInviteCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).AcceptStorefrontInviteCode(ctx, req.(*AcceptStorefrontInviteCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ListingsService_ServiceDesc is the grpc.ServiceDesc for ListingsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -3251,6 +3613,10 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ListingsService_GetReservation_Handler,
 		},
 		{
+			MethodName: "GetReservedQuantityForListing",
+			Handler:    _ListingsService_GetReservedQuantityForListing_Handler,
+		},
+		{
 			MethodName: "CreateProduct",
 			Handler:    _ListingsService_CreateProduct_Handler,
 		},
@@ -3393,6 +3759,42 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDashboardStats",
 			Handler:    _ListingsService_GetDashboardStats_Handler,
+		},
+		{
+			MethodName: "CreateStorefrontEmailInvitation",
+			Handler:    _ListingsService_CreateStorefrontEmailInvitation_Handler,
+		},
+		{
+			MethodName: "CreateStorefrontLinkInvitation",
+			Handler:    _ListingsService_CreateStorefrontLinkInvitation_Handler,
+		},
+		{
+			MethodName: "ListStorefrontInvitations",
+			Handler:    _ListingsService_ListStorefrontInvitations_Handler,
+		},
+		{
+			MethodName: "RevokeStorefrontInvitation",
+			Handler:    _ListingsService_RevokeStorefrontInvitation_Handler,
+		},
+		{
+			MethodName: "GetMyStorefrontInvitations",
+			Handler:    _ListingsService_GetMyStorefrontInvitations_Handler,
+		},
+		{
+			MethodName: "AcceptStorefrontInvitation",
+			Handler:    _ListingsService_AcceptStorefrontInvitation_Handler,
+		},
+		{
+			MethodName: "DeclineStorefrontInvitation",
+			Handler:    _ListingsService_DeclineStorefrontInvitation_Handler,
+		},
+		{
+			MethodName: "ValidateStorefrontInviteCode",
+			Handler:    _ListingsService_ValidateStorefrontInviteCode_Handler,
+		},
+		{
+			MethodName: "AcceptStorefrontInviteCode",
+			Handler:    _ListingsService_AcceptStorefrontInviteCode_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
