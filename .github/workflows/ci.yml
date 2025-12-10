@@ -7,100 +7,63 @@ on:
     branches: [ main, develop ]
 
 env:
-  GOPRIVATE: github.com/vondi-global/*
+  GO_VERSION: '1.23'
 
 jobs:
-  validate:
-    name: Validate go.mod
-    runs-on: [self-hosted, svetu]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check no replace directives in go.mod
-        run: |
-          if grep -q "^replace" go.mod; then
-            echo "❌ ERROR: go.mod contains replace directives!"
-            echo ""
-            echo "Found replace directives:"
-            grep "^replace" go.mod
-            echo ""
-            echo "Replace directives are for local development only."
-            echo "Remove them before committing to main/develop."
-            exit 1
-          else
-            echo "✅ No replace directives found in go.mod"
-          fi
-
   lint:
     name: Lint
-    runs-on: [self-hosted, svetu]
-    needs: [validate]
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure git for private modules
-        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
-
-      - name: Download dependencies
-        env:
-          GOPRIVATE: github.com/vondi-global/*
-        run: |
-          go mod download
-          go mod tidy
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v4
         with:
-          version: v2.7.2
+          version: latest
           args: --timeout=5m
-        env:
-          GOPRIVATE: github.com/vondi-global/*
 
   test:
     name: Test
-    runs-on: [self-hosted, svetu]
-    needs: [validate]
+    runs-on: self-hosted
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: listings_db_test
+          POSTGRES_USER: listings_user
+          POSTGRES_PASSWORD: listings_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - name: Cleanup old containers
-        run: |
-          # Stop and remove test containers by name
-          docker rm -f postgres-listings-test redis-listings-test || true
-
-          # Find and kill containers using ports 5432 and 6379
-          docker ps --filter "publish=5432" --format "{{.ID}}" | xargs -r docker rm -f || true
-          docker ps --filter "publish=6379" --format "{{.ID}}" | xargs -r docker rm -f || true
-
-          # Cleanup all stopped containers
-          docker ps -aq | xargs -r docker rm -f || true
-          docker network prune -f || true
-          sleep 2
-        continue-on-error: true
-
-      - name: Start PostgreSQL
-        run: |
-          docker run -d --name postgres-listings-test \
-            -e POSTGRES_DB=listings_db_test \
-            -e POSTGRES_USER=listings_user \
-            -e POSTGRES_PASSWORD=listings_password \
-            -p 55432:5432 \
-            postgres:15-alpine
-          sleep 5
-
-      - name: Start Redis
-        run: |
-          docker run -d --name redis-listings-test \
-            -p 56379:6379 \
-            redis:7-alpine
-          sleep 2
-
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure git for private modules
-        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -115,31 +78,55 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Create test temp directory
-        run: mkdir -p $GITHUB_WORKSPACE/.gotmp
-
       - name: Run unit tests
         env:
-          VONDILISTINGS_DB_HOST: localhost
-          VONDILISTINGS_DB_PORT: 55432
-          VONDILISTINGS_DB_USER: listings_user
-          VONDILISTINGS_DB_PASSWORD: listings_password
-          VONDILISTINGS_DB_NAME: listings_db_test
-          VONDILISTINGS_REDIS_HOST: localhost
-          VONDILISTINGS_REDIS_PORT: 56379
-          GOTMPDIR: ${{ github.workspace }}/.gotmp
-        run: go test -v -race -short ./internal/... ./test/...
+          SVETULISTINGS_DB_HOST: localhost
+          SVETULISTINGS_DB_PORT: 5432
+          SVETULISTINGS_DB_USER: listings_user
+          SVETULISTINGS_DB_PASSWORD: listings_password
+          SVETULISTINGS_DB_NAME: listings_db_test
+          SVETULISTINGS_REDIS_HOST: localhost
+          SVETULISTINGS_REDIS_PORT: 6379
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic -short ./...
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% is below 70% threshold"
+            exit 1
+          else
+            echo "✅ Coverage $COVERAGE% meets threshold"
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.txt
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Generate coverage badge
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.txt
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   build:
     name: Build
-    runs-on: [self-hosted, svetu]
-    needs: [validate, lint, test]
+    runs-on: self-hosted
+    needs: [lint, test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure git for private modules
-        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -163,7 +150,7 @@ jobs:
 
   docker:
     name: Docker Build
-    runs-on: [self-hosted, svetu]
+    runs-on: self-hosted
     needs: [lint, test]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     steps:
@@ -184,7 +171,7 @@ jobs:
 
   integration-test:
     name: Integration Tests
-    runs-on: [self-hosted, svetu]
+    runs-on: self-hosted
     needs: [build]
     if: github.event_name == 'pull_request'
     services:
@@ -195,7 +182,7 @@ jobs:
           POSTGRES_USER: listings_user
           POSTGRES_PASSWORD: listings_password
         ports:
-          - 5435:5432
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -205,7 +192,7 @@ jobs:
       redis:
         image: redis:7-alpine
         ports:
-          - 6380:6379
+          - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -216,20 +203,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure git for private modules
-        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
-
-      - name: Create test temp directory
-        run: mkdir -p $GITHUB_WORKSPACE/.gotmp
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Run integration tests
         env:
-          VONDILISTINGS_DB_HOST: localhost
-          VONDILISTINGS_DB_PORT: 5432
-          VONDILISTINGS_DB_USER: listings_user
-          VONDILISTINGS_DB_PASSWORD: listings_password
-          VONDILISTINGS_DB_NAME: listings_db_test
-          VONDILISTINGS_REDIS_HOST: localhost
-          VONDILISTINGS_REDIS_PORT: 6379
-          GOTMPDIR: ${{ github.workspace }}/.gotmp
-        run: go test -v -tags=integration ./internal/... ./test/...
+          SVETULISTINGS_DB_HOST: localhost
+          SVETULISTINGS_DB_PORT: 5432
+          SVETULISTINGS_DB_USER: listings_user
+          SVETULISTINGS_DB_PASSWORD: listings_password
+          SVETULISTINGS_DB_NAME: listings_db_test
+          SVETULISTINGS_REDIS_HOST: localhost
+          SVETULISTINGS_REDIS_PORT: 6379
+        run: go test -v -tags=integration ./...
