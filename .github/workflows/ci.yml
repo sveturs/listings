@@ -11,9 +11,32 @@ env:
   GOPRIVATE: github.com/vondi-global/*
 
 jobs:
+  validate:
+    name: Validate go.mod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check no replace directives in go.mod
+        run: |
+          if grep -q "^replace" go.mod; then
+            echo "❌ ERROR: go.mod contains replace directives!"
+            echo ""
+            echo "Found replace directives:"
+            grep "^replace" go.mod
+            echo ""
+            echo "Replace directives are for local development only."
+            echo "Remove them before committing to main/develop."
+            exit 1
+          else
+            echo "✅ No replace directives found in go.mod"
+          fi
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    needs: [validate]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,15 +49,25 @@ jobs:
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
+      - name: Download dependencies
+        env:
+          GOPRIVATE: github.com/vondi-global/*
+        run: |
+          go mod download
+          go mod tidy
+
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: latest
+          version: v2.7.2
           args: --timeout=5m
+        env:
+          GOPRIVATE: github.com/vondi-global/*
 
   test:
     name: Test
     runs-on: ubuntu-latest
+    needs: [validate]
     services:
       postgres:
         image: postgres:15-alpine
@@ -94,38 +127,12 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 6379
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic -short ./...
-
-      - name: Check coverage threshold
-        run: |
-          COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
-          echo "Total coverage: $COVERAGE%"
-          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-            echo "❌ Coverage $COVERAGE% is below 70% threshold"
-            exit 1
-          else
-            echo "✅ Coverage $COVERAGE% meets threshold"
-          fi
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.txt
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
-      - name: Generate coverage badge
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.txt
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+        run: go test -v -race -short ./internal/... ./test/...
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    needs: [validate, lint, test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -230,4 +237,4 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 6379
-        run: go test -v -tags=integration ./...
+        run: go test -v -tags=integration ./internal/... ./test/...

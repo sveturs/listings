@@ -133,6 +133,8 @@ func setupGRPCTestServer(t *testing.T) (pb.ListingsServiceClient, *tests.TestDB,
 		nil, // chatService
 		nil, // analyticsService
 		nil, // storefrontAnalyticsService
+		nil, // inventoryService
+		nil, // invitationService
 		nil, // minioClient
 		m,
 		logger,

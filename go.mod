@@ -24,7 +24,7 @@ require (
 	github.com/redis/go-redis/v9 v9.16.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
-	github.com/vondi-global/auth v1.21.6
+	github.com/vondi-global/auth v1.22.1
 	github.com/vondi-global/delivery v0.1.6
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
@@ -116,10 +116,4 @@ require (
 	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
-
-replace (
-	github.com/vondi-global/auth => /p/github.com/sveturs/auth
-	github.com/vondi-global/delivery => /p/github.com/sveturs/delivery
-	github.com/vondi-global/lib => /p/github.com/sveturs/lib
 )

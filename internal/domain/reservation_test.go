@@ -16,10 +16,11 @@ import (
 
 func TestInventoryReservation_Validate_Success(t *testing.T) {
 	reservation := &InventoryReservation{
-		ListingID: 100,
-		OrderID:   1,
-		Quantity:  5,
-		ExpiresAt: time.Now().Add(30 * time.Minute),
+		ListingID:     100,
+		ReferenceType: ReferenceTypeOrder,
+		ReferenceID:   1,
+		Quantity:      5,
+		ExpiresAt:     time.Now().Add(30 * time.Minute),
 	}
 
 	err := reservation.Validate()
@@ -40,40 +41,55 @@ func TestInventoryReservation_Validate_Failures(t *testing.T) {
 		{
 			name: "invalid listing_id",
 			reservation: &InventoryReservation{
-				ListingID: 0,
-				OrderID:   1,
-				Quantity:  5,
-				ExpiresAt: time.Now().Add(30 * time.Minute),
+				ListingID:     0,
+				ReferenceType: ReferenceTypeOrder,
+				ReferenceID:   1,
+				Quantity:      5,
+				ExpiresAt:     time.Now().Add(30 * time.Minute),
 			},
 			wantErr: "listing_id must be greater than 0",
 		},
 		{
-			name: "invalid order_id",
+			name: "invalid reference_type",
 			reservation: &InventoryReservation{
-				ListingID: 100,
-				OrderID:   0,
-				Quantity:  5,
-				ExpiresAt: time.Now().Add(30 * time.Minute),
+				ListingID:     100,
+				ReferenceType: "invalid",
+				ReferenceID:   1,
+				Quantity:      5,
+				ExpiresAt:     time.Now().Add(30 * time.Minute),
 			},
-			wantErr: "order_id must be greater than 0",
+			wantErr: "reference_type must be 'order' or 'transfer'",
+		},
+		{
+			name: "invalid reference_id",
+			reservation: &InventoryReservation{
+				ListingID:     100,
+				ReferenceType: ReferenceTypeOrder,
+				ReferenceID:   0,
+				Quantity:      5,
+				ExpiresAt:     time.Now().Add(30 * time.Minute),
+			},
+			wantErr: "reference_id must be greater than 0",
 		},
 		{
 			name: "invalid quantity",
 			reservation: &InventoryReservation{
-				ListingID: 100,
-				OrderID:   1,
-				Quantity:  0,
-				ExpiresAt: time.Now().Add(30 * time.Minute),
+				ListingID:     100,
+				ReferenceType: ReferenceTypeOrder,
+				ReferenceID:   1,
+				Quantity:      0,
+				ExpiresAt:     time.Now().Add(30 * time.Minute),
 			},
 			wantErr: "quantity must be greater than 0",
 		},
 		{
 			name: "zero expires_at",
 			reservation: &InventoryReservation{
-				ListingID: 100,
-				OrderID:   1,
-				Quantity:  5,
-				ExpiresAt: time.Time{},
+				ListingID:     100,
+				ReferenceType: ReferenceTypeOrder,
+				ReferenceID:   1,
+				Quantity:      5,
+				ExpiresAt:     time.Time{},
 			},
 			wantErr: "expires_at is required",
 		},
@@ -334,12 +350,13 @@ func TestInventoryReservation_CalculateTTL_ZeroExpiresAt(t *testing.T) {
 
 func TestNewInventoryReservation_Success(t *testing.T) {
 	variantID := int64(10)
-	reservation := NewInventoryReservation(100, &variantID, 1, 5)
+	reservation := NewInventoryReservation(100, &variantID, ReferenceTypeOrder, 1, 5)
 
 	require.NotNil(t, reservation)
 	assert.Equal(t, int64(100), reservation.ListingID)
 	assert.Equal(t, int64(10), *reservation.VariantID)
-	assert.Equal(t, int64(1), reservation.OrderID)
+	assert.Equal(t, ReferenceTypeOrder, reservation.ReferenceType)
+	assert.Equal(t, int64(1), reservation.ReferenceID)
 	assert.Equal(t, int32(5), reservation.Quantity)
 	assert.Equal(t, ReservationStatusActive, reservation.Status)
 	assert.False(t, reservation.ExpiresAt.IsZero())
@@ -353,7 +370,7 @@ func TestNewInventoryReservation_Success(t *testing.T) {
 }
 
 func TestNewInventoryReservation_NilVariant(t *testing.T) {
-	reservation := NewInventoryReservation(100, nil, 1, 5)
+	reservation := NewInventoryReservation(100, nil, ReferenceTypeOrder, 1, 5)
 
 	require.NotNil(t, reservation)
 	assert.Nil(t, reservation.VariantID)
@@ -361,7 +378,7 @@ func TestNewInventoryReservation_NilVariant(t *testing.T) {
 
 func TestNewInventoryReservationWithTTL_CustomTTL(t *testing.T) {
 	variantID := int64(10)
-	reservation := NewInventoryReservationWithTTL(100, &variantID, 1, 5, 60)
+	reservation := NewInventoryReservationWithTTL(100, &variantID, ReferenceTypeOrder, 1, 5, 60)
 
 	require.NotNil(t, reservation)
 	assert.Equal(t, int64(100), reservation.ListingID)
@@ -374,7 +391,7 @@ func TestNewInventoryReservationWithTTL_CustomTTL(t *testing.T) {
 }
 
 func TestNewInventoryReservationWithTTL_ZeroTTL(t *testing.T) {
-	reservation := NewInventoryReservationWithTTL(100, nil, 1, 5, 0)
+	reservation := NewInventoryReservationWithTTL(100, nil, ReferenceTypeOrder, 1, 5, 0)
 
 	require.NotNil(t, reservation)
 	assert.True(t, reservation.IsExpired()) // Should be immediately expired
@@ -431,30 +448,29 @@ func TestReservationStatus_ToProtoReservationStatus(t *testing.T) {
 func TestInventoryReservationFromProto_Success(t *testing.T) {
 	now := time.Now()
 	variantID := int64(10)
-	committedAt := now.Add(-1 * time.Hour)
 
-	pbReservation := &pb.InventoryReservation{
-		Id:          1,
-		ListingId:   100,
-		VariantId:   &variantID,
-		OrderId:     1,
-		Quantity:    5,
-		Status:      pb.ReservationStatus_RESERVATION_STATUS_COMMITTED,
-		ExpiresAt:   timestamppb.New(now.Add(30 * time.Minute)),
-		CreatedAt:   timestamppb.New(now.Add(-2 * time.Hour)),
-		UpdatedAt:   timestamppb.New(now),
-		CommittedAt: timestamppb.New(committedAt),
+	pbDetails := &pb.ReservationDetails{
+		Id:            1,
+		ListingId:     100,
+		VariantId:     &variantID,
+		ReferenceType: string(ReferenceTypeOrder),
+		ReferenceId:   1,
+		Quantity:      5,
+		Status:        string(ReservationStatusCommitted),
+		ExpiresAt:     timestamppb.New(now.Add(30 * time.Minute)),
+		CreatedAt:     timestamppb.New(now.Add(-2 * time.Hour)),
+		UpdatedAt:     timestamppb.New(now),
 	}
 
-	reservation := InventoryReservationFromProto(pbReservation)
+	reservation := InventoryReservationFromProto(pbDetails)
 	require.NotNil(t, reservation)
 	assert.Equal(t, int64(1), reservation.ID)
 	assert.Equal(t, int64(100), reservation.ListingID)
 	assert.Equal(t, int64(10), *reservation.VariantID)
-	assert.Equal(t, int64(1), reservation.OrderID)
+	assert.Equal(t, ReferenceTypeOrder, reservation.ReferenceType)
+	assert.Equal(t, int64(1), reservation.ReferenceID)
 	assert.Equal(t, int32(5), reservation.Quantity)
 	assert.Equal(t, ReservationStatusCommitted, reservation.Status)
-	assert.NotNil(t, reservation.CommittedAt)
 }
 
 func TestInventoryReservationFromProto_Nil(t *testing.T) {
@@ -468,16 +484,17 @@ func TestInventoryReservation_ToProto_Success(t *testing.T) {
 	committedAt := now.Add(-1 * time.Hour)
 
 	reservation := &InventoryReservation{
-		ID:          1,
-		ListingID:   100,
-		VariantID:   &variantID,
-		OrderID:     1,
-		Quantity:    5,
-		Status:      ReservationStatusCommitted,
-		ExpiresAt:   now.Add(30 * time.Minute),
-		CreatedAt:   now.Add(-2 * time.Hour),
-		UpdatedAt:   now,
-		CommittedAt: &committedAt,
+		ID:            1,
+		ListingID:     100,
+		VariantID:     &variantID,
+		ReferenceType: ReferenceTypeOrder,
+		ReferenceID:   1,
+		Quantity:      5,
+		Status:        ReservationStatusCommitted,
+		ExpiresAt:     now.Add(30 * time.Minute),
+		CreatedAt:     now.Add(-2 * time.Hour),
+		UpdatedAt:     now,
+		CommittedAt:   &committedAt,
 	}
 
 	pbReservation := reservation.ToProto()
@@ -485,10 +502,10 @@ func TestInventoryReservation_ToProto_Success(t *testing.T) {
 	assert.Equal(t, int64(1), pbReservation.Id)
 	assert.Equal(t, int64(100), pbReservation.ListingId)
 	assert.Equal(t, int64(10), *pbReservation.VariantId)
-	assert.Equal(t, int64(1), pbReservation.OrderId)
+	assert.Equal(t, string(ReferenceTypeOrder), pbReservation.ReferenceType)
+	assert.Equal(t, int64(1), pbReservation.ReferenceId)
 	assert.Equal(t, int32(5), pbReservation.Quantity)
-	assert.Equal(t, pb.ReservationStatus_RESERVATION_STATUS_COMMITTED, pbReservation.Status)
-	assert.NotNil(t, pbReservation.CommittedAt)
+	assert.Equal(t, string(ReservationStatusCommitted), pbReservation.Status)
 }
 
 func TestInventoryReservation_ToProto_Nil(t *testing.T) {
@@ -501,20 +518,19 @@ func TestInventoryReservation_ToProto_NoOptionalFields(t *testing.T) {
 	now := time.Now()
 
 	reservation := &InventoryReservation{
-		ID:        1,
-		ListingID: 100,
-		OrderID:   1,
-		Quantity:  5,
-		Status:    ReservationStatusActive,
-		ExpiresAt: now.Add(30 * time.Minute),
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:            1,
+		ListingID:     100,
+		ReferenceType: ReferenceTypeOrder,
+		ReferenceID:   1,
+		Quantity:      5,
+		Status:        ReservationStatusActive,
+		ExpiresAt:     now.Add(30 * time.Minute),
+		CreatedAt:     now,
+		UpdatedAt:     now,
 		// No VariantID, CommittedAt, ReleasedAt
 	}
 
 	pbReservation := reservation.ToProto()
 	require.NotNil(t, pbReservation)
 	assert.Nil(t, pbReservation.VariantId)
-	assert.Nil(t, pbReservation.CommittedAt)
-	assert.Nil(t, pbReservation.ReleasedAt)
 }

@@ -115,6 +115,8 @@ func setupBulkOperationsTest(tb testing.TB) (pb.ListingsServiceClient, *tests.Te
 		nil, // chatService
 		nil, // analyticsService
 		nil, // storefrontAnalyticsService
+		nil, // inventoryService
+		nil, // invitationService
 		nil, // minioClient
 		m,
 		logger,

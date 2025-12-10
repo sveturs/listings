@@ -84,6 +84,8 @@ func setupRollbackTestServer(t *testing.T) (pb.ListingsServiceClient, *tests.Tes
 		nil, // chatService
 		nil, // analyticsService
 		nil, // storefrontAnalyticsService
+		nil, // inventoryService
+		nil, // invitationService
 		nil, // minioClient
 		metricsInstance,
 		logger,

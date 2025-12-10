@@ -103,6 +103,8 @@ func setupUpdateProductTest(t *testing.T) (pb.ListingsServiceClient, *tests.Test
 		nil, // chatService
 		nil, // analyticsService
 		nil, // storefrontAnalyticsService
+		nil, // inventoryService
+		nil, // invitationService
 		nil, // minioClient
 		nil, // metrics
 		logger,

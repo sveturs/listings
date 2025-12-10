@@ -14,6 +14,7 @@ import (
 
 	pb "github.com/vondi-global/listings/api/proto/listings/v1"
 	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/events"
 	"github.com/vondi-global/listings/internal/metrics"
 	miniorepo "github.com/vondi-global/listings/internal/repository/minio"
 	"github.com/vondi-global/listings/internal/repository/postgres"
@@ -96,6 +97,8 @@ func (m *mockOrderService) GetOrderTracking(ctx context.Context, orderID int64, 
 func (m *mockOrderService) SetChatService(chatService service.ChatService) {}
 
 func (m *mockOrderService) SetDeliveryClient(client service.DeliveryClient) {}
+
+func (m *mockOrderService) SetEventPublisher(publisher events.OrderEventPublisher) {}
 
 // =============================================================================
 // Mock Cart Service
@@ -304,6 +307,8 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		chatService,
 		analyticsService,
 		storefrontAnalyticsService,
+		nil, // inventoryService
+		nil, // invitationService
 		minioClient,
 		m,
 		logger,

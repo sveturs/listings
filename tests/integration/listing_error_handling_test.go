@@ -376,6 +376,8 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 		nil, // chatService
 		nil, // analyticsService
 		nil, // storefrontAnalyticsService
+		nil, // inventoryService
+		nil, // invitationService
 		nil, // minioClient
 		m,
 		logger,

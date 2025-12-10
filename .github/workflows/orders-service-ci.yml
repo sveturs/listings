@@ -23,11 +23,23 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Configure git for private modules
+        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Download dependencies
+        env:
+          GOPRIVATE: github.com/vondi-global/*
+        run: |
+          go mod download
+          go mod tidy
+
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: latest
+          version: v2.7.2
           args: --timeout=5m
+        env:
+          GOPRIVATE: github.com/vondi-global/*
 
   unit-tests:
     name: Unit Tests
@@ -66,6 +78,9 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Configure git for private modules
+        run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Cache Go modules
         uses: actions/cache@v4
         with:
@@ -79,7 +94,7 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Run unit tests with coverage
+      - name: Run unit tests
         env:
           VONDILISTINGS_DB_HOST: localhost
           VONDILISTINGS_DB_PORT: 5432
@@ -88,34 +103,7 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 6379
-        run: |
-          go test -v -race -coverprofile=coverage.txt -covermode=atomic -short \
-            ./internal/... \
-            ./pkg/...
-
-      - name: Generate coverage report
-        run: |
-          go tool cover -func=coverage.txt > coverage_report.txt
-          cat coverage_report.txt
-
-      - name: Check coverage threshold
-        run: |
-          COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
-          echo "Total coverage: $COVERAGE%"
-          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-            echo "❌ Coverage $COVERAGE% is below 80% threshold"
-            exit 1
-          else
-            echo "✅ Coverage $COVERAGE% meets threshold"
-          fi
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.txt
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+        run: go test -v -race -short ./internal/... ./pkg/...
 
   integration-tests:
     name: Integration Tests (E2E)

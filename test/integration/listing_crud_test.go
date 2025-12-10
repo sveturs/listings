@@ -32,7 +32,7 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 1, "Electronics", "electronics", 1, true, 0)
 
@@ -68,7 +68,7 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: Insert category and storefront
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 2, "Fashion", "fashion", 1, true, 0)
 
@@ -107,7 +107,7 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 3, "Vehicles", "vehicles", 1, true, 0)
 
@@ -140,7 +140,7 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 4, "Books", "books", 1, true, 0)
 
@@ -243,7 +243,7 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 5, "Concurrent Test", "concurrent-test", 1, true, 0)
 
@@ -314,7 +314,7 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup: category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 10, "Update Test", "update-test", 1, true, 0)
 
@@ -356,7 +356,7 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 11, "Partial Update", "partial-update", 1, true, 0)
 
@@ -394,7 +394,7 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 12, "Validation", "validation", 1, true, 0)
 
@@ -452,7 +452,7 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 13, "Permission", "permission", 1, true, 0)
 
@@ -489,7 +489,7 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 14, "Concurrent Update", "concurrent-update", 1, true, 0)
 
@@ -547,7 +547,7 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 15, "Status", "status", 1, true, 0)
 
@@ -591,7 +591,7 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 20, "Get Test", "get-test", 1, true, 0)
 
@@ -642,7 +642,7 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 21, "Deleted Test", "deleted-test", 1, true, 0)
 
@@ -676,7 +676,7 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 22, "Related Data", "related-data", 1, true, 0)
 
@@ -737,7 +737,7 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 23, "Attributes", "attributes", 1, true, 0)
 
@@ -780,7 +780,7 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 24, "Multilang", "multilang", 1, true, 0)
 
@@ -822,7 +822,7 @@ func TestDeleteListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 30, "Delete Test", "delete-test", 1, true, 0)
 
@@ -880,7 +880,7 @@ func TestDeleteListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 31, "Permission Delete", "permission-delete", 1, true, 0)
 
@@ -916,7 +916,7 @@ func TestDeleteListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 32, "Already Deleted", "already-deleted", 1, true, 0)
 
@@ -961,7 +961,7 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 40, "Search Category", "search-category", 1, true, 0)
 
@@ -1001,7 +1001,7 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 41, "Price Range", "price-range", 1, true, 0)
 
@@ -1049,7 +1049,7 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 42, "Text Search", "text-search", 1, true, 0)
 
@@ -1085,7 +1085,7 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 43, "Pagination", "pagination", 1, true, 0)
 
@@ -1134,7 +1134,7 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 44, "Combined", "combined", 1, true, 0)
 
@@ -1213,7 +1213,7 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 45, "Source Type", "source-type", 1, true, 0)
 
@@ -1280,7 +1280,7 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 46, "Performance", "performance", 1, true, 0)
 
@@ -1390,7 +1390,7 @@ func TestListingEdgeCases(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 50, "Unicode", "unicode", 1, true, 0)
 
@@ -1426,7 +1426,7 @@ func TestListingEdgeCases(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 51, "Boundary", "boundary", 1, true, 0)
 

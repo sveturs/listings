@@ -22,7 +22,7 @@ func TestGetListing_WithImages(t *testing.T) {
 
 		// Setup: Create category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 1301, "Electronics", "electronics", 1, true, 0)
 
@@ -116,7 +116,7 @@ func TestGetListing_WithImages(t *testing.T) {
 
 		// Setup: Create category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 1302, "Books", "books", 1, true, 0)
 
@@ -154,7 +154,7 @@ func TestGetListing_WithImages(t *testing.T) {
 
 		// Setup: Create category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 1303, "Sports", "sports", 1, true, 0)
 

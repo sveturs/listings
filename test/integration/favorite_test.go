@@ -28,7 +28,7 @@ func TestAddToFavorites(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 1, "Electronics", "electronics", 1, true, 0)
 
@@ -60,7 +60,7 @@ func TestAddToFavorites(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 2, "Fashion", "fashion", 1, true, 0)
 
@@ -137,7 +137,7 @@ func TestRemoveFromFavorites(t *testing.T) {
 
 		// Setup: Create category, listing, and favorite
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 3, "Books", "books", 1, true, 0)
 
@@ -174,7 +174,7 @@ func TestRemoveFromFavorites(t *testing.T) {
 
 		// Setup: Create category and listing (but no favorite)
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 4, "Toys", "toys", 1, true, 0)
 
@@ -213,7 +213,7 @@ func TestGetUserFavorites(t *testing.T) {
 
 		// Setup: Create category and multiple listings
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 5, "Sports", "sports", 1, true, 0)
 
@@ -272,7 +272,7 @@ func TestGetUserFavorites(t *testing.T) {
 
 		// Setup: Create category and listings
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 6, "Home", "home", 1, true, 0)
 
@@ -331,7 +331,7 @@ func TestIsFavorite(t *testing.T) {
 
 		// Setup: Create category, listing, and favorite
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 7, "Garden", "garden", 1, true, 0)
 
@@ -365,7 +365,7 @@ func TestIsFavorite(t *testing.T) {
 
 		// Setup: Create category and listing (but no favorite)
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 8, "Music", "music", 1, true, 0)
 

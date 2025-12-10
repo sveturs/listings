@@ -58,7 +58,7 @@ func TestRequiredAttributesValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 1, "Electronics", "electronics", 1, true, 0)
 
@@ -131,7 +131,7 @@ func TestRequiredAttributesValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 2, "Fashion", "fashion", 1, true, 0)
 
@@ -181,7 +181,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 10, "Books", "books", 1, true, 0)
 
@@ -229,7 +229,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 11, "Real Estate", "real-estate", 1, true, 0)
 
@@ -277,7 +277,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 12, "Vehicles", "vehicles", 1, true, 0)
 
@@ -338,7 +338,7 @@ func TestAttributePatternValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 20, "Services", "services", 1, true, 0)
 
@@ -385,7 +385,7 @@ func TestAttributePatternValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 21, "Business", "business", 1, true, 0)
 
@@ -444,7 +444,7 @@ func TestAttributeRangeValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 30, "Electronics", "electronics-2", 1, true, 0)
 
@@ -492,7 +492,7 @@ func TestAttributeRangeValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 31, "Test Category", "test-cat", 1, true, 0)
 
@@ -548,7 +548,7 @@ func TestAttributeUpdateValidation(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 40, "Furniture", "furniture", 1, true, 0)
 

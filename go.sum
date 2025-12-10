@@ -253,6 +253,12 @@ github.com/valyala/fasthttp v1.51.0 h1:8b30A5JlZ6C7AS81RsWjYMQmrZG6feChmgAolCl1S
 github.com/valyala/fasthttp v1.51.0/go.mod h1:oI2XroL+lI7vdXyYoQk03bXBThfFl2cVdIA3Xl7cH8g=
 github.com/valyala/tcplisten v1.0.0 h1:rBHj/Xf+E1tRGZyWIWwJDiRY0zc1Js+CV5DqwacVSA8=
 github.com/valyala/tcplisten v1.0.0/go.mod h1:T0xQ8SeCZGxckz9qRXTfG43PvQ/mcWh7FwZEA7Ioqkc=
+github.com/vondi-global/auth v1.22.1 h1:AWfRa51862CyNgwLDn+F23+q5UIMI6JnPxK/7nhJI3Q=
+github.com/vondi-global/auth v1.22.1/go.mod h1:lUoMpBxKFDjoly947NcElHapsyQUM17jfzQdu4+lkhw=
+github.com/vondi-global/delivery v0.1.6 h1:f6Qk9pPgSESvKv1QaThmg3PdfzCjJpVSQxuaummK5XM=
+github.com/vondi-global/delivery v0.1.6/go.mod h1:qGKVXHlLSIbU3AMnuOKXC3xTuHr0sZJ3DZpwLIOZwD4=
+github.com/vondi-global/lib v1.2.3 h1:cOsePoonE4srfxEZ7XNE7KGQyA6oh1icgH5as5q08g8=
+github.com/vondi-global/lib v1.2.3/go.mod h1:pY2nVox8D9L9B/UjDALcjjJodv+18f/evQaYYZYx9gE=
 github.com/woodsbury/decimal128 v1.3.0 h1:8pffMNWIlC0O5vbyHWFZAt5yWvWcrHA+3ovIIjVWss0=
 github.com/woodsbury/decimal128 v1.3.0/go.mod h1:C5UTmyTjW3JftjUFzOVhC20BEQa2a4ZKOB5I6Zjb+ds=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=

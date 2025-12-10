@@ -32,7 +32,7 @@ func TestAddListingImage(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 10, "Electronics", "electronics", 1, true, 0)
 
@@ -74,7 +74,7 @@ func TestAddListingImage(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 11, "Fashion", "fashion", 1, true, 0)
 
@@ -113,7 +113,7 @@ func TestAddListingImage(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 12, "Books", "books", 1, true, 0)
 
@@ -182,7 +182,7 @@ func TestDeleteListingImage(t *testing.T) {
 
 		// Setup: Create category, listing, and image
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 13, "Sports", "sports", 1, true, 0)
 
@@ -220,7 +220,7 @@ func TestDeleteListingImage(t *testing.T) {
 
 		// Setup: Create category, listing, and multiple images
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 14, "Home", "home", 1, true, 0)
 
@@ -304,7 +304,7 @@ func TestGetListingImages(t *testing.T) {
 
 		// Setup: Create category, listing, and images
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 15, "Garden", "garden", 1, true, 0)
 
@@ -348,7 +348,7 @@ func TestGetListingImages(t *testing.T) {
 
 		// Setup: Create category and listing (no images)
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 16, "Music", "music", 1, true, 0)
 
@@ -388,7 +388,7 @@ func TestGetListingImage(t *testing.T) {
 
 		// Setup: Create category, listing, and image
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
 		`, 17, "Toys", "toys", 1, true, 0)
 
