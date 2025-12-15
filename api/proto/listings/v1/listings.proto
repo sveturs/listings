@@ -470,6 +470,9 @@ message Listing {
   // Translations
   map<string, ListingFieldTranslations> translations = 30;  // {"en": {...}, "ru": {...}, "sr": {...}}
   string original_language = 31;  // "sr", "en", "ru"
+
+  // Location display settings
+  bool show_on_map = 32;
 }
 
 // ListingImage represents an image associated with a listing
@@ -630,6 +633,23 @@ message GetListingResponse {
   Listing listing = 1;
 }
 
+// CreateListingLocation for creating a new listing with location
+message CreateListingLocation {
+  optional string country = 1;
+  optional string city = 2;
+  optional string postal_code = 3;
+  optional string address_line1 = 4;
+  optional string address_line2 = 5;
+  optional double latitude = 6;
+  optional double longitude = 7;
+}
+
+// CreateListingAttribute for creating a new listing with attributes
+message CreateListingAttribute {
+  string attribute_key = 1;
+  string attribute_value = 2;
+}
+
 // CreateListing messages
 message CreateListingRequest {
   int64 user_id = 1;
@@ -641,6 +661,17 @@ message CreateListingRequest {
   int64 category_id = 7;
   int32 quantity = 8;
   optional string sku = 9;
+
+  // Condition (new, used, etc.)
+  optional string condition = 10;
+
+  // Location
+  optional CreateListingLocation location = 11;
+  optional bool show_on_map = 12;
+  optional string location_privacy = 13;  // "exact", "approximate", "hidden"
+
+  // Attributes (flexible key-value pairs)
+  repeated CreateListingAttribute attributes = 14;
 
   // Translations
   map<string, ListingFieldTranslations> translations = 20;

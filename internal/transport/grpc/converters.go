@@ -84,6 +84,11 @@ func DomainToProtoListing(listing *domain.Listing) *listingspb.Listing {
 		pbListing.Location = DomainToProtoLocation(listing.Location)
 	}
 
+	// Location display settings
+	if listing.ShowOnMap != nil {
+		pbListing.ShowOnMap = *listing.ShowOnMap
+	}
+
 	return pbListing
 }
 
@@ -218,6 +223,43 @@ func ProtoToCreateListingInput(req *listingspb.CreateListingRequest) *domain.Cre
 
 	if req.Sku != nil {
 		input.SKU = req.Sku
+	}
+
+	// Condition
+	if req.Condition != nil {
+		input.Condition = req.Condition
+	}
+
+	// Location
+	if req.Location != nil {
+		input.Location = &domain.CreateLocationInput{
+			Country:      req.Location.Country,
+			City:         req.Location.City,
+			PostalCode:   req.Location.PostalCode,
+			AddressLine1: req.Location.AddressLine1,
+			AddressLine2: req.Location.AddressLine2,
+			Latitude:     req.Location.Latitude,
+			Longitude:    req.Location.Longitude,
+		}
+	}
+
+	if req.ShowOnMap != nil {
+		input.ShowOnMap = req.ShowOnMap
+	}
+
+	if req.LocationPrivacy != nil {
+		input.LocationPrivacy = req.LocationPrivacy
+	}
+
+	// Attributes
+	if len(req.Attributes) > 0 {
+		input.Attributes = make([]domain.ListingKeyValueAttribute, len(req.Attributes))
+		for i, attr := range req.Attributes {
+			input.Attributes[i] = domain.ListingKeyValueAttribute{
+				Key:   attr.AttributeKey,
+				Value: attr.AttributeValue,
+			}
+		}
 	}
 
 	// Translations

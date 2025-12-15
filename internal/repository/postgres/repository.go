@@ -213,15 +213,32 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		originalLanguage = "sr"
 	}
 
+	// Default show_on_map to true if not provided
+	showOnMap := true
+	if input.ShowOnMap != nil {
+		showOnMap = *input.ShowOnMap
+	}
+
+	// Default location_privacy to "exact" if not provided
+	locationPrivacy := "exact"
+	if input.LocationPrivacy != nil {
+		locationPrivacy = *input.LocationPrivacy
+	}
+
+	// Check if location is provided
+	hasIndividualLocation := input.Location != nil
+
 	query := `
 		INSERT INTO listings (
 			user_id, storefront_id, title, description, price, currency, category_id, quantity, sku, source_type, slug,
-			title_translations, description_translations, location_translations, city_translations, country_translations, original_language
+			title_translations, description_translations, location_translations, city_translations, country_translations, original_language,
+			show_on_map, location_privacy, has_individual_location
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
 		RETURNING id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		          status, visibility, quantity, sku, source_type, view_count, favorites_count,
 		          title_translations, description_translations, location_translations, city_translations, country_translations, original_language,
+		          show_on_map, location_privacy, has_individual_location,
 		          created_at, updated_at, published_at, deleted_at, is_deleted
 	`
 
@@ -248,6 +265,9 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		cityTranslationsJSON,
 		countryTranslationsJSON,
 		originalLanguage,
+		showOnMap,
+		locationPrivacy,
+		hasIndividualLocation,
 	).Scan(
 		&listing.ID,
 		&listing.UUID,
@@ -272,6 +292,9 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		&cityTranslationsBytes,
 		&countryTranslationsBytes,
 		&listing.OriginalLanguage,
+		&listing.ShowOnMap,
+		&listing.LocationPrivacy,
+		&listing.HasIndividualLocation,
 		&listing.CreatedAt,
 		&listing.UpdatedAt,
 		&listing.PublishedAt,
@@ -311,8 +334,144 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		}
 	}
 
+	// DEBUG: Log what we have before creating location/attributes
+	r.logger.Debug().
+		Bool("has_location", input.Location != nil).
+		Bool("has_condition", input.Condition != nil).
+		Int("attributes_count", len(input.Attributes)).
+		Int64("listing_id", listing.ID).
+		Msg("DEBUG: about to create location and attributes")
+
+	// Create location record if provided
+	if input.Location != nil {
+		logEvent := r.logger.Debug()
+		if input.Location.Country != nil {
+			logEvent = logEvent.Str("country", *input.Location.Country)
+		}
+		if input.Location.City != nil {
+			logEvent = logEvent.Str("city", *input.Location.City)
+		}
+		if input.Location.Latitude != nil {
+			logEvent = logEvent.Float64("lat", *input.Location.Latitude)
+		}
+		if input.Location.Longitude != nil {
+			logEvent = logEvent.Float64("lng", *input.Location.Longitude)
+		}
+		logEvent.Msg("DEBUG: creating listing location")
+		if err := r.createListingLocation(ctx, listing.ID, input.Location); err != nil {
+			r.logger.Error().Err(err).Int64("listing_id", listing.ID).Msg("failed to create listing location")
+			// Don't fail the entire operation, location is optional
+		} else {
+			r.logger.Debug().Int64("listing_id", listing.ID).Msg("DEBUG: listing location created successfully")
+		}
+	} else {
+		r.logger.Debug().Int64("listing_id", listing.ID).Msg("DEBUG: input.Location is nil, skipping location creation")
+	}
+
+	// Create attributes (including condition) if provided
+	if input.Condition != nil && *input.Condition != "" {
+		r.logger.Debug().Str("condition", *input.Condition).Msg("DEBUG: creating condition attribute")
+		// Add condition as an attribute
+		if err := r.createListingAttribute(ctx, listing.ID, "condition", *input.Condition); err != nil {
+			r.logger.Error().Err(err).Int64("listing_id", listing.ID).Msg("failed to create condition attribute")
+		} else {
+			r.logger.Debug().Int64("listing_id", listing.ID).Msg("DEBUG: condition attribute created successfully")
+		}
+	} else {
+		r.logger.Debug().Int64("listing_id", listing.ID).Msg("DEBUG: input.Condition is nil or empty, skipping condition attribute")
+	}
+
+	// Create other attributes
+	r.logger.Debug().Int("count", len(input.Attributes)).Msg("DEBUG: about to create attributes")
+	for _, attr := range input.Attributes {
+		r.logger.Debug().Str("key", attr.Key).Str("value", attr.Value).Msg("DEBUG: creating attribute")
+		if err := r.createListingAttribute(ctx, listing.ID, attr.Key, attr.Value); err != nil {
+			r.logger.Error().Err(err).Int64("listing_id", listing.ID).Str("key", attr.Key).Msg("failed to create listing attribute")
+		} else {
+			r.logger.Debug().Int64("listing_id", listing.ID).Str("key", attr.Key).Msg("DEBUG: attribute created successfully")
+		}
+	}
+
 	r.logger.Info().Int64("listing_id", listing.ID).Str("title", listing.Title).Str("slug", slug).Msg("listing created")
 	return &listing, nil
+}
+
+// createListingLocation creates a location record for a listing
+func (r *Repository) createListingLocation(ctx context.Context, listingID int64, loc *domain.CreateLocationInput) error {
+	query := `
+		INSERT INTO listing_locations (listing_id, country, city, postal_code, address_line1, address_line2, latitude, longitude)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	`
+	_, err := r.db.ExecContext(ctx, query, listingID, loc.Country, loc.City, loc.PostalCode, loc.AddressLine1, loc.AddressLine2, loc.Latitude, loc.Longitude)
+	return err
+}
+
+// createListingAttribute creates a single attribute record for a listing
+func (r *Repository) createListingAttribute(ctx context.Context, listingID int64, key, value string) error {
+	query := `
+		INSERT INTO listing_attributes (listing_id, attribute_key, attribute_value)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (listing_id, attribute_key) DO UPDATE SET attribute_value = $3
+	`
+	_, err := r.db.ExecContext(ctx, query, listingID, key, value)
+	return err
+}
+
+// getListingLocation retrieves location for a listing
+func (r *Repository) getListingLocation(ctx context.Context, listingID int64) (*domain.ListingLocation, error) {
+	query := `
+		SELECT id, listing_id, country, city, postal_code, address_line1, address_line2, latitude, longitude, created_at, updated_at
+		FROM listing_locations
+		WHERE listing_id = $1
+	`
+	var loc domain.ListingLocation
+	err := r.db.QueryRowContext(ctx, query, listingID).Scan(
+		&loc.ID,
+		&loc.ListingID,
+		&loc.Country,
+		&loc.City,
+		&loc.PostalCode,
+		&loc.AddressLine1,
+		&loc.AddressLine2,
+		&loc.Latitude,
+		&loc.Longitude,
+		&loc.CreatedAt,
+		&loc.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // No location is not an error
+		}
+		return nil, fmt.Errorf("failed to get listing location: %w", err)
+	}
+	return &loc, nil
+}
+
+// getListingAttributes retrieves all attributes for a listing
+func (r *Repository) getListingAttributes(ctx context.Context, listingID int64) ([]*domain.ListingAttribute, error) {
+	query := `
+		SELECT id, listing_id, attribute_key, attribute_value, created_at
+		FROM listing_attributes
+		WHERE listing_id = $1
+	`
+	rows, err := r.db.QueryContext(ctx, query, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get listing attributes: %w", err)
+	}
+	defer rows.Close()
+
+	var attributes []*domain.ListingAttribute
+	for rows.Next() {
+		var attr domain.ListingAttribute
+		if err := rows.Scan(&attr.ID, &attr.ListingID, &attr.AttributeKey, &attr.AttributeValue, &attr.CreatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan listing attribute: %w", err)
+		}
+		attributes = append(attributes, &attr)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating listing attributes: %w", err)
+	}
+	return attributes, nil
 }
 
 // GetListingByID retrieves a listing by its ID
@@ -321,6 +480,7 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 		SELECT id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
 		       title_translations, description_translations, location_translations, city_translations, country_translations, original_language,
+		       show_on_map, location_privacy, has_individual_location,
 		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
 		FROM listings
 		WHERE id = $1 AND is_deleted = false
@@ -353,6 +513,9 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 		&cityTranslationsJSON,
 		&countryTranslationsJSON,
 		&listing.OriginalLanguage,
+		&listing.ShowOnMap,
+		&listing.LocationPrivacy,
+		&listing.HasIndividualLocation,
 		&listing.ExpiresAt,
 		&listing.CreatedAt,
 		&listing.UpdatedAt,
@@ -403,6 +566,22 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 		// Don't fail the whole request if images fail to load
 	} else {
 		listing.Images = images
+	}
+
+	// Load location
+	location, err := r.getListingLocation(ctx, id)
+	if err != nil {
+		r.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to load location for listing")
+	} else {
+		listing.Location = location
+	}
+
+	// Load attributes
+	attributes, err := r.getListingAttributes(ctx, id)
+	if err != nil {
+		r.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to load attributes for listing")
+	} else {
+		listing.Attributes = attributes
 	}
 
 	return &listing, nil

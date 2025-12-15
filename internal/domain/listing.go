@@ -34,6 +34,11 @@ type Listing struct {
 	DeletedAt      *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 	IsDeleted      bool       `json:"is_deleted" db:"is_deleted"`
 
+	// Location settings
+	ShowOnMap             *bool   `json:"show_on_map,omitempty" db:"show_on_map"`
+	LocationPrivacy       *string `json:"location_privacy,omitempty" db:"location_privacy"`       // exact, approximate, hidden
+	HasIndividualLocation *bool   `json:"has_individual_location,omitempty" db:"has_individual_location"`
+
 	// Translations
 	TitleTranslations       map[string]string `json:"title_translations" db:"title_translations"`
 	DescriptionTranslations map[string]string `json:"description_translations" db:"description_translations"`
@@ -115,6 +120,23 @@ type IndexingQueueItem struct {
 	ProcessedAt  *time.Time `json:"processed_at,omitempty" db:"processed_at"`
 }
 
+// CreateLocationInput represents location data for creating a listing
+type CreateLocationInput struct {
+	Country      *string  `json:"country,omitempty"`
+	City         *string  `json:"city,omitempty"`
+	PostalCode   *string  `json:"postal_code,omitempty"`
+	AddressLine1 *string  `json:"address_line1,omitempty"`
+	AddressLine2 *string  `json:"address_line2,omitempty"`
+	Latitude     *float64 `json:"latitude,omitempty"`
+	Longitude    *float64 `json:"longitude,omitempty"`
+}
+
+// ListingKeyValueAttribute represents a simple key-value attribute for creating a listing
+type ListingKeyValueAttribute struct {
+	Key   string `json:"key" validate:"required"`
+	Value string `json:"value" validate:"required"`
+}
+
 // CreateListingInput represents input for creating a new listing
 type CreateListingInput struct {
 	UserID       int64   `json:"user_id" validate:"required"`
@@ -127,6 +149,17 @@ type CreateListingInput struct {
 	Quantity     int32   `json:"quantity" validate:"required,gte=0"`
 	SKU          *string `json:"sku,omitempty"`
 	SourceType   string  `json:"source_type" validate:"required,oneof=c2c b2c"`
+
+	// Condition (new, used, etc.)
+	Condition *string `json:"condition,omitempty" validate:"omitempty,oneof=new used refurbished for_parts"`
+
+	// Location
+	Location        *CreateLocationInput `json:"location,omitempty"`
+	ShowOnMap       *bool                `json:"show_on_map,omitempty"`
+	LocationPrivacy *string              `json:"location_privacy,omitempty" validate:"omitempty,oneof=exact approximate hidden"`
+
+	// Attributes (flexible key-value pairs)
+	Attributes []ListingKeyValueAttribute `json:"attributes,omitempty"`
 
 	// Translations
 	Translations     map[string]map[string]string `json:"translations,omitempty"`
