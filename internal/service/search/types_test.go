@@ -28,7 +28,7 @@ func TestFacetsRequestValidate(t *testing.T) {
 			name: "valid request - with query and category",
 			req: &FacetsRequest{
 				Query:      "laptop",
-				CategoryID: ptrInt64(1001),
+				CategoryID: ptrString("cat-uuid-1001"),
 				UseCache:   true,
 			},
 			wantErr: false,
@@ -560,7 +560,7 @@ func TestSuggestionsRequestValidate(t *testing.T) {
 		},
 		{
 			name:    "valid - with category",
-			req:     &SuggestionsRequest{Prefix: "lap", CategoryID: ptrInt64(1001), Limit: 10},
+			req:     &SuggestionsRequest{Prefix: "lap", CategoryID: ptrString("cat-uuid-1001"), Limit: 10},
 			wantErr: false,
 		},
 		{

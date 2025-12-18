@@ -140,7 +140,7 @@ func TestBuildSearchQuery(t *testing.T) {
 			name: "query with category filter",
 			req: &SearchRequest{
 				Query:      "laptop",
-				CategoryID: func() *int64 { v := int64(5); return &v }(),
+				CategoryID: ptrString("cat-uuid-5"),
 				Limit:      20,
 				Offset:     0,
 			},
@@ -169,7 +169,7 @@ func TestBuildSearchQuery(t *testing.T) {
 			name: "query without text - only filters",
 			req: &SearchRequest{
 				Query:      "",
-				CategoryID: func() *int64 { v := int64(5); return &v }(),
+				CategoryID: ptrString("cat-uuid-5"),
 				Limit:      50,
 				Offset:     10,
 			},
@@ -292,8 +292,8 @@ func TestConvertFacetsForCache_RoundTrip(t *testing.T) {
 	// Create original facets
 	original := &FacetsResponse{
 		Categories: []CategoryFacet{
-			{CategoryID: 1001, Count: 150},
-			{CategoryID: 1002, Count: 75},
+			{CategoryID: "cat-uuid-1001", Count: 150},
+			{CategoryID: "cat-uuid-1002", Count: 75},
 		},
 		PriceRanges: []PriceRangeFacet{
 			{Min: 0, Max: 100, Count: 50},
@@ -453,7 +453,7 @@ func TestConvertFilteredSearchForCache_RoundTrip(t *testing.T) {
 				Description: &desc,
 				Price:       999.99,
 				Currency:    "EUR",
-				CategoryID:  1001,
+				CategoryID:  "cat-uuid-1001",
 			},
 		},
 		Total:  1,
@@ -461,7 +461,7 @@ func TestConvertFilteredSearchForCache_RoundTrip(t *testing.T) {
 		Cached: false,
 		Facets: &FacetsResponse{
 			Categories: []CategoryFacet{
-				{CategoryID: 1001, Count: 1},
+				{CategoryID: "cat-uuid-1001", Count: 1},
 			},
 			PriceRanges:   []PriceRangeFacet{},
 			Attributes:    make(map[string]AttributeFacet),
@@ -549,7 +549,7 @@ func TestFacetsRequest_Validate(t *testing.T) {
 			name: "valid request",
 			req: &FacetsRequest{
 				Query:      "laptop",
-				CategoryID: func() *int64 { v := int64(1001); return &v }(),
+				CategoryID: ptrString("cat-uuid-1001"),
 				UseCache:   true,
 			},
 			wantErr: nil,
