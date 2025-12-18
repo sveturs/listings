@@ -1356,7 +1356,7 @@ func DomainToCategoryServiceProtoCategory(cat *domain.Category) *categoriespb.Ca
 	}
 
 	pbCat := &categoriespb.Category{
-		Id:          int32(cat.ID),
+		Id:          cat.ID,
 		Name:        cat.Name,
 		Slug:        cat.Slug,
 		CreatedAt:   timestamppb.New(cat.CreatedAt),
@@ -1369,8 +1369,7 @@ func DomainToCategoryServiceProtoCategory(cat *domain.Category) *categoriespb.Ca
 
 	// Optional fields
 	if cat.ParentID != nil {
-		parentID := int32(*cat.ParentID)
-		pbCat.ParentId = &parentID
+		pbCat.ParentId = cat.ParentID
 	}
 	if cat.Icon != nil {
 		pbCat.Icon = cat.Icon
@@ -1453,8 +1452,7 @@ func ProtoToCategoryServiceCreateDomain(req *categoriespb.CreateCategoryRequest)
 
 	// Optional fields
 	if req.ParentId != nil {
-		parentID := int64(*req.ParentId)
-		cat.ParentID = &parentID
+		cat.ParentID = req.ParentId
 	}
 	if req.Icon != nil {
 		cat.Icon = req.Icon
@@ -1490,7 +1488,7 @@ func ProtoToCategoryServiceCreateDomain(req *categoriespb.CreateCategoryRequest)
 // ProtoToCategoryServiceUpdateDomain converts UpdateCategoryRequest to domain.Category
 func ProtoToCategoryServiceUpdateDomain(req *categoriespb.UpdateCategoryRequest) *domain.Category {
 	cat := &domain.Category{
-		ID: int64(req.Id),
+		ID: req.Id,
 	}
 
 	// Optional fields - only set if provided
@@ -1501,8 +1499,7 @@ func ProtoToCategoryServiceUpdateDomain(req *categoriespb.UpdateCategoryRequest)
 		cat.Slug = *req.Slug
 	}
 	if req.ParentId != nil {
-		parentID := int64(*req.ParentId)
-		cat.ParentID = &parentID
+		cat.ParentID = req.ParentId
 	}
 	if req.Icon != nil {
 		cat.Icon = req.Icon

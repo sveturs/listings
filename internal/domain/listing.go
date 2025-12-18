@@ -17,7 +17,8 @@ type Listing struct {
 	Description    *string    `json:"description,omitempty" db:"description"`
 	Price          float64    `json:"price" db:"price"`
 	Currency       string     `json:"currency" db:"currency"`
-	CategoryID     int64      `json:"category_id" db:"category_id"`
+	CategoryID     string     `json:"category_id" db:"category_id"` // UUID string
+	CategorySlug   *string    `json:"category_slug,omitempty" db:"category_slug"` // Category slug for OpenSearch (populated from JOIN)
 	Status         string     `json:"status" db:"status"`
 	Visibility     string     `json:"visibility" db:"visibility"`
 	Quantity       int32      `json:"quantity" db:"quantity"`
@@ -145,7 +146,7 @@ type CreateListingInput struct {
 	Description  *string `json:"description,omitempty"`
 	Price        float64 `json:"price" validate:"required,gte=0"`
 	Currency     string  `json:"currency" validate:"required,len=3"`
-	CategoryID   int64   `json:"category_id" validate:"required"`
+	CategoryID   string  `json:"category_id" validate:"required"`
 	Quantity     int32   `json:"quantity" validate:"required,gte=0"`
 	SKU          *string `json:"sku,omitempty"`
 	SourceType   string  `json:"source_type" validate:"required,oneof=c2c b2c"`
@@ -179,7 +180,7 @@ type UpdateListingInput struct {
 type ListListingsFilter struct {
 	UserID       *int64   `json:"user_id,omitempty"`
 	StorefrontID *int64   `json:"storefront_id,omitempty"`
-	CategoryID   *int64   `json:"category_id,omitempty"`
+	CategoryID   *string  `json:"category_id,omitempty"`
 	Status       *string  `json:"status,omitempty"`
 	SourceType   *string  `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"`
 	MinPrice     *float64 `json:"min_price,omitempty"`
@@ -201,7 +202,7 @@ type AttributeFilter struct {
 
 type SearchListingsQuery struct {
 	Query            string            `json:"query" validate:"required,min=2"`
-	CategoryID       *int64            `json:"category_id,omitempty"`
+	CategoryID       *string           `json:"category_id,omitempty"`
 	SourceType       *string           `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"` // Filter by c2c or b2c listings
 	MinPrice         *float64          `json:"min_price,omitempty"`
 	MaxPrice         *float64          `json:"max_price,omitempty"`
@@ -249,10 +250,10 @@ const (
 
 // Category represents a marketplace category
 type Category struct {
-	ID                int64     `json:"id" db:"id"`
+	ID                string    `json:"id" db:"id"`
 	Name              string    `json:"name" db:"name"`
 	Slug              string    `json:"slug" db:"slug"`
-	ParentID          *int64    `json:"parent_id,omitempty" db:"parent_id"`
+	ParentID          *string   `json:"parent_id,omitempty" db:"parent_id"`
 	Icon              *string   `json:"icon,omitempty" db:"icon"`
 	Description       *string   `json:"description,omitempty" db:"description"`
 	IsActive          bool      `json:"is_active" db:"is_active"`
@@ -275,11 +276,11 @@ type Category struct {
 
 // CategoryTreeNode represents a category with its children in a tree structure
 type CategoryTreeNode struct {
-	ID                int64              `json:"id"`
+	ID                string             `json:"id"`
 	Name              string             `json:"name"`
 	Slug              string             `json:"slug"`
 	Icon              *string            `json:"icon,omitempty"`
-	ParentID          *int64             `json:"parent_id,omitempty"`
+	ParentID          *string            `json:"parent_id,omitempty"`
 	Level             int32              `json:"level"`
 	Path              string             `json:"path"`
 	ListingCount      int32              `json:"listing_count"`

@@ -286,16 +286,16 @@ func (s *Server) GetPopularCategories(ctx context.Context, req *listingspb.Popul
 
 // GetCategory retrieves a single category by ID (ListingsService implementation)
 func (s *Server) GetCategory(ctx context.Context, req *listingspb.CategoryIDRequest) (*listingspb.CategoryResponse, error) {
-	s.logger.Debug().Int64("category_id", req.CategoryId).Msg("GetCategory (ListingsService) called")
+	s.logger.Debug().Str("category_id", req.CategoryId).Msg("GetCategory (ListingsService) called")
 
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category ID must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category ID must not be empty")
 	}
 
 	// Delegate to categoryService
 	category, err := s.categoryService.GetCategory(ctx, req.CategoryId)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("category_id", req.CategoryId).Msg("failed to get category")
+		s.logger.Error().Err(err).Str("category_id", req.CategoryId).Msg("failed to get category")
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("category not found: %v", err))
 	}
 
@@ -306,16 +306,16 @@ func (s *Server) GetCategory(ctx context.Context, req *listingspb.CategoryIDRequ
 
 // GetCategoryTree retrieves category hierarchy starting from a node (ListingsService implementation)
 func (s *Server) GetCategoryTree(ctx context.Context, req *listingspb.CategoryIDRequest) (*listingspb.CategoryTreeResponse, error) {
-	s.logger.Debug().Int64("category_id", req.CategoryId).Msg("GetCategoryTree (ListingsService) called")
+	s.logger.Debug().Str("category_id", req.CategoryId).Msg("GetCategoryTree (ListingsService) called")
 
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category ID must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category ID must not be empty")
 	}
 
 	// Delegate to categoryService
 	tree, err := s.categoryService.GetCategoryTree(ctx, req.CategoryId)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("category_id", req.CategoryId).Msg("failed to get category tree")
+		s.logger.Error().Err(err).Str("category_id", req.CategoryId).Msg("failed to get category tree")
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("category tree not found: %v", err))
 	}
 

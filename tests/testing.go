@@ -155,7 +155,7 @@ func LoadTestFixtures(tb testing.TB, db *sql.DB, fixtureFile string) {
 		if _, err := os.Stat(categoriesFile); err == nil {
 			// Check if categories already loaded (avoid duplicate load)
 			var count int
-			err := db.QueryRow("SELECT COUNT(*) FROM c2c_categories WHERE id = 1301").Scan(&count)
+			err := db.QueryRow("SELECT COUNT(*) FROM categories WHERE id = 1301").Scan(&count)
 			if err != nil || count == 0 {
 				// Load categories fixture
 				catData, err := os.ReadFile(categoriesFile)

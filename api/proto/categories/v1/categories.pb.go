@@ -25,10 +25,10 @@ const (
 // Category message represents a product category
 type Category struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Slug              string                 `protobuf:"bytes,3,opt,name=slug,proto3" json:"slug,omitempty"`
-	ParentId          *int32                 `protobuf:"varint,4,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
+	ParentId          *string                `protobuf:"bytes,4,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
 	Icon              *string                `protobuf:"bytes,5,opt,name=icon,proto3,oneof" json:"icon,omitempty"`
 	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	HasCustomUi       bool                   `protobuf:"varint,7,opt,name=has_custom_ui,json=hasCustomUi,proto3" json:"has_custom_ui,omitempty"`
@@ -79,11 +79,11 @@ func (*Category) Descriptor() ([]byte, []int) {
 	return file_api_proto_categories_v1_categories_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Category) GetId() int32 {
+func (x *Category) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 func (x *Category) GetName() string {
@@ -100,11 +100,11 @@ func (x *Category) GetSlug() string {
 	return ""
 }
 
-func (x *Category) GetParentId() int32 {
+func (x *Category) GetParentId() string {
 	if x != nil && x.ParentId != nil {
 		return *x.ParentId
 	}
-	return 0
+	return ""
 }
 
 func (x *Category) GetIcon() string {
@@ -274,7 +274,7 @@ func (x *CategoryTree) GetSubcategories() []*CategoryTree {
 
 type GetCategoriesRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	ParentId        *int32                 `protobuf:"varint,1,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`                      // Filter by parent category (null for root)
+	ParentId        *string                `protobuf:"bytes,1,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`                       // Filter by parent category (null for root)
 	IsActive        *bool                  `protobuf:"varint,2,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`                      // Filter by active status
 	IncludeChildren *bool                  `protobuf:"varint,3,opt,name=include_children,json=includeChildren,proto3,oneof" json:"include_children,omitempty"` // Include all descendants
 	Page            int32                  `protobuf:"varint,4,opt,name=page,proto3" json:"page,omitempty"`                                                    // Page number (1-based)
@@ -313,11 +313,11 @@ func (*GetCategoriesRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_categories_v1_categories_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetCategoriesRequest) GetParentId() int32 {
+func (x *GetCategoriesRequest) GetParentId() string {
 	if x != nil && x.ParentId != nil {
 		return *x.ParentId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetCategoriesRequest) GetIsActive() bool {
@@ -418,7 +418,7 @@ func (x *GetCategoriesResponse) GetPageSize() int32 {
 
 type GetCategoryTreeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RootId        *int32                 `protobuf:"varint,1,opt,name=root_id,json=rootId,proto3,oneof" json:"root_id,omitempty"`             // Start from this category (null for entire tree)
+	RootId        *string                `protobuf:"bytes,1,opt,name=root_id,json=rootId,proto3,oneof" json:"root_id,omitempty"`              // Start from this category (null for entire tree)
 	ActiveOnly    *bool                  `protobuf:"varint,2,opt,name=active_only,json=activeOnly,proto3,oneof" json:"active_only,omitempty"` // Include only active categories
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -454,11 +454,11 @@ func (*GetCategoryTreeRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_categories_v1_categories_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetCategoryTreeRequest) GetRootId() int32 {
+func (x *GetCategoryTreeRequest) GetRootId() string {
 	if x != nil && x.RootId != nil {
 		return *x.RootId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetCategoryTreeRequest) GetActiveOnly() bool {
@@ -514,7 +514,7 @@ func (x *GetCategoryTreeResponse) GetTree() []*CategoryTree {
 
 type GetCategoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -549,11 +549,11 @@ func (*GetCategoryRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_categories_v1_categories_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetCategoryRequest) GetId() int32 {
+func (x *GetCategoryRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 type GetCategoryResponse struct {
@@ -692,7 +692,7 @@ type CreateCategoryRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	Name              string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Slug              string                 `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
-	ParentId          *int32                 `protobuf:"varint,3,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
+	ParentId          *string                `protobuf:"bytes,3,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
 	Icon              *string                `protobuf:"bytes,4,opt,name=icon,proto3,oneof" json:"icon,omitempty"`
 	Description       *string                `protobuf:"bytes,5,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	CustomUiComponent *string                `protobuf:"bytes,6,opt,name=custom_ui_component,json=customUiComponent,proto3,oneof" json:"custom_ui_component,omitempty"`
@@ -751,11 +751,11 @@ func (x *CreateCategoryRequest) GetSlug() string {
 	return ""
 }
 
-func (x *CreateCategoryRequest) GetParentId() int32 {
+func (x *CreateCategoryRequest) GetParentId() string {
 	if x != nil && x.ParentId != nil {
 		return *x.ParentId
 	}
-	return 0
+	return ""
 }
 
 func (x *CreateCategoryRequest) GetIcon() string {
@@ -874,10 +874,10 @@ func (x *CreateCategoryResponse) GetCategory() *Category {
 
 type UpdateCategoryRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name              *string                `protobuf:"bytes,2,opt,name=name,proto3,oneof" json:"name,omitempty"`
 	Slug              *string                `protobuf:"bytes,3,opt,name=slug,proto3,oneof" json:"slug,omitempty"`
-	ParentId          *int32                 `protobuf:"varint,4,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
+	ParentId          *string                `protobuf:"bytes,4,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
 	Icon              *string                `protobuf:"bytes,5,opt,name=icon,proto3,oneof" json:"icon,omitempty"`
 	Description       *string                `protobuf:"bytes,6,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	CustomUiComponent *string                `protobuf:"bytes,7,opt,name=custom_ui_component,json=customUiComponent,proto3,oneof" json:"custom_ui_component,omitempty"`
@@ -923,11 +923,11 @@ func (*UpdateCategoryRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_categories_v1_categories_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *UpdateCategoryRequest) GetId() int32 {
+func (x *UpdateCategoryRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 func (x *UpdateCategoryRequest) GetName() string {
@@ -944,11 +944,11 @@ func (x *UpdateCategoryRequest) GetSlug() string {
 	return ""
 }
 
-func (x *UpdateCategoryRequest) GetParentId() int32 {
+func (x *UpdateCategoryRequest) GetParentId() string {
 	if x != nil && x.ParentId != nil {
 		return *x.ParentId
 	}
-	return 0
+	return ""
 }
 
 func (x *UpdateCategoryRequest) GetIcon() string {
@@ -1074,7 +1074,7 @@ func (x *UpdateCategoryResponse) GetCategory() *Category {
 
 type DeleteCategoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1109,11 +1109,11 @@ func (*DeleteCategoryRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_categories_v1_categories_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *DeleteCategoryRequest) GetId() int32 {
+func (x *DeleteCategoryRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 type DeleteCategoryResponse struct {
@@ -1174,10 +1174,10 @@ const file_api_proto_categories_v1_categories_proto_rawDesc = "" +
 	"\n" +
 	"(api/proto/categories/v1/categories.proto\x12\x10categoriessvc.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc7\x06\n" +
 	"\bCategory\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x12 \n" +
-	"\tparent_id\x18\x04 \x01(\x05H\x00R\bparentId\x88\x01\x01\x12\x17\n" +
+	"\tparent_id\x18\x04 \x01(\tH\x00R\bparentId\x88\x01\x01\x12\x17\n" +
 	"\x04icon\x18\x05 \x01(\tH\x01R\x04icon\x88\x01\x01\x129\n" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\"\n" +
@@ -1216,7 +1216,7 @@ const file_api_proto_categories_v1_categories_proto_rawDesc = "" +
 	"\bcategory\x18\x01 \x01(\v2\x1a.categoriessvc.v1.CategoryR\bcategory\x12D\n" +
 	"\rsubcategories\x18\x02 \x03(\v2\x1e.categoriessvc.v1.CategoryTreeR\rsubcategories\"\xec\x01\n" +
 	"\x14GetCategoriesRequest\x12 \n" +
-	"\tparent_id\x18\x01 \x01(\x05H\x00R\bparentId\x88\x01\x01\x12 \n" +
+	"\tparent_id\x18\x01 \x01(\tH\x00R\bparentId\x88\x01\x01\x12 \n" +
 	"\tis_active\x18\x02 \x01(\bH\x01R\bisActive\x88\x01\x01\x12.\n" +
 	"\x10include_children\x18\x03 \x01(\bH\x02R\x0fincludeChildren\x88\x01\x01\x12\x12\n" +
 	"\x04page\x18\x04 \x01(\x05R\x04page\x12\x1b\n" +
@@ -1235,7 +1235,7 @@ const file_api_proto_categories_v1_categories_proto_rawDesc = "" +
 	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"x\n" +
 	"\x16GetCategoryTreeRequest\x12\x1c\n" +
-	"\aroot_id\x18\x01 \x01(\x05H\x00R\x06rootId\x88\x01\x01\x12$\n" +
+	"\aroot_id\x18\x01 \x01(\tH\x00R\x06rootId\x88\x01\x01\x12$\n" +
 	"\vactive_only\x18\x02 \x01(\bH\x01R\n" +
 	"activeOnly\x88\x01\x01B\n" +
 	"\n" +
@@ -1244,7 +1244,7 @@ const file_api_proto_categories_v1_categories_proto_rawDesc = "" +
 	"\x17GetCategoryTreeResponse\x122\n" +
 	"\x04tree\x18\x01 \x03(\v2\x1e.categoriessvc.v1.CategoryTreeR\x04tree\"$\n" +
 	"\x12GetCategoryRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"M\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"M\n" +
 	"\x13GetCategoryResponse\x126\n" +
 	"\bcategory\x18\x01 \x01(\v2\x1a.categoriessvc.v1.CategoryR\bcategory\".\n" +
 	"\x18GetCategoryBySlugRequest\x12\x12\n" +
@@ -1254,7 +1254,7 @@ const file_api_proto_categories_v1_categories_proto_rawDesc = "" +
 	"\x15CreateCategoryRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x02 \x01(\tR\x04slug\x12 \n" +
-	"\tparent_id\x18\x03 \x01(\x05H\x00R\bparentId\x88\x01\x01\x12\x17\n" +
+	"\tparent_id\x18\x03 \x01(\tH\x00R\bparentId\x88\x01\x01\x12\x17\n" +
 	"\x04icon\x18\x04 \x01(\tH\x01R\x04icon\x88\x01\x01\x12%\n" +
 	"\vdescription\x18\x05 \x01(\tH\x02R\vdescription\x88\x01\x01\x123\n" +
 	"\x13custom_ui_component\x18\x06 \x01(\tH\x03R\x11customUiComponent\x88\x01\x01\x12\x1d\n" +
@@ -1282,10 +1282,10 @@ const file_api_proto_categories_v1_categories_proto_rawDesc = "" +
 	"\x16CreateCategoryResponse\x126\n" +
 	"\bcategory\x18\x01 \x01(\v2\x1a.categoriessvc.v1.CategoryR\bcategory\"\xd6\x05\n" +
 	"\x15UpdateCategoryRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\x04name\x18\x02 \x01(\tH\x00R\x04name\x88\x01\x01\x12\x17\n" +
 	"\x04slug\x18\x03 \x01(\tH\x01R\x04slug\x88\x01\x01\x12 \n" +
-	"\tparent_id\x18\x04 \x01(\x05H\x02R\bparentId\x88\x01\x01\x12\x17\n" +
+	"\tparent_id\x18\x04 \x01(\tH\x02R\bparentId\x88\x01\x01\x12\x17\n" +
 	"\x04icon\x18\x05 \x01(\tH\x03R\x04icon\x88\x01\x01\x12%\n" +
 	"\vdescription\x18\x06 \x01(\tH\x04R\vdescription\x88\x01\x01\x123\n" +
 	"\x13custom_ui_component\x18\a \x01(\tH\x05R\x11customUiComponent\x88\x01\x01\x12\"\n" +
@@ -1320,7 +1320,7 @@ const file_api_proto_categories_v1_categories_proto_rawDesc = "" +
 	"\x16UpdateCategoryResponse\x126\n" +
 	"\bcategory\x18\x01 \x01(\v2\x1a.categoriessvc.v1.CategoryR\bcategory\"'\n" +
 	"\x15DeleteCategoryRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"L\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"L\n" +
 	"\x16DeleteCategoryResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage2\xd4\x05\n" +

@@ -447,7 +447,7 @@ message Listing {
   optional string description = 6;
   double price = 7;
   string currency = 8;
-  int64 category_id = 9;
+  string category_id = 9;
   string status = 10;
   string visibility = 11;
   int32 quantity = 12;
@@ -532,10 +532,10 @@ message ListingVariant {
 
 // Category represents a marketplace category
 message Category {
-  int64 id = 1;
+  string id = 1;
   string name = 2;
   string slug = 3;
-  optional int64 parent_id = 4;
+  optional string parent_id = 4;
   optional string icon = 5;
   optional string description = 6;
   bool is_active = 7;
@@ -550,11 +550,11 @@ message Category {
 
 // CategoryTreeNode represents a category with its children
 message CategoryTreeNode {
-  int64 id = 1;
+  string id = 1;
   string name = 2;
   string slug = 3;
   optional string icon = 4;
-  optional int64 parent_id = 5;
+  optional string parent_id = 5;
   int32 level = 6;
   string path = 7;
   int32 listing_count = 8;
@@ -574,7 +574,7 @@ message Product {
   string description = 4;
   double price = 5;
   string currency = 6;
-  int64 category_id = 7;
+  string category_id = 7;
   optional string sku = 8;
   optional string barcode = 9;
   int32 stock_quantity = 10;
@@ -658,7 +658,7 @@ message CreateListingRequest {
   optional string description = 4;
   double price = 5;
   string currency = 6;
-  int64 category_id = 7;
+  string category_id = 7;
   int32 quantity = 8;
   optional string sku = 9;
 
@@ -711,7 +711,7 @@ message DeleteListingResponse {
 // SearchListings messages
 message SearchListingsRequest {
   string query = 1;
-  optional int64 category_id = 2;
+  optional string category_id = 2;
   optional double min_price = 3;
   optional double max_price = 4;
   int32 limit = 5;
@@ -727,7 +727,7 @@ message SearchListingsResponse {
 message ListListingsRequest {
   optional int64 user_id = 1;
   optional int64 storefront_id = 2;
-  optional int64 category_id = 3;
+  optional string category_id = 3;
   optional string status = 4;
   optional double min_price = 5;
   optional double max_price = 6;
@@ -864,7 +864,7 @@ message CategoriesResponse {
 
 // CategoryIDRequest requests a category by ID
 message CategoryIDRequest {
-  int64 category_id = 1;
+  string category_id = 1;
 }
 
 // CategoryResponse returns a single category
@@ -1319,7 +1319,7 @@ message CreateProductRequest {
   string description = 3; // Optional, up to 5000 characters
   double price = 4; // Required, must be > 0
   string currency = 5; // Required, ISO 4217 code (USD, EUR, etc.)
-  int64 category_id = 6; // Required, must exist
+  string category_id = 6; // Required, must exist
   optional string sku = 7; // Optional, must be unique in storefront
   optional string barcode = 8; // Optional (EAN, UPC, etc.)
   int32 stock_quantity = 9; // Initial stock, default 0
@@ -1347,7 +1347,7 @@ message UpdateProductRequest {
   optional string description = 4;
   optional double price = 5;
   optional string currency = 6;
-  optional int64 category_id = 7;
+  optional string category_id = 7;
   optional string sku = 8;
   optional string barcode = 9;
   optional bool is_active = 10;
@@ -1389,7 +1389,7 @@ message ProductInput {
   string description = 2;
   double price = 3;
   string currency = 4;
-  int64 category_id = 5;
+  string category_id = 5;
   optional string sku = 6;
   optional string barcode = 7;
   int32 stock_quantity = 8;
@@ -1428,7 +1428,7 @@ message ProductUpdateInput {
   optional string description = 3;
   optional double price = 4;
   optional string currency = 5;
-  optional int64 category_id = 6;
+  optional string category_id = 6;
   optional string sku = 7;
   optional string barcode = 8;
   optional bool is_active = 9;

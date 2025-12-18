@@ -510,8 +510,8 @@ func (s *Server) validateCreateListingRequest(req *listingspb.CreateListingReque
 		return fmt.Errorf("currency must be 3 characters (ISO 4217)")
 	}
 
-	if req.CategoryId <= 0 {
-		return fmt.Errorf("category_id must be greater than 0")
+	if req.CategoryId == "" {
+		return fmt.Errorf("category_id is required")
 	}
 
 	if req.Quantity < 0 {

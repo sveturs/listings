@@ -140,8 +140,8 @@ func validateCreateListingInput(input *domain.CreateListingInput) error {
 		return fmt.Errorf("title must be at least 3 characters")
 	}
 
-	if input.CategoryID <= 0 {
-		return fmt.Errorf("category_id must be greater than 0")
+	if input.CategoryID == "" {
+		return fmt.Errorf("category_id must not be empty")
 	}
 
 	if input.Price <= 0 {

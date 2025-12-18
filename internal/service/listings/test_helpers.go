@@ -40,8 +40,8 @@ func SetupServiceTest(t *testing.T) (*Service, *mocks.MockRepository, *mocks.Moc
 // This includes category validation and slug uniqueness checks
 func SetupDefaultCreateListingMocks(mockRepo *mocks.MockRepository, ctx context.Context) {
 	// Mock category validation - returns active category
-	mockRepo.On("GetCategoryByID", ctx, mock.AnythingOfType("int64")).
-		Return(&domain.Category{ID: 1, Name: "Test Category", IsActive: true}, nil).
+	mockRepo.On("GetCategoryByID", ctx, mock.AnythingOfType("string")).
+		Return(&domain.Category{ID: "1", Name: "Test Category", IsActive: true}, nil).
 		Maybe() // Allow but don't require this call
 
 	// Mock slug uniqueness check - slug doesn't exist yet
@@ -67,7 +67,7 @@ func NewTestListing(id int64, userID int64, title string) *domain.Listing {
 		Description:    &description,
 		Price:          99.99,
 		Currency:       "USD",
-		CategoryID:     1,
+		CategoryID:     "1",
 		Status:         domain.StatusActive,
 		Visibility:     domain.VisibilityPublic,
 		Quantity:       10,
@@ -93,7 +93,7 @@ func NewCreateListingInput(userID int64, title string) *domain.CreateListingInpu
 		Description: &description,
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryID:  1,
+		CategoryID:  "1",
 		Quantity:    10,
 		SKU:         &sku,
 		SourceType:  domain.SourceTypeC2C, // Required field added
@@ -131,7 +131,7 @@ func NewSearchListingsQuery(query string, limit int32) *domain.SearchListingsQue
 }
 
 // NewTestCategory creates a test category
-func NewTestCategory(id int64, name string) *domain.Category {
+func NewTestCategory(id string, name string) *domain.Category {
 	slug := "test-category-" + time.Now().Format("20060102150405")
 
 	return &domain.Category{
@@ -188,7 +188,7 @@ func NewTestProduct(id int64, storefrontID int64, name string) *domain.Product {
 		Description:   "Test product description",
 		Price:         149.99,
 		Currency:      "USD",
-		CategoryID:    1,
+		CategoryID:    "1",
 		SKU:           &sku,
 		Barcode:       &barcode,
 		StockQuantity: 50,
@@ -215,7 +215,7 @@ func NewCreateProductInput(storefrontID int64, name string) *domain.CreateProduc
 		Description:   "Test product description",
 		Price:         149.99,
 		Currency:      "USD",
-		CategoryID:    1,
+		CategoryID:    "1",
 		SKU:           &sku,
 		Barcode:       &barcode,
 		StockQuantity: 50,

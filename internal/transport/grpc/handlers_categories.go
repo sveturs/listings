@@ -33,10 +33,9 @@ func (s *Server) GetCategoriesForCategorySvc(ctx context.Context, req *categorie
 	limit := req.PageSize
 
 	// Convert proto optional fields to pointers
-	var parentID *int64
+	var parentID *string
 	if req.ParentId != nil {
-		pid := int64(*req.ParentId)
-		parentID = &pid
+		parentID = req.ParentId
 	}
 
 	var isActive *bool
@@ -77,16 +76,16 @@ func (s *Server) GetCategoryTreeForCategorySvc(ctx context.Context, req *categor
 		Interface("active_only", req.ActiveOnly).
 		Msg("GetCategoryTree called")
 
-	// Determine root category ID (0 means entire tree)
-	rootID := int64(0)
+	// Determine root category ID (empty string means entire tree)
+	rootID := ""
 	if req.RootId != nil {
-		rootID = int64(*req.RootId)
+		rootID = *req.RootId
 	}
 
 	// Get category tree from service
 	tree, err := s.categoryService.GetCategoryTree(ctx, rootID)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("root_id", rootID).Msg("failed to get category tree")
+		s.logger.Error().Err(err).Str("root_id", rootID).Msg("failed to get category tree")
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get category tree: %v", err))
 	}
 
@@ -98,7 +97,7 @@ func (s *Server) GetCategoryTreeForCategorySvc(ctx context.Context, req *categor
 			tree = filterActiveCategoriesInTree(tree)
 		}
 
-		if rootID > 0 {
+		if rootID != "" {
 			// Single tree for specific root
 			pbTrees = []*categoriespb.CategoryTree{DomainToCategoryServiceProtoCategoryTree(tree)}
 		} else {
@@ -126,17 +125,17 @@ func (s *Server) GetCategoryTreeForCategorySvc(ctx context.Context, req *categor
 
 // GetCategory retrieves a single category by ID (CategoryService implementation)
 func (s *Server) GetCategoryForCategorySvc(ctx context.Context, req *categoriespb.GetCategoryRequest) (*categoriespb.GetCategoryResponse, error) {
-	s.logger.Debug().Int32("category_id", req.Id).Msg("GetCategory called")
+	s.logger.Debug().Str("category_id", req.Id).Msg("GetCategory called")
 
 	// Validate request
-	if req.Id <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category ID must be greater than 0")
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "category ID must not be empty")
 	}
 
 	// Get category from service
-	category, err := s.categoryService.GetCategory(ctx, int64(req.Id))
+	category, err := s.categoryService.GetCategory(ctx, req.Id)
 	if err != nil {
-		s.logger.Error().Err(err).Int32("category_id", req.Id).Msg("failed to get category")
+		s.logger.Error().Err(err).Str("category_id", req.Id).Msg("failed to get category")
 		if contains(err.Error(), "not found") || contains(err.Error(), "no rows") {
 			return nil, status.Error(codes.NotFound, "category not found")
 		}
@@ -146,7 +145,7 @@ func (s *Server) GetCategoryForCategorySvc(ctx context.Context, req *categoriesp
 	// Convert to proto
 	pbCategory := DomainToCategoryServiceProtoCategory(category)
 
-	s.logger.Debug().Int32("category_id", req.Id).Msg("category retrieved")
+	s.logger.Debug().Str("category_id", req.Id).Msg("category retrieved")
 
 	return &categoriespb.GetCategoryResponse{
 		Category: pbCategory,
@@ -230,7 +229,7 @@ func (s *Server) CreateCategoryForCategorySvc(ctx context.Context, req *categori
 	pbCategory := DomainToCategoryServiceProtoCategory(createdCategory)
 
 	s.logger.Info().
-		Int64("category_id", createdCategory.ID).
+		Str("category_id", createdCategory.ID).
 		Str("name", createdCategory.Name).
 		Msg("category created successfully")
 
@@ -242,12 +241,12 @@ func (s *Server) CreateCategoryForCategorySvc(ctx context.Context, req *categori
 // UpdateCategory updates an existing category (Admin endpoint)
 func (s *Server) UpdateCategoryForCategorySvc(ctx context.Context, req *categoriespb.UpdateCategoryRequest) (*categoriespb.UpdateCategoryResponse, error) {
 	s.logger.Debug().
-		Int32("category_id", req.Id).
+		Str("category_id", req.Id).
 		Msg("UpdateCategory called")
 
 	// Validate request
-	if req.Id <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category ID must be greater than 0")
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "category ID must not be empty")
 	}
 
 	// At least one field must be set for update
@@ -272,7 +271,7 @@ func (s *Server) UpdateCategoryForCategorySvc(ctx context.Context, req *categori
 	// Update category via service
 	updatedCategory, err := s.categoryService.UpdateCategory(ctx, category)
 	if err != nil {
-		s.logger.Error().Err(err).Int32("category_id", req.Id).Msg("failed to update category")
+		s.logger.Error().Err(err).Str("category_id", req.Id).Msg("failed to update category")
 
 		// Map database errors
 		errMsg := err.Error()
@@ -296,7 +295,7 @@ func (s *Server) UpdateCategoryForCategorySvc(ctx context.Context, req *categori
 	pbCategory := DomainToCategoryServiceProtoCategory(updatedCategory)
 
 	s.logger.Info().
-		Int64("category_id", updatedCategory.ID).
+		Str("category_id", updatedCategory.ID).
 		Msg("category updated successfully")
 
 	return &categoriespb.UpdateCategoryResponse{
@@ -307,18 +306,18 @@ func (s *Server) UpdateCategoryForCategorySvc(ctx context.Context, req *categori
 // DeleteCategory deletes a category (Admin endpoint)
 func (s *Server) DeleteCategoryForCategorySvc(ctx context.Context, req *categoriespb.DeleteCategoryRequest) (*categoriespb.DeleteCategoryResponse, error) {
 	s.logger.Debug().
-		Int32("category_id", req.Id).
+		Str("category_id", req.Id).
 		Msg("DeleteCategory called")
 
 	// Validate request
-	if req.Id <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category ID must be greater than 0")
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "category ID must not be empty")
 	}
 
 	// Delete category via service
-	err := s.categoryService.DeleteCategory(ctx, int64(req.Id))
+	err := s.categoryService.DeleteCategory(ctx, req.Id)
 	if err != nil {
-		s.logger.Error().Err(err).Int32("category_id", req.Id).Msg("failed to delete category")
+		s.logger.Error().Err(err).Str("category_id", req.Id).Msg("failed to delete category")
 
 		// Map errors
 		errMsg := err.Error()
@@ -333,7 +332,7 @@ func (s *Server) DeleteCategoryForCategorySvc(ctx context.Context, req *categori
 	}
 
 	s.logger.Info().
-		Int32("category_id", req.Id).
+		Str("category_id", req.Id).
 		Msg("category deleted successfully")
 
 	return &categoriespb.DeleteCategoryResponse{

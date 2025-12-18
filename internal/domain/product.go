@@ -14,7 +14,7 @@ type Product struct {
 	Description           string                 `json:"description" db:"description"`
 	Price                 float64                `json:"price" db:"price"`
 	Currency              string                 `json:"currency" db:"currency"`
-	CategoryID            int64                  `json:"category_id" db:"category_id"`
+	CategoryID            string                 `json:"category_id" db:"category_id"`
 	SKU                   *string                `json:"sku,omitempty" db:"sku"`
 	Barcode               *string                `json:"barcode,omitempty" db:"barcode"`
 	StockQuantity         int32                  `json:"stock_quantity" db:"stock_quantity"`
@@ -191,7 +191,7 @@ type CreateProductInput struct {
 	Description           string                 `json:"description" validate:"omitempty,max=5000"`
 	Price                 float64                `json:"price" validate:"required,gt=0"`
 	Currency              string                 `json:"currency" validate:"required,len=3"`
-	CategoryID            int64                  `json:"category_id" validate:"required"`
+	CategoryID            string                 `json:"category_id" validate:"required"`
 	SKU                   *string                `json:"sku,omitempty"`
 	Barcode               *string                `json:"barcode,omitempty"`
 	StockQuantity         int32                  `json:"stock_quantity" validate:"gte=0"`

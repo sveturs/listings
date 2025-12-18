@@ -579,7 +579,7 @@ type Listing struct {
 	Description    *string                `protobuf:"bytes,6,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	Price          float64                `protobuf:"fixed64,7,opt,name=price,proto3" json:"price,omitempty"`
 	Currency       string                 `protobuf:"bytes,8,opt,name=currency,proto3" json:"currency,omitempty"`
-	CategoryId     int64                  `protobuf:"varint,9,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId     string                 `protobuf:"bytes,9,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	Status         string                 `protobuf:"bytes,10,opt,name=status,proto3" json:"status,omitempty"`
 	Visibility     string                 `protobuf:"bytes,11,opt,name=visibility,proto3" json:"visibility,omitempty"`
 	Quantity       int32                  `protobuf:"varint,12,opt,name=quantity,proto3" json:"quantity,omitempty"`
@@ -692,11 +692,11 @@ func (x *Listing) GetCurrency() string {
 	return ""
 }
 
-func (x *Listing) GetCategoryId() int64 {
+func (x *Listing) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *Listing) GetStatus() string {
@@ -1295,10 +1295,10 @@ func (x *ListingVariant) GetUpdatedAt() string {
 // Category represents a marketplace category
 type Category struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Slug              string                 `protobuf:"bytes,3,opt,name=slug,proto3" json:"slug,omitempty"`
-	ParentId          *int64                 `protobuf:"varint,4,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
+	ParentId          *string                `protobuf:"bytes,4,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
 	Icon              *string                `protobuf:"bytes,5,opt,name=icon,proto3,oneof" json:"icon,omitempty"`
 	Description       *string                `protobuf:"bytes,6,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	IsActive          bool                   `protobuf:"varint,7,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
@@ -1343,11 +1343,11 @@ func (*Category) Descriptor() ([]byte, []int) {
 	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *Category) GetId() int64 {
+func (x *Category) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 func (x *Category) GetName() string {
@@ -1364,11 +1364,11 @@ func (x *Category) GetSlug() string {
 	return ""
 }
 
-func (x *Category) GetParentId() int64 {
+func (x *Category) GetParentId() string {
 	if x != nil && x.ParentId != nil {
 		return *x.ParentId
 	}
-	return 0
+	return ""
 }
 
 func (x *Category) GetIcon() string {
@@ -1444,11 +1444,11 @@ func (x *Category) GetCreatedAt() string {
 // CategoryTreeNode represents a category with its children
 type CategoryTreeNode struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Slug              string                 `protobuf:"bytes,3,opt,name=slug,proto3" json:"slug,omitempty"`
 	Icon              *string                `protobuf:"bytes,4,opt,name=icon,proto3,oneof" json:"icon,omitempty"`
-	ParentId          *int64                 `protobuf:"varint,5,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
+	ParentId          *string                `protobuf:"bytes,5,opt,name=parent_id,json=parentId,proto3,oneof" json:"parent_id,omitempty"`
 	Level             int32                  `protobuf:"varint,6,opt,name=level,proto3" json:"level,omitempty"`
 	Path              string                 `protobuf:"bytes,7,opt,name=path,proto3" json:"path,omitempty"`
 	ListingCount      int32                  `protobuf:"varint,8,opt,name=listing_count,json=listingCount,proto3" json:"listing_count,omitempty"`
@@ -1492,11 +1492,11 @@ func (*CategoryTreeNode) Descriptor() ([]byte, []int) {
 	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *CategoryTreeNode) GetId() int64 {
+func (x *CategoryTreeNode) GetId() string {
 	if x != nil {
 		return x.Id
 	}
-	return 0
+	return ""
 }
 
 func (x *CategoryTreeNode) GetName() string {
@@ -1520,11 +1520,11 @@ func (x *CategoryTreeNode) GetIcon() string {
 	return ""
 }
 
-func (x *CategoryTreeNode) GetParentId() int64 {
+func (x *CategoryTreeNode) GetParentId() string {
 	if x != nil && x.ParentId != nil {
 		return *x.ParentId
 	}
-	return 0
+	return ""
 }
 
 func (x *CategoryTreeNode) GetLevel() int32 {
@@ -1599,7 +1599,7 @@ type Product struct {
 	Description           string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	Price                 float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
 	Currency              string                 `protobuf:"bytes,6,opt,name=currency,proto3" json:"currency,omitempty"`
-	CategoryId            int64                  `protobuf:"varint,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId            string                 `protobuf:"bytes,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	Sku                   *string                `protobuf:"bytes,8,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
 	Barcode               *string                `protobuf:"bytes,9,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
 	StockQuantity         int32                  `protobuf:"varint,10,opt,name=stock_quantity,json=stockQuantity,proto3" json:"stock_quantity,omitempty"`
@@ -1695,11 +1695,11 @@ func (x *Product) GetCurrency() string {
 	return ""
 }
 
-func (x *Product) GetCategoryId() int64 {
+func (x *Product) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *Product) GetSku() string {
@@ -2276,7 +2276,7 @@ type CreateListingRequest struct {
 	Description  *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	Price        float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
 	Currency     string                 `protobuf:"bytes,6,opt,name=currency,proto3" json:"currency,omitempty"`
-	CategoryId   int64                  `protobuf:"varint,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId   string                 `protobuf:"bytes,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	Quantity     int32                  `protobuf:"varint,8,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	Sku          *string                `protobuf:"bytes,9,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
 	// Condition (new, used, etc.)
@@ -2366,11 +2366,11 @@ func (x *CreateListingRequest) GetCurrency() string {
 	return ""
 }
 
-func (x *CreateListingRequest) GetCategoryId() int64 {
+func (x *CreateListingRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *CreateListingRequest) GetQuantity() int32 {
@@ -2726,7 +2726,7 @@ func (x *DeleteListingResponse) GetSuccess() bool {
 type SearchListingsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Query         string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
-	CategoryId    *int64                 `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	CategoryId    *string                `protobuf:"bytes,2,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
 	MinPrice      *float64               `protobuf:"fixed64,3,opt,name=min_price,json=minPrice,proto3,oneof" json:"min_price,omitempty"`
 	MaxPrice      *float64               `protobuf:"fixed64,4,opt,name=max_price,json=maxPrice,proto3,oneof" json:"max_price,omitempty"`
 	Limit         int32                  `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
@@ -2772,11 +2772,11 @@ func (x *SearchListingsRequest) GetQuery() string {
 	return ""
 }
 
-func (x *SearchListingsRequest) GetCategoryId() int64 {
+func (x *SearchListingsRequest) GetCategoryId() string {
 	if x != nil && x.CategoryId != nil {
 		return *x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *SearchListingsRequest) GetMinPrice() float64 {
@@ -2864,7 +2864,7 @@ type ListListingsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        *int64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3,oneof" json:"user_id,omitempty"`
 	StorefrontId  *int64                 `protobuf:"varint,2,opt,name=storefront_id,json=storefrontId,proto3,oneof" json:"storefront_id,omitempty"`
-	CategoryId    *int64                 `protobuf:"varint,3,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	CategoryId    *string                `protobuf:"bytes,3,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
 	Status        *string                `protobuf:"bytes,4,opt,name=status,proto3,oneof" json:"status,omitempty"`
 	MinPrice      *float64               `protobuf:"fixed64,5,opt,name=min_price,json=minPrice,proto3,oneof" json:"min_price,omitempty"`
 	MaxPrice      *float64               `protobuf:"fixed64,6,opt,name=max_price,json=maxPrice,proto3,oneof" json:"max_price,omitempty"`
@@ -2918,11 +2918,11 @@ func (x *ListListingsRequest) GetStorefrontId() int64 {
 	return 0
 }
 
-func (x *ListListingsRequest) GetCategoryId() int64 {
+func (x *ListListingsRequest) GetCategoryId() string {
 	if x != nil && x.CategoryId != nil {
 		return *x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *ListListingsRequest) GetStatus() string {
@@ -4026,7 +4026,7 @@ func (x *CategoriesResponse) GetCategories() []*Category {
 // CategoryIDRequest requests a category by ID
 type CategoryIDRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId    int64                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4061,11 +4061,11 @@ func (*CategoryIDRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_listings_v1_listings_proto_rawDescGZIP(), []int{41}
 }
 
-func (x *CategoryIDRequest) GetCategoryId() int64 {
+func (x *CategoryIDRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 // CategoryResponse returns a single category
@@ -7674,7 +7674,7 @@ type CreateProductRequest struct {
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`                           // Optional, up to 5000 characters
 	Price         float64                `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`                                     // Required, must be > 0
 	Currency      string                 `protobuf:"bytes,5,opt,name=currency,proto3" json:"currency,omitempty"`                                 // Required, ISO 4217 code (USD, EUR, etc.)
-	CategoryId    int64                  `protobuf:"varint,6,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`          // Required, must exist
+	CategoryId    string                 `protobuf:"bytes,6,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`           // Required, must exist
 	Sku           *string                `protobuf:"bytes,7,opt,name=sku,proto3,oneof" json:"sku,omitempty"`                                     // Optional, must be unique in storefront
 	Barcode       *string                `protobuf:"bytes,8,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`                             // Optional (EAN, UPC, etc.)
 	StockQuantity int32                  `protobuf:"varint,9,opt,name=stock_quantity,json=stockQuantity,proto3" json:"stock_quantity,omitempty"` // Initial stock, default 0
@@ -7757,11 +7757,11 @@ func (x *CreateProductRequest) GetCurrency() string {
 	return ""
 }
 
-func (x *CreateProductRequest) GetCategoryId() int64 {
+func (x *CreateProductRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *CreateProductRequest) GetSku() string {
@@ -7858,7 +7858,7 @@ type UpdateProductRequest struct {
 	Description *string          `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	Price       *float64         `protobuf:"fixed64,5,opt,name=price,proto3,oneof" json:"price,omitempty"`
 	Currency    *string          `protobuf:"bytes,6,opt,name=currency,proto3,oneof" json:"currency,omitempty"`
-	CategoryId  *int64           `protobuf:"varint,7,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	CategoryId  *string          `protobuf:"bytes,7,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
 	Sku         *string          `protobuf:"bytes,8,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
 	Barcode     *string          `protobuf:"bytes,9,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
 	IsActive    *bool            `protobuf:"varint,10,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
@@ -7948,11 +7948,11 @@ func (x *UpdateProductRequest) GetCurrency() string {
 	return ""
 }
 
-func (x *UpdateProductRequest) GetCategoryId() int64 {
+func (x *UpdateProductRequest) GetCategoryId() string {
 	if x != nil && x.CategoryId != nil {
 		return *x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *UpdateProductRequest) GetSku() string {
@@ -8161,7 +8161,7 @@ type ProductInput struct {
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Price         float64                `protobuf:"fixed64,3,opt,name=price,proto3" json:"price,omitempty"`
 	Currency      string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
-	CategoryId    int64                  `protobuf:"varint,5,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,5,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	Sku           *string                `protobuf:"bytes,6,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
 	Barcode       *string                `protobuf:"bytes,7,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
 	StockQuantity int32                  `protobuf:"varint,8,opt,name=stock_quantity,json=stockQuantity,proto3" json:"stock_quantity,omitempty"`
@@ -8237,11 +8237,11 @@ func (x *ProductInput) GetCurrency() string {
 	return ""
 }
 
-func (x *ProductInput) GetCategoryId() int64 {
+func (x *ProductInput) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *ProductInput) GetSku() string {
@@ -8458,7 +8458,7 @@ type ProductUpdateInput struct {
 	Description   *string                `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	Price         *float64               `protobuf:"fixed64,4,opt,name=price,proto3,oneof" json:"price,omitempty"`
 	Currency      *string                `protobuf:"bytes,5,opt,name=currency,proto3,oneof" json:"currency,omitempty"`
-	CategoryId    *int64                 `protobuf:"varint,6,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	CategoryId    *string                `protobuf:"bytes,6,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
 	Sku           *string                `protobuf:"bytes,7,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
 	Barcode       *string                `protobuf:"bytes,8,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
 	IsActive      *bool                  `protobuf:"varint,9,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
@@ -8533,11 +8533,11 @@ func (x *ProductUpdateInput) GetCurrency() string {
 	return ""
 }
 
-func (x *ProductUpdateInput) GetCategoryId() int64 {
+func (x *ProductUpdateInput) GetCategoryId() string {
 	if x != nil && x.CategoryId != nil {
 		return *x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *ProductUpdateInput) GetSku() string {
@@ -14600,7 +14600,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vdescription\x18\x06 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x14\n" +
 	"\x05price\x18\a \x01(\x01R\x05price\x12\x1a\n" +
 	"\bcurrency\x18\b \x01(\tR\bcurrency\x12\x1f\n" +
-	"\vcategory_id\x18\t \x01(\x03R\n" +
+	"\vcategory_id\x18\t \x01(\tR\n" +
 	"categoryId\x12\x16\n" +
 	"\x06status\x18\n" +
 	" \x01(\tR\x06status\x12\x1e\n" +
@@ -14728,10 +14728,10 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\v_created_atB\r\n" +
 	"\v_updated_at\"\xe3\x04\n" +
 	"\bCategory\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x12 \n" +
-	"\tparent_id\x18\x04 \x01(\x03H\x00R\bparentId\x88\x01\x01\x12\x17\n" +
+	"\tparent_id\x18\x04 \x01(\tH\x00R\bparentId\x88\x01\x01\x12\x17\n" +
 	"\x04icon\x18\x05 \x01(\tH\x01R\x04icon\x88\x01\x01\x12%\n" +
 	"\vdescription\x18\x06 \x01(\tH\x02R\vdescription\x88\x01\x01\x12\x1b\n" +
 	"\tis_active\x18\a \x01(\bR\bisActive\x12#\n" +
@@ -14754,11 +14754,11 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\f_descriptionB\x16\n" +
 	"\x14_custom_ui_component\"\xf9\x04\n" +
 	"\x10CategoryTreeNode\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x12\x17\n" +
 	"\x04icon\x18\x04 \x01(\tH\x00R\x04icon\x88\x01\x01\x12 \n" +
-	"\tparent_id\x18\x05 \x01(\x03H\x01R\bparentId\x88\x01\x01\x12\x14\n" +
+	"\tparent_id\x18\x05 \x01(\tH\x01R\bparentId\x88\x01\x01\x12\x14\n" +
 	"\x05level\x18\x06 \x01(\x05R\x05level\x12\x12\n" +
 	"\x04path\x18\a \x01(\tR\x04path\x12#\n" +
 	"\rlisting_count\x18\b \x01(\x05R\flistingCount\x12%\n" +
@@ -14784,7 +14784,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x14\n" +
 	"\x05price\x18\x05 \x01(\x01R\x05price\x12\x1a\n" +
 	"\bcurrency\x18\x06 \x01(\tR\bcurrency\x12\x1f\n" +
-	"\vcategory_id\x18\a \x01(\x03R\n" +
+	"\vcategory_id\x18\a \x01(\tR\n" +
 	"categoryId\x12\x15\n" +
 	"\x03sku\x18\b \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
 	"\abarcode\x18\t \x01(\tH\x01R\abarcode\x88\x01\x01\x12%\n" +
@@ -14891,7 +14891,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vdescription\x18\x04 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x14\n" +
 	"\x05price\x18\x05 \x01(\x01R\x05price\x12\x1a\n" +
 	"\bcurrency\x18\x06 \x01(\tR\bcurrency\x12\x1f\n" +
-	"\vcategory_id\x18\a \x01(\x03R\n" +
+	"\vcategory_id\x18\a \x01(\tR\n" +
 	"categoryId\x12\x1a\n" +
 	"\bquantity\x18\b \x01(\x05R\bquantity\x12\x15\n" +
 	"\x03sku\x18\t \x01(\tH\x02R\x03sku\x88\x01\x01\x12!\n" +
@@ -14942,7 +14942,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xf1\x01\n" +
 	"\x15SearchListingsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12$\n" +
-	"\vcategory_id\x18\x02 \x01(\x03H\x00R\n" +
+	"\vcategory_id\x18\x02 \x01(\tH\x00R\n" +
 	"categoryId\x88\x01\x01\x12 \n" +
 	"\tmin_price\x18\x03 \x01(\x01H\x01R\bminPrice\x88\x01\x01\x12 \n" +
 	"\tmax_price\x18\x04 \x01(\x01H\x02R\bmaxPrice\x88\x01\x01\x12\x14\n" +
@@ -14959,7 +14959,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x13ListListingsRequest\x12\x1c\n" +
 	"\auser_id\x18\x01 \x01(\x03H\x00R\x06userId\x88\x01\x01\x12(\n" +
 	"\rstorefront_id\x18\x02 \x01(\x03H\x01R\fstorefrontId\x88\x01\x01\x12$\n" +
-	"\vcategory_id\x18\x03 \x01(\x03H\x02R\n" +
+	"\vcategory_id\x18\x03 \x01(\tH\x02R\n" +
 	"categoryId\x88\x01\x01\x12\x1b\n" +
 	"\x06status\x18\x04 \x01(\tH\x03R\x06status\x88\x01\x01\x12 \n" +
 	"\tmin_price\x18\x05 \x01(\x01H\x04R\bminPrice\x88\x01\x01\x12 \n" +
@@ -15062,7 +15062,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"categories\x18\x01 \x03(\v2\x18.listingssvc.v1.CategoryR\n" +
 	"categories\"4\n" +
 	"\x11CategoryIDRequest\x12\x1f\n" +
-	"\vcategory_id\x18\x01 \x01(\x03R\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\"H\n" +
 	"\x10CategoryResponse\x124\n" +
 	"\bcategory\x18\x01 \x01(\v2\x18.listingssvc.v1.CategoryR\bcategory\"L\n" +
@@ -15457,7 +15457,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
 	"\x05price\x18\x04 \x01(\x01R\x05price\x12\x1a\n" +
 	"\bcurrency\x18\x05 \x01(\tR\bcurrency\x12\x1f\n" +
-	"\vcategory_id\x18\x06 \x01(\x03R\n" +
+	"\vcategory_id\x18\x06 \x01(\tR\n" +
 	"categoryId\x12\x15\n" +
 	"\x03sku\x18\a \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
 	"\abarcode\x18\b \x01(\tH\x01R\abarcode\x88\x01\x01\x12%\n" +
@@ -15489,7 +15489,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vdescription\x18\x04 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x19\n" +
 	"\x05price\x18\x05 \x01(\x01H\x02R\x05price\x88\x01\x01\x12\x1f\n" +
 	"\bcurrency\x18\x06 \x01(\tH\x03R\bcurrency\x88\x01\x01\x12$\n" +
-	"\vcategory_id\x18\a \x01(\x03H\x04R\n" +
+	"\vcategory_id\x18\a \x01(\tH\x04R\n" +
 	"categoryId\x88\x01\x01\x12\x15\n" +
 	"\x03sku\x18\b \x01(\tH\x05R\x03sku\x88\x01\x01\x12\x1d\n" +
 	"\abarcode\x18\t \x01(\tH\x06R\abarcode\x88\x01\x01\x12 \n" +
@@ -15542,7 +15542,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x14\n" +
 	"\x05price\x18\x03 \x01(\x01R\x05price\x12\x1a\n" +
 	"\bcurrency\x18\x04 \x01(\tR\bcurrency\x12\x1f\n" +
-	"\vcategory_id\x18\x05 \x01(\x03R\n" +
+	"\vcategory_id\x18\x05 \x01(\tR\n" +
 	"categoryId\x12\x15\n" +
 	"\x03sku\x18\x06 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
 	"\abarcode\x18\a \x01(\tH\x01R\abarcode\x88\x01\x01\x12%\n" +
@@ -15581,7 +15581,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vdescription\x18\x03 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x19\n" +
 	"\x05price\x18\x04 \x01(\x01H\x02R\x05price\x88\x01\x01\x12\x1f\n" +
 	"\bcurrency\x18\x05 \x01(\tH\x03R\bcurrency\x88\x01\x01\x12$\n" +
-	"\vcategory_id\x18\x06 \x01(\x03H\x04R\n" +
+	"\vcategory_id\x18\x06 \x01(\tH\x04R\n" +
 	"categoryId\x88\x01\x01\x12\x15\n" +
 	"\x03sku\x18\a \x01(\tH\x05R\x03sku\x88\x01\x01\x12\x1d\n" +
 	"\abarcode\x18\b \x01(\tH\x06R\abarcode\x88\x01\x01\x12 \n" +

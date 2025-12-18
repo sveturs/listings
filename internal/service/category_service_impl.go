@@ -16,20 +16,20 @@ import (
 
 // CategoryRepository defines minimal repository interface needed by the service
 type CategoryRepository interface {
-	GetCategoriesWithPagination(ctx context.Context, parentID *int64, isActive *bool, limit, offset int32) ([]*domain.Category, int32, error)
-	GetCategoryByID(ctx context.Context, id int64) (*domain.Category, error)
+	GetCategoriesWithPagination(ctx context.Context, parentID *string, isActive *bool, limit, offset int32) ([]*domain.Category, int32, error)
+	GetCategoryByID(ctx context.Context, id string) (*domain.Category, error)
 	GetCategoryBySlug(ctx context.Context, slug string) (*domain.Category, error)
-	GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error)
+	GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error)
 	CreateCategory(ctx context.Context, cat *domain.Category) (*domain.Category, error)
 	UpdateCategory(ctx context.Context, cat *domain.Category) (*domain.Category, error)
-	DeleteCategory(ctx context.Context, categoryID int64) error
+	DeleteCategory(ctx context.Context, categoryID string) error
 }
 
 const (
 	// Category cache keys and TTL
-	categoryCacheKeyByID   = "category:id:%d"
+	categoryCacheKeyByID   = "category:id:%s"
 	categoryCacheKeyBySlug = "category:slug:%s"
-	categoryTreeCacheKey   = "category:tree:%d"
+	categoryTreeCacheKey   = "category:tree:%s"
 	categoryCacheTTL       = 1 * time.Hour
 )
 
@@ -72,7 +72,7 @@ func NewCategoryService(
 // =============================================================================
 
 // GetCategories retrieves a list of categories with optional filtering and pagination
-func (s *CategoryServiceImpl) GetCategories(ctx context.Context, parentID *int64, isActive *bool, limit, offset int32) ([]*domain.Category, int32, error) {
+func (s *CategoryServiceImpl) GetCategories(ctx context.Context, parentID *string, isActive *bool, limit, offset int32) ([]*domain.Category, int32, error) {
 	categories, total, err := s.repo.GetCategoriesWithPagination(ctx, parentID, isActive, limit, offset)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to get categories")
@@ -92,26 +92,26 @@ func (s *CategoryServiceImpl) GetCategories(ctx context.Context, parentID *int64
 }
 
 // GetCategory retrieves a single category by ID (with caching)
-func (s *CategoryServiceImpl) GetCategory(ctx context.Context, id int64) (*domain.Category, error) {
+func (s *CategoryServiceImpl) GetCategory(ctx context.Context, id string) (*domain.Category, error) {
 	// Try cache first
 	cacheKey := fmt.Sprintf(categoryCacheKeyByID, id)
 	cached, err := s.cache.Get(ctx, cacheKey)
 	if err == nil && cached != nil {
-		s.logger.Debug().Int64("id", id).Msg("category retrieved from cache")
+		s.logger.Debug().Str("id", id).Msg("category retrieved from cache")
 		return cached, nil
 	}
 
 	// Cache miss - fetch from repository
-	s.logger.Debug().Int64("id", id).Msg("cache miss, fetching from repository")
+	s.logger.Debug().Str("id", id).Msg("cache miss, fetching from repository")
 	category, err := s.repo.GetCategoryByID(ctx, id)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("id", id).Msg("failed to get category")
+		s.logger.Error().Err(err).Str("id", id).Msg("failed to get category")
 		return nil, fmt.Errorf("failed to get category: %w", err)
 	}
 
 	// Cache the result
 	if err := s.cache.Set(ctx, cacheKey, category, categoryCacheTTL); err != nil {
-		s.logger.Warn().Err(err).Int64("id", id).Msg("failed to cache category")
+		s.logger.Warn().Err(err).Str("id", id).Msg("failed to cache category")
 		// Don't fail on cache error
 	}
 
@@ -142,33 +142,33 @@ func (s *CategoryServiceImpl) GetCategoryBySlug(ctx context.Context, slug string
 	}
 	idKey := fmt.Sprintf(categoryCacheKeyByID, category.ID)
 	if err := s.cache.Set(ctx, idKey, category, categoryCacheTTL); err != nil {
-		s.logger.Warn().Err(err).Int64("id", category.ID).Msg("failed to cache category by id")
+		s.logger.Warn().Err(err).Str("id", category.ID).Msg("failed to cache category by id")
 	}
 
 	return category, nil
 }
 
 // GetCategoryTree retrieves the full category tree starting from a specific category (with caching)
-func (s *CategoryServiceImpl) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
+func (s *CategoryServiceImpl) GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error) {
 	// Try cache first
 	cacheKey := fmt.Sprintf(categoryTreeCacheKey, categoryID)
 	cached, err := s.cache.GetTree(ctx, cacheKey)
 	if err == nil && cached != nil {
-		s.logger.Debug().Int64("category_id", categoryID).Msg("category tree retrieved from cache")
+		s.logger.Debug().Str("category_id", categoryID).Msg("category tree retrieved from cache")
 		return cached, nil
 	}
 
 	// Cache miss - fetch from repository
-	s.logger.Debug().Int64("category_id", categoryID).Msg("cache miss, fetching tree from repository")
+	s.logger.Debug().Str("category_id", categoryID).Msg("cache miss, fetching tree from repository")
 	tree, err := s.repo.GetCategoryTree(ctx, categoryID)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to get category tree")
+		s.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to get category tree")
 		return nil, fmt.Errorf("failed to get category tree: %w", err)
 	}
 
 	// Cache the result
 	if err := s.cache.SetTree(ctx, cacheKey, tree, categoryCacheTTL); err != nil {
-		s.logger.Warn().Err(err).Int64("category_id", categoryID).Msg("failed to cache category tree")
+		s.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to cache category tree")
 		// Don't fail on cache error
 	}
 
@@ -199,7 +199,7 @@ func (s *CategoryServiceImpl) CreateCategory(ctx context.Context, cat *domain.Ca
 	if cat.ParentID != nil {
 		parent, err := s.repo.GetCategoryByID(ctx, *cat.ParentID)
 		if err != nil || parent == nil {
-			return nil, fmt.Errorf("parent category with id %d not found", *cat.ParentID)
+			return nil, fmt.Errorf("parent category with id %s not found", *cat.ParentID)
 		}
 	}
 
@@ -215,14 +215,14 @@ func (s *CategoryServiceImpl) CreateCategory(ctx context.Context, cat *domain.Ca
 		s.invalidateTreeCache(ctx, *cat.ParentID)
 	}
 
-	s.logger.Info().Int64("id", created.ID).Str("name", created.Name).Msg("category created successfully")
+	s.logger.Info().Str("id", created.ID).Str("name", created.Name).Msg("category created successfully")
 	return created, nil
 }
 
 // UpdateCategory updates an existing category with validation
 func (s *CategoryServiceImpl) UpdateCategory(ctx context.Context, cat *domain.Category) (*domain.Category, error) {
 	// Validate input
-	if cat.ID == 0 {
+	if cat.ID == "" {
 		return nil, fmt.Errorf("category ID is required")
 	}
 
@@ -232,12 +232,12 @@ func (s *CategoryServiceImpl) UpdateCategory(ctx context.Context, cat *domain.Ca
 		return nil, fmt.Errorf("failed to get existing category: %w", err)
 	}
 	if existing == nil {
-		return nil, fmt.Errorf("category with id %d not found", cat.ID)
+		return nil, fmt.Errorf("category with id %s not found", cat.ID)
 	}
 
 	// Validate updated category
 	if err := s.validateCategory(cat); err != nil {
-		s.logger.Warn().Err(err).Int64("id", cat.ID).Msg("category validation failed")
+		s.logger.Warn().Err(err).Str("id", cat.ID).Msg("category validation failed")
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
@@ -254,7 +254,7 @@ func (s *CategoryServiceImpl) UpdateCategory(ctx context.Context, cat *domain.Ca
 		if existing.ParentID == nil || *cat.ParentID != *existing.ParentID {
 			parent, err := s.repo.GetCategoryByID(ctx, *cat.ParentID)
 			if err != nil || parent == nil {
-				return nil, fmt.Errorf("parent category with id %d not found", *cat.ParentID)
+				return nil, fmt.Errorf("parent category with id %s not found", *cat.ParentID)
 			}
 
 			// Prevent circular dependency
@@ -267,13 +267,13 @@ func (s *CategoryServiceImpl) UpdateCategory(ctx context.Context, cat *domain.Ca
 	// Update category
 	updated, err := s.repo.UpdateCategory(ctx, cat)
 	if err != nil {
-		s.logger.Error().Err(err).Int64("id", cat.ID).Msg("failed to update category")
+		s.logger.Error().Err(err).Str("id", cat.ID).Msg("failed to update category")
 		return nil, fmt.Errorf("failed to update category: %w", err)
 	}
 
 	// Invalidate cache
 	if err := s.InvalidateCache(ctx, cat.ID); err != nil {
-		s.logger.Warn().Err(err).Int64("id", cat.ID).Msg("failed to invalidate cache after update")
+		s.logger.Warn().Err(err).Str("id", cat.ID).Msg("failed to invalidate cache after update")
 	}
 
 	// Invalidate parent's tree cache if parent changed
@@ -284,30 +284,30 @@ func (s *CategoryServiceImpl) UpdateCategory(ctx context.Context, cat *domain.Ca
 		s.invalidateTreeCache(ctx, *cat.ParentID)
 	}
 
-	s.logger.Info().Int64("id", updated.ID).Msg("category updated successfully")
+	s.logger.Info().Str("id", updated.ID).Msg("category updated successfully")
 	return updated, nil
 }
 
 // DeleteCategory soft-deletes a category (sets is_active=false)
-func (s *CategoryServiceImpl) DeleteCategory(ctx context.Context, categoryID int64) error {
+func (s *CategoryServiceImpl) DeleteCategory(ctx context.Context, categoryID string) error {
 	// Get existing category
 	existing, err := s.repo.GetCategoryByID(ctx, categoryID)
 	if err != nil {
 		return fmt.Errorf("failed to get category: %w", err)
 	}
 	if existing == nil {
-		return fmt.Errorf("category with id %d not found", categoryID)
+		return fmt.Errorf("category with id %s not found", categoryID)
 	}
 
 	// Delete category
 	if err := s.repo.DeleteCategory(ctx, categoryID); err != nil {
-		s.logger.Error().Err(err).Int64("id", categoryID).Msg("failed to delete category")
+		s.logger.Error().Err(err).Str("id", categoryID).Msg("failed to delete category")
 		return fmt.Errorf("failed to delete category: %w", err)
 	}
 
 	// Invalidate cache
 	if err := s.InvalidateCache(ctx, categoryID); err != nil {
-		s.logger.Warn().Err(err).Int64("id", categoryID).Msg("failed to invalidate cache after delete")
+		s.logger.Warn().Err(err).Str("id", categoryID).Msg("failed to invalidate cache after delete")
 	}
 
 	// Invalidate parent's tree cache
@@ -315,7 +315,7 @@ func (s *CategoryServiceImpl) DeleteCategory(ctx context.Context, categoryID int
 		s.invalidateTreeCache(ctx, *existing.ParentID)
 	}
 
-	s.logger.Info().Int64("id", categoryID).Msg("category deleted successfully")
+	s.logger.Info().Str("id", categoryID).Msg("category deleted successfully")
 	return nil
 }
 
@@ -324,11 +324,11 @@ func (s *CategoryServiceImpl) DeleteCategory(ctx context.Context, categoryID int
 // =============================================================================
 
 // InvalidateCache invalidates all cache entries for a category
-func (s *CategoryServiceImpl) InvalidateCache(ctx context.Context, categoryID int64) error {
+func (s *CategoryServiceImpl) InvalidateCache(ctx context.Context, categoryID string) error {
 	// Get category to get slug for cache invalidation
 	category, err := s.repo.GetCategoryByID(ctx, categoryID)
 	if err != nil {
-		s.logger.Warn().Err(err).Int64("id", categoryID).Msg("failed to get category for cache invalidation")
+		s.logger.Warn().Err(err).Str("id", categoryID).Msg("failed to get category for cache invalidation")
 		// Continue with ID-based invalidation even if we can't get the slug
 	}
 
@@ -349,12 +349,12 @@ func (s *CategoryServiceImpl) InvalidateCache(ctx context.Context, categoryID in
 	// Invalidate tree cache
 	s.invalidateTreeCache(ctx, categoryID)
 
-	s.logger.Debug().Int64("category_id", categoryID).Msg("category cache invalidated")
+	s.logger.Debug().Str("category_id", categoryID).Msg("category cache invalidated")
 	return nil
 }
 
 // invalidateTreeCache invalidates the tree cache for a category
-func (s *CategoryServiceImpl) invalidateTreeCache(ctx context.Context, categoryID int64) {
+func (s *CategoryServiceImpl) invalidateTreeCache(ctx context.Context, categoryID string) {
 	treeKey := fmt.Sprintf(categoryTreeCacheKey, categoryID)
 	if err := s.cache.client.Del(ctx, treeKey).Err(); err != nil {
 		s.logger.Warn().Err(err).Str("key", treeKey).Msg("failed to delete tree cache key")
