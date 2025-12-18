@@ -166,6 +166,14 @@ type orderService struct {
 	chatService     ChatService                // For sending order notifications
 	deliveryClient  DeliveryClient             // For delivery microservice integration
 	eventPublisher  events.OrderEventPublisher // For WMS integration
+	variantService  VariantServiceInterface    // For variant stock reservations
+}
+
+// VariantServiceInterface defines operations for variant stock management
+type VariantServiceInterface interface {
+	ReserveStock(ctx context.Context, req *ReserveStockRequest) (*ReserveStockResponse, error)
+	ReleaseStock(ctx context.Context, reservationID string) error
+	ConfirmStockDeduction(ctx context.Context, reservationID string) error
 }
 
 // NewOrderService creates a new order service
@@ -177,6 +185,7 @@ func NewOrderService(
 	pool *pgxpool.Pool,
 	config *FinancialConfig,
 	logger zerolog.Logger,
+	variantService VariantServiceInterface,
 ) OrderService {
 	if config == nil {
 		config = DefaultFinancialConfig()
@@ -190,6 +199,7 @@ func NewOrderService(
 		pool:            pool,
 		config:          config,
 		logger:          logger.With().Str("component", "order_service").Logger(),
+		variantService:  variantService,
 	}
 }
 
@@ -403,6 +413,50 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 		return nil, fmt.Errorf("failed to create order items: %w", err)
 	}
 
+	// 11.5. Reserve variant stocks (new system)
+	if s.variantService != nil {
+		for i, item := range finalOrderItems {
+			// Check if this is a UUID variant (new system)
+			if item.VariantUUID != nil && len(*item.VariantUUID) == 36 {
+				// Reserve stock via VariantService
+				reservation, err := s.variantService.ReserveStock(ctx, &ReserveStockRequest{
+					VariantID:  *item.VariantUUID,
+					Quantity:   item.Quantity,
+					OrderID:    fmt.Sprintf("%d", order.ID),
+					TTLMinutes: 15, // 15 minutes for payment
+				})
+
+				if err != nil {
+					s.logger.Error().Err(err).
+						Str("variant_uuid", *item.VariantUUID).
+						Int64("order_id", order.ID).
+						Msg("failed to reserve variant stock")
+					return nil, fmt.Errorf("failed to reserve variant stock: %w", err)
+				}
+
+				if !reservation.Success {
+					// Insufficient stock - transaction will rollback automatically
+					s.logger.Warn().
+						Str("variant_uuid", *item.VariantUUID).
+						Str("error", reservation.ErrorMessage).
+						Msg("insufficient variant stock")
+					return nil, fmt.Errorf("insufficient stock for variant %s: %s",
+						*item.VariantUUID, reservation.ErrorMessage)
+				}
+
+				// Update order item with reservation_id
+				finalOrderItems[i].StockReservationID = &reservation.ReservationID
+
+				s.logger.Info().
+					Str("reservation_id", reservation.ReservationID).
+					Str("variant_uuid", *item.VariantUUID).
+					Int64("order_id", order.ID).
+					Int32("quantity", item.Quantity).
+					Msg("variant stock reserved")
+			}
+		}
+	}
+
 	// 12. Create inventory reservations (TTL 30 minutes)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
 	reservations := s.buildReservations(order.ID, cart.Items)
@@ -563,13 +617,40 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		return nil, fmt.Errorf("failed to get reservations: %w", err)
 	}
 
+	// Release variant stock reservations (new system)
+	if s.variantService != nil {
+		items, err := s.orderRepo.GetItems(ctx, orderID)
+		if err != nil {
+			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get order items for stock release")
+			return nil, fmt.Errorf("failed to get order items: %w", err)
+		}
+
+		for _, item := range items {
+			if item.StockReservationID != nil && *item.StockReservationID != "" {
+				err := s.variantService.ReleaseStock(ctx, *item.StockReservationID)
+				if err != nil {
+					s.logger.Error().Err(err).
+						Str("reservation_id", *item.StockReservationID).
+						Int64("order_id", orderID).
+						Msg("failed to release variant stock")
+					// Don't fail - continue with order cancellation
+				} else {
+					s.logger.Info().
+						Str("reservation_id", *item.StockReservationID).
+						Int64("order_id", orderID).
+						Msg("variant stock released")
+				}
+			}
+		}
+	}
+
 	// Update order status to cancelled
 	orderRepoTx := s.orderRepo.WithTx(tx)
 	if err := orderRepoTx.UpdateStatus(ctx, orderID, domain.OrderStatusCancelled); err != nil {
 		return nil, fmt.Errorf("failed to update order status: %w", err)
 	}
 
-	// Release all reservations for this order (batch operation)
+	// Release all reservations for this order (batch operation - legacy system)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
 	if err := reservationRepoTx.ReleaseReservations(ctx, domain.ReferenceTypeOrder, orderID); err != nil {
 		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to release reservations")
@@ -684,7 +765,34 @@ func (s *orderService) ConfirmOrderPayment(ctx context.Context, orderID int64, t
 		return fmt.Errorf("failed to update order: %w", err)
 	}
 
-	// Commit all reservations for this order (batch operation)
+	// Commit stock reservations (variant system)
+	if s.variantService != nil {
+		items, err := s.orderRepo.GetItems(ctx, orderID)
+		if err != nil {
+			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get order items for stock confirmation")
+			return fmt.Errorf("failed to get order items: %w", err)
+		}
+
+		for _, item := range items {
+			if item.StockReservationID != nil && *item.StockReservationID != "" {
+				err := s.variantService.ConfirmStockDeduction(ctx, *item.StockReservationID)
+				if err != nil {
+					s.logger.Error().Err(err).
+						Str("reservation_id", *item.StockReservationID).
+						Int64("order_id", orderID).
+						Msg("failed to confirm variant stock deduction")
+					// Don't fail - order is already paid, just log the error
+				} else {
+					s.logger.Info().
+						Str("reservation_id", *item.StockReservationID).
+						Int64("order_id", orderID).
+						Msg("variant stock deduction confirmed")
+				}
+			}
+		}
+	}
+
+	// Commit all reservations for this order (batch operation - legacy system)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
 	if err := reservationRepoTx.CommitReservations(ctx, domain.ReferenceTypeOrder, orderID); err != nil {
 		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to commit reservations")
@@ -1334,7 +1442,27 @@ func (s *orderService) confirmCODOrder(ctx context.Context, order *domain.Order)
 		return fmt.Errorf("failed to update order: %w", err)
 	}
 
-	// Commit reservations (stock already deducted, now mark as committed)
+	// Commit variant stock reservations (new system)
+	if s.variantService != nil {
+		items, err := s.orderRepo.GetItems(ctx, order.ID)
+		if err != nil {
+			s.logger.Warn().Err(err).Int64("order_id", order.ID).Msg("failed to get order items for COD stock confirmation")
+		} else {
+			for _, item := range items {
+				if item.StockReservationID != nil && *item.StockReservationID != "" {
+					err := s.variantService.ConfirmStockDeduction(ctx, *item.StockReservationID)
+					if err != nil {
+						s.logger.Warn().Err(err).
+							Str("reservation_id", *item.StockReservationID).
+							Int64("order_id", order.ID).
+							Msg("failed to confirm variant stock for COD order")
+					}
+				}
+			}
+		}
+	}
+
+	// Commit reservations (stock already deducted, now mark as committed - legacy system)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
 	if err := reservationRepoTx.CommitReservations(ctx, domain.ReferenceTypeOrder, order.ID); err != nil {
 		s.logger.Warn().Err(err).Int64("order_id", order.ID).Msg("failed to commit reservations for COD order")

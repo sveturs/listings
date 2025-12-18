@@ -18,10 +18,13 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	attributespb "github.com/vondi-global/listings/api/proto/attributes/v1"
+	attributessvcv1 "github.com/vondi-global/listings/api/proto/attributessvc/v1"
 	categoriespb "github.com/vondi-global/listings/api/proto/categories/v1"
+	categoriesv2 "github.com/vondi-global/listings/api/proto/categories/v2"
 	chatsvcv1 "github.com/vondi-global/listings/api/proto/chat/v1"
 	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 	searchv1 "github.com/vondi-global/listings/api/proto/search/v1"
+	variantspb "github.com/vondi-global/listings/api/proto/variants/v1"
 	"github.com/vondi-global/listings/internal/cache"
 	deliveryclient "github.com/vondi-global/listings/internal/client/delivery"
 	"github.com/vondi-global/listings/internal/config"
@@ -229,6 +232,9 @@ func main() {
 	attrRepo := postgres.NewAttributeRepository(db, zerologLogger)
 	attributeService := service.NewAttributeService(attrRepo, redisCache.GetClient(), zerologLogger)
 
+	// Initialize category cache (for V2 API)
+	categoryCache := cache.NewCategoryCache(redisCache.GetClient(), zerologLogger)
+
 	// Initialize category service
 	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
 
@@ -314,6 +320,20 @@ func main() {
 	orderRepo := postgres.NewOrderRepository(pgxPool, zerologLogger)
 	reservationRepo := postgres.NewReservationRepository(pgxPool, zerologLogger)
 
+	// Initialize variant service dependencies (for stock management)
+	variantRepo := postgres.NewVariantRepository(db, zerologLogger)
+	stockReservationRepo := postgres.NewStockReservationRepository(db, zerologLogger)
+	skuGenerator := service.NewSKUGenerator()
+
+	// Initialize variant service
+	variantService := service.NewVariantService(
+		variantRepo,
+		stockReservationRepo,
+		skuGenerator,
+		db,
+		zerologLogger,
+	)
+
 	// Initialize cart service
 	cartService := service.NewCartService(
 		cartRepo,
@@ -332,6 +352,7 @@ func main() {
 		pgxPool,
 		nil, // Use default financial config
 		zerologLogger,
+		variantService, // Add variant service for stock reservations
 	)
 
 	// Initialize inventory service (for reservations)
@@ -507,13 +528,22 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, inventoryService, invitationService, minioClient, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, pgRepo, categoryCache, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, inventoryService, invitationService, minioClient, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
+
+	// Register Phase 2 AttributeService (GetAttributesByCategory, GetAttributeValues)
+	attrPhase2Handler := grpcTransport.NewAttributeServicePhase2Server(attrRepo)
+	attributessvcv1.RegisterAttributeServiceServer(grpcServer, attrPhase2Handler)
+	logger.Info().Msg("AttributeService Phase 2 registered with gRPC server")
 
 	// Create separate CategoryService handler to avoid method name conflicts
 	categoryHandler := grpcTransport.NewCategoryServiceServer(grpcHandler)
 	categoriespb.RegisterCategoryServiceServer(grpcServer, categoryHandler)
+
+	// Register CategoryServiceV2 (UUID-based with i18n)
+	categoriesv2.RegisterCategoryServiceV2Server(grpcServer, grpcHandler)
+	logger.Info().Msg("CategoryServiceV2 registered with gRPC server")
 
 	listingspb.RegisterOrderServiceServer(grpcServer, grpcHandler)
 
@@ -531,6 +561,11 @@ func main() {
 	// Register ChatService
 	chatsvcv1.RegisterChatServiceServer(grpcServer, grpcHandler)
 	logger.Info().Msg("ChatService registered with gRPC server")
+
+	// Register VariantService (Phase 3)
+	variantHandler := grpcTransport.NewVariantHandler(variantService, zerologLogger)
+	variantspb.RegisterVariantServiceServer(grpcServer, variantHandler)
+	logger.Info().Msg("VariantService registered with gRPC server")
 
 	// Enable gRPC reflection for tools like grpcurl
 	reflection.Register(grpcServer)

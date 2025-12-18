@@ -487,10 +487,11 @@ func (r *orderRepository) CreateItems(ctx context.Context, orderID int64, items 
 
 	query := `
 		INSERT INTO order_items (
-			order_id, listing_id, variant_id, listing_name, sku,
+			order_id, listing_id, variant_id, variant_uuid, stock_reservation_id,
+			listing_name, sku,
 			variant_data, attributes, quantity, price, subtotal, discount, total, image_url
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING id, created_at
 	`
 
@@ -511,7 +512,8 @@ func (r *orderRepository) CreateItems(ctx context.Context, orderID int64, items 
 		}
 
 		batch.Queue(query,
-			orderID, item.ListingID, item.VariantID, item.ListingName, item.SKU,
+			orderID, item.ListingID, item.VariantID, item.VariantUUID, item.StockReservationID,
+			item.ListingName, item.SKU,
 			variantDataJSON, attributesJSON, item.Quantity, item.UnitPrice, item.Subtotal, item.Discount, item.Total, item.ImageURL,
 		)
 	}
@@ -534,7 +536,8 @@ func (r *orderRepository) CreateItems(ctx context.Context, orderID int64, items 
 // GetItems retrieves all items for an order
 func (r *orderRepository) GetItems(ctx context.Context, orderID int64) ([]*domain.OrderItem, error) {
 	query := `
-		SELECT id, order_id, listing_id, variant_id, listing_name, sku,
+		SELECT id, order_id, listing_id, variant_id, variant_uuid, stock_reservation_id,
+		       listing_name, sku,
 		       variant_data, attributes, quantity, price, subtotal, discount, total, image_url, created_at
 		FROM order_items
 		WHERE order_id = $1
@@ -552,11 +555,12 @@ func (r *orderRepository) GetItems(ctx context.Context, orderID int64) ([]*domai
 	for rows.Next() {
 		var item domain.OrderItem
 		var variantID sql.NullInt64
-		var sku, imageURL sql.NullString
+		var sku, imageURL, variantUUID, stockReservationID sql.NullString
 		var variantDataJSON, attributesJSON []byte
 
 		err := rows.Scan(
-			&item.ID, &item.OrderID, &item.ListingID, &variantID, &item.ListingName, &sku,
+			&item.ID, &item.OrderID, &item.ListingID, &variantID, &variantUUID, &stockReservationID,
+			&item.ListingName, &sku,
 			&variantDataJSON, &attributesJSON, &item.Quantity, &item.UnitPrice, &item.Subtotal, &item.Discount, &item.Total, &imageURL, &item.CreatedAt,
 		)
 		if err != nil {
@@ -567,6 +571,12 @@ func (r *orderRepository) GetItems(ctx context.Context, orderID int64) ([]*domai
 		// Handle nullable fields
 		if variantID.Valid {
 			item.VariantID = &variantID.Int64
+		}
+		if variantUUID.Valid {
+			item.VariantUUID = &variantUUID.String
+		}
+		if stockReservationID.Valid {
+			item.StockReservationID = &stockReservationID.String
 		}
 		if sku.Valid {
 			item.SKU = &sku.String

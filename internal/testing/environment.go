@@ -425,6 +425,7 @@ func (env *TestEnvironment) setupServices(tb testing.TB) {
 		env.PgPool,          // pool
 		nil,                 // config (uses default)
 		env.Logger,
+		nil,                 // variantService (not used in tests)
 	)
 
 	tb.Log("Services initialized")
