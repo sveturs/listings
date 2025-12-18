@@ -103,6 +103,10 @@ func int64PtrTest(v int64) *int64 {
 	return &v
 }
 
+func stringPtrTest(v string) *string {
+	return &v
+}
+
 // ============================================================================
 // Test GetSearchFacets Handler
 // ============================================================================
@@ -116,8 +120,8 @@ func TestSearchHandler_GetSearchFacets_Success(t *testing.T) {
 
 			return &search.FacetsResponse{
 				Categories: []search.CategoryFacet{
-					{CategoryID: 1001, Count: 25},
-					{CategoryID: 1002, Count: 18},
+					{CategoryID: "cat-1001", Count: 25},
+					{CategoryID: "cat-1002", Count: 18},
 				},
 				PriceRanges: []search.PriceRangeFacet{
 					{Min: 0, Max: 100, Count: 10},
@@ -151,12 +155,12 @@ func TestSearchHandler_GetSearchFacets_Success(t *testing.T) {
 
 func TestSearchHandler_GetSearchFacets_WithFilters(t *testing.T) {
 	// Arrange
-	categoryID := int64(1301)
+	categoryID := "cat-1301"
 	query := "laptop"
 	mockSvc := &mockSearchService{
 		getFacetsFunc: func(ctx context.Context, req *search.FacetsRequest) (*search.FacetsResponse, error) {
 			assert.Equal(t, query, req.Query)
-			assert.Equal(t, categoryID, *req.CategoryID)
+			assert.Equal(t, categoryID, req.CategoryID)
 
 			return &search.FacetsResponse{
 				Categories:    []search.CategoryFacet{{CategoryID: categoryID, Count: 50}},
@@ -173,7 +177,7 @@ func TestSearchHandler_GetSearchFacets_WithFilters(t *testing.T) {
 
 	req := &searchv1.GetSearchFacetsRequest{
 		Query:      &query,
-		CategoryId: &categoryID,
+		CategoryId: categoryID,
 	}
 
 	// Act
@@ -253,7 +257,7 @@ func TestSearchHandler_SearchWithFilters_Success(t *testing.T) {
 						Title:       "Gaming Laptop",
 						Price:       1500.00,
 						Currency:    "EUR",
-						CategoryID:  1001,
+						CategoryID:  "cat-1001",
 						Status:      "active",
 						SourceType:  "b2c",
 						StockStatus: "in_stock",
@@ -298,7 +302,7 @@ func TestSearchHandler_SearchWithFilters_WithFacets(t *testing.T) {
 				Cached:   false,
 				Facets: &search.FacetsResponse{
 					Categories: []search.CategoryFacet{
-						{CategoryID: 1001, Count: 10},
+						{CategoryID: "cat-1001", Count: 10},
 					},
 					PriceRanges:   []search.PriceRangeFacet{},
 					Attributes:    make(map[string]search.AttributeFacet),
@@ -537,10 +541,10 @@ func TestSearchHandler_GetPopularSearches_Success(t *testing.T) {
 
 func TestSearchHandler_GetPopularSearches_WithCategoryFilter(t *testing.T) {
 	// Arrange
-	categoryID := int64(1301)
+	categoryID := "cat-1301"
 	mockSvc := &mockSearchService{
 		getPopularFunc: func(ctx context.Context, req *search.PopularSearchesRequest) (*search.PopularSearchesResponse, error) {
-			assert.Equal(t, categoryID, *req.CategoryID)
+			assert.Equal(t, categoryID, req.CategoryID)
 
 			return &search.PopularSearchesResponse{
 				Searches: []search.PopularSearch{
@@ -553,7 +557,7 @@ func TestSearchHandler_GetPopularSearches_WithCategoryFilter(t *testing.T) {
 	handler := newTestSearchHandler(mockSvc)
 
 	req := &searchv1.GetPopularSearchesRequest{
-		CategoryId: &categoryID,
+		CategoryId: categoryID,
 		Limit:      10,
 	}
 
@@ -717,11 +721,11 @@ func TestSearchHandler_GetTrendingSearches_Success(t *testing.T) {
 func TestSearchHandler_GetTrendingSearches_WithCategoryFilter(t *testing.T) {
 	// Arrange
 	now := testTimeNow()
-	categoryID := int64(1001)
+	categoryID := "cat-1001"
 	mockSvc := &mockSearchService{
 		getTrendingFunc: func(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error) {
 			assert.NotNil(t, req.CategoryID)
-			assert.Equal(t, categoryID, *req.CategoryID)
+			assert.Equal(t, categoryID, req.CategoryID)
 			return &search.TrendingSearchesResponse{
 				Searches: []search.TrendingSearchResult{
 					{QueryText: "macbook", SearchCount: 150, LastSearched: now},
@@ -732,7 +736,7 @@ func TestSearchHandler_GetTrendingSearches_WithCategoryFilter(t *testing.T) {
 	handler := newTestSearchHandler(mockSvc)
 
 	protoReq := &searchv1.GetTrendingSearchesRequest{
-		CategoryId: &categoryID,
+		CategoryId: categoryID,
 		Limit:      10,
 		Days:       7,
 	}
@@ -931,13 +935,13 @@ func TestGetSearchHistory_Success_UserID(t *testing.T) {
 				Entries: []search.SearchHistoryEntry{
 					{
 						QueryText:    "iphone 15",
-						CategoryID:   int64PtrTest(1001),
+						CategoryID:   stringPtrTest("cat-1001"),
 						ResultsCount: 42,
 						SearchedAt:   testTimeNow(),
 					},
 					{
 						QueryText:    "macbook pro",
-						CategoryID:   int64PtrTest(1001),
+						CategoryID:   stringPtrTest("cat-1001"),
 						ResultsCount: 15,
 						SearchedAt:   testTimeNow().Add(-1 * time.Hour),
 					},
@@ -963,7 +967,7 @@ func TestGetSearchHistory_Success_UserID(t *testing.T) {
 	// Verify first entry
 	assert.Equal(t, "iphone 15", resp.Entries[0].QueryText)
 	assert.NotNil(t, resp.Entries[0].CategoryId)
-	assert.Equal(t, int64(1001), *resp.Entries[0].CategoryId)
+	assert.Equal(t, "cat-1001", resp.Entries[0].CategoryId)
 	assert.Equal(t, int32(42), resp.Entries[0].ResultsCount)
 	assert.NotNil(t, resp.Entries[0].SearchedAt)
 
@@ -985,7 +989,7 @@ func TestGetSearchHistory_Success_SessionID(t *testing.T) {
 				Entries: []search.SearchHistoryEntry{
 					{
 						QueryText:        "tesla model 3",
-						CategoryID:       int64PtrTest(1301),
+						CategoryID:       stringPtrTest("cat-1301"),
 						ResultsCount:     8,
 						ClickedListingID: int64PtrTest(999),
 						SearchedAt:       testTimeNow(),

@@ -31,14 +31,14 @@ func TestProtoToFacetsRequest_RoundTrip(t *testing.T) {
 		{
 			name: "with category",
 			proto: &searchv1.GetSearchFacetsRequest{
-				CategoryId: ptrInt64(1001),
+				CategoryId: "cat-1001",
 			},
 		},
 		{
 			name: "with filters",
 			proto: &searchv1.GetSearchFacetsRequest{
 				Query:      ptrString("laptop"),
-				CategoryId: ptrInt64(1001),
+				CategoryId: "cat-1001",
 				Filters: &searchv1.Filters{
 					Price: &searchv1.PriceRange{
 						Min: ptrFloat64(100),
@@ -58,11 +58,11 @@ func TestProtoToFacetsRequest_RoundTrip(t *testing.T) {
 				t.Errorf("Query mismatch: got %s, want %s", domain.Query, *tt.proto.Query)
 			}
 
-			if tt.proto.CategoryId != nil {
+			if tt.proto.CategoryId != "" {
 				if domain.CategoryID == nil {
 					t.Error("CategoryID is nil, expected value")
-				} else if *domain.CategoryID != *tt.proto.CategoryId {
-					t.Errorf("CategoryID mismatch: got %d, want %d", *domain.CategoryID, *tt.proto.CategoryId)
+				} else if *domain.CategoryID != tt.proto.CategoryId {
+					t.Errorf("CategoryID mismatch: got %s, want %s", *domain.CategoryID, tt.proto.CategoryId)
 				}
 			}
 
@@ -90,8 +90,8 @@ func TestFacetsResponseToProto_RoundTrip(t *testing.T) {
 			name: "with categories",
 			domain: &search.FacetsResponse{
 				Categories: []search.CategoryFacet{
-					{CategoryID: 1001, Count: 100},
-					{CategoryID: 1002, Count: 50},
+					{CategoryID: "cat-1001", Count: 100},
+					{CategoryID: "cat-1002", Count: 50},
 				},
 				TookMs: 50,
 				Cached: false,
@@ -128,7 +128,7 @@ func TestFacetsResponseToProto_RoundTrip(t *testing.T) {
 			name: "complete response",
 			domain: &search.FacetsResponse{
 				Categories: []search.CategoryFacet{
-					{CategoryID: 1001, Count: 100},
+					{CategoryID: "cat-1001", Count: 100},
 				},
 				PriceRanges: []search.PriceRangeFacet{
 					{Min: 0, Max: 100, Count: 20},
@@ -388,7 +388,7 @@ func TestProtoToSuggestionsRequest_RoundTrip(t *testing.T) {
 			name: "with category",
 			proto: &searchv1.GetSuggestionsRequest{
 				Prefix:     "lap",
-				CategoryId: ptrInt64(1001),
+				CategoryId: "cat-1001",
 				Limit:      10,
 			},
 		},
@@ -413,11 +413,11 @@ func TestProtoToSuggestionsRequest_RoundTrip(t *testing.T) {
 				t.Errorf("Limit mismatch: got %d, want %d", domain.Limit, tt.proto.Limit)
 			}
 
-			if tt.proto.CategoryId != nil {
+			if tt.proto.CategoryId != "" {
 				if domain.CategoryID == nil {
 					t.Error("CategoryID is nil, expected value")
-				} else if *domain.CategoryID != *tt.proto.CategoryId {
-					t.Errorf("CategoryID mismatch: got %d, want %d", *domain.CategoryID, *tt.proto.CategoryId)
+				} else if *domain.CategoryID != tt.proto.CategoryId {
+					t.Errorf("CategoryID mismatch: got %s, want %s", *domain.CategoryID, tt.proto.CategoryId)
 				}
 			}
 		})
@@ -500,7 +500,7 @@ func TestProtoToPopularSearchesRequest_RoundTrip(t *testing.T) {
 		{
 			name: "with category",
 			proto: &searchv1.GetPopularSearchesRequest{
-				CategoryId: ptrInt64(1001),
+				CategoryId: "cat-1001",
 				Limit:      10,
 				TimeRange:  ptrString("24h"),
 			},
@@ -519,11 +519,11 @@ func TestProtoToPopularSearchesRequest_RoundTrip(t *testing.T) {
 				t.Errorf("TimeRange mismatch: got %s, want %s", domain.TimeRange, *tt.proto.TimeRange)
 			}
 
-			if tt.proto.CategoryId != nil {
+			if tt.proto.CategoryId != "" {
 				if domain.CategoryID == nil {
 					t.Error("CategoryID is nil, expected value")
-				} else if *domain.CategoryID != *tt.proto.CategoryId {
-					t.Errorf("CategoryID mismatch: got %d, want %d", *domain.CategoryID, *tt.proto.CategoryId)
+				} else if *domain.CategoryID != tt.proto.CategoryId {
+					t.Errorf("CategoryID mismatch: got %s, want %s", *domain.CategoryID, tt.proto.CategoryId)
 				}
 			}
 		})
@@ -587,7 +587,7 @@ func TestListingSearchResultToProto(t *testing.T) {
 		Description: ptrString("Test description"),
 		Price:       99.99,
 		Currency:    "EUR",
-		CategoryID:  1001,
+		CategoryID:  "cat-1001",
 		Status:      "active",
 		Images: []search.ListingImageResult{
 			{ID: 1, URL: "http://example.com/img1.jpg", IsPrimary: true, DisplayOrder: 0},
@@ -635,7 +635,7 @@ func TestSearchFiltersResponseToProto_Complete(t *testing.T) {
 				Title:       "Test Listing",
 				Price:       99.99,
 				Currency:    "EUR",
-				CategoryID:  1001,
+				CategoryID:  "cat-1001",
 				Status:      "active",
 				CreatedAt:   "2025-11-17T10:00:00Z",
 				UserID:      456,
@@ -649,7 +649,7 @@ func TestSearchFiltersResponseToProto_Complete(t *testing.T) {
 		Cached: true,
 		Facets: &search.FacetsResponse{
 			Categories: []search.CategoryFacet{
-				{CategoryID: 1001, Count: 100},
+				{CategoryID: "cat-1001", Count: 100},
 			},
 			TookMs: 50,
 			Cached: true,
