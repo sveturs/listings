@@ -13,7 +13,7 @@ env:
 jobs:
   validate:
     name: Validate go.mod
-    runs-on: self-hosted
+    runs-on: [self-hosted, svetu]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: self-hosted
+    runs-on: [self-hosted, svetu]
     needs: [validate]
     steps:
       - name: Checkout code
@@ -66,7 +66,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: self-hosted
+    runs-on: [self-hosted, svetu]
     needs: [validate]
     services:
       postgres:
@@ -131,7 +131,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: self-hosted
+    runs-on: [self-hosted, svetu]
     needs: [validate, lint, test]
     steps:
       - name: Checkout code
@@ -167,7 +167,7 @@ jobs:
 
   docker:
     name: Docker Build
-    runs-on: self-hosted
+    runs-on: [self-hosted, svetu]
     needs: [lint, test]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     steps:
@@ -188,7 +188,7 @@ jobs:
 
   integration-test:
     name: Integration Tests
-    runs-on: self-hosted
+    runs-on: [self-hosted, svetu]
     needs: [build]
     if: github.event_name == 'pull_request'
     services:
