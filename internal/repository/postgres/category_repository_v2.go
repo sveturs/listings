@@ -196,7 +196,6 @@ func (r *Repository) GetTreeV2(ctx context.Context, filter *domain.GetCategoryTr
 	if filter.RootID != nil {
 		whereClauses = append(whereClauses, fmt.Sprintf("parent_id = $%d", argPos))
 		args = append(args, filter.RootID.String())
-		argPos++
 	} else {
 		whereClauses = append(whereClauses, "parent_id IS NULL")
 	}

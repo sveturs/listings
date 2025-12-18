@@ -125,7 +125,6 @@ func (r *StockReservationRepository) List(ctx context.Context, filter *domain.Li
 	if filter.Status != nil {
 		query += fmt.Sprintf(" AND status = $%d", argIdx)
 		args = append(args, *filter.Status)
-		argIdx++
 	}
 
 	if filter.ActiveOnly {
