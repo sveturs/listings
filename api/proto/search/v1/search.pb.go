@@ -27,8 +27,8 @@ type SearchListingsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Search query text (optional - can search without query)
 	Query string `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
-	// Filter by category ID (optional)
-	CategoryId *int64 `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	// Filter by category ID (optional, UUID string)
+	CategoryId string `protobuf:"bytes,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Results per page (1-100, default: 20)
 	Limit int32 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	// Pagination offset (default: 0)
@@ -76,11 +76,11 @@ func (x *SearchListingsRequest) GetQuery() string {
 	return ""
 }
 
-func (x *SearchListingsRequest) GetCategoryId() int64 {
-	if x != nil && x.CategoryId != nil {
-		return *x.CategoryId
+func (x *SearchListingsRequest) GetCategoryId() string {
+	if x != nil {
+		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *SearchListingsRequest) GetLimit() int32 {
@@ -180,8 +180,8 @@ func (x *SearchListingsResponse) GetCached() bool {
 // GetTrendingSearchesRequest contains parameters for trending searches
 type GetTrendingSearchesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter by category ID (optional, NULL = all categories)
-	CategoryId *int64 `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	// Filter by category ID (optional, UUID string, empty = all categories)
+	CategoryId string `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Max results (default: 10, max: 50)
 	Limit int32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 	// Period in days (default: 7, max: 30)
@@ -220,11 +220,11 @@ func (*GetTrendingSearchesRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_search_v1_search_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetTrendingSearchesRequest) GetCategoryId() int64 {
-	if x != nil && x.CategoryId != nil {
-		return *x.CategoryId
+func (x *GetTrendingSearchesRequest) GetCategoryId() string {
+	if x != nil {
+		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetTrendingSearchesRequest) GetLimit() int32 {
@@ -466,8 +466,8 @@ type SearchHistoryEntry struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Search query text
 	QueryText string `protobuf:"bytes,1,opt,name=query_text,json=queryText,proto3" json:"query_text,omitempty"`
-	// Category ID (optional)
-	CategoryId *int64 `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	// Category ID (optional, UUID string)
+	CategoryId string `protobuf:"bytes,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Number of results returned for this search
 	ResultsCount int32 `protobuf:"varint,3,opt,name=results_count,json=resultsCount,proto3" json:"results_count,omitempty"`
 	// Listing ID that was clicked (optional)
@@ -515,11 +515,11 @@ func (x *SearchHistoryEntry) GetQueryText() string {
 	return ""
 }
 
-func (x *SearchHistoryEntry) GetCategoryId() int64 {
-	if x != nil && x.CategoryId != nil {
-		return *x.CategoryId
+func (x *SearchHistoryEntry) GetCategoryId() string {
+	if x != nil {
+		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *SearchHistoryEntry) GetResultsCount() int32 {
@@ -547,26 +547,24 @@ var File_api_proto_search_v1_search_proto protoreflect.FileDescriptor
 
 const file_api_proto_search_v1_search_proto_rawDesc = "" +
 	"\n" +
-	" api/proto/search/v1/search.proto\x12\tsearch.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a api/proto/search/v1/common.proto\x1a api/proto/search/v1/facets.proto\x1a!api/proto/search/v1/filters.proto\x1a%api/proto/search/v1/suggestions.proto\x1a!api/proto/search/v1/popular.proto\"\xae\x01\n" +
+	" api/proto/search/v1/search.proto\x12\tsearch.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a api/proto/search/v1/common.proto\x1a api/proto/search/v1/facets.proto\x1a!api/proto/search/v1/filters.proto\x1a%api/proto/search/v1/suggestions.proto\x1a!api/proto/search/v1/popular.proto\"\x99\x01\n" +
 	"\x15SearchListingsRequest\x12\x14\n" +
-	"\x05query\x18\x01 \x01(\tR\x05query\x12$\n" +
-	"\vcategory_id\x18\x02 \x01(\x03H\x00R\n" +
-	"categoryId\x88\x01\x01\x12\x14\n" +
+	"\x05query\x18\x01 \x01(\tR\x05query\x12\x1f\n" +
+	"\vcategory_id\x18\x02 \x01(\tR\n" +
+	"categoryId\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x16\n" +
 	"\x06offset\x18\x04 \x01(\x05R\x06offset\x12\x1b\n" +
-	"\tuse_cache\x18\x05 \x01(\bR\buseCacheB\x0e\n" +
-	"\f_category_id\"\x8f\x01\n" +
+	"\tuse_cache\x18\x05 \x01(\bR\buseCache\"\x8f\x01\n" +
 	"\x16SearchListingsResponse\x12.\n" +
 	"\blistings\x18\x01 \x03(\v2\x12.search.v1.ListingR\blistings\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\x12\x17\n" +
 	"\atook_ms\x18\x03 \x01(\x05R\x06tookMs\x12\x16\n" +
-	"\x06cached\x18\x04 \x01(\bR\x06cached\"|\n" +
-	"\x1aGetTrendingSearchesRequest\x12$\n" +
-	"\vcategory_id\x18\x01 \x01(\x03H\x00R\n" +
-	"categoryId\x88\x01\x01\x12\x14\n" +
+	"\x06cached\x18\x04 \x01(\bR\x06cached\"g\n" +
+	"\x1aGetTrendingSearchesRequest\x12\x1f\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
+	"categoryId\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x12\n" +
-	"\x04days\x18\x03 \x01(\x05R\x04daysB\x0e\n" +
-	"\f_category_id\"Q\n" +
+	"\x04days\x18\x03 \x01(\x05R\x04days\"Q\n" +
 	"\x18TrendingSearchesResponse\x125\n" +
 	"\bsearches\x18\x01 \x03(\v2\x19.search.v1.TrendingSearchR\bsearches\"\x93\x01\n" +
 	"\x0eTrendingSearch\x12\x1d\n" +
@@ -583,17 +581,16 @@ const file_api_proto_search_v1_search_proto_rawDesc = "" +
 	"\b_user_idB\r\n" +
 	"\v_session_id\"P\n" +
 	"\x15SearchHistoryResponse\x127\n" +
-	"\aentries\x18\x01 \x03(\v2\x1d.search.v1.SearchHistoryEntryR\aentries\"\x95\x02\n" +
+	"\aentries\x18\x01 \x03(\v2\x1d.search.v1.SearchHistoryEntryR\aentries\"\x80\x02\n" +
 	"\x12SearchHistoryEntry\x12\x1d\n" +
 	"\n" +
-	"query_text\x18\x01 \x01(\tR\tqueryText\x12$\n" +
-	"\vcategory_id\x18\x02 \x01(\x03H\x00R\n" +
-	"categoryId\x88\x01\x01\x12#\n" +
+	"query_text\x18\x01 \x01(\tR\tqueryText\x12\x1f\n" +
+	"\vcategory_id\x18\x02 \x01(\tR\n" +
+	"categoryId\x12#\n" +
 	"\rresults_count\x18\x03 \x01(\x05R\fresultsCount\x121\n" +
-	"\x12clicked_listing_id\x18\x04 \x01(\x03H\x01R\x10clickedListingId\x88\x01\x01\x12;\n" +
+	"\x12clicked_listing_id\x18\x04 \x01(\x03H\x00R\x10clickedListingId\x88\x01\x01\x12;\n" +
 	"\vsearched_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"searchedAtB\x0e\n" +
-	"\f_category_idB\x15\n" +
+	"searchedAtB\x15\n" +
 	"\x13_clicked_listing_id2\x97\x05\n" +
 	"\rSearchService\x12U\n" +
 	"\x0eSearchListings\x12 .search.v1.SearchListingsRequest\x1a!.search.v1.SearchListingsResponse\x12X\n" +
@@ -674,8 +671,6 @@ func file_api_proto_search_v1_search_proto_init() {
 	file_api_proto_search_v1_filters_proto_init()
 	file_api_proto_search_v1_suggestions_proto_init()
 	file_api_proto_search_v1_popular_proto_init()
-	file_api_proto_search_v1_search_proto_msgTypes[0].OneofWrappers = []any{}
-	file_api_proto_search_v1_search_proto_msgTypes[2].OneofWrappers = []any{}
 	file_api_proto_search_v1_search_proto_msgTypes[5].OneofWrappers = []any{}
 	file_api_proto_search_v1_search_proto_msgTypes[7].OneofWrappers = []any{}
 	type x struct{}

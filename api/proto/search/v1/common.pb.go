@@ -36,8 +36,8 @@ type Listing struct {
 	Price float64 `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
 	// Currency code (e.g., "EUR", "USD")
 	Currency string `protobuf:"bytes,6,opt,name=currency,proto3" json:"currency,omitempty"`
-	// Category ID
-	CategoryId int64 `protobuf:"varint,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	// Category ID (UUID string)
+	CategoryId string `protobuf:"bytes,7,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Listing status (e.g., "active", "inactive")
 	Status string `protobuf:"bytes,8,opt,name=status,proto3" json:"status,omitempty"`
 	// Listing images
@@ -132,11 +132,11 @@ func (x *Listing) GetCurrency() string {
 	return ""
 }
 
-func (x *Listing) GetCategoryId() int64 {
+func (x *Listing) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *Listing) GetStatus() string {
@@ -528,7 +528,7 @@ const file_api_proto_search_v1_common_proto_rawDesc = "" +
 	"\vdescription\x18\x04 \x01(\tH\x00R\vdescription\x88\x01\x01\x12\x14\n" +
 	"\x05price\x18\x05 \x01(\x01R\x05price\x12\x1a\n" +
 	"\bcurrency\x18\x06 \x01(\tR\bcurrency\x12\x1f\n" +
-	"\vcategory_id\x18\a \x01(\x03R\n" +
+	"\vcategory_id\x18\a \x01(\tR\n" +
 	"categoryId\x12\x16\n" +
 	"\x06status\x18\b \x01(\tR\x06status\x12/\n" +
 	"\x06images\x18\t \x03(\v2\x17.search.v1.ListingImageR\x06images\x12\x1d\n" +

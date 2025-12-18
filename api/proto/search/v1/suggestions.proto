@@ -9,8 +9,8 @@ message GetSuggestionsRequest {
   // Search prefix (minimum 2 characters required)
   string prefix = 1;
 
-  // Optional category filter (only suggest from this category)
-  optional int64 category_id = 2;
+  // Optional category filter (only suggest from this category, UUID string)
+  string category_id = 2;
 
   // Maximum number of suggestions (default: 10, max: 20)
   int32 limit = 3;

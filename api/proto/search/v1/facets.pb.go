@@ -26,8 +26,8 @@ type GetSearchFacetsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Optional search query to pre-filter before aggregating
 	Query *string `protobuf:"bytes,1,opt,name=query,proto3,oneof" json:"query,omitempty"`
-	// Optional category filter
-	CategoryId *int64 `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	// Optional category filter (UUID string)
+	CategoryId string `protobuf:"bytes,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Pre-filters to apply before aggregating
 	Filters       *Filters `protobuf:"bytes,3,opt,name=filters,proto3,oneof" json:"filters,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -71,11 +71,11 @@ func (x *GetSearchFacetsRequest) GetQuery() string {
 	return ""
 }
 
-func (x *GetSearchFacetsRequest) GetCategoryId() int64 {
-	if x != nil && x.CategoryId != nil {
-		return *x.CategoryId
+func (x *GetSearchFacetsRequest) GetCategoryId() string {
+	if x != nil {
+		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetSearchFacetsRequest) GetFilters() *Filters {
@@ -189,8 +189,8 @@ func (x *GetSearchFacetsResponse) GetCached() bool {
 // CategoryFacet represents category count
 type CategoryFacet struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Category ID
-	CategoryId int64 `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	// Category ID (UUID string)
+	CategoryId string `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Number of listings in this category
 	Count         int64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -227,11 +227,11 @@ func (*CategoryFacet) Descriptor() ([]byte, []int) {
 	return file_api_proto_search_v1_facets_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CategoryFacet) GetCategoryId() int64 {
+func (x *CategoryFacet) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *CategoryFacet) GetCount() int64 {
@@ -474,14 +474,13 @@ var File_api_proto_search_v1_facets_proto protoreflect.FileDescriptor
 
 const file_api_proto_search_v1_facets_proto_rawDesc = "" +
 	"\n" +
-	" api/proto/search/v1/facets.proto\x12\tsearch.v1\x1a api/proto/search/v1/common.proto\"\xb2\x01\n" +
+	" api/proto/search/v1/facets.proto\x12\tsearch.v1\x1a api/proto/search/v1/common.proto\"\x9d\x01\n" +
 	"\x16GetSearchFacetsRequest\x12\x19\n" +
-	"\x05query\x18\x01 \x01(\tH\x00R\x05query\x88\x01\x01\x12$\n" +
-	"\vcategory_id\x18\x02 \x01(\x03H\x01R\n" +
-	"categoryId\x88\x01\x01\x121\n" +
-	"\afilters\x18\x03 \x01(\v2\x12.search.v1.FiltersH\x02R\afilters\x88\x01\x01B\b\n" +
-	"\x06_queryB\x0e\n" +
-	"\f_category_idB\n" +
+	"\x05query\x18\x01 \x01(\tH\x00R\x05query\x88\x01\x01\x12\x1f\n" +
+	"\vcategory_id\x18\x02 \x01(\tR\n" +
+	"categoryId\x121\n" +
+	"\afilters\x18\x03 \x01(\v2\x12.search.v1.FiltersH\x01R\afilters\x88\x01\x01B\b\n" +
+	"\x06_queryB\n" +
 	"\n" +
 	"\b_filters\"\xdf\x03\n" +
 	"\x17GetSearchFacetsResponse\x128\n" +
@@ -500,7 +499,7 @@ const file_api_proto_search_v1_facets_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12/\n" +
 	"\x05value\x18\x02 \x01(\v2\x19.search.v1.AttributeFacetR\x05value:\x028\x01\"F\n" +
 	"\rCategoryFacet\x12\x1f\n" +
-	"\vcategory_id\x18\x01 \x01(\x03R\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\x12\x14\n" +
 	"\x05count\x18\x02 \x01(\x03R\x05count\"K\n" +
 	"\x0fPriceRangeFacet\x12\x10\n" +

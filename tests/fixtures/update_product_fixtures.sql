@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Note: c2c_categories table is created by migrations
+-- Note: categories table is created by migrations
 -- We just insert test data into it
 
 -- Insert test users (only if not exist)

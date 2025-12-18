@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Note: c2c_categories table is created by migrations
+-- Note: categories table is created by migrations
 -- We just insert test data into it
 
 -- Create b2c_product_images table (if not exists) - for GetProduct tests with images
@@ -53,7 +53,7 @@ ON CONFLICT (id) DO NOTHING;
 -- Insert test categories (only ones actually used by products in this fixture)
 -- Note: 00_categories_fixtures.sql is auto-loaded and provides common categories
 -- We only insert specific test categories with high IDs to avoid conflicts
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order, created_at)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order, created_at)
 VALUES
     (9000, 'Test Electronics', 'test-electronics-9000', NULL, 0, true, 1, NOW()),
     (9001, 'Test Clothing', 'test-clothing-9001', NULL, 0, true, 2, NOW()),

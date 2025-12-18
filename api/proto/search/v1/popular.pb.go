@@ -24,8 +24,8 @@ const (
 // GetPopularSearchesRequest requests trending/popular search queries
 type GetPopularSearchesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Optional category filter (popular searches in this category only)
-	CategoryId *int64 `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	// Optional category filter (popular searches in this category only, UUID string)
+	CategoryId string `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Maximum number of results (default: 10, max: 20)
 	Limit int32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 	// Time range for popularity calculation
@@ -66,11 +66,11 @@ func (*GetPopularSearchesRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_search_v1_popular_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetPopularSearchesRequest) GetCategoryId() int64 {
-	if x != nil && x.CategoryId != nil {
-		return *x.CategoryId
+func (x *GetPopularSearchesRequest) GetCategoryId() string {
+	if x != nil {
+		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetPopularSearchesRequest) GetLimit() int32 {
@@ -211,14 +211,13 @@ var File_api_proto_search_v1_popular_proto protoreflect.FileDescriptor
 
 const file_api_proto_search_v1_popular_proto_rawDesc = "" +
 	"\n" +
-	"!api/proto/search/v1/popular.proto\x12\tsearch.v1\"\x9a\x01\n" +
-	"\x19GetPopularSearchesRequest\x12$\n" +
-	"\vcategory_id\x18\x01 \x01(\x03H\x00R\n" +
-	"categoryId\x88\x01\x01\x12\x14\n" +
+	"!api/proto/search/v1/popular.proto\x12\tsearch.v1\"\x85\x01\n" +
+	"\x19GetPopularSearchesRequest\x12\x1f\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
+	"categoryId\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\"\n" +
 	"\n" +
-	"time_range\x18\x03 \x01(\tH\x01R\ttimeRange\x88\x01\x01B\x0e\n" +
-	"\f_category_idB\r\n" +
+	"time_range\x18\x03 \x01(\tH\x00R\ttimeRange\x88\x01\x01B\r\n" +
 	"\v_time_range\"k\n" +
 	"\x1aGetPopularSearchesResponse\x124\n" +
 	"\bsearches\x18\x01 \x03(\v2\x18.search.v1.PopularSearchR\bsearches\x12\x17\n" +

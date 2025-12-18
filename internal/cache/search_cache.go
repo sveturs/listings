@@ -22,7 +22,7 @@ type SearchCache struct {
 // SearchRequest represents search parameters for cache key generation
 type SearchRequest struct {
 	Query      string
-	CategoryID *int64
+	CategoryID *string // UUID string
 	Limit      int32
 	Offset     int32
 }
@@ -439,7 +439,7 @@ func (sc *SearchCache) SetFiltered(ctx context.Context, key string, filtered map
 }
 
 // GenerateFacetsKey creates a unique cache key for facets request
-func (sc *SearchCache) GenerateFacetsKey(query string, categoryID *int64, filters map[string]interface{}) string {
+func (sc *SearchCache) GenerateFacetsKey(query string, categoryID *string, filters map[string]interface{}) string {
 	parts := []string{
 		"q:" + query,
 		fmt.Sprintf("cat:%v", categoryID),
@@ -457,7 +457,7 @@ func (sc *SearchCache) GenerateFacetsKey(query string, categoryID *int64, filter
 }
 
 // GenerateSuggestionsKey creates a unique cache key for suggestions request
-func (sc *SearchCache) GenerateSuggestionsKey(prefix string, categoryID *int64) string {
+func (sc *SearchCache) GenerateSuggestionsKey(prefix string, categoryID *string) string {
 	parts := []string{
 		"prefix:" + prefix,
 		fmt.Sprintf("cat:%v", categoryID),
@@ -469,7 +469,7 @@ func (sc *SearchCache) GenerateSuggestionsKey(prefix string, categoryID *int64) 
 }
 
 // GeneratePopularKey creates a unique cache key for popular searches request
-func (sc *SearchCache) GeneratePopularKey(categoryID *int64, timeRange string) string {
+func (sc *SearchCache) GeneratePopularKey(categoryID *string, timeRange string) string {
 	parts := []string{
 		fmt.Sprintf("cat:%v", categoryID),
 		"range:" + timeRange,
@@ -481,7 +481,7 @@ func (sc *SearchCache) GeneratePopularKey(categoryID *int64, timeRange string) s
 }
 
 // GenerateFilteredKey creates a unique cache key for filtered search request
-func (sc *SearchCache) GenerateFilteredKey(query string, categoryID *int64, filters map[string]interface{}, sort map[string]string, limit, offset int32) string {
+func (sc *SearchCache) GenerateFilteredKey(query string, categoryID *string, filters map[string]interface{}, sort map[string]string, limit, offset int32) string {
 	parts := []string{
 		"q:" + query,
 		fmt.Sprintf("cat:%v", categoryID),
@@ -552,7 +552,7 @@ func (sc *SearchCache) SetTrending(ctx context.Context, key string, trending map
 }
 
 // GenerateTrendingKey creates a unique cache key for trending searches request
-func (sc *SearchCache) GenerateTrendingKey(categoryID *int64, days int32) string {
+func (sc *SearchCache) GenerateTrendingKey(categoryID *string, days int32) string {
 	parts := []string{
 		fmt.Sprintf("cat:%v", categoryID),
 		fmt.Sprintf("days:%d", days),

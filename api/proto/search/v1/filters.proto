@@ -12,8 +12,8 @@ message SearchWithFiltersRequest {
   // Search query text (required)
   string query = 1;
 
-  // Filter by category ID (optional)
-  optional int64 category_id = 2;
+  // Filter by category ID (optional, UUID string)
+  string category_id = 2;
 
   // Results per page (1-100, default: 20)
   int32 limit = 3;

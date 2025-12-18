@@ -26,8 +26,8 @@ type SearchWithFiltersRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Search query text (required)
 	Query string `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
-	// Filter by category ID (optional)
-	CategoryId *int64 `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	// Filter by category ID (optional, UUID string)
+	CategoryId string `protobuf:"bytes,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Results per page (1-100, default: 20)
 	Limit int32 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	// Pagination offset (default: 0)
@@ -82,11 +82,11 @@ func (x *SearchWithFiltersRequest) GetQuery() string {
 	return ""
 }
 
-func (x *SearchWithFiltersRequest) GetCategoryId() int64 {
-	if x != nil && x.CategoryId != nil {
-		return *x.CategoryId
+func (x *SearchWithFiltersRequest) GetCategoryId() string {
+	if x != nil {
+		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *SearchWithFiltersRequest) GetLimit() int32 {
@@ -274,18 +274,17 @@ var File_api_proto_search_v1_filters_proto protoreflect.FileDescriptor
 
 const file_api_proto_search_v1_filters_proto_rawDesc = "" +
 	"\n" +
-	"!api/proto/search/v1/filters.proto\x12\tsearch.v1\x1a api/proto/search/v1/common.proto\x1a api/proto/search/v1/facets.proto\"\xd0\x02\n" +
+	"!api/proto/search/v1/filters.proto\x12\tsearch.v1\x1a api/proto/search/v1/common.proto\x1a api/proto/search/v1/facets.proto\"\xbb\x02\n" +
 	"\x18SearchWithFiltersRequest\x12\x14\n" +
-	"\x05query\x18\x01 \x01(\tR\x05query\x12$\n" +
-	"\vcategory_id\x18\x02 \x01(\x03H\x00R\n" +
-	"categoryId\x88\x01\x01\x12\x14\n" +
+	"\x05query\x18\x01 \x01(\tR\x05query\x12\x1f\n" +
+	"\vcategory_id\x18\x02 \x01(\tR\n" +
+	"categoryId\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x16\n" +
 	"\x06offset\x18\x04 \x01(\x05R\x06offset\x121\n" +
-	"\afilters\x18\x05 \x01(\v2\x12.search.v1.FiltersH\x01R\afilters\x88\x01\x01\x12.\n" +
-	"\x04sort\x18\x06 \x01(\v2\x15.search.v1.SortConfigH\x02R\x04sort\x88\x01\x01\x12\x1b\n" +
+	"\afilters\x18\x05 \x01(\v2\x12.search.v1.FiltersH\x00R\afilters\x88\x01\x01\x12.\n" +
+	"\x04sort\x18\x06 \x01(\v2\x15.search.v1.SortConfigH\x01R\x04sort\x88\x01\x01\x12\x1b\n" +
 	"\tuse_cache\x18\a \x01(\bR\buseCache\x12%\n" +
-	"\x0einclude_facets\x18\b \x01(\bR\rincludeFacetsB\x0e\n" +
-	"\f_category_idB\n" +
+	"\x0einclude_facets\x18\b \x01(\bR\rincludeFacetsB\n" +
 	"\n" +
 	"\b_filtersB\a\n" +
 	"\x05_sort\"8\n" +

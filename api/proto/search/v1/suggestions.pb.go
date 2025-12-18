@@ -26,8 +26,8 @@ type GetSuggestionsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Search prefix (minimum 2 characters required)
 	Prefix string `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	// Optional category filter (only suggest from this category)
-	CategoryId *int64 `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3,oneof" json:"category_id,omitempty"`
+	// Optional category filter (only suggest from this category, UUID string)
+	CategoryId string `protobuf:"bytes,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	// Maximum number of suggestions (default: 10, max: 20)
 	Limit         int32 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -71,11 +71,11 @@ func (x *GetSuggestionsRequest) GetPrefix() string {
 	return ""
 }
 
-func (x *GetSuggestionsRequest) GetCategoryId() int64 {
-	if x != nil && x.CategoryId != nil {
-		return *x.CategoryId
+func (x *GetSuggestionsRequest) GetCategoryId() string {
+	if x != nil {
+		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetSuggestionsRequest) GetLimit() int32 {
@@ -217,13 +217,12 @@ var File_api_proto_search_v1_suggestions_proto protoreflect.FileDescriptor
 
 const file_api_proto_search_v1_suggestions_proto_rawDesc = "" +
 	"\n" +
-	"%api/proto/search/v1/suggestions.proto\x12\tsearch.v1\"{\n" +
+	"%api/proto/search/v1/suggestions.proto\x12\tsearch.v1\"f\n" +
 	"\x15GetSuggestionsRequest\x12\x16\n" +
-	"\x06prefix\x18\x01 \x01(\tR\x06prefix\x12$\n" +
-	"\vcategory_id\x18\x02 \x01(\x03H\x00R\n" +
-	"categoryId\x88\x01\x01\x12\x14\n" +
-	"\x05limit\x18\x03 \x01(\x05R\x05limitB\x0e\n" +
-	"\f_category_id\"\x82\x01\n" +
+	"\x06prefix\x18\x01 \x01(\tR\x06prefix\x12\x1f\n" +
+	"\vcategory_id\x18\x02 \x01(\tR\n" +
+	"categoryId\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"\x82\x01\n" +
 	"\x16GetSuggestionsResponse\x127\n" +
 	"\vsuggestions\x18\x01 \x03(\v2\x15.search.v1.SuggestionR\vsuggestions\x12\x17\n" +
 	"\atook_ms\x18\x02 \x01(\x05R\x06tookMs\x12\x16\n" +
@@ -268,7 +267,6 @@ func file_api_proto_search_v1_suggestions_proto_init() {
 	if File_api_proto_search_v1_suggestions_proto != nil {
 		return
 	}
-	file_api_proto_search_v1_suggestions_proto_msgTypes[0].OneofWrappers = []any{}
 	file_api_proto_search_v1_suggestions_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

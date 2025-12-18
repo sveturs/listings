@@ -24,8 +24,8 @@ message Listing {
   // Currency code (e.g., "EUR", "USD")
   string currency = 6;
 
-  // Category ID
-  int64 category_id = 7;
+  // Category ID (UUID string)
+  string category_id = 7;
 
   // Listing status (e.g., "active", "inactive")
   string status = 8;

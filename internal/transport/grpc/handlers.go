@@ -12,9 +12,12 @@ import (
 
 	attributespb "github.com/vondi-global/listings/api/proto/attributes/v1"
 	categoriespb "github.com/vondi-global/listings/api/proto/categories/v1"
+	categoriesv2 "github.com/vondi-global/listings/api/proto/categories/v2"
 	chatsvcv1 "github.com/vondi-global/listings/api/proto/chat/v1"
 	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/cache"
 	"github.com/vondi-global/listings/internal/metrics"
+	"github.com/vondi-global/listings/internal/repository"
 	minioclient "github.com/vondi-global/listings/internal/repository/minio"
 	"github.com/vondi-global/listings/internal/service"
 	"github.com/vondi-global/listings/internal/service/listings"
@@ -33,10 +36,13 @@ type Server struct {
 	listingspb.UnimplementedOrderServiceServer
 	listingspb.UnimplementedAnalyticsServiceServer
 	chatsvcv1.UnimplementedChatServiceServer
+	categoriesv2.UnimplementedCategoryServiceV2Server
 	service                    *listings.Service
 	storefrontService          *listings.StorefrontService
 	attrService                service.AttributeService
 	categoryService            service.CategoryService
+	categoryRepoV2             repository.CategoryRepositoryV2 // for V2 API
+	categoryCache              *cache.CategoryCache            // for V2 API Redis caching
 	orderService               service.OrderService
 	cartService                service.CartService
 	chatService                service.ChatService
@@ -55,6 +61,8 @@ func NewServer(
 	storefrontService *listings.StorefrontService,
 	attrService service.AttributeService,
 	categoryService service.CategoryService,
+	categoryRepoV2 repository.CategoryRepositoryV2,
+	categoryCache *cache.CategoryCache,
 	orderService service.OrderService,
 	cartService service.CartService,
 	chatService service.ChatService,
@@ -71,6 +79,8 @@ func NewServer(
 		storefrontService:          storefrontService,
 		attrService:                attrService,
 		categoryService:            categoryService,
+		categoryRepoV2:             categoryRepoV2,
+		categoryCache:              categoryCache,
 		orderService:               orderService,
 		cartService:                cartService,
 		chatService:                chatService,

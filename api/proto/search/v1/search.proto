@@ -47,8 +47,8 @@ message SearchListingsRequest {
   // Search query text (optional - can search without query)
   string query = 1;
 
-  // Filter by category ID (optional)
-  optional int64 category_id = 2;
+  // Filter by category ID (optional, UUID string)
+  string category_id = 2;
 
   // Results per page (1-100, default: 20)
   int32 limit = 3;
@@ -83,8 +83,8 @@ message SearchListingsResponse {
 
 // GetTrendingSearchesRequest contains parameters for trending searches
 message GetTrendingSearchesRequest {
-  // Filter by category ID (optional, NULL = all categories)
-  optional int64 category_id = 1;
+  // Filter by category ID (optional, UUID string, empty = all categories)
+  string category_id = 1;
 
   // Max results (default: 10, max: 50)
   int32 limit = 2;
@@ -138,8 +138,8 @@ message SearchHistoryEntry {
   // Search query text
   string query_text = 1;
 
-  // Category ID (optional)
-  optional int64 category_id = 2;
+  // Category ID (optional, UUID string)
+  string category_id = 2;
 
   // Number of results returned for this search
   int32 results_count = 3;
