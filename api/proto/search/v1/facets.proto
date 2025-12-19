@@ -11,8 +11,8 @@ message GetSearchFacetsRequest {
   // Optional search query to pre-filter before aggregating
   optional string query = 1;
 
-  // Optional category filter
-  optional int64 category_id = 2;
+  // Optional category filter (UUID string)
+  string category_id = 2;
 
   // Pre-filters to apply before aggregating
   optional Filters filters = 3;
@@ -45,8 +45,8 @@ message GetSearchFacetsResponse {
 
 // CategoryFacet represents category count
 message CategoryFacet {
-  // Category ID
-  int64 category_id = 1;
+  // Category ID (UUID string)
+  string category_id = 1;
 
   // Number of listings in this category
   int64 count = 2;

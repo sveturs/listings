@@ -302,13 +302,15 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		storefrontService,
 		attrService,
 		categoryService,
+		nil,              // categoryRepoV2 (not used in integration tests)
+		nil,              // categoryCache (not used in integration tests)
 		orderService,
 		cartService,
 		chatService,
 		analyticsService,
 		storefrontAnalyticsService,
-		nil, // inventoryService
-		nil, // invitationService
+		nil,              // inventoryService
+		nil,              // invitationService
 		minioClient,
 		m,
 		logger,

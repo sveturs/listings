@@ -371,6 +371,8 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 		nil, // storefrontService
 		nil, // attrService
 		nil, // categoryService
+		nil, // categoryRepoV2 (Phase 1, not used in tests)
+		nil, // categoryCache (Phase 1, not used in tests)
 		nil, // orderService
 		nil, // cartService
 		nil, // chatService

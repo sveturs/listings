@@ -1,0 +1,107 @@
+syntax = "proto3";
+package categoriessvc.v2;
+
+option go_package = "github.com/vondi-global/listings/api/proto/categories/v2;categoriesv2";
+
+import "google/protobuf/timestamp.proto";
+
+// CategoryV2 represents a UUID-based category with localized fields
+message CategoryV2 {
+  string id = 1; // UUID
+  string slug = 2;
+  optional string parent_id = 3; // UUID (nullable)
+  int32 level = 4;
+  string path = 5; // materialized path (e.g., "001.002.003")
+  int32 sort_order = 6;
+
+  // Localized fields (already extracted based on request locale)
+  string name = 7;
+  string description = 8;
+  string meta_title = 9;
+  string meta_description = 10;
+  string meta_keywords = 11;
+
+  optional string icon = 12;
+  optional string image_url = 13;
+  bool is_active = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+}
+
+// CategoryTreeV2 represents a category tree node with localized category and subcategories
+message CategoryTreeV2 {
+  CategoryV2 category = 1;
+  repeated CategoryTreeV2 subcategories = 2;
+}
+
+// CategoryBreadcrumb represents a single breadcrumb item for navigation
+message CategoryBreadcrumb {
+  string id = 1; // UUID
+  string slug = 2;
+  string name = 3; // Localized name based on request locale
+  int32 level = 4;
+}
+
+// ============================================================================
+// Request/Response Messages
+// ============================================================================
+
+// GetCategoryTreeV2Request retrieves category tree with localization
+message GetCategoryTreeV2Request {
+  optional string root_id = 1; // UUID (nullable, omit for entire tree)
+  string locale = 2; // Required: "sr", "en", "ru"
+  bool active_only = 3; // Filter only active categories
+  optional int32 max_depth = 4; // Optional depth limit (nullable)
+}
+
+message GetCategoryTreeV2Response {
+  repeated CategoryTreeV2 tree = 1;
+}
+
+// GetCategoryBySlugV2Request retrieves a single category by slug
+message GetCategoryBySlugV2Request {
+  string slug = 1; // Required
+  string locale = 2; // Required: "sr", "en", "ru"
+}
+
+message GetCategoryBySlugV2Response {
+  CategoryV2 category = 1;
+}
+
+// GetBreadcrumbRequest retrieves breadcrumb trail for a category
+message GetBreadcrumbRequest {
+  string category_id = 1; // UUID (required)
+  string locale = 2; // Required: "sr", "en", "ru"
+}
+
+message GetBreadcrumbResponse {
+  repeated CategoryBreadcrumb breadcrumbs = 1; // Ordered from root to target
+}
+
+// GetCategoryByUUIDRequest retrieves a single category by UUID
+message GetCategoryByUUIDRequest {
+  string id = 1; // UUID (required)
+  string locale = 2; // Required: "sr", "en", "ru"
+}
+
+message GetCategoryByUUIDResponse {
+  CategoryV2 category = 1;
+}
+
+// ============================================================================
+// Service Definition
+// ============================================================================
+
+service CategoryServiceV2 {
+  // GetCategoryTreeV2 retrieves category tree with localization
+  rpc GetCategoryTreeV2(GetCategoryTreeV2Request) returns (GetCategoryTreeV2Response);
+
+  // GetCategoryBySlugV2 retrieves a single category by slug with localization
+  rpc GetCategoryBySlugV2(GetCategoryBySlugV2Request) returns (GetCategoryBySlugV2Response);
+
+  // GetCategoryByUUID retrieves a single category by UUID with localization
+  rpc GetCategoryByUUID(GetCategoryByUUIDRequest) returns (GetCategoryByUUIDResponse);
+
+  // GetBreadcrumb retrieves breadcrumb trail for a category
+  rpc GetBreadcrumb(GetBreadcrumbRequest) returns (GetBreadcrumbResponse);
+}

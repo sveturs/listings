@@ -66,6 +66,8 @@ func setupCreateProductTest(t *testing.T) (pb.ListingsServiceClient, *tests.Test
 		nil, // storefrontService
 		nil, // attrService
 		nil, // categoryService
+		nil, // categoryRepoV2 (Phase 1, not used in tests)
+		nil, // categoryCache (Phase 1, not used in tests)
 		nil, // orderService
 		nil, // cartService
 		nil, // chatService

@@ -37,8 +37,8 @@ type Repository interface {
 	GetRootCategories(ctx context.Context) ([]*domain.Category, error)
 	GetAllCategories(ctx context.Context) ([]*domain.Category, error)
 	GetPopularCategories(ctx context.Context, limit int) ([]*domain.Category, error)
-	GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error)
-	GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error)
+	GetCategoryByID(ctx context.Context, categoryID string) (*domain.Category, error)
+	GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error)
 
 	// Favorites operations
 	GetFavoritedUsers(ctx context.Context, listingID int64) ([]int64, error)
@@ -497,11 +497,11 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 	}
 
 	// Try cache for search results (if cache is available)
-	categoryID := int64(0)
+	categoryID := ""
 	if query.CategoryID != nil {
 		categoryID = *query.CategoryID
 	}
-	cacheKey := fmt.Sprintf("search:%s:%d:%d:%d", query.Query, categoryID, query.Limit, query.Offset)
+	cacheKey := fmt.Sprintf("search:%s:%s:%d:%d", query.Query, categoryID, query.Limit, query.Offset)
 	var cachedResults []*domain.Listing
 	var cachedTotal int32
 
@@ -932,11 +932,11 @@ func (s *Service) GetPopularCategories(ctx context.Context, limit int) ([]*domai
 	return s.repo.GetPopularCategories(ctx, limit)
 }
 
-func (s *Service) GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error) {
+func (s *Service) GetCategoryByID(ctx context.Context, categoryID string) (*domain.Category, error) {
 	return s.repo.GetCategoryByID(ctx, categoryID)
 }
 
-func (s *Service) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
+func (s *Service) GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error) {
 	return s.repo.GetCategoryTree(ctx, categoryID)
 }
 
@@ -2083,7 +2083,7 @@ func convertProductToListing(product *domain.Product) *domain.Listing {
 		Title:      product.Name,
 		Price:      product.Price,
 		Currency:   product.Currency,
-		CategoryID: product.CategoryID,
+		CategoryID: fmt.Sprintf("%d", product.CategoryID), // Convert int64 to string (legacy support)
 		Quantity:   product.StockQuantity,
 		ViewsCount: product.ViewCount,
 		CreatedAt:  product.CreatedAt,

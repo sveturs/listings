@@ -6,8 +6,8 @@ option go_package = "github.com/vondi-global/listings/api/proto/search/v1;search
 
 // GetPopularSearchesRequest requests trending/popular search queries
 message GetPopularSearchesRequest {
-  // Optional category filter (popular searches in this category only)
-  optional int64 category_id = 1;
+  // Optional category filter (popular searches in this category only, UUID string)
+  string category_id = 1;
 
   // Maximum number of results (default: 10, max: 20)
   int32 limit = 2;

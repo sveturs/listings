@@ -137,12 +137,23 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 		// Attributes public methods (no auth required for viewing category attributes)
 		"/listingssvc.v1.AttributeService/GetCategoryAttributes",
 		"/listingssvc.v1.AttributeService/GetCategoryVariantAttributes",
-		// Category service public methods
+		// Order service public methods (support both authenticated users and anonymous carts via session_id)
+		"/listingssvc.v1.OrderService/AddToCart",
+		"/listingssvc.v1.OrderService/GetCart",
+		"/listingssvc.v1.OrderService/UpdateCartItem",
+		"/listingssvc.v1.OrderService/RemoveFromCart",
+		"/listingssvc.v1.OrderService/ClearCart",
+		// Category service public methods (V1)
 		"/categoriessvc.v1.CategoryService/GetCategories",
 		"/categoriessvc.v1.CategoryService/GetCategoryBySlug",
 		"/categoriessvc.v1.CategoryService/GetRootCategories",
 		"/categoriessvc.v1.CategoryService/GetCategoryChildren",
 		"/categoriessvc.v1.CategoryService/GetCategoryPath",
+		// Category service V2 public methods (UUID-based with i18n)
+		"/categoriessvc.v2.CategoryServiceV2/GetCategoryTreeV2",
+		"/categoriessvc.v2.CategoryServiceV2/GetCategoryBySlugV2",
+		"/categoriessvc.v2.CategoryServiceV2/GetCategoryByUUID",
+		"/categoriessvc.v2.CategoryServiceV2/GetBreadcrumb",
 	}
 
 	for _, publicMethod := range publicMethods {

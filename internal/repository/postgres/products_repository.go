@@ -1483,7 +1483,7 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 			Str("currency", input.Currency).
 			Int32("stock_quantity", input.StockQuantity).
 			Str("stock_status", string(stockStatus)).
-			Int64("category_id", input.CategoryID).
+			Str("category_id", input.CategoryID).
 			Bool("has_individual_location", input.HasIndividualLocation).
 			Bool("show_on_map", input.ShowOnMap).
 			Int("attributes_json_len", len(attributesJSON))
@@ -1557,7 +1557,7 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 			r.logger.Error().Err(err).
 				Int("index", idx).
 				Str("title", input.Name).
-				Int64("category_id", input.CategoryID).
+				Str("category_id", input.CategoryID).
 				Int64("storefront_id", storefrontID).
 				Str("sql_error", err.Error()).
 				Str("error_type", fmt.Sprintf("%T", err)).
@@ -1633,7 +1633,7 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 			Int64("product_id", product.ID).
 			Str("title", product.Name).
 			Int64("storefront_id", product.StorefrontID).
-			Int64("category_id", product.CategoryID).
+			Str("category_id", product.CategoryID).
 			Float64("price", product.Price).
 			Str("currency", product.Currency).
 			Int32("stock_quantity", product.StockQuantity).

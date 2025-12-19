@@ -227,6 +227,9 @@ proto: ## Generate Go code from protobuf files
 		api/proto/categories/v1/*.proto
 	PATH=/home/dim/go/bin:$$PATH protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		api/proto/categories/v2/*.proto
+	PATH=/home/dim/go/bin:$$PATH protoc --go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		api/proto/attributes/v1/*.proto
 	PATH=/home/dim/go/bin:$$PATH protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \

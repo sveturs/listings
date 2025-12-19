@@ -12,9 +12,12 @@ import (
 
 	attributespb "github.com/vondi-global/listings/api/proto/attributes/v1"
 	categoriespb "github.com/vondi-global/listings/api/proto/categories/v1"
+	categoriesv2 "github.com/vondi-global/listings/api/proto/categories/v2"
 	chatsvcv1 "github.com/vondi-global/listings/api/proto/chat/v1"
 	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/cache"
 	"github.com/vondi-global/listings/internal/metrics"
+	"github.com/vondi-global/listings/internal/repository"
 	minioclient "github.com/vondi-global/listings/internal/repository/minio"
 	"github.com/vondi-global/listings/internal/service"
 	"github.com/vondi-global/listings/internal/service/listings"
@@ -33,10 +36,13 @@ type Server struct {
 	listingspb.UnimplementedOrderServiceServer
 	listingspb.UnimplementedAnalyticsServiceServer
 	chatsvcv1.UnimplementedChatServiceServer
+	categoriesv2.UnimplementedCategoryServiceV2Server
 	service                    *listings.Service
 	storefrontService          *listings.StorefrontService
 	attrService                service.AttributeService
 	categoryService            service.CategoryService
+	categoryRepoV2             repository.CategoryRepositoryV2 // for V2 API
+	categoryCache              *cache.CategoryCache            // for V2 API Redis caching
 	orderService               service.OrderService
 	cartService                service.CartService
 	chatService                service.ChatService
@@ -55,6 +61,8 @@ func NewServer(
 	storefrontService *listings.StorefrontService,
 	attrService service.AttributeService,
 	categoryService service.CategoryService,
+	categoryRepoV2 repository.CategoryRepositoryV2,
+	categoryCache *cache.CategoryCache,
 	orderService service.OrderService,
 	cartService service.CartService,
 	chatService service.ChatService,
@@ -71,6 +79,8 @@ func NewServer(
 		storefrontService:          storefrontService,
 		attrService:                attrService,
 		categoryService:            categoryService,
+		categoryRepoV2:             categoryRepoV2,
+		categoryCache:              categoryCache,
 		orderService:               orderService,
 		cartService:                cartService,
 		chatService:                chatService,
@@ -154,6 +164,31 @@ func (s *Server) GetListing(ctx context.Context, req *listingspb.GetListingReque
 func (s *Server) CreateListing(ctx context.Context, req *listingspb.CreateListingRequest) (*listingspb.CreateListingResponse, error) {
 	s.logger.Debug().Int64("user_id", req.UserId).Str("title", req.Title).Msg("CreateListing called")
 
+	// DEBUG: Log incoming proto fields
+	s.logger.Debug().
+		Bool("has_condition", req.Condition != nil).
+		Bool("has_location", req.Location != nil).
+		Bool("has_show_on_map", req.ShowOnMap != nil).
+		Int("attributes_count", len(req.Attributes)).
+		Msg("DEBUG: incoming proto request fields")
+
+	if req.Location != nil {
+		logEvent := s.logger.Debug()
+		if req.Location.Country != nil {
+			logEvent = logEvent.Str("country", *req.Location.Country)
+		}
+		if req.Location.City != nil {
+			logEvent = logEvent.Str("city", *req.Location.City)
+		}
+		if req.Location.Latitude != nil {
+			logEvent = logEvent.Float64("lat", *req.Location.Latitude)
+		}
+		if req.Location.Longitude != nil {
+			logEvent = logEvent.Float64("lng", *req.Location.Longitude)
+		}
+		logEvent.Msg("DEBUG: incoming location data")
+	}
+
 	// Validate request
 	if err := s.validateCreateListingRequest(req); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -161,6 +196,31 @@ func (s *Server) CreateListing(ctx context.Context, req *listingspb.CreateListin
 
 	// Convert proto to domain input
 	input := ProtoToCreateListingInput(req)
+
+	// DEBUG: Log converted domain input fields
+	s.logger.Debug().
+		Bool("has_condition", input.Condition != nil).
+		Bool("has_location", input.Location != nil).
+		Bool("has_show_on_map", input.ShowOnMap != nil).
+		Int("attributes_count", len(input.Attributes)).
+		Msg("DEBUG: converted domain input fields")
+
+	if input.Location != nil {
+		logEvent := s.logger.Debug()
+		if input.Location.Country != nil {
+			logEvent = logEvent.Str("country", *input.Location.Country)
+		}
+		if input.Location.City != nil {
+			logEvent = logEvent.Str("city", *input.Location.City)
+		}
+		if input.Location.Latitude != nil {
+			logEvent = logEvent.Float64("lat", *input.Location.Latitude)
+		}
+		if input.Location.Longitude != nil {
+			logEvent = logEvent.Float64("lng", *input.Location.Longitude)
+		}
+		logEvent.Msg("DEBUG: converted location data")
+	}
 
 	// Create listing via service
 	listing, err := s.service.CreateListing(ctx, input)
@@ -450,8 +510,8 @@ func (s *Server) validateCreateListingRequest(req *listingspb.CreateListingReque
 		return fmt.Errorf("currency must be 3 characters (ISO 4217)")
 	}
 
-	if req.CategoryId <= 0 {
-		return fmt.Errorf("category_id must be greater than 0")
+	if req.CategoryId == "" {
+		return fmt.Errorf("category_id is required")
 	}
 
 	if req.Quantity < 0 {

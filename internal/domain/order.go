@@ -135,7 +135,11 @@ type OrderItem struct {
 	ID        int64  `json:"id" db:"id"`
 	OrderID   int64  `json:"order_id" db:"order_id"`
 	ListingID int64  `json:"listing_id" db:"listing_id"`           // FK to listings or products
-	VariantID *int64 `json:"variant_id,omitempty" db:"variant_id"` // FK to listing_variants or product_variants
+	VariantID *int64 `json:"variant_id,omitempty" db:"variant_id"` // FK to listing_variants or product_variants (legacy int64)
+
+	// Variant system V2 (UUID-based)
+	VariantUUID         *string `json:"variant_uuid,omitempty" db:"variant_uuid"`                   // UUID for new variant system
+	StockReservationID  *string `json:"stock_reservation_id,omitempty" db:"stock_reservation_id"`   // Stock reservation UUID
 
 	// Snapshot data (immutable after order creation)
 	ListingName string                 `json:"listing_name" db:"listing_name"`           // Product name at purchase time

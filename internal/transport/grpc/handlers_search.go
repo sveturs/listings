@@ -380,10 +380,9 @@ func (h *SearchHandler) protoToTrendingRequest(req *searchv1.GetTrendingSearches
 		Days:  req.Days,
 	}
 
-	// Handle optional category_id
-	if req.CategoryId != nil {
-		categoryID := *req.CategoryId
-		domainReq.CategoryID = &categoryID
+	// Handle optional category_id (UUID string)
+	if req.CategoryId != "" {
+		domainReq.CategoryID = &req.CategoryId
 	}
 
 	// Set defaults
@@ -529,9 +528,9 @@ func (h *SearchHandler) searchHistoryResponseToProto(result *search.SearchHistor
 			},
 		}
 
-		// Handle optional fields
+		// Handle optional fields (UUID string)
 		if entry.CategoryID != nil {
-			protoEntry.CategoryId = entry.CategoryID
+			protoEntry.CategoryId = *entry.CategoryID
 		}
 		if entry.ClickedListingID != nil {
 			protoEntry.ClickedListingId = entry.ClickedListingID
@@ -586,10 +585,9 @@ func (h *SearchHandler) protoToDomainRequest(req *searchv1.SearchListingsRequest
 		UseCache: req.UseCache,
 	}
 
-	// Handle optional category_id
-	if req.CategoryId != nil {
-		categoryID := *req.CategoryId
-		domainReq.CategoryID = &categoryID
+	// Handle optional category_id (UUID string)
+	if req.CategoryId != "" {
+		domainReq.CategoryID = &req.CategoryId
 	}
 
 	// Set defaults

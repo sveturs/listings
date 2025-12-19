@@ -84,6 +84,11 @@ func DomainToProtoListing(listing *domain.Listing) *listingspb.Listing {
 		pbListing.Location = DomainToProtoLocation(listing.Location)
 	}
 
+	// Location display settings
+	if listing.ShowOnMap != nil {
+		pbListing.ShowOnMap = *listing.ShowOnMap
+	}
+
 	return pbListing
 }
 
@@ -218,6 +223,43 @@ func ProtoToCreateListingInput(req *listingspb.CreateListingRequest) *domain.Cre
 
 	if req.Sku != nil {
 		input.SKU = req.Sku
+	}
+
+	// Condition
+	if req.Condition != nil {
+		input.Condition = req.Condition
+	}
+
+	// Location
+	if req.Location != nil {
+		input.Location = &domain.CreateLocationInput{
+			Country:      req.Location.Country,
+			City:         req.Location.City,
+			PostalCode:   req.Location.PostalCode,
+			AddressLine1: req.Location.AddressLine1,
+			AddressLine2: req.Location.AddressLine2,
+			Latitude:     req.Location.Latitude,
+			Longitude:    req.Location.Longitude,
+		}
+	}
+
+	if req.ShowOnMap != nil {
+		input.ShowOnMap = req.ShowOnMap
+	}
+
+	if req.LocationPrivacy != nil {
+		input.LocationPrivacy = req.LocationPrivacy
+	}
+
+	// Attributes
+	if len(req.Attributes) > 0 {
+		input.Attributes = make([]domain.ListingKeyValueAttribute, len(req.Attributes))
+		for i, attr := range req.Attributes {
+			input.Attributes[i] = domain.ListingKeyValueAttribute{
+				Key:   attr.AttributeKey,
+				Value: attr.AttributeValue,
+			}
+		}
 	}
 
 	// Translations
@@ -1314,7 +1356,7 @@ func DomainToCategoryServiceProtoCategory(cat *domain.Category) *categoriespb.Ca
 	}
 
 	pbCat := &categoriespb.Category{
-		Id:          int32(cat.ID),
+		Id:          cat.ID,
 		Name:        cat.Name,
 		Slug:        cat.Slug,
 		CreatedAt:   timestamppb.New(cat.CreatedAt),
@@ -1327,8 +1369,7 @@ func DomainToCategoryServiceProtoCategory(cat *domain.Category) *categoriespb.Ca
 
 	// Optional fields
 	if cat.ParentID != nil {
-		parentID := int32(*cat.ParentID)
-		pbCat.ParentId = &parentID
+		pbCat.ParentId = cat.ParentID
 	}
 	if cat.Icon != nil {
 		pbCat.Icon = cat.Icon
@@ -1411,8 +1452,7 @@ func ProtoToCategoryServiceCreateDomain(req *categoriespb.CreateCategoryRequest)
 
 	// Optional fields
 	if req.ParentId != nil {
-		parentID := int64(*req.ParentId)
-		cat.ParentID = &parentID
+		cat.ParentID = req.ParentId
 	}
 	if req.Icon != nil {
 		cat.Icon = req.Icon
@@ -1448,7 +1488,7 @@ func ProtoToCategoryServiceCreateDomain(req *categoriespb.CreateCategoryRequest)
 // ProtoToCategoryServiceUpdateDomain converts UpdateCategoryRequest to domain.Category
 func ProtoToCategoryServiceUpdateDomain(req *categoriespb.UpdateCategoryRequest) *domain.Category {
 	cat := &domain.Category{
-		ID: int64(req.Id),
+		ID: req.Id,
 	}
 
 	// Optional fields - only set if provided
@@ -1459,8 +1499,7 @@ func ProtoToCategoryServiceUpdateDomain(req *categoriespb.UpdateCategoryRequest)
 		cat.Slug = *req.Slug
 	}
 	if req.ParentId != nil {
-		parentID := int64(*req.ParentId)
-		cat.ParentID = &parentID
+		cat.ParentID = req.ParentId
 	}
 	if req.Icon != nil {
 		cat.Icon = req.Icon

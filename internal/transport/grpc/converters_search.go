@@ -20,10 +20,9 @@ func ProtoToFacetsRequest(req *searchv1.GetSearchFacetsRequest) *search.FacetsRe
 		domainReq.Query = *req.Query
 	}
 
-	// Optional category_id
-	if req.CategoryId != nil {
-		categoryID := *req.CategoryId
-		domainReq.CategoryID = &categoryID
+	// Optional category_id (UUID string)
+	if req.CategoryId != "" {
+		domainReq.CategoryID = &req.CategoryId
 	}
 
 	// Optional filters
@@ -121,10 +120,9 @@ func ProtoToSearchFiltersRequest(req *searchv1.SearchWithFiltersRequest) *search
 		IncludeFacets: req.IncludeFacets,
 	}
 
-	// Optional category_id
-	if req.CategoryId != nil {
-		categoryID := *req.CategoryId
-		domainReq.CategoryID = &categoryID
+	// Optional category_id (UUID string)
+	if req.CategoryId != "" {
+		domainReq.CategoryID = &req.CategoryId
 	}
 
 	// Optional filters
@@ -246,10 +244,9 @@ func ProtoToSuggestionsRequest(req *searchv1.GetSuggestionsRequest) *search.Sugg
 		UseCache: true, // Default to using cache
 	}
 
-	// Optional category_id
-	if req.CategoryId != nil {
-		categoryID := *req.CategoryId
-		domainReq.CategoryID = &categoryID
+	// Optional category_id (UUID string)
+	if req.CategoryId != "" {
+		domainReq.CategoryID = &req.CategoryId
 	}
 
 	// Set defaults
@@ -294,10 +291,9 @@ func ProtoToPopularSearchesRequest(req *searchv1.GetPopularSearchesRequest) *sea
 		Limit: req.Limit,
 	}
 
-	// Optional category_id
-	if req.CategoryId != nil {
-		categoryID := *req.CategoryId
-		domainReq.CategoryID = &categoryID
+	// Optional category_id (UUID string)
+	if req.CategoryId != "" {
+		domainReq.CategoryID = &req.CategoryId
 	}
 
 	// Optional time_range

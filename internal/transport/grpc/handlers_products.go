@@ -265,8 +265,8 @@ func (s *Server) CreateProduct(ctx context.Context, req *listingspb.CreateProduc
 		return nil, status.Error(codes.InvalidArgument, "currency cannot be empty")
 	}
 
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category ID must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category_id is required")
 	}
 
 	if req.StockQuantity < 0 {

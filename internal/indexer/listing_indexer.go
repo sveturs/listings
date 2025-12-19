@@ -197,6 +197,11 @@ func (idx *ListingIndexer) buildListingDocument(listing *domain.Listing, attribu
 		"updated_at":      listing.UpdatedAt,
 	}
 
+	// Add category_slug if available
+	if listing.CategorySlug != nil {
+		doc["category_slug"] = *listing.CategorySlug
+	}
+
 	// Optional fields
 	if listing.Description != nil {
 		doc["description"] = *listing.Description
@@ -296,15 +301,18 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 
 	idx.logger.Info().Int("batch_size", batchSize).Msg("starting full reindex with attributes")
 
-	// Get all active listings
+	// Get all active listings with category slug
+	// Note: category_id is UUID in DB but we don't use it for indexing (use category_slug instead)
 	query := `
-		SELECT id, uuid, user_id, storefront_id, title, description,
-		       price, currency, category_id, status, visibility, quantity, sku,
-		       source_type, stock_status, view_count, favorites_count,
-		       created_at, updated_at, published_at
-		FROM listings
-		WHERE status = 'active' AND visibility = 'public' AND is_deleted = false
-		ORDER BY id ASC
+		SELECT l.id, l.uuid, l.user_id, l.storefront_id, l.title, l.description,
+		       l.price, l.currency, 0 AS category_id, c.slug AS category_slug,
+		       l.status, l.visibility, l.quantity, l.sku,
+		       l.source_type, l.stock_status, l.view_count, l.favorites_count,
+		       l.created_at, l.updated_at, l.published_at
+		FROM listings l
+		LEFT JOIN categories c ON l.category_id = c.id
+		WHERE l.status = 'active' AND l.visibility = 'public' AND l.is_deleted = false
+		ORDER BY l.id ASC
 	`
 
 	rows, err := idx.db.QueryContext(ctx, query)
@@ -328,6 +336,7 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 			&listing.Price,
 			&listing.Currency,
 			&listing.CategoryID,
+			&listing.CategorySlug,
 			&listing.Status,
 			&listing.Visibility,
 			&listing.Quantity,

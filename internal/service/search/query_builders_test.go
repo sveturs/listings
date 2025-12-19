@@ -39,7 +39,7 @@ func TestBuildFacetsQuery(t *testing.T) {
 		{
 			name: "with category filter",
 			req: &FacetsRequest{
-				CategoryID: ptrInt64(1001),
+				CategoryID: ptrString("cat-uuid-1001"),
 				UseCache:   true,
 			},
 			expectSize:  0,
@@ -50,7 +50,7 @@ func TestBuildFacetsQuery(t *testing.T) {
 			name: "with filters",
 			req: &FacetsRequest{
 				Query:      "laptop",
-				CategoryID: ptrInt64(1001),
+				CategoryID: ptrString("cat-uuid-1001"),
 				Filters: &SearchFilters{
 					Price: &PriceRange{
 						Min: ptrFloat64(100),
@@ -229,7 +229,7 @@ func TestBuildSuggestionsQuery(t *testing.T) {
 			name: "with category context",
 			req: &SuggestionsRequest{
 				Prefix:     "lap",
-				CategoryID: ptrInt64(1001),
+				CategoryID: ptrString("cat-uuid-1001"),
 				Limit:      10,
 				UseCache:   true,
 			},
@@ -317,7 +317,7 @@ func TestBuildPopularSearchesQuery(t *testing.T) {
 		{
 			name: "with category filter",
 			req: &PopularSearchesRequest{
-				CategoryID: ptrInt64(1001),
+				CategoryID: ptrString("cat-uuid-1001"),
 				Limit:      10,
 				TimeRange:  "24h",
 			},

@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package vondi.variants.v1;
+
+option go_package = "github.com/vondi-global/listings/api/proto/variants/v1;variantspb";
+
+import "google/protobuf/timestamp.proto";
+
+// VariantService manages product variants and stock operations
+service VariantService {
+  // CRUD operations
+  rpc CreateVariant(CreateVariantRequest) returns (VariantResponse);
+  rpc GetVariant(GetVariantRequest) returns (VariantResponse);
+  rpc UpdateVariant(UpdateVariantRequest) returns (VariantResponse);
+  rpc DeleteVariant(DeleteVariantRequest) returns (DeleteVariantResponse);
+
+  // Query operations
+  rpc ListVariants(ListVariantsRequest) returns (ListVariantsResponse);
+  rpc GetVariantBySku(GetVariantBySkuRequest) returns (VariantResponse);
+  rpc FindVariantByAttributes(FindVariantByAttributesRequest) returns (VariantResponse);
+
+  // Stock operations
+  rpc ReserveStock(ReserveStockRequest) returns (ReserveStockResponse);
+  rpc ReleaseStock(ReleaseStockRequest) returns (ReleaseStockResponse);
+  rpc ConfirmStockDeduction(ConfirmStockDeductionRequest) returns (ConfirmStockDeductionResponse);
+}
+
+// Variant represents a product variant
+message Variant {
+  string id = 1;
+  string product_id = 2;
+  string sku = 3;
+  optional double price = 4;
+  optional double compare_at_price = 5;
+  int32 stock_quantity = 6;
+  int32 reserved_quantity = 7;
+  int32 available_quantity = 8; // stock - reserved
+  int32 low_stock_alert = 9;
+  optional double weight_grams = 10;
+  optional string barcode = 11;
+  bool is_default = 12;
+  int32 position = 13;
+  string status = 14; // active, out_of_stock, discontinued
+  repeated VariantAttribute attributes = 15;
+  google.protobuf.Timestamp created_at = 16;
+  google.protobuf.Timestamp updated_at = 17;
+}
+
+// VariantAttribute represents an attribute of a variant
+message VariantAttribute {
+  string id = 1;
+  int32 attribute_id = 2;
+  optional string value_text = 3;
+  optional double value_number = 4;
+  optional bool value_boolean = 5;
+}
+
+// CreateVariantRequest
+message CreateVariantRequest {
+  string product_id = 1;
+  string sku = 2; // Optional, auto-generated if empty
+  optional double price = 3;
+  optional double compare_at_price = 4;
+  int32 initial_stock = 5;
+  int32 low_stock_alert = 6;
+  optional double weight_grams = 7;
+  optional string barcode = 8;
+  bool is_default = 9;
+  int32 position = 10;
+  repeated CreateVariantAttribute attributes = 11;
+  string category_code = 12; // For SKU generation
+}
+
+message CreateVariantAttribute {
+  int32 attribute_id = 1;
+  optional string value_text = 2;
+  optional double value_number = 3;
+  optional bool value_boolean = 4;
+}
+
+// GetVariantRequest
+message GetVariantRequest {
+  string id = 1;
+}
+
+// UpdateVariantRequest
+message UpdateVariantRequest {
+  string id = 1;
+  optional string sku = 2;
+  optional double price = 3;
+  optional double compare_at_price = 4;
+  optional int32 stock_quantity = 5;
+  optional int32 low_stock_alert = 6;
+  optional double weight_grams = 7;
+  optional string barcode = 8;
+  optional bool is_default = 9;
+  optional int32 position = 10;
+  optional string status = 11;
+}
+
+// DeleteVariantRequest
+message DeleteVariantRequest {
+  string id = 1;
+}
+
+// ListVariantsRequest
+message ListVariantsRequest {
+  string product_id = 1;
+  bool active_only = 2;
+  bool in_stock_only = 3;
+  bool include_attributes = 4;
+}
+
+// GetVariantBySkuRequest
+message GetVariantBySkuRequest {
+  string sku = 1;
+}
+
+// FindVariantByAttributesRequest
+message FindVariantByAttributesRequest {
+  string product_id = 1;
+  map<int32, string> attributes = 2; // attribute_id -> value
+}
+
+// ReserveStockRequest
+message ReserveStockRequest {
+  string variant_id = 1;
+  string order_id = 2;
+  int32 quantity = 3;
+  int32 ttl_minutes = 4; // Time-to-live for reservation
+}
+
+// ReleaseStockRequest
+message ReleaseStockRequest {
+  string reservation_id = 1;
+}
+
+// ConfirmStockDeductionRequest
+message ConfirmStockDeductionRequest {
+  string reservation_id = 1;
+}
+
+// Responses
+message VariantResponse {
+  Variant variant = 1;
+}
+
+message ListVariantsResponse {
+  repeated Variant variants = 1;
+  int32 total = 2;
+}
+
+message DeleteVariantResponse {
+  bool success = 1;
+}
+
+message ReserveStockResponse {
+  bool success = 1;
+  string reservation_id = 2;
+  int32 available_after = 3;
+  string error_message = 4;
+}
+
+message ReleaseStockResponse {
+  bool success = 1;
+}
+
+message ConfirmStockDeductionResponse {
+  bool success = 1;
+}

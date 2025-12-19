@@ -15,7 +15,7 @@ import (
 type SearchQuery struct {
 	ID               int64     `json:"id" db:"id"`
 	QueryText        string    `json:"query_text" db:"query_text"`
-	CategoryID       *int64    `json:"category_id,omitempty" db:"category_id"`
+	CategoryID *string    `json:"category_id,omitempty" db:"category_id"`
 	UserID           *int64    `json:"user_id,omitempty" db:"user_id"`
 	SessionID        *string   `json:"session_id,omitempty" db:"session_id"`
 	ResultsCount     int32     `json:"results_count" db:"results_count"`
@@ -26,7 +26,7 @@ type SearchQuery struct {
 // CreateSearchQueryInput represents input for logging a search query
 type CreateSearchQueryInput struct {
 	QueryText        string  `json:"query_text" validate:"required,min=1,max=500"`
-	CategoryID       *int64  `json:"category_id,omitempty"`
+	CategoryID *string  `json:"category_id,omitempty"`
 	UserID           *int64  `json:"user_id,omitempty"`
 	SessionID        *string `json:"session_id,omitempty" validate:"omitempty,uuid4"`
 	ResultsCount     int32   `json:"results_count" validate:"gte=0"`
@@ -80,12 +80,12 @@ type TrendingSearch struct {
 	QueryText    string    `json:"query_text"`
 	SearchCount  int64     `json:"search_count"`
 	LastSearched time.Time `json:"last_searched"`
-	CategoryID   *int64    `json:"category_id,omitempty"` // NULL for global trending
+	CategoryID *string    `json:"category_id,omitempty"` // NULL for global trending
 }
 
 // GetTrendingQueriesFilter represents filters for trending queries
 type GetTrendingQueriesFilter struct {
-	CategoryID         *int64 `json:"category_id,omitempty"`
+	CategoryID *string `json:"category_id,omitempty"`
 	Limit              int32  `json:"limit" validate:"required,gte=1,lte=100"`
 	DaysAgo            int32  `json:"days_ago" validate:"gte=1,lte=90"` // Time range: last N days
 	MinResultsCount    int32  `json:"min_results_count"`                // Filter: only searches with results >= N
@@ -131,7 +131,7 @@ func DefaultTrendingFilter() *GetTrendingQueriesFilter {
 type GetUserHistoryFilter struct {
 	UserID     *int64  `json:"user_id,omitempty"`
 	SessionID  *string `json:"session_id,omitempty" validate:"omitempty,uuid4"`
-	CategoryID *int64  `json:"category_id,omitempty"` // Filter by category (optional)
+	CategoryID *string  `json:"category_id,omitempty"` // Filter by category (optional)
 	Limit      int32   `json:"limit" validate:"required,gte=1,lte=100"`
 }
 
@@ -164,7 +164,7 @@ func (filter *GetUserHistoryFilter) Validate() error {
 
 // GetPopularQueriesFilter represents filters for all-time popular searches
 type GetPopularQueriesFilter struct {
-	CategoryID     *int64 `json:"category_id,omitempty"`
+	CategoryID *string `json:"category_id,omitempty"`
 	Limit          int32  `json:"limit" validate:"required,gte=1,lte=100"`
 	MinSearchCount int64  `json:"min_search_count"` // Filter: only queries with count >= N
 }
@@ -194,13 +194,13 @@ type SearchQueryCTR struct {
 	TotalSearches int64   `json:"total_searches"`
 	TotalClicks   int64   `json:"total_clicks"`
 	CTRPercent    float64 `json:"ctr_percent"` // (clicks / searches) * 100
-	CategoryID    *int64  `json:"category_id,omitempty"`
+	CategoryID *string  `json:"category_id,omitempty"`
 }
 
 // GetCTRAnalysisFilter represents filters for CTR analysis
 type GetCTRAnalysisFilter struct {
 	QueryText  *string `json:"query_text,omitempty"`  // Specific query or NULL for all
-	CategoryID *int64  `json:"category_id,omitempty"` // Filter by category
+	CategoryID *string  `json:"category_id,omitempty"` // Filter by category
 	DaysAgo    int32   `json:"days_ago" validate:"gte=1,lte=90"`
 	Limit      int32   `json:"limit" validate:"required,gte=1,lte=100"`
 }

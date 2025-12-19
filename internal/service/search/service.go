@@ -227,8 +227,8 @@ func (s *Service) parseListingFromHit(source map[string]interface{}) ListingSear
 	if currency, ok := source["currency"].(string); ok {
 		listing.Currency = currency
 	}
-	if categoryID, ok := source["category_id"].(float64); ok {
-		listing.CategoryID = int64(categoryID)
+	if categoryID, ok := source["category_id"].(string); ok {
+		listing.CategoryID = categoryID // UUID string
 	}
 	if status, ok := source["status"].(string); ok {
 		listing.Status = status
@@ -816,10 +816,10 @@ func (s *Service) parseAggregations(result *opensearch.SearchResponse) (*FacetsR
 		if buckets, ok := categoriesAgg["buckets"].([]interface{}); ok {
 			for _, bucket := range buckets {
 				if b, ok := bucket.(map[string]interface{}); ok {
-					categoryID, _ := b["key"].(float64)
+					categoryID, _ := b["key"].(string) // UUID string
 					docCount, _ := b["doc_count"].(float64)
 					facets.Categories = append(facets.Categories, CategoryFacet{
-						CategoryID: int64(categoryID),
+						CategoryID: categoryID,
 						Count:      int64(docCount),
 					})
 				}
@@ -1032,8 +1032,8 @@ func (s *Service) convertCachedFacets(cached map[string]interface{}, isCached bo
 		for _, cat := range categories {
 			if catMap, ok := cat.(map[string]interface{}); ok {
 				facet := CategoryFacet{}
-				if id, ok := catMap["category_id"].(float64); ok {
-					facet.CategoryID = int64(id)
+				if id, ok := catMap["category_id"].(string); ok {
+					facet.CategoryID = id // UUID string
 				}
 				if count, ok := catMap["count"].(float64); ok {
 					facet.Count = int64(count)
@@ -1504,9 +1504,8 @@ func (s *Service) convertCachedSearchHistory(cached map[string]interface{}) *Sea
 				if queryText, ok := entryMap["query_text"].(string); ok {
 					entry.QueryText = queryText
 				}
-				if categoryID, ok := entryMap["category_id"].(float64); ok {
-					id := int64(categoryID)
-					entry.CategoryID = &id
+				if categoryID, ok := entryMap["category_id"].(string); ok {
+					entry.CategoryID = &categoryID // UUID string
 				}
 				if resultsCount, ok := entryMap["results_count"].(float64); ok {
 					entry.ResultsCount = int32(resultsCount)

@@ -96,7 +96,7 @@ func (f *TestFixtures) initializeListings() {
 		Description:    &description,
 		Price:          99.99,
 		Currency:       "USD",
-		CategoryId:     1,
+		CategoryId: "1",
 		Status:         "active",
 		Visibility:     "public",
 		Quantity:       1,
@@ -132,7 +132,7 @@ func (f *TestFixtures) initializeListings() {
 		Description:    &premiumDesc,
 		Price:          299.99,
 		Currency:       "USD",
-		CategoryId:     2,
+		CategoryId: "2",
 		Status:         "active",
 		Visibility:     "public",
 		Quantity:       5,
@@ -178,7 +178,7 @@ func (f *TestFixtures) initializeListings() {
 		Description:    &inactiveDesc,
 		Price:          49.99,
 		Currency:       "USD",
-		CategoryId:     3,
+		CategoryId: "3",
 		Status:         "inactive",
 		Visibility:     "public",
 		Quantity:       1,
@@ -199,7 +199,7 @@ func (f *TestFixtures) initializeListings() {
 		Description:    &draftDesc,
 		Price:          79.99,
 		Currency:       "USD",
-		CategoryId:     1,
+		CategoryId: "1",
 		Status:         "draft",
 		Visibility:     "private",
 		Quantity:       1,
@@ -221,7 +221,7 @@ func (f *TestFixtures) initializeListings() {
 		Description:    &deletedDesc,
 		Price:          29.99,
 		Currency:       "USD",
-		CategoryId:     4,
+		CategoryId: "4",
 		Status:         "deleted",
 		Visibility:     "private",
 		Quantity:       0,
@@ -243,7 +243,7 @@ func (f *TestFixtures) initializeListings() {
 		Description:    &multiImgDesc,
 		Price:          149.99,
 		Currency:       "USD",
-		CategoryId:     2,
+		CategoryId: "2",
 		Status:         "active",
 		Visibility:     "public",
 		Quantity:       3,
@@ -264,7 +264,7 @@ func (f *TestFixtures) initializeListings() {
 // initializeCategories creates test category fixtures
 func (f *TestFixtures) initializeCategories() {
 	f.RootCategory = &pb.Category{
-		Id:           1,
+		Id:           "1",
 		Name:         "Electronics",
 		Slug:         "electronics",
 		Description:  stringPtr("Electronic devices and accessories"),
@@ -275,9 +275,9 @@ func (f *TestFixtures) initializeCategories() {
 		CreatedAt:    f.Yesterday.Format(time.RFC3339),
 	}
 
-	parentID := int64(1)
+	parentID := "1"
 	f.ChildCategory = &pb.Category{
-		Id:           10,
+		Id:           "10",
 		Name:         "Smartphones",
 		Slug:         "smartphones",
 		Description:  stringPtr("Mobile phones and smartphones"),
@@ -290,7 +290,7 @@ func (f *TestFixtures) initializeCategories() {
 	}
 
 	f.CategoryTreeNode = &pb.CategoryTreeNode{
-		Id:            1,
+		Id:            "1",
 		Name:          "Electronics",
 		Slug:          "electronics",
 		Level:         1,
@@ -301,7 +301,7 @@ func (f *TestFixtures) initializeCategories() {
 		HasCustomUi:   false,
 		Children: []*pb.CategoryTreeNode{
 			{
-				Id:            10,
+				Id:            "10",
 				Name:          "Smartphones",
 				Slug:          "smartphones",
 				ParentId:      &parentID,
@@ -348,7 +348,7 @@ func (f *TestFixtures) initializeProducts() {
 		Description:   desc1,
 		Price:         29.99,
 		Currency:      "USD",
-		CategoryId:    1,
+		CategoryId: "1",
 		Sku:           &sku1,
 		StockQuantity: 100,
 		StockStatus:   "in_stock",
@@ -375,7 +375,7 @@ func (f *TestFixtures) initializeProducts() {
 		Description:   desc2,
 		Price:         49.99,
 		Currency:      "USD",
-		CategoryId:    2,
+		CategoryId: "2",
 		Sku:           &sku2,
 		StockQuantity: 200,
 		StockStatus:   "in_stock",
@@ -398,7 +398,7 @@ func (f *TestFixtures) initializeProducts() {
 		Description:   desc3,
 		Price:         19.99,
 		Currency:      "USD",
-		CategoryId:    3,
+		CategoryId: "3",
 		Sku:           &sku3,
 		StockQuantity: 0,
 		StockStatus:   "out_of_stock",
@@ -474,7 +474,7 @@ func (f *TestFixtures) initializeRequests() {
 	}
 
 	// Paginated search request with filters
-	categoryID := int64(1)
+	categoryID := "1"
 	minPrice := 10.0
 	maxPrice := 100.0
 

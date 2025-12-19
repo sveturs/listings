@@ -35,7 +35,7 @@ func (r *Repository) GetRootCategories(ctx context.Context) ([]*domain.Category,
 	for rows.Next() {
 		cat := &domain.Category{}
 		var icon, description, customUIComponent sql.NullString
-		var parentID sql.NullInt64
+		var parentID sql.NullString
 
 		err := rows.Scan(
 			&cat.ID,
@@ -59,7 +59,7 @@ func (r *Repository) GetRootCategories(ctx context.Context) ([]*domain.Category,
 
 		// Handle nullable fields
 		if parentID.Valid {
-			cat.ParentID = &parentID.Int64
+			cat.ParentID = &parentID.String
 		}
 		if icon.Valid {
 			cat.Icon = &icon.String
@@ -105,7 +105,7 @@ func (r *Repository) GetAllCategories(ctx context.Context) ([]*domain.Category, 
 	for rows.Next() {
 		cat := &domain.Category{}
 		var icon, description, customUIComponent sql.NullString
-		var parentID sql.NullInt64
+		var parentID sql.NullString
 
 		err := rows.Scan(
 			&cat.ID,
@@ -129,7 +129,7 @@ func (r *Repository) GetAllCategories(ctx context.Context) ([]*domain.Category, 
 
 		// Handle nullable fields
 		if parentID.Valid {
-			cat.ParentID = &parentID.Int64
+			cat.ParentID = &parentID.String
 		}
 		if icon.Valid {
 			cat.Icon = &icon.String
@@ -184,7 +184,7 @@ func (r *Repository) GetPopularCategories(ctx context.Context, limit int) ([]*do
 	for rows.Next() {
 		cat := &domain.Category{}
 		var icon, description, customUIComponent sql.NullString
-		var parentID sql.NullInt64
+		var parentID sql.NullString
 		var listingCount int64
 
 		err := rows.Scan(
@@ -211,7 +211,7 @@ func (r *Repository) GetPopularCategories(ctx context.Context, limit int) ([]*do
 
 		// Handle nullable fields
 		if parentID.Valid {
-			cat.ParentID = &parentID.Int64
+			cat.ParentID = &parentID.String
 		}
 		if icon.Valid {
 			cat.Icon = &icon.String
@@ -234,7 +234,7 @@ func (r *Repository) GetPopularCategories(ctx context.Context, limit int) ([]*do
 }
 
 // GetCategoryByID retrieves a single category by ID
-func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error) {
+func (r *Repository) GetCategoryByID(ctx context.Context, categoryID string) (*domain.Category, error) {
 	query := `
 		SELECT
 			id, name, slug, parent_id, icon, description,
@@ -247,7 +247,7 @@ func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*do
 
 	cat := &domain.Category{}
 	var icon, description, customUIComponent sql.NullString
-	var parentID sql.NullInt64
+	var parentID sql.NullString
 
 	err := r.db.QueryRowxContext(ctx, query, categoryID).Scan(
 		&cat.ID,
@@ -268,13 +268,13 @@ func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*do
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("category not found")
 		}
-		r.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to get category")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to get category")
 		return nil, fmt.Errorf("failed to get category: %w", err)
 	}
 
 	// Handle nullable fields
 	if parentID.Valid {
-		cat.ParentID = &parentID.Int64
+		cat.ParentID = &parentID.String
 	}
 	if icon.Valid {
 		cat.Icon = &icon.String
@@ -290,7 +290,8 @@ func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*do
 }
 
 // GetCategoryTree builds a hierarchical tree starting from a category
-func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
+// If categoryID is empty, returns a virtual root node containing all top-level categories
+func (r *Repository) GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error) {
 	// Get all categories
 	categories, err := r.GetAllCategories(ctx)
 	if err != nil {
@@ -298,8 +299,9 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*do
 	}
 
 	// Build map for fast lookup
-	catMap := make(map[int64]*domain.CategoryTreeNode)
+	catMap := make(map[string]*domain.CategoryTreeNode)
 	var rootNode *domain.CategoryTreeNode
+	var topLevelNodes []*domain.CategoryTreeNode
 
 	// First pass: create nodes
 	for _, cat := range categories {
@@ -329,8 +331,13 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*do
 		catMap[cat.ID] = node
 
 		// If this is the requested category, mark it as root
-		if cat.ID == categoryID {
+		if categoryID != "" && cat.ID == categoryID {
 			rootNode = node
+		}
+
+		// Track top-level categories (no parent)
+		if cat.ParentID == nil {
+			topLevelNodes = append(topLevelNodes, node)
 		}
 	}
 
@@ -347,6 +354,22 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*do
 	// Third pass: update ChildrenCount
 	for _, node := range catMap {
 		node.ChildrenCount = int32(len(node.Children))
+	}
+
+	// If categoryID is empty, return a virtual root with all top-level categories
+	if categoryID == "" {
+		virtualRoot := &domain.CategoryTreeNode{
+			ID:       "root",
+			Name:     "Categories",
+			Slug:     "",
+			Level:    0,
+			Children: make([]domain.CategoryTreeNode, 0, len(topLevelNodes)),
+		}
+		for _, node := range topLevelNodes {
+			virtualRoot.Children = append(virtualRoot.Children, *node)
+		}
+		virtualRoot.ChildrenCount = int32(len(virtualRoot.Children))
+		return virtualRoot, nil
 	}
 
 	if rootNode == nil {
@@ -370,7 +393,7 @@ func (r *Repository) GetCategoryBySlug(ctx context.Context, slug string) (*domai
 
 	cat := &domain.Category{}
 	var icon, description, customUIComponent sql.NullString
-	var parentID sql.NullInt64
+	var parentID sql.NullString
 
 	err := r.db.QueryRowxContext(ctx, query, slug).Scan(
 		&cat.ID,
@@ -397,7 +420,7 @@ func (r *Repository) GetCategoryBySlug(ctx context.Context, slug string) (*domai
 
 	// Handle nullable fields
 	if parentID.Valid {
-		cat.ParentID = &parentID.Int64
+		cat.ParentID = &parentID.String
 	}
 	if icon.Valid {
 		cat.Icon = &icon.String
@@ -413,7 +436,7 @@ func (r *Repository) GetCategoryBySlug(ctx context.Context, slug string) (*domai
 }
 
 // GetCategoriesWithPagination returns paginated categories with optional filters
-func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *int64, isActive *bool, limit, offset int32) ([]*domain.Category, int32, error) {
+func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *string, isActive *bool, limit, offset int32) ([]*domain.Category, int32, error) {
 	// Build query with conditional filters
 	query := `
 		SELECT
@@ -473,7 +496,7 @@ func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *
 	for rows.Next() {
 		cat := &domain.Category{}
 		var icon, description, customUIComponent sql.NullString
-		var parentIDVal sql.NullInt64
+		var parentIDVal sql.NullString
 
 		err := rows.Scan(
 			&cat.ID,
@@ -497,7 +520,7 @@ func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *
 
 		// Handle nullable fields
 		if parentIDVal.Valid {
-			cat.ParentID = &parentIDVal.Int64
+			cat.ParentID = &parentIDVal.String
 		}
 		if icon.Valid {
 			cat.Icon = &icon.String
@@ -566,9 +589,9 @@ func (r *Repository) CreateCategory(ctx context.Context, cat *domain.Category) (
 		RETURNING id
 	`
 
-	var parentID sql.NullInt64
+	var parentID sql.NullString
 	if cat.ParentID != nil {
-		parentID = sql.NullInt64{Int64: *cat.ParentID, Valid: true}
+		parentID = sql.NullString{String: *cat.ParentID, Valid: true}
 	}
 
 	var icon, description, customUIComponent sql.NullString
@@ -606,7 +629,7 @@ func (r *Repository) CreateCategory(ctx context.Context, cat *domain.Category) (
 		return nil, fmt.Errorf("failed to create category: %w", err)
 	}
 
-	r.logger.Info().Int64("category_id", cat.ID).Str("name", cat.Name).Msg("category created")
+	r.logger.Info().Str("category_id", cat.ID).Str("name", cat.Name).Msg("category created")
 	return cat, nil
 }
 
@@ -673,9 +696,9 @@ func (r *Repository) UpdateCategory(ctx context.Context, cat *domain.Category) (
 				  sort_order, level, has_custom_ui, custom_ui_component
 	`
 
-	var parentID sql.NullInt64
+	var parentID sql.NullString
 	if cat.ParentID != nil {
-		parentID = sql.NullInt64{Int64: *cat.ParentID, Valid: true}
+		parentID = sql.NullString{String: *cat.ParentID, Valid: true}
 	}
 
 	var icon, description, customUIComponent sql.NullString
@@ -744,13 +767,13 @@ func (r *Repository) UpdateCategory(ctx context.Context, cat *domain.Category) (
 				return nil, fmt.Errorf("category with slug '%s' already exists", cat.Slug)
 			}
 		}
-		r.logger.Error().Err(err).Int64("category_id", cat.ID).Msg("failed to update category")
+		r.logger.Error().Err(err).Str("category_id", cat.ID).Msg("failed to update category")
 		return nil, fmt.Errorf("failed to update category: %w", err)
 	}
 
 	// Handle nullable fields
 	if parentID.Valid {
-		updatedCat.ParentID = &parentID.Int64
+		updatedCat.ParentID = &parentID.String
 	}
 	if icon.Valid {
 		updatedCat.Icon = &icon.String
@@ -762,12 +785,12 @@ func (r *Repository) UpdateCategory(ctx context.Context, cat *domain.Category) (
 		updatedCat.CustomUIComponent = &customUIComponent.String
 	}
 
-	r.logger.Info().Int64("category_id", cat.ID).Msg("category updated")
+	r.logger.Info().Str("category_id", cat.ID).Msg("category updated")
 	return updatedCat, nil
 }
 
 // DeleteCategory soft deletes a category (sets is_active = false)
-func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error {
+func (r *Repository) DeleteCategory(ctx context.Context, categoryID string) error {
 	// Check if category has active listings
 	var activeListingsCount int
 	err := r.db.QueryRowContext(ctx, `
@@ -775,7 +798,7 @@ func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error
 		WHERE category_id = $1 AND status = 'active' AND is_deleted = false
 	`, categoryID).Scan(&activeListingsCount)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to check active listings")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to check active listings")
 		return fmt.Errorf("failed to check active listings: %w", err)
 	}
 
@@ -797,7 +820,7 @@ func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error
 
 	result, err := r.db.ExecContext(ctx, query, categoryID)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to delete category")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to delete category")
 		return fmt.Errorf("failed to delete category: %w", err)
 	}
 
@@ -811,7 +834,7 @@ func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error
 	}
 
 	r.logger.Info().
-		Int64("category_id", categoryID).
+		Str("category_id", categoryID).
 		Int64("categories_deactivated", rowsAffected).
 		Msg("category and descendants deleted")
 
@@ -819,7 +842,7 @@ func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error
 }
 
 // isDescendant checks if potentialDescendantID is a descendant of ancestorID
-func (r *Repository) isDescendant(ctx context.Context, ancestorID, potentialDescendantID int64) (bool, error) {
+func (r *Repository) isDescendant(ctx context.Context, ancestorID, potentialDescendantID string) (bool, error) {
 	query := `
 		WITH RECURSIVE category_tree AS (
 			SELECT id, parent_id FROM categories WHERE id = $1
@@ -840,7 +863,7 @@ func (r *Repository) isDescendant(ctx context.Context, ancestorID, potentialDesc
 }
 
 // updateDescendantLevels updates the level of all descendants when a category's level changes
-func (r *Repository) updateDescendantLevels(ctx context.Context, categoryID int64, newLevel int32) error {
+func (r *Repository) updateDescendantLevels(ctx context.Context, categoryID string, newLevel int32) error {
 	query := `
 		WITH RECURSIVE category_tree AS (
 			SELECT id, parent_id, $2::int + 1 as new_level FROM categories WHERE parent_id = $1
@@ -856,7 +879,7 @@ func (r *Repository) updateDescendantLevels(ctx context.Context, categoryID int6
 
 	_, err := r.db.ExecContext(ctx, query, categoryID, newLevel)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to update descendant levels")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to update descendant levels")
 		return fmt.Errorf("failed to update descendant levels: %w", err)
 	}
 
