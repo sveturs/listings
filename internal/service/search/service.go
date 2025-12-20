@@ -16,6 +16,7 @@ import (
 // Service provides search functionality for listings
 type Service struct {
 	searchClient      *opensearch.SearchClient
+	analyticsClient   *opensearch.AnalyticsClient
 	cache             *cache.SearchCache
 	searchQueriesRepo repository.SearchQueriesRepository
 	logger            zerolog.Logger
@@ -27,8 +28,12 @@ func NewService(
 	cache *cache.SearchCache,
 	logger zerolog.Logger,
 ) *Service {
+	// Create analytics client
+	analyticsClient := opensearch.NewAnalyticsClient(searchClient, logger)
+
 	return &Service{
 		searchClient:      searchClient,
+		analyticsClient:   analyticsClient,
 		cache:             cache,
 		searchQueriesRepo: nil, // Will be set via SetSearchQueriesRepo if needed
 		logger:            logger.With().Str("service", "search").Logger(),
@@ -38,6 +43,11 @@ func NewService(
 // SetSearchQueriesRepo sets the search queries repository (optional)
 func (s *Service) SetSearchQueriesRepo(repo repository.SearchQueriesRepository) {
 	s.searchQueriesRepo = repo
+}
+
+// GetAnalyticsClient returns the analytics client for external access
+func (s *Service) GetAnalyticsClient() *opensearch.AnalyticsClient {
+	return s.analyticsClient
 }
 
 // SearchListings searches for listings based on query and filters
@@ -100,11 +110,38 @@ func (s *Service) SearchListings(ctx context.Context, req *SearchRequest) (*Sear
 	// Parse results
 	listings := s.parseSearchResults(searchResp)
 
+	// Calculate page number from offset/limit
+	page := int(req.Offset / req.Limit)
+
 	response := &SearchResponse{
 		Listings: listings,
 		Total:    searchResp.Hits.Total.Value,
 		TookMs:   int32(searchResp.Took),
 		Cached:   false,
+	}
+
+	// Track search event (async, non-blocking)
+	if s.analyticsClient != nil && req.SessionID != "" {
+		searchEvent := &opensearch.SearchEvent{
+			Query:       req.Query,
+			UserID:      req.UserID,
+			SessionID:   req.SessionID,
+			ResultCount: response.Total,
+			TookMs:      int64(response.TookMs),
+			HasResults:  response.Total > 0,
+			SearchType:  "search",
+			Platform:    req.Platform,
+			Language:    req.Language,
+			Page:        page,
+		}
+
+		if err := s.analyticsClient.TrackSearch(ctx, searchEvent); err != nil {
+			// Don't fail the search, just log the error
+			s.logger.Warn().Err(err).Msg("failed to track search event")
+		} else {
+			// Set search event ID in response for click tracking
+			response.SearchEventID = searchEvent.ID
+		}
 	}
 
 	// Cache result (async, non-blocking)

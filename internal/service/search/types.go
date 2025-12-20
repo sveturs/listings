@@ -12,6 +12,12 @@ type SearchRequest struct {
 	Limit      int32   // Results per page (1-100)
 	Offset     int32   // Pagination offset
 	UseCache   bool    // Whether to use cache
+
+	// Analytics tracking fields
+	UserID    *int64 // User ID for analytics (optional)
+	SessionID string // Session ID for analytics (optional)
+	Platform  string // Platform: web, ios, android (optional)
+	Language  string // Language: sr, en, ru (optional)
 }
 
 // Validate validates search request parameters
@@ -39,10 +45,11 @@ func (r *SearchRequest) Validate() error {
 
 // SearchResponse represents search result
 type SearchResponse struct {
-	Listings []ListingSearchResult `json:"listings"`
-	Total    int64                 `json:"total"`
-	TookMs   int32                 `json:"took_ms"`
-	Cached   bool                  `json:"cached"`
+	Listings      []ListingSearchResult `json:"listings"`
+	Total         int64                 `json:"total"`
+	TookMs        int32                 `json:"took_ms"`
+	Cached        bool                  `json:"cached"`
+	SearchEventID string                `json:"search_event_id,omitempty"` // For analytics tracking
 }
 
 // ListingSearchResult represents a single listing in search results
