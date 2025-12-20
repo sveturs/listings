@@ -66,7 +66,7 @@ func TestGetCategory(t *testing.T) {
 		`, 1, "Electronics", "electronics", 1, true, 10)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: 1}
+		req := &pb.CategoryIDRequest{CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6"}
 
 		resp, err := server.Client.GetCategory(ctx, req)
 
@@ -88,7 +88,7 @@ func TestGetCategory(t *testing.T) {
 		defer server.Teardown(t)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: 99999}
+		req := &pb.CategoryIDRequest{CategoryId: "ffffffff-ffff-ffff-ffff-ffffffffffff"}
 
 		resp, err := server.Client.GetCategory(ctx, req)
 
@@ -123,7 +123,7 @@ func TestGetCategory(t *testing.T) {
 			4, "Women's Clothing", "womens-clothing", 2, 2, true, 8)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: 2}
+		req := &pb.CategoryIDRequest{CategoryId: "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b"}
 
 		resp, err := server.Client.GetCategory(ctx, req)
 
@@ -207,7 +207,7 @@ func TestListCategories(t *testing.T) {
 		for _, cat := range resp.Categories {
 			// All returned categories should have nil parent_id (root level)
 			if cat.ParentId != nil {
-				t.Errorf("Found non-root category: %s (id=%d, parent_id=%d)",
+				t.Errorf("Found non-root category: %s (id=%s, parent_id=%s)",
 					cat.Name, cat.Id, *cat.ParentId)
 			}
 			assert.Equal(t, int32(0), cat.Level, "Root categories should have level 0")
@@ -344,7 +344,7 @@ func TestGetCategoryTree(t *testing.T) {
 		`)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: 40}
+		req := &pb.CategoryIDRequest{CategoryId: "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e"}
 
 		resp, err := server.Client.GetCategoryTree(ctx, req)
 
@@ -388,7 +388,7 @@ func TestGetCategoryTree(t *testing.T) {
 		`)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: 51} // Men category
+		req := &pb.CategoryIDRequest{CategoryId: "9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f"} // Men category
 
 		resp, err := server.Client.GetCategoryTree(ctx, req)
 
@@ -421,7 +421,7 @@ func TestGetCategoryTree(t *testing.T) {
 		`)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: 61} // Leaf category
+		req := &pb.CategoryIDRequest{CategoryId: "0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a"} // Leaf category
 
 		resp, err := server.Client.GetCategoryTree(ctx, req)
 
@@ -464,20 +464,20 @@ func TestCategoryHierarchy(t *testing.T) {
 		ctx := testutils.TestContext(t)
 
 		// Get parent category
-		parentReq := &pb.CategoryIDRequest{CategoryId: 70}
+		parentReq := &pb.CategoryIDRequest{CategoryId: "1e2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b"}
 		parentResp, err := server.Client.GetCategory(ctx, parentReq)
 		require.NoError(t, err)
 		assert.Equal(t, "Parent Category", parentResp.Category.Name)
 		assert.Nil(t, parentResp.Category.ParentId)
 
 		// Get child categories and verify parent_id
-		child1Req := &pb.CategoryIDRequest{CategoryId: 71}
+		child1Req := &pb.CategoryIDRequest{CategoryId: "2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c"}
 		child1Resp, err := server.Client.GetCategory(ctx, child1Req)
 		require.NoError(t, err)
 		require.NotNil(t, child1Resp.Category.ParentId)
 		assert.Equal(t, int64(70), *child1Resp.Category.ParentId)
 
-		child2Req := &pb.CategoryIDRequest{CategoryId: 72}
+		child2Req := &pb.CategoryIDRequest{CategoryId: "3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d"}
 		child2Resp, err := server.Client.GetCategory(ctx, child2Req)
 		require.NoError(t, err)
 		require.NotNil(t, child2Resp.Category.ParentId)
@@ -505,14 +505,14 @@ func TestCategoryHierarchy(t *testing.T) {
 		ctx := testutils.TestContext(t)
 
 		// Verify root level
-		rootReq := &pb.CategoryIDRequest{CategoryId: 80}
+		rootReq := &pb.CategoryIDRequest{CategoryId: "4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e"}
 		rootResp, err := server.Client.GetCategory(ctx, rootReq)
 		require.NoError(t, err)
 		assert.Nil(t, rootResp.Category.ParentId)
 		assert.Equal(t, int32(0), rootResp.Category.Level)
 
 		// Verify mid level
-		midReq := &pb.CategoryIDRequest{CategoryId: 81}
+		midReq := &pb.CategoryIDRequest{CategoryId: "5c6d7e8f-9a0b-1c2d-3e4f-5a6b7c8d9e0f"}
 		midResp, err := server.Client.GetCategory(ctx, midReq)
 		require.NoError(t, err)
 		require.NotNil(t, midResp.Category.ParentId)
@@ -520,7 +520,7 @@ func TestCategoryHierarchy(t *testing.T) {
 		assert.Equal(t, int32(1), midResp.Category.Level)
 
 		// Verify leaf level
-		leafReq := &pb.CategoryIDRequest{CategoryId: 82}
+		leafReq := &pb.CategoryIDRequest{CategoryId: "6d7e8f9a-0b1c-2d3e-4f5a-6b7c8d9e0f1a"}
 		leafResp, err := server.Client.GetCategory(ctx, leafReq)
 		require.NoError(t, err)
 		require.NotNil(t, leafResp.Category.ParentId)
@@ -528,7 +528,7 @@ func TestCategoryHierarchy(t *testing.T) {
 		assert.Equal(t, int32(2), leafResp.Category.Level)
 
 		// Verify full tree via GetCategoryTree
-		treeReq := &pb.CategoryIDRequest{CategoryId: 80}
+		treeReq := &pb.CategoryIDRequest{CategoryId: "4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e"}
 		treeResp, err := server.Client.GetCategoryTree(ctx, treeReq)
 		require.NoError(t, err)
 		assert.Equal(t, "Root Level", treeResp.Tree.Name)
@@ -577,7 +577,7 @@ func TestCategoryMultiLanguage(t *testing.T) {
 		`, 90, "Electronics", "electronics", 1, true, 10)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: 90}
+		req := &pb.CategoryIDRequest{CategoryId: "7e8f9a0b-1c2d-3e4f-5a6b-7c8d9e0f1a2b"}
 
 		resp, err := server.Client.GetCategory(ctx, req)
 
@@ -603,7 +603,7 @@ func TestCategoryMultiLanguage(t *testing.T) {
 		`, 91, "Fashion", "fashion", 1, true, 5)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: 91}
+		req := &pb.CategoryIDRequest{CategoryId: "8f9a0b1c-2d3e-4f5a-6b7c-8d9e0f1a2b3c"}
 
 		resp, err := server.Client.GetCategory(ctx, req)
 

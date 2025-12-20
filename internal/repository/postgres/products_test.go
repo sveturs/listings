@@ -39,10 +39,10 @@ func createTestStorefront(t *testing.T, repo *Repository) int64 {
 }
 
 // createTestCategory creates a test category (stub, no real categories table in listings service)
-func createTestCategory(t *testing.T) int64 {
+func createTestCategory(t *testing.T) string {
 	t.Helper()
 	// Categories are managed externally, just return a valid ID
-	return 100
+	return "100"
 }
 
 // createTestProduct creates a product with default values
@@ -321,7 +321,7 @@ func TestCreateProduct_InvalidCategoryID(t *testing.T) {
 
 	product := &domain.CreateProductInput{
 		StorefrontID:  storefrontID,
-		CategoryID:    0, // Invalid category (0 is technically valid as there's no FK constraint)
+		CategoryID:    "0", // Invalid category (0 is technically valid as there's no FK constraint)
 		Name:          "Test Product",
 		Description:   "Test description",
 		Price:         99.99,

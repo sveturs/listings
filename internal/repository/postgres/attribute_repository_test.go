@@ -674,14 +674,14 @@ func TestAttributeRepository_LinkToCategory(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		categoryID  int32
+		categoryID  string
 		attributeID int32
 		settings    *domain.CategoryAttributeSettings
 		wantErr     bool
 	}{
 		{
 			name:        "link attribute to category",
-			categoryID:  100,
+			categoryID:  "100",
 			attributeID: attr.ID,
 			settings: &domain.CategoryAttributeSettings{
 				IsEnabled:    true,
@@ -693,7 +693,7 @@ func TestAttributeRepository_LinkToCategory(t *testing.T) {
 		},
 		{
 			name:        "update existing link (upsert)",
-			categoryID:  100,
+			categoryID:  "100",
 			attributeID: attr.ID,
 			settings: &domain.CategoryAttributeSettings{
 				IsEnabled:  true,
@@ -704,7 +704,7 @@ func TestAttributeRepository_LinkToCategory(t *testing.T) {
 		},
 		{
 			name:        "nil settings",
-			categoryID:  100,
+			categoryID:  "100",
 			attributeID: attr.ID,
 			settings:    nil,
 			wantErr:     true,
@@ -763,14 +763,14 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 	require.NoError(t, err)
 
 	// Link attributes to category
-	_, err = repo.LinkToCategory(ctx, 100, attr1.ID, &domain.CategoryAttributeSettings{
+	_, err = repo.LinkToCategory(ctx, "100", attr1.ID, &domain.CategoryAttributeSettings{
 		IsEnabled:  true,
 		IsRequired: boolPtr(true),
 		SortOrder:  1,
 	})
 	require.NoError(t, err)
 
-	_, err = repo.LinkToCategory(ctx, 100, attr2.ID, &domain.CategoryAttributeSettings{
+	_, err = repo.LinkToCategory(ctx, "100", attr2.ID, &domain.CategoryAttributeSettings{
 		IsEnabled:  true,
 		IsRequired: boolPtr(false),
 		SortOrder:  2,
@@ -779,21 +779,21 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		categoryID    int32
+		categoryID    string
 		filter        *domain.GetCategoryAttributesFilter
 		expectedCount int
 		wantErr       bool
 	}{
 		{
 			name:          "get all category attributes",
-			categoryID:    100,
+			categoryID:    "100",
 			filter:        nil,
 			expectedCount: 2,
 			wantErr:       false,
 		},
 		{
 			name:       "filter by is_enabled",
-			categoryID: 100,
+			categoryID: "100",
 			filter: &domain.GetCategoryAttributesFilter{
 				IsEnabled: boolPtr(true),
 			},
@@ -802,7 +802,7 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 		},
 		{
 			name:       "filter by is_required",
-			categoryID: 100,
+			categoryID: "100",
 			filter: &domain.GetCategoryAttributesFilter{
 				IsRequired: boolPtr(true),
 			},
@@ -811,7 +811,7 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 		},
 		{
 			name:          "category with no attributes",
-			categoryID:    200,
+			categoryID:    "200",
 			filter:        nil,
 			expectedCount: 0,
 			wantErr:       false,
@@ -857,7 +857,7 @@ func TestAttributeRepository_UnlinkFromCategory(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = repo.LinkToCategory(ctx, 100, attr.ID, &domain.CategoryAttributeSettings{
+	_, err = repo.LinkToCategory(ctx, "100", attr.ID, &domain.CategoryAttributeSettings{
 		IsEnabled: true,
 		SortOrder: 1,
 	})
@@ -865,19 +865,19 @@ func TestAttributeRepository_UnlinkFromCategory(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		categoryID  int32
+		categoryID  string
 		attributeID int32
 		wantErr     bool
 	}{
 		{
 			name:        "unlink existing link",
-			categoryID:  100,
+			categoryID:  "100",
 			attributeID: attr.ID,
 			wantErr:     false,
 		},
 		{
 			name:        "unlink non-existent link",
-			categoryID:  100,
+			categoryID:  "100",
 			attributeID: attr.ID,
 			wantErr:     true, // Already unlinked
 		},
@@ -1083,12 +1083,12 @@ func TestAttributeRepository_GetCategoryVariantAttributes(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get category variant attributes
-	variantAttrs, err := repo.GetCategoryVariantAttributes(ctx, 100)
+	variantAttrs, err := repo.GetCategoryVariantAttributes(ctx, "100")
 	require.NoError(t, err)
 	assert.Len(t, variantAttrs, 1)
 
 	va := variantAttrs[0]
-	assert.Equal(t, int32(100), va.CategoryID)
+	assert.Equal(t, "100", va.CategoryID)
 	assert.Equal(t, attr.ID, va.AttributeID)
 	assert.True(t, va.IsRequired)
 	assert.True(t, va.AffectsStock)

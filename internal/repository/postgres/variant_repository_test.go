@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,7 @@ func TestVariantRepository_Create(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test product
-	productID := createTestProduct(t, ctx, db)
+	productID := createTestProduct_helper(t, ctx, db)
 
 	// Test: Create variant with attributes
 	input := &domain.CreateVariantInputV2{
@@ -61,7 +62,7 @@ func TestVariantRepository_Create(t *testing.T) {
 	assert.Equal(t, domain.VariantStatusActive, variant.Status)
 
 	// Verify attributes were created
-	variantWithAttrs, err := repo.GetByIDWithAttributes(ctx, variant.ID.String())
+	variantWithAttrs, err := repo.GetByID(ctx, variant.ID.String())
 	require.NoError(t, err)
 	assert.Len(t, variantWithAttrs.Attributes, 2)
 }
@@ -76,8 +77,8 @@ func TestVariantRepository_GetByID(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test variant
-	productID := createTestProduct(t, ctx, db)
-	variant := createTestVariant(t, ctx, repo, productID)
+	productID := createTestProduct_helper(t, ctx, db)
+	variant := createTestVariantHelper(t, ctx, repo, productID)
 
 	// Test: Get by ID
 	retrieved, err := repo.GetByID(ctx, variant.ID.String())
@@ -99,7 +100,7 @@ func TestVariantRepository_FindByAttributes(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test product
-	productID := createTestProduct(t, ctx, db)
+	productID := createTestProduct_helper(t, ctx, db)
 
 	// Create 3 variants: M-Black, M-White, L-Black
 	createVariantWithAttrs(t, ctx, repo, productID, "M", "Black")
@@ -135,8 +136,8 @@ func TestVariantRepository_GetForUpdate(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test variant
-	productID := createTestProduct(t, ctx, db)
-	variant := createTestVariant(t, ctx, repo, productID)
+	productID := createTestProduct_helper(t, ctx, db)
+	variant := createTestVariantHelper(t, ctx, repo, productID)
 
 	// Begin transaction
 	tx, err := db.BeginTxx(ctx, nil)
@@ -164,8 +165,8 @@ func TestVariantRepository_Update(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test variant
-	productID := createTestProduct(t, ctx, db)
-	variant := createTestVariant(t, ctx, repo, productID)
+	productID := createTestProduct_helper(t, ctx, db)
+	variant := createTestVariantHelper(t, ctx, repo, productID)
 
 	// Test: Update stock quantity and status
 	newStock := int32(50)
@@ -194,12 +195,12 @@ func TestVariantRepository_ListByProduct(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test product
-	productID := createTestProduct(t, ctx, db)
+	productID := createTestProduct_helper(t, ctx, db)
 
 	// Create 3 variants
-	createTestVariant(t, ctx, repo, productID)
-	createTestVariant(t, ctx, repo, productID)
-	createTestVariant(t, ctx, repo, productID)
+	createTestVariantHelper(t, ctx, repo, productID)
+	createTestVariantHelper(t, ctx, repo, productID)
+	createTestVariantHelper(t, ctx, repo, productID)
 
 	// Test: List all variants for product
 	filter := &domain.ListVariantsFilter{
@@ -224,8 +225,8 @@ func TestVariantRepository_Delete(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test variant
-	productID := createTestProduct(t, ctx, db)
-	variant := createTestVariant(t, ctx, repo, productID)
+	productID := createTestProduct_helper(t, ctx, db)
+	variant := createTestVariantHelper(t, ctx, repo, productID)
 
 	// Test: Delete variant
 	err := repo.Delete(ctx, variant.ID.String())
@@ -247,7 +248,7 @@ func setupTestDB(t *testing.T) (*sqlx.DB, func()) {
 	return nil, func() {}
 }
 
-func createTestProduct(t *testing.T, ctx context.Context, db *sqlx.DB) uuid.UUID {
+func createTestProduct_helper(t *testing.T, ctx context.Context, db *sqlx.DB) uuid.UUID {
 	productID := uuid.New()
 
 	// TODO: Insert test product into products table
@@ -257,7 +258,7 @@ func createTestProduct(t *testing.T, ctx context.Context, db *sqlx.DB) uuid.UUID
 	return productID
 }
 
-func createTestVariant(t *testing.T, ctx context.Context, repo *VariantRepository, productID uuid.UUID) *domain.ProductVariantV2 {
+func createTestVariantHelper(t *testing.T, ctx context.Context, repo *VariantRepository, productID uuid.UUID) *domain.ProductVariantV2 {
 	input := &domain.CreateVariantInputV2{
 		ProductID:     productID,
 		SKU:           "TEST-SKU-" + uuid.New().String()[:8],

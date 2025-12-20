@@ -161,29 +161,29 @@ func TestValidator_ValidateCategory(t *testing.T) {
 
 	// Setup mock for active category
 	activeCategory := &domain.Category{
-		ID:       1,
+		ID:       "1",
 		Name:     "Electronics",
 		IsActive: true,
 	}
-	mockRepo.On("GetCategoryByID", ctx, int64(1)).Return(activeCategory, nil)
+	mockRepo.On("GetCategoryByID", ctx, "1").Return(activeCategory, nil)
 
 	// Setup mock for inactive category
 	inactiveCategory := &domain.Category{
-		ID:       2,
+		ID:       "2",
 		Name:     "Inactive Category",
 		IsActive: false,
 	}
-	mockRepo.On("GetCategoryByID", ctx, int64(2)).Return(inactiveCategory, nil)
+	mockRepo.On("GetCategoryByID", ctx, "2").Return(inactiveCategory, nil)
 
 	tests := []struct {
 		name       string
-		categoryID int64
+		categoryID string
 		wantErr    bool
 	}{
-		{"valid active category", 1, false},
-		{"inactive category", 2, true},
-		{"invalid category ID", 0, true},
-		{"negative category ID", -1, true},
+		{"valid active category", "1", false},
+		{"inactive category", "2", true},
+		{"invalid category ID", "", true},
+		{"negative category ID", "-1", true},
 	}
 
 	for _, tt := range tests {

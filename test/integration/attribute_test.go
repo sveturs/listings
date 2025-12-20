@@ -60,7 +60,7 @@ func TestRequiredAttributesValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 1, "Electronics", "electronics", 1, true, 0)
+		`, "3b4246cc-9970-403c-af01-c142a4178dc6", "Electronics", "electronics", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -71,7 +71,7 @@ func TestRequiredAttributesValidation(t *testing.T) {
 			Description: testutils.StringPtr("High-performance laptop"),
 			Price:       1200.00,
 			Currency:    "USD",
-			CategoryId:  1,
+			CategoryId:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			Quantity:    1,
 		}
 
@@ -133,7 +133,7 @@ func TestRequiredAttributesValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 2, "Fashion", "fashion", 1, true, 0)
+		`, "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b", "Fashion", "fashion", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -144,7 +144,7 @@ func TestRequiredAttributesValidation(t *testing.T) {
 			Description: testutils.StringPtr("Basic cotton t-shirt"),
 			Price:       25.00,
 			Currency:    "USD",
-			CategoryId:  2,
+			CategoryId:  "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b",
 			Quantity:    10,
 		}
 
@@ -183,7 +183,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 10, "Books", "books", 1, true, 0)
+		`, "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d", "Books", "books", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -194,7 +194,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 			Description: testutils.StringPtr("Go programming guide"),
 			Price:       45.00,
 			Currency:    "USD",
-			CategoryId:  10,
+			CategoryId:  "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
 			Quantity:    5,
 		}
 
@@ -231,7 +231,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 11, "Real Estate", "real-estate", 1, true, 0)
+		`, "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e", "Real Estate", "real-estate", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -242,7 +242,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 			Description: testutils.StringPtr("Spacious apartment"),
 			Price:       250000.00,
 			Currency:    "USD",
-			CategoryId:  11,
+			CategoryId:  "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
 			Quantity:    1,
 		}
 
@@ -279,7 +279,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 12, "Vehicles", "vehicles", 1, true, 0)
+		`, "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f", "Vehicles", "vehicles", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -290,7 +290,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 			Description: testutils.StringPtr("Reliable sedan"),
 			Price:       15000.00,
 			Currency:    "USD",
-			CategoryId:  12,
+			CategoryId:  "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
 			Quantity:    1,
 		}
 
@@ -340,7 +340,7 @@ func TestAttributePatternValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 20, "Services", "services", 1, true, 0)
+		`, "4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a", "Services", "services", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -351,7 +351,7 @@ func TestAttributePatternValidation(t *testing.T) {
 			Description: testutils.StringPtr("Professional consulting"),
 			Price:       100.00,
 			Currency:    "USD",
-			CategoryId:  20,
+			CategoryId:  "4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
 			Quantity:    1,
 		}
 
@@ -387,7 +387,7 @@ func TestAttributePatternValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 21, "Business", "business", 1, true, 0)
+		`, "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b", "Business", "business", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -398,7 +398,7 @@ func TestAttributePatternValidation(t *testing.T) {
 			Description: testutils.StringPtr("Office supplies"),
 			Price:       500.00,
 			Currency:    "USD",
-			CategoryId:  21,
+			CategoryId:  "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b",
 			Quantity:    1,
 		}
 
@@ -446,7 +446,7 @@ func TestAttributeRangeValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 30, "Electronics", "electronics-2", 1, true, 0)
+		`, "6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c", "Electronics", "electronics-2", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -457,7 +457,7 @@ func TestAttributeRangeValidation(t *testing.T) {
 			Description: testutils.StringPtr("4K display"),
 			Price:       800.00,
 			Currency:    "USD",
-			CategoryId:  30,
+			CategoryId:  "6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c",
 			Quantity:    3,
 		}
 
@@ -494,7 +494,7 @@ func TestAttributeRangeValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 31, "Test Category", "test-cat", 1, true, 0)
+		`, "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d", "Test Category", "test-cat", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -505,7 +505,7 @@ func TestAttributeRangeValidation(t *testing.T) {
 			Description: testutils.StringPtr("Testing range validation"),
 			Price:       50.00,
 			Currency:    "USD",
-			CategoryId:  31,
+			CategoryId:  "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d",
 			Quantity:    1,
 		}
 
@@ -550,7 +550,7 @@ func TestAttributeUpdateValidation(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
 			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 40, "Furniture", "furniture", 1, true, 0)
+		`, "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e", "Furniture", "furniture", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -561,7 +561,7 @@ func TestAttributeUpdateValidation(t *testing.T) {
 			Description: testutils.StringPtr("Ergonomic chair"),
 			Price:       200.00,
 			Currency:    "USD",
-			CategoryId:  40,
+			CategoryId:  "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e",
 			Quantity:    5,
 		}
 
