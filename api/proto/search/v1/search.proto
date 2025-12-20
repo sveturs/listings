@@ -58,6 +58,18 @@ message SearchListingsRequest {
 
   // Use Redis cache for results (default: true)
   bool use_cache = 5;
+
+  // Analytics: Session ID for tracking (optional, enables analytics)
+  string session_id = 6;
+
+  // Analytics: User ID for authenticated users (optional)
+  optional int64 user_id = 7;
+
+  // Analytics: Platform (web, ios, android)
+  string platform = 8;
+
+  // Analytics: Language (sr, en, ru)
+  string language = 9;
 }
 
 // SearchListingsResponse contains search results
@@ -73,6 +85,9 @@ message SearchListingsResponse {
 
   // Whether result was served from cache
   bool cached = 4;
+
+  // Analytics: Search event ID for click tracking (only if session_id was provided)
+  string search_event_id = 5;
 }
 
 // Listing and ListingImage are now defined in common.proto

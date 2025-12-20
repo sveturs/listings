@@ -66,7 +66,7 @@ type Attribute struct {
 // CategoryAttribute represents a category-attribute relationship with overrides
 type CategoryAttribute struct {
 	ID                      int32                  `json:"id" db:"id"`
-	CategoryID              int32                  `json:"category_id" db:"category_id"`
+	CategoryID              string                 `json:"category_id" db:"category_id"` // UUID as string
 	AttributeID             int32                  `json:"attribute_id" db:"attribute_id"`
 	Attribute               *Attribute             `json:"attribute,omitempty" db:"-"` // Loaded on demand
 	IsEnabled               bool                   `json:"is_enabled" db:"is_enabled"`
@@ -100,7 +100,7 @@ type ListingAttributeValue struct {
 // VariantAttribute represents a variant attribute definition for a category
 type VariantAttribute struct {
 	ID           int32      `json:"id" db:"id"`
-	CategoryID   int32      `json:"category_id" db:"category_id"`
+	CategoryID   string     `json:"category_id" db:"category_id"` // UUID as string
 	AttributeID  int32      `json:"attribute_id" db:"attribute_id"`
 	Attribute    *Attribute `json:"attribute,omitempty" db:"-"` // Loaded on demand
 	IsRequired   bool       `json:"is_required" db:"is_required"`

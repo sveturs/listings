@@ -17,8 +17,8 @@ const (
 	// Cache key prefixes
 	cacheKeyAttributeID     = "attr:id:%d"
 	cacheKeyAttributeCode   = "attr:code:%s"
-	cacheKeyCategoryAttrs   = "cat_attrs:%d"
-	cacheKeyCategoryVariant = "cat_variant_attrs:%d"
+	cacheKeyCategoryAttrs   = "cat_attrs:%s"         // UUID as string
+	cacheKeyCategoryVariant = "cat_variant_attrs:%s" // UUID as string
 	cacheKeyListingAttrs    = "listing_attrs:%d"
 
 	// Cache TTL (30 minutes as per architecture)
@@ -81,7 +81,7 @@ func (c *AttributeCache) SetAttribute(ctx context.Context, attr *domain.Attribut
 }
 
 // GetCategoryAttributes retrieves cached category attributes
-func (c *AttributeCache) GetCategoryAttributes(ctx context.Context, categoryID int32) ([]*domain.CategoryAttribute, error) {
+func (c *AttributeCache) GetCategoryAttributes(ctx context.Context, categoryID string) ([]*domain.CategoryAttribute, error) {
 	key := fmt.Sprintf(cacheKeyCategoryAttrs, categoryID)
 
 	data, err := c.client.Get(ctx, key).Bytes()
@@ -89,24 +89,24 @@ func (c *AttributeCache) GetCategoryAttributes(ctx context.Context, categoryID i
 		if err == redis.Nil {
 			return nil, nil // Cache miss
 		}
-		c.logger.Warn().Err(err).Int32("category_id", categoryID).Msg("failed to get category attributes from cache")
+		c.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to get category attributes from cache")
 		return nil, err
 	}
 
 	var attrs []*domain.CategoryAttribute
 	if err := json.Unmarshal(data, &attrs); err != nil {
-		c.logger.Error().Err(err).Int32("category_id", categoryID).Msg("failed to unmarshal category attributes")
+		c.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to unmarshal category attributes")
 		// Delete corrupted cache entry
 		_ = c.client.Del(ctx, key).Err()
 		return nil, err
 	}
 
-	c.logger.Debug().Int32("category_id", categoryID).Int("count", len(attrs)).Msg("category attributes cache hit")
+	c.logger.Debug().Str("category_id", categoryID).Int("count", len(attrs)).Msg("category attributes cache hit")
 	return attrs, nil
 }
 
 // SetCategoryAttributes caches category attributes
-func (c *AttributeCache) SetCategoryAttributes(ctx context.Context, categoryID int32, attrs []*domain.CategoryAttribute) error {
+func (c *AttributeCache) SetCategoryAttributes(ctx context.Context, categoryID string, attrs []*domain.CategoryAttribute) error {
 	key := fmt.Sprintf(cacheKeyCategoryAttrs, categoryID)
 
 	data, err := json.Marshal(attrs)
@@ -115,16 +115,16 @@ func (c *AttributeCache) SetCategoryAttributes(ctx context.Context, categoryID i
 	}
 
 	if err := c.client.Set(ctx, key, data, cacheTTL).Err(); err != nil {
-		c.logger.Warn().Err(err).Int32("category_id", categoryID).Msg("failed to cache category attributes")
+		c.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to cache category attributes")
 		return err
 	}
 
-	c.logger.Debug().Int32("category_id", categoryID).Int("count", len(attrs)).Msg("category attributes cached")
+	c.logger.Debug().Str("category_id", categoryID).Int("count", len(attrs)).Msg("category attributes cached")
 	return nil
 }
 
 // GetCategoryVariantAttributes retrieves cached variant attributes for a category
-func (c *AttributeCache) GetCategoryVariantAttributes(ctx context.Context, categoryID int32) ([]*domain.VariantAttribute, error) {
+func (c *AttributeCache) GetCategoryVariantAttributes(ctx context.Context, categoryID string) ([]*domain.VariantAttribute, error) {
 	key := fmt.Sprintf(cacheKeyCategoryVariant, categoryID)
 
 	data, err := c.client.Get(ctx, key).Bytes()
@@ -132,24 +132,24 @@ func (c *AttributeCache) GetCategoryVariantAttributes(ctx context.Context, categ
 		if err == redis.Nil {
 			return nil, nil // Cache miss
 		}
-		c.logger.Warn().Err(err).Int32("category_id", categoryID).Msg("failed to get variant attributes from cache")
+		c.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to get variant attributes from cache")
 		return nil, err
 	}
 
 	var attrs []*domain.VariantAttribute
 	if err := json.Unmarshal(data, &attrs); err != nil {
-		c.logger.Error().Err(err).Int32("category_id", categoryID).Msg("failed to unmarshal variant attributes")
+		c.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to unmarshal variant attributes")
 		// Delete corrupted cache entry
 		_ = c.client.Del(ctx, key).Err()
 		return nil, err
 	}
 
-	c.logger.Debug().Int32("category_id", categoryID).Int("count", len(attrs)).Msg("variant attributes cache hit")
+	c.logger.Debug().Str("category_id", categoryID).Int("count", len(attrs)).Msg("variant attributes cache hit")
 	return attrs, nil
 }
 
 // SetCategoryVariantAttributes caches variant attributes for a category
-func (c *AttributeCache) SetCategoryVariantAttributes(ctx context.Context, categoryID int32, attrs []*domain.VariantAttribute) error {
+func (c *AttributeCache) SetCategoryVariantAttributes(ctx context.Context, categoryID string, attrs []*domain.VariantAttribute) error {
 	key := fmt.Sprintf(cacheKeyCategoryVariant, categoryID)
 
 	data, err := json.Marshal(attrs)
@@ -158,11 +158,11 @@ func (c *AttributeCache) SetCategoryVariantAttributes(ctx context.Context, categ
 	}
 
 	if err := c.client.Set(ctx, key, data, cacheTTL).Err(); err != nil {
-		c.logger.Warn().Err(err).Int32("category_id", categoryID).Msg("failed to cache variant attributes")
+		c.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to cache variant attributes")
 		return err
 	}
 
-	c.logger.Debug().Int32("category_id", categoryID).Int("count", len(attrs)).Msg("variant attributes cached")
+	c.logger.Debug().Str("category_id", categoryID).Int("count", len(attrs)).Msg("variant attributes cached")
 	return nil
 }
 
@@ -227,7 +227,7 @@ func (c *AttributeCache) InvalidateAttribute(ctx context.Context, id int32, code
 }
 
 // InvalidateCategory invalidates all cache entries for a category
-func (c *AttributeCache) InvalidateCategory(ctx context.Context, categoryID int32) error {
+func (c *AttributeCache) InvalidateCategory(ctx context.Context, categoryID string) error {
 	keys := []string{
 		fmt.Sprintf(cacheKeyCategoryAttrs, categoryID),
 		fmt.Sprintf(cacheKeyCategoryVariant, categoryID),
@@ -239,7 +239,7 @@ func (c *AttributeCache) InvalidateCategory(ctx context.Context, categoryID int3
 		}
 	}
 
-	c.logger.Debug().Int32("category_id", categoryID).Msg("category cache invalidated")
+	c.logger.Debug().Str("category_id", categoryID).Msg("category cache invalidated")
 	return nil
 }
 

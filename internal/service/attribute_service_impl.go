@@ -234,7 +234,7 @@ func (s *AttributeServiceImpl) ListAttributes(ctx context.Context, filter *domai
 // LinkAttributeToCategory links an attribute to a category with optional overrides
 func (s *AttributeServiceImpl) LinkAttributeToCategory(
 	ctx context.Context,
-	categoryID int32,
+	categoryID string,
 	attributeID int32,
 	settings *domain.CategoryAttributeSettings,
 ) error {
@@ -256,7 +256,7 @@ func (s *AttributeServiceImpl) LinkAttributeToCategory(
 	_, err = s.repo.LinkToCategory(ctx, categoryID, attributeID, settings)
 	if err != nil {
 		s.logger.Error().Err(err).
-			Int32("category_id", categoryID).
+			Str("category_id", categoryID).
 			Int32("attribute_id", attributeID).
 			Msg("failed to link attribute to category")
 		return fmt.Errorf("failed to link attribute to category: %w", err)
@@ -264,11 +264,11 @@ func (s *AttributeServiceImpl) LinkAttributeToCategory(
 
 	// 4. Invalidate category cache
 	if err := s.cache.InvalidateCategory(ctx, categoryID); err != nil {
-		s.logger.Warn().Err(err).Int32("category_id", categoryID).Msg("failed to invalidate category cache")
+		s.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to invalidate category cache")
 	}
 
 	s.logger.Info().
-		Int32("category_id", categoryID).
+		Str("category_id", categoryID).
 		Int32("attribute_id", attributeID).
 		Str("attribute_code", attr.Code).
 		Msg("attribute linked to category")
@@ -296,19 +296,19 @@ func (s *AttributeServiceImpl) UpdateCategoryAttribute(
 
 	// 3. Invalidate category cache
 	if err := s.cache.InvalidateCategory(ctx, catAttr.CategoryID); err != nil {
-		s.logger.Warn().Err(err).Int32("category_id", catAttr.CategoryID).Msg("failed to invalidate category cache")
+		s.logger.Warn().Err(err).Str("category_id", catAttr.CategoryID).Msg("failed to invalidate category cache")
 	}
 
-	s.logger.Info().Int32("cat_attr_id", catAttrID).Int32("category_id", catAttr.CategoryID).Msg("category attribute updated")
+	s.logger.Info().Int32("cat_attr_id", catAttrID).Str("category_id", catAttr.CategoryID).Msg("category attribute updated")
 	return nil
 }
 
 // UnlinkAttributeFromCategory removes attribute-category association
-func (s *AttributeServiceImpl) UnlinkAttributeFromCategory(ctx context.Context, categoryID int32, attributeID int32) error {
+func (s *AttributeServiceImpl) UnlinkAttributeFromCategory(ctx context.Context, categoryID string, attributeID int32) error {
 	// 1. Unlink in repository
 	if err := s.repo.UnlinkFromCategory(ctx, categoryID, attributeID); err != nil {
 		s.logger.Error().Err(err).
-			Int32("category_id", categoryID).
+			Str("category_id", categoryID).
 			Int32("attribute_id", attributeID).
 			Msg("failed to unlink attribute from category")
 		return fmt.Errorf("failed to unlink attribute from category: %w", err)
@@ -316,11 +316,11 @@ func (s *AttributeServiceImpl) UnlinkAttributeFromCategory(ctx context.Context, 
 
 	// 2. Invalidate category cache
 	if err := s.cache.InvalidateCategory(ctx, categoryID); err != nil {
-		s.logger.Warn().Err(err).Int32("category_id", categoryID).Msg("failed to invalidate category cache")
+		s.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to invalidate category cache")
 	}
 
 	s.logger.Info().
-		Int32("category_id", categoryID).
+		Str("category_id", categoryID).
 		Int32("attribute_id", attributeID).
 		Msg("attribute unlinked from category")
 
@@ -330,7 +330,7 @@ func (s *AttributeServiceImpl) UnlinkAttributeFromCategory(ctx context.Context, 
 // GetCategoryAttributes retrieves all attributes for a category with effective values (cached)
 func (s *AttributeServiceImpl) GetCategoryAttributes(
 	ctx context.Context,
-	categoryID int32,
+	categoryID string,
 	filter *domain.GetCategoryAttributesFilter,
 ) ([]*domain.CategoryAttribute, error) {
 	// 1. Try cache first (if no filter specified - full cache)
@@ -344,14 +344,14 @@ func (s *AttributeServiceImpl) GetCategoryAttributes(
 	// 2. Cache miss or filtered query - fetch from repository
 	attrs, err := s.repo.GetCategoryAttributes(ctx, categoryID, filter)
 	if err != nil {
-		s.logger.Error().Err(err).Int32("category_id", categoryID).Msg("failed to get category attributes")
+		s.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to get category attributes")
 		return nil, fmt.Errorf("failed to get category attributes: %w", err)
 	}
 
 	// 3. Cache the result (only if no filter)
 	if filter == nil || s.isEmptyFilter(filter) {
 		if err := s.cache.SetCategoryAttributes(ctx, categoryID, attrs); err != nil {
-			s.logger.Warn().Err(err).Int32("category_id", categoryID).Msg("failed to cache category attributes")
+			s.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to cache category attributes")
 		}
 	}
 
@@ -422,7 +422,7 @@ func (s *AttributeServiceImpl) SetListingAttributes(
 // ValidateAttributeValues validates attribute values according to type and rules
 func (s *AttributeServiceImpl) ValidateAttributeValues(
 	ctx context.Context,
-	categoryID int32,
+	categoryID string,
 	values []domain.SetListingAttributeValue,
 ) error {
 	// 1. Get category attributes to validate against
@@ -442,7 +442,7 @@ func (s *AttributeServiceImpl) ValidateAttributeValues(
 		// Check if attribute is enabled for this category
 		catAttr, exists := catAttrMap[val.AttributeID]
 		if !exists {
-			return fmt.Errorf("attribute_id %d at index %d is not linked to category %d", val.AttributeID, i, categoryID)
+			return fmt.Errorf("attribute_id %d at index %d is not linked to category %s", val.AttributeID, i, categoryID)
 		}
 
 		if !catAttr.IsEnabled {
@@ -475,7 +475,7 @@ func (s *AttributeServiceImpl) ValidateAttributeValues(
 }
 
 // GetCategoryVariantAttributes retrieves variant attributes for a category (cached)
-func (s *AttributeServiceImpl) GetCategoryVariantAttributes(ctx context.Context, categoryID int32) ([]*domain.VariantAttribute, error) {
+func (s *AttributeServiceImpl) GetCategoryVariantAttributes(ctx context.Context, categoryID string) ([]*domain.VariantAttribute, error) {
 	// 1. Try cache first
 	cached, err := s.cache.GetCategoryVariantAttributes(ctx, categoryID)
 	if err == nil && cached != nil {
@@ -485,13 +485,13 @@ func (s *AttributeServiceImpl) GetCategoryVariantAttributes(ctx context.Context,
 	// 2. Cache miss - fetch from repository
 	attrs, err := s.repo.GetCategoryVariantAttributes(ctx, categoryID)
 	if err != nil {
-		s.logger.Error().Err(err).Int32("category_id", categoryID).Msg("failed to get variant attributes")
+		s.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to get variant attributes")
 		return nil, fmt.Errorf("failed to get variant attributes: %w", err)
 	}
 
 	// 3. Cache the result
 	if err := s.cache.SetCategoryVariantAttributes(ctx, categoryID, attrs); err != nil {
-		s.logger.Warn().Err(err).Int32("category_id", categoryID).Msg("failed to cache variant attributes")
+		s.logger.Warn().Err(err).Str("category_id", categoryID).Msg("failed to cache variant attributes")
 	}
 
 	return attrs, nil
@@ -512,7 +512,7 @@ func (s *AttributeServiceImpl) InvalidateAttributeCache(ctx context.Context, att
 }
 
 // InvalidateCategoryCache invalidates all attribute caches for a category
-func (s *AttributeServiceImpl) InvalidateCategoryCache(ctx context.Context, categoryID int32) error {
+func (s *AttributeServiceImpl) InvalidateCategoryCache(ctx context.Context, categoryID string) error {
 	return s.cache.InvalidateCategory(ctx, categoryID)
 }
 

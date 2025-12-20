@@ -219,7 +219,7 @@ func (r *AttributeRepository) DeleteListingValues(ctx context.Context, listingID
 // =============================================================================
 
 // GetCategoryVariantAttributes retrieves variant attribute definitions for a category
-func (r *AttributeRepository) GetCategoryVariantAttributes(ctx context.Context, categoryID int32) ([]*domain.VariantAttribute, error) {
+func (r *AttributeRepository) GetCategoryVariantAttributes(ctx context.Context, categoryID string) ([]*domain.VariantAttribute, error) {
 	query := `
 		SELECT cva.id, cva.category_id, cva.attribute_id,
 		       cva.is_required, cva.affects_price, cva.affects_stock, cva.sort_order, cva.display_as,
@@ -237,7 +237,7 @@ func (r *AttributeRepository) GetCategoryVariantAttributes(ctx context.Context, 
 
 	rows, err := r.db.QueryContext(ctx, query, categoryID)
 	if err != nil {
-		r.logger.Error().Err(err).Int32("category_id", categoryID).Msg("failed to get category variant attributes")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to get category variant attributes")
 		return nil, fmt.Errorf("failed to get category variant attributes: %w", err)
 	}
 	defer rows.Close()
