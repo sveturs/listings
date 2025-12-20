@@ -135,8 +135,8 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 		"/listingssvc.v1.ListingsService/GetDeliveryOptions",
 		"/listingssvc.v1.ListingsService/GetMapData",
 		// Attributes public methods (no auth required for viewing category attributes)
-		"/listingssvc.v1.AttributeService/GetCategoryAttributes",
-		"/listingssvc.v1.AttributeService/GetCategoryVariantAttributes",
+		"/attributes.v1.AttributeService/GetCategoryAttributes",
+		"/attributes.v1.AttributeService/GetCategoryVariantAttributes",
 		// Order service public methods (support both authenticated users and anonymous carts via session_id)
 		"/listingssvc.v1.OrderService/AddToCart",
 		"/listingssvc.v1.OrderService/GetCart",
@@ -154,6 +154,20 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 		"/categoriessvc.v2.CategoryServiceV2/GetCategoryBySlugV2",
 		"/categoriessvc.v2.CategoryServiceV2/GetCategoryByUUID",
 		"/categoriessvc.v2.CategoryServiceV2/GetBreadcrumb",
+		// Search service public methods (all search endpoints are public)
+		"/search.v1.SearchService/SearchListings",
+		"/search.v1.SearchService/SearchWithFilters",
+		"/search.v1.SearchService/GetSearchFacets",
+		"/search.v1.SearchService/GetSuggestions",
+		"/search.v1.SearchService/GetPopularSearches",
+		"/search.v1.SearchService/TrackClick",
+		"/search.v1.SearchService/TrackConversion",
+		"/search.v1.SearchService/GetSearchAnalytics",
+		// Category detection public methods (no auth required for category suggestions)
+		"/categories.v2.CategoryDetectionService/DetectFromText",
+		"/categories.v2.CategoryDetectionService/DetectFromKeywords",
+		"/categories.v2.CategoryDetectionService/DetectBatch",
+		"/categories.v2.CategoryDetectionService/ConfirmSelection",
 	}
 
 	for _, publicMethod := range publicMethods {
