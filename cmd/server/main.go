@@ -238,6 +238,31 @@ func main() {
 	// Initialize category service
 	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
 
+	// Initialize category detection repository
+	categoryDetectionRepo := postgres.NewCategoryDetectionRepository(db, zerologLogger)
+
+	// Initialize category detection service
+	claudeAPIKey := os.Getenv("VONDILISTINGS_CLAUDE_API_KEY")
+	if claudeAPIKey == "" {
+		claudeAPIKey = os.Getenv("CLAUDE_API_KEY") // fallback
+	}
+
+	// ВАЖНО: Создаём сервис всегда (даже без API ключа)
+	// Он будет работать на keyword/similarity matching (без AI)
+	categoryDetectionService := service.NewCategoryDetectionService(
+		categoryDetectionRepo,
+		pgRepo, // implements CategoryRepositoryInterface
+		redisCache.GetClient(),
+		claudeAPIKey, // может быть пустым - сервис использует fallback
+		zerologLogger,
+	)
+
+	if claudeAPIKey != "" {
+		logger.Info().Msg("Category detection service initialized with Claude AI support")
+	} else {
+		logger.Warn().Msg("Category detection service initialized WITHOUT AI (using keyword/similarity matching only)")
+	}
+
 	// Initialize analytics repository (Phase 29) - PostgreSQL only, no OpenSearch dependency
 	// Analytics uses materialized views and analytics_events table
 	analyticsRepo := postgres.NewAnalyticsRepository(pgxPool, zerologLogger)
@@ -469,6 +494,14 @@ func main() {
 	}
 	healthChecker := health.NewService(db.DB, redisCache, searchClient, minioClient, healthConfig, zerologLogger)
 
+	// Initialize OpenSearch stats collector (if search client available)
+	if searchClient != nil {
+		statsCollector := opensearchRepo.NewStatsCollector(searchClient, 60*time.Second, zerologLogger)
+		go statsCollector.Start(context.Background())
+		defer statsCollector.Stop()
+		logger.Info().Dur("interval", 60*time.Second).Msg("OpenSearch stats collector started")
+	}
+
 	// Initialize worker (if enabled and search is available)
 	var indexWorker *worker.Worker
 	if cfg.Worker.Enabled && searchClient != nil {
@@ -545,6 +578,19 @@ func main() {
 	categoriesv2.RegisterCategoryServiceV2Server(grpcServer, grpcHandler)
 	logger.Info().Msg("CategoryServiceV2 registered with gRPC server")
 
+	// Register CategoryDetectionService (всегда регистрируем, даже без AI)
+	categoryDetectionHandler := grpcTransport.NewCategoryDetectionHandler(
+		categoryDetectionService,
+		zerologLogger,
+	)
+	categoriesv2.RegisterCategoryDetectionServiceServer(grpcServer, categoryDetectionHandler)
+
+	if claudeAPIKey != "" {
+		logger.Info().Msg("CategoryDetectionService registered (with Claude AI)")
+	} else {
+		logger.Info().Msg("CategoryDetectionService registered (keyword/similarity only, NO AI)")
+	}
+
 	listingspb.RegisterOrderServiceServer(grpcServer, grpcHandler)
 
 	// Register SearchService (Phase 21.1)
@@ -585,7 +631,16 @@ func main() {
 
 	// Initialize HTTP server with health checks
 	httpHandler := httpTransport.NewMinimalHandler(listingsService, zerologLogger)
-	healthHandler := httpTransport.NewHealthHandler(healthChecker, zerologLogger)
+
+	// Use enhanced health handler with OpenSearch monitoring
+	var healthHandler *httpTransport.HealthHandler
+	if searchClient != nil {
+		healthHandler = httpTransport.NewHealthHandlerWithOpenSearch(healthChecker, searchClient, zerologLogger)
+		logger.Info().Msg("Health handler initialized with OpenSearch monitoring")
+	} else {
+		healthHandler = httpTransport.NewHealthHandler(healthChecker, zerologLogger)
+		logger.Warn().Msg("Health handler initialized without OpenSearch monitoring")
+	}
 
 	// Initialize WebSocket handler (requires auth service)
 	var chatWSHandler *httpTransport.ChatWebSocketHandler
@@ -596,12 +651,20 @@ func main() {
 		logger.Warn().Msg("Chat WebSocket disabled - auth service not available")
 	}
 
+	// Initialize search analytics HTTP handler (Phase 7)
+	var analyticsHandler *httpTransport.AnalyticsHandler
+	if searchSvc != nil && searchSvc.GetAnalyticsClient() != nil {
+		analyticsHandler = httpTransport.NewAnalyticsHandler(searchSvc.GetAnalyticsClient(), zerologLogger)
+		logger.Info().Msg("Search analytics HTTP handler initialized")
+	}
+
 	httpApp, err := httpTransport.StartMinimalServer(
 		cfg.Server.HTTPHost,
 		cfg.Server.HTTPPort,
 		httpHandler,
 		healthHandler,
 		chatWSHandler,
+		analyticsHandler,
 		zerologLogger,
 	)
 	if err != nil {

@@ -104,7 +104,7 @@ func (h *MinimalHandler) ListListings(c *fiber.Ctx) error {
 }
 
 // StartMinimalServer starts minimal HTTP server
-func StartMinimalServer(host string, port int, handler *MinimalHandler, healthHandler *HealthHandler, wsHandler *ChatWebSocketHandler, logger zerolog.Logger) (*fiber.App, error) {
+func StartMinimalServer(host string, port int, handler *MinimalHandler, healthHandler *HealthHandler, wsHandler *ChatWebSocketHandler, analyticsHandler *AnalyticsHandler, logger zerolog.Logger) (*fiber.App, error) {
 	app := fiber.New(fiber.Config{
 		AppName:      "Listings Service",
 		ReadTimeout:  30 * time.Second,
@@ -122,6 +122,12 @@ func StartMinimalServer(host string, port int, handler *MinimalHandler, healthHa
 	// Register WebSocket routes BEFORE starting server
 	if wsHandler != nil {
 		wsHandler.RegisterWebSocketRoute(app)
+	}
+
+	// Register analytics routes (Phase 7)
+	if analyticsHandler != nil {
+		analyticsHandler.RegisterRoutes(app)
+		logger.Info().Msg("Search analytics routes registered")
 	}
 
 	addr := fmt.Sprintf("%s:%d", host, port)

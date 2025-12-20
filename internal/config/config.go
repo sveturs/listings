@@ -167,6 +167,11 @@ type WMSConfig struct {
 	DefaultWarehouseID int64 `envconfig:"VONDILISTINGS_WMS_DEFAULT_WAREHOUSE_ID" default:"1"`
 }
 
+// LoadEnv loads environment variables from .env file
+func LoadEnv() error {
+	return godotenv.Load()
+}
+
 // Load reads configuration from environment variables
 func Load() (*Config, error) {
 	// Load .env file (ignore error if file doesn't exist - OK for production)
