@@ -22,7 +22,7 @@ bash /p/github.com/sveturs/listings/scripts/rollback_migration.sh
 
 ## What Gets Migrated
 
-| Source (svetubd:5433) | Target (listings_dev_db:35434) | Records |
+| Source (vondi_db:5433) | Target (listings_dev_db:35434) | Records |
 |----------------------|-------------------------------|---------|
 | `c2c_listings` | `listings` (source_type='c2c') | ~5 |
 | `b2c_stores` | `storefronts` | ~1 |
@@ -49,7 +49,7 @@ bash /p/github.com/sveturs/listings/scripts/rollback_migration.sh
 
 **Old DB (production):**
 ```
-postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd
+postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db
 ```
 
 **New DB (microservice):**

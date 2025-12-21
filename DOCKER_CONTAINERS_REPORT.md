@@ -205,7 +205,7 @@ GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
 
 **Подключение:**
 ```bash
-DATA_SOURCE_NAME=postgresql://postgres:mX3g1XGhMRUZEX3l@host.docker.internal:5432/svetubd?sslmode=disable
+DATA_SOURCE_NAME=postgresql://postgres:mX3g1XGhMRUZEX3l@host.docker.internal:5432/vondi_db?sslmode=disable
 ```
 
 **Volumes:**

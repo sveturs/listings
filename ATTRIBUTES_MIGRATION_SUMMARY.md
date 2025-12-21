@@ -15,7 +15,7 @@ Successfully migrated 203 attribute definitions from monolith database (`unified
 
 ### Source Database
 - **Host:** localhost:5433
-- **Database:** svetubd
+- **Database:** vondi_db
 - **Table:** unified_attributes
 - **Records:** 203
 
@@ -212,7 +212,7 @@ WHERE code = 'year';
 ### Count Records
 ```bash
 # Source
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" \
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" \
   -c "SELECT COUNT(*) FROM unified_attributes"
 
 # Target

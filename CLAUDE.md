@@ -24,7 +24,7 @@ VONDILISTINGS_DB_HOST=localhost
 VONDILISTINGS_DB_PORT=35434              # НЕ 5433!
 VONDILISTINGS_DB_USER=listings_user      # НЕ postgres!
 VONDILISTINGS_DB_PASSWORD=listings_secret
-VONDILISTINGS_DB_NAME=listings_dev_db    # НЕ svetubd!
+VONDILISTINGS_DB_NAME=listings_dev_db    # НЕ vondi_db!
 VONDILISTINGS_DB_SSLMODE=disable
 ```
 
@@ -33,7 +33,7 @@ VONDILISTINGS_DB_SSLMODE=disable
 ```bash
 # НЕ ДЕЛАЙ ТАК - это монолитная БД!
 VONDILISTINGS_DB_PORT=5433     # ❌ Это монолит!
-VONDILISTINGS_DB_NAME=svetubd  # ❌ Это монолит!
+VONDILISTINGS_DB_NAME=vondi_db  # ❌ Это монолит!
 VONDILISTINGS_DB_USER=postgres # ❌ Это монолит!
 ```
 
@@ -251,7 +251,7 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
 ## ✅ Чеклист перед запуском
 
 - [ ] `.env` указывает на порт 35434 (НЕ 5433)
-- [ ] `.env` указывает на БД `listings_dev_db` (НЕ `svetubd`)
+- [ ] `.env` указывает на БД `listings_dev_db` (НЕ `vondi_db`)
 - [ ] Docker container `listings_postgres` запущен
 - [ ] Таблица `listings` содержит данные
 - [ ] Таблица `listing_favorites` существует

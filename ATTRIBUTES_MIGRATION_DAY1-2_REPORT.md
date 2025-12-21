@@ -109,7 +109,7 @@ Successfully completed the foundation phase of the Attributes Migration from mon
 ## 📜 Migration Scripts Created
 
 ### 1. Export Script: `001_export_monolith_attributes.sh`
-- **Source:** Monolith DB (postgres://localhost:5433/svetubd)
+- **Source:** Monolith DB (postgres://localhost:5433/vondi_db)
 - **Output:** `/tmp/attribute_migration/*.csv`
 - **Results:**
   - 203 attributes exported
@@ -366,7 +366,7 @@ Variant Compatible  | 15      | 182      | 7.61%
 ## 🔗 References
 
 - **Architecture:** `/p/github.com/sveturs/svetu/docs/migration/ATTRIBUTES_MIGRATION_ARCHITECTURE.md`
-- **Monolith Source:** `postgres://localhost:5433/svetubd`
+- **Monolith Source:** `postgres://localhost:5433/vondi_db`
 - **Listings Target:** `postgres://localhost:35434/listings_dev_db`
 - **Proto Package:** `github.com/sveturs/listings/api/proto/attributes/v1`
 - **Export Data:** `/tmp/attribute_migration/`
