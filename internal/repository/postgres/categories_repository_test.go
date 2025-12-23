@@ -206,7 +206,7 @@ func TestRepository_CreateCategory_InvalidParent(t *testing.T) {
 
 	ctx := context.Background()
 
-	invalidParentID := int64(99999)
+	invalidParentID := "99999"
 	category := &domain.Category{
 		Name:     "Test",
 		ParentID: &invalidParentID,
@@ -461,7 +461,7 @@ func TestRepository_DeleteCategory_NotFound(t *testing.T) {
 
 	ctx := context.Background()
 
-	err := repo.DeleteCategory(ctx, 99999)
+	err := repo.DeleteCategory(ctx, "99999")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
 }

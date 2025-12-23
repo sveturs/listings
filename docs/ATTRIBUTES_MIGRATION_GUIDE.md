@@ -4,7 +4,7 @@
 
 Migrate `unified_attributes` table from monolith database to `attributes` table in microservice with i18n JSONB conversion.
 
-**Source:** `svetubd.unified_attributes` (localhost:5433)
+**Source:** `vondi_db.unified_attributes` (localhost:5433)
 **Target:** `listings_dev_db.attributes` (localhost:35434)
 
 **Key Transformation:** VARCHAR fields → JSONB i18n format
@@ -94,7 +94,7 @@ Validating migration...
 
 ```bash
 # Step 1: Export from source DB
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" \
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" \
   -c "COPY (
     SELECT id, code, name, display_name, attribute_type, purpose,
            options, validation_rules, ui_settings,
@@ -128,7 +128,7 @@ psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?s
 **1. Count Check:**
 ```sql
 -- Source DB
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" \
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" \
   -c "SELECT COUNT(*) FROM unified_attributes"
 
 -- Target DB

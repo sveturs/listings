@@ -98,6 +98,10 @@ func (m *mockOrderService) SetChatService(chatService service.ChatService) {}
 
 func (m *mockOrderService) SetDeliveryClient(client service.DeliveryClient) {}
 
+func (m *mockOrderService) UpdatePaymentInfo(ctx context.Context, orderID int64, req *service.UpdatePaymentInfoRequest) (*domain.Order, error) {
+	return nil, nil
+}
+
 func (m *mockOrderService) SetEventPublisher(publisher events.OrderEventPublisher) {}
 
 // =============================================================================

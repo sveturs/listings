@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,6 +14,16 @@ import (
 
 	"github.com/vondi-global/listings/internal/domain"
 )
+
+// UpdatePaymentInfoParams contains fields for updating payment information
+type UpdatePaymentInfoParams struct {
+	PaymentProvider       *string
+	PaymentSessionID      *string
+	PaymentIntentID       *string
+	PaymentIdempotencyKey *string
+	PaymentStatus         *string
+	PaymentTransactionID  *string
+}
 
 // OrderRepository defines operations for order management
 type OrderRepository interface {
@@ -24,6 +35,7 @@ type OrderRepository interface {
 	ListByStorefront(ctx context.Context, storefrontID int64, limit, offset int) ([]*domain.Order, int, error)
 	Update(ctx context.Context, order *domain.Order) error
 	UpdateStatus(ctx context.Context, orderID int64, status domain.OrderStatus) error
+	UpdatePaymentInfo(ctx context.Context, orderID int64, params UpdatePaymentInfoParams) error
 	Delete(ctx context.Context, orderID int64) error
 
 	// Order item operations
@@ -126,10 +138,11 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 		SELECT o.id, o.order_number, o.user_id, o.storefront_id, o.status, o.payment_status,
 		       o.subtotal, o.tax, o.shipping, o.discount, o.total, o.commission, o.seller_amount, o.currency,
 		       o.payment_method, o.payment_transaction_id, o.payment_completed_at,
-		       o.shipping_address, o.billing_address, o.shipping_method, o.shipping_provider, o.tracking_number, o.shipment_id,
+		       o.payment_provider, o.payment_session_id, o.payment_intent_id, o.payment_idempotency_key,
+		       o.shipping_address, o.billing_address, o.shipping_method_id, o.shipping_provider, o.tracking_number, o.shipment_id,
 		       o.escrow_release_date, o.escrow_days,
 		       o.customer_name, o.customer_email, o.customer_phone,
-		       o.notes, o.admin_notes, o.seller_notes,
+		       o.customer_notes, o.admin_notes, o.seller_notes,
 		       o.created_at, o.updated_at, o.confirmed_at, o.accepted_at, o.shipped_at, o.delivered_at, o.cancelled_at,
 		       o.label_url,
 		       s.name as storefront_name
@@ -142,6 +155,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 	var userID sql.NullInt64
 	var statusStr, paymentStatusStr string
 	var paymentMethod, paymentTransactionID sql.NullString
+	var paymentProvider, paymentSessionID, paymentIntentID, paymentIdempotencyKey sql.NullString
 	var paymentCompletedAt, escrowReleaseDate, confirmedAt, acceptedAt, shippedAt, deliveredAt, cancelledAt sql.NullTime
 	var shippingAddressJSON, billingAddressJSON []byte
 	var shippingMethod, shippingProvider, trackingNumber sql.NullString
@@ -154,6 +168,7 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 		&order.ID, &order.OrderNumber, &userID, &order.StorefrontID, &statusStr, &paymentStatusStr,
 		&order.Subtotal, &order.Tax, &order.Shipping, &order.Discount, &order.Total, &order.Commission, &order.SellerAmount, &order.Currency,
 		&paymentMethod, &paymentTransactionID, &paymentCompletedAt,
+		&paymentProvider, &paymentSessionID, &paymentIntentID, &paymentIdempotencyKey,
 		&shippingAddressJSON, &billingAddressJSON, &shippingMethod, &shippingProvider, &trackingNumber, &shipmentID,
 		&escrowReleaseDate, &order.EscrowDays,
 		&customerName, &customerEmail, &customerPhone,
@@ -186,6 +201,18 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 	}
 	if paymentCompletedAt.Valid {
 		order.PaymentCompletedAt = &paymentCompletedAt.Time
+	}
+	if paymentProvider.Valid {
+		order.PaymentProvider = &paymentProvider.String
+	}
+	if paymentSessionID.Valid {
+		order.PaymentSessionID = &paymentSessionID.String
+	}
+	if paymentIntentID.Valid {
+		order.PaymentIntentID = &paymentIntentID.String
+	}
+	if paymentIdempotencyKey.Valid {
+		order.PaymentIdempotencyKey = &paymentIdempotencyKey.String
 	}
 
 	// Parse JSONB addresses
@@ -404,13 +431,14 @@ func (r *orderRepository) Update(ctx context.Context, order *domain.Order) error
 			status = $1, payment_status = $2,
 			subtotal = $3, tax = $4, shipping = $5, discount = $6, total = $7, commission = $8, seller_amount = $9,
 			payment_method = $10, payment_transaction_id = $11, payment_completed_at = $12,
-			shipping_address = $13, billing_address = $14, shipping_method = $15, shipping_provider = $16, tracking_number = $17, shipment_id = $18,
-			escrow_release_date = $19, escrow_days = $20,
-			customer_name = $21, customer_email = $22, customer_phone = $23,
-			notes = $24, admin_notes = $25, seller_notes = $26,
-			confirmed_at = $27, accepted_at = $28, shipped_at = $29, delivered_at = $30, cancelled_at = $31,
-			label_url = $32
-		WHERE id = $33
+			payment_provider = $13, payment_session_id = $14, payment_intent_id = $15, payment_idempotency_key = $16,
+			shipping_address = $17, billing_address = $18, shipping_method = $19, shipping_provider = $20, tracking_number = $21, shipment_id = $22,
+			escrow_release_date = $23, escrow_days = $24,
+			customer_name = $25, customer_email = $26, customer_phone = $27,
+			notes = $28, admin_notes = $29, seller_notes = $30,
+			confirmed_at = $31, accepted_at = $32, shipped_at = $33, delivered_at = $34, cancelled_at = $35,
+			label_url = $36
+		WHERE id = $37
 		RETURNING updated_at
 	`
 
@@ -418,6 +446,7 @@ func (r *orderRepository) Update(ctx context.Context, order *domain.Order) error
 		string(order.Status), string(order.PaymentStatus),
 		order.Subtotal, order.Tax, order.Shipping, order.Discount, order.Total, order.Commission, order.SellerAmount,
 		order.PaymentMethod, order.PaymentTransactionID, order.PaymentCompletedAt,
+		order.PaymentProvider, order.PaymentSessionID, order.PaymentIntentID, order.PaymentIdempotencyKey,
 		shippingAddressJSON, billingAddressJSON, order.ShippingMethod, order.ShippingProvider, order.TrackingNumber, order.ShipmentID,
 		order.EscrowReleaseDate, order.EscrowDays,
 		order.CustomerName, order.CustomerEmail, order.CustomerPhone,
@@ -458,6 +487,78 @@ func (r *orderRepository) UpdateStatus(ctx context.Context, orderID int64, statu
 	}
 
 	r.logger.Info().Int64("order_id", orderID).Str("status", string(status)).Msg("order status updated")
+	return nil
+}
+
+// UpdatePaymentInfo updates payment information for an order
+func (r *orderRepository) UpdatePaymentInfo(ctx context.Context, orderID int64, params UpdatePaymentInfoParams) error {
+	// Build dynamic UPDATE query based on non-nil params
+	setClauses := []string{}
+	args := []interface{}{}
+	argPos := 1
+
+	if params.PaymentProvider != nil {
+		setClauses = append(setClauses, fmt.Sprintf("payment_provider = $%d", argPos))
+		args = append(args, *params.PaymentProvider)
+		argPos++
+	}
+
+	if params.PaymentSessionID != nil {
+		setClauses = append(setClauses, fmt.Sprintf("payment_session_id = $%d", argPos))
+		args = append(args, *params.PaymentSessionID)
+		argPos++
+	}
+
+	if params.PaymentIntentID != nil {
+		setClauses = append(setClauses, fmt.Sprintf("payment_intent_id = $%d", argPos))
+		args = append(args, *params.PaymentIntentID)
+		argPos++
+	}
+
+	if params.PaymentIdempotencyKey != nil {
+		setClauses = append(setClauses, fmt.Sprintf("payment_idempotency_key = $%d", argPos))
+		args = append(args, *params.PaymentIdempotencyKey)
+		argPos++
+	}
+
+	if params.PaymentStatus != nil {
+		setClauses = append(setClauses, fmt.Sprintf("payment_status = $%d", argPos))
+		args = append(args, *params.PaymentStatus)
+		argPos++
+	}
+
+	if params.PaymentTransactionID != nil {
+		setClauses = append(setClauses, fmt.Sprintf("payment_transaction_id = $%d", argPos))
+		args = append(args, *params.PaymentTransactionID)
+		argPos++
+	}
+
+	// If no fields to update, return error
+	if len(setClauses) == 0 {
+		return fmt.Errorf("no payment fields to update")
+	}
+
+	// Add order_id as last parameter
+	args = append(args, orderID)
+	whereClause := fmt.Sprintf("WHERE id = $%d", argPos)
+
+	query := fmt.Sprintf(`
+		UPDATE orders SET %s
+		%s
+		RETURNING updated_at
+	`, strings.Join(setClauses, ", "), whereClause)
+
+	var updatedAt sql.NullTime
+	err := r.db.QueryRow(ctx, query, args...).Scan(&updatedAt)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return fmt.Errorf("order not found")
+		}
+		r.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to update payment info")
+		return fmt.Errorf("failed to update payment info: %w", err)
+	}
+
+	r.logger.Info().Int64("order_id", orderID).Msg("payment info updated")
 	return nil
 }
 
@@ -536,7 +637,7 @@ func (r *orderRepository) CreateItems(ctx context.Context, orderID int64, items 
 // GetItems retrieves all items for an order
 func (r *orderRepository) GetItems(ctx context.Context, orderID int64) ([]*domain.OrderItem, error) {
 	query := `
-		SELECT id, order_id, listing_id, variant_id, variant_uuid, stock_reservation_id,
+		SELECT id, order_id, listing_id, variant_id, stock_reservation_id,
 		       listing_name, sku,
 		       variant_data, attributes, quantity, price, subtotal, discount, total, image_url, created_at
 		FROM order_items
@@ -555,11 +656,11 @@ func (r *orderRepository) GetItems(ctx context.Context, orderID int64) ([]*domai
 	for rows.Next() {
 		var item domain.OrderItem
 		var variantID sql.NullInt64
-		var sku, imageURL, variantUUID, stockReservationID sql.NullString
+		var sku, imageURL, stockReservationID sql.NullString
 		var variantDataJSON, attributesJSON []byte
 
 		err := rows.Scan(
-			&item.ID, &item.OrderID, &item.ListingID, &variantID, &variantUUID, &stockReservationID,
+			&item.ID, &item.OrderID, &item.ListingID, &variantID, &stockReservationID,
 			&item.ListingName, &sku,
 			&variantDataJSON, &attributesJSON, &item.Quantity, &item.UnitPrice, &item.Subtotal, &item.Discount, &item.Total, &imageURL, &item.CreatedAt,
 		)
@@ -571,9 +672,6 @@ func (r *orderRepository) GetItems(ctx context.Context, orderID int64) ([]*domai
 		// Handle nullable fields
 		if variantID.Valid {
 			item.VariantID = &variantID.Int64
-		}
-		if variantUUID.Valid {
-			item.VariantUUID = &variantUUID.String
 		}
 		if stockReservationID.Valid {
 			item.StockReservationID = &stockReservationID.String

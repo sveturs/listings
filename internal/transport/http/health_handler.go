@@ -7,12 +7,14 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/vondi-global/listings/internal/health"
+	opensearchRepo "github.com/vondi-global/listings/internal/repository/opensearch"
 )
 
 // HealthHandler provides health check HTTP endpoints
 type HealthHandler struct {
-	checker health.Checker
-	logger  zerolog.Logger
+	checker      health.Checker
+	searchClient *opensearchRepo.Client
+	logger       zerolog.Logger
 }
 
 // NewHealthHandler creates a new health check handler
@@ -20,6 +22,15 @@ func NewHealthHandler(checker health.Checker, logger zerolog.Logger) *HealthHand
 	return &HealthHandler{
 		checker: checker,
 		logger:  logger.With().Str("component", "health_handler").Logger(),
+	}
+}
+
+// NewHealthHandlerWithOpenSearch creates a new health check handler with OpenSearch monitoring
+func NewHealthHandlerWithOpenSearch(checker health.Checker, searchClient *opensearchRepo.Client, logger zerolog.Logger) *HealthHandler {
+	return &HealthHandler{
+		checker:      checker,
+		searchClient: searchClient,
+		logger:       logger.With().Str("component", "health_handler").Logger(),
 	}
 }
 
@@ -31,6 +42,12 @@ func (h *HealthHandler) RegisterRoutes(app *fiber.App) {
 	app.Get("/health/ready", h.Readiness) // Readiness probe
 	app.Get("/health/startup", h.Startup) // Startup probe
 	app.Get("/health/deep", h.DeepHealth) // Deep diagnostics
+
+	// OpenSearch-specific health endpoints (if client available)
+	if h.searchClient != nil {
+		app.Get("/health/opensearch", h.OpenSearchHealth)
+		app.Get("/metrics/opensearch", h.OpenSearchMetrics)
+	}
 
 	// Backwards compatibility with existing /ready endpoint
 	app.Get("/ready", h.Readiness)
@@ -181,4 +198,97 @@ func (h *HealthHandler) DeepHealth(c *fiber.Ctx) error {
 	}
 
 	return c.Status(statusCode).JSON(output)
+}
+
+// OpenSearchHealth returns OpenSearch-specific health status
+// GET /health/opensearch
+func (h *HealthHandler) OpenSearchHealth(c *fiber.Ctx) error {
+	if h.searchClient == nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+			"status": "unavailable",
+			"error":  "OpenSearch client not initialized",
+		})
+	}
+
+	ctx := c.Context()
+	health, err := h.searchClient.HealthCheckDetailed(ctx)
+
+	if err != nil {
+		statusCode := fiber.StatusServiceUnavailable
+		if health != nil && health.Status == "degraded" {
+			statusCode = fiber.StatusMultipleChoices // 207 Multi-Status
+		}
+
+		return c.Status(statusCode).JSON(fiber.Map{
+			"status":         health.Status,
+			"cluster_health": health.ClusterHealth,
+			"index_exists":   health.IndexExists,
+			"docs_count":     health.DocsCount,
+			"error":          err.Error(),
+			"timestamp":      time.Now().Unix(),
+		})
+	}
+
+	// Determine HTTP status code
+	statusCode := fiber.StatusOK
+	if health.Status == "unhealthy" {
+		statusCode = fiber.StatusServiceUnavailable
+	} else if health.Status == "degraded" {
+		statusCode = fiber.StatusMultipleChoices // 207 Multi-Status
+	}
+
+	return c.Status(statusCode).JSON(fiber.Map{
+		"status":         health.Status,
+		"cluster_health": health.ClusterHealth,
+		"index_exists":   health.IndexExists,
+		"docs_count":     health.DocsCount,
+		"index_size_mb":  health.IndexSizeMB,
+		"latency_ms":     health.Latency.Milliseconds(),
+		"shards": fiber.Map{
+			"total":      health.Shards.Total,
+			"successful": health.Shards.Successful,
+			"failed":     health.Shards.Failed,
+			"primary":    health.Shards.Primary,
+			"replica":    health.Shards.Replica,
+		},
+		"last_check": health.LastCheck.Format(time.RFC3339),
+		"timestamp":  time.Now().Unix(),
+	})
+}
+
+// OpenSearchMetrics returns detailed OpenSearch index metrics
+// GET /metrics/opensearch
+func (h *HealthHandler) OpenSearchMetrics(c *fiber.Ctx) error {
+	if h.searchClient == nil {
+		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+			"error": "OpenSearch client not initialized",
+		})
+	}
+
+	ctx := c.Context()
+	stats, err := h.searchClient.GetIndexStats(ctx)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to get index stats")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"index":         stats.Index,
+		"docs_count":    stats.DocsCount,
+		"store_size":    stats.StoreSize,
+		"store_size_mb": stats.StoreSizeMB,
+		"segment_count": stats.SegmentCount,
+		"shards": fiber.Map{
+			"total":      stats.Shards.Total,
+			"successful": stats.Shards.Successful,
+			"failed":     stats.Shards.Failed,
+			"primary":    stats.Shards.Primary,
+			"replica":    stats.Shards.Replica,
+		},
+		"refresh_time_ms": stats.RefreshTime.Milliseconds(),
+		"flush_time_ms":   stats.FlushTime.Milliseconds(),
+		"timestamp":       time.Now().Unix(),
+	})
 }

@@ -495,6 +495,11 @@ type Order struct {
 	CancelledAt *timestamppb.Timestamp `protobuf:"bytes,29,opt,name=cancelled_at,json=cancelledAt,proto3,oneof" json:"cancelled_at,omitempty"`
 	// Shipping label
 	LabelUrl *string `protobuf:"bytes,34,opt,name=label_url,json=labelUrl,proto3,oneof" json:"label_url,omitempty"` // URL to shipping label PDF (NEW)
+	// Payment gateway fields (NEW)
+	PaymentProvider       *string `protobuf:"bytes,35,opt,name=payment_provider,json=paymentProvider,proto3,oneof" json:"payment_provider,omitempty"`                     // Payment gateway provider (stripe, allsecure, etc.)
+	PaymentSessionId      *string `protobuf:"bytes,36,opt,name=payment_session_id,json=paymentSessionId,proto3,oneof" json:"payment_session_id,omitempty"`                // Checkout session ID
+	PaymentIntentId       *string `protobuf:"bytes,37,opt,name=payment_intent_id,json=paymentIntentId,proto3,oneof" json:"payment_intent_id,omitempty"`                   // Payment intent ID
+	PaymentIdempotencyKey *string `protobuf:"bytes,38,opt,name=payment_idempotency_key,json=paymentIdempotencyKey,proto3,oneof" json:"payment_idempotency_key,omitempty"` // Idempotency key for duplicate prevention
 	// Relations (loaded on demand)
 	Items []*OrderItem `protobuf:"bytes,30,rep,name=items,proto3" json:"items,omitempty"` // Order line items
 	// Storefront info (for display)
@@ -753,6 +758,34 @@ func (x *Order) GetCancelledAt() *timestamppb.Timestamp {
 func (x *Order) GetLabelUrl() string {
 	if x != nil && x.LabelUrl != nil {
 		return *x.LabelUrl
+	}
+	return ""
+}
+
+func (x *Order) GetPaymentProvider() string {
+	if x != nil && x.PaymentProvider != nil {
+		return *x.PaymentProvider
+	}
+	return ""
+}
+
+func (x *Order) GetPaymentSessionId() string {
+	if x != nil && x.PaymentSessionId != nil {
+		return *x.PaymentSessionId
+	}
+	return ""
+}
+
+func (x *Order) GetPaymentIntentId() string {
+	if x != nil && x.PaymentIntentId != nil {
+		return *x.PaymentIntentId
+	}
+	return ""
+}
+
+func (x *Order) GetPaymentIdempotencyKey() string {
+	if x != nil && x.PaymentIdempotencyKey != nil {
+		return *x.PaymentIdempotencyKey
 	}
 	return ""
 }
@@ -3854,6 +3887,151 @@ func (x *TrackingEvent) GetTimestamp() *timestamppb.Timestamp {
 	return nil
 }
 
+// UpdateOrderPaymentRequest - update payment information for an order
+type UpdateOrderPaymentRequest struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	OrderId               int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`                                                  // Required - order to update
+	PaymentProvider       *string                `protobuf:"bytes,2,opt,name=payment_provider,json=paymentProvider,proto3,oneof" json:"payment_provider,omitempty"`                     // Payment provider (stripe, allsecure, etc.)
+	PaymentSessionId      *string                `protobuf:"bytes,3,opt,name=payment_session_id,json=paymentSessionId,proto3,oneof" json:"payment_session_id,omitempty"`                // Checkout session ID
+	PaymentIntentId       *string                `protobuf:"bytes,4,opt,name=payment_intent_id,json=paymentIntentId,proto3,oneof" json:"payment_intent_id,omitempty"`                   // Payment intent ID
+	PaymentIdempotencyKey *string                `protobuf:"bytes,5,opt,name=payment_idempotency_key,json=paymentIdempotencyKey,proto3,oneof" json:"payment_idempotency_key,omitempty"` // Idempotency key for payment
+	PaymentStatus         *string                `protobuf:"bytes,6,opt,name=payment_status,json=paymentStatus,proto3,oneof" json:"payment_status,omitempty"`                           // Payment status (pending, paid, failed, etc.)
+	PaymentTransactionId  *string                `protobuf:"bytes,7,opt,name=payment_transaction_id,json=paymentTransactionId,proto3,oneof" json:"payment_transaction_id,omitempty"`    // Transaction ID from payment provider
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *UpdateOrderPaymentRequest) Reset() {
+	*x = UpdateOrderPaymentRequest{}
+	mi := &file_api_proto_listings_v1_orders_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateOrderPaymentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateOrderPaymentRequest) ProtoMessage() {}
+
+func (x *UpdateOrderPaymentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_orders_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateOrderPaymentRequest.ProtoReflect.Descriptor instead.
+func (*UpdateOrderPaymentRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_orders_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *UpdateOrderPaymentRequest) GetOrderId() int64 {
+	if x != nil {
+		return x.OrderId
+	}
+	return 0
+}
+
+func (x *UpdateOrderPaymentRequest) GetPaymentProvider() string {
+	if x != nil && x.PaymentProvider != nil {
+		return *x.PaymentProvider
+	}
+	return ""
+}
+
+func (x *UpdateOrderPaymentRequest) GetPaymentSessionId() string {
+	if x != nil && x.PaymentSessionId != nil {
+		return *x.PaymentSessionId
+	}
+	return ""
+}
+
+func (x *UpdateOrderPaymentRequest) GetPaymentIntentId() string {
+	if x != nil && x.PaymentIntentId != nil {
+		return *x.PaymentIntentId
+	}
+	return ""
+}
+
+func (x *UpdateOrderPaymentRequest) GetPaymentIdempotencyKey() string {
+	if x != nil && x.PaymentIdempotencyKey != nil {
+		return *x.PaymentIdempotencyKey
+	}
+	return ""
+}
+
+func (x *UpdateOrderPaymentRequest) GetPaymentStatus() string {
+	if x != nil && x.PaymentStatus != nil {
+		return *x.PaymentStatus
+	}
+	return ""
+}
+
+func (x *UpdateOrderPaymentRequest) GetPaymentTransactionId() string {
+	if x != nil && x.PaymentTransactionId != nil {
+		return *x.PaymentTransactionId
+	}
+	return ""
+}
+
+type UpdateOrderPaymentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"` // True if update successful
+	Order         *Order                 `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`      // Updated order with new payment info
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateOrderPaymentResponse) Reset() {
+	*x = UpdateOrderPaymentResponse{}
+	mi := &file_api_proto_listings_v1_orders_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateOrderPaymentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateOrderPaymentResponse) ProtoMessage() {}
+
+func (x *UpdateOrderPaymentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_orders_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateOrderPaymentResponse.ProtoReflect.Descriptor instead.
+func (*UpdateOrderPaymentResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_orders_proto_rawDescGZIP(), []int{46}
+}
+
+func (x *UpdateOrderPaymentResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *UpdateOrderPaymentResponse) GetOrder() *Order {
+	if x != nil {
+		return x.Order
+	}
+	return nil
+}
+
 var File_api_proto_listings_v1_orders_proto protoreflect.FileDescriptor
 
 const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
@@ -3897,7 +4075,7 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\x0e_listing_imageB\x0f\n" +
 	"\r_variant_dataB\x12\n" +
 	"\x10_available_stockB\x10\n" +
-	"\x0e_current_price\"\xf9\x10\n" +
+	"\x0e_current_price\"\xa8\x13\n" +
 	"\x05Order\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\forder_number\x18\x02 \x01(\tR\vorderNumber\x12\x1c\n" +
@@ -3941,9 +4119,13 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"shipped_at\x18\x1b \x01(\v2\x1a.google.protobuf.TimestampH\x11R\tshippedAt\x88\x01\x01\x12B\n" +
 	"\fdelivered_at\x18\x1c \x01(\v2\x1a.google.protobuf.TimestampH\x12R\vdeliveredAt\x88\x01\x01\x12B\n" +
 	"\fcancelled_at\x18\x1d \x01(\v2\x1a.google.protobuf.TimestampH\x13R\vcancelledAt\x88\x01\x01\x12 \n" +
-	"\tlabel_url\x18\" \x01(\tH\x14R\blabelUrl\x88\x01\x01\x12/\n" +
+	"\tlabel_url\x18\" \x01(\tH\x14R\blabelUrl\x88\x01\x01\x12.\n" +
+	"\x10payment_provider\x18# \x01(\tH\x15R\x0fpaymentProvider\x88\x01\x01\x121\n" +
+	"\x12payment_session_id\x18$ \x01(\tH\x16R\x10paymentSessionId\x88\x01\x01\x12/\n" +
+	"\x11payment_intent_id\x18% \x01(\tH\x17R\x0fpaymentIntentId\x88\x01\x01\x12;\n" +
+	"\x17payment_idempotency_key\x18& \x01(\tH\x18R\x15paymentIdempotencyKey\x88\x01\x01\x12/\n" +
 	"\x05items\x18\x1e \x03(\v2\x19.listingssvc.v1.OrderItemR\x05items\x12,\n" +
-	"\x0fstorefront_name\x18\x1f \x01(\tH\x15R\x0estorefrontName\x88\x01\x01B\n" +
+	"\x0fstorefront_name\x18\x1f \x01(\tH\x19R\x0estorefrontName\x88\x01\x01B\n" +
 	"\n" +
 	"\b_user_idB\x11\n" +
 	"\x0f_payment_methodB\x19\n" +
@@ -3966,7 +4148,11 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\r_delivered_atB\x0f\n" +
 	"\r_cancelled_atB\f\n" +
 	"\n" +
-	"_label_urlB\x12\n" +
+	"_label_urlB\x13\n" +
+	"\x11_payment_providerB\x15\n" +
+	"\x13_payment_session_idB\x14\n" +
+	"\x12_payment_intent_idB\x1a\n" +
+	"\x18_payment_idempotency_keyB\x12\n" +
 	"\x10_storefront_name\"\xf7\x01\n" +
 	"\x0fOrderFinancials\x12\x1a\n" +
 	"\bsubtotal\x18\x01 \x01(\x01R\bsubtotal\x12\x10\n" +
@@ -4302,7 +4488,24 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x1a\n" +
 	"\blocation\x18\x02 \x01(\tR\blocation\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x128\n" +
-	"\ttimestamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp*\x9f\x02\n" +
+	"\ttimestamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\"\xfa\x03\n" +
+	"\x19UpdateOrderPaymentRequest\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\x03R\aorderId\x12.\n" +
+	"\x10payment_provider\x18\x02 \x01(\tH\x00R\x0fpaymentProvider\x88\x01\x01\x121\n" +
+	"\x12payment_session_id\x18\x03 \x01(\tH\x01R\x10paymentSessionId\x88\x01\x01\x12/\n" +
+	"\x11payment_intent_id\x18\x04 \x01(\tH\x02R\x0fpaymentIntentId\x88\x01\x01\x12;\n" +
+	"\x17payment_idempotency_key\x18\x05 \x01(\tH\x03R\x15paymentIdempotencyKey\x88\x01\x01\x12*\n" +
+	"\x0epayment_status\x18\x06 \x01(\tH\x04R\rpaymentStatus\x88\x01\x01\x129\n" +
+	"\x16payment_transaction_id\x18\a \x01(\tH\x05R\x14paymentTransactionId\x88\x01\x01B\x13\n" +
+	"\x11_payment_providerB\x15\n" +
+	"\x13_payment_session_idB\x14\n" +
+	"\x12_payment_intent_idB\x1a\n" +
+	"\x18_payment_idempotency_keyB\x11\n" +
+	"\x0f_payment_statusB\x19\n" +
+	"\x17_payment_transaction_id\"c\n" +
+	"\x1aUpdateOrderPaymentResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12+\n" +
+	"\x05order\x18\x02 \x01(\v2\x15.listingssvc.v1.OrderR\x05order*\x9f\x02\n" +
 	"\vOrderStatus\x12\x1c\n" +
 	"\x18ORDER_STATUS_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14ORDER_STATUS_PENDING\x10\x01\x12\x1a\n" +
@@ -4327,7 +4530,7 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\x19RESERVATION_STATUS_ACTIVE\x10\x01\x12 \n" +
 	"\x1cRESERVATION_STATUS_COMMITTED\x10\x02\x12\x1f\n" +
 	"\x1bRESERVATION_STATUS_RELEASED\x10\x03\x12\x1e\n" +
-	"\x1aRESERVATION_STATUS_EXPIRED\x10\x042\xc2\v\n" +
+	"\x1aRESERVATION_STATUS_EXPIRED\x10\x042\xaf\f\n" +
 	"\fOrderService\x12P\n" +
 	"\tAddToCart\x12 .listingssvc.v1.AddToCartRequest\x1a!.listingssvc.v1.AddToCartResponse\x12_\n" +
 	"\x0eUpdateCartItem\x12%.listingssvc.v1.UpdateCartItemRequest\x1a&.listingssvc.v1.UpdateCartItemResponse\x12_\n" +
@@ -4345,7 +4548,8 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\vAcceptOrder\x12\".listingssvc.v1.AcceptOrderRequest\x1a#.listingssvc.v1.AcceptOrderResponse\x12n\n" +
 	"\x13CreateOrderShipment\x12*.listingssvc.v1.CreateOrderShipmentRequest\x1a+.listingssvc.v1.CreateOrderShipmentResponse\x12e\n" +
 	"\x10MarkOrderShipped\x12'.listingssvc.v1.MarkOrderShippedRequest\x1a(.listingssvc.v1.MarkOrderShippedResponse\x12e\n" +
-	"\x10GetOrderTracking\x12'.listingssvc.v1.GetOrderTrackingRequest\x1a(.listingssvc.v1.GetOrderTrackingResponseBFZDgithub.com/vondi-global/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
+	"\x10GetOrderTracking\x12'.listingssvc.v1.GetOrderTrackingRequest\x1a(.listingssvc.v1.GetOrderTrackingResponse\x12k\n" +
+	"\x12UpdateOrderPayment\x12).listingssvc.v1.UpdateOrderPaymentRequest\x1a*.listingssvc.v1.UpdateOrderPaymentResponseBFZDgithub.com/vondi-global/listings/api/proto/listings/v1;listingssvcv1b\x06proto3"
 
 var (
 	file_api_proto_listings_v1_orders_proto_rawDescOnce sync.Once
@@ -4360,7 +4564,7 @@ func file_api_proto_listings_v1_orders_proto_rawDescGZIP() []byte {
 }
 
 var file_api_proto_listings_v1_orders_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_api_proto_listings_v1_orders_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_api_proto_listings_v1_orders_proto_msgTypes = make([]protoimpl.MessageInfo, 47)
 var file_api_proto_listings_v1_orders_proto_goTypes = []any{
 	(OrderStatus)(0),                    // 0: listingssvc.v1.OrderStatus
 	(PaymentStatus)(0),                  // 1: listingssvc.v1.PaymentStatus
@@ -4410,62 +4614,64 @@ var file_api_proto_listings_v1_orders_proto_goTypes = []any{
 	(*GetOrderTrackingRequest)(nil),     // 45: listingssvc.v1.GetOrderTrackingRequest
 	(*GetOrderTrackingResponse)(nil),    // 46: listingssvc.v1.GetOrderTrackingResponse
 	(*TrackingEvent)(nil),               // 47: listingssvc.v1.TrackingEvent
-	(*timestamppb.Timestamp)(nil),       // 48: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),             // 49: google.protobuf.Struct
-	(*emptypb.Empty)(nil),               // 50: google.protobuf.Empty
+	(*UpdateOrderPaymentRequest)(nil),   // 48: listingssvc.v1.UpdateOrderPaymentRequest
+	(*UpdateOrderPaymentResponse)(nil),  // 49: listingssvc.v1.UpdateOrderPaymentResponse
+	(*timestamppb.Timestamp)(nil),       // 50: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),             // 51: google.protobuf.Struct
+	(*emptypb.Empty)(nil),               // 52: google.protobuf.Empty
 }
 var file_api_proto_listings_v1_orders_proto_depIdxs = []int32{
-	48, // 0: listingssvc.v1.Cart.created_at:type_name -> google.protobuf.Timestamp
-	48, // 1: listingssvc.v1.Cart.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 0: listingssvc.v1.Cart.created_at:type_name -> google.protobuf.Timestamp
+	50, // 1: listingssvc.v1.Cart.updated_at:type_name -> google.protobuf.Timestamp
 	4,  // 2: listingssvc.v1.Cart.items:type_name -> listingssvc.v1.CartItem
-	48, // 3: listingssvc.v1.CartItem.created_at:type_name -> google.protobuf.Timestamp
-	48, // 4: listingssvc.v1.CartItem.updated_at:type_name -> google.protobuf.Timestamp
-	49, // 5: listingssvc.v1.CartItem.variant_data:type_name -> google.protobuf.Struct
+	50, // 3: listingssvc.v1.CartItem.created_at:type_name -> google.protobuf.Timestamp
+	50, // 4: listingssvc.v1.CartItem.updated_at:type_name -> google.protobuf.Timestamp
+	51, // 5: listingssvc.v1.CartItem.variant_data:type_name -> google.protobuf.Struct
 	0,  // 6: listingssvc.v1.Order.status:type_name -> listingssvc.v1.OrderStatus
 	6,  // 7: listingssvc.v1.Order.financials:type_name -> listingssvc.v1.OrderFinancials
 	1,  // 8: listingssvc.v1.Order.payment_status:type_name -> listingssvc.v1.PaymentStatus
-	48, // 9: listingssvc.v1.Order.payment_completed_at:type_name -> google.protobuf.Timestamp
-	49, // 10: listingssvc.v1.Order.shipping_address:type_name -> google.protobuf.Struct
-	49, // 11: listingssvc.v1.Order.billing_address:type_name -> google.protobuf.Struct
-	48, // 12: listingssvc.v1.Order.escrow_release_date:type_name -> google.protobuf.Timestamp
-	48, // 13: listingssvc.v1.Order.created_at:type_name -> google.protobuf.Timestamp
-	48, // 14: listingssvc.v1.Order.updated_at:type_name -> google.protobuf.Timestamp
-	48, // 15: listingssvc.v1.Order.confirmed_at:type_name -> google.protobuf.Timestamp
-	48, // 16: listingssvc.v1.Order.accepted_at:type_name -> google.protobuf.Timestamp
-	48, // 17: listingssvc.v1.Order.shipped_at:type_name -> google.protobuf.Timestamp
-	48, // 18: listingssvc.v1.Order.delivered_at:type_name -> google.protobuf.Timestamp
-	48, // 19: listingssvc.v1.Order.cancelled_at:type_name -> google.protobuf.Timestamp
+	50, // 9: listingssvc.v1.Order.payment_completed_at:type_name -> google.protobuf.Timestamp
+	51, // 10: listingssvc.v1.Order.shipping_address:type_name -> google.protobuf.Struct
+	51, // 11: listingssvc.v1.Order.billing_address:type_name -> google.protobuf.Struct
+	50, // 12: listingssvc.v1.Order.escrow_release_date:type_name -> google.protobuf.Timestamp
+	50, // 13: listingssvc.v1.Order.created_at:type_name -> google.protobuf.Timestamp
+	50, // 14: listingssvc.v1.Order.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 15: listingssvc.v1.Order.confirmed_at:type_name -> google.protobuf.Timestamp
+	50, // 16: listingssvc.v1.Order.accepted_at:type_name -> google.protobuf.Timestamp
+	50, // 17: listingssvc.v1.Order.shipped_at:type_name -> google.protobuf.Timestamp
+	50, // 18: listingssvc.v1.Order.delivered_at:type_name -> google.protobuf.Timestamp
+	50, // 19: listingssvc.v1.Order.cancelled_at:type_name -> google.protobuf.Timestamp
 	7,  // 20: listingssvc.v1.Order.items:type_name -> listingssvc.v1.OrderItem
-	49, // 21: listingssvc.v1.OrderItem.variant_data:type_name -> google.protobuf.Struct
-	49, // 22: listingssvc.v1.OrderItem.attributes:type_name -> google.protobuf.Struct
-	48, // 23: listingssvc.v1.OrderItem.created_at:type_name -> google.protobuf.Timestamp
+	51, // 21: listingssvc.v1.OrderItem.variant_data:type_name -> google.protobuf.Struct
+	51, // 22: listingssvc.v1.OrderItem.attributes:type_name -> google.protobuf.Struct
+	50, // 23: listingssvc.v1.OrderItem.created_at:type_name -> google.protobuf.Timestamp
 	2,  // 24: listingssvc.v1.InventoryReservation.status:type_name -> listingssvc.v1.ReservationStatus
-	48, // 25: listingssvc.v1.InventoryReservation.expires_at:type_name -> google.protobuf.Timestamp
-	48, // 26: listingssvc.v1.InventoryReservation.created_at:type_name -> google.protobuf.Timestamp
-	48, // 27: listingssvc.v1.InventoryReservation.updated_at:type_name -> google.protobuf.Timestamp
-	48, // 28: listingssvc.v1.InventoryReservation.committed_at:type_name -> google.protobuf.Timestamp
-	48, // 29: listingssvc.v1.InventoryReservation.released_at:type_name -> google.protobuf.Timestamp
+	50, // 25: listingssvc.v1.InventoryReservation.expires_at:type_name -> google.protobuf.Timestamp
+	50, // 26: listingssvc.v1.InventoryReservation.created_at:type_name -> google.protobuf.Timestamp
+	50, // 27: listingssvc.v1.InventoryReservation.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 28: listingssvc.v1.InventoryReservation.committed_at:type_name -> google.protobuf.Timestamp
+	50, // 29: listingssvc.v1.InventoryReservation.released_at:type_name -> google.protobuf.Timestamp
 	3,  // 30: listingssvc.v1.AddToCartResponse.cart:type_name -> listingssvc.v1.Cart
 	4,  // 31: listingssvc.v1.UpdateCartItemResponse.item:type_name -> listingssvc.v1.CartItem
 	3,  // 32: listingssvc.v1.GetCartResponse.cart:type_name -> listingssvc.v1.Cart
 	17, // 33: listingssvc.v1.GetCartResponse.summary:type_name -> listingssvc.v1.CartSummary
 	3,  // 34: listingssvc.v1.GetUserCartsResponse.carts:type_name -> listingssvc.v1.Cart
-	49, // 35: listingssvc.v1.CreateOrderRequest.shipping_address:type_name -> google.protobuf.Struct
-	49, // 36: listingssvc.v1.CreateOrderRequest.billing_address:type_name -> google.protobuf.Struct
+	51, // 35: listingssvc.v1.CreateOrderRequest.shipping_address:type_name -> google.protobuf.Struct
+	51, // 36: listingssvc.v1.CreateOrderRequest.billing_address:type_name -> google.protobuf.Struct
 	21, // 37: listingssvc.v1.CreateOrderRequest.items:type_name -> listingssvc.v1.OrderItemInput
 	5,  // 38: listingssvc.v1.CreateOrderResponse.order:type_name -> listingssvc.v1.Order
 	5,  // 39: listingssvc.v1.GetOrderResponse.order:type_name -> listingssvc.v1.Order
 	0,  // 40: listingssvc.v1.ListOrdersRequest.status:type_name -> listingssvc.v1.OrderStatus
 	1,  // 41: listingssvc.v1.ListOrdersRequest.payment_status:type_name -> listingssvc.v1.PaymentStatus
-	48, // 42: listingssvc.v1.ListOrdersRequest.date_from:type_name -> google.protobuf.Timestamp
-	48, // 43: listingssvc.v1.ListOrdersRequest.date_to:type_name -> google.protobuf.Timestamp
+	50, // 42: listingssvc.v1.ListOrdersRequest.date_from:type_name -> google.protobuf.Timestamp
+	50, // 43: listingssvc.v1.ListOrdersRequest.date_to:type_name -> google.protobuf.Timestamp
 	5,  // 44: listingssvc.v1.ListOrdersResponse.orders:type_name -> listingssvc.v1.Order
 	28, // 45: listingssvc.v1.ListOrdersResponse.stats:type_name -> listingssvc.v1.OrderStatsSummary
 	5,  // 46: listingssvc.v1.CancelOrderResponse.order:type_name -> listingssvc.v1.Order
 	0,  // 47: listingssvc.v1.UpdateOrderStatusRequest.new_status:type_name -> listingssvc.v1.OrderStatus
 	5,  // 48: listingssvc.v1.UpdateOrderStatusResponse.order:type_name -> listingssvc.v1.Order
-	48, // 49: listingssvc.v1.GetOrderStatsRequest.date_from:type_name -> google.protobuf.Timestamp
-	48, // 50: listingssvc.v1.GetOrderStatsRequest.date_to:type_name -> google.protobuf.Timestamp
+	50, // 49: listingssvc.v1.GetOrderStatsRequest.date_from:type_name -> google.protobuf.Timestamp
+	50, // 50: listingssvc.v1.GetOrderStatsRequest.date_to:type_name -> google.protobuf.Timestamp
 	28, // 51: listingssvc.v1.GetOrderStatsResponse.stats:type_name -> listingssvc.v1.OrderStatsSummary
 	35, // 52: listingssvc.v1.GetOrderStatsResponse.status_breakdown:type_name -> listingssvc.v1.OrderStatusCount
 	36, // 53: listingssvc.v1.GetOrderStatsResponse.daily_stats:type_name -> listingssvc.v1.DailyOrderStats
@@ -4476,44 +4682,47 @@ var file_api_proto_listings_v1_orders_proto_depIdxs = []int32{
 	42, // 58: listingssvc.v1.CreateOrderShipmentResponse.shipment:type_name -> listingssvc.v1.ShipmentInfo
 	5,  // 59: listingssvc.v1.MarkOrderShippedResponse.order:type_name -> listingssvc.v1.Order
 	47, // 60: listingssvc.v1.GetOrderTrackingResponse.events:type_name -> listingssvc.v1.TrackingEvent
-	48, // 61: listingssvc.v1.TrackingEvent.timestamp:type_name -> google.protobuf.Timestamp
-	9,  // 62: listingssvc.v1.OrderService.AddToCart:input_type -> listingssvc.v1.AddToCartRequest
-	11, // 63: listingssvc.v1.OrderService.UpdateCartItem:input_type -> listingssvc.v1.UpdateCartItemRequest
-	13, // 64: listingssvc.v1.OrderService.RemoveFromCart:input_type -> listingssvc.v1.RemoveFromCartRequest
-	15, // 65: listingssvc.v1.OrderService.GetCart:input_type -> listingssvc.v1.GetCartRequest
-	18, // 66: listingssvc.v1.OrderService.ClearCart:input_type -> listingssvc.v1.ClearCartRequest
-	19, // 67: listingssvc.v1.OrderService.GetUserCarts:input_type -> listingssvc.v1.GetUserCartsRequest
-	22, // 68: listingssvc.v1.OrderService.CreateOrder:input_type -> listingssvc.v1.CreateOrderRequest
-	24, // 69: listingssvc.v1.OrderService.GetOrder:input_type -> listingssvc.v1.GetOrderRequest
-	26, // 70: listingssvc.v1.OrderService.ListOrders:input_type -> listingssvc.v1.ListOrdersRequest
-	29, // 71: listingssvc.v1.OrderService.CancelOrder:input_type -> listingssvc.v1.CancelOrderRequest
-	31, // 72: listingssvc.v1.OrderService.UpdateOrderStatus:input_type -> listingssvc.v1.UpdateOrderStatusRequest
-	33, // 73: listingssvc.v1.OrderService.GetOrderStats:input_type -> listingssvc.v1.GetOrderStatsRequest
-	37, // 74: listingssvc.v1.OrderService.AcceptOrder:input_type -> listingssvc.v1.AcceptOrderRequest
-	39, // 75: listingssvc.v1.OrderService.CreateOrderShipment:input_type -> listingssvc.v1.CreateOrderShipmentRequest
-	43, // 76: listingssvc.v1.OrderService.MarkOrderShipped:input_type -> listingssvc.v1.MarkOrderShippedRequest
-	45, // 77: listingssvc.v1.OrderService.GetOrderTracking:input_type -> listingssvc.v1.GetOrderTrackingRequest
-	10, // 78: listingssvc.v1.OrderService.AddToCart:output_type -> listingssvc.v1.AddToCartResponse
-	12, // 79: listingssvc.v1.OrderService.UpdateCartItem:output_type -> listingssvc.v1.UpdateCartItemResponse
-	14, // 80: listingssvc.v1.OrderService.RemoveFromCart:output_type -> listingssvc.v1.RemoveFromCartResponse
-	16, // 81: listingssvc.v1.OrderService.GetCart:output_type -> listingssvc.v1.GetCartResponse
-	50, // 82: listingssvc.v1.OrderService.ClearCart:output_type -> google.protobuf.Empty
-	20, // 83: listingssvc.v1.OrderService.GetUserCarts:output_type -> listingssvc.v1.GetUserCartsResponse
-	23, // 84: listingssvc.v1.OrderService.CreateOrder:output_type -> listingssvc.v1.CreateOrderResponse
-	25, // 85: listingssvc.v1.OrderService.GetOrder:output_type -> listingssvc.v1.GetOrderResponse
-	27, // 86: listingssvc.v1.OrderService.ListOrders:output_type -> listingssvc.v1.ListOrdersResponse
-	30, // 87: listingssvc.v1.OrderService.CancelOrder:output_type -> listingssvc.v1.CancelOrderResponse
-	32, // 88: listingssvc.v1.OrderService.UpdateOrderStatus:output_type -> listingssvc.v1.UpdateOrderStatusResponse
-	34, // 89: listingssvc.v1.OrderService.GetOrderStats:output_type -> listingssvc.v1.GetOrderStatsResponse
-	38, // 90: listingssvc.v1.OrderService.AcceptOrder:output_type -> listingssvc.v1.AcceptOrderResponse
-	41, // 91: listingssvc.v1.OrderService.CreateOrderShipment:output_type -> listingssvc.v1.CreateOrderShipmentResponse
-	44, // 92: listingssvc.v1.OrderService.MarkOrderShipped:output_type -> listingssvc.v1.MarkOrderShippedResponse
-	46, // 93: listingssvc.v1.OrderService.GetOrderTracking:output_type -> listingssvc.v1.GetOrderTrackingResponse
-	78, // [78:94] is the sub-list for method output_type
-	62, // [62:78] is the sub-list for method input_type
-	62, // [62:62] is the sub-list for extension type_name
-	62, // [62:62] is the sub-list for extension extendee
-	0,  // [0:62] is the sub-list for field type_name
+	50, // 61: listingssvc.v1.TrackingEvent.timestamp:type_name -> google.protobuf.Timestamp
+	5,  // 62: listingssvc.v1.UpdateOrderPaymentResponse.order:type_name -> listingssvc.v1.Order
+	9,  // 63: listingssvc.v1.OrderService.AddToCart:input_type -> listingssvc.v1.AddToCartRequest
+	11, // 64: listingssvc.v1.OrderService.UpdateCartItem:input_type -> listingssvc.v1.UpdateCartItemRequest
+	13, // 65: listingssvc.v1.OrderService.RemoveFromCart:input_type -> listingssvc.v1.RemoveFromCartRequest
+	15, // 66: listingssvc.v1.OrderService.GetCart:input_type -> listingssvc.v1.GetCartRequest
+	18, // 67: listingssvc.v1.OrderService.ClearCart:input_type -> listingssvc.v1.ClearCartRequest
+	19, // 68: listingssvc.v1.OrderService.GetUserCarts:input_type -> listingssvc.v1.GetUserCartsRequest
+	22, // 69: listingssvc.v1.OrderService.CreateOrder:input_type -> listingssvc.v1.CreateOrderRequest
+	24, // 70: listingssvc.v1.OrderService.GetOrder:input_type -> listingssvc.v1.GetOrderRequest
+	26, // 71: listingssvc.v1.OrderService.ListOrders:input_type -> listingssvc.v1.ListOrdersRequest
+	29, // 72: listingssvc.v1.OrderService.CancelOrder:input_type -> listingssvc.v1.CancelOrderRequest
+	31, // 73: listingssvc.v1.OrderService.UpdateOrderStatus:input_type -> listingssvc.v1.UpdateOrderStatusRequest
+	33, // 74: listingssvc.v1.OrderService.GetOrderStats:input_type -> listingssvc.v1.GetOrderStatsRequest
+	37, // 75: listingssvc.v1.OrderService.AcceptOrder:input_type -> listingssvc.v1.AcceptOrderRequest
+	39, // 76: listingssvc.v1.OrderService.CreateOrderShipment:input_type -> listingssvc.v1.CreateOrderShipmentRequest
+	43, // 77: listingssvc.v1.OrderService.MarkOrderShipped:input_type -> listingssvc.v1.MarkOrderShippedRequest
+	45, // 78: listingssvc.v1.OrderService.GetOrderTracking:input_type -> listingssvc.v1.GetOrderTrackingRequest
+	48, // 79: listingssvc.v1.OrderService.UpdateOrderPayment:input_type -> listingssvc.v1.UpdateOrderPaymentRequest
+	10, // 80: listingssvc.v1.OrderService.AddToCart:output_type -> listingssvc.v1.AddToCartResponse
+	12, // 81: listingssvc.v1.OrderService.UpdateCartItem:output_type -> listingssvc.v1.UpdateCartItemResponse
+	14, // 82: listingssvc.v1.OrderService.RemoveFromCart:output_type -> listingssvc.v1.RemoveFromCartResponse
+	16, // 83: listingssvc.v1.OrderService.GetCart:output_type -> listingssvc.v1.GetCartResponse
+	52, // 84: listingssvc.v1.OrderService.ClearCart:output_type -> google.protobuf.Empty
+	20, // 85: listingssvc.v1.OrderService.GetUserCarts:output_type -> listingssvc.v1.GetUserCartsResponse
+	23, // 86: listingssvc.v1.OrderService.CreateOrder:output_type -> listingssvc.v1.CreateOrderResponse
+	25, // 87: listingssvc.v1.OrderService.GetOrder:output_type -> listingssvc.v1.GetOrderResponse
+	27, // 88: listingssvc.v1.OrderService.ListOrders:output_type -> listingssvc.v1.ListOrdersResponse
+	30, // 89: listingssvc.v1.OrderService.CancelOrder:output_type -> listingssvc.v1.CancelOrderResponse
+	32, // 90: listingssvc.v1.OrderService.UpdateOrderStatus:output_type -> listingssvc.v1.UpdateOrderStatusResponse
+	34, // 91: listingssvc.v1.OrderService.GetOrderStats:output_type -> listingssvc.v1.GetOrderStatsResponse
+	38, // 92: listingssvc.v1.OrderService.AcceptOrder:output_type -> listingssvc.v1.AcceptOrderResponse
+	41, // 93: listingssvc.v1.OrderService.CreateOrderShipment:output_type -> listingssvc.v1.CreateOrderShipmentResponse
+	44, // 94: listingssvc.v1.OrderService.MarkOrderShipped:output_type -> listingssvc.v1.MarkOrderShippedResponse
+	46, // 95: listingssvc.v1.OrderService.GetOrderTracking:output_type -> listingssvc.v1.GetOrderTrackingResponse
+	49, // 96: listingssvc.v1.OrderService.UpdateOrderPayment:output_type -> listingssvc.v1.UpdateOrderPaymentResponse
+	80, // [80:97] is the sub-list for method output_type
+	63, // [63:80] is the sub-list for method input_type
+	63, // [63:63] is the sub-list for extension type_name
+	63, // [63:63] is the sub-list for extension extendee
+	0,  // [0:63] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_listings_v1_orders_proto_init() }
@@ -4542,13 +4751,14 @@ func file_api_proto_listings_v1_orders_proto_init() {
 	file_api_proto_listings_v1_orders_proto_msgTypes[39].OneofWrappers = []any{}
 	file_api_proto_listings_v1_orders_proto_msgTypes[40].OneofWrappers = []any{}
 	file_api_proto_listings_v1_orders_proto_msgTypes[43].OneofWrappers = []any{}
+	file_api_proto_listings_v1_orders_proto_msgTypes[45].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_listings_v1_orders_proto_rawDesc), len(file_api_proto_listings_v1_orders_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   45,
+			NumMessages:   47,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

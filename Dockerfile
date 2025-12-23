@@ -1,11 +1,14 @@
-# Stage 1: Build stage
+# Listings Service Dockerfile
+# Build optimized multi-stage image for production
+
+# Stage 1: Builder
 FROM golang:1.25-alpine AS builder
 
-# Accept GitHub token as build arg (optional - will work without for public repos)
+# Accept GitHub token as build arg (optional for private repos)
 ARG GITHUB_TOKEN
 
 # Install build dependencies
-RUN apk add --no-cache git make gcc musl-dev
+RUN apk add --no-cache git ca-certificates tzdata make gcc musl-dev
 
 # Set working directory
 WORKDIR /build
@@ -13,33 +16,42 @@ WORKDIR /build
 # Set GOPRIVATE for vondi-global modules
 ENV GOPRIVATE=github.com/vondi-global/*
 
-# Configure Git credentials if token provided (for private repos)
+# Configure Git credentials if token provided
 RUN if [ -n "$GITHUB_TOKEN" ]; then \
         git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"; \
     fi
 
-# Copy go mod and vendor directory for offline build
+# Copy go mod files
 COPY go.mod go.sum ./
-COPY vendor/ ./vendor/
+
+# Download dependencies
+RUN go mod download
 
 # Copy source code
 COPY . .
 
-# Build the application using vendored dependencies (no network access needed)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor \
-    -ldflags="-w -s -X main.Version=$(git describe --tags --always --dirty) -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+# Build the binary
+# CGO_ENABLED=0 for static binary
+# -ldflags="-s -w" to strip debug info
+# -mod=mod to ignore vendor directory
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -mod=mod \
+    -ldflags="-s -w -X main.Version=$(git describe --tags --always --dirty 2>/dev/null || echo 'unknown') -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     -o /build/bin/listings-service \
-    ./cmd/server
+    ./cmd/server/main.go
 
-# Stage 2: Runtime stage
+# Create keys directory if it doesn't exist
+RUN mkdir -p /build/keys
+
+# Stage 2: Runtime
 FROM alpine:3.19
 
 # Install runtime dependencies
 RUN apk add --no-cache ca-certificates tzdata
 
 # Create non-root user
-RUN addgroup -g 1000 listings && \
-    adduser -D -u 1000 -G listings listings
+RUN addgroup -g 1000 vondi && \
+    adduser -D -u 1000 -G vondi vondi
 
 # Set working directory
 WORKDIR /app
@@ -47,24 +59,29 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /build/bin/listings-service /app/listings-service
 
-# Copy migrations (if needed for embedded migrations)
+# Copy migrations
 COPY --from=builder /build/migrations /app/migrations
 
-# Copy auth service public key
+# Copy auth service public key directory (may be empty)
 COPY --from=builder /build/keys /app/keys
 
 # Change ownership
-RUN chown -R listings:listings /app
+RUN chown -R vondi:vondi /app
 
 # Switch to non-root user
-USER listings
+USER vondi
 
 # Expose ports
-EXPOSE 50053 8086 9093
+# gRPC port
+EXPOSE 50053
+# HTTP port
+EXPOSE 8084
+# Metrics port
+EXPOSE 9093
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD ["/app/listings-service", "healthcheck"]
+    CMD ["/app/listings-service", "healthcheck"] || wget --no-verbose --tries=1 --spider http://localhost:8084/health || exit 1
 
 # Run the application
 ENTRYPOINT ["/app/listings-service"]

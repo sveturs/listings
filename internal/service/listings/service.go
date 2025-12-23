@@ -2083,7 +2083,7 @@ func convertProductToListing(product *domain.Product) *domain.Listing {
 		Title:      product.Name,
 		Price:      product.Price,
 		Currency:   product.Currency,
-		CategoryID: fmt.Sprintf("%d", product.CategoryID), // Convert int64 to string (legacy support)
+		CategoryID: product.CategoryID, // UUID string
 		Quantity:   product.StockQuantity,
 		ViewsCount: product.ViewCount,
 		CreatedAt:  product.CreatedAt,

@@ -384,7 +384,7 @@ func (x *Attribute) GetUpdatedAt() *timestamppb.Timestamp {
 type CategoryAttribute struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	Id          int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	CategoryId  int32                  `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId  string                 `protobuf:"bytes,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // UUID as string
 	AttributeId int32                  `protobuf:"varint,3,opt,name=attribute_id,json=attributeId,proto3" json:"attribute_id,omitempty"`
 	Attribute   *Attribute             `protobuf:"bytes,4,opt,name=attribute,proto3" json:"attribute,omitempty"` // Embedded attribute data
 	// Category-specific overrides (null = inherit from attribute)
@@ -441,11 +441,11 @@ func (x *CategoryAttribute) GetId() int32 {
 	return 0
 }
 
-func (x *CategoryAttribute) GetCategoryId() int32 {
+func (x *CategoryAttribute) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *CategoryAttribute) GetAttributeId() int32 {
@@ -724,7 +724,7 @@ func (*ListingAttributeValue_ValueJson) isListingAttributeValue_Value() {}
 type VariantAttribute struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	CategoryId    int32                  `protobuf:"varint,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,2,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // UUID as string
 	AttributeId   int32                  `protobuf:"varint,3,opt,name=attribute_id,json=attributeId,proto3" json:"attribute_id,omitempty"`
 	Attribute     *Attribute             `protobuf:"bytes,4,opt,name=attribute,proto3" json:"attribute,omitempty"`
 	IsRequired    bool                   `protobuf:"varint,5,opt,name=is_required,json=isRequired,proto3" json:"is_required,omitempty"`
@@ -776,11 +776,11 @@ func (x *VariantAttribute) GetId() int32 {
 	return 0
 }
 
-func (x *VariantAttribute) GetCategoryId() int32 {
+func (x *VariantAttribute) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *VariantAttribute) GetAttributeId() int32 {
@@ -1676,7 +1676,7 @@ func (x *ListAttributesResponse) GetTotalPages() int32 {
 // LinkAttributeToCategoryRequest
 type LinkAttributeToCategoryRequest struct {
 	state                   protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId              int32                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId              string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // UUID as string
 	AttributeId             int32                  `protobuf:"varint,2,opt,name=attribute_id,json=attributeId,proto3" json:"attribute_id,omitempty"`
 	IsEnabled               *bool                  `protobuf:"varint,3,opt,name=is_enabled,json=isEnabled,proto3,oneof" json:"is_enabled,omitempty"`
 	IsRequired              *bool                  `protobuf:"varint,4,opt,name=is_required,json=isRequired,proto3,oneof" json:"is_required,omitempty"`
@@ -1720,11 +1720,11 @@ func (*LinkAttributeToCategoryRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_attributes_v1_attributes_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *LinkAttributeToCategoryRequest) GetCategoryId() int32 {
+func (x *LinkAttributeToCategoryRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *LinkAttributeToCategoryRequest) GetAttributeId() int32 {
@@ -1837,7 +1837,7 @@ func (x *LinkAttributeToCategoryResponse) GetCategoryAttribute() *CategoryAttrib
 // UpdateCategoryAttributeRequest
 type UpdateCategoryAttributeRequest struct {
 	state                   protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId              int32                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId              string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // UUID as string
 	AttributeId             int32                  `protobuf:"varint,2,opt,name=attribute_id,json=attributeId,proto3" json:"attribute_id,omitempty"`
 	IsEnabled               *bool                  `protobuf:"varint,3,opt,name=is_enabled,json=isEnabled,proto3,oneof" json:"is_enabled,omitempty"`
 	IsRequired              *bool                  `protobuf:"varint,4,opt,name=is_required,json=isRequired,proto3,oneof" json:"is_required,omitempty"`
@@ -1881,11 +1881,11 @@ func (*UpdateCategoryAttributeRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_attributes_v1_attributes_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *UpdateCategoryAttributeRequest) GetCategoryId() int32 {
+func (x *UpdateCategoryAttributeRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *UpdateCategoryAttributeRequest) GetAttributeId() int32 {
@@ -1998,7 +1998,7 @@ func (x *UpdateCategoryAttributeResponse) GetCategoryAttribute() *CategoryAttrib
 // UnlinkAttributeFromCategoryRequest
 type UnlinkAttributeFromCategoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId    int32                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // UUID as string
 	AttributeId   int32                  `protobuf:"varint,2,opt,name=attribute_id,json=attributeId,proto3" json:"attribute_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2034,11 +2034,11 @@ func (*UnlinkAttributeFromCategoryRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_attributes_v1_attributes_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *UnlinkAttributeFromCategoryRequest) GetCategoryId() int32 {
+func (x *UnlinkAttributeFromCategoryRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *UnlinkAttributeFromCategoryRequest) GetAttributeId() int32 {
@@ -2103,7 +2103,7 @@ func (x *UnlinkAttributeFromCategoryResponse) GetMessage() string {
 // GetCategoryAttributesRequest
 type GetCategoryAttributesRequest struct {
 	state                   protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId              int32                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId              string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // UUID as string
 	IncludeInactive         bool                   `protobuf:"varint,2,opt,name=include_inactive,json=includeInactive,proto3" json:"include_inactive,omitempty"`
 	IncludeParentCategories bool                   `protobuf:"varint,3,opt,name=include_parent_categories,json=includeParentCategories,proto3" json:"include_parent_categories,omitempty"` // Include inherited attributes
 	unknownFields           protoimpl.UnknownFields
@@ -2140,11 +2140,11 @@ func (*GetCategoryAttributesRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_attributes_v1_attributes_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *GetCategoryAttributesRequest) GetCategoryId() int32 {
+func (x *GetCategoryAttributesRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetCategoryAttributesRequest) GetIncludeInactive() bool {
@@ -2208,7 +2208,7 @@ func (x *GetCategoryAttributesResponse) GetCategoryAttributes() []*CategoryAttri
 // GetCategoryVariantAttributesRequest
 type GetCategoryVariantAttributesRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId      int32                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId      string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // UUID as string
 	IncludeInactive bool                   `protobuf:"varint,2,opt,name=include_inactive,json=includeInactive,proto3" json:"include_inactive,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
@@ -2244,11 +2244,11 @@ func (*GetCategoryVariantAttributesRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_attributes_v1_attributes_proto_rawDescGZIP(), []int{22}
 }
 
-func (x *GetCategoryVariantAttributesRequest) GetCategoryId() int32 {
+func (x *GetCategoryVariantAttributesRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetCategoryVariantAttributesRequest) GetIncludeInactive() bool {
@@ -2645,7 +2645,7 @@ func (x *SetListingAttributesResponse) GetValidationErrors() []*ValidationError 
 // ValidateAttributeValuesRequest
 type ValidateAttributeValuesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId    int32                  `protobuf:"varint,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"` // UUID as string
 	Values        []*AttributeValueInput `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2681,11 +2681,11 @@ func (*ValidateAttributeValuesRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_attributes_v1_attributes_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *ValidateAttributeValuesRequest) GetCategoryId() int32 {
+func (x *ValidateAttributeValuesRequest) GetCategoryId() string {
 	if x != nil {
 		return x.CategoryId
 	}
-	return 0
+	return ""
 }
 
 func (x *ValidateAttributeValuesRequest) GetValues() []*AttributeValueInput {
@@ -2998,7 +2998,7 @@ const file_api_proto_attributes_v1_attributes_proto_rawDesc = "" +
 	"updated_at\x18\x17 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x9f\x06\n" +
 	"\x11CategoryAttribute\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1f\n" +
-	"\vcategory_id\x18\x02 \x01(\x05R\n" +
+	"\vcategory_id\x18\x02 \x01(\tR\n" +
 	"categoryId\x12!\n" +
 	"\fattribute_id\x18\x03 \x01(\x05R\vattributeId\x126\n" +
 	"\tattribute\x18\x04 \x01(\v2\x18.attributes.v1.AttributeR\tattribute\x12\"\n" +
@@ -3045,7 +3045,7 @@ const file_api_proto_attributes_v1_attributes_proto_rawDesc = "" +
 	"\x05value\"\xda\x03\n" +
 	"\x10VariantAttribute\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1f\n" +
-	"\vcategory_id\x18\x02 \x01(\x05R\n" +
+	"\vcategory_id\x18\x02 \x01(\tR\n" +
 	"categoryId\x12!\n" +
 	"\fattribute_id\x18\x03 \x01(\x05R\vattributeId\x126\n" +
 	"\tattribute\x18\x04 \x01(\v2\x18.attributes.v1.AttributeR\tattribute\x12\x1f\n" +
@@ -3167,7 +3167,7 @@ const file_api_proto_attributes_v1_attributes_proto_rawDesc = "" +
 	"\vtotal_pages\x18\x05 \x01(\x05R\n" +
 	"totalPages\"\xd1\x04\n" +
 	"\x1eLinkAttributeToCategoryRequest\x12\x1f\n" +
-	"\vcategory_id\x18\x01 \x01(\x05R\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\x12!\n" +
 	"\fattribute_id\x18\x02 \x01(\x05R\vattributeId\x12\"\n" +
 	"\n" +
@@ -3189,7 +3189,7 @@ const file_api_proto_attributes_v1_attributes_proto_rawDesc = "" +
 	"\x1fLinkAttributeToCategoryResponse\x12O\n" +
 	"\x12category_attribute\x18\x01 \x01(\v2 .attributes.v1.CategoryAttributeR\x11categoryAttribute\"\xc5\x05\n" +
 	"\x1eUpdateCategoryAttributeRequest\x12\x1f\n" +
-	"\vcategory_id\x18\x01 \x01(\x05R\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\x12!\n" +
 	"\fattribute_id\x18\x02 \x01(\x05R\vattributeId\x12\"\n" +
 	"\n" +
@@ -3215,21 +3215,21 @@ const file_api_proto_attributes_v1_attributes_proto_rawDesc = "" +
 	"\x1fUpdateCategoryAttributeResponse\x12O\n" +
 	"\x12category_attribute\x18\x01 \x01(\v2 .attributes.v1.CategoryAttributeR\x11categoryAttribute\"h\n" +
 	"\"UnlinkAttributeFromCategoryRequest\x12\x1f\n" +
-	"\vcategory_id\x18\x01 \x01(\x05R\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\x12!\n" +
 	"\fattribute_id\x18\x02 \x01(\x05R\vattributeId\"Y\n" +
 	"#UnlinkAttributeFromCategoryResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"\xa6\x01\n" +
 	"\x1cGetCategoryAttributesRequest\x12\x1f\n" +
-	"\vcategory_id\x18\x01 \x01(\x05R\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\x12)\n" +
 	"\x10include_inactive\x18\x02 \x01(\bR\x0fincludeInactive\x12:\n" +
 	"\x19include_parent_categories\x18\x03 \x01(\bR\x17includeParentCategories\"r\n" +
 	"\x1dGetCategoryAttributesResponse\x12Q\n" +
 	"\x13category_attributes\x18\x01 \x03(\v2 .attributes.v1.CategoryAttributeR\x12categoryAttributes\"q\n" +
 	"#GetCategoryVariantAttributesRequest\x12\x1f\n" +
-	"\vcategory_id\x18\x01 \x01(\x05R\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\x12)\n" +
 	"\x10include_inactive\x18\x02 \x01(\bR\x0fincludeInactive\"v\n" +
 	"$GetCategoryVariantAttributesResponse\x12N\n" +
@@ -3259,7 +3259,7 @@ const file_api_proto_attributes_v1_attributes_proto_rawDesc = "" +
 	"\x10attribute_values\x18\x01 \x03(\v2$.attributes.v1.ListingAttributeValueR\x0fattributeValues\x12K\n" +
 	"\x11validation_errors\x18\x02 \x03(\v2\x1e.attributes.v1.ValidationErrorR\x10validationErrors\"}\n" +
 	"\x1eValidateAttributeValuesRequest\x12\x1f\n" +
-	"\vcategory_id\x18\x01 \x01(\x05R\n" +
+	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\x12:\n" +
 	"\x06values\x18\x02 \x03(\v2\".attributes.v1.AttributeValueInputR\x06values\"t\n" +
 	"\x1fValidateAttributeValuesResponse\x12\x19\n" +

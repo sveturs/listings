@@ -141,7 +141,7 @@ enum AttributePurpose {
 // CategoryAttribute represents category-specific attribute configuration
 message CategoryAttribute {
   int32 id = 1;
-  int32 category_id = 2;
+  string category_id = 2;  // UUID as string
   int32 attribute_id = 3;
   Attribute attribute = 4;  // Embedded attribute data
 
@@ -185,7 +185,7 @@ message ListingAttributeValue {
 // VariantAttribute represents variant-specific attribute configuration
 message VariantAttribute {
   int32 id = 1;
-  int32 category_id = 2;
+  string category_id = 2;  // UUID as string
   int32 attribute_id = 3;
   Attribute attribute = 4;
 
@@ -309,7 +309,7 @@ message ListAttributesResponse {
 
 // LinkAttributeToCategoryRequest
 message LinkAttributeToCategoryRequest {
-  int32 category_id = 1;
+  string category_id = 1;  // UUID as string
   int32 attribute_id = 2;
 
   optional bool is_enabled = 3;
@@ -329,7 +329,7 @@ message LinkAttributeToCategoryResponse {
 
 // UpdateCategoryAttributeRequest
 message UpdateCategoryAttributeRequest {
-  int32 category_id = 1;
+  string category_id = 1;  // UUID as string
   int32 attribute_id = 2;
 
   optional bool is_enabled = 3;
@@ -349,7 +349,7 @@ message UpdateCategoryAttributeResponse {
 
 // UnlinkAttributeFromCategoryRequest
 message UnlinkAttributeFromCategoryRequest {
-  int32 category_id = 1;
+  string category_id = 1;  // UUID as string
   int32 attribute_id = 2;
 }
 
@@ -364,7 +364,7 @@ message UnlinkAttributeFromCategoryResponse {
 
 // GetCategoryAttributesRequest
 message GetCategoryAttributesRequest {
-  int32 category_id = 1;
+  string category_id = 1;  // UUID as string
   bool include_inactive = 2;
   bool include_parent_categories = 3;  // Include inherited attributes
 }
@@ -375,7 +375,7 @@ message GetCategoryAttributesResponse {
 
 // GetCategoryVariantAttributesRequest
 message GetCategoryVariantAttributesRequest {
-  int32 category_id = 1;
+  string category_id = 1;  // UUID as string
   bool include_inactive = 2;
 }
 
@@ -426,7 +426,7 @@ message SetListingAttributesResponse {
 
 // ValidateAttributeValuesRequest
 message ValidateAttributeValuesRequest {
-  int32 category_id = 1;
+  string category_id = 1;  // UUID as string
   repeated AttributeValueInput values = 2;
 }
 

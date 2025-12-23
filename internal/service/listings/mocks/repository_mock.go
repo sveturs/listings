@@ -163,7 +163,7 @@ func (m *MockRepository) GetPopularCategories(ctx context.Context, limit int) ([
 }
 
 // GetCategoryByID mocks getting a category by ID
-func (m *MockRepository) GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error) {
+func (m *MockRepository) GetCategoryByID(ctx context.Context, categoryID string) (*domain.Category, error) {
 	args := m.Called(ctx, categoryID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -172,7 +172,7 @@ func (m *MockRepository) GetCategoryByID(ctx context.Context, categoryID int64) 
 }
 
 // GetCategoryTree mocks getting category tree
-func (m *MockRepository) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
+func (m *MockRepository) GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error) {
 	args := m.Called(ctx, categoryID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

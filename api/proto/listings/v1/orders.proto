@@ -141,6 +141,12 @@ message Order {
   // Shipping label
   optional string label_url = 34;               // URL to shipping label PDF (NEW)
 
+  // Payment gateway fields (NEW)
+  optional string payment_provider = 35;        // Payment gateway provider (stripe, allsecure, etc.)
+  optional string payment_session_id = 36;      // Checkout session ID
+  optional string payment_intent_id = 37;       // Payment intent ID
+  optional string payment_idempotency_key = 38; // Idempotency key for duplicate prevention
+
   // Relations (loaded on demand)
   repeated OrderItem items = 30;                // Order line items
 
@@ -542,6 +548,22 @@ message TrackingEvent {
   google.protobuf.Timestamp timestamp = 4; // Event time
 }
 
+// UpdateOrderPaymentRequest - update payment information for an order
+message UpdateOrderPaymentRequest {
+  int64 order_id = 1;                         // Required - order to update
+  optional string payment_provider = 2;       // Payment provider (stripe, allsecure, etc.)
+  optional string payment_session_id = 3;     // Checkout session ID
+  optional string payment_intent_id = 4;      // Payment intent ID
+  optional string payment_idempotency_key = 5; // Idempotency key for payment
+  optional string payment_status = 6;         // Payment status (pending, paid, failed, etc.)
+  optional string payment_transaction_id = 7; // Transaction ID from payment provider
+}
+
+message UpdateOrderPaymentResponse {
+  bool success = 1;                           // True if update successful
+  Order order = 2;                            // Updated order with new payment info
+}
+
 // ============================================================================
 // SERVICE DEFINITION - OrderService
 // ============================================================================
@@ -644,6 +666,16 @@ service OrderService {
   // GetOrderTracking - get tracking info from Delivery Service
   // Returns: tracking events timeline from delivery provider
   rpc GetOrderTracking(GetOrderTrackingRequest) returns (GetOrderTrackingResponse);
+
+  // =========================================
+  // Payment Operations (1 method) - NEW
+  // =========================================
+
+  // UpdateOrderPayment - update payment information for an order
+  // Used by Payment Service after successful payment processing
+  // Validates: order exists
+  // Actions: updates payment fields (provider, session_id, intent_id, status, transaction_id)
+  rpc UpdateOrderPayment(UpdateOrderPaymentRequest) returns (UpdateOrderPaymentResponse);
 }
 
 // ============================================================================

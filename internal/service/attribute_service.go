@@ -33,16 +33,16 @@ type AttributeService interface {
 
 	// Category Linking Operations
 	// LinkAttributeToCategory links an attribute to a category with optional overrides
-	LinkAttributeToCategory(ctx context.Context, categoryID int32, attributeID int32, settings *domain.CategoryAttributeSettings) error
+	LinkAttributeToCategory(ctx context.Context, categoryID string, attributeID int32, settings *domain.CategoryAttributeSettings) error
 
 	// UpdateCategoryAttribute updates category-specific attribute settings
 	UpdateCategoryAttribute(ctx context.Context, catAttrID int32, settings *domain.CategoryAttributeSettings) error
 
 	// UnlinkAttributeFromCategory removes attribute-category association
-	UnlinkAttributeFromCategory(ctx context.Context, categoryID int32, attributeID int32) error
+	UnlinkAttributeFromCategory(ctx context.Context, categoryID string, attributeID int32) error
 
 	// GetCategoryAttributes retrieves all attributes for a category with effective values (cached)
-	GetCategoryAttributes(ctx context.Context, categoryID int32, filter *domain.GetCategoryAttributesFilter) ([]*domain.CategoryAttribute, error)
+	GetCategoryAttributes(ctx context.Context, categoryID string, filter *domain.GetCategoryAttributesFilter) ([]*domain.CategoryAttribute, error)
 
 	// Listing Operations
 	// GetListingAttributes retrieves all attribute values for a listing (cached)
@@ -53,18 +53,18 @@ type AttributeService interface {
 	SetListingAttributes(ctx context.Context, listingID int32, values []domain.SetListingAttributeValue) error
 
 	// ValidateAttributeValues validates attribute values according to type and rules
-	ValidateAttributeValues(ctx context.Context, categoryID int32, values []domain.SetListingAttributeValue) error
+	ValidateAttributeValues(ctx context.Context, categoryID string, values []domain.SetListingAttributeValue) error
 
 	// Variant Attributes Operations
 	// GetCategoryVariantAttributes retrieves variant attributes for a category (cached)
-	GetCategoryVariantAttributes(ctx context.Context, categoryID int32) ([]*domain.VariantAttribute, error)
+	GetCategoryVariantAttributes(ctx context.Context, categoryID string) ([]*domain.VariantAttribute, error)
 
 	// Cache Management Operations
 	// InvalidateAttributeCache invalidates cache for an attribute
 	InvalidateAttributeCache(ctx context.Context, attributeID int32) error
 
 	// InvalidateCategoryCache invalidates all attribute caches for a category
-	InvalidateCategoryCache(ctx context.Context, categoryID int32) error
+	InvalidateCategoryCache(ctx context.Context, categoryID string) error
 
 	// InvalidateListingCache invalidates attribute cache for a listing
 	InvalidateListingCache(ctx context.Context, listingID int32) error

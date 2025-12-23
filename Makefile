@@ -237,6 +237,9 @@ proto: ## Generate Go code from protobuf files
 	PATH=/home/dim/go/bin:$$PATH protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		api/proto/chat/v1/*.proto
+	PATH=/home/dim/go/bin:$$PATH protoc --go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		api/proto/variants/v1/*.proto
 	@echo "$(GREEN)Protobuf code generated$(NC)"
 
 ## Development commands

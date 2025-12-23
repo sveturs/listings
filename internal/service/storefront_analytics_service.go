@@ -31,10 +31,19 @@ type StorefrontAnalyticsRepository interface {
 	GetStorefrontOwnerID(ctx context.Context, storefrontID int64) (int64, error)
 }
 
+// StorefrontEventRepository defines repository interface for event tracking
+type StorefrontEventRepository interface {
+	// RecordEvent stores a new storefront analytics event
+	RecordEvent(ctx context.Context, event *domain.StorefrontEvent) error
+}
+
 // StorefrontAnalyticsService defines the service interface for storefront analytics operations
 type StorefrontAnalyticsService interface {
 	// GetStorefrontStats retrieves analytics for a storefront (owner or admin)
 	GetStorefrontStats(ctx context.Context, req *listingssvcv1.GetStorefrontStatsRequest) (*listingssvcv1.GetStorefrontStatsResponse, error)
+
+	// RecordStorefrontEvent records a storefront analytics event (public endpoint)
+	RecordStorefrontEvent(ctx context.Context, req *listingssvcv1.RecordStorefrontEventRequest) error
 }
 
 // ============================================================================
@@ -58,9 +67,10 @@ const (
 
 // storefrontAnalyticsServiceImpl implements StorefrontAnalyticsService interface
 type storefrontAnalyticsServiceImpl struct {
-	repo   StorefrontAnalyticsRepository
-	cache  *StorefrontAnalyticsCache
-	logger zerolog.Logger
+	repo      StorefrontAnalyticsRepository
+	eventRepo StorefrontEventRepository
+	cache     *StorefrontAnalyticsCache
+	logger    zerolog.Logger
 }
 
 // StorefrontAnalyticsCache provides caching functionality for storefront analytics
@@ -80,13 +90,15 @@ func NewStorefrontAnalyticsCache(client redis.UniversalClient, logger zerolog.Lo
 // NewStorefrontAnalyticsService creates a new storefront analytics service
 func NewStorefrontAnalyticsService(
 	repo StorefrontAnalyticsRepository,
+	eventRepo StorefrontEventRepository,
 	cacheClient redis.UniversalClient,
 	logger zerolog.Logger,
 ) StorefrontAnalyticsService {
 	return &storefrontAnalyticsServiceImpl{
-		repo:   repo,
-		cache:  NewStorefrontAnalyticsCache(cacheClient, logger),
-		logger: logger.With().Str("component", "storefront_analytics_service").Logger(),
+		repo:      repo,
+		eventRepo: eventRepo,
+		cache:     NewStorefrontAnalyticsCache(cacheClient, logger),
+		logger:    logger.With().Str("component", "storefront_analytics_service").Logger(),
 	}
 }
 
@@ -314,4 +326,113 @@ func (c *StorefrontAnalyticsCache) Set(ctx context.Context, key string, stats *l
 		Msg("stats cached successfully")
 
 	return nil
+}
+
+// ============================================================================
+// EVENT RECORDING
+// ============================================================================
+
+// RecordStorefrontEvent records a storefront analytics event (public endpoint - no auth)
+func (s *storefrontAnalyticsServiceImpl) RecordStorefrontEvent(
+	ctx context.Context,
+	req *listingssvcv1.RecordStorefrontEventRequest,
+) error {
+	// Validate request
+	if req.StorefrontId <= 0 {
+		s.logger.Warn().
+			Int64("storefront_id", req.StorefrontId).
+			Msg("invalid storefront_id in event request")
+		return fmt.Errorf("%w: storefront_id must be positive", ErrInvalidInput)
+	}
+
+	if req.SessionId == "" {
+		s.logger.Warn().Msg("session_id is required")
+		return fmt.Errorf("%w: session_id is required", ErrInvalidInput)
+	}
+
+	if req.EventType == listingssvcv1.StorefrontEventType_STOREFRONT_EVENT_TYPE_UNSPECIFIED {
+		s.logger.Warn().Msg("event_type is required")
+		return fmt.Errorf("%w: event_type is required", ErrInvalidInput)
+	}
+
+	// Convert proto enum to domain string
+	eventType := protoEventTypeToString(req.EventType)
+
+	// Convert proto Struct to JSON
+	var eventDataJSON json.RawMessage
+	if req.EventData != nil {
+		data, err := req.EventData.MarshalJSON()
+		if err != nil {
+			s.logger.Warn().Err(err).Msg("failed to marshal event_data")
+			return fmt.Errorf("%w: invalid event_data", ErrInvalidInput)
+		}
+		eventDataJSON = data
+	} else {
+		eventDataJSON = json.RawMessage("{}")
+	}
+
+	// Build domain event
+	event := &domain.StorefrontEvent{
+		StorefrontID: req.StorefrontId,
+		EventType:    eventType,
+		EventData:    eventDataJSON,
+		SessionID:    req.SessionId,
+		IPAddress:    req.IpAddress,
+		UserAgent:    req.UserAgent,
+		Referrer:     req.Referrer,
+	}
+
+	// Set optional user_id if present
+	if req.UserId != nil && *req.UserId > 0 {
+		userID := *req.UserId
+		event.UserID = &userID
+	}
+
+	// Validate domain entity
+	if err := event.Validate(); err != nil {
+		s.logger.Warn().
+			Err(err).
+			Int64("storefront_id", req.StorefrontId).
+			Msg("event validation failed")
+		return fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
+	// Set defaults
+	event.SetDefaults()
+
+	// Store event in database
+	if err := s.eventRepo.RecordEvent(ctx, event); err != nil {
+		s.logger.Error().
+			Err(err).
+			Int64("storefront_id", req.StorefrontId).
+			Str("event_type", eventType).
+			Msg("failed to record storefront event")
+		return fmt.Errorf("%w: failed to record event", ErrInternal)
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", req.StorefrontId).
+		Str("event_type", eventType).
+		Str("session_id", req.SessionId).
+		Msg("storefront event recorded successfully")
+
+	return nil
+}
+
+// protoEventTypeToString converts proto enum to domain string
+func protoEventTypeToString(eventType listingssvcv1.StorefrontEventType) string {
+	switch eventType {
+	case listingssvcv1.StorefrontEventType_STOREFRONT_EVENT_TYPE_PAGE_VIEW:
+		return domain.EventTypePageView.String()
+	case listingssvcv1.StorefrontEventType_STOREFRONT_EVENT_TYPE_PRODUCT_VIEW:
+		return domain.EventTypeProductView.String()
+	case listingssvcv1.StorefrontEventType_STOREFRONT_EVENT_TYPE_ADD_TO_CART:
+		return domain.EventTypeAddToCart.String()
+	case listingssvcv1.StorefrontEventType_STOREFRONT_EVENT_TYPE_CHECKOUT:
+		return domain.EventTypeCheckout.String()
+	case listingssvcv1.StorefrontEventType_STOREFRONT_EVENT_TYPE_ORDER:
+		return domain.EventTypeOrder.String()
+	default:
+		return domain.EventTypeUnspecified.String()
+	}
 }

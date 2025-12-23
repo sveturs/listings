@@ -36,6 +36,7 @@ const (
 	OrderService_CreateOrderShipment_FullMethodName = "/listingssvc.v1.OrderService/CreateOrderShipment"
 	OrderService_MarkOrderShipped_FullMethodName    = "/listingssvc.v1.OrderService/MarkOrderShipped"
 	OrderService_GetOrderTracking_FullMethodName    = "/listingssvc.v1.OrderService/GetOrderTracking"
+	OrderService_UpdateOrderPayment_FullMethodName  = "/listingssvc.v1.OrderService/UpdateOrderPayment"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -113,6 +114,11 @@ type OrderServiceClient interface {
 	// GetOrderTracking - get tracking info from Delivery Service
 	// Returns: tracking events timeline from delivery provider
 	GetOrderTracking(ctx context.Context, in *GetOrderTrackingRequest, opts ...grpc.CallOption) (*GetOrderTrackingResponse, error)
+	// UpdateOrderPayment - update payment information for an order
+	// Used by Payment Service after successful payment processing
+	// Validates: order exists
+	// Actions: updates payment fields (provider, session_id, intent_id, status, transaction_id)
+	UpdateOrderPayment(ctx context.Context, in *UpdateOrderPaymentRequest, opts ...grpc.CallOption) (*UpdateOrderPaymentResponse, error)
 }
 
 type orderServiceClient struct {
@@ -283,6 +289,16 @@ func (c *orderServiceClient) GetOrderTracking(ctx context.Context, in *GetOrderT
 	return out, nil
 }
 
+func (c *orderServiceClient) UpdateOrderPayment(ctx context.Context, in *UpdateOrderPaymentRequest, opts ...grpc.CallOption) (*UpdateOrderPaymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateOrderPaymentResponse)
+	err := c.cc.Invoke(ctx, OrderService_UpdateOrderPayment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
@@ -358,6 +374,11 @@ type OrderServiceServer interface {
 	// GetOrderTracking - get tracking info from Delivery Service
 	// Returns: tracking events timeline from delivery provider
 	GetOrderTracking(context.Context, *GetOrderTrackingRequest) (*GetOrderTrackingResponse, error)
+	// UpdateOrderPayment - update payment information for an order
+	// Used by Payment Service after successful payment processing
+	// Validates: order exists
+	// Actions: updates payment fields (provider, session_id, intent_id, status, transaction_id)
+	UpdateOrderPayment(context.Context, *UpdateOrderPaymentRequest) (*UpdateOrderPaymentResponse, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -415,6 +436,9 @@ func (UnimplementedOrderServiceServer) MarkOrderShipped(context.Context, *MarkOr
 }
 func (UnimplementedOrderServiceServer) GetOrderTracking(context.Context, *GetOrderTrackingRequest) (*GetOrderTrackingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetOrderTracking not implemented")
+}
+func (UnimplementedOrderServiceServer) UpdateOrderPayment(context.Context, *UpdateOrderPaymentRequest) (*UpdateOrderPaymentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateOrderPayment not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
 func (UnimplementedOrderServiceServer) testEmbeddedByValue()                      {}
@@ -725,6 +749,24 @@ func _OrderService_GetOrderTracking_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrderService_UpdateOrderPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOrderPaymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).UpdateOrderPayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_UpdateOrderPayment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).UpdateOrderPayment(ctx, req.(*UpdateOrderPaymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrderService_ServiceDesc is the grpc.ServiceDesc for OrderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -795,6 +837,10 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOrderTracking",
 			Handler:    _OrderService_GetOrderTracking_Handler,
+		},
+		{
+			MethodName: "UpdateOrderPayment",
+			Handler:    _OrderService_UpdateOrderPayment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

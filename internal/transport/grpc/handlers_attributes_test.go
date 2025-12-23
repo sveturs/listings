@@ -74,7 +74,7 @@ func (m *MockAttributeService) ListAttributes(ctx context.Context, filter *domai
 	return args.Get(0).([]*domain.Attribute), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockAttributeService) LinkAttributeToCategory(ctx context.Context, categoryID int32, attributeID int32, settings *domain.CategoryAttributeSettings) error {
+func (m *MockAttributeService) LinkAttributeToCategory(ctx context.Context, categoryID string, attributeID int32, settings *domain.CategoryAttributeSettings) error {
 	args := m.Called(ctx, categoryID, attributeID, settings)
 	return args.Error(0)
 }
@@ -84,12 +84,12 @@ func (m *MockAttributeService) UpdateCategoryAttribute(ctx context.Context, catA
 	return args.Error(0)
 }
 
-func (m *MockAttributeService) UnlinkAttributeFromCategory(ctx context.Context, categoryID int32, attributeID int32) error {
+func (m *MockAttributeService) UnlinkAttributeFromCategory(ctx context.Context, categoryID string, attributeID int32) error {
 	args := m.Called(ctx, categoryID, attributeID)
 	return args.Error(0)
 }
 
-func (m *MockAttributeService) GetCategoryAttributes(ctx context.Context, categoryID int32, filter *domain.GetCategoryAttributesFilter) ([]*domain.CategoryAttribute, error) {
+func (m *MockAttributeService) GetCategoryAttributes(ctx context.Context, categoryID string, filter *domain.GetCategoryAttributesFilter) ([]*domain.CategoryAttribute, error) {
 	args := m.Called(ctx, categoryID, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -110,12 +110,12 @@ func (m *MockAttributeService) SetListingAttributes(ctx context.Context, listing
 	return args.Error(0)
 }
 
-func (m *MockAttributeService) ValidateAttributeValues(ctx context.Context, categoryID int32, values []domain.SetListingAttributeValue) error {
+func (m *MockAttributeService) ValidateAttributeValues(ctx context.Context, categoryID string, values []domain.SetListingAttributeValue) error {
 	args := m.Called(ctx, categoryID, values)
 	return args.Error(0)
 }
 
-func (m *MockAttributeService) GetCategoryVariantAttributes(ctx context.Context, categoryID int32) ([]*domain.VariantAttribute, error) {
+func (m *MockAttributeService) GetCategoryVariantAttributes(ctx context.Context, categoryID string) ([]*domain.VariantAttribute, error) {
 	args := m.Called(ctx, categoryID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -128,7 +128,7 @@ func (m *MockAttributeService) InvalidateAttributeCache(ctx context.Context, att
 	return args.Error(0)
 }
 
-func (m *MockAttributeService) InvalidateCategoryCache(ctx context.Context, categoryID int32) error {
+func (m *MockAttributeService) InvalidateCategoryCache(ctx context.Context, categoryID string) error {
 	args := m.Called(ctx, categoryID)
 	return args.Error(0)
 }
@@ -394,14 +394,14 @@ func TestGetCategoryAttributes_Success(t *testing.T) {
 	server, mockService := setupTestAttributeServer()
 
 	req := &pb.GetCategoryAttributesRequest{
-		CategoryId:      1,
+		CategoryId:      "3b4246cc-9970-403c-af01-c142a4178dc6",
 		IncludeInactive: false,
 	}
 
 	catAttrs := []*domain.CategoryAttribute{
 		{
 			ID:          1,
-			CategoryID:  1,
+			CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			AttributeID: 10,
 			IsEnabled:   true,
 			SortOrder:   1,
@@ -410,7 +410,7 @@ func TestGetCategoryAttributes_Success(t *testing.T) {
 		},
 	}
 
-	mockService.On("GetCategoryAttributes", ctx, int32(1), mock.AnythingOfType("*domain.GetCategoryAttributesFilter")).
+	mockService.On("GetCategoryAttributes", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", mock.AnythingOfType("*domain.GetCategoryAttributesFilter")).
 		Return(catAttrs, nil)
 
 	resp, err := server.GetCategoryAttributes(ctx, req)
@@ -465,7 +465,7 @@ func TestValidateAttributeValues_Success(t *testing.T) {
 	server, mockService := setupTestAttributeServer()
 
 	req := &pb.ValidateAttributeValuesRequest{
-		CategoryId: 1,
+		CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6",
 		Values: []*pb.AttributeValueInput{
 			{
 				AttributeId: 10,
@@ -474,7 +474,7 @@ func TestValidateAttributeValues_Success(t *testing.T) {
 		},
 	}
 
-	mockService.On("ValidateAttributeValues", ctx, int32(1), mock.AnythingOfType("[]domain.SetListingAttributeValue")).
+	mockService.On("ValidateAttributeValues", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", mock.AnythingOfType("[]domain.SetListingAttributeValue")).
 		Return(nil)
 
 	resp, err := server.ValidateAttributeValues(ctx, req)
@@ -491,7 +491,7 @@ func TestValidateAttributeValues_ValidationFailed(t *testing.T) {
 	server, mockService := setupTestAttributeServer()
 
 	req := &pb.ValidateAttributeValuesRequest{
-		CategoryId: 1,
+		CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6",
 		Values: []*pb.AttributeValueInput{
 			{
 				AttributeId: 10,
@@ -500,7 +500,7 @@ func TestValidateAttributeValues_ValidationFailed(t *testing.T) {
 		},
 	}
 
-	mockService.On("ValidateAttributeValues", ctx, int32(1), mock.AnythingOfType("[]domain.SetListingAttributeValue")).
+	mockService.On("ValidateAttributeValues", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", mock.AnythingOfType("[]domain.SetListingAttributeValue")).
 		Return(errors.New("validation failed: invalid value"))
 
 	resp, err := server.ValidateAttributeValues(ctx, req)

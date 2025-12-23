@@ -34,7 +34,15 @@ type SearchListingsRequest struct {
 	// Pagination offset (default: 0)
 	Offset int32 `protobuf:"varint,4,opt,name=offset,proto3" json:"offset,omitempty"`
 	// Use Redis cache for results (default: true)
-	UseCache      bool `protobuf:"varint,5,opt,name=use_cache,json=useCache,proto3" json:"use_cache,omitempty"`
+	UseCache bool `protobuf:"varint,5,opt,name=use_cache,json=useCache,proto3" json:"use_cache,omitempty"`
+	// Analytics: Session ID for tracking (optional, enables analytics)
+	SessionId string `protobuf:"bytes,6,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	// Analytics: User ID for authenticated users (optional)
+	UserId *int64 `protobuf:"varint,7,opt,name=user_id,json=userId,proto3,oneof" json:"user_id,omitempty"`
+	// Analytics: Platform (web, ios, android)
+	Platform string `protobuf:"bytes,8,opt,name=platform,proto3" json:"platform,omitempty"`
+	// Analytics: Language (sr, en, ru)
+	Language      string `protobuf:"bytes,9,opt,name=language,proto3" json:"language,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -104,6 +112,34 @@ func (x *SearchListingsRequest) GetUseCache() bool {
 	return false
 }
 
+func (x *SearchListingsRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *SearchListingsRequest) GetUserId() int64 {
+	if x != nil && x.UserId != nil {
+		return *x.UserId
+	}
+	return 0
+}
+
+func (x *SearchListingsRequest) GetPlatform() string {
+	if x != nil {
+		return x.Platform
+	}
+	return ""
+}
+
+func (x *SearchListingsRequest) GetLanguage() string {
+	if x != nil {
+		return x.Language
+	}
+	return ""
+}
+
 // SearchListingsResponse contains search results
 type SearchListingsResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -114,7 +150,9 @@ type SearchListingsResponse struct {
 	// Search duration in milliseconds
 	TookMs int32 `protobuf:"varint,3,opt,name=took_ms,json=tookMs,proto3" json:"took_ms,omitempty"`
 	// Whether result was served from cache
-	Cached        bool `protobuf:"varint,4,opt,name=cached,proto3" json:"cached,omitempty"`
+	Cached bool `protobuf:"varint,4,opt,name=cached,proto3" json:"cached,omitempty"`
+	// Analytics: Search event ID for click tracking (only if session_id was provided)
+	SearchEventId string `protobuf:"bytes,5,opt,name=search_event_id,json=searchEventId,proto3" json:"search_event_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -175,6 +213,13 @@ func (x *SearchListingsResponse) GetCached() bool {
 		return x.Cached
 	}
 	return false
+}
+
+func (x *SearchListingsResponse) GetSearchEventId() string {
+	if x != nil {
+		return x.SearchEventId
+	}
+	return ""
 }
 
 // GetTrendingSearchesRequest contains parameters for trending searches
@@ -547,19 +592,27 @@ var File_api_proto_search_v1_search_proto protoreflect.FileDescriptor
 
 const file_api_proto_search_v1_search_proto_rawDesc = "" +
 	"\n" +
-	" api/proto/search/v1/search.proto\x12\tsearch.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a api/proto/search/v1/common.proto\x1a api/proto/search/v1/facets.proto\x1a!api/proto/search/v1/filters.proto\x1a%api/proto/search/v1/suggestions.proto\x1a!api/proto/search/v1/popular.proto\"\x99\x01\n" +
+	" api/proto/search/v1/search.proto\x12\tsearch.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a api/proto/search/v1/common.proto\x1a api/proto/search/v1/facets.proto\x1a!api/proto/search/v1/filters.proto\x1a%api/proto/search/v1/suggestions.proto\x1a!api/proto/search/v1/popular.proto\"\x9a\x02\n" +
 	"\x15SearchListingsRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x1f\n" +
 	"\vcategory_id\x18\x02 \x01(\tR\n" +
 	"categoryId\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x16\n" +
 	"\x06offset\x18\x04 \x01(\x05R\x06offset\x12\x1b\n" +
-	"\tuse_cache\x18\x05 \x01(\bR\buseCache\"\x8f\x01\n" +
+	"\tuse_cache\x18\x05 \x01(\bR\buseCache\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x06 \x01(\tR\tsessionId\x12\x1c\n" +
+	"\auser_id\x18\a \x01(\x03H\x00R\x06userId\x88\x01\x01\x12\x1a\n" +
+	"\bplatform\x18\b \x01(\tR\bplatform\x12\x1a\n" +
+	"\blanguage\x18\t \x01(\tR\blanguageB\n" +
+	"\n" +
+	"\b_user_id\"\xb7\x01\n" +
 	"\x16SearchListingsResponse\x12.\n" +
 	"\blistings\x18\x01 \x03(\v2\x12.search.v1.ListingR\blistings\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\x12\x17\n" +
 	"\atook_ms\x18\x03 \x01(\x05R\x06tookMs\x12\x16\n" +
-	"\x06cached\x18\x04 \x01(\bR\x06cached\"g\n" +
+	"\x06cached\x18\x04 \x01(\bR\x06cached\x12&\n" +
+	"\x0fsearch_event_id\x18\x05 \x01(\tR\rsearchEventId\"g\n" +
 	"\x1aGetTrendingSearchesRequest\x12\x1f\n" +
 	"\vcategory_id\x18\x01 \x01(\tR\n" +
 	"categoryId\x12\x14\n" +
@@ -671,6 +724,7 @@ func file_api_proto_search_v1_search_proto_init() {
 	file_api_proto_search_v1_filters_proto_init()
 	file_api_proto_search_v1_suggestions_proto_init()
 	file_api_proto_search_v1_popular_proto_init()
+	file_api_proto_search_v1_search_proto_msgTypes[0].OneofWrappers = []any{}
 	file_api_proto_search_v1_search_proto_msgTypes[5].OneofWrappers = []any{}
 	file_api_proto_search_v1_search_proto_msgTypes[7].OneofWrappers = []any{}
 	type x struct{}

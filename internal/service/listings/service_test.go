@@ -73,7 +73,7 @@ func TestBulkCreateProducts_Success_SingleProduct(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{
 		NewCreateProductInput(storefrontID, "Product 1"),
 	}
@@ -98,7 +98,7 @@ func TestBulkCreateProducts_Success_MultipleProducts(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{
 		NewCreateProductInput(storefrontID, "Product 1"),
 		NewCreateProductInput(storefrontID, "Product 2"),
@@ -126,7 +126,7 @@ func TestBulkCreateProducts_Error_EmptyInput(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{}
 
 	products, errors, err := service.BulkCreateProducts(ctx, storefrontID, inputs)
@@ -141,7 +141,7 @@ func TestBulkCreateProducts_Error_BatchTooLarge(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := make([]*domain.CreateProductInput, 1001)
 	for i := 0; i < 1001; i++ {
 		inputs[i] = NewCreateProductInput(storefrontID, "Product")
@@ -159,7 +159,7 @@ func TestBulkCreateProducts_Error_NilInput(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{
 		NewCreateProductInput(storefrontID, "Product 1"),
 		nil, // Nil input
@@ -178,7 +178,7 @@ func TestBulkCreateProducts_Error_ValidationFailed_Index0(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{
 		{
 			StorefrontID: storefrontID,
@@ -186,7 +186,7 @@ func TestBulkCreateProducts_Error_ValidationFailed_Index0(t *testing.T) {
 			Description:  "Test",
 			Price:        99.99,
 			Currency:     "USD",
-			CategoryID:   1,
+			CategoryID:   "3b4246cc-9970-403c-af01-c142a4178dc6",
 		},
 	}
 
@@ -215,7 +215,7 @@ func TestBulkCreateProducts_Error_StorefrontIDMismatch(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{
 		NewCreateProductInput(2, "Product 1"), // Different storefront_id
 	}
@@ -243,7 +243,7 @@ func TestBulkCreateProducts_Error_NegativePrice(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{
 		{
 			StorefrontID:  storefrontID,
@@ -251,7 +251,7 @@ func TestBulkCreateProducts_Error_NegativePrice(t *testing.T) {
 			Description:   "Test",
 			Price:         -10.00, // Negative price
 			Currency:      "USD",
-			CategoryID:    1,
+			CategoryID:    "3b4246cc-9970-403c-af01-c142a4178dc6",
 			StockQuantity: 10,
 		},
 	}
@@ -281,7 +281,7 @@ func TestBulkCreateProducts_Error_MissingName(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{
 		{
 			StorefrontID:  storefrontID,
@@ -289,7 +289,7 @@ func TestBulkCreateProducts_Error_MissingName(t *testing.T) {
 			Description:   "Test",
 			Price:         99.99,
 			Currency:      "USD",
-			CategoryID:    1,
+			CategoryID:    "3b4246cc-9970-403c-af01-c142a4178dc6",
 			StockQuantity: 10,
 		},
 	}
@@ -319,7 +319,7 @@ func TestBulkCreateProducts_PartialSuccess_SomeFailSomeSucceed(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	inputs := []*domain.CreateProductInput{
 		NewCreateProductInput(storefrontID, "Product 1"),
 		NewCreateProductInput(storefrontID, "Product 2"),
@@ -361,7 +361,7 @@ func TestBulkUpdateProducts_Success_UpdateMultiple(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	newName1 := "Updated Product 1"
 	newName2 := "Updated Product 2"
 	newPrice := 199.99
@@ -401,7 +401,7 @@ func TestBulkUpdateProducts_Error_EmptyInput(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	updates := []*domain.BulkUpdateProductInput{}
 
 	result, err := service.BulkUpdateProducts(ctx, storefrontID, updates)
@@ -416,7 +416,7 @@ func TestBulkUpdateProducts_Error_BatchTooLarge(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	updates := make([]*domain.BulkUpdateProductInput, 1001)
 	name := "Test"
 	for i := 0; i < 1001; i++ {
@@ -437,7 +437,7 @@ func TestBulkUpdateProducts_Error_NoFieldsToUpdate(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	updates := []*domain.BulkUpdateProductInput{
 		{
 			ProductID: 1,
@@ -456,7 +456,7 @@ func TestBulkUpdateProducts_Error_InvalidProductID(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	name := "Test"
 	updates := []*domain.BulkUpdateProductInput{
 		{
@@ -476,7 +476,7 @@ func TestBulkUpdateProducts_Error_OwnershipCheck(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	name := "Updated Product"
 	updates := []*domain.BulkUpdateProductInput{
 		{
@@ -512,7 +512,7 @@ func TestBulkUpdateProducts_PartialSuccess_Mixed(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	name1 := "Updated Product 1"
 	name2 := "Updated Product 2"
 	updates := []*domain.BulkUpdateProductInput{
@@ -559,7 +559,7 @@ func TestBulkUpdateProducts_Error_NegativePrice(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	negativePrice := -10.0
 	updates := []*domain.BulkUpdateProductInput{
 		{
@@ -603,7 +603,7 @@ func TestBulkDeleteProducts_Success_SoftDelete_Multiple(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	productIDs := []int64{1, 2, 3}
 	hardDelete := false
 
@@ -624,7 +624,7 @@ func TestBulkDeleteProducts_Success_HardDelete_Multiple(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	productIDs := []int64{1, 2, 3}
 	hardDelete := true
 
@@ -645,7 +645,7 @@ func TestBulkDeleteProducts_Error_EmptyInput(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	productIDs := []int64{}
 	hardDelete := false
 
@@ -663,7 +663,7 @@ func TestBulkDeleteProducts_Error_BatchTooLarge(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	productIDs := make([]int64, 1001)
 	for i := 0; i < 1001; i++ {
 		productIDs[i] = int64(i + 1)
@@ -702,7 +702,7 @@ func TestBulkDeleteProducts_Success_DuplicateIDs(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	productIDs := []int64{1, 2, 1, 3, 2} // Duplicates: 1 and 2
 	deduplicatedIDs := []int64{1, 2, 3}
 	hardDelete := false
@@ -724,7 +724,7 @@ func TestBulkDeleteProducts_Error_ZeroIDs(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	productIDs := []int64{0, 0, 0} // All invalid IDs
 	hardDelete := false
 
@@ -742,7 +742,7 @@ func TestBulkDeleteProducts_PartialSuccess_Mixed(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	productIDs := []int64{1, 2, 3}
 	hardDelete := false
 
@@ -768,7 +768,7 @@ func TestBulkDeleteProducts_Success_CascadeDelete_Variants(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	storefrontID := int64(1)
+	storefrontID := int64(123)
 	productIDs := []int64{1} // Product with 10 variants
 	hardDelete := true
 
@@ -793,7 +793,7 @@ func TestBulkCreateProductVariants_Success_MultipleVariants(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	inputs := []*domain.CreateVariantInput{
 		NewCreateVariantInput(productID),
 		NewCreateVariantInput(productID),
@@ -820,7 +820,7 @@ func TestBulkCreateProductVariants_Error_EmptyInput(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	inputs := []*domain.CreateVariantInput{}
 
 	variants, err := service.BulkCreateProductVariants(ctx, productID, inputs)
@@ -834,7 +834,7 @@ func TestBulkCreateProductVariants_Error_BatchTooLarge(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	inputs := make([]*domain.CreateVariantInput, 1001)
 	for i := 0; i < 1001; i++ {
 		inputs[i] = NewCreateVariantInput(productID)
@@ -867,7 +867,7 @@ func TestBulkCreateProductVariants_Error_MultipleDefaults(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	input1 := NewCreateVariantInput(productID)
 	input1.IsDefault = true
 	input2 := NewCreateVariantInput(productID)
@@ -886,7 +886,7 @@ func TestBulkCreateProductVariants_Error_ValidationFailed(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	negativePrice := -10.0
 	inputs := []*domain.CreateVariantInput{
 		{
@@ -917,8 +917,8 @@ func TestCreateListing_Success_MinimalFields(t *testing.T) {
 	expectedListing := NewTestListing(1, userID, "Test Listing")
 
 	// Mock category validation - category must be active
-	mockRepo.On("GetCategoryByID", ctx, int64(1)).
-		Return(&domain.Category{ID: 1, Name: "Test Category", IsActive: true}, nil)
+	mockRepo.On("GetCategoryByID", ctx, "1").
+		Return(&domain.Category{ID: "3b4246cc-9970-403c-af01-c142a4178dc6", Name: "Test Category", IsActive: true}, nil)
 
 	// Mock slug uniqueness check - slug doesn't exist yet
 	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
@@ -953,8 +953,8 @@ func TestCreateListing_Success_WithStorefront(t *testing.T) {
 	expectedListing.StorefrontID = &storefrontID
 
 	// Mock category validation
-	mockRepo.On("GetCategoryByID", ctx, int64(1)).
-		Return(&domain.Category{ID: 1, Name: "Test Category", IsActive: true}, nil)
+	mockRepo.On("GetCategoryByID", ctx, "1").
+		Return(&domain.Category{ID: "3b4246cc-9970-403c-af01-c142a4178dc6", Name: "Test Category", IsActive: true}, nil)
 	// Mock slug uniqueness
 	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
 		Return(nil, errors.New("not found"))
@@ -978,7 +978,7 @@ func TestCreateListing_Success_WithAllFields(t *testing.T) {
 
 	// Mock category validation and slug uniqueness (common for all create tests)
 	mockRepo.On("GetCategoryByID", ctx, mock.AnythingOfType("int64")).
-		Return(&domain.Category{ID: 1, Name: "Test Category", IsActive: true}, nil)
+		Return(&domain.Category{ID: "3b4246cc-9970-403c-af01-c142a4178dc6", Name: "Test Category", IsActive: true}, nil)
 	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
 		Return(nil, errors.New("not found"))
 
@@ -1094,8 +1094,8 @@ func TestCreateListing_Success_EnqueueIndexing_Success(t *testing.T) {
 	expectedListing := NewTestListing(1, userID, "Test Listing")
 
 	// Mock validation
-	mockRepo.On("GetCategoryByID", ctx, int64(1)).
-		Return(&domain.Category{ID: 1, Name: "Test", IsActive: true}, nil)
+	mockRepo.On("GetCategoryByID", ctx, "1").
+		Return(&domain.Category{ID: "1", Name: "Test", IsActive: true}, nil)
 	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
 		Return(nil, errors.New("not found"))
 
@@ -1121,8 +1121,8 @@ func TestCreateListing_Success_EnqueueIndexing_Failure_NonCritical(t *testing.T)
 	expectedListing := NewTestListing(1, userID, "Test Listing")
 
 	// Mock validation
-	mockRepo.On("GetCategoryByID", ctx, int64(1)).
-		Return(&domain.Category{ID: 1, Name: "Test", IsActive: true}, nil)
+	mockRepo.On("GetCategoryByID", ctx, "1").
+		Return(&domain.Category{ID: "1", Name: "Test", IsActive: true}, nil)
 	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
 		Return(nil, errors.New("not found"))
 
@@ -1147,7 +1147,7 @@ func TestUpdateListing_Success_UpdatePrice(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 	newPrice := 129.99
 
@@ -1184,7 +1184,7 @@ func TestUpdateListing_Success_UpdateQuantity(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 	newQuantity := int32(25)
 
@@ -1221,7 +1221,7 @@ func TestUpdateListing_Success_UpdateMultipleFields(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 	newTitle := "Updated Title"
 	newPrice := 199.99
@@ -1288,7 +1288,7 @@ func TestUpdateListing_Error_UnauthorizedUser_OwnershipCheck(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	ownerID := int64(100)
 	unauthorizedUserID := int64(200) // Different user
 
@@ -1314,7 +1314,7 @@ func TestUpdateListing_Error_NegativePrice(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 	negativePrice := -50.0
 
@@ -1334,7 +1334,7 @@ func TestUpdateListing_Error_NegativeQuantity(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 	negativeQuantity := int32(-10)
 
@@ -1354,7 +1354,7 @@ func TestUpdateListing_Success_CacheInvalidation_Success(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 	newPrice := 129.99
 
@@ -1389,7 +1389,7 @@ func TestUpdateListing_Success_EnqueueIndexing_Success(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 	newPrice := 129.99
 
@@ -1427,7 +1427,7 @@ func TestDeleteListing_Success_SoftDelete(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 
 	existingListing := NewTestListing(listingID, userID, "Test Listing")
@@ -1475,7 +1475,7 @@ func TestDeleteListing_Error_UnauthorizedUser(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	ownerID := int64(100)
 	unauthorizedUserID := int64(200) // Different user
 
@@ -1495,7 +1495,7 @@ func TestDeleteListing_Success_CacheInvalidation_Success(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 
 	existingListing := NewTestListing(listingID, userID, "Test Listing")
@@ -1526,7 +1526,7 @@ func TestDeleteListing_Success_EnqueueIndexing_Success(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	userID := int64(100)
 
 	existingListing := NewTestListing(listingID, userID, "Test Listing")
@@ -1759,7 +1759,7 @@ func TestSearchListings_Success_WithFilters(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	categoryID := int64(1)
+	categoryID := string("3b4246cc-9970-403c-af01-c142a4178dc6")
 	minPrice := 100.0
 	maxPrice := 500.0
 
@@ -1989,7 +1989,7 @@ func TestUpdateProduct_Success_UpdateFields(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	storefrontID := int64(10)
 	newName := "Updated Product"
 	newPrice := 199.99
@@ -2031,7 +2031,7 @@ func TestUpdateProduct_Error_InvalidStorefrontID(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	storefrontID := int64(0) // Invalid ID
 
 	input := NewUpdateProductInput("Updated", 199.99)
@@ -2047,7 +2047,7 @@ func TestUpdateProduct_Error_NegativePrice(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	storefrontID := int64(10)
 	negativePrice := -50.0
 
@@ -2064,7 +2064,7 @@ func TestUpdateProduct_Error_NegativeStock(t *testing.T) {
 	service, _, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	storefrontID := int64(10)
 	negativeStock := int32(-10)
 
@@ -2087,7 +2087,7 @@ func TestDeleteProduct_Success_SoftDelete(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	storefrontID := int64(10)
 	hardDelete := false
 
@@ -2105,7 +2105,7 @@ func TestDeleteProduct_Success_HardDelete(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	storefrontID := int64(10)
 	hardDelete := true
 
@@ -2138,7 +2138,7 @@ func TestDeleteProduct_Error_OwnershipCheck(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	storefrontID := int64(10) // Wrong storefront
 	hardDelete := false
 
@@ -2156,7 +2156,7 @@ func TestDeleteProduct_Success_CascadeDelete_Variants(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 	storefrontID := int64(10)
 	hardDelete := true
 
@@ -2178,7 +2178,7 @@ func TestGetListing_Success_CacheHit(t *testing.T) {
 	service, _, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	cacheKey := "listing:1"
 
 	// Cache returns successfully (cache hit)
@@ -2197,7 +2197,7 @@ func TestGetListing_Success_CacheMiss(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	cacheKey := "listing:1"
 
 	expectedListing := NewTestListing(listingID, 100, "Test Listing")
@@ -2254,7 +2254,7 @@ func TestGetListing_Success_NonBlockingCache_SetFailure(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	cacheKey := "listing:1"
 
 	expectedListing := NewTestListing(listingID, 100, "Test Listing")
@@ -2294,7 +2294,7 @@ func TestAddToFavorites_Success_AddFavorite(t *testing.T) {
 	ctx := TestContext()
 
 	userID := int64(100)
-	listingID := int64(1)
+	listingID := int64(123)
 
 	existingListing := NewTestListing(listingID, 200, "Test Listing")
 
@@ -2320,7 +2320,7 @@ func TestAddToFavorites_Error_InvalidUserID(t *testing.T) {
 	ctx := TestContext()
 
 	userID := int64(0) // Invalid
-	listingID := int64(1)
+	listingID := int64(123)
 
 	err := service.AddToFavorites(ctx, userID, listingID)
 
@@ -2363,7 +2363,7 @@ func TestRemoveFromFavorites_Success_RemoveFavorite(t *testing.T) {
 	ctx := TestContext()
 
 	userID := int64(100)
-	listingID := int64(1)
+	listingID := int64(123)
 
 	mockRepo.On("RemoveFromFavorites", ctx, userID, listingID).
 		Return(nil)
@@ -2385,7 +2385,7 @@ func TestRemoveFromFavorites_Error_InvalidUserID(t *testing.T) {
 	ctx := TestContext()
 
 	userID := int64(0) // Invalid
-	listingID := int64(1)
+	listingID := int64(123)
 
 	err := service.RemoveFromFavorites(ctx, userID, listingID)
 
@@ -2473,7 +2473,7 @@ func TestIsFavorite_True_IsFavorite(t *testing.T) {
 	ctx := TestContext()
 
 	userID := int64(100)
-	listingID := int64(1)
+	listingID := int64(123)
 
 	// Cache miss
 	mockCache.On("Get", ctx, "favorites:user:100:listing:1", mock.Anything).Return(assert.AnError).Once()
@@ -2497,7 +2497,7 @@ func TestIsFavorite_False_NotFavorite(t *testing.T) {
 	ctx := TestContext()
 
 	userID := int64(100)
-	listingID := int64(1)
+	listingID := int64(123)
 
 	// Cache miss
 	mockCache.On("Get", ctx, "favorites:user:100:listing:1", mock.Anything).Return(assert.AnError).Once()
@@ -2521,7 +2521,7 @@ func TestIsFavorite_Error_InvalidUserID(t *testing.T) {
 	ctx := TestContext()
 
 	userID := int64(0) // Invalid
-	listingID := int64(1)
+	listingID := int64(123)
 
 	isFavorite, err := service.IsFavorite(ctx, userID, listingID)
 
@@ -2689,7 +2689,7 @@ func TestIncrementProductViews_Success_IncrementViews(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	productID := int64(1)
+	productID := int64(123)
 
 	mockRepo.On("IncrementProductViews", ctx, productID).
 		Return(nil)
@@ -2720,7 +2720,7 @@ func TestAdminGetListing_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	expectedListing := NewTestListing(listingID, 100, "Admin Listing")
 
 	mockRepo.On("GetListingByID", ctx, listingID).
@@ -2740,7 +2740,7 @@ func TestAdminUpdateListing_NoOwnershipCheck(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	newPrice := 299.99
 
 	input := &domain.UpdateListingInput{
@@ -2773,7 +2773,7 @@ func TestAdminDeleteListing_NoOwnershipCheck(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 
 	// Notice: NO GetListingByID call for ownership check
 	mockRepo.On("DeleteListing", ctx, listingID).
@@ -2794,7 +2794,7 @@ func TestCacheInvalidation_Admin(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	newTitle := "Admin Cache Test"
 
 	input := &domain.UpdateListingInput{
@@ -2830,7 +2830,7 @@ func TestUpdateProductInventory_Success(t *testing.T) {
 	ctx := TestContext()
 
 	storefrontID := int64(10)
-	productID := int64(1)
+	productID := int64(123)
 	variantID := int64(0) // No variant
 	movementType := "in"
 	quantity := int32(50)
@@ -2857,7 +2857,7 @@ func TestGetImageByID_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	imageID := int64(1)
+	imageID := int64(123)
 	expectedImage := &domain.ListingImage{
 		ID:        imageID,
 		ListingID: 1,
@@ -2879,7 +2879,7 @@ func TestDeleteImage_Success(t *testing.T) {
 	service, mockRepo, mockCache, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	imageID := int64(1)
+	imageID := int64(123)
 	listingID := int64(100)
 
 	image := &domain.ListingImage{
@@ -2926,7 +2926,7 @@ func TestAddImage_Success(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	assert.Equal(t, int64(1), result.ID)
+	assert.Equal(t, string("3b4246cc-9970-403c-af01-c142a4178dc6"), result.ID)
 	mockRepo.AssertExpectations(t)
 	mockCache.AssertExpectations(t)
 }
@@ -2935,7 +2935,7 @@ func TestGetImages_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	expectedImages := []*domain.ListingImage{
 		{ID: 1, ListingID: listingID, URL: "https://example.com/image1.jpg"},
 		{ID: 2, ListingID: listingID, URL: "https://example.com/image2.jpg"},
@@ -2960,8 +2960,8 @@ func TestGetRootCategories_Success(t *testing.T) {
 	ctx := TestContext()
 
 	expectedCategories := []*domain.Category{
-		{ID: 1, Name: "Electronics"},
-		{ID: 2, Name: "Clothing"},
+		{ID: "1", Name: "Electronics"},
+		{ID: "2", Name: "Clothing"},
 	}
 
 	mockRepo.On("GetRootCategories", ctx).
@@ -2979,8 +2979,8 @@ func TestGetAllCategories_Success(t *testing.T) {
 	ctx := TestContext()
 
 	expectedCategories := []*domain.Category{
-		{ID: 1, Name: "Electronics"},
-		{ID: 2, Name: "Laptops", ParentID: func(i int64) *int64 { return &i }(1)},
+		{ID: "1", Name: "Electronics"},
+		{ID: "2", Name: "Laptops", ParentID: func(s string) *string { return &s }("1")},
 	}
 
 	mockRepo.On("GetAllCategories", ctx).
@@ -2999,8 +2999,8 @@ func TestGetPopularCategories_Success(t *testing.T) {
 
 	limit := 10
 	expectedCategories := []*domain.Category{
-		{ID: 1, Name: "Electronics"},
-		{ID: 2, Name: "Clothing"},
+		{ID: "1", Name: "Electronics"},
+		{ID: "2", Name: "Clothing"},
 	}
 
 	mockRepo.On("GetPopularCategories", ctx, limit).
@@ -3017,7 +3017,7 @@ func TestGetCategoryByID_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	categoryID := int64(1)
+	categoryID := string("3b4246cc-9970-403c-af01-c142a4178dc6")
 	expectedCategory := &domain.Category{
 		ID:   categoryID,
 		Name: "Electronics",
@@ -3038,7 +3038,7 @@ func TestGetCategoryTree_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	categoryID := int64(1)
+	categoryID := string("3b4246cc-9970-403c-af01-c142a4178dc6")
 	expectedTree := &domain.CategoryTreeNode{
 		ID:       categoryID,
 		Name:     "Electronics",
@@ -3086,7 +3086,7 @@ func TestGetVariants_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	listingID := int64(1)
+	listingID := int64(123)
 	expectedVariants := []*domain.ListingVariant{
 		{ID: 1, ListingID: listingID, SKU: "VAR-001"},
 		{ID: 2, ListingID: listingID, SKU: "VAR-002"},
@@ -3106,7 +3106,7 @@ func TestGetVariantByID_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	variantID := int64(1)
+	variantID := int64(123)
 	listingID := int64(10)
 
 	expectedVariants := []*domain.ListingVariant{
@@ -3148,7 +3148,7 @@ func TestDeleteVariant_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	variantID := int64(1)
+	variantID := int64(123)
 
 	mockRepo.On("DeleteVariant", ctx, variantID).
 		Return(nil)
@@ -3177,7 +3177,7 @@ func TestGetListingsForReindex_Success(t *testing.T) {
 		Return(expectedListings, nil)
 
 	// Mock GetImages calls for each listing (eager loading)
-	mockRepo.On("GetImages", ctx, int64(1)).
+	mockRepo.On("GetImages", ctx, string("3b4246cc-9970-403c-af01-c142a4178dc6")).
 		Return([]*domain.ListingImage{}, nil)
 	mockRepo.On("GetImages", ctx, int64(2)).
 		Return([]*domain.ListingImage{}, nil)
@@ -3225,7 +3225,7 @@ func TestGetVariant_Success(t *testing.T) {
 	service, mockRepo, _, _ := SetupServiceTest(t)
 	ctx := TestContext()
 
-	variantID := int64(1)
+	variantID := int64(123)
 	productID := int64(10)
 
 	expectedVariant := NewTestProductVariant(variantID, productID)

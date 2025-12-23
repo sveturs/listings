@@ -1,0 +1,301 @@
+{
+  "$schema": "./_schema.json",
+  "id": "clothing-footwear",
+  "slug": "odeca-i-obuca",
+  "level": 1,
+  "sort_order": 1,
+  "icon": "👕",
+  "names": {
+    "sr": "Odeća i obuća",
+    "en": "Clothing & Footwear",
+    "ru": "Одежда и обувь"
+  },
+  "descriptions": {
+    "sr": "Muška, ženska i dečja odeća, obuća i modni dodaci",
+    "en": "Men's, women's and children's clothing, footwear and fashion accessories",
+    "ru": "Мужская, женская и детская одежда, обувь и модные аксессуары"
+  },
+  "seo": {
+    "sr": {
+      "title": "Odeća i obuća | Vondi Marketplace",
+      "description": "Kupite odeću i obuću online. Širok izbor muške, ženske i dečje odeće.",
+      "keywords": "odeća, obuća, garderoba, moda"
+    },
+    "en": {
+      "title": "Clothing & Footwear | Vondi Marketplace",
+      "description": "Buy clothing and footwear online. Wide selection of men's, women's and children's clothing.",
+      "keywords": "clothing, footwear, fashion, wardrobe"
+    },
+    "ru": {
+      "title": "Одежда и обувь | Vondi Marketplace",
+      "description": "Купить одежду и обувь онлайн. Большой выбор мужской, женской и детской одежды.",
+      "keywords": "одежда, обувь, мода, гардероб"
+    }
+  },
+  "google_category_id": 166,
+  "children": [
+    {
+      "id": "womens-clothing",
+      "slug": "zenska-odeca",
+      "parent_slug": "odeca-i-obuca",
+      "level": 2,
+      "sort_order": 1,
+      "names": {
+        "sr": "Ženska odeća",
+        "en": "Women's Clothing",
+        "ru": "Женская одежда"
+      },
+      "descriptions": {
+        "sr": "Haljine, majice, pantalone, suknje i sva ženska garderoba",
+        "en": "Dresses, tops, pants, skirts and all women's wardrobe",
+        "ru": "Платья, топы, брюки, юбки и вся женская одежда"
+      },
+      "google_category_id": 1604,
+      "children": [
+        {
+          "id": "womens-dresses",
+          "slug": "haljine",
+          "parent_slug": "zenska-odeca",
+          "level": 3,
+          "sort_order": 1,
+          "names": {
+            "sr": "Haljine",
+            "en": "Dresses",
+            "ru": "Платья"
+          },
+          "google_category_id": 2271
+        },
+        {
+          "id": "womens-tops",
+          "slug": "zenske-majice-i-topovi",
+          "parent_slug": "zenska-odeca",
+          "level": 3,
+          "sort_order": 2,
+          "names": {
+            "sr": "Majice i topovi",
+            "en": "Tops & T-shirts",
+            "ru": "Топы и футболки"
+          },
+          "google_category_id": 212
+        },
+        {
+          "id": "womens-pants",
+          "slug": "zenske-pantalone",
+          "parent_slug": "zenska-odeca",
+          "level": 3,
+          "sort_order": 3,
+          "names": {
+            "sr": "Pantalone",
+            "en": "Pants",
+            "ru": "Брюки"
+          },
+          "google_category_id": 204
+        },
+        {
+          "id": "womens-jeans",
+          "slug": "zenske-farmerke",
+          "parent_slug": "zenska-odeca",
+          "level": 3,
+          "sort_order": 4,
+          "names": {
+            "sr": "Farmerke",
+            "en": "Jeans",
+            "ru": "Джинсы"
+          },
+          "google_category_id": 214
+        },
+        {
+          "id": "womens-skirts",
+          "slug": "suknje",
+          "parent_slug": "zenska-odeca",
+          "level": 3,
+          "sort_order": 5,
+          "names": {
+            "sr": "Suknje",
+            "en": "Skirts",
+            "ru": "Юбки"
+          },
+          "google_category_id": 2580
+        }
+      ]
+    },
+    {
+      "id": "mens-clothing",
+      "slug": "muska-odeca",
+      "parent_slug": "odeca-i-obuca",
+      "level": 2,
+      "sort_order": 2,
+      "names": {
+        "sr": "Muška odeća",
+        "en": "Men's Clothing",
+        "ru": "Мужская одежда"
+      },
+      "descriptions": {
+        "sr": "Košulje, majice, pantalone i sva muška garderoba",
+        "en": "Shirts, t-shirts, pants and all men's wardrobe",
+        "ru": "Рубашки, футболки, брюки и вся мужская одежда"
+      },
+      "google_category_id": 1604,
+      "children": [
+        {
+          "id": "mens-tshirts",
+          "slug": "muske-majice",
+          "parent_slug": "muska-odeca",
+          "level": 3,
+          "sort_order": 1,
+          "names": {
+            "sr": "Majice",
+            "en": "T-shirts",
+            "ru": "Футболки"
+          },
+          "google_category_id": 212
+        },
+        {
+          "id": "mens-shirts",
+          "slug": "muske-kosulje",
+          "parent_slug": "muska-odeca",
+          "level": 3,
+          "sort_order": 2,
+          "names": {
+            "sr": "Košulje",
+            "en": "Shirts",
+            "ru": "Рубашки"
+          },
+          "google_category_id": 207
+        },
+        {
+          "id": "mens-pants",
+          "slug": "muske-pantalone",
+          "parent_slug": "muska-odeca",
+          "level": 3,
+          "sort_order": 3,
+          "names": {
+            "sr": "Pantalone",
+            "en": "Pants",
+            "ru": "Брюки"
+          },
+          "google_category_id": 204
+        }
+      ]
+    },
+    {
+      "id": "kids-clothing",
+      "slug": "decija-odeca",
+      "parent_slug": "odeca-i-obuca",
+      "level": 2,
+      "sort_order": 3,
+      "names": {
+        "sr": "Dečija odeća",
+        "en": "Kids' Clothing",
+        "ru": "Детская одежда"
+      },
+      "descriptions": {
+        "sr": "Odeća za devojčice, dečake i bebe",
+        "en": "Clothing for girls, boys and babies",
+        "ru": "Одежда для девочек, мальчиков и малышей"
+      },
+      "children": [
+        {
+          "id": "girls-clothing",
+          "slug": "za-devojcice",
+          "parent_slug": "decija-odeca",
+          "level": 3,
+          "sort_order": 1,
+          "names": {
+            "sr": "Za devojčice",
+            "en": "Girls' Clothing",
+            "ru": "Для девочек"
+          }
+        },
+        {
+          "id": "boys-clothing",
+          "slug": "za-decake",
+          "parent_slug": "decija-odeca",
+          "level": 3,
+          "sort_order": 2,
+          "names": {
+            "sr": "Za dečake",
+            "en": "Boys' Clothing",
+            "ru": "Для мальчиков"
+          }
+        }
+      ]
+    },
+    {
+      "id": "womens-footwear",
+      "slug": "zenska-obuca",
+      "parent_slug": "odeca-i-obuca",
+      "level": 2,
+      "sort_order": 4,
+      "names": {
+        "sr": "Ženska obuća",
+        "en": "Women's Footwear",
+        "ru": "Женская обувь"
+      },
+      "children": [
+        {
+          "id": "womens-heels",
+          "slug": "cipele-na-stiklu",
+          "parent_slug": "zenska-obuca",
+          "level": 3,
+          "sort_order": 1,
+          "names": {
+            "sr": "Cipele na štiklu",
+            "en": "Heels",
+            "ru": "Туфли на каблуке"
+          }
+        },
+        {
+          "id": "womens-sneakers",
+          "slug": "zenske-patike",
+          "parent_slug": "zenska-obuca",
+          "level": 3,
+          "sort_order": 2,
+          "names": {
+            "sr": "Patike",
+            "en": "Sneakers",
+            "ru": "Кроссовки"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mens-footwear",
+      "slug": "muska-obuca",
+      "parent_slug": "odeca-i-obuca",
+      "level": 2,
+      "sort_order": 5,
+      "names": {
+        "sr": "Muška obuća",
+        "en": "Men's Footwear",
+        "ru": "Мужская обувь"
+      },
+      "children": [
+        {
+          "id": "mens-sneakers",
+          "slug": "muske-patike",
+          "parent_slug": "muska-obuca",
+          "level": 3,
+          "sort_order": 1,
+          "names": {
+            "sr": "Patike",
+            "en": "Sneakers",
+            "ru": "Кроссовки"
+          }
+        },
+        {
+          "id": "mens-formal-shoes",
+          "slug": "elegantne-cipele",
+          "parent_slug": "muska-obuca",
+          "level": 3,
+          "sort_order": 2,
+          "names": {
+            "sr": "Elegantne cipele",
+            "en": "Formal Shoes",
+            "ru": "Классическая обувь"
+          }
+        }
+      ]
+    }
+  ]
+}

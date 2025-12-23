@@ -356,7 +356,7 @@ func TestExampleFullIntegration(t *testing.T) {
 	assert.Equal(t, 1, imageCount)
 
 	// 7. Test category retrieval
-	categoryResp, err := server.Client.GetCategory(ctx, &pb.CategoryIDRequest{CategoryId: 1})
+	categoryResp, err := server.Client.GetCategory(ctx, &pb.CategoryIDRequest{CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6"})
 	require.NoError(t, err)
 	require.NotNil(t, categoryResp)
 	assert.Equal(t, "Electronics", categoryResp.Category.Name)

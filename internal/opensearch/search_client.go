@@ -228,6 +228,45 @@ func (sc *SearchClient) executeSearch(ctx context.Context, query map[string]inte
 	return &searchResp, nil
 }
 
+// SearchIndex executes a search query on a specific index
+func (sc *SearchClient) SearchIndex(ctx context.Context, index string, query map[string]interface{}) (*SearchResponse, error) {
+	// Marshal query to JSON
+	queryJSON, err := json.Marshal(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query: %w", err)
+	}
+
+	// Apply timeout
+	ctx, cancel := context.WithTimeout(ctx, sc.timeout)
+	defer cancel()
+
+	// Execute search on specified index
+	res, err := sc.client.Search(
+		sc.client.Search.WithContext(ctx),
+		sc.client.Search.WithIndex(index),
+		sc.client.Search.WithBody(bytes.NewReader(queryJSON)),
+		sc.client.Search.WithTrackTotalHits(true),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("search request failed: %w", err)
+	}
+	defer res.Body.Close()
+
+	// Check for HTTP errors
+	if res.IsError() {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return nil, fmt.Errorf("search returned error [%s]: %s", res.Status(), string(bodyBytes))
+	}
+
+	// Parse response
+	var searchResp SearchResponse
+	if err := json.NewDecoder(res.Body).Decode(&searchResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &searchResp, nil
+}
+
 // HealthCheck performs a health check on OpenSearch connection
 func (sc *SearchClient) HealthCheck(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)

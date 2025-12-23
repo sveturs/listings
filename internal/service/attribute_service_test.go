@@ -66,7 +66,7 @@ func (m *MockAttributeRepository) List(ctx context.Context, filter *domain.ListA
 	return args.Get(0).([]*domain.Attribute), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockAttributeRepository) LinkToCategory(ctx context.Context, categoryID int32, attributeID int32, settings *domain.CategoryAttributeSettings) (*domain.CategoryAttribute, error) {
+func (m *MockAttributeRepository) LinkToCategory(ctx context.Context, categoryID string, attributeID int32, settings *domain.CategoryAttributeSettings) (*domain.CategoryAttribute, error) {
 	args := m.Called(ctx, categoryID, attributeID, settings)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -82,12 +82,12 @@ func (m *MockAttributeRepository) UpdateCategoryAttribute(ctx context.Context, c
 	return args.Get(0).(*domain.CategoryAttribute), args.Error(1)
 }
 
-func (m *MockAttributeRepository) UnlinkFromCategory(ctx context.Context, categoryID int32, attributeID int32) error {
+func (m *MockAttributeRepository) UnlinkFromCategory(ctx context.Context, categoryID string, attributeID int32) error {
 	args := m.Called(ctx, categoryID, attributeID)
 	return args.Error(0)
 }
 
-func (m *MockAttributeRepository) GetCategoryAttributes(ctx context.Context, categoryID int32, filter *domain.GetCategoryAttributesFilter) ([]*domain.CategoryAttribute, error) {
+func (m *MockAttributeRepository) GetCategoryAttributes(ctx context.Context, categoryID string, filter *domain.GetCategoryAttributesFilter) ([]*domain.CategoryAttribute, error) {
 	args := m.Called(ctx, categoryID, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -113,7 +113,7 @@ func (m *MockAttributeRepository) DeleteListingValues(ctx context.Context, listi
 	return args.Error(0)
 }
 
-func (m *MockAttributeRepository) GetCategoryVariantAttributes(ctx context.Context, categoryID int32) ([]*domain.VariantAttribute, error) {
+func (m *MockAttributeRepository) GetCategoryVariantAttributes(ctx context.Context, categoryID string) ([]*domain.VariantAttribute, error) {
 	args := m.Called(ctx, categoryID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -450,7 +450,7 @@ func TestLinkAttributeToCategory_Success(t *testing.T) {
 
 	catAttr := &domain.CategoryAttribute{
 		ID:          1,
-		CategoryID:  100,
+		CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 		AttributeID: 1,
 		IsEnabled:   true,
 		SortOrder:   10,
@@ -461,10 +461,10 @@ func TestLinkAttributeToCategory_Success(t *testing.T) {
 	mockRepo.On("GetByID", ctx, int32(1)).Return(attr, nil)
 
 	// Mock: Link
-	mockRepo.On("LinkToCategory", ctx, int32(100), int32(1), settings).Return(catAttr, nil).Once()
+	mockRepo.On("LinkToCategory", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", int32(1), settings).Return(catAttr, nil).Once()
 
 	// Execute
-	err := service.LinkAttributeToCategory(ctx, 100, 1, settings)
+	err := service.LinkAttributeToCategory(ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", 1, settings)
 
 	// Assert
 	assert.NoError(t, err)
@@ -483,7 +483,7 @@ func TestLinkAttributeToCategory_AttributeNotFound(t *testing.T) {
 	mockRepo.On("GetByID", ctx, int32(999)).Return(nil, errors.New("not found"))
 
 	// Execute
-	err := service.LinkAttributeToCategory(ctx, 100, 999, settings)
+	err := service.LinkAttributeToCategory(ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", 999, settings)
 
 	// Assert
 	assert.Error(t, err)
@@ -501,7 +501,7 @@ func TestGetCategoryAttributes_CacheMiss_Success(t *testing.T) {
 	expectedAttrs := []*domain.CategoryAttribute{
 		{
 			ID:          1,
-			CategoryID:  100,
+			CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			AttributeID: 1,
 			Attribute: &domain.Attribute{
 				ID:   1,
@@ -511,11 +511,11 @@ func TestGetCategoryAttributes_CacheMiss_Success(t *testing.T) {
 	}
 
 	// Mock: Repository fetch
-	mockRepo.On("GetCategoryAttributes", ctx, int32(100), (*domain.GetCategoryAttributesFilter)(nil)).
+	mockRepo.On("GetCategoryAttributes", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", (*domain.GetCategoryAttributesFilter)(nil)).
 		Return(expectedAttrs, nil)
 
 	// Execute
-	results, err := service.GetCategoryAttributes(ctx, 100, nil)
+	results, err := service.GetCategoryAttributes(ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", nil)
 
 	// Assert
 	assert.NoError(t, err)
@@ -546,7 +546,7 @@ func TestValidateAttributeValues_Success(t *testing.T) {
 	catAttrs := []*domain.CategoryAttribute{
 		{
 			ID:          1,
-			CategoryID:  100,
+			CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			AttributeID: 1,
 			IsEnabled:   true,
 			Attribute: &domain.Attribute{
@@ -559,7 +559,7 @@ func TestValidateAttributeValues_Success(t *testing.T) {
 		},
 		{
 			ID:          2,
-			CategoryID:  100,
+			CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			AttributeID: 2,
 			IsEnabled:   true,
 			Attribute: &domain.Attribute{
@@ -573,11 +573,11 @@ func TestValidateAttributeValues_Success(t *testing.T) {
 	}
 
 	// Mock: Get category attributes (cache miss will call repository)
-	mockRepo.On("GetCategoryAttributes", ctx, int32(100), (*domain.GetCategoryAttributesFilter)(nil)).
+	mockRepo.On("GetCategoryAttributes", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", (*domain.GetCategoryAttributesFilter)(nil)).
 		Return(catAttrs, nil).Once()
 
 	// Execute
-	err := service.ValidateAttributeValues(ctx, 100, values)
+	err := service.ValidateAttributeValues(ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", values)
 
 	// Assert
 	assert.NoError(t, err)
@@ -599,7 +599,7 @@ func TestValidateAttributeValues_AttributeNotLinked(t *testing.T) {
 	catAttrs := []*domain.CategoryAttribute{
 		{
 			ID:          1,
-			CategoryID:  100,
+			CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			AttributeID: 1,
 			IsEnabled:   true,
 			Attribute: &domain.Attribute{
@@ -610,11 +610,11 @@ func TestValidateAttributeValues_AttributeNotLinked(t *testing.T) {
 	}
 
 	// Mock: Get category attributes (cache will miss and call repository)
-	mockRepo.On("GetCategoryAttributes", ctx, int32(100), (*domain.GetCategoryAttributesFilter)(nil)).
+	mockRepo.On("GetCategoryAttributes", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", (*domain.GetCategoryAttributesFilter)(nil)).
 		Return(catAttrs, nil)
 
 	// Execute
-	err := service.ValidateAttributeValues(ctx, 100, values)
+	err := service.ValidateAttributeValues(ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", values)
 
 	// Assert
 	assert.Error(t, err)
@@ -632,7 +632,7 @@ func TestValidateAttributeValues_MissingRequiredAttribute(t *testing.T) {
 	catAttrs := []*domain.CategoryAttribute{
 		{
 			ID:          1,
-			CategoryID:  100,
+			CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			AttributeID: 1,
 			IsEnabled:   true,
 			IsRequired:  &isRequired, // Required!
@@ -645,11 +645,11 @@ func TestValidateAttributeValues_MissingRequiredAttribute(t *testing.T) {
 	}
 
 	// Mock: Get category attributes (cache will miss and call repository)
-	mockRepo.On("GetCategoryAttributes", ctx, int32(100), (*domain.GetCategoryAttributesFilter)(nil)).
+	mockRepo.On("GetCategoryAttributes", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", (*domain.GetCategoryAttributesFilter)(nil)).
 		Return(catAttrs, nil)
 
 	// Execute
-	err := service.ValidateAttributeValues(ctx, 100, values)
+	err := service.ValidateAttributeValues(ctx, "3b4246cc-9970-403c-af01-c142a4178dc6", values)
 
 	// Assert
 	assert.Error(t, err)
@@ -730,16 +730,16 @@ func TestGetCategoryVariantAttributes_Success(t *testing.T) {
 	expectedAttrs := []*domain.VariantAttribute{
 		{
 			ID:          1,
-			CategoryID:  100,
+			CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			AttributeID: 1,
 		},
 	}
 
 	// Mock: Repository fetch
-	mockRepo.On("GetCategoryVariantAttributes", ctx, int32(100)).Return(expectedAttrs, nil)
+	mockRepo.On("GetCategoryVariantAttributes", ctx, "3b4246cc-9970-403c-af01-c142a4178dc6").Return(expectedAttrs, nil)
 
 	// Execute
-	results, err := service.GetCategoryVariantAttributes(ctx, 100)
+	results, err := service.GetCategoryVariantAttributes(ctx, "3b4246cc-9970-403c-af01-c142a4178dc6")
 
 	// Assert
 	assert.NoError(t, err)
@@ -774,7 +774,7 @@ func TestInvalidateCategoryCache_Success(t *testing.T) {
 	ctx := context.Background()
 
 	// Execute
-	err := service.InvalidateCategoryCache(ctx, 100)
+	err := service.InvalidateCategoryCache(ctx, "3b4246cc-9970-403c-af01-c142a4178dc6")
 
 	// Assert
 	assert.NoError(t, err)

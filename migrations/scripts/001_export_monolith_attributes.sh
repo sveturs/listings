@@ -2,7 +2,7 @@
 # ============================================================================
 # Script: 001_export_monolith_attributes.sh
 # Description: Export attributes data from monolith PostgreSQL database
-# Source: postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd
+# Source: postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db
 # Output: /tmp/attribute_migration/
 # ============================================================================
 
@@ -15,7 +15,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Configuration
-MONOLITH_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"
+MONOLITH_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable"
 OUTPUT_DIR="/tmp/attribute_migration"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 

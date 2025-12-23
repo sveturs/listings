@@ -33,8 +33,8 @@ func TestCreateListing(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 1, "Electronics", "electronics", 1, true, 0)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
+		`, "3b4246cc-9970-403c-af01-c142a4178dc6", "Electronics", "electronics", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CreateListingRequest{
@@ -43,7 +43,7 @@ func TestCreateListing(t *testing.T) {
 			Description: testutils.StringPtr("A test electronic device"),
 			Price:       99.99,
 			Currency:    "USD",
-			CategoryId:  1,
+			CategoryId:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			Quantity:    1,
 		}
 
@@ -69,8 +69,8 @@ func TestCreateListing(t *testing.T) {
 		// Setup: Insert category and storefront
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 2, "Fashion", "fashion", 1, true, 0)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
+		`, "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b", "Fashion", "fashion", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO storefronts (id, user_id, slug, name, country, is_active, is_verified)
@@ -86,7 +86,7 @@ func TestCreateListing(t *testing.T) {
 			Description:  testutils.StringPtr("A fashion item"),
 			Price:        49.99,
 			Currency:     "USD",
-			CategoryId:   2,
+			CategoryId:   "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b",
 			Quantity:     5,
 		}
 
@@ -108,8 +108,8 @@ func TestCreateListing(t *testing.T) {
 		// Setup: category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 3, "Vehicles", "vehicles", 1, true, 0)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
+		`, "9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f", "Vehicles", "vehicles", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		sku := "TEST-SKU-001"
@@ -119,7 +119,7 @@ func TestCreateListing(t *testing.T) {
 			Description: testutils.StringPtr("Complete vehicle listing with all optional fields"),
 			Price:       25000.00,
 			Currency:    "USD",
-			CategoryId:  3,
+			CategoryId:  "9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f",
 			Quantity:    1,
 			Sku:         &sku,
 		}
@@ -141,8 +141,8 @@ func TestCreateListing(t *testing.T) {
 		// Setup: category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 4, "Books", "books", 1, true, 0)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
+		`, "0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a", "Books", "books", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CreateListingRequest{
@@ -150,7 +150,7 @@ func TestCreateListing(t *testing.T) {
 			Title:      "Minimal Listing",
 			Price:      9.99,
 			Currency:   "USD",
-			CategoryId: 4,
+			CategoryId: "0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
 			Quantity:   1,
 		}
 
@@ -174,7 +174,7 @@ func TestCreateListing(t *testing.T) {
 			Title:      "", // Empty title (invalid)
 			Price:      10.00,
 			Currency:   "USD",
-			CategoryId: 1,
+			CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6",
 			Quantity:   1,
 		}
 
@@ -198,7 +198,7 @@ func TestCreateListing(t *testing.T) {
 			Title:      "Invalid Price Listing",
 			Price:      -10.00, // Negative price (invalid)
 			Currency:   "USD",
-			CategoryId: 1,
+			CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6",
 			Quantity:   1,
 		}
 
@@ -222,7 +222,7 @@ func TestCreateListing(t *testing.T) {
 			Title:      "Listing with Invalid Category",
 			Price:      10.00,
 			Currency:   "USD",
-			CategoryId: 99999, // Non-existent category
+			CategoryId: "ffffffff-ffff-ffff-ffff-ffffffffffff", // Non-existent category
 			Quantity:   1,
 		}
 
@@ -244,8 +244,8 @@ func TestCreateListing(t *testing.T) {
 		// Setup: category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 5, "Concurrent Test", "concurrent-test", 1, true, 0)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
+		`, "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d", "Concurrent Test", "concurrent-test", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		concurrency := 5
@@ -263,7 +263,7 @@ func TestCreateListing(t *testing.T) {
 					Title:      fmt.Sprintf("Concurrent Listing %d", index),
 					Price:      float64(10 + index),
 					Currency:   "USD",
-					CategoryId: 5,
+					CategoryId: "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
 					Quantity:   1,
 				}
 
@@ -315,7 +315,7 @@ func TestUpdateListing(t *testing.T) {
 		// Setup: category and listing
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 10, "Update Test", "update-test", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -357,7 +357,7 @@ func TestUpdateListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 11, "Partial Update", "partial-update", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -395,7 +395,7 @@ func TestUpdateListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 12, "Validation", "validation", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -453,7 +453,7 @@ func TestUpdateListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 13, "Permission", "permission", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -490,7 +490,7 @@ func TestUpdateListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 14, "Concurrent Update", "concurrent-update", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -548,7 +548,7 @@ func TestUpdateListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 15, "Status", "status", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -592,7 +592,7 @@ func TestGetListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 20, "Get Test", "get-test", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -643,7 +643,7 @@ func TestGetListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 21, "Deleted Test", "deleted-test", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -677,7 +677,7 @@ func TestGetListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 22, "Related Data", "related-data", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -738,7 +738,7 @@ func TestGetListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 23, "Attributes", "attributes", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -781,7 +781,7 @@ func TestGetListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 24, "Multilang", "multilang", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -823,7 +823,7 @@ func TestDeleteListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 30, "Delete Test", "delete-test", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -881,7 +881,7 @@ func TestDeleteListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 31, "Permission Delete", "permission-delete", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -917,7 +917,7 @@ func TestDeleteListing(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 32, "Already Deleted", "already-deleted", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -962,7 +962,7 @@ func TestSearchListings(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 40, "Search Category", "search-category", 1, true, 0)
 
 		for i := 1; i <= 5; i++ {
@@ -978,7 +978,7 @@ func TestSearchListings(t *testing.T) {
 		}
 
 		ctx := testutils.TestContext(t)
-		categoryID := int64(40)
+		categoryID := "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e"
 		req := &pb.SearchListingsRequest{
 			Query:      "",
 			CategoryId: &categoryID,
@@ -1002,7 +1002,7 @@ func TestSearchListings(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 41, "Price Range", "price-range", 1, true, 0)
 
 		prices := []float64{10.00, 25.00, 50.00, 75.00, 100.00}
@@ -1050,7 +1050,7 @@ func TestSearchListings(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 42, "Text Search", "text-search", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -1086,7 +1086,7 @@ func TestSearchListings(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 43, "Pagination", "pagination", 1, true, 0)
 
 		for i := 1; i <= 15; i++ {
@@ -1135,7 +1135,7 @@ func TestSearchListings(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 44, "Combined", "combined", 1, true, 0)
 
 		for i := 1; i <= 10; i++ {
@@ -1151,7 +1151,7 @@ func TestSearchListings(t *testing.T) {
 		}
 
 		ctx := testutils.TestContext(t)
-		categoryID := int64(44)
+		categoryID := "44"
 		minPrice := 40.0
 		maxPrice := 70.0
 		req := &pb.SearchListingsRequest{
@@ -1170,7 +1170,7 @@ func TestSearchListings(t *testing.T) {
 		assert.Greater(t, len(resp.Listings), 0)
 
 		for _, listing := range resp.Listings {
-			assert.Equal(t, int64(44), listing.CategoryId)
+			assert.Equal(t, "44", listing.CategoryId)
 			assert.GreaterOrEqual(t, listing.Price, 40.0)
 			assert.LessOrEqual(t, listing.Price, 70.0)
 		}
@@ -1214,7 +1214,7 @@ func TestSearchListings(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 45, "Source Type", "source-type", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -1245,7 +1245,7 @@ func TestSearchListings(t *testing.T) {
 			"active", "public", 2, 0, 0)
 
 		ctx := testutils.TestContext(t)
-		categoryID := int64(45)
+		categoryID := "45"
 		req := &pb.SearchListingsRequest{
 			Query:      "",
 			CategoryId: &categoryID,
@@ -1281,7 +1281,7 @@ func TestSearchListings(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
 		`, 46, "Performance", "performance", 1, true, 0)
 
 		// Insert 100 listings for performance test
@@ -1298,7 +1298,7 @@ func TestSearchListings(t *testing.T) {
 		}
 
 		ctx := testutils.TestContext(t)
-		categoryID := int64(46)
+		categoryID := "46"
 		req := &pb.SearchListingsRequest{
 			Query:      "",
 			CategoryId: &categoryID,
@@ -1391,8 +1391,8 @@ func TestListingEdgeCases(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 50, "Unicode", "unicode", 1, true, 0)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
+		`, "50505050-5050-5050-5050-505050505050", "Unicode", "unicode", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CreateListingRequest{
@@ -1401,7 +1401,7 @@ func TestListingEdgeCases(t *testing.T) {
 			Description: testutils.StringPtr("Описание с кириллицей и эмодзи 🚀"),
 			Price:       99.99,
 			Currency:    "USD",
-			CategoryId:  50,
+			CategoryId:  "50505050-5050-5050-5050-505050505050",
 			Quantity:    1,
 		}
 
@@ -1427,8 +1427,8 @@ func TestListingEdgeCases(t *testing.T) {
 		// Setup
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 51, "Boundary", "boundary", 1, true, 0)
+			VALUES ($1::uuid, $2, $3, NULL, $4, 0, $5, $6)
+		`, "51515151-5151-5151-5151-515151515151", "Boundary", "boundary", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -1440,7 +1440,7 @@ func TestListingEdgeCases(t *testing.T) {
 			Title:      longTitle,
 			Price:      999999.99, // Very high price
 			Currency:   "USD",
-			CategoryId: 51,
+			CategoryId: "51515151-5151-5151-5151-515151515151",
 			Quantity:   999999, // Maximum quantity
 		}
 
@@ -1458,7 +1458,7 @@ func TestListingEdgeCases(t *testing.T) {
 			Title:      "Min", // Minimum 3 characters (per validation rules)
 			Price:      0.01,  // Minimum price
 			Currency:   "USD",
-			CategoryId: 51,
+			CategoryId: "51515151-5151-5151-5151-515151515151",
 			Quantity:   1, // Minimum quantity
 		}
 

@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Vondi Category Schema",
+  "description": "JSON Schema for category hierarchy (L1/L2/L3) with multilingual support",
+  "type": "object",
+  "required": ["id", "slug", "level", "names"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Internal category ID (slug without dashes)",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly identifier (Serbian)",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "description": "Hierarchy level (1=L1, 2=L2, 3=L3)"
+    },
+    "parent_slug": {
+      "type": "string",
+      "description": "Parent category slug (required for L2/L3)"
+    },
+    "sort_order": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "icon": {
+      "type": "string",
+      "description": "Emoji or icon name"
+    },
+    "image_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "names": {
+      "type": "object",
+      "required": ["sr", "en", "ru"],
+      "properties": {
+        "sr": {"type": "string", "minLength": 1},
+        "en": {"type": "string", "minLength": 1},
+        "ru": {"type": "string", "minLength": 1}
+      }
+    },
+    "descriptions": {
+      "type": "object",
+      "properties": {
+        "sr": {"type": "string"},
+        "en": {"type": "string"},
+        "ru": {"type": "string"}
+      }
+    },
+    "seo": {
+      "type": "object",
+      "properties": {
+        "sr": {
+          "type": "object",
+          "properties": {
+            "title": {"type": "string"},
+            "description": {"type": "string"},
+            "keywords": {"type": "string"}
+          }
+        },
+        "en": {"type": "object"},
+        "ru": {"type": "object"}
+      }
+    },
+    "google_category_id": {
+      "type": "integer",
+      "description": "Google Product Taxonomy ID"
+    },
+    "facebook_category_id": {
+      "type": "string"
+    },
+    "children": {
+      "type": "array",
+      "items": {"$ref": "#"}
+    }
+  }
+}

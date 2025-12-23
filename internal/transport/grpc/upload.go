@@ -24,13 +24,12 @@ import (
 )
 
 const (
-	maxImageSize      = 10 * 1024 * 1024 // 10MB per image
-	maxTotalSize      = 50 * 1024 * 1024 // 50MB total per upload batch
-	maxFiles          = 10               // Maximum files per upload
-	thumbnailSize     = 200              // Thumbnail dimensions (200x200px)
-	thumbnailQuality  = 85               // JPEG quality for thumbnails
-	chunkSize         = 1024 * 1024      // 1MB chunks
-	minioPresignedTTL = 24 * time.Hour   // Presigned URL expiry
+	maxImageSize     = 10 * 1024 * 1024 // 10MB per image
+	maxTotalSize     = 50 * 1024 * 1024 // 50MB total per upload batch
+	maxFiles         = 10               // Maximum files per upload
+	thumbnailSize    = 200              // Thumbnail dimensions (200x200px)
+	thumbnailQuality = 85               // JPEG quality for thumbnails
+	chunkSize        = 1024 * 1024      // 1MB chunks
 )
 
 var allowedExtensions = map[string]bool{
@@ -256,22 +255,9 @@ func (s *Server) processImageUpload(ctx context.Context, metadata *listingspb.Up
 
 	s.logger.Debug().Str("key", thumbnailKey).Msg("thumbnail uploaded to MinIO")
 
-	// Generate presigned URLs (24h expiry)
-	originalURL, err := s.minioClient.GetPresignedURL(ctx, originalKey, minioPresignedTTL)
-	if err != nil {
-		// Compensating transaction: Delete both images
-		_ = s.minioClient.DeleteImage(ctx, originalKey)
-		_ = s.minioClient.DeleteImage(ctx, thumbnailKey)
-		return nil, fmt.Errorf("failed to generate presigned URL for original: %w", err)
-	}
-
-	thumbnailURL, err := s.minioClient.GetPresignedURL(ctx, thumbnailKey, minioPresignedTTL)
-	if err != nil {
-		// Compensating transaction: Delete both images
-		_ = s.minioClient.DeleteImage(ctx, originalKey)
-		_ = s.minioClient.DeleteImage(ctx, thumbnailKey)
-		return nil, fmt.Errorf("failed to generate presigned URL for thumbnail: %w", err)
-	}
+	// Generate public URLs (permanent, no expiry - bucket is public)
+	originalURL := s.minioClient.GetPublicURL(originalKey)
+	thumbnailURL := s.minioClient.GetPublicURL(thumbnailKey)
 
 	// Save image metadata to database
 	width := int32(img.Bounds().Dx())

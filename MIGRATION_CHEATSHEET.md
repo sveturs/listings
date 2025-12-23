@@ -68,7 +68,7 @@ go run ./cmd/migrate_category_attributes/main.go
 
 ```bash
 # Source (Monolith) - port 5433
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" \
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" \
   -c "SELECT COUNT(*) FROM unified_attributes;"
 
 # Destination (Microservice) - port 35434
@@ -96,10 +96,10 @@ psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?s
 
 ```bash
 # Connection string
-postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable
+postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable
 
 # Quick connect
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable"
 
 # Tables
 unified_attributes
@@ -261,7 +261,7 @@ psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?s
 
 ```bash
 # Monolith (rarely needed, defaults are correct)
-export SOURCE_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"
+export SOURCE_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable"
 
 # Microservice (rarely needed, defaults are correct)
 export DEST_DB="postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable"

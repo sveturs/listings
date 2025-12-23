@@ -238,13 +238,13 @@ func (s *Server) ListAttributes(ctx context.Context, req *pb.ListAttributesReque
 // LinkAttributeToCategory links an attribute to a category with optional overrides
 func (s *Server) LinkAttributeToCategory(ctx context.Context, req *pb.LinkAttributeToCategoryRequest) (*pb.LinkAttributeToCategoryResponse, error) {
 	s.logger.Debug().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int32("attribute_id", req.AttributeId).
 		Msg("LinkAttributeToCategory called")
 
 	// Validate request
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category_id must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category_id is required")
 	}
 	if req.AttributeId <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "attribute_id must be greater than 0")
@@ -257,7 +257,7 @@ func (s *Server) LinkAttributeToCategory(ctx context.Context, req *pb.LinkAttrib
 	err := s.attrService.LinkAttributeToCategory(ctx, req.CategoryId, req.AttributeId, settings)
 	if err != nil {
 		s.logger.Error().Err(err).
-			Int32("category_id", req.CategoryId).
+			Str("category_id", req.CategoryId).
 			Int32("attribute_id", req.AttributeId).
 			Msg("failed to link attribute to category")
 		return nil, convertServiceError(err, "link attribute to category")
@@ -287,7 +287,7 @@ func (s *Server) LinkAttributeToCategory(ctx context.Context, req *pb.LinkAttrib
 	pbCatAttr := DomainToProtoCategoryAttribute(linkedAttr)
 
 	s.logger.Info().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int32("attribute_id", req.AttributeId).
 		Msg("attribute linked to category successfully")
 
@@ -299,13 +299,13 @@ func (s *Server) LinkAttributeToCategory(ctx context.Context, req *pb.LinkAttrib
 // UpdateCategoryAttribute updates category-specific attribute settings
 func (s *Server) UpdateCategoryAttribute(ctx context.Context, req *pb.UpdateCategoryAttributeRequest) (*pb.UpdateCategoryAttributeResponse, error) {
 	s.logger.Debug().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int32("attribute_id", req.AttributeId).
 		Msg("UpdateCategoryAttribute called")
 
 	// Validate request
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category_id must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category_id is required")
 	}
 	if req.AttributeId <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "attribute_id must be greater than 0")
@@ -336,7 +336,7 @@ func (s *Server) UpdateCategoryAttribute(ctx context.Context, req *pb.UpdateCate
 	err = s.attrService.UpdateCategoryAttribute(ctx, catAttrID, settings)
 	if err != nil {
 		s.logger.Error().Err(err).
-			Int32("category_id", req.CategoryId).
+			Str("category_id", req.CategoryId).
 			Int32("attribute_id", req.AttributeId).
 			Msg("failed to update category attribute")
 		return nil, convertServiceError(err, "update category attribute")
@@ -364,7 +364,7 @@ func (s *Server) UpdateCategoryAttribute(ctx context.Context, req *pb.UpdateCate
 	pbCatAttr := DomainToProtoCategoryAttribute(updatedAttr)
 
 	s.logger.Info().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int32("attribute_id", req.AttributeId).
 		Msg("category attribute updated successfully")
 
@@ -376,13 +376,13 @@ func (s *Server) UpdateCategoryAttribute(ctx context.Context, req *pb.UpdateCate
 // UnlinkAttributeFromCategory removes the attribute-category relationship
 func (s *Server) UnlinkAttributeFromCategory(ctx context.Context, req *pb.UnlinkAttributeFromCategoryRequest) (*pb.UnlinkAttributeFromCategoryResponse, error) {
 	s.logger.Debug().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int32("attribute_id", req.AttributeId).
 		Msg("UnlinkAttributeFromCategory called")
 
 	// Validate request
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category_id must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category_id is required")
 	}
 	if req.AttributeId <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "attribute_id must be greater than 0")
@@ -392,14 +392,14 @@ func (s *Server) UnlinkAttributeFromCategory(ctx context.Context, req *pb.Unlink
 	err := s.attrService.UnlinkAttributeFromCategory(ctx, req.CategoryId, req.AttributeId)
 	if err != nil {
 		s.logger.Error().Err(err).
-			Int32("category_id", req.CategoryId).
+			Str("category_id", req.CategoryId).
 			Int32("attribute_id", req.AttributeId).
 			Msg("failed to unlink attribute from category")
 		return nil, convertServiceError(err, "unlink attribute from category")
 	}
 
 	s.logger.Info().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int32("attribute_id", req.AttributeId).
 		Msg("attribute unlinked from category successfully")
 
@@ -412,13 +412,13 @@ func (s *Server) UnlinkAttributeFromCategory(ctx context.Context, req *pb.Unlink
 // GetCategoryAttributes retrieves all attributes for a specific category
 func (s *Server) GetCategoryAttributes(ctx context.Context, req *pb.GetCategoryAttributesRequest) (*pb.GetCategoryAttributesResponse, error) {
 	s.logger.Debug().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Bool("include_inactive", req.IncludeInactive).
 		Msg("GetCategoryAttributes called")
 
 	// Validate request
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category_id must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category_id is required")
 	}
 
 	// Build filter
@@ -431,7 +431,7 @@ func (s *Server) GetCategoryAttributes(ctx context.Context, req *pb.GetCategoryA
 	// Call service layer
 	catAttrs, err := s.attrService.GetCategoryAttributes(ctx, req.CategoryId, filter)
 	if err != nil {
-		s.logger.Error().Err(err).Int32("category_id", req.CategoryId).Msg("failed to get category attributes")
+		s.logger.Error().Err(err).Str("category_id", req.CategoryId).Msg("failed to get category attributes")
 		return nil, convertServiceError(err, "get category attributes")
 	}
 
@@ -442,7 +442,7 @@ func (s *Server) GetCategoryAttributes(ctx context.Context, req *pb.GetCategoryA
 	}
 
 	s.logger.Info().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int("count", len(catAttrs)).
 		Msg("category attributes retrieved successfully")
 
@@ -454,19 +454,19 @@ func (s *Server) GetCategoryAttributes(ctx context.Context, req *pb.GetCategoryA
 // GetCategoryVariantAttributes retrieves variant attributes for a category
 func (s *Server) GetCategoryVariantAttributes(ctx context.Context, req *pb.GetCategoryVariantAttributesRequest) (*pb.GetCategoryVariantAttributesResponse, error) {
 	s.logger.Debug().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Bool("include_inactive", req.IncludeInactive).
 		Msg("GetCategoryVariantAttributes called")
 
 	// Validate request
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category_id must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category_id is required")
 	}
 
 	// Call service layer
 	variantAttrs, err := s.attrService.GetCategoryVariantAttributes(ctx, req.CategoryId)
 	if err != nil {
-		s.logger.Error().Err(err).Int32("category_id", req.CategoryId).Msg("failed to get variant attributes")
+		s.logger.Error().Err(err).Str("category_id", req.CategoryId).Msg("failed to get variant attributes")
 		return nil, convertServiceError(err, "get variant attributes")
 	}
 
@@ -488,7 +488,7 @@ func (s *Server) GetCategoryVariantAttributes(ctx context.Context, req *pb.GetCa
 	}
 
 	s.logger.Info().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int("count", len(variantAttrs)).
 		Msg("variant attributes retrieved successfully")
 
@@ -606,13 +606,13 @@ func (s *Server) SetListingAttributes(ctx context.Context, req *pb.SetListingAtt
 // ValidateAttributeValues validates attribute values before saving
 func (s *Server) ValidateAttributeValues(ctx context.Context, req *pb.ValidateAttributeValuesRequest) (*pb.ValidateAttributeValuesResponse, error) {
 	s.logger.Debug().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int("values_count", len(req.Values)).
 		Msg("ValidateAttributeValues called")
 
 	// Validate request
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category_id must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category_id is required")
 	}
 
 	// Convert proto to domain values
@@ -654,7 +654,7 @@ func (s *Server) ValidateAttributeValues(ctx context.Context, req *pb.ValidateAt
 
 	// Validation successful
 	s.logger.Info().
-		Int32("category_id", req.CategoryId).
+		Str("category_id", req.CategoryId).
 		Int("values_count", len(req.Values)).
 		Msg("attribute values validated successfully")
 

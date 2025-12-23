@@ -98,7 +98,7 @@ Successfully implemented complete data migration system for Orders microservice.
 
 ## 🔍 DATABASE ANALYSIS
 
-### Monolith (svetubd, port 5433)
+### Monolith (vondi_db, port 5433)
 
 **Existing Tables:**
 - ✅ `inventory_reservations` - 3 записи (1 активная, 2 истекшие)

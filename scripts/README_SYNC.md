@@ -2,7 +2,7 @@
 
 ## Описание
 
-Скрипт `sync_listings_data.py` синхронизирует справочные данные (категории, атрибуты, связи) из монолита (база `svetubd`) в микросервис listings (база `listings_dev_db`).
+Скрипт `sync_listings_data.py` синхронизирует справочные данные (категории, атрибуты, связи) из монолита (база `vondi_db`) в микросервис listings (база `listings_dev_db`).
 
 **Основная особенность:** Автоматическая трансформация VARCHAR полей в JSONB для поддержки многоязычности.
 
@@ -58,9 +58,9 @@ python3 /tmp/sync_listings_data.py
 
 ## Connection Strings
 
-**Монолит (svetubd):**
+**Монолит (vondi_db):**
 ```
-postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd
+postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db
 ```
 
 **Микросервис (listings_dev_db):**

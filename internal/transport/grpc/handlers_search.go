@@ -583,11 +583,20 @@ func (h *SearchHandler) protoToDomainRequest(req *searchv1.SearchListingsRequest
 		Limit:    req.Limit,
 		Offset:   req.Offset,
 		UseCache: req.UseCache,
+		// Analytics fields (Phase 7)
+		SessionID: req.SessionId,
+		Platform:  req.Platform,
+		Language:  req.Language,
 	}
 
 	// Handle optional category_id (UUID string)
 	if req.CategoryId != "" {
 		domainReq.CategoryID = &req.CategoryId
+	}
+
+	// Handle optional user_id for analytics
+	if req.UserId != nil {
+		domainReq.UserID = req.UserId
 	}
 
 	// Set defaults
@@ -647,9 +656,10 @@ func (h *SearchHandler) domainToProtoResponse(result *search.SearchResponse) *se
 	}
 
 	return &searchv1.SearchListingsResponse{
-		Listings: protoListings,
-		Total:    result.Total,
-		TookMs:   result.TookMs,
-		Cached:   result.Cached,
+		Listings:      protoListings,
+		Total:         result.Total,
+		TookMs:        result.TookMs,
+		Cached:        result.Cached,
+		SearchEventId: result.SearchEventID, // Analytics: for click tracking
 	}
 }

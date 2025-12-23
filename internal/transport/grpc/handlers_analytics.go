@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
 
 	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
@@ -108,4 +109,37 @@ func mapAnalyticsError(err error, operation string) error {
 
 	// Default to internal error
 	return status.Errorf(codes.Internal, "%s: %v", operation, err)
+}
+
+// ============================================================================
+// HANDLER METHODS
+// ============================================================================
+
+// RecordStorefrontEvent records a storefront analytics event (public endpoint)
+func (s *Server) RecordStorefrontEvent(
+	ctx context.Context,
+	req *listingspb.RecordStorefrontEventRequest,
+) (*listingspb.RecordStorefrontEventResponse, error) {
+	s.logger.Debug().
+		Int64("storefront_id", req.StorefrontId).
+		Str("event_type", req.EventType.String()).
+		Str("session_id", req.SessionId).
+		Msg("RecordStorefrontEvent called")
+
+	// Call service layer
+	err := s.storefrontAnalyticsService.RecordStorefrontEvent(ctx, req)
+	if err != nil {
+		s.logger.Error().
+			Err(err).
+			Int64("storefront_id", req.StorefrontId).
+			Msg("failed to record storefront event")
+
+		// Map error to gRPC status
+		return nil, mapAnalyticsError(err, "RecordStorefrontEvent")
+	}
+
+	return &listingspb.RecordStorefrontEventResponse{
+		Success: true,
+		Message: "Event recorded successfully",
+	}, nil
 }

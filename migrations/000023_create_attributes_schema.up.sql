@@ -74,7 +74,7 @@ COMMENT ON TABLE attributes IS 'Unified attributes metadata - core definitions f
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS category_attributes (
     id SERIAL PRIMARY KEY,
-    category_id INTEGER NOT NULL,
+    category_id UUID NOT NULL,  -- References categories.id which is UUID
     attribute_id INTEGER NOT NULL REFERENCES attributes(id) ON DELETE CASCADE,
 
     -- Category-specific overrides (NULL = inherit from attributes table)
@@ -147,7 +147,7 @@ COMMENT ON TABLE listing_attribute_values IS 'Attribute values for listings - po
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS category_variant_attributes (
     id SERIAL PRIMARY KEY,
-    category_id INTEGER NOT NULL,
+    category_id UUID NOT NULL,  -- References categories.id which is UUID
     attribute_id INTEGER NOT NULL REFERENCES attributes(id) ON DELETE CASCADE,
 
     -- Variant configuration
