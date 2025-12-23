@@ -41,7 +41,7 @@ func TestDatabaseIntegration(t *testing.T) {
 			Description: stringPtr("Integration Test Description"),
 			Price:       199.99,
 			Currency:    "USD",
-			CategoryID:  200,
+			CategoryID:  "200",
 			Quantity:    5,
 			SKU:         stringPtr("INT-TEST-001"),
 		}
@@ -72,7 +72,7 @@ func TestDatabaseIntegration(t *testing.T) {
 			Description: stringPtr("Update Test Description"),
 			Price:       299.99,
 			Currency:    "EUR",
-			CategoryID:  300,
+			CategoryID:  "300",
 			Quantity:    10,
 			SKU:         stringPtr("UPD-TEST-001"),
 		}
@@ -114,7 +114,7 @@ func TestDatabaseIntegration(t *testing.T) {
 				Description: stringPtr("Filter Test Description"),
 				Price:       float64(100 * (i + 1)),
 				Currency:    "USD",
-				CategoryID:  int64(i%2 + 1),
+				CategoryID:  fmt.Sprintf("%d", i%2+1),
 				Quantity:    int32(i + 1),
 				SKU:         stringPtr("FILT-TEST"),
 			}
@@ -156,7 +156,7 @@ func TestDatabaseIntegration(t *testing.T) {
 			Description: stringPtr("Concurrent Test Description"),
 			Price:       499.99,
 			Currency:    "USD",
-			CategoryID:  500,
+			CategoryID:  "500",
 			Quantity:    20,
 			SKU:         stringPtr("CONC-TEST-001"),
 		}
