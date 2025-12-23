@@ -481,6 +481,7 @@ func (s *CategoryDetectionService) enrichCategoryFromDB(slug, name string, confi
 
 // resolveSuggestedCategory пытается найти категорию по suggested slug из AI анализа изображения
 // Это последний fallback когда все остальные методы не сработали
+//nolint:unused // Reserved for future use
 func (s *CategoryDetectionService) resolveSuggestedCategory(ctx context.Context, suggestedCategory, language string) *domain.CategoryMatch {
 	// Нормализуем slug
 	normalizedSlug := strings.ToLower(strings.TrimSpace(suggestedCategory))

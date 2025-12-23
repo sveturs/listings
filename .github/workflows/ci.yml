@@ -66,8 +66,10 @@ jobs:
     steps:
       - name: Cleanup old containers
         run: |
+          docker rm -f postgres-listings-test redis-listings-test || true
           docker ps -aq | xargs -r docker rm -f || true
           docker network prune -f || true
+          sleep 2
         continue-on-error: true
 
       - name: Start PostgreSQL

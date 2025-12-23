@@ -439,6 +439,8 @@ func (ac *AnalyticsClient) parseAnalyticsReport(resp *SearchResponse) (*SearchAn
 }
 
 // parseQueryStats parses query statistics from aggregations
+//
+//nolint:unused // Reserved for future use
 func (ac *AnalyticsClient) parseQueryStats(resp *SearchResponse, aggName string) []QueryStats {
 	var stats []QueryStats
 
