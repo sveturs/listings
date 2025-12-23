@@ -85,14 +85,14 @@ jobs:
             -e POSTGRES_DB=listings_db_test \
             -e POSTGRES_USER=listings_user \
             -e POSTGRES_PASSWORD=listings_password \
-            -p 5432:5432 \
+            -p 55432:5432 \
             postgres:15-alpine
           sleep 5
 
       - name: Start Redis
         run: |
           docker run -d --name redis-listings-test \
-            -p 6379:6379 \
+            -p 56379:6379 \
             redis:7-alpine
           sleep 2
 
@@ -118,12 +118,12 @@ jobs:
       - name: Run unit tests
         env:
           VONDILISTINGS_DB_HOST: localhost
-          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_PORT: 55432
           VONDILISTINGS_DB_USER: listings_user
           VONDILISTINGS_DB_PASSWORD: listings_password
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
-          VONDILISTINGS_REDIS_PORT: 6379
+          VONDILISTINGS_REDIS_PORT: 56379
         run: go test -v -race -short ./internal/... ./test/...
 
   build:
