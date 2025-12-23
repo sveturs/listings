@@ -10,7 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/emptypb"
-	_ "google.golang.org/protobuf/types/known/structpb"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -139,6 +139,219 @@ func (ConversionFunnelStage) EnumDescriptor() ([]byte, []int) {
 	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{1}
 }
 
+// StorefrontEventType defines types of storefront events
+type StorefrontEventType int32
+
+const (
+	StorefrontEventType_STOREFRONT_EVENT_TYPE_UNSPECIFIED  StorefrontEventType = 0
+	StorefrontEventType_STOREFRONT_EVENT_TYPE_PAGE_VIEW    StorefrontEventType = 1 // Storefront page viewed
+	StorefrontEventType_STOREFRONT_EVENT_TYPE_PRODUCT_VIEW StorefrontEventType = 2 // Product page viewed
+	StorefrontEventType_STOREFRONT_EVENT_TYPE_ADD_TO_CART  StorefrontEventType = 3 // Product added to cart
+	StorefrontEventType_STOREFRONT_EVENT_TYPE_CHECKOUT     StorefrontEventType = 4 // Checkout initiated
+	StorefrontEventType_STOREFRONT_EVENT_TYPE_ORDER        StorefrontEventType = 5 // Order completed
+)
+
+// Enum value maps for StorefrontEventType.
+var (
+	StorefrontEventType_name = map[int32]string{
+		0: "STOREFRONT_EVENT_TYPE_UNSPECIFIED",
+		1: "STOREFRONT_EVENT_TYPE_PAGE_VIEW",
+		2: "STOREFRONT_EVENT_TYPE_PRODUCT_VIEW",
+		3: "STOREFRONT_EVENT_TYPE_ADD_TO_CART",
+		4: "STOREFRONT_EVENT_TYPE_CHECKOUT",
+		5: "STOREFRONT_EVENT_TYPE_ORDER",
+	}
+	StorefrontEventType_value = map[string]int32{
+		"STOREFRONT_EVENT_TYPE_UNSPECIFIED":  0,
+		"STOREFRONT_EVENT_TYPE_PAGE_VIEW":    1,
+		"STOREFRONT_EVENT_TYPE_PRODUCT_VIEW": 2,
+		"STOREFRONT_EVENT_TYPE_ADD_TO_CART":  3,
+		"STOREFRONT_EVENT_TYPE_CHECKOUT":     4,
+		"STOREFRONT_EVENT_TYPE_ORDER":        5,
+	}
+)
+
+func (x StorefrontEventType) Enum() *StorefrontEventType {
+	p := new(StorefrontEventType)
+	*p = x
+	return p
+}
+
+func (x StorefrontEventType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (StorefrontEventType) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_proto_listings_v1_analytics_proto_enumTypes[2].Descriptor()
+}
+
+func (StorefrontEventType) Type() protoreflect.EnumType {
+	return &file_api_proto_listings_v1_analytics_proto_enumTypes[2]
+}
+
+func (x StorefrontEventType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use StorefrontEventType.Descriptor instead.
+func (StorefrontEventType) EnumDescriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{2}
+}
+
+// RecordStorefrontEventRequest records a storefront analytics event
+type RecordStorefrontEventRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StorefrontId  int64                  `protobuf:"varint,1,opt,name=storefront_id,json=storefrontId,proto3" json:"storefront_id,omitempty"`                                // Storefront ID (required)
+	EventType     StorefrontEventType    `protobuf:"varint,2,opt,name=event_type,json=eventType,proto3,enum=listingssvc.v1.StorefrontEventType" json:"event_type,omitempty"` // Event type (required)
+	SessionId     string                 `protobuf:"bytes,3,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`                                          // Session ID for tracking (required)
+	UserId        *int64                 `protobuf:"varint,4,opt,name=user_id,json=userId,proto3,oneof" json:"user_id,omitempty"`                                            // User ID if authenticated
+	EventData     *structpb.Struct       `protobuf:"bytes,5,opt,name=event_data,json=eventData,proto3" json:"event_data,omitempty"`                                          // Additional event data (optional)
+	IpAddress     string                 `protobuf:"bytes,6,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`                                          // Client IP address
+	UserAgent     string                 `protobuf:"bytes,7,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`                                          // Client User-Agent
+	Referrer      string                 `protobuf:"bytes,8,opt,name=referrer,proto3" json:"referrer,omitempty"`                                                             // HTTP Referrer
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecordStorefrontEventRequest) Reset() {
+	*x = RecordStorefrontEventRequest{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecordStorefrontEventRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecordStorefrontEventRequest) ProtoMessage() {}
+
+func (x *RecordStorefrontEventRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecordStorefrontEventRequest.ProtoReflect.Descriptor instead.
+func (*RecordStorefrontEventRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *RecordStorefrontEventRequest) GetStorefrontId() int64 {
+	if x != nil {
+		return x.StorefrontId
+	}
+	return 0
+}
+
+func (x *RecordStorefrontEventRequest) GetEventType() StorefrontEventType {
+	if x != nil {
+		return x.EventType
+	}
+	return StorefrontEventType_STOREFRONT_EVENT_TYPE_UNSPECIFIED
+}
+
+func (x *RecordStorefrontEventRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *RecordStorefrontEventRequest) GetUserId() int64 {
+	if x != nil && x.UserId != nil {
+		return *x.UserId
+	}
+	return 0
+}
+
+func (x *RecordStorefrontEventRequest) GetEventData() *structpb.Struct {
+	if x != nil {
+		return x.EventData
+	}
+	return nil
+}
+
+func (x *RecordStorefrontEventRequest) GetIpAddress() string {
+	if x != nil {
+		return x.IpAddress
+	}
+	return ""
+}
+
+func (x *RecordStorefrontEventRequest) GetUserAgent() string {
+	if x != nil {
+		return x.UserAgent
+	}
+	return ""
+}
+
+func (x *RecordStorefrontEventRequest) GetReferrer() string {
+	if x != nil {
+		return x.Referrer
+	}
+	return ""
+}
+
+// RecordStorefrontEventResponse confirms event recording
+type RecordStorefrontEventResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"` // Whether event was recorded
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`  // Status message
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecordStorefrontEventResponse) Reset() {
+	*x = RecordStorefrontEventResponse{}
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecordStorefrontEventResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecordStorefrontEventResponse) ProtoMessage() {}
+
+func (x *RecordStorefrontEventResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecordStorefrontEventResponse.ProtoReflect.Descriptor instead.
+func (*RecordStorefrontEventResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *RecordStorefrontEventResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *RecordStorefrontEventResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 // GetOverviewStatsRequest retrieves platform-wide analytics
 type GetOverviewStatsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -162,7 +375,7 @@ type GetOverviewStatsRequest struct {
 
 func (x *GetOverviewStatsRequest) Reset() {
 	*x = GetOverviewStatsRequest{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[0]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -174,7 +387,7 @@ func (x *GetOverviewStatsRequest) String() string {
 func (*GetOverviewStatsRequest) ProtoMessage() {}
 
 func (x *GetOverviewStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[0]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -187,7 +400,7 @@ func (x *GetOverviewStatsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOverviewStatsRequest.ProtoReflect.Descriptor instead.
 func (*GetOverviewStatsRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{0}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *GetOverviewStatsRequest) GetDateFrom() *timestamppb.Timestamp {
@@ -273,7 +486,7 @@ type GetOverviewStatsResponse struct {
 
 func (x *GetOverviewStatsResponse) Reset() {
 	*x = GetOverviewStatsResponse{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[1]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -285,7 +498,7 @@ func (x *GetOverviewStatsResponse) String() string {
 func (*GetOverviewStatsResponse) ProtoMessage() {}
 
 func (x *GetOverviewStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[1]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -298,7 +511,7 @@ func (x *GetOverviewStatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOverviewStatsResponse.ProtoReflect.Descriptor instead.
 func (*GetOverviewStatsResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{1}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetOverviewStatsResponse) GetListings() *ListingsStats {
@@ -409,7 +622,7 @@ type GetListingStatsRequest struct {
 
 func (x *GetListingStatsRequest) Reset() {
 	*x = GetListingStatsRequest{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[2]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -421,7 +634,7 @@ func (x *GetListingStatsRequest) String() string {
 func (*GetListingStatsRequest) ProtoMessage() {}
 
 func (x *GetListingStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[2]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -434,7 +647,7 @@ func (x *GetListingStatsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetListingStatsRequest.ProtoReflect.Descriptor instead.
 func (*GetListingStatsRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{2}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetListingStatsRequest) GetIdentifier() isGetListingStatsRequest_Identifier {
@@ -593,7 +806,7 @@ type GetListingStatsResponse struct {
 
 func (x *GetListingStatsResponse) Reset() {
 	*x = GetListingStatsResponse{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[3]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -605,7 +818,7 @@ func (x *GetListingStatsResponse) String() string {
 func (*GetListingStatsResponse) ProtoMessage() {}
 
 func (x *GetListingStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[3]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -618,7 +831,7 @@ func (x *GetListingStatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetListingStatsResponse.ProtoReflect.Descriptor instead.
 func (*GetListingStatsResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{3}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetListingStatsResponse) GetListingId() int64 {
@@ -847,7 +1060,7 @@ type ListingsStats struct {
 
 func (x *ListingsStats) Reset() {
 	*x = ListingsStats{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[4]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -859,7 +1072,7 @@ func (x *ListingsStats) String() string {
 func (*ListingsStats) ProtoMessage() {}
 
 func (x *ListingsStats) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[4]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -872,7 +1085,7 @@ func (x *ListingsStats) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListingsStats.ProtoReflect.Descriptor instead.
 func (*ListingsStats) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{4}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListingsStats) GetTotalListings() int32 {
@@ -982,7 +1195,7 @@ type RevenueStats struct {
 
 func (x *RevenueStats) Reset() {
 	*x = RevenueStats{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[5]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -994,7 +1207,7 @@ func (x *RevenueStats) String() string {
 func (*RevenueStats) ProtoMessage() {}
 
 func (x *RevenueStats) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[5]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1007,7 +1220,7 @@ func (x *RevenueStats) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevenueStats.ProtoReflect.Descriptor instead.
 func (*RevenueStats) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{5}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *RevenueStats) GetTotalRevenue() float64 {
@@ -1106,7 +1319,7 @@ type UsersStats struct {
 
 func (x *UsersStats) Reset() {
 	*x = UsersStats{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[6]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1118,7 +1331,7 @@ func (x *UsersStats) String() string {
 func (*UsersStats) ProtoMessage() {}
 
 func (x *UsersStats) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[6]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1131,7 +1344,7 @@ func (x *UsersStats) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UsersStats.ProtoReflect.Descriptor instead.
 func (*UsersStats) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{6}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *UsersStats) GetTotalUsers() int32 {
@@ -1228,7 +1441,7 @@ type OrdersStats struct {
 
 func (x *OrdersStats) Reset() {
 	*x = OrdersStats{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[7]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1240,7 +1453,7 @@ func (x *OrdersStats) String() string {
 func (*OrdersStats) ProtoMessage() {}
 
 func (x *OrdersStats) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[7]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1253,7 +1466,7 @@ func (x *OrdersStats) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrdersStats.ProtoReflect.Descriptor instead.
 func (*OrdersStats) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{7}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *OrdersStats) GetTotalOrders() int32 {
@@ -1368,7 +1581,7 @@ type EngagementMetrics struct {
 
 func (x *EngagementMetrics) Reset() {
 	*x = EngagementMetrics{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[8]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1380,7 +1593,7 @@ func (x *EngagementMetrics) String() string {
 func (*EngagementMetrics) ProtoMessage() {}
 
 func (x *EngagementMetrics) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[8]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1393,7 +1606,7 @@ func (x *EngagementMetrics) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EngagementMetrics.ProtoReflect.Descriptor instead.
 func (*EngagementMetrics) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{8}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *EngagementMetrics) GetTotalViews() int32 {
@@ -1504,7 +1717,7 @@ type ConversionFunnel struct {
 
 func (x *ConversionFunnel) Reset() {
 	*x = ConversionFunnel{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[9]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1516,7 +1729,7 @@ func (x *ConversionFunnel) String() string {
 func (*ConversionFunnel) ProtoMessage() {}
 
 func (x *ConversionFunnel) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[9]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1529,7 +1742,7 @@ func (x *ConversionFunnel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConversionFunnel.ProtoReflect.Descriptor instead.
 func (*ConversionFunnel) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{9}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ConversionFunnel) GetStageViews() int32 {
@@ -1641,7 +1854,7 @@ type TimeSeriesPoint struct {
 
 func (x *TimeSeriesPoint) Reset() {
 	*x = TimeSeriesPoint{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[10]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1653,7 +1866,7 @@ func (x *TimeSeriesPoint) String() string {
 func (*TimeSeriesPoint) ProtoMessage() {}
 
 func (x *TimeSeriesPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[10]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1666,7 +1879,7 @@ func (x *TimeSeriesPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimeSeriesPoint.ProtoReflect.Descriptor instead.
 func (*TimeSeriesPoint) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{10}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *TimeSeriesPoint) GetTimestamp() *timestamppb.Timestamp {
@@ -1751,7 +1964,7 @@ type ListingTimeSeriesPoint struct {
 
 func (x *ListingTimeSeriesPoint) Reset() {
 	*x = ListingTimeSeriesPoint{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[11]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1763,7 +1976,7 @@ func (x *ListingTimeSeriesPoint) String() string {
 func (*ListingTimeSeriesPoint) ProtoMessage() {}
 
 func (x *ListingTimeSeriesPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[11]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1776,7 +1989,7 @@ func (x *ListingTimeSeriesPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListingTimeSeriesPoint.ProtoReflect.Descriptor instead.
 func (*ListingTimeSeriesPoint) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{11}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListingTimeSeriesPoint) GetTimestamp() *timestamppb.Timestamp {
@@ -1873,7 +2086,7 @@ type PerformanceComparison struct {
 
 func (x *PerformanceComparison) Reset() {
 	*x = PerformanceComparison{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[12]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1885,7 +2098,7 @@ func (x *PerformanceComparison) String() string {
 func (*PerformanceComparison) ProtoMessage() {}
 
 func (x *PerformanceComparison) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[12]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1898,7 +2111,7 @@ func (x *PerformanceComparison) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PerformanceComparison.ProtoReflect.Descriptor instead.
 func (*PerformanceComparison) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{12}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *PerformanceComparison) GetRevenueChange() float64 {
@@ -1999,7 +2212,7 @@ type VariantStats struct {
 
 func (x *VariantStats) Reset() {
 	*x = VariantStats{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[13]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2011,7 +2224,7 @@ func (x *VariantStats) String() string {
 func (*VariantStats) ProtoMessage() {}
 
 func (x *VariantStats) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[13]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2024,7 +2237,7 @@ func (x *VariantStats) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VariantStats.ProtoReflect.Descriptor instead.
 func (*VariantStats) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{13}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *VariantStats) GetVariantId() int64 {
@@ -2127,7 +2340,7 @@ type GeoStats struct {
 
 func (x *GeoStats) Reset() {
 	*x = GeoStats{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[14]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2139,7 +2352,7 @@ func (x *GeoStats) String() string {
 func (*GeoStats) ProtoMessage() {}
 
 func (x *GeoStats) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[14]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2152,7 +2365,7 @@ func (x *GeoStats) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GeoStats.ProtoReflect.Descriptor instead.
 func (*GeoStats) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{14}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GeoStats) GetCountry() string {
@@ -2218,7 +2431,7 @@ type MetricSnapshot struct {
 
 func (x *MetricSnapshot) Reset() {
 	*x = MetricSnapshot{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[15]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2230,7 +2443,7 @@ func (x *MetricSnapshot) String() string {
 func (*MetricSnapshot) ProtoMessage() {}
 
 func (x *MetricSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[15]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2243,7 +2456,7 @@ func (x *MetricSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricSnapshot.ProtoReflect.Descriptor instead.
 func (*MetricSnapshot) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{15}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *MetricSnapshot) GetMetricName() string {
@@ -2298,7 +2511,7 @@ type GetStorefrontStatsRequest struct {
 
 func (x *GetStorefrontStatsRequest) Reset() {
 	*x = GetStorefrontStatsRequest{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[16]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2310,7 +2523,7 @@ func (x *GetStorefrontStatsRequest) String() string {
 func (*GetStorefrontStatsRequest) ProtoMessage() {}
 
 func (x *GetStorefrontStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[16]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2323,7 +2536,7 @@ func (x *GetStorefrontStatsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetStorefrontStatsRequest.ProtoReflect.Descriptor instead.
 func (*GetStorefrontStatsRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{16}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetStorefrontStatsRequest) GetStorefrontId() int64 {
@@ -2369,7 +2582,7 @@ type TopListingInfo struct {
 
 func (x *TopListingInfo) Reset() {
 	*x = TopListingInfo{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[17]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2381,7 +2594,7 @@ func (x *TopListingInfo) String() string {
 func (*TopListingInfo) ProtoMessage() {}
 
 func (x *TopListingInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[17]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2394,7 +2607,7 @@ func (x *TopListingInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TopListingInfo.ProtoReflect.Descriptor instead.
 func (*TopListingInfo) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{17}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *TopListingInfo) GetListingId() int64 {
@@ -2468,7 +2681,7 @@ type GetStorefrontStatsResponse struct {
 
 func (x *GetStorefrontStatsResponse) Reset() {
 	*x = GetStorefrontStatsResponse{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[18]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2480,7 +2693,7 @@ func (x *GetStorefrontStatsResponse) String() string {
 func (*GetStorefrontStatsResponse) ProtoMessage() {}
 
 func (x *GetStorefrontStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[18]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2493,7 +2706,7 @@ func (x *GetStorefrontStatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetStorefrontStatsResponse.ProtoReflect.Descriptor instead.
 func (*GetStorefrontStatsResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{18}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetStorefrontStatsResponse) GetStorefrontId() int64 {
@@ -2596,7 +2809,7 @@ type GetTrendingStatsRequest struct {
 
 func (x *GetTrendingStatsRequest) Reset() {
 	*x = GetTrendingStatsRequest{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[19]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2608,7 +2821,7 @@ func (x *GetTrendingStatsRequest) String() string {
 func (*GetTrendingStatsRequest) ProtoMessage() {}
 
 func (x *GetTrendingStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[19]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2621,7 +2834,7 @@ func (x *GetTrendingStatsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrendingStatsRequest.ProtoReflect.Descriptor instead.
 func (*GetTrendingStatsRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{19}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{21}
 }
 
 // TrendingCategory represents a category with growing order volume
@@ -2639,7 +2852,7 @@ type TrendingCategory struct {
 
 func (x *TrendingCategory) Reset() {
 	*x = TrendingCategory{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[20]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2651,7 +2864,7 @@ func (x *TrendingCategory) String() string {
 func (*TrendingCategory) ProtoMessage() {}
 
 func (x *TrendingCategory) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[20]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2664,7 +2877,7 @@ func (x *TrendingCategory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrendingCategory.ProtoReflect.Descriptor instead.
 func (*TrendingCategory) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{20}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *TrendingCategory) GetCategoryId() int64 {
@@ -2725,7 +2938,7 @@ type HotListing struct {
 
 func (x *HotListing) Reset() {
 	*x = HotListing{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[21]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2737,7 +2950,7 @@ func (x *HotListing) String() string {
 func (*HotListing) ProtoMessage() {}
 
 func (x *HotListing) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[21]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2750,7 +2963,7 @@ func (x *HotListing) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HotListing.ProtoReflect.Descriptor instead.
 func (*HotListing) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{21}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *HotListing) GetListingId() int64 {
@@ -2813,7 +3026,7 @@ type PopularSearch struct {
 
 func (x *PopularSearch) Reset() {
 	*x = PopularSearch{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[22]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2825,7 +3038,7 @@ func (x *PopularSearch) String() string {
 func (*PopularSearch) ProtoMessage() {}
 
 func (x *PopularSearch) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[22]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2838,7 +3051,7 @@ func (x *PopularSearch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PopularSearch.ProtoReflect.Descriptor instead.
 func (*PopularSearch) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{22}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *PopularSearch) GetQuery() string {
@@ -2872,7 +3085,7 @@ type GetTrendingStatsResponse struct {
 
 func (x *GetTrendingStatsResponse) Reset() {
 	*x = GetTrendingStatsResponse{}
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[23]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2884,7 +3097,7 @@ func (x *GetTrendingStatsResponse) String() string {
 func (*GetTrendingStatsResponse) ProtoMessage() {}
 
 func (x *GetTrendingStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[23]
+	mi := &file_api_proto_listings_v1_analytics_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2897,7 +3110,7 @@ func (x *GetTrendingStatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrendingStatsResponse.ProtoReflect.Descriptor instead.
 func (*GetTrendingStatsResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{23}
+	return file_api_proto_listings_v1_analytics_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetTrendingStatsResponse) GetTrendingCategories() []*TrendingCategory {
@@ -2932,7 +3145,26 @@ var File_api_proto_listings_v1_analytics_proto protoreflect.FileDescriptor
 
 const file_api_proto_listings_v1_analytics_proto_rawDesc = "" +
 	"\n" +
-	"%api/proto/listings/v1/analytics.proto\x12\x0elistingssvc.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x9c\x04\n" +
+	"%api/proto/listings/v1/analytics.proto\x12\x0elistingssvc.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xe2\x02\n" +
+	"\x1cRecordStorefrontEventRequest\x12#\n" +
+	"\rstorefront_id\x18\x01 \x01(\x03R\fstorefrontId\x12B\n" +
+	"\n" +
+	"event_type\x18\x02 \x01(\x0e2#.listingssvc.v1.StorefrontEventTypeR\teventType\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x03 \x01(\tR\tsessionId\x12\x1c\n" +
+	"\auser_id\x18\x04 \x01(\x03H\x00R\x06userId\x88\x01\x01\x126\n" +
+	"\n" +
+	"event_data\x18\x05 \x01(\v2\x17.google.protobuf.StructR\teventData\x12\x1d\n" +
+	"\n" +
+	"ip_address\x18\x06 \x01(\tR\tipAddress\x12\x1d\n" +
+	"\n" +
+	"user_agent\x18\a \x01(\tR\tuserAgent\x12\x1a\n" +
+	"\breferrer\x18\b \x01(\tR\breferrerB\n" +
+	"\n" +
+	"\b_user_id\"S\n" +
+	"\x1dRecordStorefrontEventResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x9c\x04\n" +
 	"\x17GetOverviewStatsRequest\x127\n" +
 	"\tdate_from\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\bdateFrom\x123\n" +
 	"\adate_to\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x06dateTo\x12B\n" +
@@ -3302,8 +3534,16 @@ const file_api_proto_listings_v1_analytics_proto_rawDesc = "" +
 	"\x1cCONVERSION_FUNNEL_STAGE_CART\x10\x02\x12$\n" +
 	" CONVERSION_FUNNEL_STAGE_CHECKOUT\x10\x03\x12#\n" +
 	"\x1fCONVERSION_FUNNEL_STAGE_PAYMENT\x10\x04\x12%\n" +
-	"!CONVERSION_FUNNEL_STAGE_COMPLETED\x10\x052\xb1\x03\n" +
-	"\x10AnalyticsService\x12e\n" +
+	"!CONVERSION_FUNNEL_STAGE_COMPLETED\x10\x05*\xf5\x01\n" +
+	"\x13StorefrontEventType\x12%\n" +
+	"!STOREFRONT_EVENT_TYPE_UNSPECIFIED\x10\x00\x12#\n" +
+	"\x1fSTOREFRONT_EVENT_TYPE_PAGE_VIEW\x10\x01\x12&\n" +
+	"\"STOREFRONT_EVENT_TYPE_PRODUCT_VIEW\x10\x02\x12%\n" +
+	"!STOREFRONT_EVENT_TYPE_ADD_TO_CART\x10\x03\x12\"\n" +
+	"\x1eSTOREFRONT_EVENT_TYPE_CHECKOUT\x10\x04\x12\x1f\n" +
+	"\x1bSTOREFRONT_EVENT_TYPE_ORDER\x10\x052\xa7\x04\n" +
+	"\x10AnalyticsService\x12t\n" +
+	"\x15RecordStorefrontEvent\x12,.listingssvc.v1.RecordStorefrontEventRequest\x1a-.listingssvc.v1.RecordStorefrontEventResponse\x12e\n" +
 	"\x10GetOverviewStats\x12'.listingssvc.v1.GetOverviewStatsRequest\x1a(.listingssvc.v1.GetOverviewStatsResponse\x12b\n" +
 	"\x0fGetListingStats\x12&.listingssvc.v1.GetListingStatsRequest\x1a'.listingssvc.v1.GetListingStatsResponse\x12k\n" +
 	"\x12GetStorefrontStats\x12).listingssvc.v1.GetStorefrontStatsRequest\x1a*.listingssvc.v1.GetStorefrontStatsResponse\x12e\n" +
@@ -3321,101 +3561,109 @@ func file_api_proto_listings_v1_analytics_proto_rawDescGZIP() []byte {
 	return file_api_proto_listings_v1_analytics_proto_rawDescData
 }
 
-var file_api_proto_listings_v1_analytics_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_api_proto_listings_v1_analytics_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_api_proto_listings_v1_analytics_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_api_proto_listings_v1_analytics_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_api_proto_listings_v1_analytics_proto_goTypes = []any{
-	(MetricPeriod)(0),                  // 0: listingssvc.v1.MetricPeriod
-	(ConversionFunnelStage)(0),         // 1: listingssvc.v1.ConversionFunnelStage
-	(*GetOverviewStatsRequest)(nil),    // 2: listingssvc.v1.GetOverviewStatsRequest
-	(*GetOverviewStatsResponse)(nil),   // 3: listingssvc.v1.GetOverviewStatsResponse
-	(*GetListingStatsRequest)(nil),     // 4: listingssvc.v1.GetListingStatsRequest
-	(*GetListingStatsResponse)(nil),    // 5: listingssvc.v1.GetListingStatsResponse
-	(*ListingsStats)(nil),              // 6: listingssvc.v1.ListingsStats
-	(*RevenueStats)(nil),               // 7: listingssvc.v1.RevenueStats
-	(*UsersStats)(nil),                 // 8: listingssvc.v1.UsersStats
-	(*OrdersStats)(nil),                // 9: listingssvc.v1.OrdersStats
-	(*EngagementMetrics)(nil),          // 10: listingssvc.v1.EngagementMetrics
-	(*ConversionFunnel)(nil),           // 11: listingssvc.v1.ConversionFunnel
-	(*TimeSeriesPoint)(nil),            // 12: listingssvc.v1.TimeSeriesPoint
-	(*ListingTimeSeriesPoint)(nil),     // 13: listingssvc.v1.ListingTimeSeriesPoint
-	(*PerformanceComparison)(nil),      // 14: listingssvc.v1.PerformanceComparison
-	(*VariantStats)(nil),               // 15: listingssvc.v1.VariantStats
-	(*GeoStats)(nil),                   // 16: listingssvc.v1.GeoStats
-	(*MetricSnapshot)(nil),             // 17: listingssvc.v1.MetricSnapshot
-	(*GetStorefrontStatsRequest)(nil),  // 18: listingssvc.v1.GetStorefrontStatsRequest
-	(*TopListingInfo)(nil),             // 19: listingssvc.v1.TopListingInfo
-	(*GetStorefrontStatsResponse)(nil), // 20: listingssvc.v1.GetStorefrontStatsResponse
-	(*GetTrendingStatsRequest)(nil),    // 21: listingssvc.v1.GetTrendingStatsRequest
-	(*TrendingCategory)(nil),           // 22: listingssvc.v1.TrendingCategory
-	(*HotListing)(nil),                 // 23: listingssvc.v1.HotListing
-	(*PopularSearch)(nil),              // 24: listingssvc.v1.PopularSearch
-	(*GetTrendingStatsResponse)(nil),   // 25: listingssvc.v1.GetTrendingStatsResponse
-	nil,                                // 26: listingssvc.v1.ListingsStats.ListingsByCategoryEntry
-	nil,                                // 27: listingssvc.v1.RevenueStats.RevenueByPaymentMethodEntry
-	nil,                                // 28: listingssvc.v1.RevenueStats.RevenueByStorefrontEntry
-	nil,                                // 29: listingssvc.v1.OrdersStats.OrdersByStatusEntry
-	nil,                                // 30: listingssvc.v1.EngagementMetrics.TopSearchTermsEntry
-	(*timestamppb.Timestamp)(nil),      // 31: google.protobuf.Timestamp
+	(MetricPeriod)(0),                     // 0: listingssvc.v1.MetricPeriod
+	(ConversionFunnelStage)(0),            // 1: listingssvc.v1.ConversionFunnelStage
+	(StorefrontEventType)(0),              // 2: listingssvc.v1.StorefrontEventType
+	(*RecordStorefrontEventRequest)(nil),  // 3: listingssvc.v1.RecordStorefrontEventRequest
+	(*RecordStorefrontEventResponse)(nil), // 4: listingssvc.v1.RecordStorefrontEventResponse
+	(*GetOverviewStatsRequest)(nil),       // 5: listingssvc.v1.GetOverviewStatsRequest
+	(*GetOverviewStatsResponse)(nil),      // 6: listingssvc.v1.GetOverviewStatsResponse
+	(*GetListingStatsRequest)(nil),        // 7: listingssvc.v1.GetListingStatsRequest
+	(*GetListingStatsResponse)(nil),       // 8: listingssvc.v1.GetListingStatsResponse
+	(*ListingsStats)(nil),                 // 9: listingssvc.v1.ListingsStats
+	(*RevenueStats)(nil),                  // 10: listingssvc.v1.RevenueStats
+	(*UsersStats)(nil),                    // 11: listingssvc.v1.UsersStats
+	(*OrdersStats)(nil),                   // 12: listingssvc.v1.OrdersStats
+	(*EngagementMetrics)(nil),             // 13: listingssvc.v1.EngagementMetrics
+	(*ConversionFunnel)(nil),              // 14: listingssvc.v1.ConversionFunnel
+	(*TimeSeriesPoint)(nil),               // 15: listingssvc.v1.TimeSeriesPoint
+	(*ListingTimeSeriesPoint)(nil),        // 16: listingssvc.v1.ListingTimeSeriesPoint
+	(*PerformanceComparison)(nil),         // 17: listingssvc.v1.PerformanceComparison
+	(*VariantStats)(nil),                  // 18: listingssvc.v1.VariantStats
+	(*GeoStats)(nil),                      // 19: listingssvc.v1.GeoStats
+	(*MetricSnapshot)(nil),                // 20: listingssvc.v1.MetricSnapshot
+	(*GetStorefrontStatsRequest)(nil),     // 21: listingssvc.v1.GetStorefrontStatsRequest
+	(*TopListingInfo)(nil),                // 22: listingssvc.v1.TopListingInfo
+	(*GetStorefrontStatsResponse)(nil),    // 23: listingssvc.v1.GetStorefrontStatsResponse
+	(*GetTrendingStatsRequest)(nil),       // 24: listingssvc.v1.GetTrendingStatsRequest
+	(*TrendingCategory)(nil),              // 25: listingssvc.v1.TrendingCategory
+	(*HotListing)(nil),                    // 26: listingssvc.v1.HotListing
+	(*PopularSearch)(nil),                 // 27: listingssvc.v1.PopularSearch
+	(*GetTrendingStatsResponse)(nil),      // 28: listingssvc.v1.GetTrendingStatsResponse
+	nil,                                   // 29: listingssvc.v1.ListingsStats.ListingsByCategoryEntry
+	nil,                                   // 30: listingssvc.v1.RevenueStats.RevenueByPaymentMethodEntry
+	nil,                                   // 31: listingssvc.v1.RevenueStats.RevenueByStorefrontEntry
+	nil,                                   // 32: listingssvc.v1.OrdersStats.OrdersByStatusEntry
+	nil,                                   // 33: listingssvc.v1.EngagementMetrics.TopSearchTermsEntry
+	(*structpb.Struct)(nil),               // 34: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),         // 35: google.protobuf.Timestamp
 }
 var file_api_proto_listings_v1_analytics_proto_depIdxs = []int32{
-	31, // 0: listingssvc.v1.GetOverviewStatsRequest.date_from:type_name -> google.protobuf.Timestamp
-	31, // 1: listingssvc.v1.GetOverviewStatsRequest.date_to:type_name -> google.protobuf.Timestamp
-	31, // 2: listingssvc.v1.GetOverviewStatsRequest.compare_from:type_name -> google.protobuf.Timestamp
-	31, // 3: listingssvc.v1.GetOverviewStatsRequest.compare_to:type_name -> google.protobuf.Timestamp
-	0,  // 4: listingssvc.v1.GetOverviewStatsRequest.period:type_name -> listingssvc.v1.MetricPeriod
-	6,  // 5: listingssvc.v1.GetOverviewStatsResponse.listings:type_name -> listingssvc.v1.ListingsStats
-	7,  // 6: listingssvc.v1.GetOverviewStatsResponse.revenue:type_name -> listingssvc.v1.RevenueStats
-	8,  // 7: listingssvc.v1.GetOverviewStatsResponse.users:type_name -> listingssvc.v1.UsersStats
-	9,  // 8: listingssvc.v1.GetOverviewStatsResponse.orders:type_name -> listingssvc.v1.OrdersStats
-	10, // 9: listingssvc.v1.GetOverviewStatsResponse.engagement:type_name -> listingssvc.v1.EngagementMetrics
-	12, // 10: listingssvc.v1.GetOverviewStatsResponse.time_series:type_name -> listingssvc.v1.TimeSeriesPoint
-	14, // 11: listingssvc.v1.GetOverviewStatsResponse.comparison:type_name -> listingssvc.v1.PerformanceComparison
-	11, // 12: listingssvc.v1.GetOverviewStatsResponse.conversion_funnel:type_name -> listingssvc.v1.ConversionFunnel
-	31, // 13: listingssvc.v1.GetOverviewStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
-	31, // 14: listingssvc.v1.GetOverviewStatsResponse.data_from:type_name -> google.protobuf.Timestamp
-	31, // 15: listingssvc.v1.GetOverviewStatsResponse.data_to:type_name -> google.protobuf.Timestamp
-	31, // 16: listingssvc.v1.GetListingStatsRequest.date_from:type_name -> google.protobuf.Timestamp
-	31, // 17: listingssvc.v1.GetListingStatsRequest.date_to:type_name -> google.protobuf.Timestamp
-	31, // 18: listingssvc.v1.GetListingStatsRequest.compare_from:type_name -> google.protobuf.Timestamp
-	31, // 19: listingssvc.v1.GetListingStatsRequest.compare_to:type_name -> google.protobuf.Timestamp
-	0,  // 20: listingssvc.v1.GetListingStatsRequest.period:type_name -> listingssvc.v1.MetricPeriod
-	10, // 21: listingssvc.v1.GetListingStatsResponse.engagement:type_name -> listingssvc.v1.EngagementMetrics
-	15, // 22: listingssvc.v1.GetListingStatsResponse.variant_stats:type_name -> listingssvc.v1.VariantStats
-	16, // 23: listingssvc.v1.GetListingStatsResponse.geo_stats:type_name -> listingssvc.v1.GeoStats
-	13, // 24: listingssvc.v1.GetListingStatsResponse.time_series:type_name -> listingssvc.v1.ListingTimeSeriesPoint
-	14, // 25: listingssvc.v1.GetListingStatsResponse.comparison:type_name -> listingssvc.v1.PerformanceComparison
-	31, // 26: listingssvc.v1.GetListingStatsResponse.created_at:type_name -> google.protobuf.Timestamp
-	31, // 27: listingssvc.v1.GetListingStatsResponse.updated_at:type_name -> google.protobuf.Timestamp
-	31, // 28: listingssvc.v1.GetListingStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
-	31, // 29: listingssvc.v1.GetListingStatsResponse.data_from:type_name -> google.protobuf.Timestamp
-	31, // 30: listingssvc.v1.GetListingStatsResponse.data_to:type_name -> google.protobuf.Timestamp
-	26, // 31: listingssvc.v1.ListingsStats.listings_by_category:type_name -> listingssvc.v1.ListingsStats.ListingsByCategoryEntry
-	27, // 32: listingssvc.v1.RevenueStats.revenue_by_payment_method:type_name -> listingssvc.v1.RevenueStats.RevenueByPaymentMethodEntry
-	28, // 33: listingssvc.v1.RevenueStats.revenue_by_storefront:type_name -> listingssvc.v1.RevenueStats.RevenueByStorefrontEntry
-	14, // 34: listingssvc.v1.RevenueStats.comparison:type_name -> listingssvc.v1.PerformanceComparison
-	29, // 35: listingssvc.v1.OrdersStats.orders_by_status:type_name -> listingssvc.v1.OrdersStats.OrdersByStatusEntry
-	30, // 36: listingssvc.v1.EngagementMetrics.top_search_terms:type_name -> listingssvc.v1.EngagementMetrics.TopSearchTermsEntry
-	31, // 37: listingssvc.v1.TimeSeriesPoint.timestamp:type_name -> google.protobuf.Timestamp
-	31, // 38: listingssvc.v1.ListingTimeSeriesPoint.timestamp:type_name -> google.protobuf.Timestamp
-	19, // 39: listingssvc.v1.GetStorefrontStatsResponse.top_listings:type_name -> listingssvc.v1.TopListingInfo
-	31, // 40: listingssvc.v1.GetStorefrontStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
-	22, // 41: listingssvc.v1.GetTrendingStatsResponse.trending_categories:type_name -> listingssvc.v1.TrendingCategory
-	23, // 42: listingssvc.v1.GetTrendingStatsResponse.hot_listings:type_name -> listingssvc.v1.HotListing
-	24, // 43: listingssvc.v1.GetTrendingStatsResponse.popular_searches:type_name -> listingssvc.v1.PopularSearch
-	31, // 44: listingssvc.v1.GetTrendingStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
-	2,  // 45: listingssvc.v1.AnalyticsService.GetOverviewStats:input_type -> listingssvc.v1.GetOverviewStatsRequest
-	4,  // 46: listingssvc.v1.AnalyticsService.GetListingStats:input_type -> listingssvc.v1.GetListingStatsRequest
-	18, // 47: listingssvc.v1.AnalyticsService.GetStorefrontStats:input_type -> listingssvc.v1.GetStorefrontStatsRequest
-	21, // 48: listingssvc.v1.AnalyticsService.GetTrendingStats:input_type -> listingssvc.v1.GetTrendingStatsRequest
-	3,  // 49: listingssvc.v1.AnalyticsService.GetOverviewStats:output_type -> listingssvc.v1.GetOverviewStatsResponse
-	5,  // 50: listingssvc.v1.AnalyticsService.GetListingStats:output_type -> listingssvc.v1.GetListingStatsResponse
-	20, // 51: listingssvc.v1.AnalyticsService.GetStorefrontStats:output_type -> listingssvc.v1.GetStorefrontStatsResponse
-	25, // 52: listingssvc.v1.AnalyticsService.GetTrendingStats:output_type -> listingssvc.v1.GetTrendingStatsResponse
-	49, // [49:53] is the sub-list for method output_type
-	45, // [45:49] is the sub-list for method input_type
-	45, // [45:45] is the sub-list for extension type_name
-	45, // [45:45] is the sub-list for extension extendee
-	0,  // [0:45] is the sub-list for field type_name
+	2,  // 0: listingssvc.v1.RecordStorefrontEventRequest.event_type:type_name -> listingssvc.v1.StorefrontEventType
+	34, // 1: listingssvc.v1.RecordStorefrontEventRequest.event_data:type_name -> google.protobuf.Struct
+	35, // 2: listingssvc.v1.GetOverviewStatsRequest.date_from:type_name -> google.protobuf.Timestamp
+	35, // 3: listingssvc.v1.GetOverviewStatsRequest.date_to:type_name -> google.protobuf.Timestamp
+	35, // 4: listingssvc.v1.GetOverviewStatsRequest.compare_from:type_name -> google.protobuf.Timestamp
+	35, // 5: listingssvc.v1.GetOverviewStatsRequest.compare_to:type_name -> google.protobuf.Timestamp
+	0,  // 6: listingssvc.v1.GetOverviewStatsRequest.period:type_name -> listingssvc.v1.MetricPeriod
+	9,  // 7: listingssvc.v1.GetOverviewStatsResponse.listings:type_name -> listingssvc.v1.ListingsStats
+	10, // 8: listingssvc.v1.GetOverviewStatsResponse.revenue:type_name -> listingssvc.v1.RevenueStats
+	11, // 9: listingssvc.v1.GetOverviewStatsResponse.users:type_name -> listingssvc.v1.UsersStats
+	12, // 10: listingssvc.v1.GetOverviewStatsResponse.orders:type_name -> listingssvc.v1.OrdersStats
+	13, // 11: listingssvc.v1.GetOverviewStatsResponse.engagement:type_name -> listingssvc.v1.EngagementMetrics
+	15, // 12: listingssvc.v1.GetOverviewStatsResponse.time_series:type_name -> listingssvc.v1.TimeSeriesPoint
+	17, // 13: listingssvc.v1.GetOverviewStatsResponse.comparison:type_name -> listingssvc.v1.PerformanceComparison
+	14, // 14: listingssvc.v1.GetOverviewStatsResponse.conversion_funnel:type_name -> listingssvc.v1.ConversionFunnel
+	35, // 15: listingssvc.v1.GetOverviewStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	35, // 16: listingssvc.v1.GetOverviewStatsResponse.data_from:type_name -> google.protobuf.Timestamp
+	35, // 17: listingssvc.v1.GetOverviewStatsResponse.data_to:type_name -> google.protobuf.Timestamp
+	35, // 18: listingssvc.v1.GetListingStatsRequest.date_from:type_name -> google.protobuf.Timestamp
+	35, // 19: listingssvc.v1.GetListingStatsRequest.date_to:type_name -> google.protobuf.Timestamp
+	35, // 20: listingssvc.v1.GetListingStatsRequest.compare_from:type_name -> google.protobuf.Timestamp
+	35, // 21: listingssvc.v1.GetListingStatsRequest.compare_to:type_name -> google.protobuf.Timestamp
+	0,  // 22: listingssvc.v1.GetListingStatsRequest.period:type_name -> listingssvc.v1.MetricPeriod
+	13, // 23: listingssvc.v1.GetListingStatsResponse.engagement:type_name -> listingssvc.v1.EngagementMetrics
+	18, // 24: listingssvc.v1.GetListingStatsResponse.variant_stats:type_name -> listingssvc.v1.VariantStats
+	19, // 25: listingssvc.v1.GetListingStatsResponse.geo_stats:type_name -> listingssvc.v1.GeoStats
+	16, // 26: listingssvc.v1.GetListingStatsResponse.time_series:type_name -> listingssvc.v1.ListingTimeSeriesPoint
+	17, // 27: listingssvc.v1.GetListingStatsResponse.comparison:type_name -> listingssvc.v1.PerformanceComparison
+	35, // 28: listingssvc.v1.GetListingStatsResponse.created_at:type_name -> google.protobuf.Timestamp
+	35, // 29: listingssvc.v1.GetListingStatsResponse.updated_at:type_name -> google.protobuf.Timestamp
+	35, // 30: listingssvc.v1.GetListingStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	35, // 31: listingssvc.v1.GetListingStatsResponse.data_from:type_name -> google.protobuf.Timestamp
+	35, // 32: listingssvc.v1.GetListingStatsResponse.data_to:type_name -> google.protobuf.Timestamp
+	29, // 33: listingssvc.v1.ListingsStats.listings_by_category:type_name -> listingssvc.v1.ListingsStats.ListingsByCategoryEntry
+	30, // 34: listingssvc.v1.RevenueStats.revenue_by_payment_method:type_name -> listingssvc.v1.RevenueStats.RevenueByPaymentMethodEntry
+	31, // 35: listingssvc.v1.RevenueStats.revenue_by_storefront:type_name -> listingssvc.v1.RevenueStats.RevenueByStorefrontEntry
+	17, // 36: listingssvc.v1.RevenueStats.comparison:type_name -> listingssvc.v1.PerformanceComparison
+	32, // 37: listingssvc.v1.OrdersStats.orders_by_status:type_name -> listingssvc.v1.OrdersStats.OrdersByStatusEntry
+	33, // 38: listingssvc.v1.EngagementMetrics.top_search_terms:type_name -> listingssvc.v1.EngagementMetrics.TopSearchTermsEntry
+	35, // 39: listingssvc.v1.TimeSeriesPoint.timestamp:type_name -> google.protobuf.Timestamp
+	35, // 40: listingssvc.v1.ListingTimeSeriesPoint.timestamp:type_name -> google.protobuf.Timestamp
+	22, // 41: listingssvc.v1.GetStorefrontStatsResponse.top_listings:type_name -> listingssvc.v1.TopListingInfo
+	35, // 42: listingssvc.v1.GetStorefrontStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	25, // 43: listingssvc.v1.GetTrendingStatsResponse.trending_categories:type_name -> listingssvc.v1.TrendingCategory
+	26, // 44: listingssvc.v1.GetTrendingStatsResponse.hot_listings:type_name -> listingssvc.v1.HotListing
+	27, // 45: listingssvc.v1.GetTrendingStatsResponse.popular_searches:type_name -> listingssvc.v1.PopularSearch
+	35, // 46: listingssvc.v1.GetTrendingStatsResponse.generated_at:type_name -> google.protobuf.Timestamp
+	3,  // 47: listingssvc.v1.AnalyticsService.RecordStorefrontEvent:input_type -> listingssvc.v1.RecordStorefrontEventRequest
+	5,  // 48: listingssvc.v1.AnalyticsService.GetOverviewStats:input_type -> listingssvc.v1.GetOverviewStatsRequest
+	7,  // 49: listingssvc.v1.AnalyticsService.GetListingStats:input_type -> listingssvc.v1.GetListingStatsRequest
+	21, // 50: listingssvc.v1.AnalyticsService.GetStorefrontStats:input_type -> listingssvc.v1.GetStorefrontStatsRequest
+	24, // 51: listingssvc.v1.AnalyticsService.GetTrendingStats:input_type -> listingssvc.v1.GetTrendingStatsRequest
+	4,  // 52: listingssvc.v1.AnalyticsService.RecordStorefrontEvent:output_type -> listingssvc.v1.RecordStorefrontEventResponse
+	6,  // 53: listingssvc.v1.AnalyticsService.GetOverviewStats:output_type -> listingssvc.v1.GetOverviewStatsResponse
+	8,  // 54: listingssvc.v1.AnalyticsService.GetListingStats:output_type -> listingssvc.v1.GetListingStatsResponse
+	23, // 55: listingssvc.v1.AnalyticsService.GetStorefrontStats:output_type -> listingssvc.v1.GetStorefrontStatsResponse
+	28, // 56: listingssvc.v1.AnalyticsService.GetTrendingStats:output_type -> listingssvc.v1.GetTrendingStatsResponse
+	52, // [52:57] is the sub-list for method output_type
+	47, // [47:52] is the sub-list for method input_type
+	47, // [47:47] is the sub-list for extension type_name
+	47, // [47:47] is the sub-list for extension extendee
+	0,  // [0:47] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_listings_v1_analytics_proto_init() }
@@ -3424,23 +3672,24 @@ func file_api_proto_listings_v1_analytics_proto_init() {
 		return
 	}
 	file_api_proto_listings_v1_analytics_proto_msgTypes[0].OneofWrappers = []any{}
-	file_api_proto_listings_v1_analytics_proto_msgTypes[1].OneofWrappers = []any{}
-	file_api_proto_listings_v1_analytics_proto_msgTypes[2].OneofWrappers = []any{
+	file_api_proto_listings_v1_analytics_proto_msgTypes[2].OneofWrappers = []any{}
+	file_api_proto_listings_v1_analytics_proto_msgTypes[3].OneofWrappers = []any{}
+	file_api_proto_listings_v1_analytics_proto_msgTypes[4].OneofWrappers = []any{
 		(*GetListingStatsRequest_ListingId)(nil),
 		(*GetListingStatsRequest_ProductId)(nil),
 	}
-	file_api_proto_listings_v1_analytics_proto_msgTypes[3].OneofWrappers = []any{}
-	file_api_proto_listings_v1_analytics_proto_msgTypes[4].OneofWrappers = []any{}
 	file_api_proto_listings_v1_analytics_proto_msgTypes[5].OneofWrappers = []any{}
-	file_api_proto_listings_v1_analytics_proto_msgTypes[15].OneofWrappers = []any{}
-	file_api_proto_listings_v1_analytics_proto_msgTypes[16].OneofWrappers = []any{}
+	file_api_proto_listings_v1_analytics_proto_msgTypes[6].OneofWrappers = []any{}
+	file_api_proto_listings_v1_analytics_proto_msgTypes[7].OneofWrappers = []any{}
+	file_api_proto_listings_v1_analytics_proto_msgTypes[17].OneofWrappers = []any{}
+	file_api_proto_listings_v1_analytics_proto_msgTypes[18].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_listings_v1_analytics_proto_rawDesc), len(file_api_proto_listings_v1_analytics_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   29,
+			NumEnums:      3,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

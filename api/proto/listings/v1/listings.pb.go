@@ -1594,6 +1594,7 @@ func (x *CategoryTreeNode) GetCreatedAt() string {
 type Product struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	Id                    int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Uuid                  string                 `protobuf:"bytes,27,opt,name=uuid,proto3" json:"uuid,omitempty"` // UUID for variant operations (required for ListVariants API)
 	StorefrontId          int64                  `protobuf:"varint,2,opt,name=storefront_id,json=storefrontId,proto3" json:"storefront_id,omitempty"`
 	Name                  string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	Description           string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
@@ -1658,6 +1659,13 @@ func (x *Product) GetId() int64 {
 		return x.Id
 	}
 	return 0
+}
+
+func (x *Product) GetUuid() string {
+	if x != nil {
+		return x.Uuid
+	}
+	return ""
 }
 
 func (x *Product) GetStorefrontId() int64 {
@@ -1839,7 +1847,9 @@ func (x *Product) GetImages() []*ProductImage {
 type ProductVariant struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	Id                int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Uuid              string                 `protobuf:"bytes,20,opt,name=uuid,proto3" json:"uuid,omitempty"` // UUID for stock operations (ReserveStock, ReleaseStock)
 	ProductId         int64                  `protobuf:"varint,2,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	ProductUuid       string                 `protobuf:"bytes,21,opt,name=product_uuid,json=productUuid,proto3" json:"product_uuid,omitempty"` // Parent product UUID for cross-reference
 	Sku               *string                `protobuf:"bytes,3,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
 	Barcode           *string                `protobuf:"bytes,4,opt,name=barcode,proto3,oneof" json:"barcode,omitempty"`
 	Price             *float64               `protobuf:"fixed64,5,opt,name=price,proto3,oneof" json:"price,omitempty"`
@@ -1898,11 +1908,25 @@ func (x *ProductVariant) GetId() int64 {
 	return 0
 }
 
+func (x *ProductVariant) GetUuid() string {
+	if x != nil {
+		return x.Uuid
+	}
+	return ""
+}
+
 func (x *ProductVariant) GetProductId() int64 {
 	if x != nil {
 		return x.ProductId
 	}
 	return 0
+}
+
+func (x *ProductVariant) GetProductUuid() string {
+	if x != nil {
+		return x.ProductUuid
+	}
+	return ""
 }
 
 func (x *ProductVariant) GetSku() string {
@@ -14776,9 +14800,10 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x05_iconB\f\n" +
 	"\n" +
 	"_parent_idB\x16\n" +
-	"\x14_custom_ui_component\"\x81\t\n" +
+	"\x14_custom_ui_component\"\x95\t\n" +
 	"\aProduct\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12#\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04uuid\x18\x1b \x01(\tR\x04uuid\x12#\n" +
 	"\rstorefront_id\x18\x02 \x01(\x03R\fstorefrontId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x14\n" +
@@ -14818,11 +14843,13 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x13_individual_addressB\x16\n" +
 	"\x14_individual_latitudeB\x17\n" +
 	"\x15_individual_longitudeB\x13\n" +
-	"\x11_location_privacy\"\xd5\x06\n" +
+	"\x11_location_privacy\"\x8c\a\n" +
 	"\x0eProductVariant\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1d\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04uuid\x18\x14 \x01(\tR\x04uuid\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x02 \x01(\x03R\tproductId\x12\x15\n" +
+	"product_id\x18\x02 \x01(\x03R\tproductId\x12!\n" +
+	"\fproduct_uuid\x18\x15 \x01(\tR\vproductUuid\x12\x15\n" +
 	"\x03sku\x18\x03 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
 	"\abarcode\x18\x04 \x01(\tH\x01R\abarcode\x88\x01\x01\x12\x19\n" +
 	"\x05price\x18\x05 \x01(\x01H\x02R\x05price\x88\x01\x01\x12-\n" +

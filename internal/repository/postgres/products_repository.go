@@ -18,7 +18,7 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 
 	query := `
 		SELECT
-			p.id, p.storefront_id, p.title, p.description, p.price, p.currency,
+			p.id, p.uuid, p.storefront_id, p.title, p.description, p.price, p.currency,
 			p.category_id, p.sku, p.quantity, p.stock_status,
 			p.status, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
@@ -44,6 +44,7 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 
 	err := r.db.QueryRowContext(ctx, query, productID, storefrontID).Scan(
 		&product.ID,
+		&product.UUID,
 		&product.StorefrontID,
 		&product.Name,
 		&description,
@@ -149,7 +150,7 @@ func (r *Repository) GetProductsBySKUs(ctx context.Context, skus []string, store
 
 	query := `
 		SELECT
-			p.id, p.storefront_id, p.title, p.description, p.price, p.currency,
+			p.id, p.uuid, p.storefront_id, p.title, p.description, p.price, p.currency,
 			p.category_id, p.sku, p.quantity, p.stock_status,
 			p.status, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
@@ -183,6 +184,7 @@ func (r *Repository) GetProductsBySKUs(ctx context.Context, skus []string, store
 
 		err := rows.Scan(
 			&product.ID,
+			&product.UUID,
 			&product.StorefrontID,
 			&product.Name,
 			&description,
@@ -262,7 +264,7 @@ func (r *Repository) GetProductsByIDs(ctx context.Context, productIDs []int64, s
 
 	query := `
 		SELECT
-			p.id, p.storefront_id, p.title, p.description, p.price, p.currency,
+			p.id, p.uuid, p.storefront_id, p.title, p.description, p.price, p.currency,
 			p.category_id, p.sku, p.quantity, p.stock_status,
 			p.status, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
@@ -296,6 +298,7 @@ func (r *Repository) GetProductsByIDs(ctx context.Context, productIDs []int64, s
 
 		err := rows.Scan(
 			&product.ID,
+			&product.UUID,
 			&product.StorefrontID,
 			&product.Name,
 			&description,
@@ -391,7 +394,7 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 	// Get products with pagination
 	query := `
 		SELECT
-			p.id, p.storefront_id, p.title, p.description, p.price, p.currency,
+			p.id, p.uuid, p.storefront_id, p.title, p.description, p.price, p.currency,
 			p.category_id, p.sku, p.quantity, p.stock_status,
 			p.status, p.attributes, p.view_count, p.sold_count,
 			p.created_at, p.updated_at,
@@ -426,6 +429,7 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 
 		err := rows.Scan(
 			&product.ID,
+			&product.UUID,
 			&product.StorefrontID,
 			&product.Name,
 			&description,

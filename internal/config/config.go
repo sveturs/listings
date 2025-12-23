@@ -98,11 +98,26 @@ type SearchConfig struct {
 
 // StorageConfig contains MinIO (S3-compatible) configuration
 type StorageConfig struct {
-	Endpoint  string `envconfig:"VONDILISTINGS_MINIO_ENDPOINT" default:"localhost:9000"`
-	AccessKey string `envconfig:"VONDILISTINGS_MINIO_ACCESS_KEY" default:"minioadmin"`
-	SecretKey string `envconfig:"VONDILISTINGS_MINIO_SECRET_KEY" default:"minioadmin"`
-	UseSSL    bool   `envconfig:"VONDILISTINGS_MINIO_USE_SSL" default:"false"`
-	Bucket    string `envconfig:"VONDILISTINGS_MINIO_BUCKET" default:"listings-images"`
+	Endpoint      string `envconfig:"VONDILISTINGS_MINIO_ENDPOINT" default:"localhost:9000"`
+	AccessKey     string `envconfig:"VONDILISTINGS_MINIO_ACCESS_KEY" default:"minioadmin"`
+	SecretKey     string `envconfig:"VONDILISTINGS_MINIO_SECRET_KEY" default:"minioadmin"`
+	UseSSL        bool   `envconfig:"VONDILISTINGS_MINIO_USE_SSL" default:"false"`
+	Bucket        string `envconfig:"VONDILISTINGS_MINIO_BUCKET" default:"listings-images"`
+	PublicBaseURL string `envconfig:"VONDILISTINGS_MINIO_PUBLIC_BASE_URL" default:""`
+}
+
+// GetPublicBaseURL returns the public base URL for objects.
+// If PublicBaseURL is configured, uses it. Otherwise, constructs from Endpoint.
+func (c StorageConfig) GetPublicBaseURL() string {
+	if c.PublicBaseURL != "" {
+		return c.PublicBaseURL
+	}
+	// Construct from endpoint
+	protocol := "http"
+	if c.UseSSL {
+		protocol = "https"
+	}
+	return fmt.Sprintf("%s://%s/%s", protocol, c.Endpoint, c.Bucket)
 }
 
 // AuthConfig contains Auth Service integration settings

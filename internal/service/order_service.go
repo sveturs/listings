@@ -37,6 +37,9 @@ type OrderService interface {
 	ConfirmOrderPayment(ctx context.Context, orderID int64, transactionID string) error
 	ProcessRefund(ctx context.Context, orderID int64) error
 
+	// Payment operations
+	UpdatePaymentInfo(ctx context.Context, orderID int64, req *UpdatePaymentInfoRequest) (*domain.Order, error)
+
 	// Configuration
 	SetChatService(chatService ChatService)
 	SetDeliveryClient(client DeliveryClient)
@@ -48,6 +51,16 @@ type OrderItemInput struct {
 	ProductID int64  // Required - product/listing ID
 	VariantID *int64 // Optional - variant ID
 	Quantity  int    // Required - quantity to order
+}
+
+// UpdatePaymentInfoRequest contains parameters for updating payment information
+type UpdatePaymentInfoRequest struct {
+	PaymentProvider       *string // Payment gateway provider (stripe, allsecure, etc.)
+	PaymentSessionID      *string // Checkout session ID
+	PaymentIntentID       *string // Payment intent ID
+	PaymentIdempotencyKey *string // Idempotency key for duplicate prevention
+	PaymentStatus         *string // Payment status (pending, paid, failed, etc.)
+	PaymentTransactionID  *string // Transaction ID from payment provider
 }
 
 // CreateOrderRequest contains parameters for creating an order
@@ -1847,4 +1860,64 @@ func (s *orderService) sendBuyerNotification(ctx context.Context, buyerID int64,
 				Msg("order notification sent to buyer")
 		}
 	}()
+}
+
+// ============================================================================
+// PAYMENT OPERATIONS
+// ============================================================================
+
+// UpdatePaymentInfo updates payment information for an order
+// Used by Payment Service after successful payment processing
+func (s *orderService) UpdatePaymentInfo(ctx context.Context, orderID int64, req *UpdatePaymentInfoRequest) (*domain.Order, error) {
+	s.logger.Debug().
+		Int64("order_id", orderID).
+		Interface("request", req).
+		Msg("UpdatePaymentInfo called")
+
+	// Validate order_id
+	if orderID <= 0 {
+		return nil, fmt.Errorf("order_id must be greater than 0")
+	}
+
+	// At least one payment field must be provided
+	if req.PaymentProvider == nil && req.PaymentSessionID == nil && req.PaymentIntentID == nil &&
+		req.PaymentIdempotencyKey == nil && req.PaymentStatus == nil && req.PaymentTransactionID == nil {
+		return nil, fmt.Errorf("at least one payment field must be provided")
+	}
+
+	// Check if order exists
+	_, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get order")
+		return nil, fmt.Errorf("order not found")
+	}
+
+	// Update payment fields in repository
+	params := postgres.UpdatePaymentInfoParams{
+		PaymentProvider:       req.PaymentProvider,
+		PaymentSessionID:      req.PaymentSessionID,
+		PaymentIntentID:       req.PaymentIntentID,
+		PaymentIdempotencyKey: req.PaymentIdempotencyKey,
+		PaymentStatus:         req.PaymentStatus,
+		PaymentTransactionID:  req.PaymentTransactionID,
+	}
+
+	if err := s.orderRepo.UpdatePaymentInfo(ctx, orderID, params); err != nil {
+		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to update payment info")
+		return nil, fmt.Errorf("failed to update payment info: %w", err)
+	}
+
+	// Reload order to get updated data
+	updatedOrder, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to reload updated order")
+		return nil, fmt.Errorf("failed to reload order: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("order_id", orderID).
+		Interface("updated_fields", req).
+		Msg("payment info updated successfully")
+
+	return updatedOrder, nil
 }

@@ -339,12 +339,12 @@ curl http://localhost:6060/debug/pprof/heap?gc=1 > heap_after_gc.pprof
 
 ```bash
 # Check active connections
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable" -c \
-"SELECT COUNT(*) FROM pg_stat_activity WHERE datname='svetubd';"
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/vondi_db?sslmode=disable" -c \
+"SELECT COUNT(*) FROM pg_stat_activity WHERE datname='vondi_db';"
 
 # Detailed connection info
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable" -c \
-"SELECT state, COUNT(*) FROM pg_stat_activity WHERE datname='svetubd' GROUP BY state;"
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/vondi_db?sslmode=disable" -c \
+"SELECT state, COUNT(*) FROM pg_stat_activity WHERE datname='vondi_db' GROUP BY state;"
 ```
 
 ### Connection Pool Configuration

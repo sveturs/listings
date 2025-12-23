@@ -37,6 +37,12 @@ enum ConversionFunnelStage {
 
 // AnalyticsService provides RPC methods for analytics and reporting
 service AnalyticsService {
+  // === Event Recording ===
+
+  // RecordStorefrontEvent records a storefront event (page_view, product_view, add_to_cart, checkout, order)
+  // Public endpoint - no authorization required
+  rpc RecordStorefrontEvent(RecordStorefrontEventRequest) returns (RecordStorefrontEventResponse);
+
   // === High-Level Analytics ===
 
   // GetOverviewStats retrieves high-level platform analytics (admin dashboard)
@@ -62,6 +68,38 @@ service AnalyticsService {
   // Authorization: Admin only
   // Cache: 1 hour (trending data doesn't need real-time)
   rpc GetTrendingStats(GetTrendingStatsRequest) returns (GetTrendingStatsResponse);
+}
+
+// ============================================================================
+// REQUEST/RESPONSE MESSAGES - RecordStorefrontEvent
+// ============================================================================
+
+// StorefrontEventType defines types of storefront events
+enum StorefrontEventType {
+  STOREFRONT_EVENT_TYPE_UNSPECIFIED = 0;
+  STOREFRONT_EVENT_TYPE_PAGE_VIEW = 1;     // Storefront page viewed
+  STOREFRONT_EVENT_TYPE_PRODUCT_VIEW = 2;  // Product page viewed
+  STOREFRONT_EVENT_TYPE_ADD_TO_CART = 3;   // Product added to cart
+  STOREFRONT_EVENT_TYPE_CHECKOUT = 4;      // Checkout initiated
+  STOREFRONT_EVENT_TYPE_ORDER = 5;         // Order completed
+}
+
+// RecordStorefrontEventRequest records a storefront analytics event
+message RecordStorefrontEventRequest {
+  int64 storefront_id = 1;                 // Storefront ID (required)
+  StorefrontEventType event_type = 2;      // Event type (required)
+  string session_id = 3;                   // Session ID for tracking (required)
+  optional int64 user_id = 4;              // User ID if authenticated
+  google.protobuf.Struct event_data = 5;   // Additional event data (optional)
+  string ip_address = 6;                   // Client IP address
+  string user_agent = 7;                   // Client User-Agent
+  string referrer = 8;                     // HTTP Referrer
+}
+
+// RecordStorefrontEventResponse confirms event recording
+message RecordStorefrontEventResponse {
+  bool success = 1;                        // Whether event was recorded
+  string message = 2;                      // Status message
 }
 
 // ============================================================================

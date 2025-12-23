@@ -9,6 +9,7 @@ import (
 // Product represents a B2C storefront product entity
 type Product struct {
 	ID                    int64                  `json:"id" db:"id"`
+	UUID                  string                 `json:"uuid" db:"uuid"` // UUID for variant operations (required for ListVariants API)
 	StorefrontID          int64                  `json:"storefront_id" db:"storefront_id"`
 	Name                  string                 `json:"name" db:"name"`
 	Description           string                 `json:"description" db:"description"`
@@ -46,7 +47,9 @@ type Product struct {
 // ProductVariant represents a product variant (size, color, etc.)
 type ProductVariant struct {
 	ID                int64                  `json:"id" db:"id"`
+	UUID              string                 `json:"uuid" db:"uuid"`                 // UUID for stock operations (ReserveStock, ReleaseStock)
 	ProductID         int64                  `json:"product_id" db:"product_id"`
+	ProductUUID       string                 `json:"product_uuid" db:"product_uuid"` // Parent product UUID for cross-reference
 	SKU               *string                `json:"sku,omitempty" db:"sku"`
 	Barcode           *string                `json:"barcode,omitempty" db:"barcode"`
 	Price             *float64               `json:"price,omitempty" db:"price"`

@@ -13,13 +13,19 @@ import (
 
 // Client handles MinIO/S3 operations for image storage
 type Client struct {
-	client *minio.Client
-	bucket string
-	logger zerolog.Logger
+	client        *minio.Client
+	bucket        string
+	publicBaseURL string
+	logger        zerolog.Logger
 }
 
 // NewClient creates a new MinIO client
 func NewClient(endpoint, accessKey, secretKey, bucket string, useSSL bool, logger zerolog.Logger) (*Client, error) {
+	return NewClientWithPublicURL(endpoint, accessKey, secretKey, bucket, useSSL, "", logger)
+}
+
+// NewClientWithPublicURL creates a new MinIO client with a custom public base URL
+func NewClientWithPublicURL(endpoint, accessKey, secretKey, bucket string, useSSL bool, publicBaseURL string, logger zerolog.Logger) (*Client, error) {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
@@ -45,16 +51,27 @@ func NewClient(endpoint, accessKey, secretKey, bucket string, useSSL bool, logge
 		logger.Info().Str("bucket", bucket).Msg("created MinIO bucket")
 	}
 
+	// Construct public base URL if not provided
+	if publicBaseURL == "" {
+		protocol := "http"
+		if useSSL {
+			protocol = "https"
+		}
+		publicBaseURL = fmt.Sprintf("%s://%s/%s", protocol, endpoint, bucket)
+	}
+
 	logger.Info().
 		Str("endpoint", endpoint).
 		Str("bucket", bucket).
+		Str("publicBaseURL", publicBaseURL).
 		Bool("ssl", useSSL).
 		Msg("MinIO client initialized")
 
 	return &Client{
-		client: client,
-		bucket: bucket,
-		logger: logger.With().Str("component", "minio_client").Logger(),
+		client:        client,
+		bucket:        bucket,
+		publicBaseURL: publicBaseURL,
+		logger:        logger.With().Str("component", "minio_client").Logger(),
 	}, nil
 }
 
@@ -110,6 +127,12 @@ func (c *Client) GetPresignedURL(ctx context.Context, objectName string, expiry 
 	}
 
 	return url.String(), nil
+}
+
+// GetPublicURL returns a permanent public URL for an object (no expiry).
+// This should only be used when the bucket is configured with public read access.
+func (c *Client) GetPublicURL(objectName string) string {
+	return fmt.Sprintf("%s/%s", c.publicBaseURL, objectName)
 }
 
 // BucketExists checks if the bucket exists

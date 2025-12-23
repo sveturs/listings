@@ -43,7 +43,7 @@ Migrate listings and images from monolith's `unified_listings` VIEW to microserv
 SOURCE_DB = {
     'host': 'localhost',
     'port': 5433,
-    'database': 'svetubd',
+    'database': 'vondi_db',
     'user': 'postgres',
     'password': 'mX3g1XGhMRUZEX3l'
 }

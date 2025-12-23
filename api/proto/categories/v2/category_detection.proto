@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package categories.v2;
+
+option go_package = "github.com/vondi-global/listings/api/gen/categories/v2;categoriesv2";
+
+// CategoryDetectionService - Унифицированный сервис определения категорий
+service CategoryDetectionService {
+  // Определение категории по тексту (название + описание)
+  rpc DetectFromText(DetectFromTextRequest) returns (DetectCategoryResponse);
+
+  // Определение категории по ключевым словам
+  rpc DetectFromKeywords(DetectFromKeywordsRequest) returns (DetectCategoryResponse);
+
+  // Batch определение (для импорта множества товаров)
+  rpc DetectBatch(DetectBatchRequest) returns (DetectBatchResponse);
+
+  // Подтверждение выбора пользователем (для обучения)
+  rpc ConfirmSelection(ConfirmSelectionRequest) returns (ConfirmSelectionResponse);
+}
+
+// Запросы
+
+message DetectFromTextRequest {
+  string title = 1;
+  string description = 2;
+  string language = 3;              // "sr" | "en" | "ru"
+  CategoryHints hints = 4;          // Опциональные подсказки
+  string suggested_category = 5;    // AI-предложенная категория (например "Furniture")
+}
+
+message DetectFromKeywordsRequest {
+  repeated string keywords = 1;
+  string language = 2;
+}
+
+message DetectBatchRequest {
+  repeated DetectFromTextRequest items = 1;
+}
+
+message ConfirmSelectionRequest {
+  string detection_id = 1;
+  string selected_category_id = 2;
+}
+
+// Ответы
+
+message CategoryMatch {
+  string category_id = 1;           // UUID категории
+  string category_name = 2;         // Локализованное название
+  string category_slug = 3;         // Slug для URL
+  string category_path = 4;         // "Electronics > Phones > Smartphones"
+  double confidence_score = 5;      // 0.0 - 1.0
+  string detection_method = 6;      // "ai_claude" | "keyword_match" | "similarity"
+  repeated string matched_keywords = 7;
+}
+
+message DetectCategoryResponse {
+  CategoryMatch primary = 1;                    // Лучшее совпадение
+  repeated CategoryMatch alternatives = 2;     // Альтернативы (до 5)
+  string detection_id = 3;                      // UUID для tracking
+  int32 processing_time_ms = 4;
+}
+
+message DetectBatchResponse {
+  repeated DetectCategoryResponse results = 1;
+  int32 total_processing_time_ms = 2;
+}
+
+message ConfirmSelectionResponse {
+  bool success = 1;
+}
+
+// Вспомогательные типы
+
+message CategoryHints {
+  string domain = 1;                // "electronics", "fashion", etc.
+  string product_type = 2;          // "smartphone", "dress", etc.
+  repeated string keywords = 3;     // Дополнительные ключевые слова
+}

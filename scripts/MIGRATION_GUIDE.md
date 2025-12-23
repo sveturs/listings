@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide describes the process of migrating production data from the old monolith database (`svetubd`) to the new microservice database (`listings_dev_db`).
+This guide describes the process of migrating production data from the old monolith database (`vondi_db`) to the new microservice database (`listings_dev_db`).
 
 ## Migration Script
 
@@ -12,7 +12,7 @@ This guide describes the process of migrating production data from the old monol
 
 ### Source → Target Mapping
 
-| Old DB (svetubd) | New DB (listings_dev_db) | Notes |
+| Old DB (vondi_db) | New DB (listings_dev_db) | Notes |
 |------------------|--------------------------|-------|
 | `c2c_listings` | `listings` | With `source_type='c2c'` |
 | `b2c_stores` | `storefronts` | B2C business stores |
@@ -42,7 +42,7 @@ This guide describes the process of migrating production data from the old monol
 
 **Old DB (port 5433):**
 ```
-postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd
+postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db
 ```
 
 **New DB (port 35434):**
@@ -68,7 +68,7 @@ pip3 install psycopg2-binary
 
 **Old DB:**
 ```bash
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" -c "
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" -c "
 SELECT
   (SELECT COUNT(*) FROM c2c_listings) as c2c_listings,
   (SELECT COUNT(*) FROM b2c_stores) as b2c_stores,
@@ -119,7 +119,7 @@ python3 /p/github.com/sveturs/listings/scripts/migrate_data.py
 ```
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                    DATA MIGRATION SCRIPT                                     ║
-║                svetubd → listings_dev_db                                     ║
+║                vondi_db → listings_dev_db                                     ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 Started at: 2025-11-10 15:30:00

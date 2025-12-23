@@ -569,6 +569,7 @@ func ProductToProto(p *domain.Product) *listingspb.Product {
 
 	pbProduct := &listingspb.Product{
 		Id:                    p.ID,
+		Uuid:                  p.UUID, // UUID for variant operations (required for ListVariants API)
 		StorefrontId:          p.StorefrontID,
 		Name:                  p.Name,
 		Description:           p.Description,
@@ -653,7 +654,9 @@ func ProductVariantToProto(v *domain.ProductVariant) *listingspb.ProductVariant 
 
 	pbVariant := &listingspb.ProductVariant{
 		Id:            v.ID,
+		Uuid:          v.UUID,        // UUID for stock operations (ReserveStock, ReleaseStock)
 		ProductId:     v.ProductID,
+		ProductUuid:   v.ProductUUID, // Parent product UUID for cross-reference
 		StockQuantity: v.StockQuantity,
 		StockStatus:   v.StockStatus,
 		IsActive:      v.IsActive,

@@ -168,6 +168,13 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 		"/categories.v2.CategoryDetectionService/DetectFromKeywords",
 		"/categories.v2.CategoryDetectionService/DetectBatch",
 		"/categories.v2.CategoryDetectionService/ConfirmSelection",
+		// Analytics public methods (no auth required for recording events - user_id is optional)
+		"/listingssvc.v1.AnalyticsService/RecordStorefrontEvent",
+		// Variant service public methods (viewing variants on product page is public)
+		"/vondi.variants.v1.VariantService/ListVariants",
+		"/vondi.variants.v1.VariantService/GetVariant",
+		"/vondi.variants.v1.VariantService/GetVariantBySku",
+		"/vondi.variants.v1.VariantService/FindVariantByAttributes",
 	}
 
 	for _, publicMethod := range publicMethods {

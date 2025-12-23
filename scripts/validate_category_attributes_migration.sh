@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Database connection strings
-SOURCE_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"
+SOURCE_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable"
 DEST_DB="postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"

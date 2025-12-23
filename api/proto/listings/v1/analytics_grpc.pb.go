@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AnalyticsService_GetOverviewStats_FullMethodName   = "/listingssvc.v1.AnalyticsService/GetOverviewStats"
-	AnalyticsService_GetListingStats_FullMethodName    = "/listingssvc.v1.AnalyticsService/GetListingStats"
-	AnalyticsService_GetStorefrontStats_FullMethodName = "/listingssvc.v1.AnalyticsService/GetStorefrontStats"
-	AnalyticsService_GetTrendingStats_FullMethodName   = "/listingssvc.v1.AnalyticsService/GetTrendingStats"
+	AnalyticsService_RecordStorefrontEvent_FullMethodName = "/listingssvc.v1.AnalyticsService/RecordStorefrontEvent"
+	AnalyticsService_GetOverviewStats_FullMethodName      = "/listingssvc.v1.AnalyticsService/GetOverviewStats"
+	AnalyticsService_GetListingStats_FullMethodName       = "/listingssvc.v1.AnalyticsService/GetListingStats"
+	AnalyticsService_GetStorefrontStats_FullMethodName    = "/listingssvc.v1.AnalyticsService/GetStorefrontStats"
+	AnalyticsService_GetTrendingStats_FullMethodName      = "/listingssvc.v1.AnalyticsService/GetTrendingStats"
 )
 
 // AnalyticsServiceClient is the client API for AnalyticsService service.
@@ -31,6 +32,9 @@ const (
 //
 // AnalyticsService provides RPC methods for analytics and reporting
 type AnalyticsServiceClient interface {
+	// RecordStorefrontEvent records a storefront event (page_view, product_view, add_to_cart, checkout, order)
+	// Public endpoint - no authorization required
+	RecordStorefrontEvent(ctx context.Context, in *RecordStorefrontEventRequest, opts ...grpc.CallOption) (*RecordStorefrontEventResponse, error)
 	// GetOverviewStats retrieves high-level platform analytics (admin dashboard)
 	// Includes: total listings, revenue, users, orders, conversion metrics
 	// Supports time-series data for trend analysis
@@ -59,6 +63,16 @@ type analyticsServiceClient struct {
 
 func NewAnalyticsServiceClient(cc grpc.ClientConnInterface) AnalyticsServiceClient {
 	return &analyticsServiceClient{cc}
+}
+
+func (c *analyticsServiceClient) RecordStorefrontEvent(ctx context.Context, in *RecordStorefrontEventRequest, opts ...grpc.CallOption) (*RecordStorefrontEventResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RecordStorefrontEventResponse)
+	err := c.cc.Invoke(ctx, AnalyticsService_RecordStorefrontEvent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *analyticsServiceClient) GetOverviewStats(ctx context.Context, in *GetOverviewStatsRequest, opts ...grpc.CallOption) (*GetOverviewStatsResponse, error) {
@@ -107,6 +121,9 @@ func (c *analyticsServiceClient) GetTrendingStats(ctx context.Context, in *GetTr
 //
 // AnalyticsService provides RPC methods for analytics and reporting
 type AnalyticsServiceServer interface {
+	// RecordStorefrontEvent records a storefront event (page_view, product_view, add_to_cart, checkout, order)
+	// Public endpoint - no authorization required
+	RecordStorefrontEvent(context.Context, *RecordStorefrontEventRequest) (*RecordStorefrontEventResponse, error)
 	// GetOverviewStats retrieves high-level platform analytics (admin dashboard)
 	// Includes: total listings, revenue, users, orders, conversion metrics
 	// Supports time-series data for trend analysis
@@ -137,6 +154,9 @@ type AnalyticsServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAnalyticsServiceServer struct{}
 
+func (UnimplementedAnalyticsServiceServer) RecordStorefrontEvent(context.Context, *RecordStorefrontEventRequest) (*RecordStorefrontEventResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RecordStorefrontEvent not implemented")
+}
 func (UnimplementedAnalyticsServiceServer) GetOverviewStats(context.Context, *GetOverviewStatsRequest) (*GetOverviewStatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetOverviewStats not implemented")
 }
@@ -168,6 +188,24 @@ func RegisterAnalyticsServiceServer(s grpc.ServiceRegistrar, srv AnalyticsServic
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AnalyticsService_ServiceDesc, srv)
+}
+
+func _AnalyticsService_RecordStorefrontEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordStorefrontEventRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AnalyticsServiceServer).RecordStorefrontEvent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AnalyticsService_RecordStorefrontEvent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AnalyticsServiceServer).RecordStorefrontEvent(ctx, req.(*RecordStorefrontEventRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AnalyticsService_GetOverviewStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -249,6 +287,10 @@ var AnalyticsService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "listingssvc.v1.AnalyticsService",
 	HandlerType: (*AnalyticsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RecordStorefrontEvent",
+			Handler:    _AnalyticsService_RecordStorefrontEvent_Handler,
+		},
 		{
 			MethodName: "GetOverviewStats",
 			Handler:    _AnalyticsService_GetOverviewStats_Handler,

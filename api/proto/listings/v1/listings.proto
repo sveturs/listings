@@ -569,6 +569,7 @@ message CategoryTreeNode {
 // Product represents a B2C product
 message Product {
   int64 id = 1;
+  string uuid = 27;  // UUID for variant operations (required for ListVariants API)
   int64 storefront_id = 2;
   string name = 3;
   string description = 4;
@@ -599,7 +600,9 @@ message Product {
 // ProductVariant represents a product variant with specific attributes
 message ProductVariant {
   int64 id = 1;
+  string uuid = 20;  // UUID for stock operations (ReserveStock, ReleaseStock)
   int64 product_id = 2;
+  string product_uuid = 21;  // Parent product UUID for cross-reference
   optional string sku = 3;
   optional string barcode = 4;
   optional double price = 5;

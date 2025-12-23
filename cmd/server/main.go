@@ -187,12 +187,13 @@ func main() {
 	// Initialize MinIO (optional)
 	var minioClient *minio.Client
 	if cfg.Storage.Endpoint != "" {
-		minioClient, err = minio.NewClient(
+		minioClient, err = minio.NewClientWithPublicURL(
 			cfg.Storage.Endpoint,
 			cfg.Storage.AccessKey,
 			cfg.Storage.SecretKey,
 			cfg.Storage.Bucket,
 			cfg.Storage.UseSSL,
+			cfg.Storage.PublicBaseURL,
 			zerologLogger,
 		)
 		if err != nil {
@@ -333,8 +334,10 @@ func main() {
 	// Initialize storefront analytics service (Phase 30.1)
 	var storefrontAnalyticsSvc service.StorefrontAnalyticsService
 	storefrontAnalyticsRepo := postgres.NewStorefrontAnalyticsRepository(pgxPool, zerologLogger)
+	storefrontEventRepo := postgres.NewStorefrontEventRepository(pgxPool, zerologLogger)
 	storefrontAnalyticsSvc = service.NewStorefrontAnalyticsService(
 		storefrontAnalyticsRepo,
+		storefrontEventRepo,
 		redisCache.GetClient(), // Reuse existing Redis client
 		zerologLogger,
 	)

@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Database connection strings
-SOURCE_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd"
+SOURCE_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db"
 TARGET_DB="postgres://listings_user:listings_secret@localhost:35434/listings_dev_db"
 
 # Tables to migrate in correct order (respecting FK dependencies)
@@ -26,7 +26,7 @@ TABLES=(
 
 echo -e "${BLUE}=====================================${NC}"
 echo -e "${BLUE}C2C Data Migration Script${NC}"
-echo -e "${BLUE}Source: svetubd (5433)${NC}"
+echo -e "${BLUE}Source: vondi_db (5433)${NC}"
 echo -e "${BLUE}Target: listings_dev_db (35434)${NC}"
 echo -e "${BLUE}=====================================${NC}"
 echo ""
@@ -92,7 +92,7 @@ migrate_table() {
         -h localhost \
         -p 5433 \
         -U postgres \
-        -d svetubd \
+        -d vondi_db \
         --table="$table" \
         --data-only \
         --column-inserts \
@@ -177,7 +177,7 @@ fix_sequences() {
 main() {
     # Step 1: Check connections
     echo -e "${BLUE}Step 1: Checking database connections${NC}"
-    check_db_connection "source DB (svetubd)" "$SOURCE_DB"
+    check_db_connection "source DB (vondi_db)" "$SOURCE_DB"
     check_db_connection "target DB (listings_dev_db)" "$TARGET_DB"
     echo ""
 

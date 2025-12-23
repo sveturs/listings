@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-This guide describes the data migration process from the monolith database (`svetubd`) to the Orders microservice database (`listings_dev_db`).
+This guide describes the data migration process from the monolith database (`vondi_db`) to the Orders microservice database (`listings_dev_db`).
 
 **Current status:**
 - Monolith has **only** `inventory_reservations` table with orders data (2 active records)
@@ -13,10 +13,10 @@ This guide describes the data migration process from the monolith database (`sve
 
 ## 🗄️ Database Schemas
 
-### Monolith (svetubd)
+### Monolith (vondi_db)
 **Connection:**
 ```bash
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable"
 ```
 
 **Tables:**
@@ -80,7 +80,7 @@ psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?s
 1. **Both databases must be running:**
    ```bash
    # Check monolith PostgreSQL
-   psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" -c "SELECT version();"
+   psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" -c "SELECT version();"
 
    # Check microservice PostgreSQL (Docker container)
    docker ps | grep listings-postgres
@@ -339,7 +339,7 @@ psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?s
 
 ```bash
 # Monolith: Count active reservations
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" \
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" \
   -c "SELECT COUNT(*) FROM inventory_reservations WHERE expires_at > NOW() AND status = 'active';"
 
 # Microservice: Count migrated reservations
@@ -370,7 +370,7 @@ psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?s
 
 ```bash
 # Monolith: Show sample reservation
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" \
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" \
   -c "SELECT id, product_id, quantity, status::text, expires_at FROM inventory_reservations LIMIT 1;"
 
 # Microservice: Show same reservation (by ID)

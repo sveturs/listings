@@ -347,7 +347,7 @@ curl -X GET "http://localhost:9200/listings_microservice/_mapping" | \
 ```
 Host: localhost
 Port: 5433
-Database: svetubd
+Database: vondi_db
 View: unified_listings
 ```
 

@@ -2,7 +2,7 @@
 
 ## Обзор
 
-Миграция данных `category_attributes` из монолита (база `svetubd:5433`) в микросервис Listings (база `listings_dev_db:35434`).
+Миграция данных `category_attributes` из монолита (база `vondi_db:5433`) в микросервис Listings (база `listings_dev_db:35434`).
 
 **Миграция:** `unified_category_attributes` → `category_attributes`
 
@@ -13,7 +13,7 @@
 ## Архитектура
 
 ### Источник (Монолит)
-- **База:** `svetubd` (PostgreSQL 5433)
+- **База:** `vondi_db` (PostgreSQL 5433)
 - **Таблица:** `unified_category_attributes`
 - **Записей:** 479
 
@@ -166,7 +166,7 @@ go run ./cmd/migrate_category_attributes/main.go \
 ```
 
 **Флаги:**
-- `--source` - DSN для подключения к монолиту (по умолчанию localhost:5433/svetubd)
+- `--source` - DSN для подключения к монолиту (по умолчанию localhost:5433/vondi_db)
 - `--dest` - DSN для подключения к микросервису (по умолчанию localhost:35434/listings_dev_db)
 - `--dry-run` - режим без изменений (только валидация)
 - `--batch-size` - размер батча для вставки (по умолчанию 100)
@@ -358,7 +358,7 @@ SELECT COUNT(DISTINCT attribute_id) FROM unified_category_attributes;
 **Решение:**
 1. Проверить какие категории отсутствуют:
 ```bash
-psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable" -c "
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable" -c "
   SELECT DISTINCT ca.category_id
   FROM unified_category_attributes ca
   WHERE NOT EXISTS (

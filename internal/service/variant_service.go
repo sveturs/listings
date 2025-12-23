@@ -326,9 +326,14 @@ func (s *VariantService) CreateVariant(ctx context.Context, input *domain.Create
 }
 
 // ListByProduct retrieves all variants for a product
+// Accepts product_id as UUID string. Returns error if UUID is invalid.
 func (s *VariantService) ListByProduct(ctx context.Context, productID string) ([]*domain.ProductVariantV2, error) {
 	productUUID, err := uuid.Parse(productID)
 	if err != nil {
+		s.logger.Error().
+			Str("product_id", productID).
+			Err(err).
+			Msg("invalid product UUID format")
 		return nil, fmt.Errorf("invalid product ID: %w", err)
 	}
 

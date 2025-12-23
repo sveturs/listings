@@ -1123,6 +1123,56 @@ func (s *Server) GetOrderTracking(ctx context.Context, req *listingspb.GetOrderT
 }
 
 // ============================================================================
+// PAYMENT OPERATIONS (1 method)
+// ============================================================================
+
+// UpdateOrderPayment updates payment information for an order
+// Used by Payment Service after successful payment processing
+// Validates: order exists
+// Actions: updates payment fields (provider, session_id, intent_id, status, transaction_id)
+func (s *Server) UpdateOrderPayment(ctx context.Context, req *listingspb.UpdateOrderPaymentRequest) (*listingspb.UpdateOrderPaymentResponse, error) {
+	s.logger.Debug().
+		Int64("order_id", req.OrderId).
+		Interface("payment_provider", req.PaymentProvider).
+		Interface("payment_session_id", req.PaymentSessionId).
+		Interface("payment_status", req.PaymentStatus).
+		Msg("UpdateOrderPayment called")
+
+	// Validate order_id
+	if req.OrderId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "order_id must be greater than 0")
+	}
+
+	// At least one payment field must be provided
+	if req.PaymentProvider == nil && req.PaymentSessionId == nil && req.PaymentIntentId == nil &&
+		req.PaymentIdempotencyKey == nil && req.PaymentStatus == nil && req.PaymentTransactionId == nil {
+		return nil, status.Error(codes.InvalidArgument, "at least one payment field must be provided")
+	}
+
+	// Call service layer to update payment info
+	updatedOrder, err := s.orderService.UpdatePaymentInfo(ctx, req.OrderId, &service.UpdatePaymentInfoRequest{
+		PaymentProvider:       req.PaymentProvider,
+		PaymentSessionID:      req.PaymentSessionId,
+		PaymentIntentID:       req.PaymentIntentId,
+		PaymentIdempotencyKey: req.PaymentIdempotencyKey,
+		PaymentStatus:         req.PaymentStatus,
+		PaymentTransactionID:  req.PaymentTransactionId,
+	})
+
+	if err != nil {
+		return nil, mapServiceErrorToGRPC(err, s.logger)
+	}
+
+	// Convert domain Order to proto Order
+	pbOrder := updatedOrder.ToProto()
+
+	return &listingspb.UpdateOrderPaymentResponse{
+		Success: true,
+		Order:   pbOrder,
+	}, nil
+}
+
+// ============================================================================
 // HELPER FUNCTIONS - Error Mapping
 // ============================================================================
 
