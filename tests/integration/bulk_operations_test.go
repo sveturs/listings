@@ -42,11 +42,11 @@ const (
 	bulkPerfStorefront   = int64(6005)
 
 	// Categories
-	testCategory1301 = int64(1301) // Bulk Test Electronics
-	testCategory1302 = int64(1302) // Bulk Test Computers
-	testCategory1303 = int64(1303) // Bulk Test Accessories
-	testCategory1304 = int64(1304) // Bulk Test Clothing
-	testCategory1305 = int64(1305) // Bulk Test Home & Garden
+	testCategory1301 = "1301" // Bulk Test Electronics
+	testCategory1302 = "1302" // Bulk Test Computers
+	testCategory1303 = "1303" // Bulk Test Accessories
+	testCategory1304 = "1304" // Bulk Test Clothing
+	testCategory1305 = "1305" // Bulk Test Home & Garden
 
 	// Products for BulkUpdateProducts tests
 	product20001 = int64(20001) // Laptop Dell XPS 13
