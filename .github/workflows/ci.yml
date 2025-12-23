@@ -66,7 +66,14 @@ jobs:
     steps:
       - name: Cleanup old containers
         run: |
+          # Stop and remove test containers by name
           docker rm -f postgres-listings-test redis-listings-test || true
+
+          # Find and kill containers using ports 5432 and 6379
+          docker ps --filter "publish=5432" --format "{{.ID}}" | xargs -r docker rm -f || true
+          docker ps --filter "publish=6379" --format "{{.ID}}" | xargs -r docker rm -f || true
+
+          # Cleanup all stopped containers
           docker ps -aq | xargs -r docker rm -f || true
           docker network prune -f || true
           sleep 2
