@@ -46,7 +46,7 @@ func TestConcurrency_ParallelCreates(t *testing.T) {
 				Title:      "Concurrent Test Product",
 				Price:      99.99,
 				Currency:   "USD",
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			}
 
@@ -89,7 +89,7 @@ func TestConcurrency_ParallelUpdates(t *testing.T) {
 		Title:      "Original Title",
 		Price:      100.00,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   100,
 	}
 
@@ -152,7 +152,7 @@ func TestConcurrency_ReadWriteRace(t *testing.T) {
 		Title:      "Race Test Listing",
 		Price:      100.00,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   100,
 	}
 
@@ -253,7 +253,7 @@ func TestConcurrency_CreateAndDelete(t *testing.T) {
 				Title:      "Create/Delete Test",
 				Price:      99.99,
 				Currency:   "USD",
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			}
 
@@ -301,7 +301,7 @@ func TestConcurrency_BulkOperations(t *testing.T) {
 			Title:      "Bulk Test Listing",
 			Price:      99.99,
 			Currency:   "USD",
-			CategoryId: 1,
+			CategoryId: "1",
 			Quantity:   10,
 		}
 
@@ -358,7 +358,7 @@ func TestConcurrency_NoDeadlock(t *testing.T) {
 			Title:      "Deadlock Test",
 			Price:      99.99,
 			Currency:   "USD",
-			CategoryId: 1,
+			CategoryId: "1",
 			Quantity:   10,
 		}
 
@@ -425,7 +425,7 @@ func TestConcurrency_DoubleDelete(t *testing.T) {
 		Title:      "Double Delete Test",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -487,7 +487,7 @@ func TestConcurrency_ParallelSearches(t *testing.T) {
 			Title:      "Search Test Product",
 			Price:      99.99,
 			Currency:   "USD",
-			CategoryId: int64(1 + (i % 3)),
+			CategoryId: fmt.Sprintf("%d", 1 + (i % 3)),
 			Quantity:   1,
 		}
 

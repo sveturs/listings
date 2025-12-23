@@ -453,7 +453,7 @@ func TestBulkCreateProducts_Error_MissingRequiredFields(t *testing.T) {
 				Price:         100.0,
 				Currency:      "USD",
 				StockQuantity: 10,
-				CategoryId:    0,
+				CategoryId: "",
 				Sku:           stringPtr("INV-CAT-001"),
 			},
 			expectedErr: "category",

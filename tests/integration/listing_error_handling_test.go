@@ -48,7 +48,7 @@ func TestListing_Error_MissingRequiredFields(t *testing.T) {
 				Title:      "", // Missing
 				Price:      99.99,
 				Currency:   "USD",
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
@@ -60,7 +60,7 @@ func TestListing_Error_MissingRequiredFields(t *testing.T) {
 				Title:      "Test Product",
 				Price:      99.99,
 				Currency:   "", // Missing
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
@@ -72,7 +72,7 @@ func TestListing_Error_MissingRequiredFields(t *testing.T) {
 				Title:      "Test Product",
 				Price:      99.99,
 				Currency:   "USD",
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
@@ -115,7 +115,7 @@ func TestListing_Error_InvalidEnumValues(t *testing.T) {
 				Title:      "Test Product",
 				Price:      99.99,
 				Currency:   "USD",
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			}
 
@@ -221,7 +221,7 @@ func TestListing_Error_InvalidCurrency(t *testing.T) {
 				Title:      "Test Product",
 				Price:      99.99,
 				Currency:   tc.currency,
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			}
 
@@ -253,7 +253,7 @@ func TestListing_Error_DuplicateSKU(t *testing.T) {
 		Title:      "First Product",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 
 		Sku: stringPtr("DUPLICATE-SKU-001"),
@@ -269,7 +269,7 @@ func TestListing_Error_DuplicateSKU(t *testing.T) {
 		Title:      "Second Product",
 		Price:      149.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 
 		Sku: stringPtr("DUPLICATE-SKU-001"), // Same SKU
@@ -315,7 +315,7 @@ func TestListing_Error_TooManyListings(t *testing.T) {
 			Title:      "Bulk Test Product",
 			Price:      99.99,
 			Currency:   "USD",
-			CategoryId: 1,
+			CategoryId: "1",
 			Quantity:   1,
 		}
 
@@ -415,7 +415,7 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 		Title:      "Test Before Disconnect",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -433,7 +433,7 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 		Title:      "Test After Disconnect",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -467,7 +467,7 @@ func TestListing_Error_ContextTimeout(t *testing.T) {
 		Title:      "Timeout Test",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -496,7 +496,7 @@ func TestListing_Error_ContextCancellation(t *testing.T) {
 		Title:      "Cancelled Request Test",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -526,7 +526,7 @@ func TestListing_Error_UpdateOthersListing(t *testing.T) {
 		Title:      "User 100 Listing",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -568,7 +568,7 @@ func TestListing_Error_DeleteOthersListing(t *testing.T) {
 		Title:      "User 100 Listing",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 

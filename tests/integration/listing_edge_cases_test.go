@@ -32,7 +32,7 @@ func TestListing_BoundaryValues_MinTitle(t *testing.T) {
 		Description: stringPtr("Valid description"),
 		Price:       1.0,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -60,7 +60,7 @@ func TestListing_BoundaryValues_MaxTitle(t *testing.T) {
 		Description: stringPtr("Valid description"),
 		Price:       1.0,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -87,7 +87,7 @@ func TestListing_BoundaryValues_TitleTooLong(t *testing.T) {
 		Description: stringPtr("Valid description"),
 		Price:       1.0,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -118,7 +118,7 @@ func TestListing_BoundaryValues_MinPrice(t *testing.T) {
 		Description: stringPtr("Testing minimum price"),
 		Price:       0.01, // Minimum valid price (1 cent)
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -142,7 +142,7 @@ func TestListing_BoundaryValues_ZeroPrice(t *testing.T) {
 		Description: stringPtr("Testing zero price"),
 		Price:       0.0, // Invalid price
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -172,7 +172,7 @@ func TestListing_BoundaryValues_NegativePrice(t *testing.T) {
 		Description: stringPtr("Testing negative price"),
 		Price:       -10.50, // Invalid price
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -198,7 +198,7 @@ func TestListing_BoundaryValues_ZeroQuantity(t *testing.T) {
 		Description: stringPtr("Testing zero quantity"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    0, // Zero quantity
 
 	}
@@ -230,7 +230,7 @@ func TestListing_BoundaryValues_MaxQuantity(t *testing.T) {
 		Description: stringPtr("Testing max quantity"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    2147483647, // Max int32 value
 
 	}
@@ -259,7 +259,7 @@ func TestListing_Unicode_Emoji(t *testing.T) {
 		Description: stringPtr("Smartphone with emoji 🎉🎊"),
 		Price:       999.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    10,
 	}
 
@@ -284,7 +284,7 @@ func TestListing_Unicode_CJK(t *testing.T) {
 		Description: stringPtr("多语言描述 マルチ言語 다국어"),
 		Price:       149.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    5,
 	}
 
@@ -308,7 +308,7 @@ func TestListing_Unicode_RTL(t *testing.T) {
 		Description: stringPtr("وصف المنتج תיאור המוצר"),
 		Price:       79.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    3,
 	}
 
@@ -333,7 +333,7 @@ func TestListing_Unicode_SpecialSymbols(t *testing.T) {
 		Description: stringPtr("Symbols: € £ ¥ ₹ ¢ ° ± × ÷"),
 		Price:       199.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -359,7 +359,7 @@ func TestListing_Unicode_ZeroWidthCharacters(t *testing.T) {
 		Description: stringPtr("Normal description"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -388,7 +388,7 @@ func TestListing_Unicode_ControlCharacters(t *testing.T) {
 		Description: stringPtr("Test\nMultiline\rDescription"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -424,7 +424,7 @@ func TestListing_EdgeCase_EmptyDescription(t *testing.T) {
 		Description: nil, // Empty description
 		Price:       49.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -451,7 +451,7 @@ func TestListing_EdgeCase_VeryLongDescription(t *testing.T) {
 		Description: &veryLongDesc,
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -480,7 +480,7 @@ func TestListing_EdgeCase_InvalidCategoryID(t *testing.T) {
 		Description: stringPtr("Testing invalid category"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryId:  999999, // Non-existent category
+		CategoryId: "999999", // Non-existent category
 		Quantity:    1,
 	}
 
@@ -506,7 +506,7 @@ func TestListing_EdgeCase_SQLInjectionAttempt(t *testing.T) {
 		Description: stringPtr("1' OR '1'='1"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
@@ -538,7 +538,7 @@ func TestListing_EdgeCase_XSSAttempt(t *testing.T) {
 		Description: stringPtr("<img src=x onerror=alert('XSS')>"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryId:  1,
+		CategoryId: "1",
 		Quantity:    1,
 	}
 
