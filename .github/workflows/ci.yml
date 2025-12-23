@@ -88,6 +88,12 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Cleanup old containers
+        run: |
+          docker ps -aq --filter "name=postgres" --filter "name=redis" | xargs -r docker rm -f || true
+          docker network prune -f || true
+        continue-on-error: true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
