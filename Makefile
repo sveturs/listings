@@ -1,4 +1,4 @@
-.PHONY: help build run test clean docker-build docker-up docker-down migrate-up migrate-down proto lint format tidy deps
+.PHONY: help build run test clean docker-build docker-up docker-down migrate-up migrate-down proto lint format tidy deps dump2mig-dump dump2mig
 
 # Variables
 APP_NAME := listings-service
@@ -305,3 +305,50 @@ load-test-clean: ## Clean load test results
 	@echo "$(YELLOW)Cleaning load test results...$(NC)"
 	@rm -rf load-tests/results/*.json load-tests/results/*.log load-tests/results/*.txt
 	@echo "$(GREEN)Load test results cleaned$(NC)"
+
+## Dump2Mig commands (database schema migration generation)
+
+dump2mig-dump: ## Create PostgreSQL dump for migration generation
+	@echo "$(GREEN)Creating database dump for dump2mig...$(NC)"
+	@echo "$(YELLOW)Connecting to: localhost:35434/listings_dev_db$(NC)"
+	@echo "$(YELLOW)Note: Using schema-only dump (--schema-only) to avoid PostGIS type issues$(NC)"
+	@PGPASSWORD=listings_secret pg_dump \
+		-h localhost \
+		-p 35434 \
+		-U listings_user \
+		-d listings_dev_db \
+		--no-owner \
+		--no-acl \
+		--schema-only \
+		-f dump2mig_dump.sql
+	@echo "$(GREEN)Dump created: dump2mig_dump.sql ($$(wc -l < dump2mig_dump.sql) lines)$(NC)"
+
+dump2mig: dump2mig-dump ## Full dump2mig cycle: dump -> split -> combine -> replace
+	@echo ""
+	@echo "$(GREEN)Splitting dump into migrations and fixtures...$(NC)"
+	@rm -rf migrations_new fixtures_new migrations_big migrations_combined
+	~/go/bin/dump2mig-split dump2mig_dump.sql
+	@mv migrations migrations_new
+	@mv fixtures fixtures_new
+	@echo "$(GREEN)✅ Split complete: $$(ls migrations_new/*.sql | wc -l) migrations, $$(ls fixtures_new/*.sql | wc -l) fixtures$(NC)"
+	@echo ""
+	@echo "$(GREEN)Combining migration files...$(NC)"
+	@mv migrations_new migrations
+	~/go/bin/dump2mig-combine
+	@rm -rf migrations
+	@mv migrations_combined migrations_new
+	@echo "$(GREEN)✅ Combine complete: $$(ls migrations_new/*.sql | wc -l) combined migrations$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Replacing old migrations and fixtures...$(NC)"
+	@rm -rf migrations fixtures migrations_big
+	@mv migrations_new migrations
+	@mv fixtures_new fixtures
+	@rm -f dump2mig_dump.sql
+	@echo ""
+	@echo "=========================================="
+	@echo "$(GREEN)✅ dump2mig complete!$(NC)"
+	@echo "=========================================="
+	@echo "Generated files:"
+	@echo "  migrations/ - $$(ls migrations/*.sql 2>/dev/null | wc -l | tr -d ' ') files"
+	@echo "  fixtures/   - $$(ls fixtures/*.sql 2>/dev/null | wc -l | tr -d ' ') files"
+	@echo ""
