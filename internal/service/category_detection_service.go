@@ -854,6 +854,16 @@ func (s *CategoryDetectionService) detectByProductType(ctx context.Context, prod
 		"sneakers":    "obuca",
 		"bag":         "torbe",
 		"handbag":     "torbe",
+
+		// Канцелярия / Office Supplies
+		"stapler":     "kancelarijski-materijal",
+		"pen":         "kancelarijski-materijal",
+		"pencil":      "kancelarijski-materijal",
+		"notebook":    "kancelarijski-materijal",
+		"folder":      "kancelarijski-materijal",
+		"scissors":    "kancelarijski-materijal",
+		"calculator":  "kancelarijski-materijal",
+		"desk_lamp":   "kancelarijski-materijal",
 	}
 
 	slug, ok := productTypeMapping[strings.ToLower(productType)]
