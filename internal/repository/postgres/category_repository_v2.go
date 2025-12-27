@@ -465,6 +465,28 @@ func scanCategoriesV2(rows *sqlx.Rows, r *Repository) ([]*domain.CategoryV2, err
 	return categories, nil
 }
 
+// GetAllActiveV2 retrieves all active categories for category detection
+func (r *Repository) GetAllActiveV2(ctx context.Context) ([]*domain.CategoryV2, error) {
+	query := `
+		SELECT
+			id, slug, parent_id, level, path, sort_order,
+			name, description, meta_title, meta_description, meta_keywords,
+			icon, image_url, is_active, created_at, updated_at
+		FROM categories
+		WHERE is_active = true
+		ORDER BY level ASC, sort_order ASC, slug ASC
+	`
+
+	rows, err := r.db.QueryxContext(ctx, query)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to query all active categories")
+		return nil, fmt.Errorf("failed to query all active categories: %w", err)
+	}
+	defer rows.Close()
+
+	return scanCategoriesV2(rows, r)
+}
+
 // getLocalizedFromMap extracts localized value with fallback logic
 func getLocalizedFromMap(m map[string]string, locale string) string {
 	if m == nil {

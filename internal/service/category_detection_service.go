@@ -22,17 +22,21 @@ const claudeAPIURL = "https://api.anthropic.com/v1/messages"
 
 // CategoryDetectionService - сервис детекции категорий
 type CategoryDetectionService struct {
-	repo         *postgres.CategoryDetectionRepository
-	categoryRepo CategoryRepositoryInterface
-	redisClient  *redis.Client
-	claudeAPIKey string
-	logger       zerolog.Logger
+	repo           *postgres.CategoryDetectionRepository
+	categoryRepo   CategoryRepositoryInterface
+	redisClient    *redis.Client
+	claudeAPIKey   string
+	logger         zerolog.Logger
+	categoryCache  []*domain.CategoryV2 // Cached categories for Claude prompt
+	cacheLoadedAt  time.Time            // When cache was last loaded
+	cacheTTL       time.Duration        // Cache TTL (default 1 hour)
 }
 
 // CategoryRepositoryInterface - интерфейс для получения категорий
 type CategoryRepositoryInterface interface {
 	GetByUUID(ctx context.Context, id string) (*domain.CategoryV2, error)
 	GetBySlugV2(ctx context.Context, slug string) (*domain.CategoryV2, error)
+	GetAllActiveV2(ctx context.Context) ([]*domain.CategoryV2, error)
 }
 
 // NewCategoryDetectionService создаёт сервис
@@ -43,13 +47,44 @@ func NewCategoryDetectionService(
 	claudeAPIKey string,
 	logger zerolog.Logger,
 ) *CategoryDetectionService {
-	return &CategoryDetectionService{
+	svc := &CategoryDetectionService{
 		repo:         repo,
 		categoryRepo: categoryRepo,
 		redisClient:  redisClient,
 		claudeAPIKey: claudeAPIKey,
 		logger:       logger.With().Str("component", "category_detection_service").Logger(),
+		cacheTTL:     1 * time.Hour, // Categories don't change often
 	}
+
+	// Load categories into cache on startup (non-blocking)
+	go svc.refreshCategoryCache()
+
+	return svc
+}
+
+// refreshCategoryCache loads all active categories into memory cache
+func (s *CategoryDetectionService) refreshCategoryCache() {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	categories, err := s.categoryRepo.GetAllActiveV2(ctx)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to load categories for cache")
+		return
+	}
+
+	s.categoryCache = categories
+	s.cacheLoadedAt = time.Now()
+	s.logger.Info().Int("count", len(categories)).Msg("Category cache loaded successfully")
+}
+
+// getCachedCategories returns cached categories, refreshing if needed
+func (s *CategoryDetectionService) getCachedCategories() []*domain.CategoryV2 {
+	// Check if cache is stale
+	if s.categoryCache == nil || time.Since(s.cacheLoadedAt) > s.cacheTTL {
+		s.refreshCategoryCache()
+	}
+	return s.categoryCache
 }
 
 // DetectFromText определяет категорию по тексту с каскадной детекцией
@@ -347,38 +382,79 @@ func (s *CategoryDetectionService) detectWithClaude(
 	return s.parseCategoryResponse(claudeResp.Content[0].Text, input.Language)
 }
 
-// buildCategoryDetectionPrompt строит промпт для Claude
+// buildCategoryDetectionPrompt строит промпт для Claude с динамическим списком категорий
 func (s *CategoryDetectionService) buildCategoryDetectionPrompt(input domain.DetectFromTextInput) string {
-	return fmt.Sprintf(`Analyze this product and determine the best category.
+	// Get cached categories
+	categories := s.getCachedCategories()
+
+	// Build category list for prompt
+	var categoryLines strings.Builder
+	for _, cat := range categories {
+		// Get localized name (prefer English, fallback to Serbian)
+		name := cat.Name["en"]
+		if name == "" {
+			name = cat.Name["sr"]
+		}
+		if name == "" {
+			name = cat.Slug
+		}
+
+		// Get description for better context
+		desc := cat.Description["en"]
+		if desc == "" {
+			desc = cat.Description["sr"]
+		}
+
+		// Get keywords for better matching
+		keywords := cat.MetaKeywords["en"]
+		if keywords == "" {
+			keywords = cat.MetaKeywords["sr"]
+		}
+
+		// Format: UUID | slug | Name | Keywords
+		if desc != "" || keywords != "" {
+			extra := ""
+			if keywords != "" {
+				extra = fmt.Sprintf(" (%s)", keywords)
+			} else if desc != "" {
+				// Truncate description if too long
+				if len(desc) > 50 {
+					desc = desc[:50] + "..."
+				}
+				extra = fmt.Sprintf(" - %s", desc)
+			}
+			categoryLines.WriteString(fmt.Sprintf("- %s | %s | %s%s\n", cat.ID.String(), cat.Slug, name, extra))
+		} else {
+			categoryLines.WriteString(fmt.Sprintf("- %s | %s | %s\n", cat.ID.String(), cat.Slug, name))
+		}
+	}
+
+	return fmt.Sprintf(`Analyze this product and determine the best matching category.
 
 Title: %s
 Description: %s
 
+AVAILABLE CATEGORIES (format: UUID | slug | Name | Keywords):
+%s
+IMPORTANT: You MUST return the category_id as the exact UUID from the list above!
+
 Return a JSON response with the following structure:
 {
-  "category": "category-slug-in-english",
+  "category_id": "exact-uuid-from-list",
+  "category_slug": "category-slug",
   "category_name": "Category Name",
   "confidence": 0.95,
   "keywords": ["keyword1", "keyword2"],
   "alternatives": [
-    {"category": "alt-slug", "category_name": "Alt Name", "confidence": 0.7}
+    {"category_id": "uuid", "category_slug": "slug", "category_name": "Name", "confidence": 0.7}
   ]
 }
 
-Choose from these main categories:
-- electronics (phones, computers, gadgets)
-- fashion (clothing, shoes, accessories)
-- home-garden (furniture, decor, tools)
-- sports (fitness, outdoor, equipment)
-- vehicles (cars, motorcycles, parts)
-- kids (toys, baby products)
-- beauty (cosmetics, personal care)
-- books-media (books, music, movies)
-
-Return ONLY valid JSON, no explanations.`, input.Title, input.Description)
+Return ONLY valid JSON, no explanations.`, input.Title, input.Description, categoryLines.String())
 }
 
 // parseCategoryResponse парсит ответ Claude и обогащает результаты из БД
+// Поддерживает оба формата: новый с category_id (UUID) и старый с category (slug)
 func (s *CategoryDetectionService) parseCategoryResponse(text, language string) ([]domain.CategoryMatch, error) {
 	// Очищаем от markdown code blocks
 	text = strings.TrimPrefix(text, "```json")
@@ -386,11 +462,17 @@ func (s *CategoryDetectionService) parseCategoryResponse(text, language string) 
 	text = strings.TrimSpace(text)
 
 	var response struct {
+		// New format with UUID
+		CategoryID   string `json:"category_id"`
+		CategorySlug string `json:"category_slug"`
+		// Legacy format (fallback)
 		Category     string   `json:"category"`
 		CategoryName string   `json:"category_name"`
 		Confidence   float64  `json:"confidence"`
 		Keywords     []string `json:"keywords"`
 		Alternatives []struct {
+			CategoryID   string  `json:"category_id"`
+			CategorySlug string  `json:"category_slug"`
 			Category     string  `json:"category"`
 			CategoryName string  `json:"category_name"`
 			Confidence   float64 `json:"confidence"`
@@ -403,21 +485,115 @@ func (s *CategoryDetectionService) parseCategoryResponse(text, language string) 
 
 	var matches []domain.CategoryMatch
 
-	// === Enrich primary category from database ===
-	primaryMatch := s.enrichCategoryFromDB(response.Category, response.CategoryName, response.Confidence, response.Keywords, language)
+	// === Parse primary category ===
+	// Try UUID first (new format), fallback to slug (legacy)
+	categoryID := response.CategoryID
+	categorySlug := response.CategorySlug
+	if categorySlug == "" {
+		categorySlug = response.Category // Legacy field
+	}
+
+	primaryMatch := s.enrichCategoryFromResponse(categoryID, categorySlug, response.CategoryName, response.Confidence, response.Keywords, language)
 	if primaryMatch != nil {
 		matches = append(matches, *primaryMatch)
 	}
 
-	// === Enrich alternatives from database ===
+	// === Parse alternatives ===
 	for _, alt := range response.Alternatives {
-		altMatch := s.enrichCategoryFromDB(alt.Category, alt.CategoryName, alt.Confidence, nil, language)
+		altID := alt.CategoryID
+		altSlug := alt.CategorySlug
+		if altSlug == "" {
+			altSlug = alt.Category
+		}
+
+		altMatch := s.enrichCategoryFromResponse(altID, altSlug, alt.CategoryName, alt.Confidence, nil, language)
 		if altMatch != nil {
 			matches = append(matches, *altMatch)
 		}
 	}
 
 	return matches, nil
+}
+
+// enrichCategoryFromResponse обогащает category match данными из БД
+// Пытается найти категорию по UUID (если предоставлен), затем по slug
+func (s *CategoryDetectionService) enrichCategoryFromResponse(categoryID, slug, name string, confidence float64, keywords []string, language string) *domain.CategoryMatch {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	var category *domain.CategoryV2
+	var err error
+
+	// Try to find by UUID first (most reliable)
+	if categoryID != "" && categoryID != "uuid" && categoryID != "exact-uuid-from-list" {
+		// Validate UUID format
+		if _, parseErr := uuid.Parse(categoryID); parseErr == nil {
+			category, err = s.categoryRepo.GetByUUID(ctx, categoryID)
+			if err == nil && category != nil {
+				s.logger.Debug().
+					Str("category_id", categoryID).
+					Str("slug", category.Slug).
+					Msg("Category found by UUID from Claude")
+			}
+		}
+	}
+
+	// Fallback to slug-based search if UUID lookup failed
+	if category == nil && slug != "" {
+		category = s.findCategoryBySlugVariants(ctx, slug)
+	}
+
+	if category == nil {
+		s.logger.Warn().
+			Str("category_id", categoryID).
+			Str("slug", slug).
+			Str("name", name).
+			Msg("Category from Claude not found in DB, using generic match")
+
+		// Возвращаем match без UUID (zero UUID)
+		return &domain.CategoryMatch{
+			CategorySlug:    slug,
+			CategoryName:    name,
+			ConfidenceScore: confidence,
+			DetectionMethod: domain.MethodAIClaude,
+			MatchedKeywords: keywords,
+		}
+	}
+
+	// Локализуем название
+	localized := category.Localize(language)
+
+	return &domain.CategoryMatch{
+		CategoryID:      category.ID,
+		CategorySlug:    category.Slug,
+		CategoryName:    localized.Name,
+		CategoryPath:    category.Path,
+		ConfidenceScore: confidence,
+		DetectionMethod: domain.MethodAIClaude,
+		MatchedKeywords: keywords,
+	}
+}
+
+// findCategoryBySlugVariants tries to find a category by various slug transformations
+func (s *CategoryDetectionService) findCategoryBySlugVariants(ctx context.Context, slug string) *domain.CategoryV2 {
+	slugVariants := []string{
+		slug,                               // as-is
+		strings.ReplaceAll(slug, "-", "_"), // home-garden -> home_garden
+		strings.ToLower(slug),              // Electronics -> electronics
+		s.mapAISlugToDBSlug(slug),          // electronics -> elektronika
+	}
+
+	for _, trySlug := range slugVariants {
+		if trySlug == "" {
+			continue
+		}
+		category, err := s.categoryRepo.GetBySlugV2(ctx, trySlug)
+		if err == nil && category != nil {
+			return category
+		}
+	}
+
+	return nil
 }
 
 // enrichCategoryFromDB обогащает category match данными из БД
