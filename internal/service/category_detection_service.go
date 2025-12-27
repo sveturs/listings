@@ -864,6 +864,21 @@ func (s *CategoryDetectionService) detectByProductType(ctx context.Context, prod
 		"scissors":    "kancelarijski-materijal",
 		"calculator":  "kancelarijski-materijal",
 		"desk_lamp":   "kancelarijski-materijal",
+
+		// Дом и сад / Home & Garden
+		"decor":         "dom-i-basta",
+		"decoration":    "dom-i-basta",
+		"home_decor":    "dom-i-basta",
+		"figurine":      "dom-i-basta",
+		"vase":          "dom-i-basta",
+		"candle":        "dom-i-basta",
+		"plant_pot":     "dom-i-basta",
+		"picture_frame": "dom-i-basta",
+		"mirror":        "dom-i-basta",
+		"lamp":          "dom-i-basta",
+		"furniture":     "dom-i-basta",
+		"garden_tool":   "dom-i-basta",
+		"garden_decor":  "dom-i-basta",
 	}
 
 	slug, ok := productTypeMapping[strings.ToLower(productType)]
