@@ -106,13 +106,47 @@ func (s *CategoryDetectionService) DetectFromText(
 				Str("category", productTypeMatch.CategorySlug).
 				Float64("confidence", productTypeMatch.ConfidenceScore).
 				Str("method", "product_type_hint").
-				Msg("Using productType hint (highest priority)")
+				Msg("ЭТАП 0: Using productType hint (highest priority)")
 			return s.buildDetection([]domain.CategoryMatch{*productTypeMatch}, startTime, input)
 		}
 	}
 
-	// === ЭТАП 1: AI Mapping (высокий приоритет, confidence 0.95-1.0) ===
-	// Если Claude AI предложил категорию при анализе изображения
+	// === ЭТАП 1: Keyword Matching (БЕСПЛАТНО! Приоритет перед AI) ===
+	// Сначала пробуем найти категорию по ключевым словам в тексте
+	keywords := extractKeywords(fullText)
+	keywordMatches, err := s.repo.FindByKeywords(ctx, keywords, input.Language)
+	if err != nil {
+		s.logger.Warn().Err(err).Msg("Keyword matching failed")
+	}
+
+	// Если есть уверенный keyword match (>0.7), сразу используем его
+	if len(keywordMatches) > 0 && keywordMatches[0].ConfidenceScore >= 0.7 {
+		s.logger.Info().
+			Float64("confidence", keywordMatches[0].ConfidenceScore).
+			Str("category", keywordMatches[0].CategorySlug).
+			Strs("keywords", keywords).
+			Str("method", string(domain.MethodKeywordMatch)).
+			Msg("ЭТАП 1: Using keyword match (FREE, high confidence)")
+		return s.buildDetection(keywordMatches, startTime, input)
+	}
+
+	// === ЭТАП 2: Brand Matching (БЕСПЛАТНО, очень точно для брендов) ===
+	brandMatches, err := s.detectByBrand(ctx, fullText, input.Language)
+	if err != nil {
+		s.logger.Warn().Err(err).Msg("Brand matching failed")
+	}
+
+	if len(brandMatches) > 0 && brandMatches[0].ConfidenceScore >= 0.95 {
+		s.logger.Info().
+			Float64("confidence", brandMatches[0].ConfidenceScore).
+			Str("category", brandMatches[0].CategorySlug).
+			Str("method", string(domain.MethodBrandMatch)).
+			Msg("ЭТАП 2: Using brand match result")
+		return s.buildDetection(brandMatches, startTime, input)
+	}
+
+	// === ЭТАП 3: AI Mapping (БЕСПЛАТНО - использует suggestedCategory от Claude Vision) ===
+	// Claude Vision уже оплачен при анализе изображения, маппинг бесплатен
 	if input.SuggestedCategory != "" {
 		aiMapping, err := s.repo.FindByAIMapping(ctx, input.SuggestedCategory, input.Language)
 		if err != nil {
@@ -127,97 +161,81 @@ func (s *CategoryDetectionService) DetectFromText(
 				Str("category", aiMapping.CategorySlug).
 				Float64("confidence", aiMapping.ConfidenceScore).
 				Str("method", "ai_mapping").
-				Msg("Using AI mapping")
+				Msg("ЭТАП 3: Using AI mapping (from Vision analysis)")
 			return s.buildDetection([]domain.CategoryMatch{*aiMapping}, startTime, input)
 		}
 
-		// Если маппинг нашёлся, но confidence низкий, логируем для анализа
 		if aiMapping != nil {
-			s.logger.Warn().
+			s.logger.Debug().
 				Str("suggested_category", input.SuggestedCategory).
 				Float64("confidence", aiMapping.ConfidenceScore).
 				Msg("AI mapping found but confidence too low (<0.90)")
 		}
 	}
 
-	// === ЭТАП 2: Brand Matching (самый точный, confidence 0.95-0.98) ===
-	brandMatches, err := s.detectByBrand(ctx, fullText, input.Language)
-	if err != nil {
-		s.logger.Warn().Err(err).Msg("Brand matching failed")
-	}
-
-	if len(brandMatches) > 0 && brandMatches[0].ConfidenceScore >= 0.95 {
-		s.logger.Info().
-			Float64("confidence", brandMatches[0].ConfidenceScore).
-			Str("category", brandMatches[0].CategorySlug).
-			Str("method", string(domain.MethodBrandMatch)).
-			Msg("Using brand match result")
-		return s.buildDetection(brandMatches, startTime, input)
-	}
-
-	// === ЭТАП 2: Keyword Matching (быстро и бесплатно) ===
-	keywords := extractKeywords(fullText)
-	keywordMatches, err := s.repo.FindByKeywords(ctx, keywords, input.Language)
-	if err != nil {
-		s.logger.Warn().Err(err).Msg("Keyword matching failed")
-	}
-
-	// Если есть хороший keyword match (>0.6), используем его
-	if len(keywordMatches) > 0 && keywordMatches[0].ConfidenceScore > 0.6 {
-		s.logger.Debug().
-			Float64("confidence", keywordMatches[0].ConfidenceScore).
-			Str("category", keywordMatches[0].CategorySlug).
-			Str("method", string(domain.MethodKeywordMatch)).
-			Msg("Using keyword match result")
-
-		// Добавить brand matches как альтернативы
-		allMatches := mergeMatches(keywordMatches, brandMatches)
-		return s.buildDetection(allMatches, startTime, input)
-	}
-
-	// === ЭТАП 3: Similarity Matching ===
+	// === ЭТАП 4: Similarity Matching (БЕСПЛАТНО) ===
 	similarityMatches, err := s.repo.FindBySimilarity(ctx, input.Title, input.Language)
 	if err != nil {
 		s.logger.Warn().Err(err).Msg("Similarity matching failed")
 	}
 
-	if len(similarityMatches) > 0 && similarityMatches[0].ConfidenceScore > 0.4 {
-		s.logger.Debug().
+	if len(similarityMatches) > 0 && similarityMatches[0].ConfidenceScore > 0.5 {
+		s.logger.Info().
 			Float64("confidence", similarityMatches[0].ConfidenceScore).
 			Str("category", similarityMatches[0].CategorySlug).
 			Str("method", string(domain.MethodSimilarity)).
-			Msg("Using similarity match result")
+			Msg("ЭТАП 4: Using similarity match result")
 
-		// Комбинировать все результаты
+		// Комбинировать с keyword и brand как альтернативы
 		allMatches := mergeMatches(similarityMatches, keywordMatches, brandMatches)
 		return s.buildDetection(allMatches, startTime, input)
 	}
 
-	// === ЭТАП 4: Claude AI (только как fallback, дорого) ===
-	if len(keywordMatches) == 0 || keywordMatches[0].ConfidenceScore < 0.4 {
-		s.logger.Info().Msg("Using Claude AI as fallback")
-		aiMatches, err := s.detectWithClaude(ctx, input)
-		if err != nil {
-			s.logger.Warn().Err(err).Msg("Claude AI detection failed, using best available")
-			// Fallback на лучшие доступные результаты
-			allMatches := mergeMatches(keywordMatches, similarityMatches, brandMatches)
-			if len(allMatches) > 0 {
-				return s.buildDetection(allMatches, startTime, input)
-			}
-
-			// ВАЖНО: SuggestedCategory теперь обрабатывается в ЭТАП 0 (highest priority)
-			// Если мы дошли сюда - значит маппинг не найден или confidence < 0.90
-			return s.fallbackDetection(startTime, input)
-		}
-
-		// AI успешен - комбинируем со всеми результатами как альтернативы
-		allMatches := mergeMatches(aiMatches, keywordMatches, similarityMatches, brandMatches)
+	// === ЭТАП 5: Низко-уверенный Keyword Match (>0.5) ===
+	// Используем keyword match с меньшей уверенностью если другие методы не сработали
+	if len(keywordMatches) > 0 && keywordMatches[0].ConfidenceScore > 0.5 {
+		s.logger.Info().
+			Float64("confidence", keywordMatches[0].ConfidenceScore).
+			Str("category", keywordMatches[0].CategorySlug).
+			Str("method", string(domain.MethodKeywordMatch)).
+			Msg("ЭТАП 5: Using keyword match (moderate confidence)")
+		allMatches := mergeMatches(keywordMatches, brandMatches, similarityMatches)
 		return s.buildDetection(allMatches, startTime, input)
 	}
 
-	// === Используем лучшие доступные результаты ===
+	// === ЭТАП 6: Claude AI (ПЛАТНЫЙ! Только как крайний fallback) ===
+	// Вызываем Claude только если ни один бесплатный метод не дал результата
+	if len(keywordMatches) == 0 && len(brandMatches) == 0 && len(similarityMatches) == 0 {
+		s.logger.Warn().
+			Str("title", input.Title).
+			Strs("extracted_keywords", keywords).
+			Msg("ЭТАП 6: No FREE matches found, using Claude AI as PAID fallback")
+
+		aiMatches, err := s.detectWithClaude(ctx, input)
+		if err != nil {
+			s.logger.Warn().Err(err).Msg("Claude AI detection failed, using fallback category")
+			return s.fallbackDetection(startTime, input)
+		}
+
+		// AI успешен
+		s.logger.Info().
+			Str("category", aiMatches[0].CategorySlug).
+			Float64("confidence", aiMatches[0].ConfidenceScore).
+			Msg("ЭТАП 6: Claude AI detection successful")
+		return s.buildDetection(aiMatches, startTime, input)
+	}
+
+	// === Используем лучшие доступные результаты из бесплатных методов ===
 	allMatches := mergeMatches(keywordMatches, similarityMatches, brandMatches)
-	return s.buildDetection(allMatches, startTime, input)
+	if len(allMatches) > 0 {
+		s.logger.Info().
+			Float64("confidence", allMatches[0].ConfidenceScore).
+			Str("category", allMatches[0].CategorySlug).
+			Msg("Using best available FREE match")
+		return s.buildDetection(allMatches, startTime, input)
+	}
+
+	return s.fallbackDetection(startTime, input)
 }
 
 // DetectFromKeywords определяет категорию по ключевым словам
@@ -879,6 +897,31 @@ func (s *CategoryDetectionService) detectByProductType(ctx context.Context, prod
 		"furniture":     "dom-i-basta",
 		"garden_tool":   "dom-i-basta",
 		"garden_decor":  "dom-i-basta",
+
+		// Товары для животных / Pet Supplies
+		"pet grooming tools": "kucni-ljubimci",
+		"pet grooming":       "kucni-ljubimci",
+		"pet brush":          "kucni-ljubimci",
+		"pet comb":           "kucni-ljubimci",
+		"pet care":           "kucni-ljubimci",
+		"pet supplies":       "kucni-ljubimci",
+		"pet accessories":    "kucni-ljubimci",
+		"pet food":           "kucni-ljubimci",
+		"pet toys":           "kucni-ljubimci",
+		"dog food":           "kucni-ljubimci",
+		"cat food":           "kucni-ljubimci",
+		"dog toy":            "kucni-ljubimci",
+		"cat toy":            "kucni-ljubimci",
+		"dog accessories":    "kucni-ljubimci",
+		"cat accessories":    "kucni-ljubimci",
+		"leash":              "kucni-ljubimci",
+		"collar":             "kucni-ljubimci",
+		"pet bed":            "kucni-ljubimci",
+		"aquarium":           "kucni-ljubimci",
+		"fish tank":          "kucni-ljubimci",
+		"bird cage":          "kucni-ljubimci",
+		"cat litter":         "kucni-ljubimci",
+		"pet carrier":        "kucni-ljubimci",
 	}
 
 	slug, ok := productTypeMapping[strings.ToLower(productType)]
