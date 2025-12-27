@@ -95,8 +95,24 @@ func (s *CategoryDetectionService) DetectFromText(
 	startTime := time.Now()
 	fullText := input.Title + " " + input.Description
 
-	// === ЭТАП 0: AI Mapping (НАИВЫСШИЙ ПРИОРИТЕТ, confidence 0.95-1.0) ===
-	// Если Claude AI предложил категорию при анализе изображения, используем её ПЕРВОЙ
+	// === ЭТАП 0: ProductType Hint (НАИВЫСШИЙ ПРИОРИТЕТ для специфичных типов) ===
+	// ProductType из AI анализа изображений точнее чем общая категория
+	// Пример: productType="watch" точнее чем category="Electronics"
+	if input.Hints != nil && input.Hints.ProductType != "" {
+		productTypeMatch := s.detectByProductType(ctx, input.Hints.ProductType, input.Language)
+		if productTypeMatch != nil && productTypeMatch.ConfidenceScore >= 0.85 {
+			s.logger.Info().
+				Str("productType", input.Hints.ProductType).
+				Str("category", productTypeMatch.CategorySlug).
+				Float64("confidence", productTypeMatch.ConfidenceScore).
+				Str("method", "product_type_hint").
+				Msg("Using productType hint (highest priority)")
+			return s.buildDetection([]domain.CategoryMatch{*productTypeMatch}, startTime, input)
+		}
+	}
+
+	// === ЭТАП 1: AI Mapping (высокий приоритет, confidence 0.95-1.0) ===
+	// Если Claude AI предложил категорию при анализе изображения
 	if input.SuggestedCategory != "" {
 		aiMapping, err := s.repo.FindByAIMapping(ctx, input.SuggestedCategory, input.Language)
 		if err != nil {
@@ -111,7 +127,7 @@ func (s *CategoryDetectionService) DetectFromText(
 				Str("category", aiMapping.CategorySlug).
 				Float64("confidence", aiMapping.ConfidenceScore).
 				Str("method", "ai_mapping").
-				Msg("Using AI mapping (highest priority)")
+				Msg("Using AI mapping")
 			return s.buildDetection([]domain.CategoryMatch{*aiMapping}, startTime, input)
 		}
 
@@ -124,7 +140,7 @@ func (s *CategoryDetectionService) DetectFromText(
 		}
 	}
 
-	// === ЭТАП 1: Brand Matching (самый точный, confidence 0.95-0.98) ===
+	// === ЭТАП 2: Brand Matching (самый точный, confidence 0.95-0.98) ===
 	brandMatches, err := s.detectByBrand(ctx, fullText, input.Language)
 	if err != nil {
 		s.logger.Warn().Err(err).Msg("Brand matching failed")
@@ -137,19 +153,6 @@ func (s *CategoryDetectionService) DetectFromText(
 			Str("method", string(domain.MethodBrandMatch)).
 			Msg("Using brand match result")
 		return s.buildDetection(brandMatches, startTime, input)
-	}
-
-	// === ЭТАП 1.5: ProductType Hint Matching (для часов, телефонов и т.д.) ===
-	if input.Hints != nil && input.Hints.ProductType != "" {
-		productTypeMatch := s.detectByProductType(ctx, input.Hints.ProductType, input.Language)
-		if productTypeMatch != nil && productTypeMatch.ConfidenceScore >= 0.85 {
-			s.logger.Info().
-				Str("productType", input.Hints.ProductType).
-				Str("category", productTypeMatch.CategorySlug).
-				Float64("confidence", productTypeMatch.ConfidenceScore).
-				Msg("Using productType hint match")
-			return s.buildDetection([]domain.CategoryMatch{*productTypeMatch}, startTime, input)
-		}
 	}
 
 	// === ЭТАП 2: Keyword Matching (быстро и бесплатно) ===
