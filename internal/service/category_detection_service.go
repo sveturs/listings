@@ -617,65 +617,6 @@ func (s *CategoryDetectionService) findCategoryBySlugVariants(ctx context.Contex
 	return nil
 }
 
-// enrichCategoryFromDB обогащает category match данными из БД
-// Пытается найти категорию по slug и получить реальный UUID
-func (s *CategoryDetectionService) enrichCategoryFromDB(slug, name string, confidence float64, keywords []string, language string) *domain.CategoryMatch {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	// Нормализуем slug для поиска в БД
-	// Claude может вернуть "electronics" или "home-garden"
-	slugVariants := []string{
-		slug,                                    // как есть
-		strings.ReplaceAll(slug, "-", "_"),      // electronics -> electronics
-		strings.ToLower(slug),                   // Electronics -> electronics
-		s.mapAISlugToDBSlug(slug),               // electronics -> elektronika
-	}
-
-	var category *domain.CategoryV2
-	var err error
-
-	// Пробуем найти по разным вариантам slug
-	for _, trySlug := range slugVariants {
-		if trySlug == "" {
-			continue
-		}
-		category, err = s.categoryRepo.GetBySlugV2(ctx, trySlug)
-		if err == nil && category != nil {
-			break
-		}
-	}
-
-	if category == nil {
-		s.logger.Warn().
-			Str("slug", slug).
-			Str("name", name).
-			Msg("Category from Claude not found in DB, using generic match")
-
-		// Возвращаем match без UUID (zero UUID)
-		return &domain.CategoryMatch{
-			CategorySlug:    slug,
-			CategoryName:    name,
-			ConfidenceScore: confidence,
-			DetectionMethod: domain.MethodAIClaude,
-			MatchedKeywords: keywords,
-		}
-	}
-
-	// Локализуем название
-	localized := category.Localize(language)
-
-	return &domain.CategoryMatch{
-		CategoryID:      category.ID,
-		CategorySlug:    category.Slug,
-		CategoryName:    localized.Name,
-		CategoryPath:    category.Path,
-		ConfidenceScore: confidence,
-		DetectionMethod: domain.MethodAIClaude,
-		MatchedKeywords: keywords,
-	}
-}
-
 // resolveSuggestedCategory пытается найти категорию по suggested slug из AI анализа изображения
 // Это последний fallback когда все остальные методы не сработали
 //nolint:unused // Reserved for future use
