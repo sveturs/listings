@@ -6,9 +6,15 @@
 
 ## [Unreleased]
 
-### Fixed - 2025-12-29 (b8cc01329)
+### Fixed - 2025-12-29 (c3ade748a)
 
-**Исправлена обработка ошибок удаления из корзины + скрипты очистки**
+**Исправлена обработка ошибок удаления из корзины + скрипты очистки + CI lint fix**
+
+#### CI Fix (c3ade748a)
+- Удалена unused функция `enrichCategoryFromDB` из `internal/service/category_detection_service.go`
+- Исправлен lint warning: "func (*CategoryDetectionService).enrichCategoryFromDB is unused"
+
+#### Original Fix (b8cc01329)
 
 #### Изменения в коде
 
