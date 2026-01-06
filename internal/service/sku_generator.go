@@ -5,6 +5,7 @@ package service
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/vondi-global/listings/internal/domain"
@@ -12,7 +13,9 @@ import (
 
 // SKUGenerator generates unique SKU codes for product variants
 type SKUGenerator struct {
-	categoryPrefixes map[string]string
+	categoryPrefixes   map[string]string
+	colorAbbreviations map[string]string
+	sizeAbbreviations  map[string]string
 }
 
 // NewSKUGenerator creates a new SKU generator instance
@@ -20,53 +23,89 @@ func NewSKUGenerator() *SKUGenerator {
 	return &SKUGenerator{
 		categoryPrefixes: map[string]string{
 			// Clothing & Fashion
-			"clothing":      "CLO",
-			"mens-clothing": "MCL",
+			"clothing":        "CLO",
+			"clo":             "CLO",
+			"mens-clothing":   "MCL",
 			"womens-clothing": "WCL",
-			"kids-clothing": "KCL",
-			"underwear":     "UND",
-			"sportswear":    "SPO",
-			"accessories":   "ACC",
+			"kids-clothing":   "KCL",
+			"underwear":       "UND",
+			"sportswear":      "SPO",
+			"accessories":     "ACC",
 
 			// Footwear
-			"shoes":         "SHO",
-			"mens-shoes":    "MSH",
-			"womens-shoes":  "WSH",
-			"kids-shoes":    "KSH",
-			"sneakers":      "SNK",
-			"boots":         "BOT",
+			"shoes":        "SHO",
+			"mens-shoes":   "MSH",
+			"womens-shoes": "WSH",
+			"kids-shoes":   "KSH",
+			"sneakers":     "SNK",
+			"boots":        "BOT",
 
 			// Electronics
-			"electronics":   "ELE",
-			"smartphones":   "PHN",
-			"laptops":       "LAP",
-			"tablets":       "TAB",
-			"headphones":    "HDP",
-			"cameras":       "CAM",
-			"smartwatches":  "SWT",
+			"electronics":  "ELE",
+			"ele":          "ELE",
+			"smartphones":  "PHN",
+			"laptops":      "LAP",
+			"tablets":      "TAB",
+			"headphones":   "HDP",
+			"cameras":      "CAM",
+			"smartwatches": "SWT",
 
 			// Home & Garden
-			"home":          "HOM",
-			"furniture":     "FUR",
-			"kitchen":       "KIT",
-			"bedding":       "BED",
-			"garden":        "GAR",
+			"home":      "HOM",
+			"furniture": "FUR",
+			"kitchen":   "KIT",
+			"bedding":   "BED",
+			"garden":    "GAR",
 
 			// Beauty & Health
-			"beauty":        "BEA",
-			"cosmetics":     "COS",
-			"skincare":      "SKN",
-			"haircare":      "HAR",
-			"perfume":       "PRF",
+			"beauty":    "BEA",
+			"cosmetics": "COS",
+			"skincare":  "SKN",
+			"haircare":  "HAR",
+			"perfume":   "PRF",
 
 			// Sports & Outdoors
-			"sports":        "SPT",
-			"fitness":       "FIT",
-			"camping":       "CMP",
-			"cycling":       "CYC",
+			"sports":  "SPT",
+			"fitness": "FIT",
+			"camping": "CMP",
+			"cycling": "CYC",
 
 			// Default
-			"general":       "GEN",
+			"general": "GEN",
+		},
+		colorAbbreviations: map[string]string{
+			"black":   "BLK",
+			"white":   "WHT",
+			"red":     "RED",
+			"blue":    "BLU",
+			"green":   "GRN",
+			"yellow":  "YEL",
+			"orange":  "ORG",
+			"purple":  "PUR",
+			"pink":    "PNK",
+			"brown":   "BRN",
+			"gray":    "GRY",
+			"grey":    "GRY",
+			"silver":  "SLV",
+			"gold":    "GLD",
+			"beige":   "BGE",
+			"navy":    "NVY",
+			"unknown": "UNK",
+		},
+		sizeAbbreviations: map[string]string{
+			"extra small":       "XS",
+			"small":             "S",
+			"medium":            "M",
+			"large":             "L",
+			"extra large":       "XL",
+			"extra extra large": "XXL",
+			"xs":                "XS",
+			"s":                 "S",
+			"m":                 "M",
+			"l":                 "L",
+			"xl":                "XL",
+			"xxl":               "XXL",
+			"xxxl":              "XXXL",
 		},
 	}
 }
@@ -184,9 +223,16 @@ func (g *SKUGenerator) extractShortID(productID string) string {
 
 // buildAttributeSuffixes builds SKU suffixes from variant attributes
 func (g *SKUGenerator) buildAttributeSuffixes(attributes []VariantAttributeForSKU) []string {
+	// Sort attributes by code for consistent SKU generation
+	sortedAttrs := make([]VariantAttributeForSKU, len(attributes))
+	copy(sortedAttrs, attributes)
+	sort.Slice(sortedAttrs, func(i, j int) bool {
+		return sortedAttrs[i].Code < sortedAttrs[j].Code
+	})
+
 	suffixes := make([]string, 0)
 
-	for _, attr := range attributes {
+	for _, attr := range sortedAttrs {
 		suffix := g.formatAttributeSuffix(attr)
 		if suffix != "" {
 			suffixes = append(suffixes, suffix)
@@ -200,20 +246,34 @@ func (g *SKUGenerator) buildAttributeSuffixes(attributes []VariantAttributeForSK
 func (g *SKUGenerator) formatAttributeSuffix(attr VariantAttributeForSKU) string {
 	code := strings.ToLower(attr.Code)
 	value := strings.TrimSpace(attr.ValueLabel)
+	valueLower := strings.ToLower(value)
 
 	switch code {
 	case "clothing_size", "shoe_size_eu", "size":
-		// Size: use as-is (e.g., "M", "42", "XL")
+		// Size: check abbreviation map first, then use as-is
+		if abbr, ok := g.sizeAbbreviations[valueLower]; ok {
+			return abbr
+		}
+		// For numeric sizes or unknown, use as-is
 		return strings.ToUpper(value)
 
 	case "color", "colour":
-		// Color: first 3 letters, uppercase (e.g., "Black" -> "BLK")
+		// Color: check abbreviation map first
+		// Handle multi-word colors like "Unknown Color"
+		firstWord := strings.Split(valueLower, " ")[0]
+		if abbr, ok := g.colorAbbreviations[valueLower]; ok {
+			return abbr
+		}
+		if abbr, ok := g.colorAbbreviations[firstWord]; ok {
+			return abbr
+		}
+		// Fallback: first 3 letters
 		if len(value) >= 3 {
 			return strings.ToUpper(value[:3])
 		}
 		return strings.ToUpper(value)
 
-	case "storage_capacity", "memory", "capacity":
+	case "storage_capacity", "memory", "capacity", "storage":
 		// Storage: extract number + unit (e.g., "256 GB" -> "256GB", "1 TB" -> "1TB")
 		return g.extractCapacity(value)
 

@@ -24,10 +24,10 @@ func TestSKUGenerator_Clothing(t *testing.T) {
 
 	sku := gen.GenerateSKU(productID, categoryCode, attrs)
 
-	// Assert SKU format: CLO-xxxxxx-M-BLK
+	// Assert SKU format: CLO-xxxxxx-BLK-M (sorted alphabetically: color < size)
 	assert.True(t, strings.HasPrefix(sku, "CLO-"))
-	assert.Contains(t, sku, "-M-")
-	assert.Contains(t, sku, "-BLK")
+	assert.Contains(t, sku, "-BLK-")
+	assert.True(t, strings.HasSuffix(sku, "-M"))
 
 	parts := strings.Split(sku, "-")
 	assert.GreaterOrEqual(t, len(parts), 4)

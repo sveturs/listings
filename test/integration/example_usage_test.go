@@ -68,7 +68,7 @@ func TestExampleWithDatabaseFixtures(t *testing.T) {
 
 	// Insert test category (required by foreign key)
 	ExecuteSQL(t, server, `
-		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 		VALUES ($1, $2, $3, NULL, $4, $5, $6, $7)
 	`, 1, "Electronics", "electronics", 1, 0, true, 0)
 
@@ -121,7 +121,7 @@ func TestExampleWithTransactionIsolation(t *testing.T) {
 
 	// Insert test data
 	ExecuteSQL(t, server, `
-		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 		VALUES ($1, $2, $3, NULL, $4, $5, $6, $7)
 	`, 1, "Electronics", "electronics", 1, 0, true, 0)
 
@@ -242,7 +242,7 @@ func TestExampleDatabaseCleanup(t *testing.T) {
 
 	// Insert test categories
 	ExecuteSQL(t, server, `
-		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 		VALUES
 			(1, 'Cat1', 'cat1', NULL, 1, 0, true, 0),
 			(2, 'Cat2', 'cat2', NULL, 2, 0, true, 0)
@@ -314,7 +314,7 @@ func TestExampleFullIntegration(t *testing.T) {
 
 	// 2. Insert test category
 	ExecuteSQL(t, server, `
-		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 		VALUES ($1, $2, $3, NULL, $4, $5, $6, $7)
 	`, 1, "Electronics", "electronics", 1, 0, true, 0)
 

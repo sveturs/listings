@@ -61,8 +61,8 @@ func TestGetCategory(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 1, "Electronics", "electronics", 1, true, 10)
 
 		ctx := testutils.TestContext(t)
@@ -109,13 +109,13 @@ func TestGetCategory(t *testing.T) {
 
 		// Setup: Insert parent category
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 2, "Fashion", "fashion", 1, true, 15)
 
 		// Setup: Insert child categories
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
 				($1, $2, $3, $4, $5, 1, $6, $7),
 				($8, $9, $10, $11, $12, 1, $13, $14)
@@ -153,7 +153,7 @@ func TestListCategories(t *testing.T) {
 
 		// Setup: Insert multiple categories
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
 				(10, 'Electronics', 'electronics', NULL, 1, 0, true, 20),
 				(11, 'Fashion', 'fashion', NULL, 2, 0, true, 15),
@@ -188,7 +188,7 @@ func TestListCategories(t *testing.T) {
 
 		// Setup: Insert root and child categories
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
 				(20, 'Root Category 1', 'root-1', NULL, 1, 0, true, 10),
 				(21, 'Root Category 2', 'root-2', NULL, 2, 0, true, 5),
@@ -335,7 +335,7 @@ func TestGetCategoryTree(t *testing.T) {
 
 		// Setup: Insert root category with children
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
 				(40, 'Electronics', 'electronics', NULL, 1, 0, true, 30),
 				(41, 'Laptops', 'laptops', 40, 1, 1, true, 10),
@@ -379,7 +379,7 @@ func TestGetCategoryTree(t *testing.T) {
 
 		// Setup: Insert category hierarchy
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
 				(50, 'Fashion', 'fashion', NULL, 1, 0, true, 50),
 				(51, 'Men', 'men', 50, 1, 1, true, 20),
@@ -414,7 +414,7 @@ func TestGetCategoryTree(t *testing.T) {
 
 		// Setup: Insert leaf category (no children)
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
 				(60, 'Root', 'root', NULL, 1, 0, true, 10),
 				(61, 'Leaf Category', 'leaf', 60, 1, 1, true, 5)
@@ -454,7 +454,7 @@ func TestCategoryHierarchy(t *testing.T) {
 
 		// Setup: Insert parent and children
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
 				(70, 'Parent Category', 'parent', NULL, 1, 0, true, 20),
 				(71, 'Child 1', 'child-1', 70, 1, 1, true, 8),
@@ -495,7 +495,7 @@ func TestCategoryHierarchy(t *testing.T) {
 
 		// Setup: Insert 3-level hierarchy (root → parent → child)
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
 				(80, 'Root Level', 'root-level', NULL, 1, 0, true, 50),
 				(81, 'Mid Level', 'mid-level', 80, 1, 1, true, 30),
@@ -572,8 +572,8 @@ func TestCategoryMultiLanguage(t *testing.T) {
 		// Setup: Insert category with translation data
 		// TODO: Add translation support when implemented
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 90, "Electronics", "electronics", 1, true, 10)
 
 		ctx := testutils.TestContext(t)
@@ -598,8 +598,8 @@ func TestCategoryMultiLanguage(t *testing.T) {
 
 		// Setup: Insert category
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 91, "Fashion", "fashion", 1, true, 5)
 
 		ctx := testutils.TestContext(t)

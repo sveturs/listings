@@ -175,6 +175,9 @@ func TestValidator_ValidateCategory(t *testing.T) {
 	}
 	mockRepo.On("GetCategoryByID", ctx, "2").Return(inactiveCategory, nil)
 
+	// Setup mock for non-existent category (negative ID)
+	mockRepo.On("GetCategoryByID", ctx, "-1").Return(nil, assert.AnError)
+
 	tests := []struct {
 		name       string
 		categoryID string

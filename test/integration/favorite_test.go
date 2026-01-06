@@ -28,8 +28,8 @@ func TestAddToFavorites(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 1, "Electronics", "electronics", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -60,8 +60,8 @@ func TestAddToFavorites(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 2, "Fashion", "fashion", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -137,8 +137,8 @@ func TestRemoveFromFavorites(t *testing.T) {
 
 		// Setup: Create category, listing, and favorite
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 3, "Books", "books", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -174,8 +174,8 @@ func TestRemoveFromFavorites(t *testing.T) {
 
 		// Setup: Create category and listing (but no favorite)
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 4, "Toys", "toys", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -213,8 +213,8 @@ func TestGetUserFavorites(t *testing.T) {
 
 		// Setup: Create category and multiple listings
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 5, "Sports", "sports", 1, true, 0)
 
 		for i := 105; i <= 109; i++ {
@@ -272,8 +272,8 @@ func TestGetUserFavorites(t *testing.T) {
 
 		// Setup: Create category and listings
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 6, "Home", "home", 1, true, 0)
 
 		// Create 3 listings: 2 active, 1 draft (using valid status)
@@ -331,8 +331,8 @@ func TestIsFavorite(t *testing.T) {
 
 		// Setup: Create category, listing, and favorite
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 7, "Garden", "garden", 1, true, 0)
 
 		ExecuteSQL(t, server, `
@@ -365,8 +365,8 @@ func TestIsFavorite(t *testing.T) {
 
 		// Setup: Create category and listing (but no favorite)
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, 8, "Music", "music", 1, true, 0)
 
 		ExecuteSQL(t, server, `

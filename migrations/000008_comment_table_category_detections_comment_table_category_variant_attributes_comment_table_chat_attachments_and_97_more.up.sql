@@ -25,11 +25,7 @@ COMMENT ON COLUMN public.chats.is_archived IS 'Whether chat is archived by curre
 COMMENT ON COLUMN public.chats.last_message_at IS 'Timestamp of last message (for sorting)';
 COMMENT ON COLUMN public.chats.created_at IS 'When chat was created';
 COMMENT ON COLUMN public.chats.updated_at IS 'Last update timestamp';
-COMMENT ON TABLE public.inventory_reservations IS 'Temporary stock holds for pending orders. Prevents overselling during checkout. Auto-expires after 30 min.
-Available stock calculation:
-  available = listings.stock - SUM(reservations.quantity WHERE status = ''active'' AND expires_at > NOW())
-Example cleanup job (run every 5 minutes):
-  UPDATE inventory_reservations
+COMMENT ON TABLE public.inventory_reservations IS 'Temporary stock holds for pending orders. Prevents overselling during checkout. Auto-expires after 30 min. Available stock: listings.stock - SUM(reservations.quantity WHERE status = active AND expires_at > NOW())';
 COMMENT ON COLUMN public.inventory_reservations.listing_id IS 'Product listing being reserved. Always required.';
 COMMENT ON COLUMN public.inventory_reservations.variant_id IS 'Product variant (optional). For products with size/color/etc variants. NULL for simple products.';
 COMMENT ON COLUMN public.inventory_reservations.reference_id IS 'Order this reservation belongs to. NULL until order created. SET NULL if order deleted.';
