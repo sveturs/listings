@@ -62,8 +62,8 @@ func TestGetCategory(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 1, "Electronics", "electronics", 1, true, 10)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "c0000000-0000-0000-0000-000000000001", "Electronics", "electronics", 1, true, 10)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CategoryIDRequest{CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6"}
@@ -110,17 +110,17 @@ func TestGetCategory(t *testing.T) {
 		// Setup: Insert parent category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 2, "Fashion", "fashion", 1, true, 15)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "c0000000-0000-0000-0000-000000000002", "Fashion", "fashion", 1, true, 15)
 
 		// Setup: Insert child categories
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
-				($1, $2, $3, $4, $5, 1, $6, $7),
-				($8, $9, $10, $11, $12, 1, $13, $14)
-		`, 3, "Men's Clothing", "mens-clothing", 2, 1, true, 5,
-			4, "Women's Clothing", "womens-clothing", 2, 2, true, 8)
+				($1::uuid, $2, $3, $4::uuid, $5, 1, $6, $7),
+				($8::uuid, $9, $10, $11::uuid, $12, 1, $13, $14)
+		`, "c0000000-0000-0000-0000-000000000003", "Men's Clothing", "mens-clothing", "c0000000-0000-0000-0000-000000000002", 1, true, 5,
+			"c0000000-0000-0000-0000-000000000004", "Women's Clothing", "womens-clothing", "c0000000-0000-0000-0000-000000000002", 2, true, 8)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CategoryIDRequest{CategoryId: "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b"}
@@ -133,7 +133,7 @@ func TestGetCategory(t *testing.T) {
 		assert.Equal(t, "Fashion", resp.Category.Name)
 
 		// Verify children exist in database (GetCategory doesn't return children, GetCategoryTree does)
-		childCount := CountRows(t, server, "categories", "parent_id = $1", 2)
+		childCount := CountRows(t, server, "categories", "parent_id = $1::uuid", "c0000000-0000-0000-0000-000000000002")
 		assert.Equal(t, 2, childCount, "Parent category should have 2 children")
 	})
 }
@@ -155,11 +155,11 @@ func TestListCategories(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
-				(10, 'Electronics', 'electronics', NULL, 1, 0, true, 20),
-				(11, 'Fashion', 'fashion', NULL, 2, 0, true, 15),
-				(12, 'Home & Garden', 'home-garden', NULL, 3, 0, true, 10),
-				(13, 'Laptops', 'laptops', 10, 1, 1, true, 8),
-				(14, 'Phones', 'phones', 10, 2, 1, true, 12)
+				('c0000000-0000-0000-0000-000000000010'::uuid, 'Electronics', 'electronics', NULL, 1, 0, true, 20),
+				('c0000000-0000-0000-0000-000000000011'::uuid, 'Fashion', 'fashion', NULL, 2, 0, true, 15),
+				('c0000000-0000-0000-0000-000000000012'::uuid, 'Home & Garden', 'home-garden', NULL, 3, 0, true, 10),
+				('c0000000-0000-0000-0000-000000000013'::uuid, 'Laptops', 'laptops', 'c0000000-0000-0000-0000-000000000010'::uuid, 1, 1, true, 8),
+				('c0000000-0000-0000-0000-000000000014'::uuid, 'Phones', 'phones', 'c0000000-0000-0000-0000-000000000010'::uuid, 2, 1, true, 12)
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -190,9 +190,9 @@ func TestListCategories(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
-				(20, 'Root Category 1', 'root-1', NULL, 1, 0, true, 10),
-				(21, 'Root Category 2', 'root-2', NULL, 2, 0, true, 5),
-				(22, 'Child Category', 'child-1', 20, 1, 1, true, 3)
+				('c0000000-0000-0000-0000-000000000020'::uuid, 'Root Category 1', 'root-1', NULL, 1, 0, true, 10),
+				('c0000000-0000-0000-0000-000000000021'::uuid, 'Root Category 2', 'root-2', NULL, 2, 0, true, 5),
+				('c0000000-0000-0000-0000-000000000022'::uuid, 'Child Category', 'child-1', 'c0000000-0000-0000-0000-000000000020'::uuid, 1, 1, true, 3)
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -232,10 +232,10 @@ func TestListCategories(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active)
 			VALUES
-				(30, 'Popular 1', 'popular-1', NULL, 1, 0, true),
-				(31, 'Popular 2', 'popular-2', NULL, 2, 0, true),
-				(32, 'Popular 3', 'popular-3', NULL, 3, 0, true),
-				(33, 'Less Popular', 'less-popular', NULL, 4, 0, true)
+				('c0000000-0000-0000-0000-000000000030'::uuid, 'Popular 1', 'popular-1', NULL, 1, 0, true),
+				('c0000000-0000-0000-0000-000000000031'::uuid, 'Popular 2', 'popular-2', NULL, 2, 0, true),
+				('c0000000-0000-0000-0000-000000000032'::uuid, 'Popular 3', 'popular-3', NULL, 3, 0, true),
+				('c0000000-0000-0000-0000-000000000033'::uuid, 'Less Popular', 'less-popular', NULL, 4, 0, true)
 		`)
 
 		// Create listings for each category to simulate popularity
@@ -247,22 +247,22 @@ func TestListCategories(t *testing.T) {
 
 			-- Popular 1: 10 listings
 			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
-			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 30, 1, 1, 'c2c', NOW(), NOW()
+			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 'c0000000-0000-0000-0000-000000000030'::uuid, 1, 1, 'c2c', NOW(), NOW()
 			FROM generate_series(1, 10) AS i;
 
 			-- Popular 2: 8 listings
 			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
-			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 31, 1, 1, 'c2c', NOW(), NOW()
+			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 'c0000000-0000-0000-0000-000000000031'::uuid, 1, 1, 'c2c', NOW(), NOW()
 			FROM generate_series(1, 8) AS i;
 
 			-- Popular 3: 6 listings
 			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
-			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 32, 1, 1, 'c2c', NOW(), NOW()
+			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 'c0000000-0000-0000-0000-000000000032'::uuid, 1, 1, 'c2c', NOW(), NOW()
 			FROM generate_series(1, 6) AS i;
 
 			-- Less Popular: 1 listing
 			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
-			VALUES ('Listing 1', 'Description', 100.00, 'RSD', 'active', 33, 1, 1, 'c2c', NOW(), NOW());
+			VALUES ('Listing 1', 'Description', 100.00, 'RSD', 'active', 'c0000000-0000-0000-0000-000000000033'::uuid, 1, 1, 'c2c', NOW(), NOW());
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -337,10 +337,10 @@ func TestGetCategoryTree(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
-				(40, 'Electronics', 'electronics', NULL, 1, 0, true, 30),
-				(41, 'Laptops', 'laptops', 40, 1, 1, true, 10),
-				(42, 'Phones', 'phones', 40, 2, 1, true, 15),
-				(43, 'Gaming Laptops', 'gaming-laptops', 41, 1, 2, true, 5)
+				('c0000000-0000-0000-0000-000000000040'::uuid, 'Electronics', 'electronics', NULL, 1, 0, true, 30),
+				('c0000000-0000-0000-0000-000000000041'::uuid, 'Laptops', 'laptops', 'c0000000-0000-0000-0000-000000000040'::uuid, 1, 1, true, 10),
+				('c0000000-0000-0000-0000-000000000042'::uuid, 'Phones', 'phones', 'c0000000-0000-0000-0000-000000000040'::uuid, 2, 1, true, 15),
+				('c0000000-0000-0000-0000-000000000043'::uuid, 'Gaming Laptops', 'gaming-laptops', 'c0000000-0000-0000-0000-000000000041'::uuid, 1, 2, true, 5)
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -381,10 +381,10 @@ func TestGetCategoryTree(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
-				(50, 'Fashion', 'fashion', NULL, 1, 0, true, 50),
-				(51, 'Men', 'men', 50, 1, 1, true, 20),
-				(52, 'T-Shirts', 'tshirts', 51, 1, 2, true, 8),
-				(53, 'Jeans', 'jeans', 51, 2, 2, true, 12)
+				('c0000000-0000-0000-0000-000000000050'::uuid, 'Fashion', 'fashion', NULL, 1, 0, true, 50),
+				('c0000000-0000-0000-0000-000000000051'::uuid, 'Men', 'men', 'c0000000-0000-0000-0000-000000000050'::uuid, 1, 1, true, 20),
+				('c0000000-0000-0000-0000-000000000052'::uuid, 'T-Shirts', 'tshirts', 'c0000000-0000-0000-0000-000000000051'::uuid, 1, 2, true, 8),
+				('c0000000-0000-0000-0000-000000000053'::uuid, 'Jeans', 'jeans', 'c0000000-0000-0000-0000-000000000051'::uuid, 2, 2, true, 12)
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -416,8 +416,8 @@ func TestGetCategoryTree(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
-				(60, 'Root', 'root', NULL, 1, 0, true, 10),
-				(61, 'Leaf Category', 'leaf', 60, 1, 1, true, 5)
+				('c0000000-0000-0000-0000-000000000060'::uuid, 'Root', 'root', NULL, 1, 0, true, 10),
+				('c0000000-0000-0000-0000-000000000061'::uuid, 'Leaf Category', 'leaf', 'c0000000-0000-0000-0000-000000000060'::uuid, 1, 1, true, 5)
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -456,9 +456,9 @@ func TestCategoryHierarchy(t *testing.T) {
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
-				(70, 'Parent Category', 'parent', NULL, 1, 0, true, 20),
-				(71, 'Child 1', 'child-1', 70, 1, 1, true, 8),
-				(72, 'Child 2', 'child-2', 70, 2, 1, true, 12)
+				('c0000000-0000-0000-0000-000000000070'::uuid, 'Parent Category', 'parent', NULL, 1, 0, true, 20),
+				('c0000000-0000-0000-0000-000000000071'::uuid, 'Child 1', 'child-1', 'c0000000-0000-0000-0000-000000000070'::uuid, 1, 1, true, 8),
+				('c0000000-0000-0000-0000-000000000072'::uuid, 'Child 2', 'child-2', 'c0000000-0000-0000-0000-000000000070'::uuid, 2, 1, true, 12)
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -484,7 +484,7 @@ func TestCategoryHierarchy(t *testing.T) {
 		assert.Equal(t, int64(70), *child2Resp.Category.ParentId)
 
 		// Verify database relationships
-		childCount := CountRows(t, server, "categories", "parent_id = $1", 70)
+		childCount := CountRows(t, server, "categories", "parent_id = $1::uuid", "c0000000-0000-0000-0000-000000000070")
 		assert.Equal(t, 2, childCount, "Parent should have exactly 2 children")
 	})
 
@@ -493,13 +493,13 @@ func TestCategoryHierarchy(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert 3-level hierarchy (root → parent → child)
+		// Setup: Insert 3-level hierarchy (root -> parent -> child)
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES
-				(80, 'Root Level', 'root-level', NULL, 1, 0, true, 50),
-				(81, 'Mid Level', 'mid-level', 80, 1, 1, true, 30),
-				(82, 'Leaf Level', 'leaf-level', 81, 1, 2, true, 10)
+				('c0000000-0000-0000-0000-000000000080'::uuid, 'Root Level', 'root-level', NULL, 1, 0, true, 50),
+				('c0000000-0000-0000-0000-000000000081'::uuid, 'Mid Level', 'mid-level', 'c0000000-0000-0000-0000-000000000080'::uuid, 1, 1, true, 30),
+				('c0000000-0000-0000-0000-000000000082'::uuid, 'Leaf Level', 'leaf-level', 'c0000000-0000-0000-0000-000000000081'::uuid, 1, 2, true, 10)
 		`)
 
 		ctx := testutils.TestContext(t)
@@ -573,8 +573,8 @@ func TestCategoryMultiLanguage(t *testing.T) {
 		// TODO: Add translation support when implemented
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 90, "Electronics", "electronics", 1, true, 10)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "c0000000-0000-0000-0000-000000000090", "Electronics", "electronics", 1, true, 10)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CategoryIDRequest{CategoryId: "7e8f9a0b-1c2d-3e4f-5a6b-7c8d9e0f1a2b"}
@@ -599,8 +599,8 @@ func TestCategoryMultiLanguage(t *testing.T) {
 		// Setup: Insert category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 91, "Fashion", "fashion", 1, true, 5)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "c0000000-0000-0000-0000-000000000091", "Fashion", "fashion", 1, true, 5)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CategoryIDRequest{CategoryId: "8f9a0b1c-2d3e-4f5a-6b7c-8d9e0f1a2b3c"}

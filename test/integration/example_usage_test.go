@@ -69,8 +69,8 @@ func TestExampleWithDatabaseFixtures(t *testing.T) {
 	// Insert test category (required by foreign key)
 	ExecuteSQL(t, server, `
 		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-		VALUES ($1, $2, $3, NULL, $4, $5, $6, $7)
-	`, 1, "Electronics", "electronics", 1, 0, true, 0)
+		VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+	`, "a0000000-0000-0000-0000-000000000001", "Electronics", "electronics", 1, true, 0)
 
 	// Insert test listing
 	ExecuteSQL(t, server, `
@@ -78,9 +78,9 @@ func TestExampleWithDatabaseFixtures(t *testing.T) {
 			id, user_id, title, description, price, currency, category_id,
 			status, visibility, quantity, view_count, favorites_count
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+			$1, $2, $3, $4, $5, $6, $7::uuid, $8, $9, $10, $11, $12
 		)
-	`, 1001, 100, "Test Listing", "Description", 99.99, "USD", 1,
+	`, 1001, 100, "Test Listing", "Description", 99.99, "USD", "a0000000-0000-0000-0000-000000000001",
 		"active", "public", 1, 0, 0)
 
 	// Verify data through gRPC API
@@ -122,8 +122,8 @@ func TestExampleWithTransactionIsolation(t *testing.T) {
 	// Insert test data
 	ExecuteSQL(t, server, `
 		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-		VALUES ($1, $2, $3, NULL, $4, $5, $6, $7)
-	`, 1, "Electronics", "electronics", 1, 0, true, 0)
+		VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+	`, "a0000000-0000-0000-0000-000000000002", "Electronics", "electronics", 1, true, 0)
 
 	// Verify data exists within transaction
 	count := CountRows(t, server, "categories", "slug = $1", "electronics")
@@ -244,8 +244,8 @@ func TestExampleDatabaseCleanup(t *testing.T) {
 	ExecuteSQL(t, server, `
 		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 		VALUES
-			(1, 'Cat1', 'cat1', NULL, 1, 0, true, 0),
-			(2, 'Cat2', 'cat2', NULL, 2, 0, true, 0)
+			('a0000000-0000-0000-0000-000000000003'::uuid, to_jsonb('Cat1'::text), 'cat1', NULL, 1, 1, 'cat1', true, 0),
+			('a0000000-0000-0000-0000-000000000004'::uuid, to_jsonb('Cat2'::text), 'cat2', NULL, 2, 1, 'cat2', true, 0)
 	`)
 
 	// Verify data exists
@@ -315,8 +315,8 @@ func TestExampleFullIntegration(t *testing.T) {
 	// 2. Insert test category
 	ExecuteSQL(t, server, `
 		INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-		VALUES ($1, $2, $3, NULL, $4, $5, $6, $7)
-	`, 1, "Electronics", "electronics", 1, 0, true, 0)
+		VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+	`, "a0000000-0000-0000-0000-000000000005", "Electronics", "electronics", 1, true, 0)
 
 	// 3. Insert test listing
 	ExecuteSQL(t, server, `
@@ -324,9 +324,9 @@ func TestExampleFullIntegration(t *testing.T) {
 			id, user_id, title, description, price, currency, category_id,
 			status, visibility, quantity, view_count, favorites_count
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+			$1, $2, $3, $4, $5, $6, $7::uuid, $8, $9, $10, $11, $12
 		)
-	`, 1001, 100, "Test Listing", "Description", 99.99, "USD", 1,
+	`, 1001, 100, "Test Listing", "Description", 99.99, "USD", "a0000000-0000-0000-0000-000000000005",
 		"active", "public", 1, 0, 0)
 
 	// 4. Insert test image
@@ -356,7 +356,7 @@ func TestExampleFullIntegration(t *testing.T) {
 	assert.Equal(t, 1, imageCount)
 
 	// 7. Test category retrieval
-	categoryResp, err := server.Client.GetCategory(ctx, &pb.CategoryIDRequest{CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6"})
+	categoryResp, err := server.Client.GetCategory(ctx, &pb.CategoryIDRequest{CategoryId: "a0000000-0000-0000-0000-000000000005"})
 	require.NoError(t, err)
 	require.NotNil(t, categoryResp)
 	assert.Equal(t, "Electronics", categoryResp.Category.Name)

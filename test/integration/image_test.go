@@ -33,13 +33,13 @@ func TestAddListingImage(t *testing.T) {
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 10, "Electronics", "electronics", 1, true, 0)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000010", "Electronics", "electronics", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 201, 100, 10, "Laptop", 999.99, "USD", 1, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 201, 100, "a0000000-0000-0000-0000-000000000010", "Laptop", 999.99, "USD", 1, "active", "public")
 
 		ctx := testutils.TestContext(t)
 		req := &pb.AddImageRequest{
@@ -75,13 +75,13 @@ func TestAddListingImage(t *testing.T) {
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 11, "Fashion", "fashion", 1, true, 0)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000011", "Fashion", "fashion", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 202, 100, 11, "T-Shirt", 29.99, "USD", 50, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 202, 100, "a0000000-0000-0000-0000-000000000011", "T-Shirt", 29.99, "USD", 50, "active", "public")
 
 		ctx := testutils.TestContext(t)
 
@@ -114,13 +114,13 @@ func TestAddListingImage(t *testing.T) {
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 12, "Books", "books", 1, true, 0)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000012", "Books", "books", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 203, 100, 12, "Novel", 14.99, "USD", 100, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 203, 100, "a0000000-0000-0000-0000-000000000012", "Novel", 14.99, "USD", 100, "active", "public")
 
 		ctx := testutils.TestContext(t)
 		req := &pb.AddImageRequest{
@@ -183,13 +183,13 @@ func TestDeleteListingImage(t *testing.T) {
 		// Setup: Create category, listing, and image
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 13, "Sports", "sports", 1, true, 0)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000013", "Sports", "sports", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 204, 100, 13, "Basketball", 39.99, "USD", 20, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 204, 100, "a0000000-0000-0000-0000-000000000013", "Basketball", 39.99, "USD", 20, "active", "public")
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listing_images (id, listing_id, url, display_order, is_primary)
@@ -221,13 +221,13 @@ func TestDeleteListingImage(t *testing.T) {
 		// Setup: Create category, listing, and multiple images
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 14, "Home", "home", 1, true, 0)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000014", "Home", "home", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 205, 100, 14, "Chair", 89.99, "USD", 10, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 205, 100, "a0000000-0000-0000-0000-000000000014", "Chair", 89.99, "USD", 10, "active", "public")
 
 		// Insert 3 images: first one is primary
 		ExecuteSQL(t, server, `
@@ -305,13 +305,13 @@ func TestGetListingImages(t *testing.T) {
 		// Setup: Create category, listing, and images
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 15, "Garden", "garden", 1, true, 0)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000015", "Garden", "garden", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 206, 100, 15, "Lawn Mower", 299.99, "USD", 5, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 206, 100, "a0000000-0000-0000-0000-000000000015", "Lawn Mower", 299.99, "USD", 5, "active", "public")
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listing_images (id, listing_id, url, display_order, is_primary)
@@ -349,13 +349,13 @@ func TestGetListingImages(t *testing.T) {
 		// Setup: Create category and listing (no images)
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 16, "Music", "music", 1, true, 0)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000016", "Music", "music", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 207, 100, 16, "Piano", 1999.99, "USD", 1, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 207, 100, "a0000000-0000-0000-0000-000000000016", "Piano", 1999.99, "USD", 1, "active", "public")
 
 		ctx := testutils.TestContext(t)
 		req := &pb.ListingIDRequest{
@@ -389,13 +389,13 @@ func TestGetListingImage(t *testing.T) {
 		// Setup: Create category, listing, and image
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 17, "Toys", "toys", 1, true, 0)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000017", "Toys", "toys", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 208, 100, 17, "LEGO Set", 79.99, "USD", 15, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 208, 100, "a0000000-0000-0000-0000-000000000017", "LEGO Set", 79.99, "USD", 15, "active", "public")
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listing_images (id, listing_id, url, display_order, is_primary, width, height)

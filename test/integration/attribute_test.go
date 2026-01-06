@@ -59,7 +59,7 @@ func TestRequiredAttributesValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "3b4246cc-9970-403c-af01-c142a4178dc6", "Electronics", "electronics", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -132,7 +132,7 @@ func TestRequiredAttributesValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b", "Fashion", "fashion", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -182,7 +182,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d", "Books", "books", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -230,7 +230,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e", "Real Estate", "real-estate", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -278,7 +278,7 @@ func TestAttributeDataTypeValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f", "Vehicles", "vehicles", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -339,7 +339,7 @@ func TestAttributePatternValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a", "Services", "services", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -386,7 +386,7 @@ func TestAttributePatternValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b", "Business", "business", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -445,7 +445,7 @@ func TestAttributeRangeValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c", "Electronics", "electronics-2", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -493,7 +493,7 @@ func TestAttributeRangeValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d", "Test Category", "test-cat", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
@@ -549,7 +549,7 @@ func TestAttributeUpdateValidation(t *testing.T) {
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES ($1, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
 		`, "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e", "Furniture", "furniture", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
