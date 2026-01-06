@@ -681,7 +681,7 @@ func TestAttributeRepository_LinkToCategory(t *testing.T) {
 	}{
 		{
 			name:        "link attribute to category",
-			categoryID:  "100",
+			categoryID:  TestCategoryUUID100,
 			attributeID: attr.ID,
 			settings: &domain.CategoryAttributeSettings{
 				IsEnabled:    true,
@@ -693,7 +693,7 @@ func TestAttributeRepository_LinkToCategory(t *testing.T) {
 		},
 		{
 			name:        "update existing link (upsert)",
-			categoryID:  "100",
+			categoryID:  TestCategoryUUID100,
 			attributeID: attr.ID,
 			settings: &domain.CategoryAttributeSettings{
 				IsEnabled:  true,
@@ -704,7 +704,7 @@ func TestAttributeRepository_LinkToCategory(t *testing.T) {
 		},
 		{
 			name:        "nil settings",
-			categoryID:  "100",
+			categoryID:  TestCategoryUUID100,
 			attributeID: attr.ID,
 			settings:    nil,
 			wantErr:     true,
@@ -763,14 +763,14 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 	require.NoError(t, err)
 
 	// Link attributes to category
-	_, err = repo.LinkToCategory(ctx, "100", attr1.ID, &domain.CategoryAttributeSettings{
+	_, err = repo.LinkToCategory(ctx, TestCategoryUUID100, attr1.ID, &domain.CategoryAttributeSettings{
 		IsEnabled:  true,
 		IsRequired: boolPtr(true),
 		SortOrder:  1,
 	})
 	require.NoError(t, err)
 
-	_, err = repo.LinkToCategory(ctx, "100", attr2.ID, &domain.CategoryAttributeSettings{
+	_, err = repo.LinkToCategory(ctx, TestCategoryUUID100, attr2.ID, &domain.CategoryAttributeSettings{
 		IsEnabled:  true,
 		IsRequired: boolPtr(false),
 		SortOrder:  2,
@@ -786,14 +786,14 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 	}{
 		{
 			name:          "get all category attributes",
-			categoryID:    "100",
+			categoryID:    TestCategoryUUID100,
 			filter:        nil,
 			expectedCount: 2,
 			wantErr:       false,
 		},
 		{
 			name:       "filter by is_enabled",
-			categoryID: "100",
+			categoryID: TestCategoryUUID100,
 			filter: &domain.GetCategoryAttributesFilter{
 				IsEnabled: boolPtr(true),
 			},
@@ -802,7 +802,7 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 		},
 		{
 			name:       "filter by is_required",
-			categoryID: "100",
+			categoryID: TestCategoryUUID100,
 			filter: &domain.GetCategoryAttributesFilter{
 				IsRequired: boolPtr(true),
 			},
@@ -811,7 +811,7 @@ func TestAttributeRepository_GetCategoryAttributes(t *testing.T) {
 		},
 		{
 			name:          "category with no attributes",
-			categoryID:    "200",
+			categoryID:    TestCategoryUUID200,
 			filter:        nil,
 			expectedCount: 0,
 			wantErr:       false,
@@ -857,7 +857,7 @@ func TestAttributeRepository_UnlinkFromCategory(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = repo.LinkToCategory(ctx, "100", attr.ID, &domain.CategoryAttributeSettings{
+	_, err = repo.LinkToCategory(ctx, TestCategoryUUID100, attr.ID, &domain.CategoryAttributeSettings{
 		IsEnabled: true,
 		SortOrder: 1,
 	})
@@ -871,13 +871,13 @@ func TestAttributeRepository_UnlinkFromCategory(t *testing.T) {
 	}{
 		{
 			name:        "unlink existing link",
-			categoryID:  "100",
+			categoryID:  TestCategoryUUID100,
 			attributeID: attr.ID,
 			wantErr:     false,
 		},
 		{
 			name:        "unlink non-existent link",
-			categoryID:  "100",
+			categoryID:  TestCategoryUUID100,
 			attributeID: attr.ID,
 			wantErr:     true, // Already unlinked
 		},
@@ -915,9 +915,9 @@ func TestAttributeRepository_SetAndGetListingValues(t *testing.T) {
 	var listingID int32
 	err := testDB.DB.QueryRow(`
 		INSERT INTO listings (user_id, title, price, currency, category_id, status, sku, source_type, slug)
-		VALUES (1, 'Test Listing', 99.99, 'USD', 100, 'active', 'TEST-SKU', 'c2c', 'test-listing')
+		VALUES (1, 'Test Listing', 99.99, 'USD', $1::uuid, 'active', 'TEST-SKU', 'c2c', 'test-listing')
 		RETURNING id
-	`).Scan(&listingID)
+	`, TestCategoryUUID100).Scan(&listingID)
 	require.NoError(t, err)
 
 	// Create test attributes
@@ -1025,9 +1025,9 @@ func TestAttributeRepository_DeleteListingValues(t *testing.T) {
 	var listingID int32
 	err := testDB.DB.QueryRow(`
 		INSERT INTO listings (user_id, title, price, currency, category_id, status, sku, source_type, slug)
-		VALUES (1, 'Test Listing 2', 99.99, 'USD', 100, 'active', 'TEST-SKU-2', 'c2c', 'test-listing-2')
+		VALUES (1, 'Test Listing 2', 99.99, 'USD', $1::uuid, 'active', 'TEST-SKU-2', 'c2c', 'test-listing-2')
 		RETURNING id
-	`).Scan(&listingID)
+	`, TestCategoryUUID100).Scan(&listingID)
 	require.NoError(t, err)
 
 	// Create and set test values
@@ -1078,17 +1078,17 @@ func TestAttributeRepository_GetCategoryVariantAttributes(t *testing.T) {
 	// Insert category variant attribute directly (since we don't have the full API yet)
 	_, err = testDB.DB.Exec(`
 		INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order, display_as)
-		VALUES ($1, $2, true, false, true, 1, 'buttons')
-	`, 100, attr.ID)
+		VALUES ($1::uuid, $2, true, false, true, 1, 'buttons')
+	`, TestCategoryUUID100, attr.ID)
 	require.NoError(t, err)
 
 	// Get category variant attributes
-	variantAttrs, err := repo.GetCategoryVariantAttributes(ctx, "100")
+	variantAttrs, err := repo.GetCategoryVariantAttributes(ctx, TestCategoryUUID100)
 	require.NoError(t, err)
 	assert.Len(t, variantAttrs, 1)
 
 	va := variantAttrs[0]
-	assert.Equal(t, "100", va.CategoryID)
+	assert.Equal(t, TestCategoryUUID100, va.CategoryID)
 	assert.Equal(t, attr.ID, va.AttributeID)
 	assert.True(t, va.IsRequired)
 	assert.True(t, va.AffectsStock)

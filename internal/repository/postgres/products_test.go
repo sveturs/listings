@@ -41,8 +41,9 @@ func createTestStorefront(t *testing.T, repo *Repository) int64 {
 // createTestCategory creates a test category (stub, no real categories table in listings service)
 func createTestCategory(t *testing.T) string {
 	t.Helper()
-	// Categories are managed externally, just return a valid ID
-	return "100"
+	// Categories are managed externally, return a valid UUID from test fixtures
+	// TestCategoryUUID100 is defined in repository_test.go and created by setupTestCategories
+	return TestCategoryUUID100
 }
 
 // createTestProduct creates a product with default values
@@ -321,7 +322,7 @@ func TestCreateProduct_InvalidCategoryID(t *testing.T) {
 
 	product := &domain.CreateProductInput{
 		StorefrontID:  storefrontID,
-		CategoryID:    "0", // Invalid category (0 is technically valid as there's no FK constraint)
+		CategoryID:    "00000000-0000-0000-0000-000000000000", // Valid UUID format but non-existent category
 		Name:          "Test Product",
 		Description:   "Test description",
 		Price:         99.99,
@@ -333,7 +334,7 @@ func TestCreateProduct_InvalidCategoryID(t *testing.T) {
 
 	createdProduct, err := repo.CreateProduct(ctx, product)
 
-	// No FK constraint on category_id, so this should succeed
+	// No FK constraint on category_id, so this should succeed (UUID is valid format)
 	require.NoError(t, err)
 	assert.NotNil(t, createdProduct)
 }
