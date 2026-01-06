@@ -115,6 +115,9 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Create test temp directory
+        run: mkdir -p $GITHUB_WORKSPACE/.gotmp
+
       - name: Run unit tests
         env:
           VONDILISTINGS_DB_HOST: localhost
@@ -124,6 +127,7 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 56379
+          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: go test -v -race -short ./internal/... ./test/...
 
   build:
@@ -215,6 +219,9 @@ jobs:
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
+      - name: Create test temp directory
+        run: mkdir -p $GITHUB_WORKSPACE/.gotmp
+
       - name: Run integration tests
         env:
           VONDILISTINGS_DB_HOST: localhost
@@ -224,4 +231,5 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 6379
+          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: go test -v -tags=integration ./internal/... ./test/...

@@ -94,6 +94,9 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Create test temp directory
+        run: mkdir -p $GITHUB_WORKSPACE/.gotmp
+
       - name: Run unit tests
         env:
           VONDILISTINGS_DB_HOST: localhost
@@ -103,6 +106,7 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 6379
+          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: go test -v -race -short ./internal/... ./pkg/...
 
   integration-tests:
@@ -179,6 +183,9 @@ jobs:
           # For now, using go test which handles migrations
           echo "Migrations will be handled by test setup"
 
+      - name: Create test temp directory
+        run: mkdir -p $GITHUB_WORKSPACE/.gotmp
+
       - name: Run E2E tests (Orders)
         env:
           VONDILISTINGS_DB_HOST: localhost
@@ -190,6 +197,7 @@ jobs:
           VONDILISTINGS_REDIS_PORT: 6379
           VONDILISTINGS_OPENSEARCH_HOST: localhost
           VONDILISTINGS_OPENSEARCH_PORT: 9200
+          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: |
           # Run integration tests for Orders domain
           go test -v -timeout=10m -tags=integration \
@@ -255,6 +263,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Create test temp directory
+        run: mkdir -p $GITHUB_WORKSPACE/.gotmp
+
       - name: Run benchmark tests
         env:
           VONDILISTINGS_DB_HOST: localhost
@@ -264,6 +275,7 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 6379
+          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: |
           # Run Go benchmarks
           go test -bench=. -benchmem -benchtime=10s \
