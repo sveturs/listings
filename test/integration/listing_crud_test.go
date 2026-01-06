@@ -1133,10 +1133,11 @@ func TestSearchListings(t *testing.T) {
 		defer server.Teardown(t)
 
 		// Setup
+		combinedCategoryID := "c0440000-0000-0000-0000-000000000044"
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 44, "Combined", "combined", 1, true, 0)
+		`, combinedCategoryID, "Combined", "combined", 1, true, 0)
 
 		for i := 1; i <= 10; i++ {
 			ExecuteSQL(t, server, `
@@ -1144,14 +1145,14 @@ func TestSearchListings(t *testing.T) {
 					id, user_id, title, description, price, currency, category_id,
 					status, visibility, quantity, view_count, favorites_count
 				) VALUES (
-					$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+					$1, $2, $3, $4, $5, $6, $7::uuid, $8, $9, $10, $11, $12
 				)
 			`, 5040+i, 4004, fmt.Sprintf("Combined Listing %d", i),
-				"Description", float64(30+i*5), "USD", 44, "active", "public", 1, 0, 0)
+				"Description", float64(30+i*5), "USD", combinedCategoryID, "active", "public", 1, 0, 0)
 		}
 
 		ctx := testutils.TestContext(t)
-		categoryID := "44"
+		categoryID := combinedCategoryID
 		minPrice := 40.0
 		maxPrice := 70.0
 		req := &pb.SearchListingsRequest{
@@ -1170,7 +1171,7 @@ func TestSearchListings(t *testing.T) {
 		assert.Greater(t, len(resp.Listings), 0)
 
 		for _, listing := range resp.Listings {
-			assert.Equal(t, "44", listing.CategoryId)
+			assert.Equal(t, combinedCategoryID, listing.CategoryId)
 			assert.GreaterOrEqual(t, listing.Price, 40.0)
 			assert.LessOrEqual(t, listing.Price, 70.0)
 		}
@@ -1212,10 +1213,11 @@ func TestSearchListings(t *testing.T) {
 		defer server.Teardown(t)
 
 		// Setup
+		sourceTypeCategoryID := "c0450000-0000-0000-0000-000000000045"
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 45, "Source Type", "source-type", 1, true, 0)
+		`, sourceTypeCategoryID, "Source Type", "source-type", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO storefronts (id, user_id, slug, name, country, is_active, is_verified)
@@ -1228,9 +1230,9 @@ func TestSearchListings(t *testing.T) {
 				id, user_id, storefront_id, title, description, price, currency, category_id,
 				status, visibility, quantity, view_count, favorites_count
 			) VALUES (
-				$1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+				$1, $2, NULL, $3, $4, $5, $6, $7::uuid, $8, $9, $10, $11, $12
 			)
-		`, 5050, 4005, "C2C Listing", "Description", 30.00, "USD", 45,
+		`, 5050, 4005, "C2C Listing", "Description", 30.00, "USD", sourceTypeCategoryID,
 			"active", "public", 1, 0, 0)
 
 		// B2C listing (with storefront_id)
@@ -1239,13 +1241,13 @@ func TestSearchListings(t *testing.T) {
 				id, user_id, storefront_id, title, description, price, currency, category_id,
 				status, visibility, quantity, view_count, favorites_count
 			) VALUES (
-				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+				$1, $2, $3, $4, $5, $6, $7, $8::uuid, $9, $10, $11, $12, $13
 			)
-		`, 5051, 4005, 5002, "B2C Listing", "Description", 40.00, "USD", 45,
+		`, 5051, 4005, 5002, "B2C Listing", "Description", 40.00, "USD", sourceTypeCategoryID,
 			"active", "public", 2, 0, 0)
 
 		ctx := testutils.TestContext(t)
-		categoryID := "45"
+		categoryID := sourceTypeCategoryID
 		req := &pb.SearchListingsRequest{
 			Query:      "",
 			CategoryId: &categoryID,
@@ -1279,10 +1281,11 @@ func TestSearchListings(t *testing.T) {
 		defer server.Teardown(t)
 
 		// Setup
+		perfCategoryID := "c0460000-0000-0000-0000-000000000046"
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, 46, "Performance", "performance", 1, true, 0)
+		`, perfCategoryID, "Performance", "performance", 1, true, 0)
 
 		// Insert 100 listings for performance test
 		for i := 1; i <= 100; i++ {
@@ -1291,14 +1294,14 @@ func TestSearchListings(t *testing.T) {
 					id, user_id, title, description, price, currency, category_id,
 					status, visibility, quantity, view_count, favorites_count
 				) VALUES (
-					$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+					$1, $2, $3, $4, $5, $6, $7::uuid, $8, $9, $10, $11, $12
 				)
 			`, 6000+i, 5000, fmt.Sprintf("Performance Listing %d", i),
-				"Performance test description", float64(50+i), "USD", 46, "active", "public", 1, 0, 0)
+				"Performance test description", float64(50+i), "USD", perfCategoryID, "active", "public", 1, 0, 0)
 		}
 
 		ctx := testutils.TestContext(t)
-		categoryID := "46"
+		categoryID := perfCategoryID
 		req := &pb.SearchListingsRequest{
 			Query:      "",
 			CategoryId: &categoryID,
