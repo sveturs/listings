@@ -201,7 +201,7 @@ type AttributeFilter struct {
 }
 
 type SearchListingsQuery struct {
-	Query            string            `json:"query" validate:"required,min=2"`
+	Query            string            `json:"query" validate:"omitempty,min=2"`
 	CategoryID       *string           `json:"category_id,omitempty"`
 	SourceType       *string           `json:"source_type,omitempty" validate:"omitempty,oneof=c2c b2c"` // Filter by c2c or b2c listings
 	MinPrice         *float64          `json:"min_price,omitempty"`

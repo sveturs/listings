@@ -492,7 +492,8 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 		query.Limit = 20
 	}
 
-	if len(query.Query) < 2 {
+	// Require minimum 2 characters for text search (empty query = filter-only search)
+	if query.Query != "" && len(query.Query) < 2 {
 		return nil, 0, fmt.Errorf("search query must be at least 2 characters")
 	}
 
