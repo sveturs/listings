@@ -2876,7 +2876,7 @@ func TestGetImageByID_Success(t *testing.T) {
 }
 
 func TestDeleteImage_Success(t *testing.T) {
-	service, mockRepo, mockCache, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, mockIndexer := SetupServiceTest(t)
 	ctx := TestContext()
 
 	imageID := int64(123)
@@ -2895,6 +2895,14 @@ func TestDeleteImage_Success(t *testing.T) {
 	mockCache.On("Delete", ctx, "listing:100").
 		Return(nil)
 
+	// Background goroutine expectations (async reindexing)
+	mockRepo.On("GetListingByID", mock.Anything, listingID).
+		Return(&domain.Listing{ID: listingID}, nil).Maybe()
+	mockRepo.On("GetImages", mock.Anything, listingID).
+		Return([]*domain.ListingImage{}, nil).Maybe()
+	mockIndexer.On("UpdateListing", mock.Anything, mock.Anything).
+		Return(nil).Maybe()
+
 	err := service.DeleteImage(ctx, imageID)
 
 	assert.NoError(t, err)
@@ -2903,7 +2911,7 @@ func TestDeleteImage_Success(t *testing.T) {
 }
 
 func TestAddImage_Success(t *testing.T) {
-	service, mockRepo, mockCache, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, mockIndexer := SetupServiceTest(t)
 	ctx := TestContext()
 
 	image := &domain.ListingImage{
@@ -2921,6 +2929,15 @@ func TestAddImage_Success(t *testing.T) {
 		Return(expectedImage, nil)
 	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
+
+	// Background goroutine expectations (async reindexing)
+	// These use context.Background() so we match with mock.Anything
+	mockRepo.On("GetListingByID", mock.Anything, int64(123)).
+		Return(&domain.Listing{ID: 123}, nil).Maybe()
+	mockRepo.On("GetImages", mock.Anything, int64(123)).
+		Return([]*domain.ListingImage{expectedImage}, nil).Maybe()
+	mockIndexer.On("UpdateListing", mock.Anything, mock.Anything).
+		Return(nil).Maybe()
 
 	result, err := service.AddImage(ctx, image)
 
