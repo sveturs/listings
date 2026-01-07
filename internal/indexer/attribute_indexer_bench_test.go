@@ -102,7 +102,7 @@ func BenchmarkPopulateAttributeSearchCache(b *testing.B) {
 func getBenchDB(b *testing.B) *sqlx.DB {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable"
+		b.Skip("DATABASE_URL not set, skipping benchmark")
 	}
 
 	db, err := sqlx.Connect("postgres", dsn)
