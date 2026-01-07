@@ -296,12 +296,15 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 				// Check for unique constraint violation (duplicate SKU)
 				if pqErr, ok := err.(*pq.Error); ok {
 					if pqErr.Code == "23505" { // unique_violation
+						// Transaction is now in failed state - must rollback
+						tx.Rollback()
 						result.FailedUpdates = append(result.FailedUpdates, domain.BulkUpdateError{
 							ProductID:    update.ProductID,
 							ErrorCode:    "products.sku_duplicate",
 							ErrorMessage: "SKU already exists",
 						})
-						continue
+						// Return immediately - cannot continue with failed transaction
+						return result, nil
 					}
 				}
 

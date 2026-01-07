@@ -1,9 +1,7 @@
 package postgres
 
-// ⚠️ DEPRECATED: Product variants functionality is deprecated.
-// The b2c_product_variants table was removed in Phase 11.5 (migration 000010).
-// This file is kept for API compatibility but methods will return errors.
-// Consider creating a new unified product_variants table if variants are needed.
+// Product variants repository methods for managing product variants.
+// Uses the unified product_variants table.
 
 import (
 	"context"
@@ -63,7 +61,7 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 	// If this is a default variant, unset other defaults
 	if input.IsDefault {
 		_, err = tx.ExecContext(ctx, `
-			UPDATE b2c_product_variants
+			UPDATE product_variants
 			SET is_default = false, updated_at = NOW()
 			WHERE product_id = $1 AND is_default = true
 		`, input.ProductID)
@@ -109,7 +107,7 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 
 	// Insert variant
 	query := `
-		INSERT INTO b2c_product_variants (
+		INSERT INTO product_variants (
 			product_id, sku, barcode, price, compare_at_price, cost_price,
 			stock_quantity, stock_status, low_stock_threshold,
 			variant_attributes, weight, dimensions,
@@ -151,7 +149,7 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 		dimensionsJSON,
 		input.IsDefault,
 	).Scan(
-		&variant.ID,
+		&variant.UUID, // Changed: scan UUID into string field
 		&variant.ProductID,
 		&sku,
 		&barcode,
@@ -228,7 +226,7 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 	}
 
 	r.logger.Info().
-		Int64("variant_id", variant.ID).
+		Str("variant_uuid", variant.UUID).
 		Int64("product_id", variant.ProductID).
 		Msg("product variant created successfully")
 
@@ -236,14 +234,14 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 }
 
 // UpdateProductVariant updates an existing product variant
-func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
+func (r *Repository) UpdateProductVariant(ctx context.Context, variantUUID string, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
 	r.logger.Debug().
-		Int64("variant_id", variantID).
+		Str("variant_uuid", variantUUID).
 		Int64("product_id", productID).
 		Msg("updating product variant")
 
 	// Validate IDs
-	if variantID <= 0 {
+	if variantUUID == "" {
 		return nil, fmt.Errorf("variants.invalid_variant_id")
 	}
 	if productID <= 0 {
@@ -262,10 +260,10 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 	var exists bool
 	err = tx.QueryRowContext(ctx, `
 		SELECT EXISTS(
-			SELECT 1 FROM b2c_product_variants
-			WHERE id = $1 AND product_id = $2
+			SELECT 1 FROM product_variants
+			WHERE id = $1::uuid AND product_id = $2
 		)
-	`, variantID, productID).Scan(&exists)
+	`, variantUUID, productID).Scan(&exists)
 
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to check variant")
@@ -280,9 +278,9 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 	if input.IsActive != nil && !*input.IsActive {
 		var activeCount int
 		err = tx.QueryRowContext(ctx, `
-			SELECT COUNT(*) FROM b2c_product_variants
-			WHERE product_id = $1 AND is_active = true AND id != $2
-		`, productID, variantID).Scan(&activeCount)
+			SELECT COUNT(*) FROM product_variants
+			WHERE product_id = $1 AND is_active = true AND id != $2::uuid
+		`, productID, variantUUID).Scan(&activeCount)
 
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to count active variants")
@@ -297,10 +295,10 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 	// If setting this as default, unset other defaults
 	if input.IsDefault != nil && *input.IsDefault {
 		_, err = tx.ExecContext(ctx, `
-			UPDATE b2c_product_variants
+			UPDATE product_variants
 			SET is_default = false, updated_at = NOW()
-			WHERE product_id = $1 AND is_default = true AND id != $2
-		`, productID, variantID)
+			WHERE product_id = $1 AND is_default = true AND id != $2::uuid
+		`, productID, variantUUID)
 
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to unset other defaults")
@@ -403,19 +401,19 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 
 	if len(updates) == 0 {
 		// No updates requested, return current variant
-		return r.GetVariantByID(ctx, variantID, &productID)
+		return r.GetVariantByUUID(ctx, variantUUID, &productID)
 	}
 
 	// Always update updated_at
 	updates = append(updates, "updated_at = NOW()")
 
-	// Add variant ID and product ID as last parameters
-	args = append(args, variantID, productID)
+	// Add variant UUID and product ID as last parameters
+	args = append(args, variantUUID, productID)
 
 	query := fmt.Sprintf(`
-		UPDATE b2c_product_variants
+		UPDATE product_variants
 		SET %s
-		WHERE id = $%d AND product_id = $%d
+		WHERE id = $%d::uuid AND product_id = $%d
 		RETURNING
 			id, product_id, sku, barcode, price, compare_at_price, cost_price,
 			stock_quantity, stock_status, low_stock_threshold,
@@ -431,7 +429,7 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 	var variantAttributesJSON, dimensionsJSON []byte
 
 	err = tx.QueryRowContext(ctx, query, args...).Scan(
-		&variant.ID,
+		&variant.UUID, // Changed: scan UUID into string field
 		&variant.ProductID,
 		&sku,
 		&barcode,
@@ -510,21 +508,21 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 	}
 
 	r.logger.Info().
-		Int64("variant_id", variant.ID).
+		Str("variant_uuid", variant.UUID).
 		Msg("product variant updated successfully")
 
 	return &variant, nil
 }
 
 // DeleteProductVariant deletes a product variant
-func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error {
+func (r *Repository) DeleteProductVariant(ctx context.Context, variantUUID string, productID int64) error {
 	r.logger.Debug().
-		Int64("variant_id", variantID).
+		Str("variant_uuid", variantUUID).
 		Int64("product_id", productID).
 		Msg("deleting product variant")
 
 	// Validate IDs
-	if variantID <= 0 {
+	if variantUUID == "" {
 		return fmt.Errorf("variants.invalid_variant_id")
 	}
 	if productID <= 0 {
@@ -544,11 +542,11 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 	var isDefault bool
 	err = tx.QueryRowContext(ctx, `
 		SELECT EXISTS(
-			SELECT 1 FROM b2c_product_variants
-			WHERE id = $1 AND product_id = $2
+			SELECT 1 FROM product_variants
+			WHERE id = $1::uuid AND product_id = $2
 		),
-		COALESCE((SELECT is_default FROM b2c_product_variants WHERE id = $1), false)
-	`, variantID, productID).Scan(&exists, &isDefault)
+		COALESCE((SELECT is_default FROM product_variants WHERE id = $1::uuid), false)
+	`, variantUUID, productID).Scan(&exists, &isDefault)
 
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to check variant")
@@ -562,9 +560,9 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 	// Count active variants (excluding current one)
 	var activeCount int
 	err = tx.QueryRowContext(ctx, `
-		SELECT COUNT(*) FROM b2c_product_variants
-		WHERE product_id = $1 AND id != $2
-	`, productID, variantID).Scan(&activeCount)
+		SELECT COUNT(*) FROM product_variants
+		WHERE product_id = $1 AND id != $2::uuid
+	`, productID, variantUUID).Scan(&activeCount)
 
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to count variants")
@@ -588,12 +586,12 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 	// Business rule: If deleted variant was default, assign default to another
 	if isDefault && activeCount > 0 {
 		_, err = tx.ExecContext(ctx, `
-			UPDATE b2c_product_variants
+			UPDATE product_variants
 			SET is_default = true, updated_at = NOW()
-			WHERE product_id = $1 AND id != $2
+			WHERE product_id = $1 AND id != $2::uuid
 			ORDER BY id ASC
 			LIMIT 1
-		`, productID, variantID)
+		`, productID, variantUUID)
 
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to assign new default")
@@ -603,9 +601,9 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 
 	// Delete variant
 	result, err := tx.ExecContext(ctx, `
-		DELETE FROM b2c_product_variants
-		WHERE id = $1 AND product_id = $2
-	`, variantID, productID)
+		DELETE FROM product_variants
+		WHERE id = $1::uuid AND product_id = $2
+	`, variantUUID, productID)
 
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to delete variant")
@@ -629,7 +627,7 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 	}
 
 	r.logger.Info().
-		Int64("variant_id", variantID).
+		Str("variant_uuid", variantUUID).
 		Int64("product_id", productID).
 		Msg("product variant deleted successfully")
 
@@ -700,7 +698,7 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 	// If any variant is marked as default, unset existing defaults
 	if defaultCount == 1 {
 		_, err = tx.ExecContext(ctx, `
-			UPDATE b2c_product_variants
+			UPDATE product_variants
 			SET is_default = false, updated_at = NOW()
 			WHERE product_id = $1 AND is_default = true
 		`, productID)
@@ -782,7 +780,7 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 
 	// Execute batch insert
 	query := fmt.Sprintf(`
-		INSERT INTO b2c_product_variants (
+		INSERT INTO product_variants (
 			product_id, sku, barcode, price, compare_at_price, cost_price,
 			stock_quantity, stock_status, low_stock_threshold,
 			variant_attributes, weight, dimensions, is_default
@@ -818,7 +816,7 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 		var variantAttributesJSON, dimensionsJSON []byte
 
 		err = rows.Scan(
-			&variant.ID,
+			&variant.UUID, // Changed: scan UUID into string field
 			&variant.ProductID,
 			&sku,
 			&barcode,
@@ -901,4 +899,94 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 		Msg("product variants bulk created successfully")
 
 	return variants, nil
+}
+
+// GetVariantByUUID retrieves a product variant by its UUID
+func (r *Repository) GetVariantByUUID(ctx context.Context, variantUUID string, productID *int64) (*domain.ProductVariant, error) {
+	query := `
+		SELECT
+			id, product_id, sku, barcode, price, compare_at_price, cost_price,
+			stock_quantity, stock_status, low_stock_threshold,
+			variant_attributes, weight, dimensions,
+			is_active, is_default, view_count, sold_count,
+			created_at, updated_at
+		FROM product_variants
+		WHERE id = $1::uuid
+		  AND ($2::bigint IS NULL OR product_id = $2)
+	`
+
+	var variant domain.ProductVariant
+	var sku, barcode sql.NullString
+	var price, compareAtPrice, costPrice, weight sql.NullFloat64
+	var lowStockThreshold sql.NullInt32
+	var variantAttributesJSON, dimensionsJSON []byte
+
+	err := r.db.QueryRowContext(ctx, query, variantUUID, productID).Scan(
+		&variant.UUID,
+		&variant.ProductID,
+		&sku,
+		&barcode,
+		&price,
+		&compareAtPrice,
+		&costPrice,
+		&variant.StockQuantity,
+		&variant.StockStatus,
+		&lowStockThreshold,
+		&variantAttributesJSON,
+		&weight,
+		&dimensionsJSON,
+		&variant.IsActive,
+		&variant.IsDefault,
+		&variant.ViewCount,
+		&variant.SoldCount,
+		&variant.CreatedAt,
+		&variant.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("variants.not_found")
+		}
+		r.logger.Error().Err(err).Msg("failed to get variant by UUID")
+		return nil, fmt.Errorf("variants.get_failed")
+	}
+
+	// Handle nullable fields
+	if sku.Valid {
+		variant.SKU = &sku.String
+	}
+	if barcode.Valid {
+		variant.Barcode = &barcode.String
+	}
+	if price.Valid {
+		variant.Price = &price.Float64
+	}
+	if compareAtPrice.Valid {
+		variant.CompareAtPrice = &compareAtPrice.Float64
+	}
+	if costPrice.Valid {
+		variant.CostPrice = &costPrice.Float64
+	}
+	if weight.Valid {
+		variant.Weight = &weight.Float64
+	}
+	if lowStockThreshold.Valid {
+		variant.LowStockThreshold = &lowStockThreshold.Int32
+	}
+
+	// Parse JSONB fields
+	if len(variantAttributesJSON) > 0 {
+		if err := json.Unmarshal(variantAttributesJSON, &variant.VariantAttributes); err != nil {
+			r.logger.Error().Err(err).Msg("failed to unmarshal variant attributes")
+			return nil, fmt.Errorf("variants.get_failed")
+		}
+	}
+	if len(dimensionsJSON) > 0 {
+		if err := json.Unmarshal(dimensionsJSON, &variant.Dimensions); err != nil {
+			r.logger.Error().Err(err).Msg("failed to unmarshal dimensions")
+			return nil, fmt.Errorf("variants.get_failed")
+		}
+	}
+
+	return &variant, nil
 }

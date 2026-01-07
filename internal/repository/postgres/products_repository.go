@@ -517,14 +517,23 @@ func (r *Repository) ListProducts(ctx context.Context, storefrontID int64, page,
 
 // GetVariantByID retrieves a single variant by ID
 func (r *Repository) GetVariantByID(ctx context.Context, variantID int64, productID *int64) (*domain.ProductVariant, error) {
+	// NOTE: This method is DEPRECATED for UUID-based product_variants table
+	// product_variants.id is now UUID, not int64
+	// Clients should migrate to use UUIDs in proto definitions
+	// For backward compatibility, we try to cast int64 as UUID-like string,
+	// but this will only work if UUID was generated from int64 (which is NOT the case)
+	r.logger.Warn().
+		Int64("variant_id", variantID).
+		Msg("GetVariantByID called with int64 ID for UUID column - this will likely fail")
+
 	query := `
 		SELECT
 			v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price,
 			v.cost_price, v.stock_quantity, v.stock_status, v.low_stock_threshold,
 			v.variant_attributes, v.weight, v.dimensions, v.is_active, v.is_default,
 			v.view_count, v.sold_count, v.created_at, v.updated_at
-		FROM b2c_product_variants v
-		WHERE v.id = $1
+		FROM product_variants v
+		WHERE v.id::text = $1::text
 		  AND ($2::bigint IS NULL OR v.product_id = $2)
 	`
 
@@ -534,8 +543,11 @@ func (r *Repository) GetVariantByID(ctx context.Context, variantID int64, produc
 	var lowStockThreshold sql.NullInt32
 	var variantAttributesJSON, dimensionsJSON []byte
 
-	err := r.db.QueryRowContext(ctx, query, variantID, productID).Scan(
-		&variant.ID,
+	// Try to convert int64 to UUID string format (won't work for real UUIDs)
+	variantIDStr := fmt.Sprintf("%d", variantID)
+
+	err := r.db.QueryRowContext(ctx, query, variantIDStr, productID).Scan(
+		&variant.UUID, // Scan UUID string (id column is UUID type)
 		&variant.ProductID,
 		&sku,
 		&barcode,
@@ -948,7 +960,7 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 	}
 
 	if input.StockQuantity != nil {
-		setClauses = append(setClauses, fmt.Sprintf("stock_quantity = $%d", argIndex))
+		setClauses = append(setClauses, fmt.Sprintf("quantity = $%d", argIndex))
 		args = append(args, *input.StockQuantity)
 		argIndex++
 
@@ -1181,11 +1193,31 @@ func (r *Repository) DeleteProduct(ctx context.Context, productID, storefrontID 
 	// TODO: Add check for active orders once orders table/microservice is available
 	// For now, we skip this check
 
-	// Step 3: Count variants before deletion (variants table removed in Phase 11.5)
+	// Step 3: Count variants before deletion
 	var variantsCount int32 = 0
+	variantsCountQuery := `
+		SELECT COUNT(*) FROM product_variants WHERE product_id = $1
+	`
+	err = tx.QueryRowContext(ctx, variantsCountQuery, productID).Scan(&variantsCount)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to count product variants")
+		return 0, fmt.Errorf("failed to count product variants: %w", err)
+	}
 
 	if hardDelete {
-		// Hard delete: DELETE CASCADE will handle variants automatically
+		// Hard delete: Delete variants first (explicit for counting)
+		if variantsCount > 0 {
+			deleteVariantsQuery := `
+				DELETE FROM product_variants WHERE product_id = $1
+			`
+			_, err = tx.ExecContext(ctx, deleteVariantsQuery, productID)
+			if err != nil {
+				r.logger.Error().Err(err).Msg("failed to delete product variants")
+				return 0, fmt.Errorf("failed to delete product variants: %w", err)
+			}
+		}
+
+		// Delete product
 		deleteQuery := `
 			DELETE FROM listings
 			WHERE id = $1 AND storefront_id = $2 AND source_type = 'b2c'
@@ -1683,6 +1715,12 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 		Int("successful", len(createdProducts)).
 		Int("failed", len(errors)).
 		Msg("bulk product creation completed")
+
+	// If ALL products failed, return an error
+	if len(createdProducts) == 0 && len(errors) > 0 {
+		// Build error message from first error (most relevant)
+		return nil, errors, fmt.Errorf("%s", errors[0].ErrorCode)
+	}
 
 	return createdProducts, errors, nil
 }

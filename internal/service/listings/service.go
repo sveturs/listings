@@ -82,8 +82,8 @@ type Repository interface {
 	GetVariantByID(ctx context.Context, variantID int64, productID *int64) (*domain.ProductVariant, error)
 	GetVariantsByProductID(ctx context.Context, productID int64, isActiveOnly bool) ([]*domain.ProductVariant, error)
 	CreateProductVariant(ctx context.Context, input *domain.CreateVariantInput) (*domain.ProductVariant, error)
-	UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error)
-	DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error
+	UpdateProductVariant(ctx context.Context, variantUUID string, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error)
+	DeleteProductVariant(ctx context.Context, variantUUID string, productID int64) error
 	BulkCreateProductVariants(ctx context.Context, productID int64, inputs []*domain.CreateVariantInput) ([]*domain.ProductVariant, error)
 
 	// Inventory Management operations
@@ -492,7 +492,8 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 		query.Limit = 20
 	}
 
-	if len(query.Query) < 2 {
+	// Require minimum 2 characters for text search (empty query = filter-only search)
+	if query.Query != "" && len(query.Query) < 2 {
 		return nil, 0, fmt.Errorf("search query must be at least 2 characters")
 	}
 
@@ -1708,9 +1709,9 @@ func (s *Service) CreateProductVariant(ctx context.Context, input *domain.Create
 }
 
 // UpdateProductVariant updates an existing product variant with validation
-func (s *Service) UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
+func (s *Service) UpdateProductVariant(ctx context.Context, variantUUID string, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
 	s.logger.Debug().
-		Int64("variant_id", variantID).
+		Str("variant_uuid", variantUUID).
 		Int64("product_id", productID).
 		Msg("updating product variant")
 
@@ -1721,31 +1722,31 @@ func (s *Service) UpdateProductVariant(ctx context.Context, variantID int64, pro
 	}
 
 	// Update variant in repository
-	variant, err := s.repo.UpdateProductVariant(ctx, variantID, productID, input)
+	variant, err := s.repo.UpdateProductVariant(ctx, variantUUID, productID, input)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to update variant")
 		return nil, err // Return as-is to preserve error placeholders
 	}
 
-	s.logger.Info().Int64("variant_id", variant.ID).Msg("product variant updated successfully")
+	s.logger.Info().Str("variant_uuid", variant.UUID).Msg("product variant updated successfully")
 	return variant, nil
 }
 
 // DeleteProductVariant deletes a product variant with business rules enforcement
-func (s *Service) DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error {
+func (s *Service) DeleteProductVariant(ctx context.Context, variantUUID string, productID int64) error {
 	s.logger.Debug().
-		Int64("variant_id", variantID).
+		Str("variant_uuid", variantUUID).
 		Int64("product_id", productID).
 		Msg("deleting product variant")
 
 	// Delete variant in repository (business rules enforced there)
-	err := s.repo.DeleteProductVariant(ctx, variantID, productID)
+	err := s.repo.DeleteProductVariant(ctx, variantUUID, productID)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to delete variant")
 		return err // Return as-is to preserve error placeholders
 	}
 
-	s.logger.Info().Int64("variant_id", variantID).Msg("product variant deleted successfully")
+	s.logger.Info().Str("variant_uuid", variantUUID).Msg("product variant deleted successfully")
 	return nil
 }
 

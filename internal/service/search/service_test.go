@@ -157,7 +157,7 @@ func TestBuildSearchQuery(t *testing.T) {
 					if termClause, ok := clause["term"]; ok {
 						term := termClause.(map[string]interface{})
 						if catID, ok := term["category_id"]; ok {
-							assert.Equal(t, int64(5), catID)
+							assert.Equal(t, "cat-uuid-5", catID) // UUID string
 							hasCategoryTerm = true
 						}
 					}
@@ -211,7 +211,7 @@ func TestParseListingFromHit(t *testing.T) {
 		"description":  "Great laptop for work",
 		"price":        999.99,
 		"currency":     "EUR",
-		"category_id":  float64(5),
+		"category_id":  "cat-uuid-5", // UUID string
 		"status":       "active",
 		"created_at":   "2025-11-17T10:00:00Z",
 		"user_id":      float64(456),
@@ -237,7 +237,7 @@ func TestParseListingFromHit(t *testing.T) {
 	assert.Equal(t, "Great laptop for work", *listing.Description)
 	assert.Equal(t, 999.99, listing.Price)
 	assert.Equal(t, "EUR", listing.Currency)
-	assert.Equal(t, int64(5), listing.CategoryID)
+	assert.Equal(t, "cat-uuid-5", listing.CategoryID) // UUID string
 	assert.Equal(t, "active", listing.Status)
 	assert.Equal(t, "2025-11-17T10:00:00Z", listing.CreatedAt)
 	assert.Equal(t, int64(456), listing.UserID)
@@ -261,7 +261,7 @@ func TestParseListingFromHit_OptionalFields(t *testing.T) {
 		"title":        "Test Laptop",
 		"price":        999.99,
 		"currency":     "EUR",
-		"category_id":  float64(5),
+		"category_id":  "cat-uuid-5", // UUID string
 		"status":       "active",
 		"created_at":   "2025-11-17T10:00:00Z",
 		"user_id":      float64(456),
@@ -791,15 +791,15 @@ func TestParseAggregations_FullResponse(t *testing.T) {
 			"categories": map[string]interface{}{
 				"buckets": []interface{}{
 					map[string]interface{}{
-						"key":       float64(1001),
+						"key":       "cat-uuid-1001", // UUID string
 						"doc_count": float64(125),
 					},
 					map[string]interface{}{
-						"key":       float64(1002),
+						"key":       "cat-uuid-1002", // UUID string
 						"doc_count": float64(87),
 					},
 					map[string]interface{}{
-						"key":       float64(1003),
+						"key":       "cat-uuid-1003", // UUID string
 						"doc_count": float64(43),
 					},
 				},
@@ -898,9 +898,9 @@ func TestParseAggregations_FullResponse(t *testing.T) {
 
 	// Verify Categories
 	assert.Len(t, facets.Categories, 3)
-	assert.Equal(t, int64(1001), facets.Categories[0].CategoryID)
+	assert.Equal(t, "cat-uuid-1001", facets.Categories[0].CategoryID) // UUID string
 	assert.Equal(t, int64(125), facets.Categories[0].Count)
-	assert.Equal(t, int64(1002), facets.Categories[1].CategoryID)
+	assert.Equal(t, "cat-uuid-1002", facets.Categories[1].CategoryID) // UUID string
 	assert.Equal(t, int64(87), facets.Categories[1].Count)
 
 	// Verify PriceRanges (zero doc_count filtered out)
@@ -1088,7 +1088,7 @@ func TestParseAggregations_PartialData(t *testing.T) {
 			"categories": map[string]interface{}{
 				"buckets": []interface{}{
 					map[string]interface{}{
-						"key":       float64(1001),
+						"key":       "cat-uuid-1001", // UUID string
 						"doc_count": float64(50),
 					},
 				},
@@ -1104,7 +1104,7 @@ func TestParseAggregations_PartialData(t *testing.T) {
 
 	// Categories should be populated
 	assert.Len(t, facets.Categories, 1)
-	assert.Equal(t, int64(1001), facets.Categories[0].CategoryID)
+	assert.Equal(t, "cat-uuid-1001", facets.Categories[0].CategoryID) // UUID string
 
 	// Other facets should be empty but initialized
 	assert.Empty(t, facets.PriceRanges)

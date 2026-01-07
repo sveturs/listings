@@ -22,17 +22,21 @@ const claudeAPIURL = "https://api.anthropic.com/v1/messages"
 
 // CategoryDetectionService - сервис детекции категорий
 type CategoryDetectionService struct {
-	repo         *postgres.CategoryDetectionRepository
-	categoryRepo CategoryRepositoryInterface
-	redisClient  *redis.Client
-	claudeAPIKey string
-	logger       zerolog.Logger
+	repo           *postgres.CategoryDetectionRepository
+	categoryRepo   CategoryRepositoryInterface
+	redisClient    *redis.Client
+	claudeAPIKey   string
+	logger         zerolog.Logger
+	categoryCache  []*domain.CategoryV2 // Cached categories for Claude prompt
+	cacheLoadedAt  time.Time            // When cache was last loaded
+	cacheTTL       time.Duration        // Cache TTL (default 1 hour)
 }
 
 // CategoryRepositoryInterface - интерфейс для получения категорий
 type CategoryRepositoryInterface interface {
 	GetByUUID(ctx context.Context, id string) (*domain.CategoryV2, error)
 	GetBySlugV2(ctx context.Context, slug string) (*domain.CategoryV2, error)
+	GetAllActiveV2(ctx context.Context) ([]*domain.CategoryV2, error)
 }
 
 // NewCategoryDetectionService создаёт сервис
@@ -43,13 +47,44 @@ func NewCategoryDetectionService(
 	claudeAPIKey string,
 	logger zerolog.Logger,
 ) *CategoryDetectionService {
-	return &CategoryDetectionService{
+	svc := &CategoryDetectionService{
 		repo:         repo,
 		categoryRepo: categoryRepo,
 		redisClient:  redisClient,
 		claudeAPIKey: claudeAPIKey,
 		logger:       logger.With().Str("component", "category_detection_service").Logger(),
+		cacheTTL:     1 * time.Hour, // Categories don't change often
 	}
+
+	// Load categories into cache on startup (non-blocking)
+	go svc.refreshCategoryCache()
+
+	return svc
+}
+
+// refreshCategoryCache loads all active categories into memory cache
+func (s *CategoryDetectionService) refreshCategoryCache() {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	categories, err := s.categoryRepo.GetAllActiveV2(ctx)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to load categories for cache")
+		return
+	}
+
+	s.categoryCache = categories
+	s.cacheLoadedAt = time.Now()
+	s.logger.Info().Int("count", len(categories)).Msg("Category cache loaded successfully")
+}
+
+// getCachedCategories returns cached categories, refreshing if needed
+func (s *CategoryDetectionService) getCachedCategories() []*domain.CategoryV2 {
+	// Check if cache is stale
+	if s.categoryCache == nil || time.Since(s.cacheLoadedAt) > s.cacheTTL {
+		s.refreshCategoryCache()
+	}
+	return s.categoryCache
 }
 
 // DetectFromText определяет категорию по тексту с каскадной детекцией
@@ -60,8 +95,58 @@ func (s *CategoryDetectionService) DetectFromText(
 	startTime := time.Now()
 	fullText := input.Title + " " + input.Description
 
-	// === ЭТАП 0: AI Mapping (НАИВЫСШИЙ ПРИОРИТЕТ, confidence 0.95-1.0) ===
-	// Если Claude AI предложил категорию при анализе изображения, используем её ПЕРВОЙ
+	// === ЭТАП 0: ProductType Hint (НАИВЫСШИЙ ПРИОРИТЕТ для специфичных типов) ===
+	// ProductType из AI анализа изображений точнее чем общая категория
+	// Пример: productType="watch" точнее чем category="Electronics"
+	if input.Hints != nil && input.Hints.ProductType != "" {
+		productTypeMatch := s.detectByProductType(ctx, input.Hints.ProductType, input.Language)
+		if productTypeMatch != nil && productTypeMatch.ConfidenceScore >= 0.85 {
+			s.logger.Info().
+				Str("productType", input.Hints.ProductType).
+				Str("category", productTypeMatch.CategorySlug).
+				Float64("confidence", productTypeMatch.ConfidenceScore).
+				Str("method", "product_type_hint").
+				Msg("ЭТАП 0: Using productType hint (highest priority)")
+			return s.buildDetection([]domain.CategoryMatch{*productTypeMatch}, startTime, input)
+		}
+	}
+
+	// === ЭТАП 1: Keyword Matching (БЕСПЛАТНО! Приоритет перед AI) ===
+	// Сначала пробуем найти категорию по ключевым словам в тексте
+	keywords := extractKeywords(fullText)
+	keywordMatches, err := s.repo.FindByKeywords(ctx, keywords, input.Language)
+	if err != nil {
+		s.logger.Warn().Err(err).Msg("Keyword matching failed")
+	}
+
+	// Если есть уверенный keyword match (>0.7), сразу используем его
+	if len(keywordMatches) > 0 && keywordMatches[0].ConfidenceScore >= 0.7 {
+		s.logger.Info().
+			Float64("confidence", keywordMatches[0].ConfidenceScore).
+			Str("category", keywordMatches[0].CategorySlug).
+			Strs("keywords", keywords).
+			Str("method", string(domain.MethodKeywordMatch)).
+			Msg("ЭТАП 1: Using keyword match (FREE, high confidence)")
+		return s.buildDetection(keywordMatches, startTime, input)
+	}
+
+	// === ЭТАП 2: Brand Matching (БЕСПЛАТНО, очень точно для брендов) ===
+	brandMatches, err := s.detectByBrand(ctx, fullText, input.Language)
+	if err != nil {
+		s.logger.Warn().Err(err).Msg("Brand matching failed")
+	}
+
+	if len(brandMatches) > 0 && brandMatches[0].ConfidenceScore >= 0.95 {
+		s.logger.Info().
+			Float64("confidence", brandMatches[0].ConfidenceScore).
+			Str("category", brandMatches[0].CategorySlug).
+			Str("method", string(domain.MethodBrandMatch)).
+			Msg("ЭТАП 2: Using brand match result")
+		return s.buildDetection(brandMatches, startTime, input)
+	}
+
+	// === ЭТАП 3: AI Mapping (БЕСПЛАТНО - использует suggestedCategory от Claude Vision) ===
+	// Claude Vision уже оплачен при анализе изображения, маппинг бесплатен
 	if input.SuggestedCategory != "" {
 		aiMapping, err := s.repo.FindByAIMapping(ctx, input.SuggestedCategory, input.Language)
 		if err != nil {
@@ -76,110 +161,81 @@ func (s *CategoryDetectionService) DetectFromText(
 				Str("category", aiMapping.CategorySlug).
 				Float64("confidence", aiMapping.ConfidenceScore).
 				Str("method", "ai_mapping").
-				Msg("Using AI mapping (highest priority)")
+				Msg("ЭТАП 3: Using AI mapping (from Vision analysis)")
 			return s.buildDetection([]domain.CategoryMatch{*aiMapping}, startTime, input)
 		}
 
-		// Если маппинг нашёлся, но confidence низкий, логируем для анализа
 		if aiMapping != nil {
-			s.logger.Warn().
+			s.logger.Debug().
 				Str("suggested_category", input.SuggestedCategory).
 				Float64("confidence", aiMapping.ConfidenceScore).
 				Msg("AI mapping found but confidence too low (<0.90)")
 		}
 	}
 
-	// === ЭТАП 1: Brand Matching (самый точный, confidence 0.95-0.98) ===
-	brandMatches, err := s.detectByBrand(ctx, fullText, input.Language)
-	if err != nil {
-		s.logger.Warn().Err(err).Msg("Brand matching failed")
-	}
-
-	if len(brandMatches) > 0 && brandMatches[0].ConfidenceScore >= 0.95 {
-		s.logger.Info().
-			Float64("confidence", brandMatches[0].ConfidenceScore).
-			Str("category", brandMatches[0].CategorySlug).
-			Str("method", string(domain.MethodBrandMatch)).
-			Msg("Using brand match result")
-		return s.buildDetection(brandMatches, startTime, input)
-	}
-
-	// === ЭТАП 1.5: ProductType Hint Matching (для часов, телефонов и т.д.) ===
-	if input.Hints != nil && input.Hints.ProductType != "" {
-		productTypeMatch := s.detectByProductType(ctx, input.Hints.ProductType, input.Language)
-		if productTypeMatch != nil && productTypeMatch.ConfidenceScore >= 0.85 {
-			s.logger.Info().
-				Str("productType", input.Hints.ProductType).
-				Str("category", productTypeMatch.CategorySlug).
-				Float64("confidence", productTypeMatch.ConfidenceScore).
-				Msg("Using productType hint match")
-			return s.buildDetection([]domain.CategoryMatch{*productTypeMatch}, startTime, input)
-		}
-	}
-
-	// === ЭТАП 2: Keyword Matching (быстро и бесплатно) ===
-	keywords := extractKeywords(fullText)
-	keywordMatches, err := s.repo.FindByKeywords(ctx, keywords, input.Language)
-	if err != nil {
-		s.logger.Warn().Err(err).Msg("Keyword matching failed")
-	}
-
-	// Если есть хороший keyword match (>0.6), используем его
-	if len(keywordMatches) > 0 && keywordMatches[0].ConfidenceScore > 0.6 {
-		s.logger.Debug().
-			Float64("confidence", keywordMatches[0].ConfidenceScore).
-			Str("category", keywordMatches[0].CategorySlug).
-			Str("method", string(domain.MethodKeywordMatch)).
-			Msg("Using keyword match result")
-
-		// Добавить brand matches как альтернативы
-		allMatches := mergeMatches(keywordMatches, brandMatches)
-		return s.buildDetection(allMatches, startTime, input)
-	}
-
-	// === ЭТАП 3: Similarity Matching ===
+	// === ЭТАП 4: Similarity Matching (БЕСПЛАТНО) ===
 	similarityMatches, err := s.repo.FindBySimilarity(ctx, input.Title, input.Language)
 	if err != nil {
 		s.logger.Warn().Err(err).Msg("Similarity matching failed")
 	}
 
-	if len(similarityMatches) > 0 && similarityMatches[0].ConfidenceScore > 0.4 {
-		s.logger.Debug().
+	if len(similarityMatches) > 0 && similarityMatches[0].ConfidenceScore > 0.5 {
+		s.logger.Info().
 			Float64("confidence", similarityMatches[0].ConfidenceScore).
 			Str("category", similarityMatches[0].CategorySlug).
 			Str("method", string(domain.MethodSimilarity)).
-			Msg("Using similarity match result")
+			Msg("ЭТАП 4: Using similarity match result")
 
-		// Комбинировать все результаты
+		// Комбинировать с keyword и brand как альтернативы
 		allMatches := mergeMatches(similarityMatches, keywordMatches, brandMatches)
 		return s.buildDetection(allMatches, startTime, input)
 	}
 
-	// === ЭТАП 4: Claude AI (только как fallback, дорого) ===
-	if len(keywordMatches) == 0 || keywordMatches[0].ConfidenceScore < 0.4 {
-		s.logger.Info().Msg("Using Claude AI as fallback")
-		aiMatches, err := s.detectWithClaude(ctx, input)
-		if err != nil {
-			s.logger.Warn().Err(err).Msg("Claude AI detection failed, using best available")
-			// Fallback на лучшие доступные результаты
-			allMatches := mergeMatches(keywordMatches, similarityMatches, brandMatches)
-			if len(allMatches) > 0 {
-				return s.buildDetection(allMatches, startTime, input)
-			}
-
-			// ВАЖНО: SuggestedCategory теперь обрабатывается в ЭТАП 0 (highest priority)
-			// Если мы дошли сюда - значит маппинг не найден или confidence < 0.90
-			return s.fallbackDetection(startTime, input)
-		}
-
-		// AI успешен - комбинируем со всеми результатами как альтернативы
-		allMatches := mergeMatches(aiMatches, keywordMatches, similarityMatches, brandMatches)
+	// === ЭТАП 5: Низко-уверенный Keyword Match (>0.5) ===
+	// Используем keyword match с меньшей уверенностью если другие методы не сработали
+	if len(keywordMatches) > 0 && keywordMatches[0].ConfidenceScore > 0.5 {
+		s.logger.Info().
+			Float64("confidence", keywordMatches[0].ConfidenceScore).
+			Str("category", keywordMatches[0].CategorySlug).
+			Str("method", string(domain.MethodKeywordMatch)).
+			Msg("ЭТАП 5: Using keyword match (moderate confidence)")
+		allMatches := mergeMatches(keywordMatches, brandMatches, similarityMatches)
 		return s.buildDetection(allMatches, startTime, input)
 	}
 
-	// === Используем лучшие доступные результаты ===
+	// === ЭТАП 6: Claude AI (ПЛАТНЫЙ! Только как крайний fallback) ===
+	// Вызываем Claude только если ни один бесплатный метод не дал результата
+	if len(keywordMatches) == 0 && len(brandMatches) == 0 && len(similarityMatches) == 0 {
+		s.logger.Warn().
+			Str("title", input.Title).
+			Strs("extracted_keywords", keywords).
+			Msg("ЭТАП 6: No FREE matches found, using Claude AI as PAID fallback")
+
+		aiMatches, err := s.detectWithClaude(ctx, input)
+		if err != nil {
+			s.logger.Warn().Err(err).Msg("Claude AI detection failed, using fallback category")
+			return s.fallbackDetection(startTime, input)
+		}
+
+		// AI успешен
+		s.logger.Info().
+			Str("category", aiMatches[0].CategorySlug).
+			Float64("confidence", aiMatches[0].ConfidenceScore).
+			Msg("ЭТАП 6: Claude AI detection successful")
+		return s.buildDetection(aiMatches, startTime, input)
+	}
+
+	// === Используем лучшие доступные результаты из бесплатных методов ===
 	allMatches := mergeMatches(keywordMatches, similarityMatches, brandMatches)
-	return s.buildDetection(allMatches, startTime, input)
+	if len(allMatches) > 0 {
+		s.logger.Info().
+			Float64("confidence", allMatches[0].ConfidenceScore).
+			Str("category", allMatches[0].CategorySlug).
+			Msg("Using best available FREE match")
+		return s.buildDetection(allMatches, startTime, input)
+	}
+
+	return s.fallbackDetection(startTime, input)
 }
 
 // DetectFromKeywords определяет категорию по ключевым словам
@@ -347,38 +403,79 @@ func (s *CategoryDetectionService) detectWithClaude(
 	return s.parseCategoryResponse(claudeResp.Content[0].Text, input.Language)
 }
 
-// buildCategoryDetectionPrompt строит промпт для Claude
+// buildCategoryDetectionPrompt строит промпт для Claude с динамическим списком категорий
 func (s *CategoryDetectionService) buildCategoryDetectionPrompt(input domain.DetectFromTextInput) string {
-	return fmt.Sprintf(`Analyze this product and determine the best category.
+	// Get cached categories
+	categories := s.getCachedCategories()
+
+	// Build category list for prompt
+	var categoryLines strings.Builder
+	for _, cat := range categories {
+		// Get localized name (prefer English, fallback to Serbian)
+		name := cat.Name["en"]
+		if name == "" {
+			name = cat.Name["sr"]
+		}
+		if name == "" {
+			name = cat.Slug
+		}
+
+		// Get description for better context
+		desc := cat.Description["en"]
+		if desc == "" {
+			desc = cat.Description["sr"]
+		}
+
+		// Get keywords for better matching
+		keywords := cat.MetaKeywords["en"]
+		if keywords == "" {
+			keywords = cat.MetaKeywords["sr"]
+		}
+
+		// Format: UUID | slug | Name | Keywords
+		if desc != "" || keywords != "" {
+			extra := ""
+			if keywords != "" {
+				extra = fmt.Sprintf(" (%s)", keywords)
+			} else if desc != "" {
+				// Truncate description if too long
+				if len(desc) > 50 {
+					desc = desc[:50] + "..."
+				}
+				extra = fmt.Sprintf(" - %s", desc)
+			}
+			categoryLines.WriteString(fmt.Sprintf("- %s | %s | %s%s\n", cat.ID.String(), cat.Slug, name, extra))
+		} else {
+			categoryLines.WriteString(fmt.Sprintf("- %s | %s | %s\n", cat.ID.String(), cat.Slug, name))
+		}
+	}
+
+	return fmt.Sprintf(`Analyze this product and determine the best matching category.
 
 Title: %s
 Description: %s
 
+AVAILABLE CATEGORIES (format: UUID | slug | Name | Keywords):
+%s
+IMPORTANT: You MUST return the category_id as the exact UUID from the list above!
+
 Return a JSON response with the following structure:
 {
-  "category": "category-slug-in-english",
+  "category_id": "exact-uuid-from-list",
+  "category_slug": "category-slug",
   "category_name": "Category Name",
   "confidence": 0.95,
   "keywords": ["keyword1", "keyword2"],
   "alternatives": [
-    {"category": "alt-slug", "category_name": "Alt Name", "confidence": 0.7}
+    {"category_id": "uuid", "category_slug": "slug", "category_name": "Name", "confidence": 0.7}
   ]
 }
 
-Choose from these main categories:
-- electronics (phones, computers, gadgets)
-- fashion (clothing, shoes, accessories)
-- home-garden (furniture, decor, tools)
-- sports (fitness, outdoor, equipment)
-- vehicles (cars, motorcycles, parts)
-- kids (toys, baby products)
-- beauty (cosmetics, personal care)
-- books-media (books, music, movies)
-
-Return ONLY valid JSON, no explanations.`, input.Title, input.Description)
+Return ONLY valid JSON, no explanations.`, input.Title, input.Description, categoryLines.String())
 }
 
 // parseCategoryResponse парсит ответ Claude и обогащает результаты из БД
+// Поддерживает оба формата: новый с category_id (UUID) и старый с category (slug)
 func (s *CategoryDetectionService) parseCategoryResponse(text, language string) ([]domain.CategoryMatch, error) {
 	// Очищаем от markdown code blocks
 	text = strings.TrimPrefix(text, "```json")
@@ -386,11 +483,17 @@ func (s *CategoryDetectionService) parseCategoryResponse(text, language string) 
 	text = strings.TrimSpace(text)
 
 	var response struct {
+		// New format with UUID
+		CategoryID   string `json:"category_id"`
+		CategorySlug string `json:"category_slug"`
+		// Legacy format (fallback)
 		Category     string   `json:"category"`
 		CategoryName string   `json:"category_name"`
 		Confidence   float64  `json:"confidence"`
 		Keywords     []string `json:"keywords"`
 		Alternatives []struct {
+			CategoryID   string  `json:"category_id"`
+			CategorySlug string  `json:"category_slug"`
 			Category     string  `json:"category"`
 			CategoryName string  `json:"category_name"`
 			Confidence   float64 `json:"confidence"`
@@ -403,15 +506,28 @@ func (s *CategoryDetectionService) parseCategoryResponse(text, language string) 
 
 	var matches []domain.CategoryMatch
 
-	// === Enrich primary category from database ===
-	primaryMatch := s.enrichCategoryFromDB(response.Category, response.CategoryName, response.Confidence, response.Keywords, language)
+	// === Parse primary category ===
+	// Try UUID first (new format), fallback to slug (legacy)
+	categoryID := response.CategoryID
+	categorySlug := response.CategorySlug
+	if categorySlug == "" {
+		categorySlug = response.Category // Legacy field
+	}
+
+	primaryMatch := s.enrichCategoryFromResponse(categoryID, categorySlug, response.CategoryName, response.Confidence, response.Keywords, language)
 	if primaryMatch != nil {
 		matches = append(matches, *primaryMatch)
 	}
 
-	// === Enrich alternatives from database ===
+	// === Parse alternatives ===
 	for _, alt := range response.Alternatives {
-		altMatch := s.enrichCategoryFromDB(alt.Category, alt.CategoryName, alt.Confidence, nil, language)
+		altID := alt.CategoryID
+		altSlug := alt.CategorySlug
+		if altSlug == "" {
+			altSlug = alt.Category
+		}
+
+		altMatch := s.enrichCategoryFromResponse(altID, altSlug, alt.CategoryName, alt.Confidence, nil, language)
 		if altMatch != nil {
 			matches = append(matches, *altMatch)
 		}
@@ -420,37 +536,37 @@ func (s *CategoryDetectionService) parseCategoryResponse(text, language string) 
 	return matches, nil
 }
 
-// enrichCategoryFromDB обогащает category match данными из БД
-// Пытается найти категорию по slug и получить реальный UUID
-func (s *CategoryDetectionService) enrichCategoryFromDB(slug, name string, confidence float64, keywords []string, language string) *domain.CategoryMatch {
+// enrichCategoryFromResponse обогащает category match данными из БД
+// Пытается найти категорию по UUID (если предоставлен), затем по slug
+func (s *CategoryDetectionService) enrichCategoryFromResponse(categoryID, slug, name string, confidence float64, keywords []string, language string) *domain.CategoryMatch {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-
-	// Нормализуем slug для поиска в БД
-	// Claude может вернуть "electronics" или "home-garden"
-	slugVariants := []string{
-		slug,                                    // как есть
-		strings.ReplaceAll(slug, "-", "_"),      // electronics -> electronics
-		strings.ToLower(slug),                   // Electronics -> electronics
-		s.mapAISlugToDBSlug(slug),               // electronics -> elektronika
-	}
 
 	var category *domain.CategoryV2
 	var err error
 
-	// Пробуем найти по разным вариантам slug
-	for _, trySlug := range slugVariants {
-		if trySlug == "" {
-			continue
+	// Try to find by UUID first (most reliable)
+	if categoryID != "" && categoryID != "uuid" && categoryID != "exact-uuid-from-list" {
+		// Validate UUID format
+		if _, parseErr := uuid.Parse(categoryID); parseErr == nil {
+			category, err = s.categoryRepo.GetByUUID(ctx, categoryID)
+			if err == nil && category != nil {
+				s.logger.Debug().
+					Str("category_id", categoryID).
+					Str("slug", category.Slug).
+					Msg("Category found by UUID from Claude")
+			}
 		}
-		category, err = s.categoryRepo.GetBySlugV2(ctx, trySlug)
-		if err == nil && category != nil {
-			break
-		}
+	}
+
+	// Fallback to slug-based search if UUID lookup failed
+	if category == nil && slug != "" {
+		category = s.findCategoryBySlugVariants(ctx, slug)
 	}
 
 	if category == nil {
 		s.logger.Warn().
+			Str("category_id", categoryID).
 			Str("slug", slug).
 			Str("name", name).
 			Msg("Category from Claude not found in DB, using generic match")
@@ -477,6 +593,28 @@ func (s *CategoryDetectionService) enrichCategoryFromDB(slug, name string, confi
 		DetectionMethod: domain.MethodAIClaude,
 		MatchedKeywords: keywords,
 	}
+}
+
+// findCategoryBySlugVariants tries to find a category by various slug transformations
+func (s *CategoryDetectionService) findCategoryBySlugVariants(ctx context.Context, slug string) *domain.CategoryV2 {
+	slugVariants := []string{
+		slug,                               // as-is
+		strings.ReplaceAll(slug, "-", "_"), // home-garden -> home_garden
+		strings.ToLower(slug),              // Electronics -> electronics
+		s.mapAISlugToDBSlug(slug),          // electronics -> elektronika
+	}
+
+	for _, trySlug := range slugVariants {
+		if trySlug == "" {
+			continue
+		}
+		category, err := s.categoryRepo.GetBySlugV2(ctx, trySlug)
+		if err == nil && category != nil {
+			return category
+		}
+	}
+
+	return nil
 }
 
 // resolveSuggestedCategory пытается найти категорию по suggested slug из AI анализа изображения
@@ -675,6 +813,56 @@ func (s *CategoryDetectionService) detectByProductType(ctx context.Context, prod
 		"sneakers":    "obuca",
 		"bag":         "torbe",
 		"handbag":     "torbe",
+
+		// Канцелярия / Office Supplies
+		"stapler":     "kancelarijski-materijal",
+		"pen":         "kancelarijski-materijal",
+		"pencil":      "kancelarijski-materijal",
+		"notebook":    "kancelarijski-materijal",
+		"folder":      "kancelarijski-materijal",
+		"scissors":    "kancelarijski-materijal",
+		"calculator":  "kancelarijski-materijal",
+		"desk_lamp":   "kancelarijski-materijal",
+
+		// Дом и сад / Home & Garden
+		"decor":         "dom-i-basta",
+		"decoration":    "dom-i-basta",
+		"home_decor":    "dom-i-basta",
+		"figurine":      "dom-i-basta",
+		"vase":          "dom-i-basta",
+		"candle":        "dom-i-basta",
+		"plant_pot":     "dom-i-basta",
+		"picture_frame": "dom-i-basta",
+		"mirror":        "dom-i-basta",
+		"lamp":          "dom-i-basta",
+		"furniture":     "dom-i-basta",
+		"garden_tool":   "dom-i-basta",
+		"garden_decor":  "dom-i-basta",
+
+		// Товары для животных / Pet Supplies
+		"pet grooming tools": "kucni-ljubimci",
+		"pet grooming":       "kucni-ljubimci",
+		"pet brush":          "kucni-ljubimci",
+		"pet comb":           "kucni-ljubimci",
+		"pet care":           "kucni-ljubimci",
+		"pet supplies":       "kucni-ljubimci",
+		"pet accessories":    "kucni-ljubimci",
+		"pet food":           "kucni-ljubimci",
+		"pet toys":           "kucni-ljubimci",
+		"dog food":           "kucni-ljubimci",
+		"cat food":           "kucni-ljubimci",
+		"dog toy":            "kucni-ljubimci",
+		"cat toy":            "kucni-ljubimci",
+		"dog accessories":    "kucni-ljubimci",
+		"cat accessories":    "kucni-ljubimci",
+		"leash":              "kucni-ljubimci",
+		"collar":             "kucni-ljubimci",
+		"pet bed":            "kucni-ljubimci",
+		"aquarium":           "kucni-ljubimci",
+		"fish tank":          "kucni-ljubimci",
+		"bird cage":          "kucni-ljubimci",
+		"cat litter":         "kucni-ljubimci",
+		"pet carrier":        "kucni-ljubimci",
 	}
 
 	slug, ok := productTypeMapping[strings.ToLower(productType)]

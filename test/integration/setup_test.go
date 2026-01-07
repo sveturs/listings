@@ -541,3 +541,129 @@ func CleanupTestData(t *testing.T, server *TestServer, table string, minID, maxI
 	t.Helper()
 	server.DB.CleanupTestData(t, table, minID, maxID)
 }
+
+// SeedTestCategories is a helper to create test category fixtures for integration tests.
+// This creates a small hierarchy of categories with proper JSONB translations.
+//
+// Returns: map of slug -> category UUID for easy reference in tests.
+//
+// Example:
+//
+//	catIDs := SeedTestCategories(t, server)
+//	electronicsID := catIDs["electronics"]
+func SeedTestCategories(t *testing.T, server *TestServer) map[string]string {
+	t.Helper()
+
+	categories := []struct {
+		id          string
+		name        string
+		slug        string
+		parentSlug  *string
+		level       int32
+		path        string
+		sortOrder   int32
+		listingCount int32
+	}{
+		// Root categories
+		{
+			id:           "c0000000-0000-0000-0000-000000000001",
+			name:         `{"sr": "Elektronika", "en": "Electronics", "ru": "Электроника"}`,
+			slug:         "electronics",
+			parentSlug:   nil,
+			level:        1,
+			path:         "electronics",
+			sortOrder:    1,
+			listingCount: 10,
+		},
+		{
+			id:           "c0000000-0000-0000-0000-000000000002",
+			name:         `{"sr": "Moda", "en": "Fashion", "ru": "Мода"}`,
+			slug:         "fashion",
+			parentSlug:   nil,
+			level:        1,
+			path:         "fashion",
+			sortOrder:    2,
+			listingCount: 15,
+		},
+		{
+			id:           "c0000000-0000-0000-0000-000000000003",
+			name:         `{"sr": "Kuća i bašta", "en": "Home & Garden", "ru": "Дом и сад"}`,
+			slug:         "home-garden",
+			parentSlug:   nil,
+			level:        1,
+			path:         "home-garden",
+			sortOrder:    3,
+			listingCount: 20,
+		},
+		// Electronics children
+		{
+			id:           "c0000000-0000-0000-0000-000000000004",
+			name:         `{"sr": "Računari", "en": "Computers", "ru": "Компьютеры"}`,
+			slug:         "computers",
+			parentSlug:   stringPtr("electronics"),
+			level:        2,
+			path:         "electronics/computers",
+			sortOrder:    1,
+			listingCount: 5,
+		},
+		{
+			id:           "c0000000-0000-0000-0000-000000000005",
+			name:         `{"sr": "Telefoni", "en": "Phones", "ru": "Телефоны"}`,
+			slug:         "phones",
+			parentSlug:   stringPtr("electronics"),
+			level:        2,
+			path:         "electronics/phones",
+			sortOrder:    2,
+			listingCount: 8,
+		},
+		// Fashion children
+		{
+			id:           "c0000000-0000-0000-0000-000000000006",
+			name:         `{"sr": "Muška odeća", "en": "Men's Clothing", "ru": "Мужская одежда"}`,
+			slug:         "mens-clothing",
+			parentSlug:   stringPtr("fashion"),
+			level:        2,
+			path:         "fashion/mens-clothing",
+			sortOrder:    1,
+			listingCount: 10,
+		},
+		{
+			id:           "c0000000-0000-0000-0000-000000000007",
+			name:         `{"sr": "Ženska odeća", "en": "Women's Clothing", "ru": "Женская одежда"}`,
+			slug:         "womens-clothing",
+			parentSlug:   stringPtr("fashion"),
+			level:        2,
+			path:         "fashion/womens-clothing",
+			sortOrder:    2,
+			listingCount: 12,
+		},
+	}
+
+	// Build slug to ID map
+	slugToID := make(map[string]string)
+	for _, cat := range categories {
+		slugToID[cat.slug] = cat.id
+	}
+
+	// Insert categories
+	for _, cat := range categories {
+		var parentID *string
+		if cat.parentSlug != nil {
+			pid := slugToID[*cat.parentSlug]
+			parentID = &pid
+		}
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, level, path, sort_order, is_active, listing_count)
+			VALUES ($1::uuid, $2::jsonb, $3, $4::uuid, $5, $6, $7, true, $8)
+			ON CONFLICT (id) DO NOTHING
+		`, cat.id, cat.name, cat.slug, parentID, cat.level, cat.path, cat.sortOrder, cat.listingCount)
+	}
+
+	return slugToID
+}
+
+// stringPtr is a helper to create a string pointer.
+func stringPtr(s string) *string {
+	return &s
+}

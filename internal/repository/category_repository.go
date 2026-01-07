@@ -28,4 +28,6 @@ type CategoryRepositoryV2 interface {
 	GetTreeV2(ctx context.Context, filter *domain.GetCategoryTreeFilterV2) ([]*domain.CategoryTreeV2, error)
 	GetBreadcrumb(ctx context.Context, categoryID string, locale string) ([]*domain.CategoryBreadcrumb, error)
 	ListV2(ctx context.Context, parentID *string, activeOnly bool, page, pageSize int32) ([]*domain.CategoryV2, int64, error)
+	// GetAllActiveV2 returns all active categories for category detection
+	GetAllActiveV2(ctx context.Context) ([]*domain.CategoryV2, error)
 }

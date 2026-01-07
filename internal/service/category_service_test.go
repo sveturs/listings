@@ -241,7 +241,7 @@ func TestCategoryService_CreateCategory_Success(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, created)
-	assert.Equal(t, int64(1), created.ID)
+	assert.Equal(t, "1", created.ID)
 	assert.Equal(t, "Electronics", created.Name)
 	mockRepo.AssertExpectations(t)
 }

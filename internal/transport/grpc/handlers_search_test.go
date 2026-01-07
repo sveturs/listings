@@ -160,7 +160,8 @@ func TestSearchHandler_GetSearchFacets_WithFilters(t *testing.T) {
 	mockSvc := &mockSearchService{
 		getFacetsFunc: func(ctx context.Context, req *search.FacetsRequest) (*search.FacetsResponse, error) {
 			assert.Equal(t, query, req.Query)
-			assert.Equal(t, categoryID, req.CategoryID)
+			assert.NotNil(t, req.CategoryID)
+			assert.Equal(t, categoryID, *req.CategoryID)
 
 			return &search.FacetsResponse{
 				Categories:    []search.CategoryFacet{{CategoryID: categoryID, Count: 50}},
@@ -544,7 +545,8 @@ func TestSearchHandler_GetPopularSearches_WithCategoryFilter(t *testing.T) {
 	categoryID := "cat-1301"
 	mockSvc := &mockSearchService{
 		getPopularFunc: func(ctx context.Context, req *search.PopularSearchesRequest) (*search.PopularSearchesResponse, error) {
-			assert.Equal(t, categoryID, req.CategoryID)
+			assert.NotNil(t, req.CategoryID)
+			assert.Equal(t, categoryID, *req.CategoryID)
 
 			return &search.PopularSearchesResponse{
 				Searches: []search.PopularSearch{
@@ -725,7 +727,7 @@ func TestSearchHandler_GetTrendingSearches_WithCategoryFilter(t *testing.T) {
 	mockSvc := &mockSearchService{
 		getTrendingFunc: func(ctx context.Context, req *search.TrendingSearchesRequest) (*search.TrendingSearchesResponse, error) {
 			assert.NotNil(t, req.CategoryID)
-			assert.Equal(t, categoryID, req.CategoryID)
+			assert.Equal(t, categoryID, *req.CategoryID)
 			return &search.TrendingSearchesResponse{
 				Searches: []search.TrendingSearchResult{
 					{QueryText: "macbook", SearchCount: 150, LastSearched: now},

@@ -41,8 +41,9 @@ func createTestStorefront(t *testing.T, repo *Repository) int64 {
 // createTestCategory creates a test category (stub, no real categories table in listings service)
 func createTestCategory(t *testing.T) string {
 	t.Helper()
-	// Categories are managed externally, just return a valid ID
-	return "100"
+	// Categories are managed externally, return a valid UUID from test fixtures
+	// TestCategoryUUID100 is defined in repository_test.go and created by setupTestCategories
+	return TestCategoryUUID100
 }
 
 // createTestProduct creates a product with default values
@@ -99,21 +100,23 @@ func createTestVariant(t *testing.T, repo *Repository, productID int64) *domain.
 	ctx := tests.TestContext(t)
 
 	query := `
-		INSERT INTO b2c_product_variants (
+		INSERT INTO product_variants (
 			product_id, sku, stock_quantity, stock_status,
 			is_active, is_default, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, 'in_stock', true, false, NOW(), NOW()
-		) RETURNING id, product_id, sku, stock_quantity, stock_status,
+		) RETURNING id::text, product_id, sku, stock_quantity, stock_status,
 				  is_active, is_default, view_count, sold_count, created_at, updated_at
 	`
 
 	var variant domain.ProductVariant
+	var variantUUID string
 	sku := "VARIANT-SKU-001"
+	skuPtr := &sku
 	err := repo.db.QueryRowContext(ctx, query, productID, sku, 50).Scan(
-		&variant.ID,
+		&variantUUID,
 		&variant.ProductID,
-		&variant.SKU,
+		&skuPtr,
 		&variant.StockQuantity,
 		&variant.StockStatus,
 		&variant.IsActive,
@@ -124,6 +127,11 @@ func createTestVariant(t *testing.T, repo *Repository, productID int64) *domain.
 		&variant.UpdatedAt,
 	)
 	require.NoError(t, err, "Failed to create test variant")
+
+	// Set UUID field and dummy int64 ID for legacy compatibility
+	variant.UUID = variantUUID
+	variant.SKU = skuPtr
+	variant.ID = 1 // Dummy ID for legacy tests (UUID is the real identifier)
 
 	return &variant
 }
@@ -321,7 +329,7 @@ func TestCreateProduct_InvalidCategoryID(t *testing.T) {
 
 	product := &domain.CreateProductInput{
 		StorefrontID:  storefrontID,
-		CategoryID:    "0", // Invalid category (0 is technically valid as there's no FK constraint)
+		CategoryID:    "invalid-uuid", // Invalid UUID format
 		Name:          "Test Product",
 		Description:   "Test description",
 		Price:         99.99,
@@ -333,9 +341,9 @@ func TestCreateProduct_InvalidCategoryID(t *testing.T) {
 
 	createdProduct, err := repo.CreateProduct(ctx, product)
 
-	// No FK constraint on category_id, so this should succeed
-	require.NoError(t, err)
-	assert.NotNil(t, createdProduct)
+	// Should fail with invalid UUID format
+	assert.Error(t, err)
+	assert.Nil(t, createdProduct)
 }
 
 func TestCreateProduct_NegativePrice(t *testing.T) {
@@ -580,19 +588,17 @@ func TestUpdateProduct_InvalidData(t *testing.T) {
 
 	product := createTestProduct(t, repo, storefrontID)
 
-	// Try to update with empty name
-	emptyName := ""
+	// Try to update with negative price (invalid)
+	negativePrice := -50.00
 	updateInput := &domain.UpdateProductInput{
-		Name: &emptyName,
+		Price: &negativePrice,
 	}
 
-	// Note: Current implementation doesn't validate empty name in update
-	// This test documents current behavior
 	updatedProduct, err := repo.UpdateProduct(ctx, product.ID, storefrontID, updateInput)
 
-	// Current implementation allows empty name in updates
-	require.NoError(t, err)
-	assert.NotNil(t, updatedProduct)
+	// Should fail with invalid price
+	assert.Error(t, err)
+	assert.Nil(t, updatedProduct)
 }
 
 func TestUpdateProduct_ConcurrentUpdate(t *testing.T) {
@@ -909,27 +915,27 @@ func TestBulkCreateProducts_TransactionRollback(t *testing.T) {
 	// Create a product with SKU first
 	createTestProductWithOptions(t, repo, storefrontID, "EXISTING-SKU", 99.99, 100)
 
-	// Try bulk create with duplicate SKU
+	// Try bulk create with ALL products having duplicate SKU
 	inputs := []*domain.CreateProductInput{
 		{
 			StorefrontID:  storefrontID,
 			CategoryID:    categoryID,
-			Name:          "New Product 1",
+			Name:          "Duplicate SKU Product 1",
 			Description:   "Description 1",
 			Price:         99.99,
 			Currency:      "USD",
-			SKU:           stringPtr("NEW-001"),
+			SKU:           stringPtr("EXISTING-SKU"), // Duplicate
 			StockQuantity: 100,
 			Attributes:    map[string]interface{}{},
 		},
 		{
 			StorefrontID:  storefrontID,
 			CategoryID:    categoryID,
-			Name:          "Duplicate SKU Product",
+			Name:          "Duplicate SKU Product 2",
 			Description:   "Description 2",
 			Price:         149.99,
 			Currency:      "USD",
-			SKU:           stringPtr("EXISTING-SKU"), // Duplicate
+			SKU:           stringPtr("EXISTING-SKU"), // Duplicate (same SKU in batch)
 			StockQuantity: 50,
 			Attributes:    map[string]interface{}{},
 		},

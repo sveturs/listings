@@ -977,7 +977,7 @@ func TestCreateListing_Success_WithAllFields(t *testing.T) {
 	ctx := TestContext()
 
 	// Mock category validation and slug uniqueness (common for all create tests)
-	mockRepo.On("GetCategoryByID", ctx, mock.AnythingOfType("int64")).
+	mockRepo.On("GetCategoryByID", ctx, mock.AnythingOfType("string")).
 		Return(&domain.Category{ID: "3b4246cc-9970-403c-af01-c142a4178dc6", Name: "Test Category", IsActive: true}, nil)
 	mockRepo.On("GetListingBySlug", ctx, mock.AnythingOfType("string")).
 		Return(nil, errors.New("not found"))
@@ -1166,7 +1166,7 @@ func TestUpdateListing_Success_UpdatePrice(t *testing.T) {
 		Return(updatedListing, nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpUpdate).
 		Return(nil)
@@ -1203,7 +1203,7 @@ func TestUpdateListing_Success_UpdateQuantity(t *testing.T) {
 		Return(updatedListing, nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpUpdate).
 		Return(nil)
@@ -1245,7 +1245,7 @@ func TestUpdateListing_Success_UpdateMultipleFields(t *testing.T) {
 		Return(updatedListing, nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpUpdate).
 		Return(nil)
@@ -1372,7 +1372,7 @@ func TestUpdateListing_Success_CacheInvalidation_Success(t *testing.T) {
 		Return(updatedListing, nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil) // Cache invalidation succeeds
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpUpdate).
 		Return(nil)
@@ -1407,7 +1407,7 @@ func TestUpdateListing_Success_EnqueueIndexing_Success(t *testing.T) {
 		Return(updatedListing, nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpUpdate).
 		Return(nil) // Indexing succeeds
@@ -1438,9 +1438,9 @@ func TestDeleteListing_Success_SoftDelete(t *testing.T) {
 		Return(nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil) // No images to delete
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
-	mockCache.On("Delete", ctx, "favorites:listing:1:count").
+	mockCache.On("Delete", ctx, "favorites:listing:123:count").
 		Return(nil)
 	mockCache.On("Delete", ctx, "user:100:listings").
 		Return(nil)
@@ -1506,9 +1506,9 @@ func TestDeleteListing_Success_CacheInvalidation_Success(t *testing.T) {
 		Return(nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil) // Cache invalidation succeeds
-	mockCache.On("Delete", ctx, "favorites:listing:1:count").
+	mockCache.On("Delete", ctx, "favorites:listing:123:count").
 		Return(nil)
 	mockCache.On("Delete", ctx, "user:100:listings").
 		Return(nil)
@@ -1537,9 +1537,9 @@ func TestDeleteListing_Success_EnqueueIndexing_Success(t *testing.T) {
 		Return(nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
-	mockCache.On("Delete", ctx, "favorites:listing:1:count").
+	mockCache.On("Delete", ctx, "favorites:listing:123:count").
 		Return(nil)
 	mockCache.On("Delete", ctx, "user:100:listings").
 		Return(nil)
@@ -1706,8 +1706,8 @@ func TestSearchListings_Success_CacheHit(t *testing.T) {
 	query := NewSearchListingsQuery("laptop", 20)
 
 	// Cache key format: "search:query:categoryID:limit:offset"
-	// When categoryID is nil, it's still printed as "0"
-	cacheKey := "search:laptop:0:20:0"
+	// When categoryID is nil, it's printed as empty string
+	cacheKey := "search:laptop::20:0"
 	mockCache.On("Get", ctx, cacheKey, mock.Anything).
 		Return(nil) // Cache hit (but data won't be populated in mock)
 
@@ -1732,7 +1732,7 @@ func TestSearchListings_Success_CacheMiss(t *testing.T) {
 		NewTestListing(2, 100, "Laptop 2"),
 	}
 
-	cacheKey := "search:laptop:0:20:0"
+	cacheKey := "search:laptop::20:0"
 	mockCache.On("Get", ctx, cacheKey, mock.Anything).
 		Return(assert.AnError) // Cache miss
 
@@ -1772,7 +1772,7 @@ func TestSearchListings_Success_WithFilters(t *testing.T) {
 		NewTestListing(1, 100, "Laptop 1"),
 	}
 
-	cacheKey := "search:laptop:1:20:0"
+	cacheKey := "search:laptop:3b4246cc-9970-403c-af01-c142a4178dc6:20:0"
 	mockCache.On("Get", ctx, cacheKey, mock.Anything).
 		Return(assert.AnError) // Cache miss
 
@@ -1823,7 +1823,7 @@ func TestSearchListings_Success_LimitCapping_Max100(t *testing.T) {
 		NewTestListing(1, 100, "Laptop 1"),
 	}
 
-	cacheKey := "search:laptop:0:100:0"
+	cacheKey := "search:laptop::100:0"
 	mockCache.On("Get", ctx, cacheKey, mock.Anything).
 		Return(assert.AnError) // Cache miss
 
@@ -1857,7 +1857,7 @@ func TestSearchListings_Success_NonBlockingCache_SetFailure(t *testing.T) {
 		NewTestListing(1, 100, "Laptop 1"),
 	}
 
-	cacheKey := "search:laptop:0:20:0"
+	cacheKey := "search:laptop::20:0"
 	mockCache.On("Get", ctx, cacheKey, mock.Anything).
 		Return(assert.AnError) // Cache miss
 
@@ -1888,7 +1888,7 @@ func TestSearchListings_Success_EmptyResults(t *testing.T) {
 
 	expectedListings := []*domain.Listing{} // Empty results
 
-	cacheKey := "search:nonexistent:0:20:0"
+	cacheKey := "search:nonexistent::20:0"
 	mockCache.On("Get", ctx, cacheKey, mock.Anything).
 		Return(assert.AnError) // Cache miss
 
@@ -2179,7 +2179,7 @@ func TestGetListing_Success_CacheHit(t *testing.T) {
 	ctx := TestContext()
 
 	listingID := int64(123)
-	cacheKey := "listing:1"
+	cacheKey := "listing:123"
 
 	// Cache returns successfully (cache hit)
 	mockCache.On("Get", ctx, cacheKey, mock.Anything).
@@ -2198,7 +2198,7 @@ func TestGetListing_Success_CacheMiss(t *testing.T) {
 	ctx := TestContext()
 
 	listingID := int64(123)
-	cacheKey := "listing:1"
+	cacheKey := "listing:123"
 
 	expectedListing := NewTestListing(listingID, 100, "Test Listing")
 
@@ -2255,7 +2255,7 @@ func TestGetListing_Success_NonBlockingCache_SetFailure(t *testing.T) {
 	ctx := TestContext()
 
 	listingID := int64(123)
-	cacheKey := "listing:1"
+	cacheKey := "listing:123"
 
 	expectedListing := NewTestListing(listingID, 100, "Test Listing")
 
@@ -2305,8 +2305,8 @@ func TestAddToFavorites_Success_AddFavorite(t *testing.T) {
 
 	// Mock cache invalidation - three separate calls
 	mockCache.On("Delete", ctx, "favorites:user:100").Return(nil).Once()
-	mockCache.On("Delete", ctx, "favorites:listing:1:count").Return(nil).Once()
-	mockCache.On("Delete", ctx, "favorites:user:100:listing:1").Return(nil).Once()
+	mockCache.On("Delete", ctx, "favorites:listing:123:count").Return(nil).Once()
+	mockCache.On("Delete", ctx, "favorites:user:100:listing:123").Return(nil).Once()
 
 	err := service.AddToFavorites(ctx, userID, listingID)
 
@@ -2370,8 +2370,8 @@ func TestRemoveFromFavorites_Success_RemoveFavorite(t *testing.T) {
 
 	// Mock cache invalidation - three separate calls
 	mockCache.On("Delete", ctx, "favorites:user:100").Return(nil).Once()
-	mockCache.On("Delete", ctx, "favorites:listing:1:count").Return(nil).Once()
-	mockCache.On("Delete", ctx, "favorites:user:100:listing:1").Return(nil).Once()
+	mockCache.On("Delete", ctx, "favorites:listing:123:count").Return(nil).Once()
+	mockCache.On("Delete", ctx, "favorites:user:100:listing:123").Return(nil).Once()
 
 	err := service.RemoveFromFavorites(ctx, userID, listingID)
 
@@ -2476,13 +2476,13 @@ func TestIsFavorite_True_IsFavorite(t *testing.T) {
 	listingID := int64(123)
 
 	// Cache miss
-	mockCache.On("Get", ctx, "favorites:user:100:listing:1", mock.Anything).Return(assert.AnError).Once()
+	mockCache.On("Get", ctx, "favorites:user:100:listing:123", mock.Anything).Return(assert.AnError).Once()
 
 	mockRepo.On("IsFavorite", ctx, userID, listingID).
 		Return(true, nil)
 
 	// Cache set
-	mockCache.On("Set", ctx, "favorites:user:100:listing:1", true).Return(nil).Once()
+	mockCache.On("Set", ctx, "favorites:user:100:listing:123", true).Return(nil).Once()
 
 	isFavorite, err := service.IsFavorite(ctx, userID, listingID)
 
@@ -2500,13 +2500,13 @@ func TestIsFavorite_False_NotFavorite(t *testing.T) {
 	listingID := int64(123)
 
 	// Cache miss
-	mockCache.On("Get", ctx, "favorites:user:100:listing:1", mock.Anything).Return(assert.AnError).Once()
+	mockCache.On("Get", ctx, "favorites:user:100:listing:123", mock.Anything).Return(assert.AnError).Once()
 
 	mockRepo.On("IsFavorite", ctx, userID, listingID).
 		Return(false, nil)
 
 	// Cache set
-	mockCache.On("Set", ctx, "favorites:user:100:listing:1", false).Return(nil).Once()
+	mockCache.On("Set", ctx, "favorites:user:100:listing:123", false).Return(nil).Once()
 
 	isFavorite, err := service.IsFavorite(ctx, userID, listingID)
 
@@ -2755,7 +2755,7 @@ func TestAdminUpdateListing_NoOwnershipCheck(t *testing.T) {
 		Return(updatedListing, nil)
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpUpdate).
 		Return(nil)
@@ -2778,7 +2778,7 @@ func TestAdminDeleteListing_NoOwnershipCheck(t *testing.T) {
 	// Notice: NO GetListingByID call for ownership check
 	mockRepo.On("DeleteListing", ctx, listingID).
 		Return(nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpDelete).
 		Return(nil)
@@ -2808,7 +2808,7 @@ func TestCacheInvalidation_Admin(t *testing.T) {
 	mockRepo.On("GetImages", ctx, listingID).
 		Return([]*domain.ListingImage{}, nil)
 	// Cache invalidation is critical for admin operations
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
 	mockRepo.On("EnqueueIndexing", ctx, listingID, domain.IndexOpUpdate).
 		Return(nil)
@@ -2876,7 +2876,7 @@ func TestGetImageByID_Success(t *testing.T) {
 }
 
 func TestDeleteImage_Success(t *testing.T) {
-	service, mockRepo, mockCache, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, mockIndexer := SetupServiceTest(t)
 	ctx := TestContext()
 
 	imageID := int64(123)
@@ -2895,6 +2895,14 @@ func TestDeleteImage_Success(t *testing.T) {
 	mockCache.On("Delete", ctx, "listing:100").
 		Return(nil)
 
+	// Background goroutine expectations (async reindexing)
+	mockRepo.On("GetListingByID", mock.Anything, listingID).
+		Return(&domain.Listing{ID: listingID}, nil).Maybe()
+	mockRepo.On("GetImages", mock.Anything, listingID).
+		Return([]*domain.ListingImage{}, nil).Maybe()
+	mockIndexer.On("UpdateListing", mock.Anything, mock.Anything).
+		Return(nil).Maybe()
+
 	err := service.DeleteImage(ctx, imageID)
 
 	assert.NoError(t, err)
@@ -2903,30 +2911,39 @@ func TestDeleteImage_Success(t *testing.T) {
 }
 
 func TestAddImage_Success(t *testing.T) {
-	service, mockRepo, mockCache, _ := SetupServiceTest(t)
+	service, mockRepo, mockCache, mockIndexer := SetupServiceTest(t)
 	ctx := TestContext()
 
 	image := &domain.ListingImage{
-		ListingID: 1,
+		ListingID: 123,
 		URL:       "https://example.com/image.jpg",
 	}
 
 	expectedImage := &domain.ListingImage{
 		ID:        1,
-		ListingID: 1,
+		ListingID: 123,
 		URL:       "https://example.com/image.jpg",
 	}
 
 	mockRepo.On("AddImage", ctx, image).
 		Return(expectedImage, nil)
-	mockCache.On("Delete", ctx, "listing:1").
+	mockCache.On("Delete", ctx, "listing:123").
 		Return(nil)
+
+	// Background goroutine expectations (async reindexing)
+	// These use context.Background() so we match with mock.Anything
+	mockRepo.On("GetListingByID", mock.Anything, int64(123)).
+		Return(&domain.Listing{ID: 123}, nil).Maybe()
+	mockRepo.On("GetImages", mock.Anything, int64(123)).
+		Return([]*domain.ListingImage{expectedImage}, nil).Maybe()
+	mockIndexer.On("UpdateListing", mock.Anything, mock.Anything).
+		Return(nil).Maybe()
 
 	result, err := service.AddImage(ctx, image)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	assert.Equal(t, string("3b4246cc-9970-403c-af01-c142a4178dc6"), result.ID)
+	assert.Equal(t, int64(1), result.ID)
 	mockRepo.AssertExpectations(t)
 	mockCache.AssertExpectations(t)
 }
@@ -3177,7 +3194,7 @@ func TestGetListingsForReindex_Success(t *testing.T) {
 		Return(expectedListings, nil)
 
 	// Mock GetImages calls for each listing (eager loading)
-	mockRepo.On("GetImages", ctx, string("3b4246cc-9970-403c-af01-c142a4178dc6")).
+	mockRepo.On("GetImages", ctx, int64(1)).
 		Return([]*domain.ListingImage{}, nil)
 	mockRepo.On("GetImages", ctx, int64(2)).
 		Return([]*domain.ListingImage{}, nil)

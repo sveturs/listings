@@ -222,7 +222,7 @@ func TestCreateListing_ValidationErrors(t *testing.T) {
 				Currency:   "RSD",
 				CategoryId: "",
 			},
-			errMsg: "category_id must be greater than 0",
+			errMsg: "category_id is required",
 		},
 		{
 			name: "negative quantity",

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -20,7 +21,25 @@ func TestGetBySlugV2Integration(t *testing.T) {
 	defer testDB.TeardownTestPostgres(t)
 	ctx := context.Background()
 
-	// Test with a known category from seed data
+	// Create test category with JSONB fields
+	testCategoryID := uuid.New()
+	_, err := testDB.DB.ExecContext(ctx, `
+		INSERT INTO categories (id, name, description, slug, parent_id, level, path, sort_order, is_active)
+		VALUES (
+			$1,
+			'{"sr": "Elektronika", "en": "Electronics", "ru": "Электроника"}'::jsonb,
+			'{"sr": "Elektronski uređaji", "en": "Electronic devices", "ru": "Электронные устройства"}'::jsonb,
+			'elektronika',
+			NULL,
+			1,
+			'elektronika',
+			1,
+			true
+		)
+	`, testCategoryID)
+	require.NoError(t, err, "failed to create test category")
+
+	// Test with the created category
 	cat, err := repo.GetBySlugV2(ctx, "elektronika")
 	require.NoError(t, err, "should fetch elektronika category")
 	require.NotNil(t, cat, "category should not be nil")
@@ -89,6 +108,40 @@ func TestGetTreeV2Integration(t *testing.T) {
 	defer testDB.TeardownTestPostgres(t)
 	ctx := context.Background()
 
+	// Create root category
+	rootID := uuid.New()
+	_, err := testDB.DB.ExecContext(ctx, `
+		INSERT INTO categories (id, name, slug, parent_id, level, path, sort_order, is_active)
+		VALUES (
+			$1,
+			'{"sr": "Moda", "en": "Fashion", "ru": "Мода"}'::jsonb,
+			'moda',
+			NULL,
+			1,
+			'moda',
+			1,
+			true
+		)
+	`, rootID)
+	require.NoError(t, err)
+
+	// Create child category
+	childID := uuid.New()
+	_, err = testDB.DB.ExecContext(ctx, `
+		INSERT INTO categories (id, name, slug, parent_id, level, path, sort_order, is_active)
+		VALUES (
+			$1,
+			'{"sr": "Muška odeća", "en": "Men''s Clothing", "ru": "Мужская одежда"}'::jsonb,
+			'muska-odeca',
+			$2,
+			2,
+			'moda/muska-odeca',
+			1,
+			true
+		)
+	`, childID, rootID)
+	require.NoError(t, err)
+
 	// Fetch root categories in Serbian
 	filter := &domain.GetCategoryTreeFilterV2{
 		RootID:     nil, // Root level
@@ -121,19 +174,32 @@ func TestGetBreadcrumbIntegration(t *testing.T) {
 	defer testDB.TeardownTestPostgres(t)
 	ctx := context.Background()
 
-	// First, fetch a category to get its ID
-	cat, err := repo.GetBySlugV2(ctx, "elektronika")
+	// Create test category
+	testCatID := uuid.New()
+	_, err := testDB.DB.ExecContext(ctx, `
+		INSERT INTO categories (id, name, slug, parent_id, level, path, sort_order, is_active)
+		VALUES (
+			$1,
+			'{"sr": "Elektronika", "en": "Electronics", "ru": "Электроника"}'::jsonb,
+			'elektronika',
+			NULL,
+			1,
+			'elektronika',
+			1,
+			true
+		)
+	`, testCatID)
 	require.NoError(t, err)
 
 	// Get breadcrumb
-	breadcrumbs, err := repo.GetBreadcrumb(ctx, cat.ID.String(), "sr")
+	breadcrumbs, err := repo.GetBreadcrumb(ctx, testCatID.String(), "sr")
 	require.NoError(t, err)
 	require.NotEmpty(t, breadcrumbs, "breadcrumb should not be empty")
 
 	// Root category should have breadcrumb with just itself
 	assert.Equal(t, 1, len(breadcrumbs))
-	assert.Equal(t, cat.ID, breadcrumbs[0].ID)
-	assert.Equal(t, cat.Slug, breadcrumbs[0].Slug)
+	assert.Equal(t, testCatID, breadcrumbs[0].ID)
+	assert.Equal(t, "elektronika", breadcrumbs[0].Slug)
 	assert.NotEmpty(t, breadcrumbs[0].Name)
 
 	t.Logf("✅ Breadcrumb: %s (Level %d)", breadcrumbs[0].Name, breadcrumbs[0].Level)
@@ -148,6 +214,25 @@ func TestListV2WithPagination(t *testing.T) {
 	repo, testDB := setupCategoryTestRepo(t)
 	defer testDB.TeardownTestPostgres(t)
 	ctx := context.Background()
+
+	// Create test root categories
+	for i := 1; i <= 3; i++ {
+		catID := uuid.New()
+		_, err := testDB.DB.ExecContext(ctx, `
+			INSERT INTO categories (id, name, slug, parent_id, level, path, sort_order, is_active)
+			VALUES (
+				$1,
+				$2::jsonb,
+				$3,
+				NULL,
+				1,
+				$3,
+				$4,
+				true
+			)
+		`, catID, fmt.Sprintf(`{"sr": "Kategorija %d", "en": "Category %d"}`, i, i), fmt.Sprintf("category-%d", i), i)
+		require.NoError(t, err)
+	}
 
 	// List root categories (parent_id IS NULL)
 	categories, total, err := repo.ListV2(ctx, nil, true, 1, 10)

@@ -28,14 +28,14 @@ func TestAddToFavorites(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 1, "Electronics", "electronics", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000001", "Electronics", "electronics", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 101, 100, 1, "Test Product", 99.99, "USD", 1, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 101, 100, "a0000000-0000-0000-0000-000000000001", "Test Product", 99.99, "USD", 1, "active", "public")
 
 		ctx := testutils.TestContext(t)
 		req := &pb.AddToFavoritesRequest{
@@ -49,7 +49,7 @@ func TestAddToFavorites(t *testing.T) {
 		require.NotNil(t, resp)
 
 		// Verify in database
-		exists := RowExists(t, server, "c2c_favorites", "user_id = $1 AND listing_id = $2", 200, 101)
+		exists := RowExists(t, server, "listing_favorites", "user_id = $1 AND listing_id = $2", 200, 101)
 		assert.True(t, exists, "Favorite should exist in database")
 	})
 
@@ -60,18 +60,18 @@ func TestAddToFavorites(t *testing.T) {
 
 		// Setup: Create category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 2, "Fashion", "fashion", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000002", "Fashion", "fashion", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 102, 100, 2, "Fashion Item", 49.99, "USD", 5, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 102, 100, "a0000000-0000-0000-0000-000000000002", "Fashion Item", 49.99, "USD", 5, "active", "public")
 
 		// Add favorite first time
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_favorites (user_id, listing_id)
+			INSERT INTO listing_favorites (user_id, listing_id)
 			VALUES ($1, $2)
 		`, 201, 102)
 
@@ -95,7 +95,7 @@ func TestAddToFavorites(t *testing.T) {
 		}
 
 		// Verify still only one record
-		count := CountRows(t, server, "c2c_favorites", "user_id = $1 AND listing_id = $2", 201, 102)
+		count := CountRows(t, server, "listing_favorites", "user_id = $1 AND listing_id = $2", 201, 102)
 		assert.Equal(t, 1, count, "Should have exactly one favorite record")
 	})
 
@@ -137,17 +137,17 @@ func TestRemoveFromFavorites(t *testing.T) {
 
 		// Setup: Create category, listing, and favorite
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 3, "Books", "books", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000003", "Books", "books", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 103, 100, 3, "Test Book", 19.99, "USD", 10, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 103, 100, "a0000000-0000-0000-0000-000000000003", "Test Book", 19.99, "USD", 10, "active", "public")
 
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_favorites (user_id, listing_id)
+			INSERT INTO listing_favorites (user_id, listing_id)
 			VALUES ($1, $2)
 		`, 203, 103)
 
@@ -163,7 +163,7 @@ func TestRemoveFromFavorites(t *testing.T) {
 		require.NotNil(t, resp)
 
 		// Verify removed from database
-		exists := RowExists(t, server, "c2c_favorites", "user_id = $1 AND listing_id = $2", 203, 103)
+		exists := RowExists(t, server, "listing_favorites", "user_id = $1 AND listing_id = $2", 203, 103)
 		assert.False(t, exists, "Favorite should be removed from database")
 	})
 
@@ -174,14 +174,14 @@ func TestRemoveFromFavorites(t *testing.T) {
 
 		// Setup: Create category and listing (but no favorite)
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 4, "Toys", "toys", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000004", "Toys", "toys", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 104, 100, 4, "Toy Car", 29.99, "USD", 3, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 104, 100, "a0000000-0000-0000-0000-000000000004", "Toy Car", 29.99, "USD", 3, "active", "public")
 
 		ctx := testutils.TestContext(t)
 		req := &pb.RemoveFromFavoritesRequest{
@@ -213,18 +213,18 @@ func TestGetUserFavorites(t *testing.T) {
 
 		// Setup: Create category and multiple listings
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 5, "Sports", "sports", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000005", "Sports", "sports", 1, true, 0)
 
 		for i := 105; i <= 109; i++ {
 			ExecuteSQL(t, server, `
 				INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-			`, i, 100, 5, fmt.Sprintf("Sports Item %d", i), 39.99, "USD", 2, "active", "public")
+				VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+			`, i, 100, "a0000000-0000-0000-0000-000000000005", fmt.Sprintf("Sports Item %d", i), 39.99, "USD", 2, "active", "public")
 
 			ExecuteSQL(t, server, `
-				INSERT INTO c2c_favorites (user_id, listing_id)
+				INSERT INTO listing_favorites (user_id, listing_id)
 				VALUES ($1, $2)
 			`, 205, i)
 		}
@@ -272,25 +272,25 @@ func TestGetUserFavorites(t *testing.T) {
 
 		// Setup: Create category and listings
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 6, "Home", "home", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000006", "Home", "home", 1, true, 0)
 
 		// Create 3 listings: 2 active, 1 draft (using valid status)
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
 			VALUES
-				($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid()),
-				($10, $11, $12, $13, $14, $15, $16, $17, $18, gen_random_uuid()),
-				($19, $20, $21, $22, $23, $24, $25, $26, $27, gen_random_uuid())
-		`, 110, 100, 6, "Home Item 1", 59.99, "USD", 1, "active", "public",
-			111, 100, 6, "Home Item 2", 69.99, "USD", 1, "draft", "public",
-			112, 100, 6, "Home Item 3", 79.99, "USD", 1, "active", "public")
+				($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid()),
+				($10, $11, $12::uuid, $13, $14, $15, $16, $17, $18, gen_random_uuid()),
+				($19, $20, $21::uuid, $22, $23, $24, $25, $26, $27, gen_random_uuid())
+		`, 110, 100, "a0000000-0000-0000-0000-000000000006", "Home Item 1", 59.99, "USD", 1, "active", "public",
+			111, 100, "a0000000-0000-0000-0000-000000000006", "Home Item 2", 69.99, "USD", 1, "draft", "public",
+			112, 100, "a0000000-0000-0000-0000-000000000006", "Home Item 3", 79.99, "USD", 1, "active", "public")
 
 		// Add all 3 to favorites
 		for i := 110; i <= 112; i++ {
 			ExecuteSQL(t, server, `
-				INSERT INTO c2c_favorites (user_id, listing_id)
+				INSERT INTO listing_favorites (user_id, listing_id)
 				VALUES ($1, $2)
 			`, 206, i)
 		}
@@ -331,17 +331,17 @@ func TestIsFavorite(t *testing.T) {
 
 		// Setup: Create category, listing, and favorite
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 7, "Garden", "garden", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000007", "Garden", "garden", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 113, 100, 7, "Garden Tool", 89.99, "USD", 4, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 113, 100, "a0000000-0000-0000-0000-000000000007", "Garden Tool", 89.99, "USD", 4, "active", "public")
 
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_favorites (user_id, listing_id)
+			INSERT INTO listing_favorites (user_id, listing_id)
 			VALUES ($1, $2)
 		`, 207, 113)
 
@@ -365,14 +365,14 @@ func TestIsFavorite(t *testing.T) {
 
 		// Setup: Create category and listing (but no favorite)
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 8, "Music", "music", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "a0000000-0000-0000-0000-000000000008", "Music", "music", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, uuid)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid())
-		`, 114, 100, 8, "Guitar", 199.99, "USD", 1, "active", "public")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, gen_random_uuid())
+		`, 114, 100, "a0000000-0000-0000-0000-000000000008", "Guitar", 199.99, "USD", 1, "active", "public")
 
 		ctx := testutils.TestContext(t)
 		req := &pb.IsFavoriteRequest{

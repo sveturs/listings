@@ -40,27 +40,34 @@ func setupTestRepo(t *testing.T) (*Repository, *tests.TestDB) {
 	return repo, testDB
 }
 
+// Test category UUIDs (deterministic for testing)
+const (
+	TestCategoryUUID100 = "a0000000-0000-0000-0000-000000000100"
+	TestCategoryUUID200 = "a0000000-0000-0000-0000-000000000200"
+	TestCategoryUUID300 = "a0000000-0000-0000-0000-000000000300"
+)
+
 // setupTestCategories creates test category fixtures
 func setupTestCategories(t *testing.T, db *sqlx.DB) {
 	t.Helper()
 
 	categories := []struct {
-		id          int
+		id          string
 		name        string
 		slug        string
 		description string
 	}{
-		{100, "Test Electronics", "test-electronics", "Test category for electronics"},
-		{200, "Test Fashion", "test-fashion", "Test category for fashion items"},
-		{300, "Test Home & Garden", "test-home-garden", "Test category for home and garden"},
+		{TestCategoryUUID100, "Test Electronics", "test-electronics", "Test category for electronics"},
+		{TestCategoryUUID200, "Test Fashion", "test-fashion", "Test category for fashion items"},
+		{TestCategoryUUID300, "Test Home & Garden", "test-home-garden", "Test category for home and garden"},
 	}
 
 	for _, cat := range categories {
 		_, err := db.Exec(`
-			INSERT INTO categories (id, name, slug, description, is_active, level, sort_order)
-			VALUES ($1, $2, $3, $4, true, 0, 0)
+			INSERT INTO categories (id, name, slug, path, level, sort_order, is_active)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $3, 1, 0, true)
 			ON CONFLICT (id) DO NOTHING
-		`, cat.id, cat.name, cat.slug, cat.description)
+		`, cat.id, cat.name, cat.slug)
 		if err != nil {
 			t.Fatalf("failed to create test category: %v", err)
 		}
@@ -96,7 +103,7 @@ func TestCreateListing(t *testing.T) {
 				Description:  stringPtr("Test Description"),
 				Price:        99.99,
 				Currency:     "USD",
-				CategoryID:   "100",
+				CategoryID:   TestCategoryUUID100,
 				Quantity:     10,
 				SKU:          stringPtr("TEST-SKU-001"),
 				SourceType:   "c2c",
@@ -112,7 +119,7 @@ func TestCreateListing(t *testing.T) {
 				Description:  stringPtr("Storefront Description"),
 				Price:        199.99,
 				Currency:     "EUR",
-				CategoryID:   "200",
+				CategoryID:   TestCategoryUUID200,
 				Quantity:     5,
 				SKU:          stringPtr("STORE-SKU-001"),
 				SourceType:   "b2c",
@@ -172,7 +179,7 @@ func TestGetListingByID(t *testing.T) {
 		Description: stringPtr("Description"),
 		Price:       50.00,
 		Currency:    "USD",
-		CategoryID:  "100",
+		CategoryID:  TestCategoryUUID100,
 		Quantity:    1,
 		SKU:         stringPtr("TEST-001"),
 		SourceType:  "c2c",
@@ -228,7 +235,7 @@ func TestUpdateListing(t *testing.T) {
 		Description: stringPtr("Original Description"),
 		Price:       100.00,
 		Currency:    "USD",
-		CategoryID:  "100",
+		CategoryID:  TestCategoryUUID100,
 		Quantity:    5,
 		SKU:         stringPtr("ORIG-001"),
 		SourceType:  "c2c",
@@ -301,7 +308,7 @@ func TestDeleteListing(t *testing.T) {
 		Description: stringPtr("Description"),
 		Price:       75.00,
 		Currency:    "USD",
-		CategoryID:  "100",
+		CategoryID:  TestCategoryUUID100,
 		Quantity:    3,
 		SKU:         stringPtr("DEL-001"),
 		SourceType:  "c2c",
@@ -361,7 +368,7 @@ func TestListListings(t *testing.T) {
 			Description: desc,
 			Price:       float64(100 * (i + 1)),
 			Currency:    "USD",
-			CategoryID:  "100",
+			CategoryID:  TestCategoryUUID100,
 			Quantity:    int32(i + 1),
 			SKU:         sku,
 			SourceType:  "c2c",

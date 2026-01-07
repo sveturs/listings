@@ -399,8 +399,8 @@ func (m *MockRepository) CreateProductVariant(ctx context.Context, input *domain
 }
 
 // UpdateProductVariant mocks updating a product variant
-func (m *MockRepository) UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
-	args := m.Called(ctx, variantID, productID, input)
+func (m *MockRepository) UpdateProductVariant(ctx context.Context, variantUUID string, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
+	args := m.Called(ctx, variantUUID, productID, input)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -408,8 +408,8 @@ func (m *MockRepository) UpdateProductVariant(ctx context.Context, variantID int
 }
 
 // DeleteProductVariant mocks deleting a product variant
-func (m *MockRepository) DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error {
-	args := m.Called(ctx, variantID, productID)
+func (m *MockRepository) DeleteProductVariant(ctx context.Context, variantUUID string, productID int64) error {
+	args := m.Called(ctx, variantUUID, productID)
 	return args.Error(0)
 }
 

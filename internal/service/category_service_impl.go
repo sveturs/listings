@@ -325,6 +325,11 @@ func (s *CategoryServiceImpl) DeleteCategory(ctx context.Context, categoryID str
 
 // InvalidateCache invalidates all cache entries for a category
 func (s *CategoryServiceImpl) InvalidateCache(ctx context.Context, categoryID string) error {
+	// Skip cache operations if cache is not configured
+	if s.cache == nil || s.cache.client == nil {
+		return nil
+	}
+
 	// Get category to get slug for cache invalidation
 	category, err := s.repo.GetCategoryByID(ctx, categoryID)
 	if err != nil {
@@ -355,6 +360,10 @@ func (s *CategoryServiceImpl) InvalidateCache(ctx context.Context, categoryID st
 
 // invalidateTreeCache invalidates the tree cache for a category
 func (s *CategoryServiceImpl) invalidateTreeCache(ctx context.Context, categoryID string) {
+	// Skip cache operations if cache is not configured
+	if s.cache == nil || s.cache.client == nil {
+		return
+	}
 	treeKey := fmt.Sprintf(categoryTreeCacheKey, categoryID)
 	if err := s.cache.client.Del(ctx, treeKey).Err(); err != nil {
 		s.logger.Warn().Err(err).Str("key", treeKey).Msg("failed to delete tree cache key")
@@ -397,6 +406,9 @@ func (s *CategoryServiceImpl) validateCategory(cat *domain.Category) error {
 
 // Get retrieves a category from cache
 func (c *CategoryCache) Get(ctx context.Context, key string) (*domain.Category, error) {
+	if c == nil || c.client == nil {
+		return nil, nil // No cache configured
+	}
 	data, err := c.client.Get(ctx, key).Bytes()
 	if err == redis.Nil {
 		return nil, nil // Cache miss
@@ -417,6 +429,9 @@ func (c *CategoryCache) Get(ctx context.Context, key string) (*domain.Category, 
 
 // Set stores a category in cache
 func (c *CategoryCache) Set(ctx context.Context, key string, category *domain.Category, ttl time.Duration) error {
+	if c == nil || c.client == nil {
+		return nil // No cache configured
+	}
 	data, err := json.Marshal(category)
 	if err != nil {
 		c.logger.Error().Err(err).Str("key", key).Msg("failed to marshal category for cache")
@@ -433,6 +448,9 @@ func (c *CategoryCache) Set(ctx context.Context, key string, category *domain.Ca
 
 // GetTree retrieves a category tree from cache
 func (c *CategoryCache) GetTree(ctx context.Context, key string) (*domain.CategoryTreeNode, error) {
+	if c == nil || c.client == nil {
+		return nil, nil // No cache configured
+	}
 	data, err := c.client.Get(ctx, key).Bytes()
 	if err == redis.Nil {
 		return nil, nil // Cache miss
@@ -453,6 +471,9 @@ func (c *CategoryCache) GetTree(ctx context.Context, key string) (*domain.Catego
 
 // SetTree stores a category tree in cache
 func (c *CategoryCache) SetTree(ctx context.Context, key string, tree *domain.CategoryTreeNode, ttl time.Duration) error {
+	if c == nil || c.client == nil {
+		return nil // No cache configured
+	}
 	data, err := json.Marshal(tree)
 	if err != nil {
 		c.logger.Error().Err(err).Str("key", key).Msg("failed to marshal category tree for cache")
