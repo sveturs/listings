@@ -14,7 +14,7 @@ env:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -53,18 +53,27 @@ jobs:
           cache-from: type=registry,ref=${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
+      - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.K8S_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H vondi.rs >> ~/.ssh/known_hosts
+
       - name: Deploy to Kubernetes
         run: |
           echo "Deploying $DEPLOYMENT_NAME with image $HARBOR_REGISTRY/$IMAGE_NAME:latest"
 
-          # Update deployment with new image (runner has kubectl access)
-          kubectl set image deployment/$DEPLOYMENT_NAME \
+          # Update deployment with new image via SSH
+          ssh root@vondi.rs "kubectl set image deployment/$DEPLOYMENT_NAME \
             $DEPLOYMENT_NAME=$HARBOR_REGISTRY/$IMAGE_NAME:latest \
-            -n $K8S_NAMESPACE
+            -n $K8S_NAMESPACE"
 
           # Wait for rollout (timeout 5 minutes)
-          kubectl rollout status deployment/$DEPLOYMENT_NAME \
-            -n $K8S_NAMESPACE --timeout=5m
+          ssh root@vondi.rs "kubectl rollout status deployment/$DEPLOYMENT_NAME \
+            -n $K8S_NAMESPACE --timeout=5m"
 
       - name: Health check
         run: |
@@ -98,10 +107,15 @@ jobs:
         if: failure()
         run: |
           echo "Deployment failed, rolling back..."
-          kubectl rollout undo deployment/$DEPLOYMENT_NAME -n $K8S_NAMESPACE
+          ssh root@vondi.rs "kubectl rollout undo deployment/$DEPLOYMENT_NAME -n $K8S_NAMESPACE"
 
           echo "Waiting for rollback to complete..."
-          kubectl rollout status deployment/$DEPLOYMENT_NAME \
-            -n $K8S_NAMESPACE --timeout=3m
+          ssh root@vondi.rs "kubectl rollout status deployment/$DEPLOYMENT_NAME \
+            -n $K8S_NAMESPACE --timeout=3m"
 
           echo "❌ Deployment failed and rolled back to previous version"
+
+      - name: Cleanup SSH
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_ed25519
