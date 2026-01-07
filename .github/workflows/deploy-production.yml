@@ -1,0 +1,121 @@
+name: Deploy Listings Service to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  HARBOR_REGISTRY: registry.vondi.rs
+  IMAGE_NAME: library/listings
+  K8S_NAMESPACE: production
+  DEPLOYMENT_NAME: listings-service
+  HEALTH_URL: https://listings.vondi.rs/health
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Get git sha (short)
+        id: git_sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Vendor dependencies
+        run: GOWORK=off go mod vendor
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.git_sha.outputs.sha }}
+          cache-from: type=registry,ref=${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+      - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.K8S_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H terra.vondi.rs >> ~/.ssh/known_hosts
+
+      - name: Deploy to Kubernetes
+        run: |
+          echo "Deploying $DEPLOYMENT_NAME with image $HARBOR_REGISTRY/$IMAGE_NAME:latest"
+
+          # Update deployment with new image
+          ssh agrouser@terra.vondi.rs "sudo kubectl set image deployment/$DEPLOYMENT_NAME \
+            $DEPLOYMENT_NAME=$HARBOR_REGISTRY/$IMAGE_NAME:latest \
+            -n $K8S_NAMESPACE"
+
+          # Wait for rollout (timeout 5 minutes)
+          ssh agrouser@terra.vondi.rs "sudo kubectl rollout status deployment/$DEPLOYMENT_NAME \
+            -n $K8S_NAMESPACE --timeout=5m"
+
+      - name: Health check
+        run: |
+          echo "Waiting 10 seconds for service to stabilize..."
+          sleep 10
+
+          echo "Checking health at $HEALTH_URL"
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL || echo "000")
+            echo "Health check attempt $((RETRY_COUNT+1))/$MAX_RETRIES: HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Retrying in 5 seconds..."
+              sleep 5
+            fi
+          done
+
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed, rolling back..."
+          ssh agrouser@terra.vondi.rs "sudo kubectl rollout undo deployment/$DEPLOYMENT_NAME -n $K8S_NAMESPACE"
+
+          echo "Waiting for rollback to complete..."
+          ssh agrouser@terra.vondi.rs "sudo kubectl rollout status deployment/$DEPLOYMENT_NAME \
+            -n $K8S_NAMESPACE --timeout=3m"
+
+          echo "❌ Deployment failed and rolled back to previous version"
+
+      - name: Cleanup SSH
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_ed25519
