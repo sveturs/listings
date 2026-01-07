@@ -60,26 +60,27 @@ func TestGetCategory(t *testing.T) {
 		defer server.Teardown(t)
 
 		// Setup: Insert test category
+		testCategoryUUID := "c0000000-0000-0000-0000-000000000001"
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, "c0000000-0000-0000-0000-000000000001", "Electronics", "electronics", 1, true, 10)
+		`, testCategoryUUID, "Electronics", "electronics", 1, true, 10)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6"}
+		req := &pb.CategoryIDRequest{CategoryId: testCategoryUUID}
 
 		resp, err := server.Client.GetCategory(ctx, req)
 
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		assert.Equal(t, int64(1), resp.Category.Id)
+		assert.Equal(t, testCategoryUUID, resp.Category.Id)
 		assert.Equal(t, "Electronics", resp.Category.Name)
 		assert.Equal(t, "electronics", resp.Category.Slug)
 		assert.Nil(t, resp.Category.ParentId)
 		assert.True(t, resp.Category.IsActive)
 		// Note: ListingCount may be 0 in fresh test database
 		assert.GreaterOrEqual(t, resp.Category.ListingCount, int32(0))
-		assert.Equal(t, int32(0), resp.Category.Level)
+		assert.Equal(t, int32(1), resp.Category.Level)
 	})
 
 	t.Run("GetNonExistentCategory_NotFound", func(t *testing.T) {
@@ -107,33 +108,40 @@ func TestGetCategory(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
+		// Setup: Use consistent UUIDs for parent and children
+		parentUUID := "c0000000-0000-0000-0000-000000000002"
+		child1UUID := "c0000000-0000-0000-0000-000000000003"
+		child2UUID := "c0000000-0000-0000-0000-000000000004"
+
 		// Setup: Insert parent category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
-		`, "c0000000-0000-0000-0000-000000000002", "Fashion", "fashion", 1, true, 15)
+		`, parentUUID, "Fashion", "fashion", 1, true, 15)
 
-		// Setup: Insert child categories
+		// Setup: Insert child categories (one at a time to avoid column mismatch)
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES
-				($1::uuid, $2, $3, $4::uuid, $5, 1, $6, $7),
-				($8::uuid, $9, $10, $11::uuid, $12, 1, $13, $14)
-		`, "c0000000-0000-0000-0000-000000000003", "Men's Clothing", "mens-clothing", "c0000000-0000-0000-0000-000000000002", 1, true, 5,
-			"c0000000-0000-0000-0000-000000000004", "Women's Clothing", "womens-clothing", "c0000000-0000-0000-0000-000000000002", 2, true, 8)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, 2, $6, $7, $8)
+		`, child1UUID, "Men's Clothing", "mens-clothing", parentUUID, 1, "fashion/mens-clothing", true, 5)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, 2, $6, $7, $8)
+		`, child2UUID, "Women's Clothing", "womens-clothing", parentUUID, 2, "fashion/womens-clothing", true, 8)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b"}
+		req := &pb.CategoryIDRequest{CategoryId: parentUUID}
 
 		resp, err := server.Client.GetCategory(ctx, req)
 
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		assert.Equal(t, int64(2), resp.Category.Id)
+		assert.Equal(t, parentUUID, resp.Category.Id)
 		assert.Equal(t, "Fashion", resp.Category.Name)
 
 		// Verify children exist in database (GetCategory doesn't return children, GetCategoryTree does)
-		childCount := CountRows(t, server, "categories", "parent_id = $1::uuid", "c0000000-0000-0000-0000-000000000002")
+		childCount := CountRows(t, server, "categories", "parent_id = $1::uuid", parentUUID)
 		assert.Equal(t, 2, childCount, "Parent category should have 2 children")
 	})
 }
@@ -151,16 +159,32 @@ func TestListCategories(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert multiple categories
+		// Setup: Insert multiple categories with correct column structure
+		// Columns: (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES
-				('c0000000-0000-0000-0000-000000000010'::uuid, 'Electronics', 'electronics', NULL, 1, 0, true, 20),
-				('c0000000-0000-0000-0000-000000000011'::uuid, 'Fashion', 'fashion', NULL, 2, 0, true, 15),
-				('c0000000-0000-0000-0000-000000000012'::uuid, 'Home & Garden', 'home-garden', NULL, 3, 0, true, 10),
-				('c0000000-0000-0000-0000-000000000013'::uuid, 'Laptops', 'laptops', 'c0000000-0000-0000-0000-000000000010'::uuid, 1, 1, true, 8),
-				('c0000000-0000-0000-0000-000000000014'::uuid, 'Phones', 'phones', 'c0000000-0000-0000-0000-000000000010'::uuid, 2, 1, true, 12)
-		`)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, "c0000000-0000-0000-0000-000000000010", "Electronics", "electronics", 1, 1, true, 20)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, "c0000000-0000-0000-0000-000000000011", "Fashion", "fashion", 2, 1, true, 15)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, "c0000000-0000-0000-0000-000000000012", "Home & Garden", "home-garden", 3, 1, true, 10)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, "c0000000-0000-0000-0000-000000000013", "Laptops", "laptops", "c0000000-0000-0000-0000-000000000010", 1, 2, "electronics/laptops", true, 8)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, "c0000000-0000-0000-0000-000000000014", "Phones", "phones", "c0000000-0000-0000-0000-000000000010", 2, 2, "electronics/phones", true, 12)
 
 		ctx := testutils.TestContext(t)
 		req := &emptypb.Empty{}
@@ -186,14 +210,25 @@ func TestListCategories(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert root and child categories
+		// Setup: Insert root and child categories with correct column structure
+		root1UUID := "c0000000-0000-0000-0000-000000000020"
+		root2UUID := "c0000000-0000-0000-0000-000000000021"
+		childUUID := "c0000000-0000-0000-0000-000000000022"
+
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES
-				('c0000000-0000-0000-0000-000000000020'::uuid, 'Root Category 1', 'root-1', NULL, 1, 0, true, 10),
-				('c0000000-0000-0000-0000-000000000021'::uuid, 'Root Category 2', 'root-2', NULL, 2, 0, true, 5),
-				('c0000000-0000-0000-0000-000000000022'::uuid, 'Child Category', 'child-1', 'c0000000-0000-0000-0000-000000000020'::uuid, 1, 1, true, 3)
-		`)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, root1UUID, "Root Category 1", "root-1", 1, 1, true, 10)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, root2UUID, "Root Category 2", "root-2", 2, 1, true, 5)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, childUUID, "Child Category", "child-1", root1UUID, 1, 2, "root-1/child-1", true, 3)
 
 		ctx := testutils.TestContext(t)
 		req := &emptypb.Empty{}
@@ -210,7 +245,8 @@ func TestListCategories(t *testing.T) {
 				t.Errorf("Found non-root category: %s (id=%s, parent_id=%s)",
 					cat.Name, cat.Id, *cat.ParentId)
 			}
-			assert.Equal(t, int32(0), cat.Level, "Root categories should have level 0")
+			// Root categories have level 1 in our schema
+			assert.Equal(t, int32(1), cat.Level, "Root categories should have level 1")
 		}
 
 		// Verify specific root categories exist
@@ -228,42 +264,32 @@ func TestListCategories(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert categories
+		// Setup: Insert categories with listing_count directly set (simpler approach)
+		cat1UUID := "c0000000-0000-0000-0000-000000000030"
+		cat2UUID := "c0000000-0000-0000-0000-000000000031"
+		cat3UUID := "c0000000-0000-0000-0000-000000000032"
+		cat4UUID := "c0000000-0000-0000-0000-000000000033"
+
+		// Insert categories with different listing_count values
 		ExecuteSQL(t, server, `
-			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, is_active)
-			VALUES
-				('c0000000-0000-0000-0000-000000000030'::uuid, 'Popular 1', 'popular-1', NULL, 1, 0, true),
-				('c0000000-0000-0000-0000-000000000031'::uuid, 'Popular 2', 'popular-2', NULL, 2, 0, true),
-				('c0000000-0000-0000-0000-000000000032'::uuid, 'Popular 3', 'popular-3', NULL, 3, 0, true),
-				('c0000000-0000-0000-0000-000000000033'::uuid, 'Less Popular', 'less-popular', NULL, 4, 0, true)
-		`)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, cat1UUID, "Popular 1", "popular-1", 1, 1, true, 10)
 
-		// Create listings for each category to simulate popularity
-		// Popular 1: 10 listings, Popular 2: 8 listings, Popular 3: 6 listings, Less Popular: 1 listing
 		ExecuteSQL(t, server, `
-			-- Create storefront
-			INSERT INTO storefronts (id, name, slug, user_id, is_active, created_at, updated_at)
-			VALUES (1, 'Test Store', 'test-store', 1, true, NOW(), NOW());
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, cat2UUID, "Popular 2", "popular-2", 2, 1, true, 8)
 
-			-- Popular 1: 10 listings
-			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
-			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 'c0000000-0000-0000-0000-000000000030'::uuid, 1, 1, 'c2c', NOW(), NOW()
-			FROM generate_series(1, 10) AS i;
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, cat3UUID, "Popular 3", "popular-3", 3, 1, true, 6)
 
-			-- Popular 2: 8 listings
-			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
-			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 'c0000000-0000-0000-0000-000000000031'::uuid, 1, 1, 'c2c', NOW(), NOW()
-			FROM generate_series(1, 8) AS i;
-
-			-- Popular 3: 6 listings
-			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
-			SELECT 'Listing ' || i, 'Description', 100.00, 'RSD', 'active', 'c0000000-0000-0000-0000-000000000032'::uuid, 1, 1, 'c2c', NOW(), NOW()
-			FROM generate_series(1, 6) AS i;
-
-			-- Less Popular: 1 listing
-			INSERT INTO listings (title, description, price, currency, status, category_id, user_id, storefront_id, source_type, created_at, updated_at)
-			VALUES ('Listing 1', 'Description', 100.00, 'RSD', 'active', 'c0000000-0000-0000-0000-000000000033'::uuid, 1, 1, 'c2c', NOW(), NOW());
-		`)
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, cat4UUID, "Less Popular", "less-popular", 4, 1, true, 1)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.PopularCategoriesRequest{Limit: 3}
@@ -333,18 +359,36 @@ func TestGetCategoryTree(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert root category with children
+		// Setup: Use consistent UUIDs
+		rootUUID := "c0000000-0000-0000-0000-000000000040"
+		laptopsUUID := "c0000000-0000-0000-0000-000000000041"
+		phonesUUID := "c0000000-0000-0000-0000-000000000042"
+		gamingUUID := "c0000000-0000-0000-0000-000000000043"
+
+		// Insert root category
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES
-				('c0000000-0000-0000-0000-000000000040'::uuid, 'Electronics', 'electronics', NULL, 1, 0, true, 30),
-				('c0000000-0000-0000-0000-000000000041'::uuid, 'Laptops', 'laptops', 'c0000000-0000-0000-0000-000000000040'::uuid, 1, 1, true, 10),
-				('c0000000-0000-0000-0000-000000000042'::uuid, 'Phones', 'phones', 'c0000000-0000-0000-0000-000000000040'::uuid, 2, 1, true, 15),
-				('c0000000-0000-0000-0000-000000000043'::uuid, 'Gaming Laptops', 'gaming-laptops', 'c0000000-0000-0000-0000-000000000041'::uuid, 1, 2, true, 5)
-		`)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, rootUUID, "Electronics", "electronics", 1, 1, true, 30)
+
+		// Insert children categories
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, laptopsUUID, "Laptops", "laptops", rootUUID, 1, 2, "electronics/laptops", true, 10)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, phonesUUID, "Phones", "phones", rootUUID, 2, 2, "electronics/phones", true, 15)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, gamingUUID, "Gaming Laptops", "gaming-laptops", laptopsUUID, 1, 3, "electronics/laptops/gaming-laptops", true, 5)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e"}
+		req := &pb.CategoryIDRequest{CategoryId: rootUUID}
 
 		resp, err := server.Client.GetCategoryTree(ctx, req)
 
@@ -353,9 +397,9 @@ func TestGetCategoryTree(t *testing.T) {
 		require.NotNil(t, resp.Tree)
 
 		// Verify root node
-		assert.Equal(t, int64(40), resp.Tree.Id)
+		assert.Equal(t, rootUUID, resp.Tree.Id)
 		assert.Equal(t, "Electronics", resp.Tree.Name)
-		assert.Equal(t, int32(0), resp.Tree.Level)
+		assert.Equal(t, int32(1), resp.Tree.Level)
 
 		// Verify children exist
 		assert.GreaterOrEqual(t, len(resp.Tree.Children), 2, "Root should have at least 2 children")
@@ -365,8 +409,8 @@ func TestGetCategoryTree(t *testing.T) {
 		childrenNames := make([]string, len(resp.Tree.Children))
 		for i, child := range resp.Tree.Children {
 			childrenNames[i] = child.Name
-			assert.Equal(t, int32(1), child.Level, "First-level children should have level 1")
-			assert.Equal(t, int64(40), *child.ParentId, "Children should reference parent ID")
+			assert.Equal(t, int32(2), child.Level, "First-level children should have level 2")
+			assert.Equal(t, rootUUID, *child.ParentId, "Children should reference parent ID")
 		}
 		assert.Contains(t, childrenNames, "Laptops")
 		assert.Contains(t, childrenNames, "Phones")
@@ -377,18 +421,35 @@ func TestGetCategoryTree(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert category hierarchy
+		// Setup: Use consistent UUIDs
+		fashionUUID := "c0000000-0000-0000-0000-000000000050"
+		menUUID := "c0000000-0000-0000-0000-000000000051"
+		tshirtsUUID := "c0000000-0000-0000-0000-000000000052"
+		jeansUUID := "c0000000-0000-0000-0000-000000000053"
+
+		// Insert category hierarchy
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES
-				('c0000000-0000-0000-0000-000000000050'::uuid, 'Fashion', 'fashion', NULL, 1, 0, true, 50),
-				('c0000000-0000-0000-0000-000000000051'::uuid, 'Men', 'men', 'c0000000-0000-0000-0000-000000000050'::uuid, 1, 1, true, 20),
-				('c0000000-0000-0000-0000-000000000052'::uuid, 'T-Shirts', 'tshirts', 'c0000000-0000-0000-0000-000000000051'::uuid, 1, 2, true, 8),
-				('c0000000-0000-0000-0000-000000000053'::uuid, 'Jeans', 'jeans', 'c0000000-0000-0000-0000-000000000051'::uuid, 2, 2, true, 12)
-		`)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, fashionUUID, "Fashion", "fashion", 1, 1, true, 50)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, menUUID, "Men", "men", fashionUUID, 1, 2, "fashion/men", true, 20)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, tshirtsUUID, "T-Shirts", "tshirts", menUUID, 1, 3, "fashion/men/tshirts", true, 8)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, jeansUUID, "Jeans", "jeans", menUUID, 2, 3, "fashion/men/jeans", true, 12)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: "9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f"} // Men category
+		req := &pb.CategoryIDRequest{CategoryId: menUUID} // Men category
 
 		resp, err := server.Client.GetCategoryTree(ctx, req)
 
@@ -397,11 +458,11 @@ func TestGetCategoryTree(t *testing.T) {
 		require.NotNil(t, resp.Tree)
 
 		// Verify node
-		assert.Equal(t, int64(51), resp.Tree.Id)
+		assert.Equal(t, menUUID, resp.Tree.Id)
 		assert.Equal(t, "Men", resp.Tree.Name)
-		assert.Equal(t, int32(1), resp.Tree.Level)
+		assert.Equal(t, int32(2), resp.Tree.Level)
 		assert.NotNil(t, resp.Tree.ParentId)
-		assert.Equal(t, int64(50), *resp.Tree.ParentId)
+		assert.Equal(t, fashionUUID, *resp.Tree.ParentId)
 
 		// Verify children
 		assert.GreaterOrEqual(t, len(resp.Tree.Children), 2, "Should have at least 2 children")
@@ -412,16 +473,23 @@ func TestGetCategoryTree(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert leaf category (no children)
+		// Setup: Use consistent UUIDs
+		rootUUID := "c0000000-0000-0000-0000-000000000060"
+		leafUUID := "c0000000-0000-0000-0000-000000000061"
+
+		// Insert leaf category (no children)
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES
-				('c0000000-0000-0000-0000-000000000060'::uuid, 'Root', 'root', NULL, 1, 0, true, 10),
-				('c0000000-0000-0000-0000-000000000061'::uuid, 'Leaf Category', 'leaf', 'c0000000-0000-0000-0000-000000000060'::uuid, 1, 1, true, 5)
-		`)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, rootUUID, "Root", "root", 1, 1, true, 10)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, leafUUID, "Leaf Category", "leaf", rootUUID, 1, 2, "root/leaf", true, 5)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.CategoryIDRequest{CategoryId: "0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a"} // Leaf category
+		req := &pb.CategoryIDRequest{CategoryId: leafUUID} // Leaf category
 
 		resp, err := server.Client.GetCategoryTree(ctx, req)
 
@@ -430,7 +498,7 @@ func TestGetCategoryTree(t *testing.T) {
 		require.NotNil(t, resp.Tree)
 
 		// Verify node
-		assert.Equal(t, int64(61), resp.Tree.Id)
+		assert.Equal(t, leafUUID, resp.Tree.Id)
 		assert.Equal(t, "Leaf Category", resp.Tree.Name)
 
 		// Verify no children
@@ -452,39 +520,51 @@ func TestCategoryHierarchy(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert parent and children
+		// Setup: Use consistent UUIDs
+		parentUUID := "c0000000-0000-0000-0000-000000000070"
+		child1UUID := "c0000000-0000-0000-0000-000000000071"
+		child2UUID := "c0000000-0000-0000-0000-000000000072"
+
+		// Insert parent and children
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES
-				('c0000000-0000-0000-0000-000000000070'::uuid, 'Parent Category', 'parent', NULL, 1, 0, true, 20),
-				('c0000000-0000-0000-0000-000000000071'::uuid, 'Child 1', 'child-1', 'c0000000-0000-0000-0000-000000000070'::uuid, 1, 1, true, 8),
-				('c0000000-0000-0000-0000-000000000072'::uuid, 'Child 2', 'child-2', 'c0000000-0000-0000-0000-000000000070'::uuid, 2, 1, true, 12)
-		`)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, parentUUID, "Parent Category", "parent", 1, 1, true, 20)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, child1UUID, "Child 1", "child-1", parentUUID, 1, 2, "parent/child-1", true, 8)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, child2UUID, "Child 2", "child-2", parentUUID, 2, 2, "parent/child-2", true, 12)
 
 		ctx := testutils.TestContext(t)
 
 		// Get parent category
-		parentReq := &pb.CategoryIDRequest{CategoryId: "1e2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b"}
+		parentReq := &pb.CategoryIDRequest{CategoryId: parentUUID}
 		parentResp, err := server.Client.GetCategory(ctx, parentReq)
 		require.NoError(t, err)
 		assert.Equal(t, "Parent Category", parentResp.Category.Name)
 		assert.Nil(t, parentResp.Category.ParentId)
 
 		// Get child categories and verify parent_id
-		child1Req := &pb.CategoryIDRequest{CategoryId: "2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c"}
+		child1Req := &pb.CategoryIDRequest{CategoryId: child1UUID}
 		child1Resp, err := server.Client.GetCategory(ctx, child1Req)
 		require.NoError(t, err)
 		require.NotNil(t, child1Resp.Category.ParentId)
-		assert.Equal(t, int64(70), *child1Resp.Category.ParentId)
+		assert.Equal(t, parentUUID, *child1Resp.Category.ParentId)
 
-		child2Req := &pb.CategoryIDRequest{CategoryId: "3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d"}
+		child2Req := &pb.CategoryIDRequest{CategoryId: child2UUID}
 		child2Resp, err := server.Client.GetCategory(ctx, child2Req)
 		require.NoError(t, err)
 		require.NotNil(t, child2Resp.Category.ParentId)
-		assert.Equal(t, int64(70), *child2Resp.Category.ParentId)
+		assert.Equal(t, parentUUID, *child2Resp.Category.ParentId)
 
 		// Verify database relationships
-		childCount := CountRows(t, server, "categories", "parent_id = $1::uuid", "c0000000-0000-0000-0000-000000000070")
+		childCount := CountRows(t, server, "categories", "parent_id = $1::uuid", parentUUID)
 		assert.Equal(t, 2, childCount, "Parent should have exactly 2 children")
 	})
 
@@ -493,42 +573,54 @@ func TestCategoryHierarchy(t *testing.T) {
 		server := SetupTestServer(t, config)
 		defer server.Teardown(t)
 
-		// Setup: Insert 3-level hierarchy (root -> parent -> child)
+		// Setup: Use consistent UUIDs
+		rootUUID := "c0000000-0000-0000-0000-000000000080"
+		midUUID := "c0000000-0000-0000-0000-000000000081"
+		leafUUID := "c0000000-0000-0000-0000-000000000082"
+
+		// Insert 3-level hierarchy (root -> mid -> leaf)
 		ExecuteSQL(t, server, `
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
-			VALUES
-				('c0000000-0000-0000-0000-000000000080'::uuid, 'Root Level', 'root-level', NULL, 1, 0, true, 50),
-				('c0000000-0000-0000-0000-000000000081'::uuid, 'Mid Level', 'mid-level', 'c0000000-0000-0000-0000-000000000080'::uuid, 1, 1, true, 30),
-				('c0000000-0000-0000-0000-000000000082'::uuid, 'Leaf Level', 'leaf-level', 'c0000000-0000-0000-0000-000000000081'::uuid, 1, 2, true, 10)
-		`)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, $5, $3, $6, $7)
+		`, rootUUID, "Root Level", "root-level", 1, 1, true, 50)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, midUUID, "Mid Level", "mid-level", rootUUID, 1, 2, "root-level/mid-level", true, 30)
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, $4::uuid, $5, $6, $7, $8, $9)
+		`, leafUUID, "Leaf Level", "leaf-level", midUUID, 1, 3, "root-level/mid-level/leaf-level", true, 10)
 
 		ctx := testutils.TestContext(t)
 
 		// Verify root level
-		rootReq := &pb.CategoryIDRequest{CategoryId: "4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e"}
+		rootReq := &pb.CategoryIDRequest{CategoryId: rootUUID}
 		rootResp, err := server.Client.GetCategory(ctx, rootReq)
 		require.NoError(t, err)
 		assert.Nil(t, rootResp.Category.ParentId)
-		assert.Equal(t, int32(0), rootResp.Category.Level)
+		assert.Equal(t, int32(1), rootResp.Category.Level)
 
 		// Verify mid level
-		midReq := &pb.CategoryIDRequest{CategoryId: "5c6d7e8f-9a0b-1c2d-3e4f-5a6b7c8d9e0f"}
+		midReq := &pb.CategoryIDRequest{CategoryId: midUUID}
 		midResp, err := server.Client.GetCategory(ctx, midReq)
 		require.NoError(t, err)
 		require.NotNil(t, midResp.Category.ParentId)
-		assert.Equal(t, int64(80), *midResp.Category.ParentId)
-		assert.Equal(t, int32(1), midResp.Category.Level)
+		assert.Equal(t, rootUUID, *midResp.Category.ParentId)
+		assert.Equal(t, int32(2), midResp.Category.Level)
 
 		// Verify leaf level
-		leafReq := &pb.CategoryIDRequest{CategoryId: "6d7e8f9a-0b1c-2d3e-4f5a-6b7c8d9e0f1a"}
+		leafReq := &pb.CategoryIDRequest{CategoryId: leafUUID}
 		leafResp, err := server.Client.GetCategory(ctx, leafReq)
 		require.NoError(t, err)
 		require.NotNil(t, leafResp.Category.ParentId)
-		assert.Equal(t, int64(81), *leafResp.Category.ParentId)
-		assert.Equal(t, int32(2), leafResp.Category.Level)
+		assert.Equal(t, midUUID, *leafResp.Category.ParentId)
+		assert.Equal(t, int32(3), leafResp.Category.Level)
 
 		// Verify full tree via GetCategoryTree
-		treeReq := &pb.CategoryIDRequest{CategoryId: "4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e"}
+		treeReq := &pb.CategoryIDRequest{CategoryId: rootUUID}
 		treeResp, err := server.Client.GetCategoryTree(ctx, treeReq)
 		require.NoError(t, err)
 		assert.Equal(t, "Root Level", treeResp.Tree.Name)
