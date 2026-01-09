@@ -44,8 +44,6 @@ jobs:
           tags: |
             ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.git_sha.outputs.sha }}
-          cache-from: type=registry,ref=${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
 
       - name: Setup SSH
         env:
