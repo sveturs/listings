@@ -68,14 +68,14 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.K8S_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519_workflow
+          chmod 600 ~/.ssh/id_ed25519_workflow
 
           cat > ~/.ssh/config << 'SSH_CONFIG'
           Host vondi
             HostName 62.169.20.78
             User root
-            IdentityFile ~/.ssh/id_ed25519
+            IdentityFile ~/.ssh/id_ed25519_workflow
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
           SSH_CONFIG
@@ -138,4 +138,4 @@ jobs:
       - name: Cleanup SSH
         if: always()
         run: |
-          rm -f ~/.ssh/id_ed25519
+          rm -f ~/.ssh/id_ed25519_workflow
