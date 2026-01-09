@@ -73,13 +73,13 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H $VONDI_HOST >> ~/.ssh/known_hosts
 
-          cat >> ~/.ssh/config <<EOF
+          cat > ~/.ssh/config << 'SSH_CONFIG'
           Host vondi
-            HostName $VONDI_HOST
+            HostName 62.169.20.78
             User root
             IdentityFile ~/.ssh/id_ed25519
             StrictHostKeyChecking no
-          EOF
+          SSH_CONFIG
           chmod 600 ~/.ssh/config
 
       - name: Deploy to Kubernetes
