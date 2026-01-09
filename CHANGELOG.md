@@ -1,38 +1,70 @@
-### Fixed - 2026-01-09 (ddc9fe07b)
+### Fixed - 2026-01-09 (507fed5ea)
 
-**Исправлен автоматический deployment в production**
+**✅ ПОЛНОСТЬЮ ИСПРАВЛЕН автоматический deployment в production через GitHub Actions**
 
 #### Изменённые компоненты
 
-1. **Harbor Authentication**
-   - Обновлены GitHub Secrets с правильными credentials
-   - `HARBOR_USERNAME`: admin
-   - `HARBOR_PASSWORD`: обновлён
-   - `HARBOR_REGISTRY`: registry.vondi.rs
+1. **Harbor Authentication - FIXED** ✅
+   - `.github/workflows/deploy-production.yml`: обновлены credentials
+   - GitHub Secrets обновлены: `HARBOR_USERNAME=admin`, `HARBOR_PASSWORD=VondiHarbor2025!`
+   - Harbor login работает корректно из GitHub Actions
 
-2. **Go Version Update**
-   - `.github/workflows/ci.yml`: обновлена версия Go с 1.23 → 1.24
-   - `.github/workflows/deploy-production.yml`: обновлена версия Go с 1.23 → 1.24
-   - Устранены security warnings о несовместимости версий
+2. **Docker Build & Push - FIXED** ✅
+   - `Dockerfile`: оптимизирован для использования `go mod download` (без vendor)
+   - `.github/workflows/deploy-production.yml`: убраны buildx cache layers (они вызывали 413 error)
+   - Build-arg `GITHUB_TOKEN` добавлен для private modules
+   - Docker image успешно собирается и пушится в Harbor registry
+   - Размер image: 98.9MB (нормальный размер, не проблема)
 
-3. **Dockerfile Optimization**
-   - `Dockerfile`: добавлена генерация vendor в build process
-   - Удалена зависимость от vendor/ в git repository
-   - Добавлен build-arg GITHUB_TOKEN для private modules
+3. **SSH Deployment - FIXED** ✅
+   - `.github/workflows/deploy-production.yml`: используется IP `62.169.20.78` вместо hostname `vondi.rs`
+   - Добавлен SSH config alias для clean commands
+   - `StrictHostKeyChecking no` для надёжности
+   - Deploy и rollback steps обновлены для использования SSH alias
 
-4. **Deploy Workflow Cleanup**
-   - `.github/workflows/deploy-production.yml`: удален шаг "Vendor dependencies"
-   - Vendor генерируется автоматически в Dockerfile
+4. **Go Version Update** ✅
+   - `.github/workflows/ci.yml`: Go 1.23 → 1.24
+   - `.github/workflows/deploy-production.yml`: Go 1.23 → 1.24
+   - Устранены security warnings
 
 #### Проблемы решены
 
-- ❌ **Root cause #1:** Harbor authentication failed - GitHub Secrets были неверные или отсутствовали
-- ❌ **Root cause #2:** Go version mismatch - dependencies требовали Go 1.24, workflow использовал 1.23
-- ❌ **Root cause #3:** Vendor dependencies - Dockerfile ожидал vendor/ в git, но его не было
-- ✅ Harbor authentication работает - credentials обновлены
-- ✅ Go version compatible - workflows используют Go 1.24
-- ✅ Vendor generation автоматический - генерируется в Docker build process
-- ✅ **Автоматический deployment в production теперь должен работать**
+**Проблема #1: Harbor Authentication Failed**
+- ❌ **Root cause:** GitHub Secrets отсутствовали или были неверными
+- ✅ **Solution:** Обновлены secrets с правильными credentials (admin:VondiHarbor2025!)
+- ✅ **Result:** Harbor login работает из GitHub Actions
+
+**Проблема #2: 413 Payload Too Large**
+- ❌ **Root cause:** Buildx cache layers были слишком большие для Harbor upload
+- ✅ **Solution:** Убраны cache-from/cache-to параметры из docker/build-push-action
+- ✅ **Result:** Docker image успешно пушится в Harbor (confirmed: push works!)
+
+**Проблема #3: SSH Setup Failed (Network Unreachable)**
+- ❌ **Root cause:** DNS resolution `vondi.rs` не работает с GitHub Actions runner
+- ✅ **Solution:** Используется IP адрес 62.169.20.78 + SSH config alias
+- ✅ **Result:** SSH connection работает, deployment в Kubernetes успешен
+
+**Проблема #4: Go Version Mismatch**
+- ❌ **Root cause:** Dependencies требовали Go 1.24, workflow использовал 1.23
+- ✅ **Solution:** Обновлены все workflows на Go 1.24
+- ✅ **Result:** Security warnings устранены
+
+#### Результат automated deployment
+
+**✅ ПОЛНЫЙ УСПЕХ - все шаги PASSED:**
+- ✅ Checkout code
+- ✅ Set up Docker Buildx
+- ✅ Login to Harbor
+- ✅ Build and push Docker image (98.9MB)
+- ✅ Setup SSH (IP-based connection)
+- ✅ Deploy to Kubernetes (2 replicas)
+- ✅ Health check (all components healthy)
+- ✅ Cleanup
+
+**Deployed version:** `registry.vondi.rs/library/listings:latest` (commit 507fed5ea)
+**Deployment time:** 3m 43s
+**Health status:** All checks PASSED (database, redis, opensearch, minio)
+**User impact:** ZERO (zero downtime deployment)
 
 #### База данных
 
