@@ -48,23 +48,34 @@ jobs:
       - name: Setup SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.K8S_SSH_KEY }}
+          VONDI_HOST: 62.169.20.78
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H vondi.rs >> ~/.ssh/known_hosts
+          ssh-keyscan -H $VONDI_HOST >> ~/.ssh/known_hosts
+
+          # Add SSH config alias
+          cat >> ~/.ssh/config <<EOF
+          Host vondi
+            HostName $VONDI_HOST
+            User root
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: Deploy to Kubernetes
         run: |
           echo "Deploying $DEPLOYMENT_NAME with image $HARBOR_REGISTRY/$IMAGE_NAME:latest"
 
           # Update deployment with new image via SSH
-          ssh root@vondi.rs "kubectl set image deployment/$DEPLOYMENT_NAME \
+          ssh vondi "kubectl set image deployment/$DEPLOYMENT_NAME \
             $DEPLOYMENT_NAME=$HARBOR_REGISTRY/$IMAGE_NAME:latest \
             -n $K8S_NAMESPACE"
 
           # Wait for rollout (timeout 5 minutes)
-          ssh root@vondi.rs "kubectl rollout status deployment/$DEPLOYMENT_NAME \
+          ssh vondi "kubectl rollout status deployment/$DEPLOYMENT_NAME \
             -n $K8S_NAMESPACE --timeout=5m"
 
       - name: Health check
@@ -99,10 +110,10 @@ jobs:
         if: failure()
         run: |
           echo "Deployment failed, rolling back..."
-          ssh root@vondi.rs "kubectl rollout undo deployment/$DEPLOYMENT_NAME -n $K8S_NAMESPACE"
+          ssh vondi "kubectl rollout undo deployment/$DEPLOYMENT_NAME -n $K8S_NAMESPACE"
 
           echo "Waiting for rollback to complete..."
-          ssh root@vondi.rs "kubectl rollout status deployment/$DEPLOYMENT_NAME \
+          ssh vondi "kubectl rollout status deployment/$DEPLOYMENT_NAME \
             -n $K8S_NAMESPACE --timeout=3m"
 
           echo "❌ Deployment failed and rolled back to previous version"
