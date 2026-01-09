@@ -934,7 +934,13 @@ func (r *Repository) EnqueueIndexing(ctx context.Context, listingID int64, opera
 		INSERT INTO indexing_queue (listing_id, operation, status, retry_count, max_retries)
 		VALUES ($1, $2, 'pending', 0, 3)
 		ON CONFLICT (listing_id) WHERE status = 'pending'
-		DO UPDATE SET operation = EXCLUDED.operation, updated_at = CURRENT_TIMESTAMP
+		DO UPDATE SET
+			-- Only update 'update' -> 'update' or 'index' -> 'index', never downgrade 'index' to 'update'
+			operation = CASE
+				WHEN indexing_queue.operation = 'index' THEN 'index'  -- Preserve 'index' operation
+				ELSE EXCLUDED.operation                                -- Otherwise update normally
+			END,
+			updated_at = CURRENT_TIMESTAMP
 	`
 
 	_, err := r.db.ExecContext(ctx, query, listingID, operation)

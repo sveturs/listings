@@ -119,9 +119,17 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 	if len(listing.Attributes) > 0 {
 		attrMap := make(map[string]string)
 		for _, attr := range listing.Attributes {
+			// Skip attributes with empty keys (invalid for OpenSearch)
+			if attr.AttributeKey == "" {
+				c.logger.Warn().Int64("listing_id", listing.ID).Str("value", attr.AttributeValue).Msg("skipping attribute with empty key")
+				continue
+			}
 			attrMap[attr.AttributeKey] = attr.AttributeValue
 		}
-		doc["listing_attributes"] = attrMap
+		// Only add if we have valid attributes
+		if len(attrMap) > 0 {
+			doc["listing_attributes"] = attrMap
+		}
 	}
 
 	// Add images if present
@@ -491,7 +499,7 @@ func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit 
 				},
 				"type":                 "best_fields",
 				"tie_breaker":          0.3,
-				"minimum_should_match": "1", // At least 1 term must match
+				"minimum_should_match": "1",  // At least 1 term must match
 				"boost":                10.0, // High boost for title matching
 			},
 		})
@@ -961,6 +969,9 @@ func (c *Client) IndexProduct(ctx context.Context, product *domain.Listing) erro
 		return fmt.Errorf("failed to marshal product document: %w", err)
 	}
 
+	// DEBUG: Log document being indexed to find empty field names
+	c.logger.Info().Int64("product_id", product.ID).Str("document", string(body)).Msg("indexing document")
+
 	// Index document
 	res, err := c.client.Index(
 		c.index,
@@ -977,8 +988,19 @@ func (c *Client) IndexProduct(ctx context.Context, product *domain.Listing) erro
 	defer res.Body.Close()
 
 	if res.IsError() {
-		c.logger.Error().Int("status", res.StatusCode).Int64("product_id", product.ID).Msg("OpenSearch index error")
-		return fmt.Errorf("OpenSearch index error: %s", res.Status())
+		// Read response body for detailed error
+		bodyBytes, readErr := io.ReadAll(res.Body)
+		if readErr != nil {
+			c.logger.Error().Err(readErr).Int("status", res.StatusCode).Int64("product_id", product.ID).Msg("failed to read OpenSearch error response")
+			return fmt.Errorf("OpenSearch index error: %s (failed to read error details)", res.Status())
+		}
+
+		c.logger.Error().
+			Int("status", res.StatusCode).
+			Int64("product_id", product.ID).
+			Str("error_body", string(bodyBytes)).
+			Msg("OpenSearch index error with details")
+		return fmt.Errorf("OpenSearch index error: %s - %s", res.Status(), string(bodyBytes))
 	}
 
 	c.logger.Debug().Int64("product_id", product.ID).Msg("product indexed successfully")

@@ -87,19 +87,19 @@ type Order struct {
 	Currency     string  `json:"currency" db:"currency"`
 
 	// Payment information
-	PaymentMethod           *string       `json:"payment_method,omitempty" db:"payment_method"`                       // cash, card, bank_transfer, paypal, etc.
-	PaymentStatus           PaymentStatus `json:"payment_status" db:"payment_status"`                                 // Payment processing status
-	PaymentTransactionID    *string       `json:"payment_transaction_id,omitempty" db:"payment_transaction_id"`       // External payment ID
-	PaymentCompletedAt      *time.Time    `json:"payment_completed_at,omitempty" db:"payment_completed_at"`
-	PaymentProvider         *string       `json:"payment_provider,omitempty" db:"payment_provider"`                   // stripe, allsecure, etc.
-	PaymentSessionID        *string       `json:"payment_session_id,omitempty" db:"payment_session_id"`               // Checkout session ID
-	PaymentIntentID         *string       `json:"payment_intent_id,omitempty" db:"payment_intent_id"`                 // Payment intent ID
-	PaymentIdempotencyKey   *string       `json:"payment_idempotency_key,omitempty" db:"payment_idempotency_key"`     // Idempotency key
+	PaymentMethod         *string       `json:"payment_method,omitempty" db:"payment_method"`                 // cash, card, bank_transfer, paypal, etc.
+	PaymentStatus         PaymentStatus `json:"payment_status" db:"payment_status"`                           // Payment processing status
+	PaymentTransactionID  *string       `json:"payment_transaction_id,omitempty" db:"payment_transaction_id"` // External payment ID
+	PaymentCompletedAt    *time.Time    `json:"payment_completed_at,omitempty" db:"payment_completed_at"`
+	PaymentProvider       *string       `json:"payment_provider,omitempty" db:"payment_provider"`               // stripe, allsecure, etc.
+	PaymentSessionID      *string       `json:"payment_session_id,omitempty" db:"payment_session_id"`           // Checkout session ID
+	PaymentIntentID       *string       `json:"payment_intent_id,omitempty" db:"payment_intent_id"`             // Payment intent ID
+	PaymentIdempotencyKey *string       `json:"payment_idempotency_key,omitempty" db:"payment_idempotency_key"` // Idempotency key
 
 	// Shipping information
 	ShippingAddress  map[string]interface{} `json:"shipping_address,omitempty" db:"shipping_address"`   // JSONB
 	BillingAddress   map[string]interface{} `json:"billing_address,omitempty" db:"billing_address"`     // JSONB
-	ShippingMethod   *string                `json:"shipping_method,omitempty" db:"shipping_method_id"`     // standard, express, overnight
+	ShippingMethod   *string                `json:"shipping_method,omitempty" db:"shipping_method_id"`  // standard, express, overnight
 	ShippingProvider *string                `json:"shipping_provider,omitempty" db:"shipping_provider"` // Post Express, AKS, DHL, etc.
 	TrackingNumber   *string                `json:"tracking_number,omitempty" db:"tracking_number"`     // Shipment tracking number
 	ShipmentID       *int64                 `json:"shipment_id,omitempty" db:"shipment_id"`             // FK to Delivery Service shipment
@@ -142,8 +142,8 @@ type OrderItem struct {
 	VariantID *int64 `json:"variant_id,omitempty" db:"variant_id"` // FK to listing_variants or product_variants (legacy int64)
 
 	// Variant system V2 (UUID-based)
-	VariantUUID         *string `json:"variant_uuid,omitempty" db:"variant_uuid"`                   // UUID for new variant system
-	StockReservationID  *string `json:"stock_reservation_id,omitempty" db:"stock_reservation_id"`   // Stock reservation UUID
+	VariantUUID        *string `json:"variant_uuid,omitempty" db:"variant_uuid"`                 // UUID for new variant system
+	StockReservationID *string `json:"stock_reservation_id,omitempty" db:"stock_reservation_id"` // Stock reservation UUID
 
 	// Snapshot data (immutable after order creation)
 	ListingName string                 `json:"listing_name" db:"listing_name"`           // Product name at purchase time

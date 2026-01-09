@@ -66,13 +66,13 @@ func TestStorefrontInvitation_IsExpired(t *testing.T) {
 
 func TestStorefrontInvitation_CanAccept(t *testing.T) {
 	tests := []struct {
-		name       string
-		status     StorefrontInvitationStatus
-		expiresAt  *time.Time
-		maxUses    *int32
+		name        string
+		status      StorefrontInvitationStatus
+		expiresAt   *time.Time
+		maxUses     *int32
 		currentUses int32
-		invType    StorefrontInvitationType
-		want       bool
+		invType     StorefrontInvitationType
+		want        bool
 	}{
 		{
 			name:    "pending email invitation",
@@ -202,11 +202,11 @@ func TestStorefrontInvitation_Validate(t *testing.T) {
 		{
 			name: "valid email invitation",
 			inv: &StorefrontInvitation{
-				StorefrontID:  1,
-				InvitedByID:   1,
-				Role:          "staff",
-				Type:          InvitationTypeEmail,
-				InvitedEmail:  strPtr("test@example.com"),
+				StorefrontID: 1,
+				InvitedByID:  1,
+				Role:         "staff",
+				Type:         InvitationTypeEmail,
+				InvitedEmail: strPtr("test@example.com"),
 			},
 			wantErr: false,
 		},
@@ -224,9 +224,9 @@ func TestStorefrontInvitation_Validate(t *testing.T) {
 		{
 			name: "missing storefront_id",
 			inv: &StorefrontInvitation{
-				InvitedByID: 1,
-				Role:        "staff",
-				Type:        InvitationTypeEmail,
+				InvitedByID:  1,
+				Role:         "staff",
+				Type:         InvitationTypeEmail,
 				InvitedEmail: strPtr("test@example.com"),
 			},
 			wantErr: true,

@@ -30,10 +30,10 @@ type CategoryMatch struct {
 
 // CategoryDetection - результат детекции с tracking информацией
 type CategoryDetection struct {
-	ID               uuid.UUID        `json:"id"`
-	Primary          *CategoryMatch   `json:"primary"`
-	Alternatives     []CategoryMatch  `json:"alternatives,omitempty"`
-	ProcessingTimeMs int32            `json:"processing_time_ms"`
+	ID               uuid.UUID       `json:"id"`
+	Primary          *CategoryMatch  `json:"primary"`
+	Alternatives     []CategoryMatch `json:"alternatives,omitempty"`
+	ProcessingTimeMs int32           `json:"processing_time_ms"`
 
 	// Входные данные (для tracking)
 	InputTitle       string `json:"input_title"`

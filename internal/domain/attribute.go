@@ -135,9 +135,9 @@ type VariantAttributeValue struct {
 type AttributeValue struct {
 	ID          int32                  `json:"id" db:"id"`
 	AttributeID int32                  `json:"attribute_id" db:"attribute_id"`
-	Value       string                 `json:"value" db:"value"`                      // e.g., "black", "XL", "new"
-	Label       map[string]string      `json:"label" db:"label"`                      // i18n JSONB: {"sr": "Crna", "en": "Black", "ru": "Чёрный"}
-	Metadata    map[string]interface{} `json:"metadata,omitempty" db:"metadata"`      // e.g., {"hex": "#000000"} for colors
+	Value       string                 `json:"value" db:"value"`                 // e.g., "black", "XL", "new"
+	Label       map[string]string      `json:"label" db:"label"`                 // i18n JSONB: {"sr": "Crna", "en": "Black", "ru": "Чёрный"}
+	Metadata    map[string]interface{} `json:"metadata,omitempty" db:"metadata"` // e.g., {"hex": "#000000"} for colors
 	SortOrder   int32                  `json:"sort_order" db:"sort_order"`
 	IsActive    bool                   `json:"is_active" db:"is_active"`
 	CreatedAt   time.Time              `json:"created_at" db:"created_at"`

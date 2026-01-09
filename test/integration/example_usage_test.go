@@ -363,7 +363,7 @@ func TestExampleFullIntegration(t *testing.T) {
 	// Category name is localized (default server locale is Serbian)
 	assert.True(t,
 		categoryResp.Category.Name == "Elektronika" || // Serbian (default)
-		strings.Contains(categoryResp.Category.Name, "Electronics"), // English or JSON
+			strings.Contains(categoryResp.Category.Name, "Electronics"), // English or JSON
 		"Expected category name to be 'Elektronika' or contain 'Electronics'",
 	)
 }

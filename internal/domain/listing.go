@@ -17,7 +17,7 @@ type Listing struct {
 	Description    *string    `json:"description,omitempty" db:"description"`
 	Price          float64    `json:"price" db:"price"`
 	Currency       string     `json:"currency" db:"currency"`
-	CategoryID     string     `json:"category_id" db:"category_id"` // UUID string
+	CategoryID     string     `json:"category_id" db:"category_id"`               // UUID string
 	CategorySlug   *string    `json:"category_slug,omitempty" db:"category_slug"` // Category slug for OpenSearch (populated from JOIN)
 	Status         string     `json:"status" db:"status"`
 	Visibility     string     `json:"visibility" db:"visibility"`
@@ -37,7 +37,7 @@ type Listing struct {
 
 	// Location settings
 	ShowOnMap             *bool   `json:"show_on_map,omitempty" db:"show_on_map"`
-	LocationPrivacy       *string `json:"location_privacy,omitempty" db:"location_privacy"`       // exact, approximate, hidden
+	LocationPrivacy       *string `json:"location_privacy,omitempty" db:"location_privacy"` // exact, approximate, hidden
 	HasIndividualLocation *bool   `json:"has_individual_location,omitempty" db:"has_individual_location"`
 
 	// Translations

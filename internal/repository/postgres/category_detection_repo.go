@@ -22,7 +22,7 @@ type CategoryDetectionRepository struct {
 
 	// Кеш брендов для быстрого поиска
 	brandCache      map[string]*domain.BrandCategoryMapping // brand_name (lowercase) -> mapping
-	brandAliasCache map[string]string                        // alias (lowercase) -> brand_name
+	brandAliasCache map[string]string                       // alias (lowercase) -> brand_name
 }
 
 // NewCategoryDetectionRepository создаёт репозиторий

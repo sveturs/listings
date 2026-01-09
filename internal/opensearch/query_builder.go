@@ -17,19 +17,19 @@ type FilterQuery struct {
 	CategoryID int64
 
 	// Optional filters
-	PriceMin     *float64
-	PriceMax     *float64
-	SourceType   string // "c2c" or "b2c"
-	StockStatus  string // "in_stock", "out_of_stock", "low_stock"
-	LatLon       *GeoLocation
-	RadiusKM     *float64
-	Attributes   []AttributeFilter
-	SearchQuery  string // Text search query
+	PriceMin    *float64
+	PriceMax    *float64
+	SourceType  string // "c2c" or "b2c"
+	StockStatus string // "in_stock", "out_of_stock", "low_stock"
+	LatLon      *GeoLocation
+	RadiusKM    *float64
+	Attributes  []AttributeFilter
+	SearchQuery string // Text search query
 
 	// Pagination and sorting
-	Limit  int
-	Offset int
-	SortBy string // "relevance", "price", "created_at", "views_count", "favorites_count"
+	Limit     int
+	Offset    int
+	SortBy    string // "relevance", "price", "created_at", "views_count", "favorites_count"
 	SortOrder string // "asc", "desc"
 }
 
@@ -75,9 +75,9 @@ func BuildFilterQuery(cfg FilterQuery) map[string]interface{} {
 	if cfg.SearchQuery != "" {
 		mustClauses = append(mustClauses, map[string]interface{}{
 			"multi_match": map[string]interface{}{
-				"query":  cfg.SearchQuery,
-				"fields": []string{"title^3", "description", "title.autocomplete"},
-				"type":   "best_fields",
+				"query":    cfg.SearchQuery,
+				"fields":   []string{"title^3", "description", "title.autocomplete"},
+				"type":     "best_fields",
 				"operator": "and",
 			},
 		})

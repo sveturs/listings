@@ -7,10 +7,10 @@ import (
 
 // Facet represents a facet with its possible values and counts
 type Facet struct {
-	Code   string        `json:"code"`
-	Name   string        `json:"name"`
-	Type   string        `json:"type"`
-	Values []FacetValue  `json:"values"`
+	Code   string       `json:"code"`
+	Name   string       `json:"name"`
+	Type   string       `json:"type"`
+	Values []FacetValue `json:"values"`
 }
 
 // FacetValue represents a single value option in a facet
@@ -187,10 +187,10 @@ func buildPriceRangeAggregation(customRanges []PriceRange) map[string]interface{
 // ParseFacetsResponse parses OpenSearch aggregation response into facets
 func ParseFacetsResponse(aggs map[string]interface{}, attributeMetadata map[string]AttributeMetadata) FacetsResult {
 	result := FacetsResult{
-		Attributes:   []Facet{},
-		Categories:   []CategoryFacet{},
-		PriceRanges:  []PriceRangeFacet{},
-		SourceTypes:  []SimpleFacet{},
+		Attributes:    []Facet{},
+		Categories:    []CategoryFacet{},
+		PriceRanges:   []PriceRangeFacet{},
+		SourceTypes:   []SimpleFacet{},
 		StockStatuses: []SimpleFacet{},
 	}
 

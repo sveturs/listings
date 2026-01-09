@@ -123,8 +123,8 @@ func (s *Server) ListStorefrontInvitations(ctx context.Context, req *listingspb.
 
 	// Build filter
 	filter := &domain.ListInvitationsFilter{
-		Limit:  req.Limit,
-		Page:   req.Offset/req.Limit + 1, // Convert offset to page
+		Limit: req.Limit,
+		Page:  req.Offset/req.Limit + 1, // Convert offset to page
 	}
 
 	if req.StatusFilter != nil {

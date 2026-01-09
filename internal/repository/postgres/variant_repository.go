@@ -37,19 +37,19 @@ func (r *VariantRepository) Create(ctx context.Context, input *domain.CreateVari
 
 	// Create variant
 	variant := &domain.ProductVariantV2{
-		ID:              uuid.New(),
-		ProductID:       input.ProductID,
-		SKU:             input.SKU,
-		Price:           input.Price,
-		CompareAtPrice:  input.CompareAtPrice,
-		StockQuantity:   input.StockQuantity,
+		ID:               uuid.New(),
+		ProductID:        input.ProductID,
+		SKU:              input.SKU,
+		Price:            input.Price,
+		CompareAtPrice:   input.CompareAtPrice,
+		StockQuantity:    input.StockQuantity,
 		ReservedQuantity: 0,
-		LowStockAlert:   input.LowStockAlert,
-		WeightGrams:     input.WeightGrams,
-		Barcode:         input.Barcode,
-		IsDefault:       input.IsDefault,
-		Position:        input.Position,
-		Status:          domain.VariantStatusActive,
+		LowStockAlert:    input.LowStockAlert,
+		WeightGrams:      input.WeightGrams,
+		Barcode:          input.Barcode,
+		IsDefault:        input.IsDefault,
+		Position:         input.Position,
+		Status:           domain.VariantStatusActive,
 	}
 
 	query := `

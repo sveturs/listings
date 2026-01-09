@@ -289,8 +289,8 @@ func TestBuildAttributeNestedQuery_MultipleValues(t *testing.T) {
 
 func TestDetermineValueField(t *testing.T) {
 	tests := []struct {
-		attrType  string
-		expected  string
+		attrType string
+		expected string
 	}{
 		{"select", "attributes.value_select"},
 		{"multiselect", "attributes.value_multiselect"},
@@ -353,8 +353,8 @@ func TestBuildFilterQuery_JSONSerialization(t *testing.T) {
 	// Test that generated query can be serialized to JSON (important for OpenSearch)
 	minPrice := 100.0
 	cfg := FilterQuery{
-		CategoryID: 123,
-		PriceMin:   &minPrice,
+		CategoryID:  123,
+		PriceMin:    &minPrice,
 		SearchQuery: "test",
 		Attributes: []AttributeFilter{
 			{Code: "brand", Type: "select", Values: []string{"apple"}},

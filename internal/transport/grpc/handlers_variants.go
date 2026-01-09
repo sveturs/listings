@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	pb "github.com/vondi-global/listings/api/proto/variants/v1"
 	"github.com/vondi-global/listings/internal/domain"
 	"github.com/vondi-global/listings/internal/service"
-	pb "github.com/vondi-global/listings/api/proto/variants/v1"
 )
 
 // VariantHandler handles gRPC requests for variant operations

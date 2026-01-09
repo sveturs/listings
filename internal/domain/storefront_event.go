@@ -29,12 +29,12 @@ type StorefrontEvent struct {
 type StorefrontEventType string
 
 const (
-	EventTypePageView     StorefrontEventType = "page_view"
-	EventTypeProductView  StorefrontEventType = "product_view"
-	EventTypeAddToCart    StorefrontEventType = "add_to_cart"
-	EventTypeCheckout     StorefrontEventType = "checkout"
-	EventTypeOrder        StorefrontEventType = "order"
-	EventTypeUnspecified  StorefrontEventType = "unspecified"
+	EventTypePageView    StorefrontEventType = "page_view"
+	EventTypeProductView StorefrontEventType = "product_view"
+	EventTypeAddToCart   StorefrontEventType = "add_to_cart"
+	EventTypeCheckout    StorefrontEventType = "checkout"
+	EventTypeOrder       StorefrontEventType = "order"
+	EventTypeUnspecified StorefrontEventType = "unspecified"
 )
 
 // Valid returns true if the event type is valid

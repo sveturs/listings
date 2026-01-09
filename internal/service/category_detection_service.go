@@ -22,14 +22,14 @@ const claudeAPIURL = "https://api.anthropic.com/v1/messages"
 
 // CategoryDetectionService - сервис детекции категорий
 type CategoryDetectionService struct {
-	repo           *postgres.CategoryDetectionRepository
-	categoryRepo   CategoryRepositoryInterface
-	redisClient    *redis.Client
-	claudeAPIKey   string
-	logger         zerolog.Logger
-	categoryCache  []*domain.CategoryV2 // Cached categories for Claude prompt
-	cacheLoadedAt  time.Time            // When cache was last loaded
-	cacheTTL       time.Duration        // Cache TTL (default 1 hour)
+	repo          *postgres.CategoryDetectionRepository
+	categoryRepo  CategoryRepositoryInterface
+	redisClient   *redis.Client
+	claudeAPIKey  string
+	logger        zerolog.Logger
+	categoryCache []*domain.CategoryV2 // Cached categories for Claude prompt
+	cacheLoadedAt time.Time            // When cache was last loaded
+	cacheTTL      time.Duration        // Cache TTL (default 1 hour)
 }
 
 // CategoryRepositoryInterface - интерфейс для получения категорий
@@ -619,6 +619,7 @@ func (s *CategoryDetectionService) findCategoryBySlugVariants(ctx context.Contex
 
 // resolveSuggestedCategory пытается найти категорию по suggested slug из AI анализа изображения
 // Это последний fallback когда все остальные методы не сработали
+//
 //nolint:unused // Reserved for future use
 func (s *CategoryDetectionService) resolveSuggestedCategory(ctx context.Context, suggestedCategory, language string) *domain.CategoryMatch {
 	// Нормализуем slug
@@ -691,18 +692,18 @@ func (s *CategoryDetectionService) mapAISlugToDBSlug(aiSlug string) string {
 		"garden":      "dom-i-basta",
 
 		// Furniture (мебель) - подкатегория Home & Garden
-		"furniture":           "dom-i-basta",
-		"chair":               "namestaj-dnevna-soba",
-		"sofa":                "namestaj-dnevna-soba",
-		"table":               "namestaj-dnevna-soba",
-		"bed":                 "namestaj-spavaca-soba",
-		"desk":                "namestaj-kancelarija",
-		"kitchen-furniture":   "namestaj-kuhinja",
-		"outdoor-furniture":   "bastenska-garnitura",
-		"living-room":         "namestaj-dnevna-soba",
-		"bedroom":             "namestaj-spavaca-soba",
-		"nameštaj":            "dom-i-basta",
-		"namestaj":            "dom-i-basta",
+		"furniture":         "dom-i-basta",
+		"chair":             "namestaj-dnevna-soba",
+		"sofa":              "namestaj-dnevna-soba",
+		"table":             "namestaj-dnevna-soba",
+		"bed":               "namestaj-spavaca-soba",
+		"desk":              "namestaj-kancelarija",
+		"kitchen-furniture": "namestaj-kuhinja",
+		"outdoor-furniture": "bastenska-garnitura",
+		"living-room":       "namestaj-dnevna-soba",
+		"bedroom":           "namestaj-spavaca-soba",
+		"nameštaj":          "dom-i-basta",
+		"namestaj":          "dom-i-basta",
 
 		// Sports & Tourism
 		"sports": "sport-i-turizam",
@@ -782,47 +783,47 @@ func (s *CategoryDetectionService) detectByProductType(ctx context.Context, prod
 	// Маппинг productType → slug категории
 	productTypeMapping := map[string]string{
 		// Часы → Nakit i satovi
-		"watch":       "nakit-i-satovi",
-		"watches":     "nakit-i-satovi",
-		"wristwatch":  "nakit-i-satovi",
-		"smartwatch":  "pametni-satovi", // Умные часы в Electronics
-		"jewelry":     "nakit-i-satovi",
-		"necklace":    "nakit-i-satovi",
-		"ring":        "nakit-i-satovi",
-		"bracelet":    "nakit-i-satovi",
-		"earrings":    "nakit-i-satovi",
+		"watch":      "nakit-i-satovi",
+		"watches":    "nakit-i-satovi",
+		"wristwatch": "nakit-i-satovi",
+		"smartwatch": "pametni-satovi", // Умные часы в Electronics
+		"jewelry":    "nakit-i-satovi",
+		"necklace":   "nakit-i-satovi",
+		"ring":       "nakit-i-satovi",
+		"bracelet":   "nakit-i-satovi",
+		"earrings":   "nakit-i-satovi",
 
 		// Электроника
-		"smartphone":  "mobilni-telefoni",
-		"phone":       "mobilni-telefoni",
-		"mobile":      "mobilni-telefoni",
-		"tablet":      "tableti",
-		"laptop":      "laptopovi",
-		"computer":    "racunari",
-		"headphones":  "slusalice",
-		"camera":      "fotoaparati",
-		"tv":          "televizori",
-		"television":  "televizori",
-		"console":     "konzole",
-		"gaming":      "konzole",
+		"smartphone": "mobilni-telefoni",
+		"phone":      "mobilni-telefoni",
+		"mobile":     "mobilni-telefoni",
+		"tablet":     "tableti",
+		"laptop":     "laptopovi",
+		"computer":   "racunari",
+		"headphones": "slusalice",
+		"camera":     "fotoaparati",
+		"tv":         "televizori",
+		"television": "televizori",
+		"console":    "konzole",
+		"gaming":     "konzole",
 
 		// Одежда
-		"dress":       "zenska-odeca",
-		"shirt":       "muska-odeca",
-		"shoes":       "obuca",
-		"sneakers":    "obuca",
-		"bag":         "torbe",
-		"handbag":     "torbe",
+		"dress":    "zenska-odeca",
+		"shirt":    "muska-odeca",
+		"shoes":    "obuca",
+		"sneakers": "obuca",
+		"bag":      "torbe",
+		"handbag":  "torbe",
 
 		// Канцелярия / Office Supplies
-		"stapler":     "kancelarijski-materijal",
-		"pen":         "kancelarijski-materijal",
-		"pencil":      "kancelarijski-materijal",
-		"notebook":    "kancelarijski-materijal",
-		"folder":      "kancelarijski-materijal",
-		"scissors":    "kancelarijski-materijal",
-		"calculator":  "kancelarijski-materijal",
-		"desk_lamp":   "kancelarijski-materijal",
+		"stapler":    "kancelarijski-materijal",
+		"pen":        "kancelarijski-materijal",
+		"pencil":     "kancelarijski-materijal",
+		"notebook":   "kancelarijski-materijal",
+		"folder":     "kancelarijski-materijal",
+		"scissors":   "kancelarijski-materijal",
+		"calculator": "kancelarijski-materijal",
+		"desk_lamp":  "kancelarijski-materijal",
 
 		// Дом и сад / Home & Garden
 		"decor":         "dom-i-basta",
@@ -891,7 +892,7 @@ func (s *CategoryDetectionService) detectByProductType(ctx context.Context, prod
 		CategorySlug:    category.Slug,
 		CategoryName:    localized.Name,
 		CategoryPath:    category.Path,
-		ConfidenceScore: 0.90, // Высокая уверенность для productType match
+		ConfidenceScore: 0.90,                      // Высокая уверенность для productType match
 		DetectionMethod: domain.MethodKeywordMatch, // Используем существующий метод
 		MatchedKeywords: []string{productType},
 	}

@@ -654,7 +654,7 @@ func ProductVariantToProto(v *domain.ProductVariant) *listingspb.ProductVariant 
 
 	pbVariant := &listingspb.ProductVariant{
 		Id:            v.ID,
-		Uuid:          v.UUID,        // UUID for stock operations (ReserveStock, ReleaseStock)
+		Uuid:          v.UUID, // UUID for stock operations (ReserveStock, ReleaseStock)
 		ProductId:     v.ProductID,
 		ProductUuid:   v.ProductUUID, // Parent product UUID for cross-reference
 		StockQuantity: v.StockQuantity,

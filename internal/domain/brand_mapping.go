@@ -20,8 +20,8 @@ type BrandCategoryMapping struct {
 
 // BrandMatch - результат детекции по бренду
 type BrandMatch struct {
-	Brand         string
-	MatchedAlias  string
-	CategorySlug  string
+	Brand           string
+	MatchedAlias    string
+	CategorySlug    string
 	ConfidenceScore float64
 }

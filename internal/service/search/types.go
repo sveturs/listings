@@ -87,7 +87,7 @@ type ListingImageResult struct {
 // FacetsRequest - request for GetSearchFacets
 type FacetsRequest struct {
 	Query      string         // Optional pre-filter
-	CategoryID *string         // Optional pre-filter
+	CategoryID *string        // Optional pre-filter
 	Filters    *SearchFilters // Optional pre-filter (price, attributes)
 	UseCache   bool           // Whether to use cache
 }
@@ -123,7 +123,7 @@ type FacetsResponse struct {
 // CategoryFacet represents category distribution
 type CategoryFacet struct {
 	CategoryID string `json:"category_id"`
-	Count      int64 `json:"count"`
+	Count      int64  `json:"count"`
 }
 
 // PriceRangeFacet represents price histogram bucket
@@ -347,10 +347,10 @@ type SearchFiltersResponse struct {
 
 // SuggestionsRequest - autocomplete request
 type SuggestionsRequest struct {
-	Prefix     string // Search prefix (min 2 chars)
+	Prefix     string  // Search prefix (min 2 chars)
 	CategoryID *string // Optional category filter
-	Limit      int32  // Max suggestions (1-20)
-	UseCache   bool   // Whether to use cache
+	Limit      int32   // Max suggestions (1-20)
+	UseCache   bool    // Whether to use cache
 }
 
 // Validate validates suggestions request parameters
@@ -393,8 +393,8 @@ type Suggestion struct {
 // PopularSearchesRequest - trending queries request
 type PopularSearchesRequest struct {
 	CategoryID *string // Optional category filter
-	Limit      int32  // Max results (1-20)
-	TimeRange  string // "24h" | "7d" | "30d"
+	Limit      int32   // Max results (1-20)
+	TimeRange  string  // "24h" | "7d" | "30d"
 }
 
 // Validate validates popular searches request parameters
@@ -443,8 +443,8 @@ type PopularSearch struct {
 // TrendingSearchesRequest - real trending queries from analytics
 type TrendingSearchesRequest struct {
 	CategoryID *string // Optional category filter
-	Limit      int32  // Max results (1-50)
-	Days       int32  // Period in days (1-30)
+	Limit      int32   // Max results (1-50)
+	Days       int32   // Period in days (1-30)
 }
 
 // Validate validates trending searches request parameters

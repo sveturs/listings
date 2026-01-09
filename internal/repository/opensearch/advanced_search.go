@@ -13,21 +13,21 @@ import (
 
 // UniversalSearchParams represents parameters for universal search with ranking
 type UniversalSearchParams struct {
-	Query          string
-	CategoryIDs    []string            // UUID strings
-	PriceMin       *float64
-	PriceMax       *float64
-	SourceTypes    []string            // "c2c", "b2c"
-	City           string
-	Country        string
-	Attributes     map[string][]string // attribute_code -> values
-	SortBy         string              // "price", "created_at", "relevance", "popularity"
-	SortOrder      string              // "asc", "desc"
-	Page           int
-	Limit          int
+	Query           string
+	CategoryIDs     []string // UUID strings
+	PriceMin        *float64
+	PriceMax        *float64
+	SourceTypes     []string // "c2c", "b2c"
+	City            string
+	Country         string
+	Attributes      map[string][]string // attribute_code -> values
+	SortBy          string              // "price", "created_at", "relevance", "popularity"
+	SortOrder       string              // "asc", "desc"
+	Page            int
+	Limit           int
 	IncludeVariants bool
-	EnableFuzzy    bool
-	Highlighting   bool // Enable highlighting
+	EnableFuzzy     bool
+	Highlighting    bool // Enable highlighting
 }
 
 // UniversalSearchResult represents search result with ranking signals
@@ -42,15 +42,15 @@ type UniversalSearchResult struct {
 
 // ListingResult represents a single listing in search results
 type ListingResult struct {
-	ID          int64
-	UUID        string
-	Title       string
-	Price       float64
-	Image       string
-	Score       float64
-	Highlights  map[string][]string
-	IsPromoted  bool
-	IsFeatured  bool
+	ID         int64
+	UUID       string
+	Title      string
+	Price      float64
+	Image      string
+	Score      float64
+	Highlights map[string][]string
+	IsPromoted bool
+	IsFeatured bool
 }
 
 // UniversalSearch performs advanced search with function_score ranking

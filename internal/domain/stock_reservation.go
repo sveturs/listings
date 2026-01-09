@@ -34,18 +34,18 @@ type CreateReservationInput struct {
 
 // UpdateReservationInput represents input for updating a reservation
 type UpdateReservationInput struct {
-	Quantity  *int32  `json:"quantity,omitempty" validate:"omitempty,gte=1"`
-	Status    *string `json:"status,omitempty" validate:"omitempty,oneof=active confirmed cancelled expired"`
+	Quantity  *int32     `json:"quantity,omitempty" validate:"omitempty,gte=1"`
+	Status    *string    `json:"status,omitempty" validate:"omitempty,oneof=active confirmed cancelled expired"`
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 }
 
 // ListReservationsFilter represents filters for listing reservations
 type ListReservationsFilter struct {
-	VariantID  *uuid.UUID `json:"variant_id,omitempty"`
-	OrderID    *uuid.UUID `json:"order_id,omitempty"`
-	Status     *string    `json:"status,omitempty" validate:"omitempty,oneof=active confirmed cancelled expired"`
-	ActiveOnly bool       `json:"active_only"`
-	ExpiredOnly bool      `json:"expired_only"`
+	VariantID   *uuid.UUID `json:"variant_id,omitempty"`
+	OrderID     *uuid.UUID `json:"order_id,omitempty"`
+	Status      *string    `json:"status,omitempty" validate:"omitempty,oneof=active confirmed cancelled expired"`
+	ActiveOnly  bool       `json:"active_only"`
+	ExpiredOnly bool       `json:"expired_only"`
 }
 
 // Stock Reservation status constants (prefixed to avoid conflict with existing ReservationStatus)
@@ -58,7 +58,7 @@ const (
 
 // Default reservation TTL in minutes
 const (
-	DefaultReservationTTL = 30 // 30 minutes
+	DefaultReservationTTL = 30   // 30 minutes
 	MaxReservationTTL     = 1440 // 24 hours
 )
 
@@ -109,11 +109,11 @@ func (r *StockReservation) Validate() error {
 
 // Domain errors for StockReservation
 var (
-	ErrStockReservationNotFound         = errors.New("stock reservation not found")
-	ErrInvalidReservationQuantity  = errors.New("reservation quantity must be positive")
-	ErrReservationAlreadyExpired   = errors.New("reservation has already expired")
-	ErrInvalidReservationStatus    = errors.New("invalid reservation status")
-	ErrCannotReleaseReservation    = errors.New("reservation cannot be released in current state")
-	ErrCannotConfirmReservation    = errors.New("reservation cannot be confirmed (expired or invalid state)")
-	ErrReservationExpired          = errors.New("reservation has expired")
+	ErrStockReservationNotFound   = errors.New("stock reservation not found")
+	ErrInvalidReservationQuantity = errors.New("reservation quantity must be positive")
+	ErrReservationAlreadyExpired  = errors.New("reservation has already expired")
+	ErrInvalidReservationStatus   = errors.New("invalid reservation status")
+	ErrCannotReleaseReservation   = errors.New("reservation cannot be released in current state")
+	ErrCannotConfirmReservation   = errors.New("reservation cannot be confirmed (expired or invalid state)")
+	ErrReservationExpired         = errors.New("reservation has expired")
 )

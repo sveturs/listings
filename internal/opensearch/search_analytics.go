@@ -15,21 +15,21 @@ const searchAnalyticsIndex = "search_analytics"
 
 // SearchEvent represents a search event for analytics
 type SearchEvent struct {
-	ID          string                 `json:"id"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Query       string                 `json:"query"`
-	QueryKeyword string                `json:"query_keyword"` // For aggregations
-	UserID      *int64                 `json:"user_id,omitempty"`
-	SessionID   string                 `json:"session_id"`
-	ResultCount int64                  `json:"result_count"`
-	TookMs      int64                  `json:"took_ms"`
-	Filters     map[string]interface{} `json:"filters,omitempty"`
-	Page        int                    `json:"page"`
-	HasResults  bool                   `json:"has_results"`
-	SearchType  string                 `json:"search_type"` // search, autocomplete, suggest
-	Platform    string                 `json:"platform"`    // web, ios, android
-	Language    string                 `json:"language"`    // sr, en, ru
-	EventType   string                 `json:"event_type"`  // Always "search" for SearchEvent
+	ID           string                 `json:"id"`
+	Timestamp    time.Time              `json:"timestamp"`
+	Query        string                 `json:"query"`
+	QueryKeyword string                 `json:"query_keyword"` // For aggregations
+	UserID       *int64                 `json:"user_id,omitempty"`
+	SessionID    string                 `json:"session_id"`
+	ResultCount  int64                  `json:"result_count"`
+	TookMs       int64                  `json:"took_ms"`
+	Filters      map[string]interface{} `json:"filters,omitempty"`
+	Page         int                    `json:"page"`
+	HasResults   bool                   `json:"has_results"`
+	SearchType   string                 `json:"search_type"` // search, autocomplete, suggest
+	Platform     string                 `json:"platform"`    // web, ios, android
+	Language     string                 `json:"language"`    // sr, en, ru
+	EventType    string                 `json:"event_type"`  // Always "search" for SearchEvent
 }
 
 // ClickEvent represents a click on search result
@@ -57,17 +57,17 @@ type ConversionEvent struct {
 
 // SearchAnalyticsReport represents analytics report for a time period
 type SearchAnalyticsReport struct {
-	TotalSearches        int64                `json:"total_searches"`
-	UniqueQueries        int64                `json:"unique_queries"`
-	AvgResultCount       float64              `json:"avg_result_count"`
-	ZeroResultRate       float64              `json:"zero_result_rate"` // % of searches with 0 results
-	AvgLatency           float64              `json:"avg_latency"`
-	TopQueries           []QueryStats         `json:"top_queries"`
-	TopZeroResultQueries []string             `json:"top_zero_result_queries"`
-	SearchesByPlatform   map[string]int64     `json:"searches_by_platform"`
-	SearchesByLanguage   map[string]int64     `json:"searches_by_language"`
-	CTR                  float64              `json:"ctr"`            // Click-Through Rate
-	ConversionRate       float64              `json:"conversion_rate"`
+	TotalSearches        int64            `json:"total_searches"`
+	UniqueQueries        int64            `json:"unique_queries"`
+	AvgResultCount       float64          `json:"avg_result_count"`
+	ZeroResultRate       float64          `json:"zero_result_rate"` // % of searches with 0 results
+	AvgLatency           float64          `json:"avg_latency"`
+	TopQueries           []QueryStats     `json:"top_queries"`
+	TopZeroResultQueries []string         `json:"top_zero_result_queries"`
+	SearchesByPlatform   map[string]int64 `json:"searches_by_platform"`
+	SearchesByLanguage   map[string]int64 `json:"searches_by_language"`
+	CTR                  float64          `json:"ctr"` // Click-Through Rate
+	ConversionRate       float64          `json:"conversion_rate"`
 }
 
 // QueryStats represents statistics for a single query
@@ -97,25 +97,25 @@ func (ac *AnalyticsClient) CreateAnalyticsIndex(ctx context.Context) error {
 	mappings := map[string]interface{}{
 		"mappings": map[string]interface{}{
 			"properties": map[string]interface{}{
-				"id":               map[string]string{"type": "keyword"},
-				"timestamp":        map[string]string{"type": "date"},
-				"query":            map[string]string{"type": "text", "analyzer": "standard"},
-				"query_keyword":    map[string]string{"type": "keyword"},
-				"user_id":          map[string]string{"type": "long"},
-				"session_id":       map[string]string{"type": "keyword"},
-				"result_count":     map[string]string{"type": "integer"},
-				"took_ms":          map[string]string{"type": "integer"},
-				"has_results":      map[string]string{"type": "boolean"},
-				"search_type":      map[string]string{"type": "keyword"},
-				"platform":         map[string]string{"type": "keyword"},
-				"language":         map[string]string{"type": "keyword"},
-				"filters":          map[string]string{"type": "object"},
-				"page":             map[string]string{"type": "integer"},
-				"event_type":       map[string]string{"type": "keyword"}, // search, click, conversion
-				"search_event_id":  map[string]string{"type": "keyword"},
-				"listing_id":       map[string]string{"type": "long"},
-				"position":         map[string]string{"type": "integer"},
-				"conversion_type":  map[string]string{"type": "keyword"},
+				"id":              map[string]string{"type": "keyword"},
+				"timestamp":       map[string]string{"type": "date"},
+				"query":           map[string]string{"type": "text", "analyzer": "standard"},
+				"query_keyword":   map[string]string{"type": "keyword"},
+				"user_id":         map[string]string{"type": "long"},
+				"session_id":      map[string]string{"type": "keyword"},
+				"result_count":    map[string]string{"type": "integer"},
+				"took_ms":         map[string]string{"type": "integer"},
+				"has_results":     map[string]string{"type": "boolean"},
+				"search_type":     map[string]string{"type": "keyword"},
+				"platform":        map[string]string{"type": "keyword"},
+				"language":        map[string]string{"type": "keyword"},
+				"filters":         map[string]string{"type": "object"},
+				"page":            map[string]string{"type": "integer"},
+				"event_type":      map[string]string{"type": "keyword"}, // search, click, conversion
+				"search_event_id": map[string]string{"type": "keyword"},
+				"listing_id":      map[string]string{"type": "long"},
+				"position":        map[string]string{"type": "integer"},
+				"conversion_type": map[string]string{"type": "keyword"},
 			},
 		},
 		"settings": map[string]interface{}{

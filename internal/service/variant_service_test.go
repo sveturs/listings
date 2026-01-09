@@ -220,7 +220,7 @@ func setupReservationRepo(db *sqlx.DB, logger zerolog.Logger) *postgres.StockRes
 func createTestVariant(t *testing.T, ctx context.Context, repo *postgres.VariantRepository, db *sqlx.DB, productID uuid.UUID, stock int32, reserved int32) *domain.ProductVariantV2 {
 	input := &domain.CreateVariantInputV2{
 		ProductID:     productID,
-		SKU:          "TEST-SKU-" + uuid.New().String()[:8],
+		SKU:           "TEST-SKU-" + uuid.New().String()[:8],
 		StockQuantity: stock,
 		LowStockAlert: 5,
 		IsDefault:     true,

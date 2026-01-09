@@ -306,15 +306,15 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		storefrontService,
 		attrService,
 		categoryService,
-		nil,              // categoryRepoV2 (not used in integration tests)
-		nil,              // categoryCache (not used in integration tests)
+		nil, // categoryRepoV2 (not used in integration tests)
+		nil, // categoryCache (not used in integration tests)
 		orderService,
 		cartService,
 		chatService,
 		analyticsService,
 		storefrontAnalyticsService,
-		nil,              // inventoryService
-		nil,              // invitationService
+		nil, // inventoryService
+		nil, // invitationService
 		minioClient,
 		m,
 		logger,
@@ -555,13 +555,13 @@ func SeedTestCategories(t *testing.T, server *TestServer) map[string]string {
 	t.Helper()
 
 	categories := []struct {
-		id          string
-		name        string
-		slug        string
-		parentSlug  *string
-		level       int32
-		path        string
-		sortOrder   int32
+		id           string
+		name         string
+		slug         string
+		parentSlug   *string
+		level        int32
+		path         string
+		sortOrder    int32
 		listingCount int32
 	}{
 		// Root categories

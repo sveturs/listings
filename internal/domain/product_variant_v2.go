@@ -12,21 +12,21 @@ import (
 // ProductVariantV2 represents a product variant with UUID-based architecture (Phase 3)
 // This replaces the old int64-based ProductVariant for new variant system
 type ProductVariantV2 struct {
-	ID              uuid.UUID `json:"id" db:"id"`
-	ProductID       uuid.UUID `json:"product_id" db:"product_id"`
-	SKU             string    `json:"sku" db:"sku"`
-	Price           *float64  `json:"price,omitempty" db:"price"` // NULL = use product base_price
-	CompareAtPrice  *float64  `json:"compare_at_price,omitempty" db:"compare_at_price"`
-	StockQuantity   int32     `json:"stock_quantity" db:"stock_quantity"`
-	ReservedQuantity int32    `json:"reserved_quantity" db:"reserved_quantity"`
-	LowStockAlert   int32     `json:"low_stock_alert" db:"low_stock_alert"`
-	WeightGrams     *float64  `json:"weight_grams,omitempty" db:"weight_grams"`
-	Barcode         *string   `json:"barcode,omitempty" db:"barcode"`
-	IsDefault       bool      `json:"is_default" db:"is_default"`
-	Position        int32     `json:"position" db:"position"`
-	Status          string    `json:"status" db:"status"` // active, out_of_stock, discontinued
-	CreatedAt       time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
+	ID               uuid.UUID `json:"id" db:"id"`
+	ProductID        uuid.UUID `json:"product_id" db:"product_id"`
+	SKU              string    `json:"sku" db:"sku"`
+	Price            *float64  `json:"price,omitempty" db:"price"` // NULL = use product base_price
+	CompareAtPrice   *float64  `json:"compare_at_price,omitempty" db:"compare_at_price"`
+	StockQuantity    int32     `json:"stock_quantity" db:"stock_quantity"`
+	ReservedQuantity int32     `json:"reserved_quantity" db:"reserved_quantity"`
+	LowStockAlert    int32     `json:"low_stock_alert" db:"low_stock_alert"`
+	WeightGrams      *float64  `json:"weight_grams,omitempty" db:"weight_grams"`
+	Barcode          *string   `json:"barcode,omitempty" db:"barcode"`
+	IsDefault        bool      `json:"is_default" db:"is_default"`
+	Position         int32     `json:"position" db:"position"`
+	Status           string    `json:"status" db:"status"` // active, out_of_stock, discontinued
+	CreatedAt        time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
 
 	// Relations (loaded on demand)
 	Attributes []*VariantAttributeValueV2 `json:"attributes,omitempty" db:"-"`
@@ -34,16 +34,16 @@ type ProductVariantV2 struct {
 
 // VariantAttributeValueV2 represents an attribute value for a product variant
 type VariantAttributeValueV2 struct {
-	ID          uuid.UUID  `json:"id" db:"id"`
-	VariantID   uuid.UUID  `json:"variant_id" db:"variant_id"`
-	AttributeID int32      `json:"attribute_id" db:"attribute_id"`
-	ValueText   *string    `json:"value_text,omitempty" db:"value_text"`
-	ValueNumber *float64   `json:"value_number,omitempty" db:"value_number"`
-	ValueBoolean *bool     `json:"value_boolean,omitempty" db:"value_boolean"`
-	ValueDate   *time.Time `json:"value_date,omitempty" db:"value_date"`
-	ValueJSON   []byte     `json:"value_json,omitempty" db:"value_json"` // JSONB for multiselect
-	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
+	ID           uuid.UUID  `json:"id" db:"id"`
+	VariantID    uuid.UUID  `json:"variant_id" db:"variant_id"`
+	AttributeID  int32      `json:"attribute_id" db:"attribute_id"`
+	ValueText    *string    `json:"value_text,omitempty" db:"value_text"`
+	ValueNumber  *float64   `json:"value_number,omitempty" db:"value_number"`
+	ValueBoolean *bool      `json:"value_boolean,omitempty" db:"value_boolean"`
+	ValueDate    *time.Time `json:"value_date,omitempty" db:"value_date"`
+	ValueJSON    []byte     `json:"value_json,omitempty" db:"value_json"` // JSONB for multiselect
+	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
 
 	// Loaded attribute metadata (optional)
 	Attribute *Attribute `json:"attribute,omitempty" db:"-"`
@@ -51,16 +51,16 @@ type VariantAttributeValueV2 struct {
 
 // CreateVariantInputV2 represents input for creating a new variant (Phase 3)
 type CreateVariantInputV2 struct {
-	ProductID      uuid.UUID                    `json:"product_id" validate:"required"`
-	SKU            string                       `json:"sku" validate:"required,max=100"`
-	Price          *float64                     `json:"price,omitempty" validate:"omitempty,gte=0"`
-	CompareAtPrice *float64                     `json:"compare_at_price,omitempty" validate:"omitempty,gte=0"`
-	StockQuantity  int32                        `json:"stock_quantity" validate:"gte=0"`
-	LowStockAlert  int32                        `json:"low_stock_alert" validate:"gte=0"`
-	WeightGrams    *float64                     `json:"weight_grams,omitempty" validate:"omitempty,gte=0"`
-	Barcode        *string                      `json:"barcode,omitempty" validate:"omitempty,max=50"`
-	IsDefault      bool                         `json:"is_default"`
-	Position       int32                        `json:"position" validate:"gte=0"`
+	ProductID      uuid.UUID                     `json:"product_id" validate:"required"`
+	SKU            string                        `json:"sku" validate:"required,max=100"`
+	Price          *float64                      `json:"price,omitempty" validate:"omitempty,gte=0"`
+	CompareAtPrice *float64                      `json:"compare_at_price,omitempty" validate:"omitempty,gte=0"`
+	StockQuantity  int32                         `json:"stock_quantity" validate:"gte=0"`
+	LowStockAlert  int32                         `json:"low_stock_alert" validate:"gte=0"`
+	WeightGrams    *float64                      `json:"weight_grams,omitempty" validate:"omitempty,gte=0"`
+	Barcode        *string                       `json:"barcode,omitempty" validate:"omitempty,max=50"`
+	IsDefault      bool                          `json:"is_default"`
+	Position       int32                         `json:"position" validate:"gte=0"`
 	Attributes     []CreateVariantAttributeValue `json:"attributes" validate:"required,min=1"`
 }
 
@@ -90,16 +90,16 @@ type UpdateVariantInputV2 struct {
 
 // ListVariantsFilter represents filters for listing variants
 type ListVariantsFilter struct {
-	ProductID       uuid.UUID `json:"product_id" validate:"required"`
-	ActiveOnly      bool      `json:"active_only"`
-	InStockOnly     bool      `json:"in_stock_only"`
-	IncludeAttributes bool    `json:"include_attributes"`
+	ProductID         uuid.UUID `json:"product_id" validate:"required"`
+	ActiveOnly        bool      `json:"active_only"`
+	InStockOnly       bool      `json:"in_stock_only"`
+	IncludeAttributes bool      `json:"include_attributes"`
 }
 
 // FindVariantByAttributesFilter represents filters for finding variant by attribute combination
 type FindVariantByAttributesFilter struct {
-	ProductID  uuid.UUID              `json:"product_id" validate:"required"`
-	Attributes map[int32]interface{}  `json:"attributes" validate:"required,min=1"`
+	ProductID  uuid.UUID             `json:"product_id" validate:"required"`
+	Attributes map[int32]interface{} `json:"attributes" validate:"required,min=1"`
 }
 
 // Variant status constants
@@ -220,12 +220,12 @@ func (v *ProductVariantV2) Validate() error {
 // Domain errors for ProductVariantV2
 var (
 	ErrVariantNotFound          = errors.New("variant not found")
-	ErrInvalidSKU              = errors.New("invalid or empty SKU")
-	ErrDuplicateSKU            = errors.New("SKU already exists")
-	ErrInvalidStockQuantity    = errors.New("stock quantity cannot be negative")
-	ErrInvalidReservedQuantity = errors.New("reserved quantity cannot be negative")
-	ErrReservedExceedsStock    = errors.New("reserved quantity cannot exceed stock quantity")
-	ErrInvalidPrice            = errors.New("price cannot be negative")
-	ErrInsufficientStock       = errors.New("insufficient stock for operation")
+	ErrInvalidSKU               = errors.New("invalid or empty SKU")
+	ErrDuplicateSKU             = errors.New("SKU already exists")
+	ErrInvalidStockQuantity     = errors.New("stock quantity cannot be negative")
+	ErrInvalidReservedQuantity  = errors.New("reserved quantity cannot be negative")
+	ErrReservedExceedsStock     = errors.New("reserved quantity cannot exceed stock quantity")
+	ErrInvalidPrice             = errors.New("price cannot be negative")
+	ErrInsufficientStock        = errors.New("insufficient stock for operation")
 	ErrVariantAttributeNotFound = errors.New("variant attribute value not found")
 )

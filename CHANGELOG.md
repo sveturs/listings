@@ -1,3 +1,40 @@
+### Fixed - 2026-01-09 (b363de069)
+
+**Исправлена автоматическая индексация новых listings в OpenSearch**
+
+#### Изменённые компоненты
+
+1. **EnqueueIndexing - защита от race condition**
+   - `internal/repository/postgres/repository.go:931-954`
+   - ON CONFLICT: операция `'index'` больше не перезаписывается на `'update'`
+   - Предотвращена race condition между CreateListing → auto-publish → UpdateListing
+
+2. **buildProductDocument - пропуск пустых attribute keys**
+   - `internal/repository/opensearch/client.go:118-133`
+   - Добавлена валидация: пропускаются атрибуты с пустыми ключами
+   - Логируется warning о пропущенных атрибутах
+
+3. **IndexProduct - детальные ошибки OpenSearch**
+   - `internal/repository/opensearch/client.go:979-993`
+   - Логируется полное тело ошибки OpenSearch для диагностики
+
+#### Проблемы решены
+
+- ❌ **Root cause #1:** Монолит вызывает CreateListing (enqueue 'index') → сразу UpdateListing для auto-publish (enqueue 'update')
+- ❌ **Root cause #2:** ON CONFLICT перезаписывал 'index' → 'update', worker пытался UPDATE несуществующего документа
+- ❌ **Root cause #3:** В listing_attributes были записи с пустыми ключами → OpenSearch 400 "field name cannot be an empty string"
+- ✅ Операция 'index' сохраняется при conflict, документ создаётся правильно
+- ✅ Атрибуты с пустыми ключами пропускаются с warning
+- ✅ Детальные ошибки OpenSearch помогают в диагностике
+- ✅ **Новые listings автоматически индексируются в OpenSearch** (критический фикс для UX)
+
+#### База данных
+
+- Удалено 5 записей с пустыми ключами из `listing_attributes`
+- Схема не изменена
+
+---
+
 ### Changed - 2026-01-07
 
 **Удален дублирующий Orders Service CI/CD workflow**

@@ -32,33 +32,33 @@ const InviteCodePrefix = "sf-"
 // StorefrontInvitation represents an invitation to join a storefront staff
 type StorefrontInvitation struct {
 	// Identification
-	ID           int64                        `db:"id" json:"id"`
-	StorefrontID int64                        `db:"storefront_id" json:"storefront_id"`
-	Role         string                       `db:"role" json:"role"`
-	Type         StorefrontInvitationType     `db:"type" json:"type"`
+	ID           int64                    `db:"id" json:"id"`
+	StorefrontID int64                    `db:"storefront_id" json:"storefront_id"`
+	Role         string                   `db:"role" json:"role"`
+	Type         StorefrontInvitationType `db:"type" json:"type"`
 
 	// Email invitation fields
 	InvitedEmail  *string `db:"invited_email" json:"invited_email,omitempty"`
 	InvitedUserID *int64  `db:"invited_user_id" json:"invited_user_id,omitempty"`
 
 	// Link invitation fields
-	InviteCode   *string    `db:"invite_code" json:"invite_code,omitempty"`
-	ExpiresAt    *time.Time `db:"expires_at" json:"expires_at,omitempty"`
-	MaxUses      *int32     `db:"max_uses" json:"max_uses,omitempty"`
-	CurrentUses  int32      `db:"current_uses" json:"current_uses"`
+	InviteCode  *string    `db:"invite_code" json:"invite_code,omitempty"`
+	ExpiresAt   *time.Time `db:"expires_at" json:"expires_at,omitempty"`
+	MaxUses     *int32     `db:"max_uses" json:"max_uses,omitempty"`
+	CurrentUses int32      `db:"current_uses" json:"current_uses"`
 
 	// Metadata
 	InvitedByID int64  `db:"invited_by_id" json:"invited_by_id"`
 	Comment     string `db:"comment" json:"comment,omitempty"`
 
 	// Status
-	Status      StorefrontInvitationStatus `db:"status" json:"status"`
+	Status StorefrontInvitationStatus `db:"status" json:"status"`
 
 	// Timestamps
-	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
-	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
-	AcceptedAt  *time.Time `db:"accepted_at" json:"accepted_at,omitempty"`
-	DeclinedAt  *time.Time `db:"declined_at" json:"declined_at,omitempty"`
+	CreatedAt  time.Time  `db:"created_at" json:"created_at"`
+	UpdatedAt  time.Time  `db:"updated_at" json:"updated_at"`
+	AcceptedAt *time.Time `db:"accepted_at" json:"accepted_at,omitempty"`
+	DeclinedAt *time.Time `db:"declined_at" json:"declined_at,omitempty"`
 }
 
 // IsExpired checks if the invitation has expired
@@ -228,11 +228,11 @@ func GenerateInviteCode() (string, error) {
 
 // CreateEmailInvitationRequest represents request to create email invitation
 type CreateEmailInvitationRequest struct {
-	StorefrontID  int64  `json:"storefront_id" validate:"required"`
-	InvitedEmail  string `json:"invited_email" validate:"required,email"`
-	Role          string `json:"role" validate:"required,oneof=owner manager staff cashier"`
-	InvitedByID   int64  `json:"invited_by_id" validate:"required"`
-	Comment       string `json:"comment"`
+	StorefrontID int64  `json:"storefront_id" validate:"required"`
+	InvitedEmail string `json:"invited_email" validate:"required,email"`
+	Role         string `json:"role" validate:"required,oneof=owner manager staff cashier"`
+	InvitedByID  int64  `json:"invited_by_id" validate:"required"`
+	Comment      string `json:"comment"`
 }
 
 // CreateLinkInvitationRequest represents request to create link invitation

@@ -47,7 +47,7 @@ type Product struct {
 // ProductVariant represents a product variant (size, color, etc.)
 type ProductVariant struct {
 	ID                int64                  `json:"id" db:"id"`
-	UUID              string                 `json:"uuid" db:"uuid"`                 // UUID for stock operations (ReserveStock, ReleaseStock)
+	UUID              string                 `json:"uuid" db:"uuid"` // UUID for stock operations (ReserveStock, ReleaseStock)
 	ProductID         int64                  `json:"product_id" db:"product_id"`
 	ProductUUID       string                 `json:"product_uuid" db:"product_uuid"` // Parent product UUID for cross-reference
 	SKU               *string                `json:"sku,omitempty" db:"sku"`
