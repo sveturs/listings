@@ -24,8 +24,11 @@ RUN if [ -n "$GITHUB_TOKEN" ]; then \
 # Copy go mod files
 COPY go.mod go.sum ./
 
-# Copy vendor directory (contains all dependencies)
-COPY vendor ./vendor
+# Download dependencies
+RUN go mod download
+
+# Generate vendor directory (if needed for build)
+RUN go mod vendor
 
 # Copy source code
 COPY . .

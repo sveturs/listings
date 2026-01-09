@@ -1,3 +1,45 @@
+### Fixed - 2026-01-09 (ddc9fe07b)
+
+**Исправлен автоматический deployment в production**
+
+#### Изменённые компоненты
+
+1. **Harbor Authentication**
+   - Обновлены GitHub Secrets с правильными credentials
+   - `HARBOR_USERNAME`: admin
+   - `HARBOR_PASSWORD`: обновлён
+   - `HARBOR_REGISTRY`: registry.vondi.rs
+
+2. **Go Version Update**
+   - `.github/workflows/ci.yml`: обновлена версия Go с 1.23 → 1.24
+   - `.github/workflows/deploy-production.yml`: обновлена версия Go с 1.23 → 1.24
+   - Устранены security warnings о несовместимости версий
+
+3. **Dockerfile Optimization**
+   - `Dockerfile`: добавлена генерация vendor в build process
+   - Удалена зависимость от vendor/ в git repository
+   - Добавлен build-arg GITHUB_TOKEN для private modules
+
+4. **Deploy Workflow Cleanup**
+   - `.github/workflows/deploy-production.yml`: удален шаг "Vendor dependencies"
+   - Vendor генерируется автоматически в Dockerfile
+
+#### Проблемы решены
+
+- ❌ **Root cause #1:** Harbor authentication failed - GitHub Secrets были неверные или отсутствовали
+- ❌ **Root cause #2:** Go version mismatch - dependencies требовали Go 1.24, workflow использовал 1.23
+- ❌ **Root cause #3:** Vendor dependencies - Dockerfile ожидал vendor/ в git, но его не было
+- ✅ Harbor authentication работает - credentials обновлены
+- ✅ Go version compatible - workflows используют Go 1.24
+- ✅ Vendor generation автоматический - генерируется в Docker build process
+- ✅ **Автоматический deployment в production теперь должен работать**
+
+#### База данных
+
+Нет изменений в БД.
+
+---
+
 ### Fixed - 2026-01-09 (b363de069)
 
 **Исправлена автоматическая индексация новых listings в OpenSearch**

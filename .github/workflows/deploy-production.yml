@@ -33,20 +33,14 @@ jobs:
         id: git_sha
         run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-
-      - name: Vendor dependencies
-        run: GOWORK=off go mod vendor
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile
           push: true
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GO_MODULES_TOKEN }}
           tags: |
             ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.git_sha.outputs.sha }}
