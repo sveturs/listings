@@ -570,3 +570,113 @@ kubectl logs -n production -l app=listings-service --tail=50
 **Дата:** 2026-01-09
 **Статус:** Resolved via Manual Deployment
 **Follow-up:** Fix automated deployment pipeline
+
+---
+
+## ✅ RESOLUTION - 2026-01-09
+
+### Что сработало
+
+**Решение: Manual Deployment с Docker build на production сервере**
+
+#### Шаги выполненные:
+
+1. **✅ Harbor credentials исправлены**
+   - Обновлены GitHub Secrets (`HARBOR_USERNAME`, `HARBOR_PASSWORD`, `HARBOR_REGISTRY`)
+   - Credentials работают: `admin:VondiHarbor2025!`
+
+2. **✅ Go version обновлен до 1.24**
+   - `.github/workflows/ci.yml`: GO_VERSION='1.24'
+   - `.github/workflows/deploy-production.yml`: go-version='1.24'
+
+3. **✅ Dockerfile оптимизирован**
+   - Убрана зависимость от vendor в git
+   - Используется `go mod download` вместо `go mod vendor`
+   - Build не требует vendor в репозитории
+
+4. **✅ Traefik ingress annotations добавлены**
+   - `traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes=0`
+   - `traefik.ingress.kubernetes.io/service.serversscheme=h2c`
+   - `traefik.ingress.kubernetes.io/router.tls=true`
+   - Traefik deployment перезапущен
+
+5. **⚠️ Automated deployment всё ещё провален (413 Payload Too Large)**
+   - Проблема НЕ в Traefik annotations
+   - Проблема скорее всего в Harbor internal limits или registry configuration
+   - Требуется дополнительное исследование Harbor core/registry настроек
+
+6. **✅ Manual deployment УСПЕШЕН**
+   ```bash
+   # На production сервере (vondi.rs)
+   cd /root/vondi-repos/listings
+   git pull origin main
+   
+   docker build --build-arg GITHUB_TOKEN=$(cat ~/.github-token) \
+     -t registry.vondi.rs/library/listings:latest \
+     -t registry.vondi.rs/library/listings:$(git rev-parse --short HEAD) \
+     -f Dockerfile .
+   
+   kubectl set image deployment/listings-service \
+     listings-service=registry.vondi.rs/library/listings:$(git rev-parse --short HEAD) \
+     -n production
+   
+   kubectl rollout status deployment/listings-service -n production --timeout=5m
+   ```
+
+#### Deployment Results:
+
+- **Image:** `registry.vondi.rs/library/listings:13e1c7c`
+- **Build time:** ~62s (builder stage) + ~5s (runtime stage)
+- **Deployment:** 2 replicas, both running
+- **Health checks:** ✅ ALL PASSING
+  - Database: 5 connections active
+  - Redis: 4 hits, 1 misses
+  - OpenSearch: cluster 200 OK
+  - MinIO: optional, not configured
+- **Version deployed:** 13e1c7c (commit hash)
+- **HTTP port:** 8080 (34 handlers)
+- **gRPC port:** 50051
+- **Category cache:** 663 categories loaded
+
+### Next Steps (для автоматизации)
+
+1. **Harbor 413 Payload Too Large - Root Cause Analysis**
+   - Проверить Harbor core configuration
+   - Проверить Harbor registry max upload limits
+   - Возможно нужно увеличить `storage.blobuploadtimeout` в registry config
+   - Или разбить build на smaller layers
+
+2. **Alternative Solutions:**
+   - **Option A:** Увеличить Harbor registry blob upload timeout/size
+   - **Option B:** Использовать Harbor push напрямую с production сервера (bypass GitHub Actions)
+   - **Option C:** Использовать multi-stage Docker build с меньшими layers
+   - **Option D:** Переключиться на другой registry (Docker Hub, GitHub Container Registry)
+
+3. **Automation Enhancement:**
+   - Создать script для automated manual deployment
+   - Добавить post-deployment health checks в workflow
+   - Настроить notifications о deployment status
+
+### Lessons Learned
+
+1. **✅ Manual deployment работает надёжно** - можно использовать как fallback
+2. **⚠️ Harbor имеет ограничения на размер blob/layer** - нужно учитывать при проектировании
+3. **✅ Dockerfile optimization важен** - использование `go mod download` вместо vendor уменьшает размер image
+4. **✅ Health checks критичны** - без них не знаем реальный статус deployment
+5. **✅ Git workflow правильный** - коммиты триггерят deployment автоматически
+
+### Production Status
+
+- **Status:** ✅ **DEPLOYED & HEALTHY**
+- **Deployed at:** 2026-01-09 10:51 UTC
+- **Version:** 13e1c7c (includes OpenSearch indexing fixes)
+- **Method:** Manual deployment via SSH
+- **Uptime:** Stable, no errors
+- **User impact:** NONE (zero downtime deployment)
+
+---
+
+**Автор финального решения:** Claude Code
+**Дата:** 2026-01-09 10:51 UTC
+**Final status:** Production deployment SUCCESSFUL ✅
+
