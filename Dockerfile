@@ -24,11 +24,8 @@ RUN if [ -n "$GITHUB_TOKEN" ]; then \
 # Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies
+# Download dependencies (cached layer)
 RUN go mod download
-
-# Generate vendor directory (if needed for build)
-RUN go mod vendor
 
 # Copy source code
 COPY . .
@@ -36,9 +33,8 @@ COPY . .
 # Build the binary
 # CGO_ENABLED=0 for static binary
 # -ldflags="-s -w" to strip debug info
-# -mod=vendor to use vendored dependencies
+# Use downloaded modules (not vendor)
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -mod=vendor \
     -ldflags="-s -w -X main.Version=$(git describe --tags --always --dirty 2>/dev/null || echo 'unknown') -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     -o /build/bin/listings-service \
     ./cmd/server/main.go
