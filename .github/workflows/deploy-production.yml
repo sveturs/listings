@@ -92,10 +92,11 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          echo "Deploying $DEPLOYMENT_NAME with image $HARBOR_REGISTRY/$IMAGE_NAME:latest"
+          SHA="${{ steps.git_sha.outputs.sha }}"
+          echo "Deploying $DEPLOYMENT_NAME with image $HARBOR_REGISTRY/$IMAGE_NAME:$SHA"
 
           ssh vondi "kubectl set image deployment/$DEPLOYMENT_NAME \
-            $DEPLOYMENT_NAME=$HARBOR_REGISTRY/$IMAGE_NAME:latest \
+            $DEPLOYMENT_NAME=$HARBOR_REGISTRY/$IMAGE_NAME:$SHA \
             -n $K8S_NAMESPACE"
 
           ssh vondi "kubectl rollout status deployment/$DEPLOYMENT_NAME \
