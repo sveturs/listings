@@ -1,3 +1,20 @@
+### Fixed - 2026-01-11 (6b0b12ef2)
+
+**Deployment: Use SHA tag for K8s deployment to ensure pod restart**
+
+#### Problem
+Deployment workflow used `latest` tag with `kubectl set image`. When the tag name doesn't change, Kubernetes doesn't restart pods even if image content changed. This caused deployed fixes (like OpenSearch reindexing for primary image changes) to not take effect.
+
+#### Solution
+- Changed deployment to use SHA-based image tags: `$IMAGE:$SHA` instead of `$IMAGE:latest`
+- Kubernetes sees new tag name and triggers pod restart
+
+#### Files Changed
+- `.github/workflows/deploy-production.yml`: Use SHA tag for deployment
+- `docs/PRIMARY_IMAGE_FIX_ANALYSIS.md`: Documentation of investigation
+
+---
+
 ### Fixed - 2026-01-09 (507fed5ea)
 
 **✅ ПОЛНОСТЬЮ ИСПРАВЛЕН автоматический deployment в production через GitHub Actions**
