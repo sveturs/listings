@@ -98,6 +98,7 @@ type Repository interface {
 	GetProductImages(ctx context.Context, productID int64) ([]*domain.ProductImage, error)
 	DeleteProductImage(ctx context.Context, imageID int64) error
 	ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error
+	SetProductImagePrimary(ctx context.Context, productID int64, imageID int64) error
 
 	// Transaction and database operations
 	BeginTx(ctx context.Context) (*sql.Tx, error)
@@ -2214,4 +2215,9 @@ func (s *Service) DeleteProductImage(ctx context.Context, imageID int64) error {
 // ReorderProductImages updates display order for product images
 func (s *Service) ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error {
 	return s.repo.ReorderProductImages(ctx, productID, orders)
+}
+
+// SetProductImagePrimary sets a specific image as primary and unsets all other primary images for the product
+func (s *Service) SetProductImagePrimary(ctx context.Context, productID int64, imageID int64) error {
+	return s.repo.SetProductImagePrimary(ctx, productID, imageID)
 }

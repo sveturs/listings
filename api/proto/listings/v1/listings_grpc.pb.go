@@ -85,6 +85,7 @@ const (
 	ListingsService_GetProductImages_FullMethodName                = "/listingssvc.v1.ListingsService/GetProductImages"
 	ListingsService_DeleteProductImage_FullMethodName              = "/listingssvc.v1.ListingsService/DeleteProductImage"
 	ListingsService_ReorderProductImages_FullMethodName            = "/listingssvc.v1.ListingsService/ReorderProductImages"
+	ListingsService_SetProductImagePrimary_FullMethodName          = "/listingssvc.v1.ListingsService/SetProductImagePrimary"
 	ListingsService_ReindexAll_FullMethodName                      = "/listingssvc.v1.ListingsService/ReindexAll"
 	ListingsService_CreateStorefront_FullMethodName                = "/listingssvc.v1.ListingsService/CreateStorefront"
 	ListingsService_UpdateStorefront_FullMethodName                = "/listingssvc.v1.ListingsService/UpdateStorefront"
@@ -272,6 +273,9 @@ type ListingsServiceClient interface {
 	DeleteProductImage(ctx context.Context, in *DeleteProductImageRequest, opts ...grpc.CallOption) (*DeleteProductImageResponse, error)
 	// ReorderProductImages updates display order for product images
 	ReorderProductImages(ctx context.Context, in *ReorderProductImagesRequest, opts ...grpc.CallOption) (*ReorderProductImagesResponse, error)
+	// SetProductImagePrimary sets a specific image as primary for a product
+	// Automatically unsets primary flag from all other images
+	SetProductImagePrimary(ctx context.Context, in *SetProductImagePrimaryRequest, opts ...grpc.CallOption) (*SetProductImagePrimaryResponse, error)
 	// ReindexAll performs full reindexing of all products to OpenSearch
 	// Used for rebuilding search index after schema changes or data migration
 	ReindexAll(ctx context.Context, in *ReindexAllRequest, opts ...grpc.CallOption) (*ReindexAllResponse, error)
@@ -990,6 +994,16 @@ func (c *listingsServiceClient) ReorderProductImages(ctx context.Context, in *Re
 	return out, nil
 }
 
+func (c *listingsServiceClient) SetProductImagePrimary(ctx context.Context, in *SetProductImagePrimaryRequest, opts ...grpc.CallOption) (*SetProductImagePrimaryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetProductImagePrimaryResponse)
+	err := c.cc.Invoke(ctx, ListingsService_SetProductImagePrimary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *listingsServiceClient) ReindexAll(ctx context.Context, in *ReindexAllRequest, opts ...grpc.CallOption) (*ReindexAllResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReindexAllResponse)
@@ -1418,6 +1432,9 @@ type ListingsServiceServer interface {
 	DeleteProductImage(context.Context, *DeleteProductImageRequest) (*DeleteProductImageResponse, error)
 	// ReorderProductImages updates display order for product images
 	ReorderProductImages(context.Context, *ReorderProductImagesRequest) (*ReorderProductImagesResponse, error)
+	// SetProductImagePrimary sets a specific image as primary for a product
+	// Automatically unsets primary flag from all other images
+	SetProductImagePrimary(context.Context, *SetProductImagePrimaryRequest) (*SetProductImagePrimaryResponse, error)
 	// ReindexAll performs full reindexing of all products to OpenSearch
 	// Used for rebuilding search index after schema changes or data migration
 	ReindexAll(context.Context, *ReindexAllRequest) (*ReindexAllResponse, error)
@@ -1677,6 +1694,9 @@ func (UnimplementedListingsServiceServer) DeleteProductImage(context.Context, *D
 }
 func (UnimplementedListingsServiceServer) ReorderProductImages(context.Context, *ReorderProductImagesRequest) (*ReorderProductImagesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReorderProductImages not implemented")
+}
+func (UnimplementedListingsServiceServer) SetProductImagePrimary(context.Context, *SetProductImagePrimaryRequest) (*SetProductImagePrimaryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetProductImagePrimary not implemented")
 }
 func (UnimplementedListingsServiceServer) ReindexAll(context.Context, *ReindexAllRequest) (*ReindexAllResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReindexAll not implemented")
@@ -2939,6 +2959,24 @@ func _ListingsService_ReorderProductImages_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_SetProductImagePrimary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetProductImagePrimaryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).SetProductImagePrimary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_SetProductImagePrimary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).SetProductImagePrimary(ctx, req.(*SetProductImagePrimaryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ListingsService_ReindexAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReindexAllRequest)
 	if err := dec(in); err != nil {
@@ -3687,6 +3725,10 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReorderProductImages",
 			Handler:    _ListingsService_ReorderProductImages_Handler,
+		},
+		{
+			MethodName: "SetProductImagePrimary",
+			Handler:    _ListingsService_SetProductImagePrimary_Handler,
 		},
 		{
 			MethodName: "ReindexAll",

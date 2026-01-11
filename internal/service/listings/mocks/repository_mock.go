@@ -608,3 +608,9 @@ func (m *MockRepository) ReorderProductImages(ctx context.Context, productID int
 	args := m.Called(ctx, productID, orders)
 	return args.Error(0)
 }
+
+// SetProductImagePrimary mocks setting a product image as primary
+func (m *MockRepository) SetProductImagePrimary(ctx context.Context, productID int64, imageID int64) error {
+	args := m.Called(ctx, productID, imageID)
+	return args.Error(0)
+}

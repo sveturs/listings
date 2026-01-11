@@ -323,6 +323,10 @@ service ListingsService {
   // ReorderProductImages updates display order for product images
   rpc ReorderProductImages(ReorderProductImagesRequest) returns (ReorderProductImagesResponse);
 
+  // SetProductImagePrimary sets a specific image as primary for a product
+  // Automatically unsets primary flag from all other images
+  rpc SetProductImagePrimary(SetProductImagePrimaryRequest) returns (SetProductImagePrimaryResponse);
+
   // === OpenSearch Reindexing (ADMINISTRATIVE) ===
 
   // ReindexAll performs full reindexing of all products to OpenSearch
@@ -2111,6 +2115,19 @@ message ReorderProductImagesRequest {
 // ReorderProductImagesResponse confirms reorder operation
 message ReorderProductImagesResponse {
   bool success = 1;
+}
+
+// SetProductImagePrimaryRequest sets a specific image as primary for a product
+message SetProductImagePrimaryRequest {
+  int64 product_id = 1;     // Required
+  int64 image_id = 2;       // Required - the image to set as primary
+  int64 storefront_id = 3;  // Required for ownership validation
+}
+
+// SetProductImagePrimaryResponse confirms the operation
+message SetProductImagePrimaryResponse {
+  bool success = 1;
+  string message = 2;
 }
 
 // ============================================================================

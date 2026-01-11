@@ -78,7 +78,18 @@ func (r *Repository) GetProductImageByID(ctx context.Context, imageID int64) (*d
 
 // AddProductImage adds a new image to a product (B2C or C2C)
 // Uses listing_images table (unified for both C2C and B2C products)
+// If is_primary is true, it will unset all other primary images for this product
 func (r *Repository) AddProductImage(ctx context.Context, image *domain.ProductImage) (*domain.ProductImage, error) {
+	// If this image is set as primary, first unset all other primary images
+	if image.IsPrimary && image.ProductID != nil {
+		unsetQuery := `UPDATE listing_images SET is_primary = false WHERE listing_id = $1 AND is_primary = true`
+		_, err := r.db.ExecContext(ctx, unsetQuery, *image.ProductID)
+		if err != nil {
+			r.logger.Warn().Err(err).Int64("product_id", *image.ProductID).Msg("failed to unset existing primary images, continuing anyway")
+			// Don't fail the insert, just log the warning
+		}
+	}
+
 	query := `
 		INSERT INTO listing_images (
 			listing_id, url, storage_path, thumbnail_url, display_order,
@@ -322,6 +333,68 @@ func (r *Repository) DeleteProductImage(ctx context.Context, imageID int64) erro
 type ProductImageOrder struct {
 	ImageID      int64
 	DisplayOrder int32
+}
+
+// SetProductImagePrimary sets a specific image as primary and unsets all other images for the product
+// Uses listing_images table (unified for both C2C and B2C products)
+func (r *Repository) SetProductImagePrimary(ctx context.Context, productID int64, imageID int64) error {
+	// Start transaction
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("failed to start transaction for SetProductImagePrimary")
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// First, unset all primary images for this product
+	unsetQuery := `UPDATE listing_images SET is_primary = false WHERE listing_id = $1 AND is_primary = true`
+	_, err = tx.ExecContext(ctx, unsetQuery, productID)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("product_id", productID).Msg("failed to unset primary images")
+		return fmt.Errorf("failed to unset primary images: %w", err)
+	}
+
+	// Then, set the specified image as primary
+	setQuery := `UPDATE listing_images SET is_primary = true WHERE id = $1 AND listing_id = $2`
+	result, err := tx.ExecContext(ctx, setQuery, imageID, productID)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("image_id", imageID).Int64("product_id", productID).Msg("failed to set primary image")
+		return fmt.Errorf("failed to set primary image: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("image not found or does not belong to this product")
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		r.logger.Error().Err(err).Msg("failed to commit transaction for SetProductImagePrimary")
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	r.logger.Info().
+		Int64("product_id", productID).
+		Int64("image_id", imageID).
+		Msg("product image set as primary")
+
+	return nil
+}
+
+// UnsetOtherPrimaryImages unsets primary flag for all images except the specified one
+// Used when adding a new primary image to ensure only one primary exists
+func (r *Repository) UnsetOtherPrimaryImages(ctx context.Context, productID int64, exceptImageID int64) error {
+	query := `UPDATE listing_images SET is_primary = false WHERE listing_id = $1 AND is_primary = true AND id != $2`
+	_, err := r.db.ExecContext(ctx, query, productID, exceptImageID)
+	if err != nil {
+		r.logger.Error().Err(err).Int64("product_id", productID).Msg("failed to unset other primary images")
+		return fmt.Errorf("failed to unset other primary images: %w", err)
+	}
+	return nil
 }
 
 // ReorderProductImages updates display order for multiple product images in a single transaction
