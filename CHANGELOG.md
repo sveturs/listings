@@ -1,3 +1,18 @@
+### Fixed - 2026-01-12 (f3614bb2b)
+
+**Search: Fix image parsing to use correct OpenSearch field names**
+
+#### Problem
+Search results returned images with empty URLs and `is_primary: false`. The `parseImages()` function in search service was looking for fields `url` and `is_primary`, but OpenSearch documents store images with fields `public_url` and `is_main`.
+
+#### Solution
+Updated `parseImages()` to check for correct OpenSearch field names first (`public_url`, `is_main`), with fallback to legacy field names for backwards compatibility.
+
+#### Files Changed
+- `internal/service/search/service.go`: Fix parseImages() to use public_url and is_main
+
+---
+
 ### Fixed - 2026-01-11 (6b0b12ef2)
 
 **Deployment: Use SHA tag for K8s deployment to ensure pod restart**
