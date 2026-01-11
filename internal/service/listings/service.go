@@ -2219,5 +2219,38 @@ func (s *Service) ReorderProductImages(ctx context.Context, productID int64, ord
 
 // SetProductImagePrimary sets a specific image as primary and unsets all other primary images for the product
 func (s *Service) SetProductImagePrimary(ctx context.Context, productID int64, imageID int64) error {
-	return s.repo.SetProductImagePrimary(ctx, productID, imageID)
+	err := s.repo.SetProductImagePrimary(ctx, productID, imageID)
+	if err != nil {
+		return err
+	}
+
+	// Reindex product in OpenSearch after primary image change (async)
+	if s.indexer != nil && productID > 0 {
+		go func() {
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full product with images
+			fullProduct, err := s.repo.GetProductByID(indexCtx, productID, nil)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("failed to get product for reindexing after primary image change (non-blocking)")
+				return
+			}
+
+			// Convert to listing for indexing
+			listing := convertProductToListing(fullProduct)
+
+			// Update in OpenSearch
+			if err := s.indexer.UpdateListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("OpenSearch reindexing failed after primary image change (non-blocking)")
+			} else {
+				s.logger.Info().Int64("product_id", productID).Int64("image_id", imageID).
+					Msg("product reindexed in OpenSearch after primary image change")
+			}
+		}()
+	}
+
+	return nil
 }
