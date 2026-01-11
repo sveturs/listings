@@ -1174,13 +1174,17 @@ func (c *Client) buildProductDocument(product *domain.Listing) map[string]interf
 	}
 
 	// Add images if present
+	// NOTE: Field names must match what parseImages() expects in search service:
+	// - public_url (not file_path or url)
+	// - is_main (not is_primary)
 	if len(product.Images) > 0 {
 		images := make([]map[string]interface{}, 0, len(product.Images))
 		for _, img := range product.Images {
 			images = append(images, map[string]interface{}{
-				"id":        img.ID,
-				"file_path": img.URL,
-				"is_main":   img.IsPrimary,
+				"id":            img.ID,
+				"public_url":    img.URL,
+				"is_main":       img.IsPrimary,
+				"display_order": img.DisplayOrder,
 			})
 		}
 		doc["images"] = images

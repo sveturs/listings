@@ -308,7 +308,7 @@ func (s *Service) parseListingFromHit(source map[string]interface{}) ListingSear
 
 // parseImages parses images from OpenSearch source
 // NOTE: OpenSearch stores images with "public_url" and "is_main" fields,
-// but we also check for legacy "url" and "is_primary" for backwards compatibility
+// but we also check for legacy fields ("file_path", "url", "is_primary") for backwards compatibility
 func (s *Service) parseImages(imagesData []interface{}) []ListingImageResult {
 	images := make([]ListingImageResult, 0, len(imagesData))
 
@@ -320,8 +320,10 @@ func (s *Service) parseImages(imagesData []interface{}) []ListingImageResult {
 				img.ID = int64(id)
 			}
 
-			// Check for public_url first (OpenSearch field), then fall back to url
+			// Check for public_url first (primary field), then file_path (legacy), then url (legacy)
 			if url, ok := imgMap["public_url"].(string); ok && url != "" {
+				img.URL = url
+			} else if url, ok := imgMap["file_path"].(string); ok && url != "" {
 				img.URL = url
 			} else if url, ok := imgMap["url"].(string); ok {
 				img.URL = url

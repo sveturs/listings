@@ -1,3 +1,20 @@
+### Fixed - 2026-01-12 (53b7a8981)
+
+**OpenSearch: Fix image indexing and parsing field name mismatch**
+
+#### Problem
+When changing primary image via edit page, the OpenSearch index was not reflecting the change. Root cause: `buildProductDocument()` was writing images with `file_path` field, but `parseImages()` was looking for `public_url` field.
+
+#### Solution
+1. Updated `buildProductDocument()` to write images with `public_url` field (matching what search expects)
+2. Added `file_path` as a fallback in `parseImages()` for existing indexed documents
+
+#### Files Changed
+- `internal/repository/opensearch/client.go`: Fix buildProductDocument to use public_url instead of file_path
+- `internal/service/search/service.go`: Add file_path fallback in parseImages for backwards compatibility
+
+---
+
 ### Fixed - 2026-01-12 (f3614bb2b)
 
 **Search: Fix image parsing to use correct OpenSearch field names**
