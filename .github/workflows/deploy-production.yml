@@ -19,19 +19,25 @@ jobs:
       - name: Manual checkout (for self-hosted + private repos)
         run: |
           echo "Cloning repository manually with token..."
-          
-          # Clean any existing checkout
-          rm -rf $GITHUB_WORKSPACE/*
-          rm -rf $GITHUB_WORKSPACE/.git
-          
-          # Clone using HTTPS with token
-          git clone https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/${{ github.repository }}.git $GITHUB_WORKSPACE
-          
-          cd $GITHUB_WORKSPACE
-          git checkout ${{ github.ref_name }}
+
+          # If repo exists, fetch and reset; otherwise clone fresh
+          if [ -d "$GITHUB_WORKSPACE/.git" ]; then
+            echo "Repository already exists, fetching updates..."
+            cd $GITHUB_WORKSPACE
+            git fetch origin
+            git reset --hard origin/${{ github.ref_name }}
+            git clean -fdx
+          else
+            echo "Fresh clone..."
+            rm -rf $GITHUB_WORKSPACE 2>/dev/null || true
+            mkdir -p $GITHUB_WORKSPACE
+            git clone https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/${{ github.repository }}.git $GITHUB_WORKSPACE
+            cd $GITHUB_WORKSPACE
+            git checkout ${{ github.ref_name }}
+          fi
+
           git log -1 --oneline
-          
-          echo "✅ Repository cloned successfully!"
+          echo "✅ Repository ready!"
 
       - name: Configure Git for private modules
         run: |
@@ -139,3 +145,4 @@ jobs:
         if: always()
         run: |
           rm -f ~/.ssh/id_ed25519_workflow
+# Trigger CI rebuild
