@@ -80,7 +80,7 @@ jobs:
           POSTGRES_USER: listings_user
           POSTGRES_PASSWORD: listings_password
         ports:
-          - 5432:5432
+          - 15432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -90,7 +90,7 @@ jobs:
       redis:
         image: redis:7-alpine
         ports:
-          - 6379:6379
+          - 16379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -124,15 +124,19 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Create temp directory for tests
+        run: mkdir -p ${{ github.workspace }}/.gotmp
+
       - name: Run unit tests
         env:
           VONDILISTINGS_DB_HOST: localhost
-          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_PORT: 15432
           VONDILISTINGS_DB_USER: listings_user
           VONDILISTINGS_DB_PASSWORD: listings_password
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
-          VONDILISTINGS_REDIS_PORT: 6379
+          VONDILISTINGS_REDIS_PORT: 16379
+          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: go test -v -race -short ./internal/... ./test/...
 
   build:
@@ -209,7 +213,7 @@ jobs:
           POSTGRES_USER: listings_user
           POSTGRES_PASSWORD: listings_password
         ports:
-          - 5432:5432
+          - 15432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -219,7 +223,7 @@ jobs:
       redis:
         image: redis:7-alpine
         ports:
-          - 6379:6379
+          - 16379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -240,13 +244,17 @@ jobs:
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
+      - name: Create temp directory for tests
+        run: mkdir -p ${{ github.workspace }}/.gotmp
+
       - name: Run integration tests
         env:
           VONDILISTINGS_DB_HOST: localhost
-          VONDILISTINGS_DB_PORT: 5432
+          VONDILISTINGS_DB_PORT: 15432
           VONDILISTINGS_DB_USER: listings_user
           VONDILISTINGS_DB_PASSWORD: listings_password
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
-          VONDILISTINGS_REDIS_PORT: 6379
+          VONDILISTINGS_REDIS_PORT: 16379
+          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: go test -v -tags=integration ./internal/... ./test/...
