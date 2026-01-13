@@ -39,11 +39,19 @@ jobs:
     name: Lint
     runs-on: self-hosted
     needs: [validate]
+    env:
+      # Fix "permission denied" on self-hosted runners where /tmp has noexec
+      # /tmp is noexec for security (prevent crypto miners/viruses)
+      TMPDIR: ${{ github.workspace }}/.gotmp
+      GOTMPDIR: ${{ github.workspace }}/.gotmp
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GO_MODULES_TOKEN }}
+
+      - name: Create temp directory for Go builds
+        run: mkdir -p ${{ github.workspace }}/.gotmp
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -72,6 +80,11 @@ jobs:
     name: Test
     runs-on: self-hosted
     needs: [validate]
+    env:
+      # Fix "permission denied" on self-hosted runners where /tmp has noexec
+      # /tmp is noexec for security (prevent crypto miners/viruses)
+      TMPDIR: ${{ github.workspace }}/.gotmp
+      GOTMPDIR: ${{ github.workspace }}/.gotmp
     services:
       postgres:
         image: postgres:15-alpine
@@ -127,18 +140,25 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 16379
-          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: go test -v -race -short ./internal/... ./test/...
 
   build:
     name: Build
     runs-on: self-hosted
     needs: [validate, lint, test]
+    env:
+      # Fix "permission denied" on self-hosted runners where /tmp has noexec
+      # /tmp is noexec for security (prevent crypto miners/viruses)
+      TMPDIR: ${{ github.workspace }}/.gotmp
+      GOTMPDIR: ${{ github.workspace }}/.gotmp
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GO_MODULES_TOKEN }}
+
+      - name: Create temp directory for Go builds
+        run: mkdir -p ${{ github.workspace }}/.gotmp
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -187,6 +207,11 @@ jobs:
     runs-on: self-hosted
     needs: [build]
     if: github.event_name == 'pull_request'
+    env:
+      # Fix "permission denied" on self-hosted runners where /tmp has noexec
+      # /tmp is noexec for security (prevent crypto miners/viruses)
+      TMPDIR: ${{ github.workspace }}/.gotmp
+      GOTMPDIR: ${{ github.workspace }}/.gotmp
     services:
       postgres:
         image: postgres:15-alpine
@@ -238,5 +263,4 @@ jobs:
           VONDILISTINGS_DB_NAME: listings_db_test
           VONDILISTINGS_REDIS_HOST: localhost
           VONDILISTINGS_REDIS_PORT: 16379
-          GOTMPDIR: ${{ github.workspace }}/.gotmp
         run: go test -v -tags=integration ./internal/... ./test/...
