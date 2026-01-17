@@ -465,6 +465,18 @@ func (r *Repository) GetStaff(ctx context.Context, storefrontID int64) ([]domain
 	return staff, nil
 }
 
+// IsUserStaff checks if a user is a staff member of the storefront
+func (r *Repository) IsUserStaff(ctx context.Context, storefrontID, userID int64) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM storefront_staff WHERE storefront_id = $1 AND user_id = $2)`
+
+	var exists bool
+	if err := r.db.GetContext(ctx, &exists, query, storefrontID, userID); err != nil {
+		return false, fmt.Errorf("failed to check staff membership: %w", err)
+	}
+
+	return exists, nil
+}
+
 // SetWorkingHours sets working hours for a storefront (replaces existing)
 func (r *Repository) SetWorkingHours(ctx context.Context, storefrontID int64, hours []domain.StorefrontHours) error {
 	tx, err := r.db.BeginTxx(ctx, nil)
@@ -794,6 +806,37 @@ func (r *Repository) loadRelatedEntities(ctx context.Context, storefront *domain
 			return fmt.Errorf("failed to load delivery options: %w", err)
 		}
 		storefront.DeliveryOptions = options
+	}
+
+	return nil
+}
+
+// UpdateFields updates specific fields of a storefront dynamically
+func (r *Repository) UpdateFields(ctx context.Context, storefrontID int64, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+
+	// Build dynamic UPDATE query
+	query := "UPDATE storefronts SET "
+	args := make([]interface{}, 0, len(updates)+1)
+	i := 1
+
+	for field, value := range updates {
+		if i > 1 {
+			query += ", "
+		}
+		query += fmt.Sprintf("%s = $%d", field, i)
+		args = append(args, value)
+		i++
+	}
+
+	query += fmt.Sprintf(" WHERE id = $%d", i)
+	args = append(args, storefrontID)
+
+	_, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to update storefront fields: %w", err)
 	}
 
 	return nil

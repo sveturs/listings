@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/vondi-global/listings/internal/domain"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // StorefrontRepository defines the interface for storefront data access
@@ -35,6 +36,8 @@ type StorefrontRepository interface {
 	GetStorefrontDashboardStats(ctx context.Context, storefrontID int64, from, to *time.Time) (*domain.StorefrontDashboardStats, error)
 	IsSlugTaken(ctx context.Context, slug string, excludeID *int64) (bool, error)
 	IncrementViewsCount(ctx context.Context, storefrontID int64) error
+	UpdateFields(ctx context.Context, storefrontID int64, updates map[string]interface{}) error
+	IsUserStaff(ctx context.Context, storefrontID, userID int64) (bool, error)
 }
 
 // CreateStorefrontRequest represents storefront creation request
@@ -570,4 +573,55 @@ func generateSlug(name string) string {
 		slug = strings.TrimRight(slug, "-")
 	}
 	return slug
+}
+
+// UpdateStatus updates storefront operational status (vacation mode, accepting orders)
+func (s *StorefrontService) UpdateStatus(ctx context.Context, storefrontID, userID int64, req *listingspb.UpdateStorefrontStatusRequest) error {
+	// Verify storefront exists and user has permission
+	storefront, err := s.repo.GetStorefrontByID(ctx, storefrontID, nil)
+	if err != nil {
+		return fmt.Errorf("storefront not found")
+	}
+
+	// Check ownership or staff permission
+	if storefront.UserID != userID {
+		isStaff, err := s.repo.IsUserStaff(ctx, storefrontID, userID)
+		if err != nil || !isStaff {
+			return fmt.Errorf("not authorized")
+		}
+	}
+
+	// Build update query dynamically
+	updates := make(map[string]interface{})
+	updates["status_updated_at"] = time.Now()
+
+	if req.VacationMode != nil {
+		updates["vacation_mode"] = *req.VacationMode
+	}
+	if req.AcceptingOrders != nil {
+		updates["accepting_orders"] = *req.AcceptingOrders
+	}
+	if req.VacationStartDate != nil {
+		updates["vacation_start_date"] = req.VacationStartDate.AsTime()
+	}
+	if req.VacationEndDate != nil {
+		updates["vacation_end_date"] = req.VacationEndDate.AsTime()
+	}
+	if req.AutoPauseWhenOutOfStock != nil {
+		updates["auto_pause_when_out_of_stock"] = *req.AutoPauseWhenOutOfStock
+	}
+
+	// Update in repository
+	err = s.repo.UpdateFields(ctx, storefrontID, updates)
+	if err != nil {
+		return fmt.Errorf("failed to update status: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", storefrontID).
+		Int64("user_id", userID).
+		Interface("updates", updates).
+		Msg("Storefront status updated")
+
+	return nil
 }

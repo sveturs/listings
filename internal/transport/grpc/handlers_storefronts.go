@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 	"github.com/vondi-global/listings/internal/domain"
@@ -584,4 +585,61 @@ func validateCreateStorefrontRequest(req *listingspb.CreateStorefrontRequest) er
 		return fmt.Errorf("location.country is required")
 	}
 	return nil
+}
+
+// UpdateStorefrontStatus updates operational status of a storefront
+func (s *Server) UpdateStorefrontStatus(ctx context.Context, req *listingspb.UpdateStorefrontStatusRequest) (*listingspb.UpdateStorefrontStatusResponse, error) {
+	if req.StorefrontId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "storefront_id is required")
+	}
+	if req.UserId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Call storefrontService to update status
+	err := s.storefrontService.UpdateStatus(ctx, req.StorefrontId, req.UserId, req)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("storefront_id", req.StorefrontId).Msg("Failed to update storefront status")
+
+		// Check specific error types
+		if err.Error() == "storefront not found" {
+			return nil, status.Error(codes.NotFound, "storefront not found")
+		}
+		if err.Error() == "not authorized" {
+			return nil, status.Error(codes.PermissionDenied, "not authorized to update this storefront")
+		}
+
+		return nil, status.Error(codes.Internal, "failed to update storefront status")
+	}
+
+	// Get updated storefront to return current status
+	storefrontID := req.StorefrontId
+	storefront, err := s.storefrontService.GetStorefront(ctx, &storefrontID, nil, nil)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to get updated storefront")
+		return nil, status.Error(codes.Internal, "failed to get updated storefront")
+	}
+
+	// Build response from updated storefront
+	response := &listingspb.UpdateStorefrontStatusResponse{
+		Success:          true,
+		VacationMode:     storefront.VacationMode,
+		AcceptingOrders:  storefront.AcceptingOrders,
+		StatusUpdatedAt:  timestamppb.New(storefront.StatusUpdatedAt),
+	}
+
+	if storefront.VacationStartDate != nil {
+		response.VacationStartDate = timestamppb.New(*storefront.VacationStartDate)
+	}
+	if storefront.VacationEndDate != nil {
+		response.VacationEndDate = timestamppb.New(*storefront.VacationEndDate)
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", req.StorefrontId).
+		Bool("vacation_mode", storefront.VacationMode).
+		Bool("accepting_orders", storefront.AcceptingOrders).
+		Msg("Storefront status updated successfully")
+
+	return response, nil
 }

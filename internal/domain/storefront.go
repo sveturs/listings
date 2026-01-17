@@ -91,6 +91,15 @@ type Storefront struct {
 	IsActive         bool       `db:"is_active" json:"is_active"`
 	IsVerified       bool       `db:"is_verified" json:"is_verified"`
 	VerificationDate *time.Time `db:"verification_date" json:"verification_date,omitempty"`
+
+	// Store Operational Status (NEW - 2026-01-17)
+	VacationMode             bool       `db:"vacation_mode" json:"vacation_mode"`
+	AcceptingOrders          bool       `db:"accepting_orders" json:"accepting_orders"`
+	VacationStartDate        *time.Time `db:"vacation_start_date" json:"vacation_start_date,omitempty"`
+	VacationEndDate          *time.Time `db:"vacation_end_date" json:"vacation_end_date,omitempty"`
+	AutoPauseWhenOutOfStock  bool       `db:"auto_pause_when_out_of_stock" json:"auto_pause_when_out_of_stock"`
+	StatusUpdatedAt          time.Time  `db:"status_updated_at" json:"status_updated_at"`
+
 	Rating           float64    `db:"rating" json:"rating"`
 	ReviewsCount     int32      `db:"reviews_count" json:"reviews_count"`
 	ProductsCount    int32      `db:"products_count" json:"products_count"`
