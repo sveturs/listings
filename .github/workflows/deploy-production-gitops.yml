@@ -66,7 +66,74 @@ jobs:
           tags: |
             ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.git_sha.outputs.sha }}
 
+  migrate:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Manual checkout
+        run: |
+          if [ -d "$GITHUB_WORKSPACE/.git" ]; then
+            cd $GITHUB_WORKSPACE
+            git fetch origin
+            git reset --hard origin/${{ github.ref_name }}
+          else
+            rm -rf $GITHUB_WORKSPACE 2>/dev/null || true
+            mkdir -p $GITHUB_WORKSPACE
+            git clone https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/${{ github.repository }}.git $GITHUB_WORKSPACE
+          fi
+
+      - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.K8S_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519_workflow
+          chmod 600 ~/.ssh/id_ed25519_workflow
+          cat > ~/.ssh/config << 'SSH_CONFIG'
+          Host vondi
+            HostName 62.169.20.78
+            User root
+            IdentityFile ~/.ssh/id_ed25519_workflow
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          SSH_CONFIG
+          chmod 600 ~/.ssh/config
+
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+
+          DB_USER="listings_user"
+          DB_PASS="vLj8tQ2mK9rN3xP6wY4zA7bC"
+          DB_NAME="listings_db"
+
+          # Setup port-forward in background
+          ssh -f -N -L 15432:postgres-listings-0.postgres-listings.production.svc.cluster.local:5432 vondi
+          sleep 3
+
+          # Install golang-migrate if not present
+          if ! command -v migrate &> /dev/null; then
+            curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+            sudo mv migrate /usr/local/bin/
+          fi
+
+          # Check current version
+          PGPASSWORD=$DB_PASS psql -h localhost -p 15432 -U $DB_USER -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations;" || echo "No migrations yet"
+
+          # Run migrations
+          migrate -path ./migrations -database "postgres://$DB_USER:$DB_PASS@localhost:15432/$DB_NAME?sslmode=disable" up
+
+          echo "✅ Migrations complete!"
+
+          # Cleanup
+          pkill -f "ssh -f -N -L 15432" || true
+
+      - name: Cleanup SSH
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519_workflow
+
   deploy:
+    needs: [build, migrate]
     needs: build
     runs-on: self-hosted
     steps:

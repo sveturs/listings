@@ -90,6 +90,43 @@ jobs:
 
           echo "SSH configured for host vondi (62.169.20.78)"
 
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+
+          # Database connection details for production
+          DB_HOST="postgres-listings-0.postgres-listings.$K8S_NAMESPACE.svc.cluster.local"
+          DB_PORT="5432"
+          DB_USER="listings_user"
+          DB_PASS="vLj8tQ2mK9rN3xP6wY4zA7bC"
+          DB_NAME="listings_db"
+
+          # Setup port-forward in background
+          echo "Setting up port-forward to PostgreSQL..."
+          ssh -f -N -L 15432:postgres-listings-0.postgres-listings.production.svc.cluster.local:5432 vondi
+          sleep 3
+
+          # Install golang-migrate if not present
+          if ! command -v migrate &> /dev/null; then
+            echo "Installing golang-migrate..."
+            curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+            sudo mv migrate /usr/local/bin/
+          fi
+
+          # Check current migration version
+          echo "Current migration version:"
+          PGPASSWORD=$DB_PASS psql -h localhost -p 15432 -U $DB_USER -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 1;" || echo "No migrations table yet"
+
+          # Run migrations
+          echo "Applying migrations..."
+          migrate -path ./migrations -database "postgres://$DB_USER:$DB_PASS@localhost:15432/$DB_NAME?sslmode=disable" up
+
+          echo "✅ Migrations complete!"
+          PGPASSWORD=$DB_PASS psql -h localhost -p 15432 -U $DB_USER -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 5;"
+
+          # Cleanup port-forward
+          pkill -f "ssh -f -N -L 15432" || true
+
       - name: Deploy to Kubernetes
         run: |
           SHA="${{ steps.git_sha.outputs.sha }}"
