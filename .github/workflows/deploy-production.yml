@@ -7,7 +7,7 @@ on:
 
 env:
   HARBOR_REGISTRY: registry.vondi.rs
-  IMAGE_NAME: library/listings
+  IMAGE_NAME: services/listings
   K8S_NAMESPACE: production
   DEPLOYMENT_NAME: listings-service
   HEALTH_URL: https://listings.vondi.rs/health
