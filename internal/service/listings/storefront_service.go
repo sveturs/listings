@@ -53,6 +53,16 @@ type CreateStorefrontRequest struct {
 	Phone       *string
 	Email       *string
 	Website     *string
+	SocialLinks domain.JSONB
+	// Business Legal Structure
+	LegalEntityType            string
+	BusinessCategory           string
+	FullLegalName              *string
+	RegistrationNumber         *string
+	TaxNumber                  *string
+	VatNumber                  *string
+	LegalRepresentativeName    *string
+	LegalRepresentativePosition *string
 	Location    StorefrontLocation
 	Settings    domain.JSONB
 	SeoMeta     domain.JSONB
@@ -144,6 +154,16 @@ func (s *StorefrontService) CreateStorefront(ctx context.Context, req *CreateSto
 		Phone:                req.Phone,
 		Email:                req.Email,
 		Website:              req.Website,
+		SocialLinks:          req.SocialLinks,
+		// Business Legal Structure
+		LegalEntityType:            req.LegalEntityType,
+		BusinessCategory:           req.BusinessCategory,
+		FullLegalName:              req.FullLegalName,
+		RegistrationNumber:         req.RegistrationNumber,
+		TaxNumber:                  req.TaxNumber,
+		VatNumber:                  req.VatNumber,
+		LegalRepresentativeName:    req.LegalRepresentativeName,
+		LegalRepresentativePosition: req.LegalRepresentativePosition,
 		Address:              &req.Location.FullAddress,
 		City:                 &req.Location.City,
 		PostalCode:           req.Location.PostalCode,

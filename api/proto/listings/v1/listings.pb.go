@@ -4558,6 +4558,7 @@ type Storefront struct {
 	Phone          *string                `protobuf:"bytes,8,opt,name=phone,proto3,oneof" json:"phone,omitempty"`
 	Email          *string                `protobuf:"bytes,9,opt,name=email,proto3,oneof" json:"email,omitempty"`
 	Website        *string                `protobuf:"bytes,10,opt,name=website,proto3,oneof" json:"website,omitempty"`
+	SocialLinks    *structpb.Struct       `protobuf:"bytes,27,opt,name=social_links,json=socialLinks,proto3,oneof" json:"social_links,omitempty"` // JSON: {"instagram": "url", "facebook": "url", "telegram": "url", "whatsapp": "number"}
 	Address        *string                `protobuf:"bytes,11,opt,name=address,proto3,oneof" json:"address,omitempty"`
 	City           *string                `protobuf:"bytes,12,opt,name=city,proto3,oneof" json:"city,omitempty"`
 	PostalCode     *string                `protobuf:"bytes,13,opt,name=postal_code,json=postalCode,proto3,oneof" json:"postal_code,omitempty"`
@@ -4574,8 +4575,17 @@ type Storefront struct {
 	FollowersCount int32                  `protobuf:"varint,24,opt,name=followers_count,json=followersCount,proto3" json:"followers_count,omitempty"`
 	CreatedAt      string                 `protobuf:"bytes,25,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt      string                 `protobuf:"bytes,26,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Business legal structure (added 2026-01-18)
+	LegalEntityType             string  `protobuf:"bytes,28,opt,name=legal_entity_type,json=legalEntityType,proto3" json:"legal_entity_type,omitempty"`              // preduzetnik, doo, ad
+	BusinessCategory            string  `protobuf:"bytes,29,opt,name=business_category,json=businessCategory,proto3" json:"business_category,omitempty"`             // retail, service, restaurant, grocery, other
+	FullLegalName               *string `protobuf:"bytes,30,opt,name=full_legal_name,json=fullLegalName,proto3,oneof" json:"full_legal_name,omitempty"`              // Full company name (for legal entities)
+	RegistrationNumber          *string `protobuf:"bytes,31,opt,name=registration_number,json=registrationNumber,proto3,oneof" json:"registration_number,omitempty"` // Matični broj (MB)
+	TaxNumber                   *string `protobuf:"bytes,34,opt,name=tax_number,json=taxNumber,proto3,oneof" json:"tax_number,omitempty"`                            // PIB (9 digits)
+	VatNumber                   *string `protobuf:"bytes,35,opt,name=vat_number,json=vatNumber,proto3,oneof" json:"vat_number,omitempty"`                            // PDV broj (RS + 9 digits)
+	LegalRepresentativeName     *string `protobuf:"bytes,32,opt,name=legal_representative_name,json=legalRepresentativeName,proto3,oneof" json:"legal_representative_name,omitempty"`
+	LegalRepresentativePosition *string `protobuf:"bytes,33,opt,name=legal_representative_position,json=legalRepresentativePosition,proto3,oneof" json:"legal_representative_position,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *Storefront) Reset() {
@@ -4676,6 +4686,13 @@ func (x *Storefront) GetWebsite() string {
 		return *x.Website
 	}
 	return ""
+}
+
+func (x *Storefront) GetSocialLinks() *structpb.Struct {
+	if x != nil {
+		return x.SocialLinks
+	}
+	return nil
 }
 
 func (x *Storefront) GetAddress() string {
@@ -4786,6 +4803,62 @@ func (x *Storefront) GetCreatedAt() string {
 func (x *Storefront) GetUpdatedAt() string {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *Storefront) GetLegalEntityType() string {
+	if x != nil {
+		return x.LegalEntityType
+	}
+	return ""
+}
+
+func (x *Storefront) GetBusinessCategory() string {
+	if x != nil {
+		return x.BusinessCategory
+	}
+	return ""
+}
+
+func (x *Storefront) GetFullLegalName() string {
+	if x != nil && x.FullLegalName != nil {
+		return *x.FullLegalName
+	}
+	return ""
+}
+
+func (x *Storefront) GetRegistrationNumber() string {
+	if x != nil && x.RegistrationNumber != nil {
+		return *x.RegistrationNumber
+	}
+	return ""
+}
+
+func (x *Storefront) GetTaxNumber() string {
+	if x != nil && x.TaxNumber != nil {
+		return *x.TaxNumber
+	}
+	return ""
+}
+
+func (x *Storefront) GetVatNumber() string {
+	if x != nil && x.VatNumber != nil {
+		return *x.VatNumber
+	}
+	return ""
+}
+
+func (x *Storefront) GetLegalRepresentativeName() string {
+	if x != nil && x.LegalRepresentativeName != nil {
+		return *x.LegalRepresentativeName
+	}
+	return ""
+}
+
+func (x *Storefront) GetLegalRepresentativePosition() string {
+	if x != nil && x.LegalRepresentativePosition != nil {
+		return *x.LegalRepresentativePosition
 	}
 	return ""
 }
@@ -10421,9 +10494,10 @@ type StorefrontFull struct {
 	BannerUrl *string          `protobuf:"bytes,7,opt,name=banner_url,json=bannerUrl,proto3,oneof" json:"banner_url,omitempty"`
 	Theme     *structpb.Struct `protobuf:"bytes,8,opt,name=theme,proto3,oneof" json:"theme,omitempty"` // JSON: {"layout": "grid", "primaryColor": "#1976d2"}
 	// Contact information
-	Phone   *string `protobuf:"bytes,9,opt,name=phone,proto3,oneof" json:"phone,omitempty"`
-	Email   *string `protobuf:"bytes,10,opt,name=email,proto3,oneof" json:"email,omitempty"`
-	Website *string `protobuf:"bytes,11,opt,name=website,proto3,oneof" json:"website,omitempty"`
+	Phone       *string          `protobuf:"bytes,9,opt,name=phone,proto3,oneof" json:"phone,omitempty"`
+	Email       *string          `protobuf:"bytes,10,opt,name=email,proto3,oneof" json:"email,omitempty"`
+	Website     *string          `protobuf:"bytes,11,opt,name=website,proto3,oneof" json:"website,omitempty"`
+	SocialLinks *structpb.Struct `protobuf:"bytes,54,opt,name=social_links,json=socialLinks,proto3,oneof" json:"social_links,omitempty"` // JSON: {"instagram": "url", "facebook": "url", "telegram": "url", "whatsapp": "number"}
 	// Location (address)
 	Address             *string               `protobuf:"bytes,12,opt,name=address,proto3,oneof" json:"address,omitempty"`
 	City                *string               `protobuf:"bytes,13,opt,name=city,proto3,oneof" json:"city,omitempty"`
@@ -10475,8 +10549,17 @@ type StorefrontFull struct {
 	Hours           []*StorefrontHours          `protobuf:"bytes,45,rep,name=hours,proto3" json:"hours,omitempty"`
 	PaymentMethods  []*StorefrontPaymentMethod  `protobuf:"bytes,46,rep,name=payment_methods,json=paymentMethods,proto3" json:"payment_methods,omitempty"`
 	DeliveryOptions []*StorefrontDeliveryOption `protobuf:"bytes,47,rep,name=delivery_options,json=deliveryOptions,proto3" json:"delivery_options,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Business legal structure (added 2026-01-18)
+	LegalEntityType             string  `protobuf:"bytes,55,opt,name=legal_entity_type,json=legalEntityType,proto3" json:"legal_entity_type,omitempty"`              // preduzetnik, doo, ad
+	BusinessCategory            string  `protobuf:"bytes,56,opt,name=business_category,json=businessCategory,proto3" json:"business_category,omitempty"`             // retail, service, restaurant, grocery, other
+	FullLegalName               *string `protobuf:"bytes,57,opt,name=full_legal_name,json=fullLegalName,proto3,oneof" json:"full_legal_name,omitempty"`              // Full company name (for legal entities)
+	RegistrationNumber          *string `protobuf:"bytes,58,opt,name=registration_number,json=registrationNumber,proto3,oneof" json:"registration_number,omitempty"` // Matični broj (MB)
+	TaxNumber                   *string `protobuf:"bytes,61,opt,name=tax_number,json=taxNumber,proto3,oneof" json:"tax_number,omitempty"`                            // PIB (9 digits)
+	VatNumber                   *string `protobuf:"bytes,62,opt,name=vat_number,json=vatNumber,proto3,oneof" json:"vat_number,omitempty"`                            // PDV broj (RS + 9 digits)
+	LegalRepresentativeName     *string `protobuf:"bytes,59,opt,name=legal_representative_name,json=legalRepresentativeName,proto3,oneof" json:"legal_representative_name,omitempty"`
+	LegalRepresentativePosition *string `protobuf:"bytes,60,opt,name=legal_representative_position,json=legalRepresentativePosition,proto3,oneof" json:"legal_representative_position,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *StorefrontFull) Reset() {
@@ -10584,6 +10667,13 @@ func (x *StorefrontFull) GetWebsite() string {
 		return *x.Website
 	}
 	return ""
+}
+
+func (x *StorefrontFull) GetSocialLinks() *structpb.Struct {
+	if x != nil {
+		return x.SocialLinks
+	}
+	return nil
 }
 
 func (x *StorefrontFull) GetAddress() string {
@@ -10878,6 +10968,62 @@ func (x *StorefrontFull) GetDeliveryOptions() []*StorefrontDeliveryOption {
 		return x.DeliveryOptions
 	}
 	return nil
+}
+
+func (x *StorefrontFull) GetLegalEntityType() string {
+	if x != nil {
+		return x.LegalEntityType
+	}
+	return ""
+}
+
+func (x *StorefrontFull) GetBusinessCategory() string {
+	if x != nil {
+		return x.BusinessCategory
+	}
+	return ""
+}
+
+func (x *StorefrontFull) GetFullLegalName() string {
+	if x != nil && x.FullLegalName != nil {
+		return *x.FullLegalName
+	}
+	return ""
+}
+
+func (x *StorefrontFull) GetRegistrationNumber() string {
+	if x != nil && x.RegistrationNumber != nil {
+		return *x.RegistrationNumber
+	}
+	return ""
+}
+
+func (x *StorefrontFull) GetTaxNumber() string {
+	if x != nil && x.TaxNumber != nil {
+		return *x.TaxNumber
+	}
+	return ""
+}
+
+func (x *StorefrontFull) GetVatNumber() string {
+	if x != nil && x.VatNumber != nil {
+		return *x.VatNumber
+	}
+	return ""
+}
+
+func (x *StorefrontFull) GetLegalRepresentativeName() string {
+	if x != nil && x.LegalRepresentativeName != nil {
+		return *x.LegalRepresentativeName
+	}
+	return ""
+}
+
+func (x *StorefrontFull) GetLegalRepresentativePosition() string {
+	if x != nil && x.LegalRepresentativePosition != nil {
+		return *x.LegalRepresentativePosition
+	}
+	return ""
 }
 
 // StorefrontStaff represents staff member (b2c_store_staff table)
@@ -11507,22 +11653,32 @@ func (x *Location) GetCountry() string {
 
 // CreateStorefrontRequest creates a new storefront
 type CreateStorefrontRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // Owner (from JWT token)
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                    // Required
-	Slug          *string                `protobuf:"bytes,3,opt,name=slug,proto3,oneof" json:"slug,omitempty"`              // Auto-generated if empty
-	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	Logo          []byte                 `protobuf:"bytes,5,opt,name=logo,proto3,oneof" json:"logo,omitempty"`     // File content for upload
-	Banner        []byte                 `protobuf:"bytes,6,opt,name=banner,proto3,oneof" json:"banner,omitempty"` // File content for upload
-	Theme         *structpb.Struct       `protobuf:"bytes,7,opt,name=theme,proto3,oneof" json:"theme,omitempty"`
-	Phone         *string                `protobuf:"bytes,8,opt,name=phone,proto3,oneof" json:"phone,omitempty"`
-	Email         *string                `protobuf:"bytes,9,opt,name=email,proto3,oneof" json:"email,omitempty"`      // Validated
-	Website       *string                `protobuf:"bytes,10,opt,name=website,proto3,oneof" json:"website,omitempty"` // Validated
-	Location      *Location              `protobuf:"bytes,11,opt,name=location,proto3" json:"location,omitempty"`     // Required
-	Settings      *structpb.Struct       `protobuf:"bytes,12,opt,name=settings,proto3,oneof" json:"settings,omitempty"`
-	SeoMeta       *structpb.Struct       `protobuf:"bytes,13,opt,name=seo_meta,json=seoMeta,proto3,oneof" json:"seo_meta,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	UserId      int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // Owner (from JWT token)
+	Name        string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                    // Required
+	Slug        *string                `protobuf:"bytes,3,opt,name=slug,proto3,oneof" json:"slug,omitempty"`              // Auto-generated if empty
+	Description *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Logo        []byte                 `protobuf:"bytes,5,opt,name=logo,proto3,oneof" json:"logo,omitempty"`     // File content for upload
+	Banner      []byte                 `protobuf:"bytes,6,opt,name=banner,proto3,oneof" json:"banner,omitempty"` // File content for upload
+	Theme       *structpb.Struct       `protobuf:"bytes,7,opt,name=theme,proto3,oneof" json:"theme,omitempty"`
+	Phone       *string                `protobuf:"bytes,8,opt,name=phone,proto3,oneof" json:"phone,omitempty"`
+	Email       *string                `protobuf:"bytes,9,opt,name=email,proto3,oneof" json:"email,omitempty"`                                 // Validated
+	Website     *string                `protobuf:"bytes,10,opt,name=website,proto3,oneof" json:"website,omitempty"`                            // Validated
+	SocialLinks *structpb.Struct       `protobuf:"bytes,22,opt,name=social_links,json=socialLinks,proto3,oneof" json:"social_links,omitempty"` // Social media links
+	Location    *Location              `protobuf:"bytes,11,opt,name=location,proto3" json:"location,omitempty"`                                // Required
+	Settings    *structpb.Struct       `protobuf:"bytes,12,opt,name=settings,proto3,oneof" json:"settings,omitempty"`
+	SeoMeta     *structpb.Struct       `protobuf:"bytes,13,opt,name=seo_meta,json=seoMeta,proto3,oneof" json:"seo_meta,omitempty"`
+	// Business legal structure (added 2026-01-18)
+	LegalEntityType             *string `protobuf:"bytes,14,opt,name=legal_entity_type,json=legalEntityType,proto3,oneof" json:"legal_entity_type,omitempty"`        // preduzetnik, doo, ad
+	BusinessCategory            *string `protobuf:"bytes,15,opt,name=business_category,json=businessCategory,proto3,oneof" json:"business_category,omitempty"`       // retail, service, restaurant, grocery, other
+	FullLegalName               *string `protobuf:"bytes,16,opt,name=full_legal_name,json=fullLegalName,proto3,oneof" json:"full_legal_name,omitempty"`              // Full company name (for legal entities)
+	RegistrationNumber          *string `protobuf:"bytes,17,opt,name=registration_number,json=registrationNumber,proto3,oneof" json:"registration_number,omitempty"` // Matični broj (MB)
+	TaxNumber                   *string `protobuf:"bytes,20,opt,name=tax_number,json=taxNumber,proto3,oneof" json:"tax_number,omitempty"`                            // PIB (9 digits)
+	VatNumber                   *string `protobuf:"bytes,21,opt,name=vat_number,json=vatNumber,proto3,oneof" json:"vat_number,omitempty"`                            // PDV broj (RS + 9 digits)
+	LegalRepresentativeName     *string `protobuf:"bytes,18,opt,name=legal_representative_name,json=legalRepresentativeName,proto3,oneof" json:"legal_representative_name,omitempty"`
+	LegalRepresentativePosition *string `protobuf:"bytes,19,opt,name=legal_representative_position,json=legalRepresentativePosition,proto3,oneof" json:"legal_representative_position,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *CreateStorefrontRequest) Reset() {
@@ -11625,6 +11781,13 @@ func (x *CreateStorefrontRequest) GetWebsite() string {
 	return ""
 }
 
+func (x *CreateStorefrontRequest) GetSocialLinks() *structpb.Struct {
+	if x != nil {
+		return x.SocialLinks
+	}
+	return nil
+}
+
 func (x *CreateStorefrontRequest) GetLocation() *Location {
 	if x != nil {
 		return x.Location
@@ -11646,6 +11809,62 @@ func (x *CreateStorefrontRequest) GetSeoMeta() *structpb.Struct {
 	return nil
 }
 
+func (x *CreateStorefrontRequest) GetLegalEntityType() string {
+	if x != nil && x.LegalEntityType != nil {
+		return *x.LegalEntityType
+	}
+	return ""
+}
+
+func (x *CreateStorefrontRequest) GetBusinessCategory() string {
+	if x != nil && x.BusinessCategory != nil {
+		return *x.BusinessCategory
+	}
+	return ""
+}
+
+func (x *CreateStorefrontRequest) GetFullLegalName() string {
+	if x != nil && x.FullLegalName != nil {
+		return *x.FullLegalName
+	}
+	return ""
+}
+
+func (x *CreateStorefrontRequest) GetRegistrationNumber() string {
+	if x != nil && x.RegistrationNumber != nil {
+		return *x.RegistrationNumber
+	}
+	return ""
+}
+
+func (x *CreateStorefrontRequest) GetTaxNumber() string {
+	if x != nil && x.TaxNumber != nil {
+		return *x.TaxNumber
+	}
+	return ""
+}
+
+func (x *CreateStorefrontRequest) GetVatNumber() string {
+	if x != nil && x.VatNumber != nil {
+		return *x.VatNumber
+	}
+	return ""
+}
+
+func (x *CreateStorefrontRequest) GetLegalRepresentativeName() string {
+	if x != nil && x.LegalRepresentativeName != nil {
+		return *x.LegalRepresentativeName
+	}
+	return ""
+}
+
+func (x *CreateStorefrontRequest) GetLegalRepresentativePosition() string {
+	if x != nil && x.LegalRepresentativePosition != nil {
+		return *x.LegalRepresentativePosition
+	}
+	return ""
+}
+
 // UpdateStorefrontRequest updates an existing storefront
 type UpdateStorefrontRequest struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
@@ -11665,8 +11884,17 @@ type UpdateStorefrontRequest struct {
 	AiAgentEnabled      *bool                  `protobuf:"varint,14,opt,name=ai_agent_enabled,json=aiAgentEnabled,proto3,oneof" json:"ai_agent_enabled,omitempty"`
 	LiveShoppingEnabled *bool                  `protobuf:"varint,15,opt,name=live_shopping_enabled,json=liveShoppingEnabled,proto3,oneof" json:"live_shopping_enabled,omitempty"`
 	GroupBuyingEnabled  *bool                  `protobuf:"varint,16,opt,name=group_buying_enabled,json=groupBuyingEnabled,proto3,oneof" json:"group_buying_enabled,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Business legal structure (added 2026-01-18)
+	LegalEntityType             *string `protobuf:"bytes,17,opt,name=legal_entity_type,json=legalEntityType,proto3,oneof" json:"legal_entity_type,omitempty"`
+	BusinessCategory            *string `protobuf:"bytes,18,opt,name=business_category,json=businessCategory,proto3,oneof" json:"business_category,omitempty"`
+	FullLegalName               *string `protobuf:"bytes,19,opt,name=full_legal_name,json=fullLegalName,proto3,oneof" json:"full_legal_name,omitempty"`
+	RegistrationNumber          *string `protobuf:"bytes,20,opt,name=registration_number,json=registrationNumber,proto3,oneof" json:"registration_number,omitempty"`
+	TaxNumber                   *string `protobuf:"bytes,23,opt,name=tax_number,json=taxNumber,proto3,oneof" json:"tax_number,omitempty"`
+	VatNumber                   *string `protobuf:"bytes,24,opt,name=vat_number,json=vatNumber,proto3,oneof" json:"vat_number,omitempty"`
+	LegalRepresentativeName     *string `protobuf:"bytes,21,opt,name=legal_representative_name,json=legalRepresentativeName,proto3,oneof" json:"legal_representative_name,omitempty"`
+	LegalRepresentativePosition *string `protobuf:"bytes,22,opt,name=legal_representative_position,json=legalRepresentativePosition,proto3,oneof" json:"legal_representative_position,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
 }
 
 func (x *UpdateStorefrontRequest) Reset() {
@@ -11809,6 +12037,62 @@ func (x *UpdateStorefrontRequest) GetGroupBuyingEnabled() bool {
 		return *x.GroupBuyingEnabled
 	}
 	return false
+}
+
+func (x *UpdateStorefrontRequest) GetLegalEntityType() string {
+	if x != nil && x.LegalEntityType != nil {
+		return *x.LegalEntityType
+	}
+	return ""
+}
+
+func (x *UpdateStorefrontRequest) GetBusinessCategory() string {
+	if x != nil && x.BusinessCategory != nil {
+		return *x.BusinessCategory
+	}
+	return ""
+}
+
+func (x *UpdateStorefrontRequest) GetFullLegalName() string {
+	if x != nil && x.FullLegalName != nil {
+		return *x.FullLegalName
+	}
+	return ""
+}
+
+func (x *UpdateStorefrontRequest) GetRegistrationNumber() string {
+	if x != nil && x.RegistrationNumber != nil {
+		return *x.RegistrationNumber
+	}
+	return ""
+}
+
+func (x *UpdateStorefrontRequest) GetTaxNumber() string {
+	if x != nil && x.TaxNumber != nil {
+		return *x.TaxNumber
+	}
+	return ""
+}
+
+func (x *UpdateStorefrontRequest) GetVatNumber() string {
+	if x != nil && x.VatNumber != nil {
+		return *x.VatNumber
+	}
+	return ""
+}
+
+func (x *UpdateStorefrontRequest) GetLegalRepresentativeName() string {
+	if x != nil && x.LegalRepresentativeName != nil {
+		return *x.LegalRepresentativeName
+	}
+	return ""
+}
+
+func (x *UpdateStorefrontRequest) GetLegalRepresentativePosition() string {
+	if x != nil && x.LegalRepresentativePosition != nil {
+		return *x.LegalRepresentativePosition
+	}
+	return ""
 }
 
 // UpdateStorefrontStatusRequest updates store operational status
@@ -15460,7 +15744,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"listing_id\x18\x02 \x01(\x03R\tlistingId\"5\n" +
 	"\x12IsFavoriteResponse\x12\x1f\n" +
 	"\vis_favorite\x18\x01 \x01(\bR\n" +
-	"isFavorite\"\xb0\a\n" +
+	"isFavorite\"\x9a\f\n" +
 	"\n" +
 	"Storefront\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
@@ -15474,15 +15758,16 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x05phone\x18\b \x01(\tH\x03R\x05phone\x88\x01\x01\x12\x19\n" +
 	"\x05email\x18\t \x01(\tH\x04R\x05email\x88\x01\x01\x12\x1d\n" +
 	"\awebsite\x18\n" +
-	" \x01(\tH\x05R\awebsite\x88\x01\x01\x12\x1d\n" +
-	"\aaddress\x18\v \x01(\tH\x06R\aaddress\x88\x01\x01\x12\x17\n" +
-	"\x04city\x18\f \x01(\tH\aR\x04city\x88\x01\x01\x12$\n" +
-	"\vpostal_code\x18\r \x01(\tH\bR\n" +
+	" \x01(\tH\x05R\awebsite\x88\x01\x01\x12?\n" +
+	"\fsocial_links\x18\x1b \x01(\v2\x17.google.protobuf.StructH\x06R\vsocialLinks\x88\x01\x01\x12\x1d\n" +
+	"\aaddress\x18\v \x01(\tH\aR\aaddress\x88\x01\x01\x12\x17\n" +
+	"\x04city\x18\f \x01(\tH\bR\x04city\x88\x01\x01\x12$\n" +
+	"\vpostal_code\x18\r \x01(\tH\tR\n" +
 	"postalCode\x88\x01\x01\x12\x18\n" +
 	"\acountry\x18\x0e \x01(\tR\acountry\x12\x1f\n" +
-	"\blatitude\x18\x0f \x01(\x01H\tR\blatitude\x88\x01\x01\x12!\n" +
-	"\tlongitude\x18\x10 \x01(\x01H\n" +
-	"R\tlongitude\x88\x01\x01\x12\x1b\n" +
+	"\blatitude\x18\x0f \x01(\x01H\n" +
+	"R\blatitude\x88\x01\x01\x12!\n" +
+	"\tlongitude\x18\x10 \x01(\x01H\vR\tlongitude\x88\x01\x01\x12\x1b\n" +
 	"\tis_active\x18\x11 \x01(\bR\bisActive\x12\x1f\n" +
 	"\vis_verified\x18\x12 \x01(\bR\n" +
 	"isVerified\x12\x16\n" +
@@ -15497,21 +15782,38 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x19 \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x1a \x01(\tR\tupdatedAtB\x0e\n" +
+	"updated_at\x18\x1a \x01(\tR\tupdatedAt\x12*\n" +
+	"\x11legal_entity_type\x18\x1c \x01(\tR\x0flegalEntityType\x12+\n" +
+	"\x11business_category\x18\x1d \x01(\tR\x10businessCategory\x12+\n" +
+	"\x0ffull_legal_name\x18\x1e \x01(\tH\fR\rfullLegalName\x88\x01\x01\x124\n" +
+	"\x13registration_number\x18\x1f \x01(\tH\rR\x12registrationNumber\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"tax_number\x18\" \x01(\tH\x0eR\ttaxNumber\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"vat_number\x18# \x01(\tH\x0fR\tvatNumber\x88\x01\x01\x12?\n" +
+	"\x19legal_representative_name\x18  \x01(\tH\x10R\x17legalRepresentativeName\x88\x01\x01\x12G\n" +
+	"\x1dlegal_representative_position\x18! \x01(\tH\x11R\x1blegalRepresentativePosition\x88\x01\x01B\x0e\n" +
 	"\f_descriptionB\v\n" +
 	"\t_logo_urlB\r\n" +
 	"\v_banner_urlB\b\n" +
 	"\x06_phoneB\b\n" +
 	"\x06_emailB\n" +
 	"\n" +
-	"\b_websiteB\n" +
+	"\b_websiteB\x0f\n" +
+	"\r_social_linksB\n" +
 	"\n" +
 	"\b_addressB\a\n" +
 	"\x05_cityB\x0e\n" +
 	"\f_postal_codeB\v\n" +
 	"\t_latitudeB\f\n" +
 	"\n" +
-	"_longitude\"\x88\x02\n" +
+	"_longitudeB\x12\n" +
+	"\x10_full_legal_nameB\x16\n" +
+	"\x14_registration_numberB\r\n" +
+	"\v_tax_numberB\r\n" +
+	"\v_vat_numberB\x1c\n" +
+	"\x1a_legal_representative_nameB \n" +
+	"\x1e_legal_representative_position\"\x88\x02\n" +
 	"\x14GetStorefrontRequest\x12\x10\n" +
 	"\x02id\x18\x01 \x01(\x03H\x00R\x02id\x12\x14\n" +
 	"\x04slug\x18\x02 \x01(\tH\x00R\x04slug\x12#\n" +
@@ -16196,7 +16498,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\rtotal_indexed\x18\x01 \x01(\x05R\ftotalIndexed\x12!\n" +
 	"\ftotal_failed\x18\x02 \x01(\x05R\vtotalFailed\x12)\n" +
 	"\x10duration_seconds\x18\x03 \x01(\x05R\x0fdurationSeconds\x12\x16\n" +
-	"\x06errors\x18\x04 \x03(\tR\x06errors\"\xe9\x16\n" +
+	"\x06errors\x18\x04 \x03(\tR\x06errors\"\xd3\x1b\n" +
 	"\x0eStorefrontFull\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x12\n" +
@@ -16210,31 +16512,32 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x05phone\x18\t \x01(\tH\x04R\x05phone\x88\x01\x01\x12\x19\n" +
 	"\x05email\x18\n" +
 	" \x01(\tH\x05R\x05email\x88\x01\x01\x12\x1d\n" +
-	"\awebsite\x18\v \x01(\tH\x06R\awebsite\x88\x01\x01\x12\x1d\n" +
-	"\aaddress\x18\f \x01(\tH\aR\aaddress\x88\x01\x01\x12\x17\n" +
-	"\x04city\x18\r \x01(\tH\bR\x04city\x88\x01\x01\x12$\n" +
-	"\vpostal_code\x18\x0e \x01(\tH\tR\n" +
+	"\awebsite\x18\v \x01(\tH\x06R\awebsite\x88\x01\x01\x12?\n" +
+	"\fsocial_links\x186 \x01(\v2\x17.google.protobuf.StructH\aR\vsocialLinks\x88\x01\x01\x12\x1d\n" +
+	"\aaddress\x18\f \x01(\tH\bR\aaddress\x88\x01\x01\x12\x17\n" +
+	"\x04city\x18\r \x01(\tH\tR\x04city\x88\x01\x01\x12$\n" +
+	"\vpostal_code\x18\x0e \x01(\tH\n" +
+	"R\n" +
 	"postalCode\x88\x01\x01\x12\x1d\n" +
-	"\acountry\x18\x0f \x01(\tH\n" +
-	"R\acountry\x88\x01\x01\x12\x1f\n" +
-	"\blatitude\x18\x10 \x01(\x01H\vR\blatitude\x88\x01\x01\x12!\n" +
-	"\tlongitude\x18\x11 \x01(\x01H\fR\tlongitude\x88\x01\x01\x120\n" +
-	"\x11formatted_address\x18\x12 \x01(\tH\rR\x10formattedAddress\x88\x01\x01\x12H\n" +
+	"\acountry\x18\x0f \x01(\tH\vR\acountry\x88\x01\x01\x12\x1f\n" +
+	"\blatitude\x18\x10 \x01(\x01H\fR\blatitude\x88\x01\x01\x12!\n" +
+	"\tlongitude\x18\x11 \x01(\x01H\rR\tlongitude\x88\x01\x01\x120\n" +
+	"\x11formatted_address\x18\x12 \x01(\tH\x0eR\x10formattedAddress\x88\x01\x01\x12H\n" +
 	"\fgeo_strategy\x18\x13 \x01(\x0e2%.listingssvc.v1.StorefrontGeoStrategyR\vgeoStrategy\x12X\n" +
 	"\x15default_privacy_level\x18\x14 \x01(\x0e2$.listingssvc.v1.LocationPrivacyLevelR\x13defaultPrivacyLevel\x12)\n" +
 	"\x10address_verified\x18\x15 \x01(\bR\x0faddressVerified\x128\n" +
-	"\bsettings\x18\x16 \x01(\v2\x17.google.protobuf.StructH\x0eR\bsettings\x88\x01\x01\x127\n" +
-	"\bseo_meta\x18\x17 \x01(\v2\x17.google.protobuf.StructH\x0fR\aseoMeta\x88\x01\x01\x12\x1b\n" +
+	"\bsettings\x18\x16 \x01(\v2\x17.google.protobuf.StructH\x0fR\bsettings\x88\x01\x01\x127\n" +
+	"\bseo_meta\x18\x17 \x01(\v2\x17.google.protobuf.StructH\x10R\aseoMeta\x88\x01\x01\x12\x1b\n" +
 	"\tis_active\x18\x18 \x01(\bR\bisActive\x12\x1f\n" +
 	"\vis_verified\x18\x19 \x01(\bR\n" +
 	"isVerified\x12L\n" +
-	"\x11verification_date\x18\x1a \x01(\v2\x1a.google.protobuf.TimestampH\x10R\x10verificationDate\x88\x01\x01\x12#\n" +
+	"\x11verification_date\x18\x1a \x01(\v2\x1a.google.protobuf.TimestampH\x11R\x10verificationDate\x88\x01\x01\x12#\n" +
 	"\rvacation_mode\x180 \x01(\bR\fvacationMode\x12)\n" +
 	"\x10accepting_orders\x181 \x01(\bR\x0facceptingOrders\x12O\n" +
-	"\x13vacation_start_date\x182 \x01(\v2\x1a.google.protobuf.TimestampH\x11R\x11vacationStartDate\x88\x01\x01\x12K\n" +
-	"\x11vacation_end_date\x183 \x01(\v2\x1a.google.protobuf.TimestampH\x12R\x0fvacationEndDate\x88\x01\x01\x12=\n" +
+	"\x13vacation_start_date\x182 \x01(\v2\x1a.google.protobuf.TimestampH\x12R\x11vacationStartDate\x88\x01\x01\x12K\n" +
+	"\x11vacation_end_date\x183 \x01(\v2\x1a.google.protobuf.TimestampH\x13R\x0fvacationEndDate\x88\x01\x01\x12=\n" +
 	"\x1cauto_pause_when_out_of_stock\x184 \x01(\bR\x17autoPauseWhenOutOfStock\x12K\n" +
-	"\x11status_updated_at\x185 \x01(\v2\x1a.google.protobuf.TimestampH\x13R\x0fstatusUpdatedAt\x88\x01\x01\x12\x16\n" +
+	"\x11status_updated_at\x185 \x01(\v2\x1a.google.protobuf.TimestampH\x14R\x0fstatusUpdatedAt\x88\x01\x01\x12\x16\n" +
 	"\x06rating\x18\x1b \x01(\x01R\x06rating\x12#\n" +
 	"\rreviews_count\x18\x1c \x01(\x05R\freviewsCount\x12%\n" +
 	"\x0eproducts_count\x18\x1d \x01(\x05R\rproductsCount\x12\x1f\n" +
@@ -16243,12 +16546,12 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vviews_count\x18\x1f \x01(\x05R\n" +
 	"viewsCount\x12Q\n" +
 	"\x11subscription_plan\x18  \x01(\x0e2$.listingssvc.v1.SubscriptionPlanTypeR\x10subscriptionPlan\x12W\n" +
-	"\x17subscription_expires_at\x18! \x01(\v2\x1a.google.protobuf.TimestampH\x14R\x15subscriptionExpiresAt\x88\x01\x01\x12'\n" +
+	"\x17subscription_expires_at\x18! \x01(\v2\x1a.google.protobuf.TimestampH\x15R\x15subscriptionExpiresAt\x88\x01\x01\x12'\n" +
 	"\x0fcommission_rate\x18\" \x01(\x01R\x0ecommissionRate\x12,\n" +
-	"\x0fsubscription_id\x18# \x01(\x03H\x15R\x0esubscriptionId\x88\x01\x01\x124\n" +
+	"\x0fsubscription_id\x18# \x01(\x03H\x16R\x0esubscriptionId\x88\x01\x01\x124\n" +
 	"\x16is_subscription_active\x18$ \x01(\bR\x14isSubscriptionActive\x12(\n" +
 	"\x10ai_agent_enabled\x18% \x01(\bR\x0eaiAgentEnabled\x12D\n" +
-	"\x0fai_agent_config\x18& \x01(\v2\x17.google.protobuf.StructH\x16R\raiAgentConfig\x88\x01\x01\x122\n" +
+	"\x0fai_agent_config\x18& \x01(\v2\x17.google.protobuf.StructH\x17R\raiAgentConfig\x88\x01\x01\x122\n" +
 	"\x15live_shopping_enabled\x18' \x01(\bR\x13liveShoppingEnabled\x120\n" +
 	"\x14group_buying_enabled\x18( \x01(\bR\x12groupBuyingEnabled\x12'\n" +
 	"\x0ffollowers_count\x18) \x01(\x05R\x0efollowersCount\x129\n" +
@@ -16259,7 +16562,17 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x05staff\x18, \x03(\v2\x1f.listingssvc.v1.StorefrontStaffR\x05staff\x125\n" +
 	"\x05hours\x18- \x03(\v2\x1f.listingssvc.v1.StorefrontHoursR\x05hours\x12P\n" +
 	"\x0fpayment_methods\x18. \x03(\v2'.listingssvc.v1.StorefrontPaymentMethodR\x0epaymentMethods\x12S\n" +
-	"\x10delivery_options\x18/ \x03(\v2(.listingssvc.v1.StorefrontDeliveryOptionR\x0fdeliveryOptionsB\x0e\n" +
+	"\x10delivery_options\x18/ \x03(\v2(.listingssvc.v1.StorefrontDeliveryOptionR\x0fdeliveryOptions\x12*\n" +
+	"\x11legal_entity_type\x187 \x01(\tR\x0flegalEntityType\x12+\n" +
+	"\x11business_category\x188 \x01(\tR\x10businessCategory\x12+\n" +
+	"\x0ffull_legal_name\x189 \x01(\tH\x18R\rfullLegalName\x88\x01\x01\x124\n" +
+	"\x13registration_number\x18: \x01(\tH\x19R\x12registrationNumber\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"tax_number\x18= \x01(\tH\x1aR\ttaxNumber\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"vat_number\x18> \x01(\tH\x1bR\tvatNumber\x88\x01\x01\x12?\n" +
+	"\x19legal_representative_name\x18; \x01(\tH\x1cR\x17legalRepresentativeName\x88\x01\x01\x12G\n" +
+	"\x1dlegal_representative_position\x18< \x01(\tH\x1dR\x1blegalRepresentativePosition\x88\x01\x01B\x0e\n" +
 	"\f_descriptionB\v\n" +
 	"\t_logo_urlB\r\n" +
 	"\v_banner_urlB\b\n" +
@@ -16267,7 +16580,8 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x06_phoneB\b\n" +
 	"\x06_emailB\n" +
 	"\n" +
-	"\b_websiteB\n" +
+	"\b_websiteB\x0f\n" +
+	"\r_social_linksB\n" +
 	"\n" +
 	"\b_addressB\a\n" +
 	"\x05_cityB\x0e\n" +
@@ -16286,7 +16600,13 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x12_status_updated_atB\x1a\n" +
 	"\x18_subscription_expires_atB\x12\n" +
 	"\x10_subscription_idB\x12\n" +
-	"\x10_ai_agent_config\"\xd3\x03\n" +
+	"\x10_ai_agent_configB\x12\n" +
+	"\x10_full_legal_nameB\x16\n" +
+	"\x14_registration_numberB\r\n" +
+	"\v_tax_numberB\r\n" +
+	"\v_vat_numberB\x1c\n" +
+	"\x1a_legal_representative_nameB \n" +
+	"\x1e_legal_representative_position\"\xd3\x03\n" +
 	"\x0fStorefrontStaff\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12#\n" +
 	"\rstorefront_id\x18\x02 \x01(\x03R\fstorefrontId\x12\x17\n" +
@@ -16385,7 +16705,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\vpostal_code\x18\x05 \x01(\tH\x00R\n" +
 	"postalCode\x88\x01\x01\x12\x18\n" +
 	"\acountry\x18\x06 \x01(\tR\acountryB\x0e\n" +
-	"\f_postal_code\"\xdf\x04\n" +
+	"\f_postal_code\"\xff\t\n" +
 	"\x17CreateStorefrontRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x17\n" +
@@ -16397,10 +16717,22 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x05phone\x18\b \x01(\tH\x05R\x05phone\x88\x01\x01\x12\x19\n" +
 	"\x05email\x18\t \x01(\tH\x06R\x05email\x88\x01\x01\x12\x1d\n" +
 	"\awebsite\x18\n" +
-	" \x01(\tH\aR\awebsite\x88\x01\x01\x124\n" +
+	" \x01(\tH\aR\awebsite\x88\x01\x01\x12?\n" +
+	"\fsocial_links\x18\x16 \x01(\v2\x17.google.protobuf.StructH\bR\vsocialLinks\x88\x01\x01\x124\n" +
 	"\blocation\x18\v \x01(\v2\x18.listingssvc.v1.LocationR\blocation\x128\n" +
-	"\bsettings\x18\f \x01(\v2\x17.google.protobuf.StructH\bR\bsettings\x88\x01\x01\x127\n" +
-	"\bseo_meta\x18\r \x01(\v2\x17.google.protobuf.StructH\tR\aseoMeta\x88\x01\x01B\a\n" +
+	"\bsettings\x18\f \x01(\v2\x17.google.protobuf.StructH\tR\bsettings\x88\x01\x01\x127\n" +
+	"\bseo_meta\x18\r \x01(\v2\x17.google.protobuf.StructH\n" +
+	"R\aseoMeta\x88\x01\x01\x12/\n" +
+	"\x11legal_entity_type\x18\x0e \x01(\tH\vR\x0flegalEntityType\x88\x01\x01\x120\n" +
+	"\x11business_category\x18\x0f \x01(\tH\fR\x10businessCategory\x88\x01\x01\x12+\n" +
+	"\x0ffull_legal_name\x18\x10 \x01(\tH\rR\rfullLegalName\x88\x01\x01\x124\n" +
+	"\x13registration_number\x18\x11 \x01(\tH\x0eR\x12registrationNumber\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"tax_number\x18\x14 \x01(\tH\x0fR\ttaxNumber\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"vat_number\x18\x15 \x01(\tH\x10R\tvatNumber\x88\x01\x01\x12?\n" +
+	"\x19legal_representative_name\x18\x12 \x01(\tH\x11R\x17legalRepresentativeName\x88\x01\x01\x12G\n" +
+	"\x1dlegal_representative_position\x18\x13 \x01(\tH\x12R\x1blegalRepresentativePosition\x88\x01\x01B\a\n" +
 	"\x05_slugB\x0e\n" +
 	"\f_descriptionB\a\n" +
 	"\x05_logoB\t\n" +
@@ -16409,9 +16741,18 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x06_phoneB\b\n" +
 	"\x06_emailB\n" +
 	"\n" +
-	"\b_websiteB\v\n" +
+	"\b_websiteB\x0f\n" +
+	"\r_social_linksB\v\n" +
 	"\t_settingsB\v\n" +
-	"\t_seo_meta\"\x81\a\n" +
+	"\t_seo_metaB\x14\n" +
+	"\x12_legal_entity_typeB\x14\n" +
+	"\x12_business_categoryB\x12\n" +
+	"\x10_full_legal_nameB\x16\n" +
+	"\x14_registration_numberB\r\n" +
+	"\v_tax_numberB\r\n" +
+	"\v_vat_numberB\x1c\n" +
+	"\x1a_legal_representative_nameB \n" +
+	"\x1e_legal_representative_position\"\xcf\v\n" +
 	"\x17UpdateStorefrontRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\x04name\x18\x02 \x01(\tH\x00R\x04name\x88\x01\x01\x12%\n" +
@@ -16431,7 +16772,17 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\bseo_meta\x18\r \x01(\v2\x17.google.protobuf.StructH\vR\aseoMeta\x88\x01\x01\x12-\n" +
 	"\x10ai_agent_enabled\x18\x0e \x01(\bH\fR\x0eaiAgentEnabled\x88\x01\x01\x127\n" +
 	"\x15live_shopping_enabled\x18\x0f \x01(\bH\rR\x13liveShoppingEnabled\x88\x01\x01\x125\n" +
-	"\x14group_buying_enabled\x18\x10 \x01(\bH\x0eR\x12groupBuyingEnabled\x88\x01\x01B\a\n" +
+	"\x14group_buying_enabled\x18\x10 \x01(\bH\x0eR\x12groupBuyingEnabled\x88\x01\x01\x12/\n" +
+	"\x11legal_entity_type\x18\x11 \x01(\tH\x0fR\x0flegalEntityType\x88\x01\x01\x120\n" +
+	"\x11business_category\x18\x12 \x01(\tH\x10R\x10businessCategory\x88\x01\x01\x12+\n" +
+	"\x0ffull_legal_name\x18\x13 \x01(\tH\x11R\rfullLegalName\x88\x01\x01\x124\n" +
+	"\x13registration_number\x18\x14 \x01(\tH\x12R\x12registrationNumber\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"tax_number\x18\x17 \x01(\tH\x13R\ttaxNumber\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"vat_number\x18\x18 \x01(\tH\x14R\tvatNumber\x88\x01\x01\x12?\n" +
+	"\x19legal_representative_name\x18\x15 \x01(\tH\x15R\x17legalRepresentativeName\x88\x01\x01\x12G\n" +
+	"\x1dlegal_representative_position\x18\x16 \x01(\tH\x16R\x1blegalRepresentativePosition\x88\x01\x01B\a\n" +
 	"\x05_nameB\x0e\n" +
 	"\f_descriptionB\f\n" +
 	"\n" +
@@ -16448,7 +16799,15 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\t_seo_metaB\x13\n" +
 	"\x11_ai_agent_enabledB\x18\n" +
 	"\x16_live_shopping_enabledB\x17\n" +
-	"\x15_group_buying_enabled\"\x8f\x04\n" +
+	"\x15_group_buying_enabledB\x14\n" +
+	"\x12_legal_entity_typeB\x14\n" +
+	"\x12_business_categoryB\x12\n" +
+	"\x10_full_legal_nameB\x16\n" +
+	"\x14_registration_numberB\r\n" +
+	"\v_tax_numberB\r\n" +
+	"\v_vat_numberB\x1c\n" +
+	"\x1a_legal_representative_nameB \n" +
+	"\x1e_legal_representative_position\"\x8f\x04\n" +
 	"\x1dUpdateStorefrontStatusRequest\x12#\n" +
 	"\rstorefront_id\x18\x01 \x01(\x03R\fstorefrontId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12(\n" +
@@ -17156,325 +17515,328 @@ var file_api_proto_listings_v1_listings_proto_depIdxs = []int32{
 	14,  // 31: listingssvc.v1.CategoriesResponse.categories:type_name -> listingssvc.v1.Category
 	14,  // 32: listingssvc.v1.CategoryResponse.category:type_name -> listingssvc.v1.Category
 	15,  // 33: listingssvc.v1.CategoryTreeResponse.tree:type_name -> listingssvc.v1.CategoryTreeNode
-	59,  // 34: listingssvc.v1.StorefrontResponse.storefront:type_name -> listingssvc.v1.Storefront
-	138, // 35: listingssvc.v1.GetStorefrontResponse.storefront:type_name -> listingssvc.v1.StorefrontFull
-	2,   // 36: listingssvc.v1.ListStorefrontsRequest.subscription_plans:type_name -> listingssvc.v1.SubscriptionPlanType
-	4,   // 37: listingssvc.v1.ListStorefrontsRequest.payment_methods:type_name -> listingssvc.v1.PaymentMethodType
-	138, // 38: listingssvc.v1.ListStorefrontsResponse.storefronts:type_name -> listingssvc.v1.StorefrontFull
-	67,  // 39: listingssvc.v1.CreateVariantsRequest.variants:type_name -> listingssvc.v1.VariantInput
-	199, // 40: listingssvc.v1.VariantInput.attributes:type_name -> listingssvc.v1.VariantInput.AttributesEntry
-	13,  // 41: listingssvc.v1.VariantsResponse.variants:type_name -> listingssvc.v1.ListingVariant
-	200, // 42: listingssvc.v1.UpdateVariantRequest.attributes:type_name -> listingssvc.v1.UpdateVariantRequest.AttributesEntry
-	9,   // 43: listingssvc.v1.ListingsResponse.listings:type_name -> listingssvc.v1.Listing
-	16,  // 44: listingssvc.v1.ProductResponse.product:type_name -> listingssvc.v1.Product
-	16,  // 45: listingssvc.v1.ProductsResponse.products:type_name -> listingssvc.v1.Product
-	17,  // 46: listingssvc.v1.VariantResponse.variant:type_name -> listingssvc.v1.ProductVariant
-	17,  // 47: listingssvc.v1.ProductVariantsResponse.variants:type_name -> listingssvc.v1.ProductVariant
-	84,  // 48: listingssvc.v1.DecrementStockRequest.items:type_name -> listingssvc.v1.StockItem
-	85,  // 49: listingssvc.v1.DecrementStockResponse.results:type_name -> listingssvc.v1.StockResult
-	84,  // 50: listingssvc.v1.RollbackStockRequest.items:type_name -> listingssvc.v1.StockItem
-	85,  // 51: listingssvc.v1.RollbackStockResponse.results:type_name -> listingssvc.v1.StockResult
-	84,  // 52: listingssvc.v1.CheckStockAvailabilityRequest.items:type_name -> listingssvc.v1.StockItem
-	91,  // 53: listingssvc.v1.CheckStockAvailabilityResponse.items:type_name -> listingssvc.v1.StockAvailability
-	93,  // 54: listingssvc.v1.CreateReservationRequest.item:type_name -> listingssvc.v1.ReservationItem
-	202, // 55: listingssvc.v1.CreateReservationResponse.expires_at:type_name -> google.protobuf.Timestamp
-	202, // 56: listingssvc.v1.ReservationDetails.expires_at:type_name -> google.protobuf.Timestamp
-	202, // 57: listingssvc.v1.ReservationDetails.created_at:type_name -> google.protobuf.Timestamp
-	202, // 58: listingssvc.v1.ReservationDetails.updated_at:type_name -> google.protobuf.Timestamp
-	101, // 59: listingssvc.v1.GetReservationResponse.reservation:type_name -> listingssvc.v1.ReservationDetails
-	104, // 60: listingssvc.v1.GetReservedQuantityResponse.by_type:type_name -> listingssvc.v1.ReservedQuantityByType
-	201, // 61: listingssvc.v1.CreateProductRequest.attributes:type_name -> google.protobuf.Struct
-	201, // 62: listingssvc.v1.UpdateProductRequest.attributes:type_name -> google.protobuf.Struct
-	203, // 63: listingssvc.v1.UpdateProductRequest.update_mask:type_name -> google.protobuf.FieldMask
-	201, // 64: listingssvc.v1.ProductInput.attributes:type_name -> google.protobuf.Struct
-	110, // 65: listingssvc.v1.BulkCreateProductsRequest.products:type_name -> listingssvc.v1.ProductInput
-	16,  // 66: listingssvc.v1.BulkCreateProductsResponse.products:type_name -> listingssvc.v1.Product
-	118, // 67: listingssvc.v1.BulkCreateProductsResponse.errors:type_name -> listingssvc.v1.BulkOperationError
-	201, // 68: listingssvc.v1.ProductUpdateInput.attributes:type_name -> google.protobuf.Struct
-	203, // 69: listingssvc.v1.ProductUpdateInput.update_mask:type_name -> google.protobuf.FieldMask
-	113, // 70: listingssvc.v1.BulkUpdateProductsRequest.updates:type_name -> listingssvc.v1.ProductUpdateInput
-	16,  // 71: listingssvc.v1.BulkUpdateProductsResponse.products:type_name -> listingssvc.v1.Product
-	118, // 72: listingssvc.v1.BulkUpdateProductsResponse.errors:type_name -> listingssvc.v1.BulkOperationError
-	118, // 73: listingssvc.v1.BulkDeleteProductsResponse.errors:type_name -> listingssvc.v1.BulkOperationError
-	201, // 74: listingssvc.v1.CreateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
-	201, // 75: listingssvc.v1.CreateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
-	201, // 76: listingssvc.v1.UpdateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
-	201, // 77: listingssvc.v1.UpdateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
-	203, // 78: listingssvc.v1.UpdateProductVariantRequest.update_mask:type_name -> google.protobuf.FieldMask
-	201, // 79: listingssvc.v1.ProductVariantInput.variant_attributes:type_name -> google.protobuf.Struct
-	201, // 80: listingssvc.v1.ProductVariantInput.dimensions:type_name -> google.protobuf.Struct
-	123, // 81: listingssvc.v1.BulkCreateProductVariantsRequest.variants:type_name -> listingssvc.v1.ProductVariantInput
-	17,  // 82: listingssvc.v1.BulkCreateProductVariantsResponse.variants:type_name -> listingssvc.v1.ProductVariant
-	118, // 83: listingssvc.v1.BulkCreateProductVariantsResponse.errors:type_name -> listingssvc.v1.BulkOperationError
-	128, // 84: listingssvc.v1.BatchUpdateStockRequest.items:type_name -> listingssvc.v1.StockUpdateItem
-	130, // 85: listingssvc.v1.BatchUpdateStockResponse.results:type_name -> listingssvc.v1.StockUpdateResult
-	133, // 86: listingssvc.v1.GetProductStatsResponse.stats:type_name -> listingssvc.v1.ProductStats
-	201, // 87: listingssvc.v1.StorefrontFull.theme:type_name -> google.protobuf.Struct
-	0,   // 88: listingssvc.v1.StorefrontFull.geo_strategy:type_name -> listingssvc.v1.StorefrontGeoStrategy
-	1,   // 89: listingssvc.v1.StorefrontFull.default_privacy_level:type_name -> listingssvc.v1.LocationPrivacyLevel
-	201, // 90: listingssvc.v1.StorefrontFull.settings:type_name -> google.protobuf.Struct
-	201, // 91: listingssvc.v1.StorefrontFull.seo_meta:type_name -> google.protobuf.Struct
-	202, // 92: listingssvc.v1.StorefrontFull.verification_date:type_name -> google.protobuf.Timestamp
-	202, // 93: listingssvc.v1.StorefrontFull.vacation_start_date:type_name -> google.protobuf.Timestamp
-	202, // 94: listingssvc.v1.StorefrontFull.vacation_end_date:type_name -> google.protobuf.Timestamp
-	202, // 95: listingssvc.v1.StorefrontFull.status_updated_at:type_name -> google.protobuf.Timestamp
-	2,   // 96: listingssvc.v1.StorefrontFull.subscription_plan:type_name -> listingssvc.v1.SubscriptionPlanType
-	202, // 97: listingssvc.v1.StorefrontFull.subscription_expires_at:type_name -> google.protobuf.Timestamp
-	201, // 98: listingssvc.v1.StorefrontFull.ai_agent_config:type_name -> google.protobuf.Struct
-	202, // 99: listingssvc.v1.StorefrontFull.created_at:type_name -> google.protobuf.Timestamp
-	202, // 100: listingssvc.v1.StorefrontFull.updated_at:type_name -> google.protobuf.Timestamp
-	139, // 101: listingssvc.v1.StorefrontFull.staff:type_name -> listingssvc.v1.StorefrontStaff
-	140, // 102: listingssvc.v1.StorefrontFull.hours:type_name -> listingssvc.v1.StorefrontHours
-	141, // 103: listingssvc.v1.StorefrontFull.payment_methods:type_name -> listingssvc.v1.StorefrontPaymentMethod
-	142, // 104: listingssvc.v1.StorefrontFull.delivery_options:type_name -> listingssvc.v1.StorefrontDeliveryOption
-	3,   // 105: listingssvc.v1.StorefrontStaff.role:type_name -> listingssvc.v1.StaffRole
-	201, // 106: listingssvc.v1.StorefrontStaff.permissions:type_name -> google.protobuf.Struct
-	202, // 107: listingssvc.v1.StorefrontStaff.last_active_at:type_name -> google.protobuf.Timestamp
-	202, // 108: listingssvc.v1.StorefrontStaff.created_at:type_name -> google.protobuf.Timestamp
-	202, // 109: listingssvc.v1.StorefrontStaff.updated_at:type_name -> google.protobuf.Timestamp
-	4,   // 110: listingssvc.v1.StorefrontPaymentMethod.method_type:type_name -> listingssvc.v1.PaymentMethodType
-	201, // 111: listingssvc.v1.StorefrontPaymentMethod.settings:type_name -> google.protobuf.Struct
-	202, // 112: listingssvc.v1.StorefrontPaymentMethod.created_at:type_name -> google.protobuf.Timestamp
-	201, // 113: listingssvc.v1.StorefrontDeliveryOption.zones:type_name -> google.protobuf.Struct
-	201, // 114: listingssvc.v1.StorefrontDeliveryOption.available_days:type_name -> google.protobuf.Struct
-	201, // 115: listingssvc.v1.StorefrontDeliveryOption.provider_config:type_name -> google.protobuf.Struct
-	202, // 116: listingssvc.v1.StorefrontDeliveryOption.created_at:type_name -> google.protobuf.Timestamp
-	202, // 117: listingssvc.v1.StorefrontDeliveryOption.updated_at:type_name -> google.protobuf.Timestamp
-	201, // 118: listingssvc.v1.CreateStorefrontRequest.theme:type_name -> google.protobuf.Struct
-	143, // 119: listingssvc.v1.CreateStorefrontRequest.location:type_name -> listingssvc.v1.Location
-	201, // 120: listingssvc.v1.CreateStorefrontRequest.settings:type_name -> google.protobuf.Struct
-	201, // 121: listingssvc.v1.CreateStorefrontRequest.seo_meta:type_name -> google.protobuf.Struct
-	201, // 122: listingssvc.v1.UpdateStorefrontRequest.theme:type_name -> google.protobuf.Struct
-	143, // 123: listingssvc.v1.UpdateStorefrontRequest.location:type_name -> listingssvc.v1.Location
-	201, // 124: listingssvc.v1.UpdateStorefrontRequest.settings:type_name -> google.protobuf.Struct
-	201, // 125: listingssvc.v1.UpdateStorefrontRequest.seo_meta:type_name -> google.protobuf.Struct
-	202, // 126: listingssvc.v1.UpdateStorefrontStatusRequest.vacation_start_date:type_name -> google.protobuf.Timestamp
-	202, // 127: listingssvc.v1.UpdateStorefrontStatusRequest.vacation_end_date:type_name -> google.protobuf.Timestamp
-	202, // 128: listingssvc.v1.UpdateStorefrontStatusResponse.vacation_start_date:type_name -> google.protobuf.Timestamp
-	202, // 129: listingssvc.v1.UpdateStorefrontStatusResponse.vacation_end_date:type_name -> google.protobuf.Timestamp
-	202, // 130: listingssvc.v1.UpdateStorefrontStatusResponse.status_updated_at:type_name -> google.protobuf.Timestamp
-	3,   // 131: listingssvc.v1.AddStaffRequest.role:type_name -> listingssvc.v1.StaffRole
-	201, // 132: listingssvc.v1.AddStaffRequest.permissions:type_name -> google.protobuf.Struct
-	3,   // 133: listingssvc.v1.UpdateStaffRequest.role:type_name -> listingssvc.v1.StaffRole
-	201, // 134: listingssvc.v1.UpdateStaffRequest.permissions:type_name -> google.protobuf.Struct
-	139, // 135: listingssvc.v1.GetStaffResponse.staff:type_name -> listingssvc.v1.StorefrontStaff
-	140, // 136: listingssvc.v1.SetWorkingHoursRequest.hours:type_name -> listingssvc.v1.StorefrontHours
-	140, // 137: listingssvc.v1.GetWorkingHoursResponse.hours:type_name -> listingssvc.v1.StorefrontHours
-	141, // 138: listingssvc.v1.SetPaymentMethodsRequest.methods:type_name -> listingssvc.v1.StorefrontPaymentMethod
-	141, // 139: listingssvc.v1.GetPaymentMethodsResponse.methods:type_name -> listingssvc.v1.StorefrontPaymentMethod
-	142, // 140: listingssvc.v1.SetDeliveryOptionsRequest.options:type_name -> listingssvc.v1.StorefrontDeliveryOption
-	142, // 141: listingssvc.v1.GetDeliveryOptionsResponse.options:type_name -> listingssvc.v1.StorefrontDeliveryOption
-	64,  // 142: listingssvc.v1.GetMapDataRequest.filter:type_name -> listingssvc.v1.ListStorefrontsRequest
-	166, // 143: listingssvc.v1.GetMapDataResponse.storefronts:type_name -> listingssvc.v1.StorefrontMapData
-	202, // 144: listingssvc.v1.DashboardStatsRequest.date_from:type_name -> google.protobuf.Timestamp
-	202, // 145: listingssvc.v1.DashboardStatsRequest.date_to:type_name -> google.protobuf.Timestamp
-	171, // 146: listingssvc.v1.ProductImageResponse.image:type_name -> listingssvc.v1.ProductImage
-	171, // 147: listingssvc.v1.ProductImagesResponse.images:type_name -> listingssvc.v1.ProductImage
-	6,   // 148: listingssvc.v1.StorefrontInvitation.type:type_name -> listingssvc.v1.StorefrontInvitationType
-	7,   // 149: listingssvc.v1.StorefrontInvitation.status:type_name -> listingssvc.v1.StorefrontInvitationStatus
-	202, // 150: listingssvc.v1.StorefrontInvitation.expires_at:type_name -> google.protobuf.Timestamp
-	202, // 151: listingssvc.v1.StorefrontInvitation.created_at:type_name -> google.protobuf.Timestamp
-	202, // 152: listingssvc.v1.StorefrontInvitation.updated_at:type_name -> google.protobuf.Timestamp
-	202, // 153: listingssvc.v1.StorefrontInvitation.accepted_at:type_name -> google.protobuf.Timestamp
-	202, // 154: listingssvc.v1.StorefrontInvitation.declined_at:type_name -> google.protobuf.Timestamp
-	7,   // 155: listingssvc.v1.ListStorefrontInvitationsRequest.status_filter:type_name -> listingssvc.v1.StorefrontInvitationStatus
-	182, // 156: listingssvc.v1.ListStorefrontInvitationsResponse.invitations:type_name -> listingssvc.v1.StorefrontInvitation
-	182, // 157: listingssvc.v1.ValidateStorefrontInviteCodeResponse.invitation:type_name -> listingssvc.v1.StorefrontInvitation
-	8,   // 158: listingssvc.v1.Listing.TranslationsEntry.value:type_name -> listingssvc.v1.ListingFieldTranslations
-	8,   // 159: listingssvc.v1.CreateListingRequest.TranslationsEntry.value:type_name -> listingssvc.v1.ListingFieldTranslations
-	18,  // 160: listingssvc.v1.ListingsService.GetListing:input_type -> listingssvc.v1.GetListingRequest
-	22,  // 161: listingssvc.v1.ListingsService.CreateListing:input_type -> listingssvc.v1.CreateListingRequest
-	24,  // 162: listingssvc.v1.ListingsService.UpdateListing:input_type -> listingssvc.v1.UpdateListingRequest
-	26,  // 163: listingssvc.v1.ListingsService.DeleteListing:input_type -> listingssvc.v1.DeleteListingRequest
-	28,  // 164: listingssvc.v1.ListingsService.SearchListings:input_type -> listingssvc.v1.SearchListingsRequest
-	30,  // 165: listingssvc.v1.ListingsService.ListListings:input_type -> listingssvc.v1.ListListingsRequest
-	32,  // 166: listingssvc.v1.ListingsService.GetSimilarListings:input_type -> listingssvc.v1.GetSimilarListingsRequest
-	34,  // 167: listingssvc.v1.ListingsService.GetListingImage:input_type -> listingssvc.v1.ImageIDRequest
-	42,  // 168: listingssvc.v1.ListingsService.DeleteListingImage:input_type -> listingssvc.v1.DeleteListingImageRequest
-	36,  // 169: listingssvc.v1.ListingsService.AddListingImage:input_type -> listingssvc.v1.AddImageRequest
-	37,  // 170: listingssvc.v1.ListingsService.GetListingImages:input_type -> listingssvc.v1.ListingIDRequest
-	39,  // 171: listingssvc.v1.ListingsService.ReorderListingImages:input_type -> listingssvc.v1.ReorderImagesRequest
-	44,  // 172: listingssvc.v1.ListingsService.UploadListingImages:input_type -> listingssvc.v1.UploadImageChunkRequest
-	204, // 173: listingssvc.v1.ListingsService.GetRootCategories:input_type -> google.protobuf.Empty
-	204, // 174: listingssvc.v1.ListingsService.GetAllCategories:input_type -> google.protobuf.Empty
-	47,  // 175: listingssvc.v1.ListingsService.GetPopularCategories:input_type -> listingssvc.v1.PopularCategoriesRequest
-	49,  // 176: listingssvc.v1.ListingsService.GetCategory:input_type -> listingssvc.v1.CategoryIDRequest
-	49,  // 177: listingssvc.v1.ListingsService.GetCategoryTree:input_type -> listingssvc.v1.CategoryIDRequest
-	37,  // 178: listingssvc.v1.ListingsService.GetFavoritedUsers:input_type -> listingssvc.v1.ListingIDRequest
-	53,  // 179: listingssvc.v1.ListingsService.AddToFavorites:input_type -> listingssvc.v1.AddToFavoritesRequest
-	54,  // 180: listingssvc.v1.ListingsService.RemoveFromFavorites:input_type -> listingssvc.v1.RemoveFromFavoritesRequest
-	55,  // 181: listingssvc.v1.ListingsService.GetUserFavorites:input_type -> listingssvc.v1.GetUserFavoritesRequest
-	57,  // 182: listingssvc.v1.ListingsService.IsFavorite:input_type -> listingssvc.v1.IsFavoriteRequest
-	60,  // 183: listingssvc.v1.ListingsService.GetStorefront:input_type -> listingssvc.v1.GetStorefrontRequest
-	61,  // 184: listingssvc.v1.ListingsService.GetStorefrontBySlug:input_type -> listingssvc.v1.GetStorefrontBySlugRequest
-	64,  // 185: listingssvc.v1.ListingsService.ListStorefronts:input_type -> listingssvc.v1.ListStorefrontsRequest
-	66,  // 186: listingssvc.v1.ListingsService.CreateVariants:input_type -> listingssvc.v1.CreateVariantsRequest
-	37,  // 187: listingssvc.v1.ListingsService.GetVariants:input_type -> listingssvc.v1.ListingIDRequest
-	69,  // 188: listingssvc.v1.ListingsService.UpdateVariant:input_type -> listingssvc.v1.UpdateVariantRequest
-	70,  // 189: listingssvc.v1.ListingsService.DeleteVariant:input_type -> listingssvc.v1.VariantIDRequest
-	71,  // 190: listingssvc.v1.ListingsService.GetListingsForReindex:input_type -> listingssvc.v1.ReindexRequest
-	73,  // 191: listingssvc.v1.ListingsService.ResetReindexFlags:input_type -> listingssvc.v1.ResetFlagsRequest
-	204, // 192: listingssvc.v1.ListingsService.SyncDiscounts:input_type -> google.protobuf.Empty
-	74,  // 193: listingssvc.v1.ListingsService.GetProduct:input_type -> listingssvc.v1.GetProductRequest
-	76,  // 194: listingssvc.v1.ListingsService.GetProductsBySKUs:input_type -> listingssvc.v1.GetProductsBySKUsRequest
-	78,  // 195: listingssvc.v1.ListingsService.GetProductsByIDs:input_type -> listingssvc.v1.GetProductsByIDsRequest
-	79,  // 196: listingssvc.v1.ListingsService.ListProducts:input_type -> listingssvc.v1.ListProductsRequest
-	80,  // 197: listingssvc.v1.ListingsService.GetVariant:input_type -> listingssvc.v1.GetVariantRequest
-	82,  // 198: listingssvc.v1.ListingsService.GetVariantsByProductID:input_type -> listingssvc.v1.GetVariantsByProductIDRequest
-	86,  // 199: listingssvc.v1.ListingsService.DecrementStock:input_type -> listingssvc.v1.DecrementStockRequest
-	88,  // 200: listingssvc.v1.ListingsService.RollbackStock:input_type -> listingssvc.v1.RollbackStockRequest
-	90,  // 201: listingssvc.v1.ListingsService.CheckStockAvailability:input_type -> listingssvc.v1.CheckStockAvailabilityRequest
-	94,  // 202: listingssvc.v1.ListingsService.CreateReservation:input_type -> listingssvc.v1.CreateReservationRequest
-	96,  // 203: listingssvc.v1.ListingsService.ReleaseReservation:input_type -> listingssvc.v1.ReleaseReservationRequest
-	98,  // 204: listingssvc.v1.ListingsService.CommitReservation:input_type -> listingssvc.v1.CommitReservationRequest
-	100, // 205: listingssvc.v1.ListingsService.GetReservation:input_type -> listingssvc.v1.GetReservationRequest
-	103, // 206: listingssvc.v1.ListingsService.GetReservedQuantityForListing:input_type -> listingssvc.v1.GetReservedQuantityRequest
-	106, // 207: listingssvc.v1.ListingsService.CreateProduct:input_type -> listingssvc.v1.CreateProductRequest
-	107, // 208: listingssvc.v1.ListingsService.UpdateProduct:input_type -> listingssvc.v1.UpdateProductRequest
-	108, // 209: listingssvc.v1.ListingsService.DeleteProduct:input_type -> listingssvc.v1.DeleteProductRequest
-	111, // 210: listingssvc.v1.ListingsService.BulkCreateProducts:input_type -> listingssvc.v1.BulkCreateProductsRequest
-	114, // 211: listingssvc.v1.ListingsService.BulkUpdateProducts:input_type -> listingssvc.v1.BulkUpdateProductsRequest
-	116, // 212: listingssvc.v1.ListingsService.BulkDeleteProducts:input_type -> listingssvc.v1.BulkDeleteProductsRequest
-	119, // 213: listingssvc.v1.ListingsService.CreateProductVariant:input_type -> listingssvc.v1.CreateProductVariantRequest
-	120, // 214: listingssvc.v1.ListingsService.UpdateProductVariant:input_type -> listingssvc.v1.UpdateProductVariantRequest
-	121, // 215: listingssvc.v1.ListingsService.DeleteProductVariant:input_type -> listingssvc.v1.DeleteProductVariantRequest
-	124, // 216: listingssvc.v1.ListingsService.BulkCreateProductVariants:input_type -> listingssvc.v1.BulkCreateProductVariantsRequest
-	126, // 217: listingssvc.v1.ListingsService.RecordInventoryMovement:input_type -> listingssvc.v1.RecordInventoryMovementRequest
-	129, // 218: listingssvc.v1.ListingsService.BatchUpdateStock:input_type -> listingssvc.v1.BatchUpdateStockRequest
-	132, // 219: listingssvc.v1.ListingsService.GetProductStats:input_type -> listingssvc.v1.GetProductStatsRequest
-	135, // 220: listingssvc.v1.ListingsService.IncrementProductViews:input_type -> listingssvc.v1.IncrementProductViewsRequest
-	172, // 221: listingssvc.v1.ListingsService.AddProductImage:input_type -> listingssvc.v1.AddProductImageRequest
-	174, // 222: listingssvc.v1.ListingsService.GetProductImages:input_type -> listingssvc.v1.GetProductImagesRequest
-	176, // 223: listingssvc.v1.ListingsService.DeleteProductImage:input_type -> listingssvc.v1.DeleteProductImageRequest
-	178, // 224: listingssvc.v1.ListingsService.ReorderProductImages:input_type -> listingssvc.v1.ReorderProductImagesRequest
-	180, // 225: listingssvc.v1.ListingsService.SetProductImagePrimary:input_type -> listingssvc.v1.SetProductImagePrimaryRequest
-	136, // 226: listingssvc.v1.ListingsService.ReindexAll:input_type -> listingssvc.v1.ReindexAllRequest
-	144, // 227: listingssvc.v1.ListingsService.CreateStorefront:input_type -> listingssvc.v1.CreateStorefrontRequest
-	145, // 228: listingssvc.v1.ListingsService.UpdateStorefront:input_type -> listingssvc.v1.UpdateStorefrontRequest
-	146, // 229: listingssvc.v1.ListingsService.UpdateStorefrontStatus:input_type -> listingssvc.v1.UpdateStorefrontStatusRequest
-	148, // 230: listingssvc.v1.ListingsService.DeleteStorefront:input_type -> listingssvc.v1.DeleteStorefrontRequest
-	64,  // 231: listingssvc.v1.ListingsService.GetMyStorefronts:input_type -> listingssvc.v1.ListStorefrontsRequest
-	150, // 232: listingssvc.v1.ListingsService.AddStaff:input_type -> listingssvc.v1.AddStaffRequest
-	151, // 233: listingssvc.v1.ListingsService.UpdateStaff:input_type -> listingssvc.v1.UpdateStaffRequest
-	152, // 234: listingssvc.v1.ListingsService.RemoveStaff:input_type -> listingssvc.v1.RemoveStaffRequest
-	153, // 235: listingssvc.v1.ListingsService.GetStaff:input_type -> listingssvc.v1.GetStaffRequest
-	155, // 236: listingssvc.v1.ListingsService.SetWorkingHours:input_type -> listingssvc.v1.SetWorkingHoursRequest
-	156, // 237: listingssvc.v1.ListingsService.GetWorkingHours:input_type -> listingssvc.v1.GetWorkingHoursRequest
-	158, // 238: listingssvc.v1.ListingsService.IsOpenNow:input_type -> listingssvc.v1.IsOpenNowRequest
-	160, // 239: listingssvc.v1.ListingsService.SetPaymentMethods:input_type -> listingssvc.v1.SetPaymentMethodsRequest
-	161, // 240: listingssvc.v1.ListingsService.GetPaymentMethods:input_type -> listingssvc.v1.GetPaymentMethodsRequest
-	163, // 241: listingssvc.v1.ListingsService.SetDeliveryOptions:input_type -> listingssvc.v1.SetDeliveryOptionsRequest
-	164, // 242: listingssvc.v1.ListingsService.GetDeliveryOptions:input_type -> listingssvc.v1.GetDeliveryOptionsRequest
-	167, // 243: listingssvc.v1.ListingsService.GetMapData:input_type -> listingssvc.v1.GetMapDataRequest
-	169, // 244: listingssvc.v1.ListingsService.GetDashboardStats:input_type -> listingssvc.v1.DashboardStatsRequest
-	183, // 245: listingssvc.v1.ListingsService.CreateStorefrontEmailInvitation:input_type -> listingssvc.v1.CreateStorefrontEmailInvitationRequest
-	184, // 246: listingssvc.v1.ListingsService.CreateStorefrontLinkInvitation:input_type -> listingssvc.v1.CreateStorefrontLinkInvitationRequest
-	185, // 247: listingssvc.v1.ListingsService.ListStorefrontInvitations:input_type -> listingssvc.v1.ListStorefrontInvitationsRequest
-	187, // 248: listingssvc.v1.ListingsService.RevokeStorefrontInvitation:input_type -> listingssvc.v1.RevokeStorefrontInvitationRequest
-	188, // 249: listingssvc.v1.ListingsService.GetMyStorefrontInvitations:input_type -> listingssvc.v1.GetMyStorefrontInvitationsRequest
-	189, // 250: listingssvc.v1.ListingsService.AcceptStorefrontInvitation:input_type -> listingssvc.v1.AcceptStorefrontInvitationRequest
-	190, // 251: listingssvc.v1.ListingsService.DeclineStorefrontInvitation:input_type -> listingssvc.v1.DeclineStorefrontInvitationRequest
-	191, // 252: listingssvc.v1.ListingsService.ValidateStorefrontInviteCode:input_type -> listingssvc.v1.ValidateStorefrontInviteCodeRequest
-	193, // 253: listingssvc.v1.ListingsService.AcceptStorefrontInviteCode:input_type -> listingssvc.v1.AcceptStorefrontInviteCodeRequest
-	19,  // 254: listingssvc.v1.ListingsService.GetListing:output_type -> listingssvc.v1.GetListingResponse
-	23,  // 255: listingssvc.v1.ListingsService.CreateListing:output_type -> listingssvc.v1.CreateListingResponse
-	25,  // 256: listingssvc.v1.ListingsService.UpdateListing:output_type -> listingssvc.v1.UpdateListingResponse
-	27,  // 257: listingssvc.v1.ListingsService.DeleteListing:output_type -> listingssvc.v1.DeleteListingResponse
-	29,  // 258: listingssvc.v1.ListingsService.SearchListings:output_type -> listingssvc.v1.SearchListingsResponse
-	31,  // 259: listingssvc.v1.ListingsService.ListListings:output_type -> listingssvc.v1.ListListingsResponse
-	33,  // 260: listingssvc.v1.ListingsService.GetSimilarListings:output_type -> listingssvc.v1.GetSimilarListingsResponse
-	35,  // 261: listingssvc.v1.ListingsService.GetListingImage:output_type -> listingssvc.v1.ImageResponse
-	43,  // 262: listingssvc.v1.ListingsService.DeleteListingImage:output_type -> listingssvc.v1.DeleteListingImageResponse
-	35,  // 263: listingssvc.v1.ListingsService.AddListingImage:output_type -> listingssvc.v1.ImageResponse
-	38,  // 264: listingssvc.v1.ListingsService.GetListingImages:output_type -> listingssvc.v1.ImagesResponse
-	40,  // 265: listingssvc.v1.ListingsService.ReorderListingImages:output_type -> listingssvc.v1.ReorderImagesResponse
-	46,  // 266: listingssvc.v1.ListingsService.UploadListingImages:output_type -> listingssvc.v1.UploadImagesResponse
-	48,  // 267: listingssvc.v1.ListingsService.GetRootCategories:output_type -> listingssvc.v1.CategoriesResponse
-	48,  // 268: listingssvc.v1.ListingsService.GetAllCategories:output_type -> listingssvc.v1.CategoriesResponse
-	48,  // 269: listingssvc.v1.ListingsService.GetPopularCategories:output_type -> listingssvc.v1.CategoriesResponse
-	50,  // 270: listingssvc.v1.ListingsService.GetCategory:output_type -> listingssvc.v1.CategoryResponse
-	51,  // 271: listingssvc.v1.ListingsService.GetCategoryTree:output_type -> listingssvc.v1.CategoryTreeResponse
-	52,  // 272: listingssvc.v1.ListingsService.GetFavoritedUsers:output_type -> listingssvc.v1.UserIDsResponse
-	204, // 273: listingssvc.v1.ListingsService.AddToFavorites:output_type -> google.protobuf.Empty
-	204, // 274: listingssvc.v1.ListingsService.RemoveFromFavorites:output_type -> google.protobuf.Empty
-	56,  // 275: listingssvc.v1.ListingsService.GetUserFavorites:output_type -> listingssvc.v1.GetUserFavoritesResponse
-	58,  // 276: listingssvc.v1.ListingsService.IsFavorite:output_type -> listingssvc.v1.IsFavoriteResponse
-	63,  // 277: listingssvc.v1.ListingsService.GetStorefront:output_type -> listingssvc.v1.GetStorefrontResponse
-	63,  // 278: listingssvc.v1.ListingsService.GetStorefrontBySlug:output_type -> listingssvc.v1.GetStorefrontResponse
-	65,  // 279: listingssvc.v1.ListingsService.ListStorefronts:output_type -> listingssvc.v1.ListStorefrontsResponse
-	204, // 280: listingssvc.v1.ListingsService.CreateVariants:output_type -> google.protobuf.Empty
-	68,  // 281: listingssvc.v1.ListingsService.GetVariants:output_type -> listingssvc.v1.VariantsResponse
-	204, // 282: listingssvc.v1.ListingsService.UpdateVariant:output_type -> google.protobuf.Empty
-	204, // 283: listingssvc.v1.ListingsService.DeleteVariant:output_type -> google.protobuf.Empty
-	72,  // 284: listingssvc.v1.ListingsService.GetListingsForReindex:output_type -> listingssvc.v1.ListingsResponse
-	204, // 285: listingssvc.v1.ListingsService.ResetReindexFlags:output_type -> google.protobuf.Empty
-	204, // 286: listingssvc.v1.ListingsService.SyncDiscounts:output_type -> google.protobuf.Empty
-	75,  // 287: listingssvc.v1.ListingsService.GetProduct:output_type -> listingssvc.v1.ProductResponse
-	77,  // 288: listingssvc.v1.ListingsService.GetProductsBySKUs:output_type -> listingssvc.v1.ProductsResponse
-	77,  // 289: listingssvc.v1.ListingsService.GetProductsByIDs:output_type -> listingssvc.v1.ProductsResponse
-	77,  // 290: listingssvc.v1.ListingsService.ListProducts:output_type -> listingssvc.v1.ProductsResponse
-	81,  // 291: listingssvc.v1.ListingsService.GetVariant:output_type -> listingssvc.v1.VariantResponse
-	83,  // 292: listingssvc.v1.ListingsService.GetVariantsByProductID:output_type -> listingssvc.v1.ProductVariantsResponse
-	87,  // 293: listingssvc.v1.ListingsService.DecrementStock:output_type -> listingssvc.v1.DecrementStockResponse
-	89,  // 294: listingssvc.v1.ListingsService.RollbackStock:output_type -> listingssvc.v1.RollbackStockResponse
-	92,  // 295: listingssvc.v1.ListingsService.CheckStockAvailability:output_type -> listingssvc.v1.CheckStockAvailabilityResponse
-	95,  // 296: listingssvc.v1.ListingsService.CreateReservation:output_type -> listingssvc.v1.CreateReservationResponse
-	97,  // 297: listingssvc.v1.ListingsService.ReleaseReservation:output_type -> listingssvc.v1.ReleaseReservationResponse
-	99,  // 298: listingssvc.v1.ListingsService.CommitReservation:output_type -> listingssvc.v1.CommitReservationResponse
-	102, // 299: listingssvc.v1.ListingsService.GetReservation:output_type -> listingssvc.v1.GetReservationResponse
-	105, // 300: listingssvc.v1.ListingsService.GetReservedQuantityForListing:output_type -> listingssvc.v1.GetReservedQuantityResponse
-	75,  // 301: listingssvc.v1.ListingsService.CreateProduct:output_type -> listingssvc.v1.ProductResponse
-	75,  // 302: listingssvc.v1.ListingsService.UpdateProduct:output_type -> listingssvc.v1.ProductResponse
-	109, // 303: listingssvc.v1.ListingsService.DeleteProduct:output_type -> listingssvc.v1.DeleteProductResponse
-	112, // 304: listingssvc.v1.ListingsService.BulkCreateProducts:output_type -> listingssvc.v1.BulkCreateProductsResponse
-	115, // 305: listingssvc.v1.ListingsService.BulkUpdateProducts:output_type -> listingssvc.v1.BulkUpdateProductsResponse
-	117, // 306: listingssvc.v1.ListingsService.BulkDeleteProducts:output_type -> listingssvc.v1.BulkDeleteProductsResponse
-	81,  // 307: listingssvc.v1.ListingsService.CreateProductVariant:output_type -> listingssvc.v1.VariantResponse
-	81,  // 308: listingssvc.v1.ListingsService.UpdateProductVariant:output_type -> listingssvc.v1.VariantResponse
-	122, // 309: listingssvc.v1.ListingsService.DeleteProductVariant:output_type -> listingssvc.v1.DeleteProductVariantResponse
-	125, // 310: listingssvc.v1.ListingsService.BulkCreateProductVariants:output_type -> listingssvc.v1.BulkCreateProductVariantsResponse
-	127, // 311: listingssvc.v1.ListingsService.RecordInventoryMovement:output_type -> listingssvc.v1.RecordInventoryMovementResponse
-	131, // 312: listingssvc.v1.ListingsService.BatchUpdateStock:output_type -> listingssvc.v1.BatchUpdateStockResponse
-	134, // 313: listingssvc.v1.ListingsService.GetProductStats:output_type -> listingssvc.v1.GetProductStatsResponse
-	204, // 314: listingssvc.v1.ListingsService.IncrementProductViews:output_type -> google.protobuf.Empty
-	173, // 315: listingssvc.v1.ListingsService.AddProductImage:output_type -> listingssvc.v1.ProductImageResponse
-	175, // 316: listingssvc.v1.ListingsService.GetProductImages:output_type -> listingssvc.v1.ProductImagesResponse
-	177, // 317: listingssvc.v1.ListingsService.DeleteProductImage:output_type -> listingssvc.v1.DeleteProductImageResponse
-	179, // 318: listingssvc.v1.ListingsService.ReorderProductImages:output_type -> listingssvc.v1.ReorderProductImagesResponse
-	181, // 319: listingssvc.v1.ListingsService.SetProductImagePrimary:output_type -> listingssvc.v1.SetProductImagePrimaryResponse
-	137, // 320: listingssvc.v1.ListingsService.ReindexAll:output_type -> listingssvc.v1.ReindexAllResponse
-	138, // 321: listingssvc.v1.ListingsService.CreateStorefront:output_type -> listingssvc.v1.StorefrontFull
-	138, // 322: listingssvc.v1.ListingsService.UpdateStorefront:output_type -> listingssvc.v1.StorefrontFull
-	147, // 323: listingssvc.v1.ListingsService.UpdateStorefrontStatus:output_type -> listingssvc.v1.UpdateStorefrontStatusResponse
-	149, // 324: listingssvc.v1.ListingsService.DeleteStorefront:output_type -> listingssvc.v1.DeleteStorefrontResponse
-	65,  // 325: listingssvc.v1.ListingsService.GetMyStorefronts:output_type -> listingssvc.v1.ListStorefrontsResponse
-	139, // 326: listingssvc.v1.ListingsService.AddStaff:output_type -> listingssvc.v1.StorefrontStaff
-	139, // 327: listingssvc.v1.ListingsService.UpdateStaff:output_type -> listingssvc.v1.StorefrontStaff
-	149, // 328: listingssvc.v1.ListingsService.RemoveStaff:output_type -> listingssvc.v1.DeleteStorefrontResponse
-	154, // 329: listingssvc.v1.ListingsService.GetStaff:output_type -> listingssvc.v1.GetStaffResponse
-	157, // 330: listingssvc.v1.ListingsService.SetWorkingHours:output_type -> listingssvc.v1.GetWorkingHoursResponse
-	157, // 331: listingssvc.v1.ListingsService.GetWorkingHours:output_type -> listingssvc.v1.GetWorkingHoursResponse
-	159, // 332: listingssvc.v1.ListingsService.IsOpenNow:output_type -> listingssvc.v1.IsOpenNowResponse
-	162, // 333: listingssvc.v1.ListingsService.SetPaymentMethods:output_type -> listingssvc.v1.GetPaymentMethodsResponse
-	162, // 334: listingssvc.v1.ListingsService.GetPaymentMethods:output_type -> listingssvc.v1.GetPaymentMethodsResponse
-	165, // 335: listingssvc.v1.ListingsService.SetDeliveryOptions:output_type -> listingssvc.v1.GetDeliveryOptionsResponse
-	165, // 336: listingssvc.v1.ListingsService.GetDeliveryOptions:output_type -> listingssvc.v1.GetDeliveryOptionsResponse
-	168, // 337: listingssvc.v1.ListingsService.GetMapData:output_type -> listingssvc.v1.GetMapDataResponse
-	170, // 338: listingssvc.v1.ListingsService.GetDashboardStats:output_type -> listingssvc.v1.DashboardStatsResponse
-	182, // 339: listingssvc.v1.ListingsService.CreateStorefrontEmailInvitation:output_type -> listingssvc.v1.StorefrontInvitation
-	182, // 340: listingssvc.v1.ListingsService.CreateStorefrontLinkInvitation:output_type -> listingssvc.v1.StorefrontInvitation
-	186, // 341: listingssvc.v1.ListingsService.ListStorefrontInvitations:output_type -> listingssvc.v1.ListStorefrontInvitationsResponse
-	204, // 342: listingssvc.v1.ListingsService.RevokeStorefrontInvitation:output_type -> google.protobuf.Empty
-	186, // 343: listingssvc.v1.ListingsService.GetMyStorefrontInvitations:output_type -> listingssvc.v1.ListStorefrontInvitationsResponse
-	204, // 344: listingssvc.v1.ListingsService.AcceptStorefrontInvitation:output_type -> google.protobuf.Empty
-	204, // 345: listingssvc.v1.ListingsService.DeclineStorefrontInvitation:output_type -> google.protobuf.Empty
-	192, // 346: listingssvc.v1.ListingsService.ValidateStorefrontInviteCode:output_type -> listingssvc.v1.ValidateStorefrontInviteCodeResponse
-	204, // 347: listingssvc.v1.ListingsService.AcceptStorefrontInviteCode:output_type -> google.protobuf.Empty
-	254, // [254:348] is the sub-list for method output_type
-	160, // [160:254] is the sub-list for method input_type
-	160, // [160:160] is the sub-list for extension type_name
-	160, // [160:160] is the sub-list for extension extendee
-	0,   // [0:160] is the sub-list for field type_name
+	201, // 34: listingssvc.v1.Storefront.social_links:type_name -> google.protobuf.Struct
+	59,  // 35: listingssvc.v1.StorefrontResponse.storefront:type_name -> listingssvc.v1.Storefront
+	138, // 36: listingssvc.v1.GetStorefrontResponse.storefront:type_name -> listingssvc.v1.StorefrontFull
+	2,   // 37: listingssvc.v1.ListStorefrontsRequest.subscription_plans:type_name -> listingssvc.v1.SubscriptionPlanType
+	4,   // 38: listingssvc.v1.ListStorefrontsRequest.payment_methods:type_name -> listingssvc.v1.PaymentMethodType
+	138, // 39: listingssvc.v1.ListStorefrontsResponse.storefronts:type_name -> listingssvc.v1.StorefrontFull
+	67,  // 40: listingssvc.v1.CreateVariantsRequest.variants:type_name -> listingssvc.v1.VariantInput
+	199, // 41: listingssvc.v1.VariantInput.attributes:type_name -> listingssvc.v1.VariantInput.AttributesEntry
+	13,  // 42: listingssvc.v1.VariantsResponse.variants:type_name -> listingssvc.v1.ListingVariant
+	200, // 43: listingssvc.v1.UpdateVariantRequest.attributes:type_name -> listingssvc.v1.UpdateVariantRequest.AttributesEntry
+	9,   // 44: listingssvc.v1.ListingsResponse.listings:type_name -> listingssvc.v1.Listing
+	16,  // 45: listingssvc.v1.ProductResponse.product:type_name -> listingssvc.v1.Product
+	16,  // 46: listingssvc.v1.ProductsResponse.products:type_name -> listingssvc.v1.Product
+	17,  // 47: listingssvc.v1.VariantResponse.variant:type_name -> listingssvc.v1.ProductVariant
+	17,  // 48: listingssvc.v1.ProductVariantsResponse.variants:type_name -> listingssvc.v1.ProductVariant
+	84,  // 49: listingssvc.v1.DecrementStockRequest.items:type_name -> listingssvc.v1.StockItem
+	85,  // 50: listingssvc.v1.DecrementStockResponse.results:type_name -> listingssvc.v1.StockResult
+	84,  // 51: listingssvc.v1.RollbackStockRequest.items:type_name -> listingssvc.v1.StockItem
+	85,  // 52: listingssvc.v1.RollbackStockResponse.results:type_name -> listingssvc.v1.StockResult
+	84,  // 53: listingssvc.v1.CheckStockAvailabilityRequest.items:type_name -> listingssvc.v1.StockItem
+	91,  // 54: listingssvc.v1.CheckStockAvailabilityResponse.items:type_name -> listingssvc.v1.StockAvailability
+	93,  // 55: listingssvc.v1.CreateReservationRequest.item:type_name -> listingssvc.v1.ReservationItem
+	202, // 56: listingssvc.v1.CreateReservationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	202, // 57: listingssvc.v1.ReservationDetails.expires_at:type_name -> google.protobuf.Timestamp
+	202, // 58: listingssvc.v1.ReservationDetails.created_at:type_name -> google.protobuf.Timestamp
+	202, // 59: listingssvc.v1.ReservationDetails.updated_at:type_name -> google.protobuf.Timestamp
+	101, // 60: listingssvc.v1.GetReservationResponse.reservation:type_name -> listingssvc.v1.ReservationDetails
+	104, // 61: listingssvc.v1.GetReservedQuantityResponse.by_type:type_name -> listingssvc.v1.ReservedQuantityByType
+	201, // 62: listingssvc.v1.CreateProductRequest.attributes:type_name -> google.protobuf.Struct
+	201, // 63: listingssvc.v1.UpdateProductRequest.attributes:type_name -> google.protobuf.Struct
+	203, // 64: listingssvc.v1.UpdateProductRequest.update_mask:type_name -> google.protobuf.FieldMask
+	201, // 65: listingssvc.v1.ProductInput.attributes:type_name -> google.protobuf.Struct
+	110, // 66: listingssvc.v1.BulkCreateProductsRequest.products:type_name -> listingssvc.v1.ProductInput
+	16,  // 67: listingssvc.v1.BulkCreateProductsResponse.products:type_name -> listingssvc.v1.Product
+	118, // 68: listingssvc.v1.BulkCreateProductsResponse.errors:type_name -> listingssvc.v1.BulkOperationError
+	201, // 69: listingssvc.v1.ProductUpdateInput.attributes:type_name -> google.protobuf.Struct
+	203, // 70: listingssvc.v1.ProductUpdateInput.update_mask:type_name -> google.protobuf.FieldMask
+	113, // 71: listingssvc.v1.BulkUpdateProductsRequest.updates:type_name -> listingssvc.v1.ProductUpdateInput
+	16,  // 72: listingssvc.v1.BulkUpdateProductsResponse.products:type_name -> listingssvc.v1.Product
+	118, // 73: listingssvc.v1.BulkUpdateProductsResponse.errors:type_name -> listingssvc.v1.BulkOperationError
+	118, // 74: listingssvc.v1.BulkDeleteProductsResponse.errors:type_name -> listingssvc.v1.BulkOperationError
+	201, // 75: listingssvc.v1.CreateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
+	201, // 76: listingssvc.v1.CreateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
+	201, // 77: listingssvc.v1.UpdateProductVariantRequest.variant_attributes:type_name -> google.protobuf.Struct
+	201, // 78: listingssvc.v1.UpdateProductVariantRequest.dimensions:type_name -> google.protobuf.Struct
+	203, // 79: listingssvc.v1.UpdateProductVariantRequest.update_mask:type_name -> google.protobuf.FieldMask
+	201, // 80: listingssvc.v1.ProductVariantInput.variant_attributes:type_name -> google.protobuf.Struct
+	201, // 81: listingssvc.v1.ProductVariantInput.dimensions:type_name -> google.protobuf.Struct
+	123, // 82: listingssvc.v1.BulkCreateProductVariantsRequest.variants:type_name -> listingssvc.v1.ProductVariantInput
+	17,  // 83: listingssvc.v1.BulkCreateProductVariantsResponse.variants:type_name -> listingssvc.v1.ProductVariant
+	118, // 84: listingssvc.v1.BulkCreateProductVariantsResponse.errors:type_name -> listingssvc.v1.BulkOperationError
+	128, // 85: listingssvc.v1.BatchUpdateStockRequest.items:type_name -> listingssvc.v1.StockUpdateItem
+	130, // 86: listingssvc.v1.BatchUpdateStockResponse.results:type_name -> listingssvc.v1.StockUpdateResult
+	133, // 87: listingssvc.v1.GetProductStatsResponse.stats:type_name -> listingssvc.v1.ProductStats
+	201, // 88: listingssvc.v1.StorefrontFull.theme:type_name -> google.protobuf.Struct
+	201, // 89: listingssvc.v1.StorefrontFull.social_links:type_name -> google.protobuf.Struct
+	0,   // 90: listingssvc.v1.StorefrontFull.geo_strategy:type_name -> listingssvc.v1.StorefrontGeoStrategy
+	1,   // 91: listingssvc.v1.StorefrontFull.default_privacy_level:type_name -> listingssvc.v1.LocationPrivacyLevel
+	201, // 92: listingssvc.v1.StorefrontFull.settings:type_name -> google.protobuf.Struct
+	201, // 93: listingssvc.v1.StorefrontFull.seo_meta:type_name -> google.protobuf.Struct
+	202, // 94: listingssvc.v1.StorefrontFull.verification_date:type_name -> google.protobuf.Timestamp
+	202, // 95: listingssvc.v1.StorefrontFull.vacation_start_date:type_name -> google.protobuf.Timestamp
+	202, // 96: listingssvc.v1.StorefrontFull.vacation_end_date:type_name -> google.protobuf.Timestamp
+	202, // 97: listingssvc.v1.StorefrontFull.status_updated_at:type_name -> google.protobuf.Timestamp
+	2,   // 98: listingssvc.v1.StorefrontFull.subscription_plan:type_name -> listingssvc.v1.SubscriptionPlanType
+	202, // 99: listingssvc.v1.StorefrontFull.subscription_expires_at:type_name -> google.protobuf.Timestamp
+	201, // 100: listingssvc.v1.StorefrontFull.ai_agent_config:type_name -> google.protobuf.Struct
+	202, // 101: listingssvc.v1.StorefrontFull.created_at:type_name -> google.protobuf.Timestamp
+	202, // 102: listingssvc.v1.StorefrontFull.updated_at:type_name -> google.protobuf.Timestamp
+	139, // 103: listingssvc.v1.StorefrontFull.staff:type_name -> listingssvc.v1.StorefrontStaff
+	140, // 104: listingssvc.v1.StorefrontFull.hours:type_name -> listingssvc.v1.StorefrontHours
+	141, // 105: listingssvc.v1.StorefrontFull.payment_methods:type_name -> listingssvc.v1.StorefrontPaymentMethod
+	142, // 106: listingssvc.v1.StorefrontFull.delivery_options:type_name -> listingssvc.v1.StorefrontDeliveryOption
+	3,   // 107: listingssvc.v1.StorefrontStaff.role:type_name -> listingssvc.v1.StaffRole
+	201, // 108: listingssvc.v1.StorefrontStaff.permissions:type_name -> google.protobuf.Struct
+	202, // 109: listingssvc.v1.StorefrontStaff.last_active_at:type_name -> google.protobuf.Timestamp
+	202, // 110: listingssvc.v1.StorefrontStaff.created_at:type_name -> google.protobuf.Timestamp
+	202, // 111: listingssvc.v1.StorefrontStaff.updated_at:type_name -> google.protobuf.Timestamp
+	4,   // 112: listingssvc.v1.StorefrontPaymentMethod.method_type:type_name -> listingssvc.v1.PaymentMethodType
+	201, // 113: listingssvc.v1.StorefrontPaymentMethod.settings:type_name -> google.protobuf.Struct
+	202, // 114: listingssvc.v1.StorefrontPaymentMethod.created_at:type_name -> google.protobuf.Timestamp
+	201, // 115: listingssvc.v1.StorefrontDeliveryOption.zones:type_name -> google.protobuf.Struct
+	201, // 116: listingssvc.v1.StorefrontDeliveryOption.available_days:type_name -> google.protobuf.Struct
+	201, // 117: listingssvc.v1.StorefrontDeliveryOption.provider_config:type_name -> google.protobuf.Struct
+	202, // 118: listingssvc.v1.StorefrontDeliveryOption.created_at:type_name -> google.protobuf.Timestamp
+	202, // 119: listingssvc.v1.StorefrontDeliveryOption.updated_at:type_name -> google.protobuf.Timestamp
+	201, // 120: listingssvc.v1.CreateStorefrontRequest.theme:type_name -> google.protobuf.Struct
+	201, // 121: listingssvc.v1.CreateStorefrontRequest.social_links:type_name -> google.protobuf.Struct
+	143, // 122: listingssvc.v1.CreateStorefrontRequest.location:type_name -> listingssvc.v1.Location
+	201, // 123: listingssvc.v1.CreateStorefrontRequest.settings:type_name -> google.protobuf.Struct
+	201, // 124: listingssvc.v1.CreateStorefrontRequest.seo_meta:type_name -> google.protobuf.Struct
+	201, // 125: listingssvc.v1.UpdateStorefrontRequest.theme:type_name -> google.protobuf.Struct
+	143, // 126: listingssvc.v1.UpdateStorefrontRequest.location:type_name -> listingssvc.v1.Location
+	201, // 127: listingssvc.v1.UpdateStorefrontRequest.settings:type_name -> google.protobuf.Struct
+	201, // 128: listingssvc.v1.UpdateStorefrontRequest.seo_meta:type_name -> google.protobuf.Struct
+	202, // 129: listingssvc.v1.UpdateStorefrontStatusRequest.vacation_start_date:type_name -> google.protobuf.Timestamp
+	202, // 130: listingssvc.v1.UpdateStorefrontStatusRequest.vacation_end_date:type_name -> google.protobuf.Timestamp
+	202, // 131: listingssvc.v1.UpdateStorefrontStatusResponse.vacation_start_date:type_name -> google.protobuf.Timestamp
+	202, // 132: listingssvc.v1.UpdateStorefrontStatusResponse.vacation_end_date:type_name -> google.protobuf.Timestamp
+	202, // 133: listingssvc.v1.UpdateStorefrontStatusResponse.status_updated_at:type_name -> google.protobuf.Timestamp
+	3,   // 134: listingssvc.v1.AddStaffRequest.role:type_name -> listingssvc.v1.StaffRole
+	201, // 135: listingssvc.v1.AddStaffRequest.permissions:type_name -> google.protobuf.Struct
+	3,   // 136: listingssvc.v1.UpdateStaffRequest.role:type_name -> listingssvc.v1.StaffRole
+	201, // 137: listingssvc.v1.UpdateStaffRequest.permissions:type_name -> google.protobuf.Struct
+	139, // 138: listingssvc.v1.GetStaffResponse.staff:type_name -> listingssvc.v1.StorefrontStaff
+	140, // 139: listingssvc.v1.SetWorkingHoursRequest.hours:type_name -> listingssvc.v1.StorefrontHours
+	140, // 140: listingssvc.v1.GetWorkingHoursResponse.hours:type_name -> listingssvc.v1.StorefrontHours
+	141, // 141: listingssvc.v1.SetPaymentMethodsRequest.methods:type_name -> listingssvc.v1.StorefrontPaymentMethod
+	141, // 142: listingssvc.v1.GetPaymentMethodsResponse.methods:type_name -> listingssvc.v1.StorefrontPaymentMethod
+	142, // 143: listingssvc.v1.SetDeliveryOptionsRequest.options:type_name -> listingssvc.v1.StorefrontDeliveryOption
+	142, // 144: listingssvc.v1.GetDeliveryOptionsResponse.options:type_name -> listingssvc.v1.StorefrontDeliveryOption
+	64,  // 145: listingssvc.v1.GetMapDataRequest.filter:type_name -> listingssvc.v1.ListStorefrontsRequest
+	166, // 146: listingssvc.v1.GetMapDataResponse.storefronts:type_name -> listingssvc.v1.StorefrontMapData
+	202, // 147: listingssvc.v1.DashboardStatsRequest.date_from:type_name -> google.protobuf.Timestamp
+	202, // 148: listingssvc.v1.DashboardStatsRequest.date_to:type_name -> google.protobuf.Timestamp
+	171, // 149: listingssvc.v1.ProductImageResponse.image:type_name -> listingssvc.v1.ProductImage
+	171, // 150: listingssvc.v1.ProductImagesResponse.images:type_name -> listingssvc.v1.ProductImage
+	6,   // 151: listingssvc.v1.StorefrontInvitation.type:type_name -> listingssvc.v1.StorefrontInvitationType
+	7,   // 152: listingssvc.v1.StorefrontInvitation.status:type_name -> listingssvc.v1.StorefrontInvitationStatus
+	202, // 153: listingssvc.v1.StorefrontInvitation.expires_at:type_name -> google.protobuf.Timestamp
+	202, // 154: listingssvc.v1.StorefrontInvitation.created_at:type_name -> google.protobuf.Timestamp
+	202, // 155: listingssvc.v1.StorefrontInvitation.updated_at:type_name -> google.protobuf.Timestamp
+	202, // 156: listingssvc.v1.StorefrontInvitation.accepted_at:type_name -> google.protobuf.Timestamp
+	202, // 157: listingssvc.v1.StorefrontInvitation.declined_at:type_name -> google.protobuf.Timestamp
+	7,   // 158: listingssvc.v1.ListStorefrontInvitationsRequest.status_filter:type_name -> listingssvc.v1.StorefrontInvitationStatus
+	182, // 159: listingssvc.v1.ListStorefrontInvitationsResponse.invitations:type_name -> listingssvc.v1.StorefrontInvitation
+	182, // 160: listingssvc.v1.ValidateStorefrontInviteCodeResponse.invitation:type_name -> listingssvc.v1.StorefrontInvitation
+	8,   // 161: listingssvc.v1.Listing.TranslationsEntry.value:type_name -> listingssvc.v1.ListingFieldTranslations
+	8,   // 162: listingssvc.v1.CreateListingRequest.TranslationsEntry.value:type_name -> listingssvc.v1.ListingFieldTranslations
+	18,  // 163: listingssvc.v1.ListingsService.GetListing:input_type -> listingssvc.v1.GetListingRequest
+	22,  // 164: listingssvc.v1.ListingsService.CreateListing:input_type -> listingssvc.v1.CreateListingRequest
+	24,  // 165: listingssvc.v1.ListingsService.UpdateListing:input_type -> listingssvc.v1.UpdateListingRequest
+	26,  // 166: listingssvc.v1.ListingsService.DeleteListing:input_type -> listingssvc.v1.DeleteListingRequest
+	28,  // 167: listingssvc.v1.ListingsService.SearchListings:input_type -> listingssvc.v1.SearchListingsRequest
+	30,  // 168: listingssvc.v1.ListingsService.ListListings:input_type -> listingssvc.v1.ListListingsRequest
+	32,  // 169: listingssvc.v1.ListingsService.GetSimilarListings:input_type -> listingssvc.v1.GetSimilarListingsRequest
+	34,  // 170: listingssvc.v1.ListingsService.GetListingImage:input_type -> listingssvc.v1.ImageIDRequest
+	42,  // 171: listingssvc.v1.ListingsService.DeleteListingImage:input_type -> listingssvc.v1.DeleteListingImageRequest
+	36,  // 172: listingssvc.v1.ListingsService.AddListingImage:input_type -> listingssvc.v1.AddImageRequest
+	37,  // 173: listingssvc.v1.ListingsService.GetListingImages:input_type -> listingssvc.v1.ListingIDRequest
+	39,  // 174: listingssvc.v1.ListingsService.ReorderListingImages:input_type -> listingssvc.v1.ReorderImagesRequest
+	44,  // 175: listingssvc.v1.ListingsService.UploadListingImages:input_type -> listingssvc.v1.UploadImageChunkRequest
+	204, // 176: listingssvc.v1.ListingsService.GetRootCategories:input_type -> google.protobuf.Empty
+	204, // 177: listingssvc.v1.ListingsService.GetAllCategories:input_type -> google.protobuf.Empty
+	47,  // 178: listingssvc.v1.ListingsService.GetPopularCategories:input_type -> listingssvc.v1.PopularCategoriesRequest
+	49,  // 179: listingssvc.v1.ListingsService.GetCategory:input_type -> listingssvc.v1.CategoryIDRequest
+	49,  // 180: listingssvc.v1.ListingsService.GetCategoryTree:input_type -> listingssvc.v1.CategoryIDRequest
+	37,  // 181: listingssvc.v1.ListingsService.GetFavoritedUsers:input_type -> listingssvc.v1.ListingIDRequest
+	53,  // 182: listingssvc.v1.ListingsService.AddToFavorites:input_type -> listingssvc.v1.AddToFavoritesRequest
+	54,  // 183: listingssvc.v1.ListingsService.RemoveFromFavorites:input_type -> listingssvc.v1.RemoveFromFavoritesRequest
+	55,  // 184: listingssvc.v1.ListingsService.GetUserFavorites:input_type -> listingssvc.v1.GetUserFavoritesRequest
+	57,  // 185: listingssvc.v1.ListingsService.IsFavorite:input_type -> listingssvc.v1.IsFavoriteRequest
+	60,  // 186: listingssvc.v1.ListingsService.GetStorefront:input_type -> listingssvc.v1.GetStorefrontRequest
+	61,  // 187: listingssvc.v1.ListingsService.GetStorefrontBySlug:input_type -> listingssvc.v1.GetStorefrontBySlugRequest
+	64,  // 188: listingssvc.v1.ListingsService.ListStorefronts:input_type -> listingssvc.v1.ListStorefrontsRequest
+	66,  // 189: listingssvc.v1.ListingsService.CreateVariants:input_type -> listingssvc.v1.CreateVariantsRequest
+	37,  // 190: listingssvc.v1.ListingsService.GetVariants:input_type -> listingssvc.v1.ListingIDRequest
+	69,  // 191: listingssvc.v1.ListingsService.UpdateVariant:input_type -> listingssvc.v1.UpdateVariantRequest
+	70,  // 192: listingssvc.v1.ListingsService.DeleteVariant:input_type -> listingssvc.v1.VariantIDRequest
+	71,  // 193: listingssvc.v1.ListingsService.GetListingsForReindex:input_type -> listingssvc.v1.ReindexRequest
+	73,  // 194: listingssvc.v1.ListingsService.ResetReindexFlags:input_type -> listingssvc.v1.ResetFlagsRequest
+	204, // 195: listingssvc.v1.ListingsService.SyncDiscounts:input_type -> google.protobuf.Empty
+	74,  // 196: listingssvc.v1.ListingsService.GetProduct:input_type -> listingssvc.v1.GetProductRequest
+	76,  // 197: listingssvc.v1.ListingsService.GetProductsBySKUs:input_type -> listingssvc.v1.GetProductsBySKUsRequest
+	78,  // 198: listingssvc.v1.ListingsService.GetProductsByIDs:input_type -> listingssvc.v1.GetProductsByIDsRequest
+	79,  // 199: listingssvc.v1.ListingsService.ListProducts:input_type -> listingssvc.v1.ListProductsRequest
+	80,  // 200: listingssvc.v1.ListingsService.GetVariant:input_type -> listingssvc.v1.GetVariantRequest
+	82,  // 201: listingssvc.v1.ListingsService.GetVariantsByProductID:input_type -> listingssvc.v1.GetVariantsByProductIDRequest
+	86,  // 202: listingssvc.v1.ListingsService.DecrementStock:input_type -> listingssvc.v1.DecrementStockRequest
+	88,  // 203: listingssvc.v1.ListingsService.RollbackStock:input_type -> listingssvc.v1.RollbackStockRequest
+	90,  // 204: listingssvc.v1.ListingsService.CheckStockAvailability:input_type -> listingssvc.v1.CheckStockAvailabilityRequest
+	94,  // 205: listingssvc.v1.ListingsService.CreateReservation:input_type -> listingssvc.v1.CreateReservationRequest
+	96,  // 206: listingssvc.v1.ListingsService.ReleaseReservation:input_type -> listingssvc.v1.ReleaseReservationRequest
+	98,  // 207: listingssvc.v1.ListingsService.CommitReservation:input_type -> listingssvc.v1.CommitReservationRequest
+	100, // 208: listingssvc.v1.ListingsService.GetReservation:input_type -> listingssvc.v1.GetReservationRequest
+	103, // 209: listingssvc.v1.ListingsService.GetReservedQuantityForListing:input_type -> listingssvc.v1.GetReservedQuantityRequest
+	106, // 210: listingssvc.v1.ListingsService.CreateProduct:input_type -> listingssvc.v1.CreateProductRequest
+	107, // 211: listingssvc.v1.ListingsService.UpdateProduct:input_type -> listingssvc.v1.UpdateProductRequest
+	108, // 212: listingssvc.v1.ListingsService.DeleteProduct:input_type -> listingssvc.v1.DeleteProductRequest
+	111, // 213: listingssvc.v1.ListingsService.BulkCreateProducts:input_type -> listingssvc.v1.BulkCreateProductsRequest
+	114, // 214: listingssvc.v1.ListingsService.BulkUpdateProducts:input_type -> listingssvc.v1.BulkUpdateProductsRequest
+	116, // 215: listingssvc.v1.ListingsService.BulkDeleteProducts:input_type -> listingssvc.v1.BulkDeleteProductsRequest
+	119, // 216: listingssvc.v1.ListingsService.CreateProductVariant:input_type -> listingssvc.v1.CreateProductVariantRequest
+	120, // 217: listingssvc.v1.ListingsService.UpdateProductVariant:input_type -> listingssvc.v1.UpdateProductVariantRequest
+	121, // 218: listingssvc.v1.ListingsService.DeleteProductVariant:input_type -> listingssvc.v1.DeleteProductVariantRequest
+	124, // 219: listingssvc.v1.ListingsService.BulkCreateProductVariants:input_type -> listingssvc.v1.BulkCreateProductVariantsRequest
+	126, // 220: listingssvc.v1.ListingsService.RecordInventoryMovement:input_type -> listingssvc.v1.RecordInventoryMovementRequest
+	129, // 221: listingssvc.v1.ListingsService.BatchUpdateStock:input_type -> listingssvc.v1.BatchUpdateStockRequest
+	132, // 222: listingssvc.v1.ListingsService.GetProductStats:input_type -> listingssvc.v1.GetProductStatsRequest
+	135, // 223: listingssvc.v1.ListingsService.IncrementProductViews:input_type -> listingssvc.v1.IncrementProductViewsRequest
+	172, // 224: listingssvc.v1.ListingsService.AddProductImage:input_type -> listingssvc.v1.AddProductImageRequest
+	174, // 225: listingssvc.v1.ListingsService.GetProductImages:input_type -> listingssvc.v1.GetProductImagesRequest
+	176, // 226: listingssvc.v1.ListingsService.DeleteProductImage:input_type -> listingssvc.v1.DeleteProductImageRequest
+	178, // 227: listingssvc.v1.ListingsService.ReorderProductImages:input_type -> listingssvc.v1.ReorderProductImagesRequest
+	180, // 228: listingssvc.v1.ListingsService.SetProductImagePrimary:input_type -> listingssvc.v1.SetProductImagePrimaryRequest
+	136, // 229: listingssvc.v1.ListingsService.ReindexAll:input_type -> listingssvc.v1.ReindexAllRequest
+	144, // 230: listingssvc.v1.ListingsService.CreateStorefront:input_type -> listingssvc.v1.CreateStorefrontRequest
+	145, // 231: listingssvc.v1.ListingsService.UpdateStorefront:input_type -> listingssvc.v1.UpdateStorefrontRequest
+	146, // 232: listingssvc.v1.ListingsService.UpdateStorefrontStatus:input_type -> listingssvc.v1.UpdateStorefrontStatusRequest
+	148, // 233: listingssvc.v1.ListingsService.DeleteStorefront:input_type -> listingssvc.v1.DeleteStorefrontRequest
+	64,  // 234: listingssvc.v1.ListingsService.GetMyStorefronts:input_type -> listingssvc.v1.ListStorefrontsRequest
+	150, // 235: listingssvc.v1.ListingsService.AddStaff:input_type -> listingssvc.v1.AddStaffRequest
+	151, // 236: listingssvc.v1.ListingsService.UpdateStaff:input_type -> listingssvc.v1.UpdateStaffRequest
+	152, // 237: listingssvc.v1.ListingsService.RemoveStaff:input_type -> listingssvc.v1.RemoveStaffRequest
+	153, // 238: listingssvc.v1.ListingsService.GetStaff:input_type -> listingssvc.v1.GetStaffRequest
+	155, // 239: listingssvc.v1.ListingsService.SetWorkingHours:input_type -> listingssvc.v1.SetWorkingHoursRequest
+	156, // 240: listingssvc.v1.ListingsService.GetWorkingHours:input_type -> listingssvc.v1.GetWorkingHoursRequest
+	158, // 241: listingssvc.v1.ListingsService.IsOpenNow:input_type -> listingssvc.v1.IsOpenNowRequest
+	160, // 242: listingssvc.v1.ListingsService.SetPaymentMethods:input_type -> listingssvc.v1.SetPaymentMethodsRequest
+	161, // 243: listingssvc.v1.ListingsService.GetPaymentMethods:input_type -> listingssvc.v1.GetPaymentMethodsRequest
+	163, // 244: listingssvc.v1.ListingsService.SetDeliveryOptions:input_type -> listingssvc.v1.SetDeliveryOptionsRequest
+	164, // 245: listingssvc.v1.ListingsService.GetDeliveryOptions:input_type -> listingssvc.v1.GetDeliveryOptionsRequest
+	167, // 246: listingssvc.v1.ListingsService.GetMapData:input_type -> listingssvc.v1.GetMapDataRequest
+	169, // 247: listingssvc.v1.ListingsService.GetDashboardStats:input_type -> listingssvc.v1.DashboardStatsRequest
+	183, // 248: listingssvc.v1.ListingsService.CreateStorefrontEmailInvitation:input_type -> listingssvc.v1.CreateStorefrontEmailInvitationRequest
+	184, // 249: listingssvc.v1.ListingsService.CreateStorefrontLinkInvitation:input_type -> listingssvc.v1.CreateStorefrontLinkInvitationRequest
+	185, // 250: listingssvc.v1.ListingsService.ListStorefrontInvitations:input_type -> listingssvc.v1.ListStorefrontInvitationsRequest
+	187, // 251: listingssvc.v1.ListingsService.RevokeStorefrontInvitation:input_type -> listingssvc.v1.RevokeStorefrontInvitationRequest
+	188, // 252: listingssvc.v1.ListingsService.GetMyStorefrontInvitations:input_type -> listingssvc.v1.GetMyStorefrontInvitationsRequest
+	189, // 253: listingssvc.v1.ListingsService.AcceptStorefrontInvitation:input_type -> listingssvc.v1.AcceptStorefrontInvitationRequest
+	190, // 254: listingssvc.v1.ListingsService.DeclineStorefrontInvitation:input_type -> listingssvc.v1.DeclineStorefrontInvitationRequest
+	191, // 255: listingssvc.v1.ListingsService.ValidateStorefrontInviteCode:input_type -> listingssvc.v1.ValidateStorefrontInviteCodeRequest
+	193, // 256: listingssvc.v1.ListingsService.AcceptStorefrontInviteCode:input_type -> listingssvc.v1.AcceptStorefrontInviteCodeRequest
+	19,  // 257: listingssvc.v1.ListingsService.GetListing:output_type -> listingssvc.v1.GetListingResponse
+	23,  // 258: listingssvc.v1.ListingsService.CreateListing:output_type -> listingssvc.v1.CreateListingResponse
+	25,  // 259: listingssvc.v1.ListingsService.UpdateListing:output_type -> listingssvc.v1.UpdateListingResponse
+	27,  // 260: listingssvc.v1.ListingsService.DeleteListing:output_type -> listingssvc.v1.DeleteListingResponse
+	29,  // 261: listingssvc.v1.ListingsService.SearchListings:output_type -> listingssvc.v1.SearchListingsResponse
+	31,  // 262: listingssvc.v1.ListingsService.ListListings:output_type -> listingssvc.v1.ListListingsResponse
+	33,  // 263: listingssvc.v1.ListingsService.GetSimilarListings:output_type -> listingssvc.v1.GetSimilarListingsResponse
+	35,  // 264: listingssvc.v1.ListingsService.GetListingImage:output_type -> listingssvc.v1.ImageResponse
+	43,  // 265: listingssvc.v1.ListingsService.DeleteListingImage:output_type -> listingssvc.v1.DeleteListingImageResponse
+	35,  // 266: listingssvc.v1.ListingsService.AddListingImage:output_type -> listingssvc.v1.ImageResponse
+	38,  // 267: listingssvc.v1.ListingsService.GetListingImages:output_type -> listingssvc.v1.ImagesResponse
+	40,  // 268: listingssvc.v1.ListingsService.ReorderListingImages:output_type -> listingssvc.v1.ReorderImagesResponse
+	46,  // 269: listingssvc.v1.ListingsService.UploadListingImages:output_type -> listingssvc.v1.UploadImagesResponse
+	48,  // 270: listingssvc.v1.ListingsService.GetRootCategories:output_type -> listingssvc.v1.CategoriesResponse
+	48,  // 271: listingssvc.v1.ListingsService.GetAllCategories:output_type -> listingssvc.v1.CategoriesResponse
+	48,  // 272: listingssvc.v1.ListingsService.GetPopularCategories:output_type -> listingssvc.v1.CategoriesResponse
+	50,  // 273: listingssvc.v1.ListingsService.GetCategory:output_type -> listingssvc.v1.CategoryResponse
+	51,  // 274: listingssvc.v1.ListingsService.GetCategoryTree:output_type -> listingssvc.v1.CategoryTreeResponse
+	52,  // 275: listingssvc.v1.ListingsService.GetFavoritedUsers:output_type -> listingssvc.v1.UserIDsResponse
+	204, // 276: listingssvc.v1.ListingsService.AddToFavorites:output_type -> google.protobuf.Empty
+	204, // 277: listingssvc.v1.ListingsService.RemoveFromFavorites:output_type -> google.protobuf.Empty
+	56,  // 278: listingssvc.v1.ListingsService.GetUserFavorites:output_type -> listingssvc.v1.GetUserFavoritesResponse
+	58,  // 279: listingssvc.v1.ListingsService.IsFavorite:output_type -> listingssvc.v1.IsFavoriteResponse
+	63,  // 280: listingssvc.v1.ListingsService.GetStorefront:output_type -> listingssvc.v1.GetStorefrontResponse
+	63,  // 281: listingssvc.v1.ListingsService.GetStorefrontBySlug:output_type -> listingssvc.v1.GetStorefrontResponse
+	65,  // 282: listingssvc.v1.ListingsService.ListStorefronts:output_type -> listingssvc.v1.ListStorefrontsResponse
+	204, // 283: listingssvc.v1.ListingsService.CreateVariants:output_type -> google.protobuf.Empty
+	68,  // 284: listingssvc.v1.ListingsService.GetVariants:output_type -> listingssvc.v1.VariantsResponse
+	204, // 285: listingssvc.v1.ListingsService.UpdateVariant:output_type -> google.protobuf.Empty
+	204, // 286: listingssvc.v1.ListingsService.DeleteVariant:output_type -> google.protobuf.Empty
+	72,  // 287: listingssvc.v1.ListingsService.GetListingsForReindex:output_type -> listingssvc.v1.ListingsResponse
+	204, // 288: listingssvc.v1.ListingsService.ResetReindexFlags:output_type -> google.protobuf.Empty
+	204, // 289: listingssvc.v1.ListingsService.SyncDiscounts:output_type -> google.protobuf.Empty
+	75,  // 290: listingssvc.v1.ListingsService.GetProduct:output_type -> listingssvc.v1.ProductResponse
+	77,  // 291: listingssvc.v1.ListingsService.GetProductsBySKUs:output_type -> listingssvc.v1.ProductsResponse
+	77,  // 292: listingssvc.v1.ListingsService.GetProductsByIDs:output_type -> listingssvc.v1.ProductsResponse
+	77,  // 293: listingssvc.v1.ListingsService.ListProducts:output_type -> listingssvc.v1.ProductsResponse
+	81,  // 294: listingssvc.v1.ListingsService.GetVariant:output_type -> listingssvc.v1.VariantResponse
+	83,  // 295: listingssvc.v1.ListingsService.GetVariantsByProductID:output_type -> listingssvc.v1.ProductVariantsResponse
+	87,  // 296: listingssvc.v1.ListingsService.DecrementStock:output_type -> listingssvc.v1.DecrementStockResponse
+	89,  // 297: listingssvc.v1.ListingsService.RollbackStock:output_type -> listingssvc.v1.RollbackStockResponse
+	92,  // 298: listingssvc.v1.ListingsService.CheckStockAvailability:output_type -> listingssvc.v1.CheckStockAvailabilityResponse
+	95,  // 299: listingssvc.v1.ListingsService.CreateReservation:output_type -> listingssvc.v1.CreateReservationResponse
+	97,  // 300: listingssvc.v1.ListingsService.ReleaseReservation:output_type -> listingssvc.v1.ReleaseReservationResponse
+	99,  // 301: listingssvc.v1.ListingsService.CommitReservation:output_type -> listingssvc.v1.CommitReservationResponse
+	102, // 302: listingssvc.v1.ListingsService.GetReservation:output_type -> listingssvc.v1.GetReservationResponse
+	105, // 303: listingssvc.v1.ListingsService.GetReservedQuantityForListing:output_type -> listingssvc.v1.GetReservedQuantityResponse
+	75,  // 304: listingssvc.v1.ListingsService.CreateProduct:output_type -> listingssvc.v1.ProductResponse
+	75,  // 305: listingssvc.v1.ListingsService.UpdateProduct:output_type -> listingssvc.v1.ProductResponse
+	109, // 306: listingssvc.v1.ListingsService.DeleteProduct:output_type -> listingssvc.v1.DeleteProductResponse
+	112, // 307: listingssvc.v1.ListingsService.BulkCreateProducts:output_type -> listingssvc.v1.BulkCreateProductsResponse
+	115, // 308: listingssvc.v1.ListingsService.BulkUpdateProducts:output_type -> listingssvc.v1.BulkUpdateProductsResponse
+	117, // 309: listingssvc.v1.ListingsService.BulkDeleteProducts:output_type -> listingssvc.v1.BulkDeleteProductsResponse
+	81,  // 310: listingssvc.v1.ListingsService.CreateProductVariant:output_type -> listingssvc.v1.VariantResponse
+	81,  // 311: listingssvc.v1.ListingsService.UpdateProductVariant:output_type -> listingssvc.v1.VariantResponse
+	122, // 312: listingssvc.v1.ListingsService.DeleteProductVariant:output_type -> listingssvc.v1.DeleteProductVariantResponse
+	125, // 313: listingssvc.v1.ListingsService.BulkCreateProductVariants:output_type -> listingssvc.v1.BulkCreateProductVariantsResponse
+	127, // 314: listingssvc.v1.ListingsService.RecordInventoryMovement:output_type -> listingssvc.v1.RecordInventoryMovementResponse
+	131, // 315: listingssvc.v1.ListingsService.BatchUpdateStock:output_type -> listingssvc.v1.BatchUpdateStockResponse
+	134, // 316: listingssvc.v1.ListingsService.GetProductStats:output_type -> listingssvc.v1.GetProductStatsResponse
+	204, // 317: listingssvc.v1.ListingsService.IncrementProductViews:output_type -> google.protobuf.Empty
+	173, // 318: listingssvc.v1.ListingsService.AddProductImage:output_type -> listingssvc.v1.ProductImageResponse
+	175, // 319: listingssvc.v1.ListingsService.GetProductImages:output_type -> listingssvc.v1.ProductImagesResponse
+	177, // 320: listingssvc.v1.ListingsService.DeleteProductImage:output_type -> listingssvc.v1.DeleteProductImageResponse
+	179, // 321: listingssvc.v1.ListingsService.ReorderProductImages:output_type -> listingssvc.v1.ReorderProductImagesResponse
+	181, // 322: listingssvc.v1.ListingsService.SetProductImagePrimary:output_type -> listingssvc.v1.SetProductImagePrimaryResponse
+	137, // 323: listingssvc.v1.ListingsService.ReindexAll:output_type -> listingssvc.v1.ReindexAllResponse
+	138, // 324: listingssvc.v1.ListingsService.CreateStorefront:output_type -> listingssvc.v1.StorefrontFull
+	138, // 325: listingssvc.v1.ListingsService.UpdateStorefront:output_type -> listingssvc.v1.StorefrontFull
+	147, // 326: listingssvc.v1.ListingsService.UpdateStorefrontStatus:output_type -> listingssvc.v1.UpdateStorefrontStatusResponse
+	149, // 327: listingssvc.v1.ListingsService.DeleteStorefront:output_type -> listingssvc.v1.DeleteStorefrontResponse
+	65,  // 328: listingssvc.v1.ListingsService.GetMyStorefronts:output_type -> listingssvc.v1.ListStorefrontsResponse
+	139, // 329: listingssvc.v1.ListingsService.AddStaff:output_type -> listingssvc.v1.StorefrontStaff
+	139, // 330: listingssvc.v1.ListingsService.UpdateStaff:output_type -> listingssvc.v1.StorefrontStaff
+	149, // 331: listingssvc.v1.ListingsService.RemoveStaff:output_type -> listingssvc.v1.DeleteStorefrontResponse
+	154, // 332: listingssvc.v1.ListingsService.GetStaff:output_type -> listingssvc.v1.GetStaffResponse
+	157, // 333: listingssvc.v1.ListingsService.SetWorkingHours:output_type -> listingssvc.v1.GetWorkingHoursResponse
+	157, // 334: listingssvc.v1.ListingsService.GetWorkingHours:output_type -> listingssvc.v1.GetWorkingHoursResponse
+	159, // 335: listingssvc.v1.ListingsService.IsOpenNow:output_type -> listingssvc.v1.IsOpenNowResponse
+	162, // 336: listingssvc.v1.ListingsService.SetPaymentMethods:output_type -> listingssvc.v1.GetPaymentMethodsResponse
+	162, // 337: listingssvc.v1.ListingsService.GetPaymentMethods:output_type -> listingssvc.v1.GetPaymentMethodsResponse
+	165, // 338: listingssvc.v1.ListingsService.SetDeliveryOptions:output_type -> listingssvc.v1.GetDeliveryOptionsResponse
+	165, // 339: listingssvc.v1.ListingsService.GetDeliveryOptions:output_type -> listingssvc.v1.GetDeliveryOptionsResponse
+	168, // 340: listingssvc.v1.ListingsService.GetMapData:output_type -> listingssvc.v1.GetMapDataResponse
+	170, // 341: listingssvc.v1.ListingsService.GetDashboardStats:output_type -> listingssvc.v1.DashboardStatsResponse
+	182, // 342: listingssvc.v1.ListingsService.CreateStorefrontEmailInvitation:output_type -> listingssvc.v1.StorefrontInvitation
+	182, // 343: listingssvc.v1.ListingsService.CreateStorefrontLinkInvitation:output_type -> listingssvc.v1.StorefrontInvitation
+	186, // 344: listingssvc.v1.ListingsService.ListStorefrontInvitations:output_type -> listingssvc.v1.ListStorefrontInvitationsResponse
+	204, // 345: listingssvc.v1.ListingsService.RevokeStorefrontInvitation:output_type -> google.protobuf.Empty
+	186, // 346: listingssvc.v1.ListingsService.GetMyStorefrontInvitations:output_type -> listingssvc.v1.ListStorefrontInvitationsResponse
+	204, // 347: listingssvc.v1.ListingsService.AcceptStorefrontInvitation:output_type -> google.protobuf.Empty
+	204, // 348: listingssvc.v1.ListingsService.DeclineStorefrontInvitation:output_type -> google.protobuf.Empty
+	192, // 349: listingssvc.v1.ListingsService.ValidateStorefrontInviteCode:output_type -> listingssvc.v1.ValidateStorefrontInviteCodeResponse
+	204, // 350: listingssvc.v1.ListingsService.AcceptStorefrontInviteCode:output_type -> google.protobuf.Empty
+	257, // [257:351] is the sub-list for method output_type
+	163, // [163:257] is the sub-list for method input_type
+	163, // [163:163] is the sub-list for extension type_name
+	163, // [163:163] is the sub-list for extension extendee
+	0,   // [0:163] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_listings_v1_listings_proto_init() }

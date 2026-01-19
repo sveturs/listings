@@ -15,7 +15,9 @@ func (r *Repository) CreateStorefront(ctx context.Context, storefront *domain.St
 	query := `
 		INSERT INTO storefronts (
 			user_id, slug, name, description, logo_url, banner_url, theme,
-			phone, email, website,
+			phone, email, website, social_links,
+			legal_entity_type, business_category, full_legal_name, registration_number,
+			tax_number, vat_number, legal_representative_name, legal_representative_position,
 			address, city, postal_code, country, latitude, longitude, formatted_address,
 			geo_strategy, default_privacy_level, address_verified,
 			settings, seo_meta,
@@ -24,14 +26,20 @@ func (r *Repository) CreateStorefront(ctx context.Context, storefront *domain.St
 			ai_agent_enabled, ai_agent_config, live_shopping_enabled, group_buying_enabled,
 			followers_count
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-			$21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+			$12, $13, $14, $15, $16, $17, $18, $19,
+			$20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31,
+			$32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48
 		) RETURNING id, created_at, updated_at`
 
 	return r.db.QueryRowContext(ctx, query,
 		storefront.UserID, storefront.Slug, storefront.Name, storefront.Description,
 		storefront.LogoURL, storefront.BannerURL, storefront.Theme,
-		storefront.Phone, storefront.Email, storefront.Website,
+		storefront.Phone, storefront.Email, storefront.Website, storefront.SocialLinks,
+		// Business Legal Structure
+		storefront.LegalEntityType, storefront.BusinessCategory, storefront.FullLegalName,
+		storefront.RegistrationNumber, storefront.TaxNumber, storefront.VatNumber,
+		storefront.LegalRepresentativeName, storefront.LegalRepresentativePosition,
 		storefront.Address, storefront.City, storefront.PostalCode, storefront.Country,
 		storefront.Latitude, storefront.Longitude, storefront.FormattedAddress,
 		storefront.GeoStrategy, storefront.DefaultPrivacyLevel, storefront.AddressVerified,

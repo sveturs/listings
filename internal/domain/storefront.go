@@ -67,9 +67,20 @@ type Storefront struct {
 	Theme     JSONB   `db:"theme" json:"theme,omitempty"`
 
 	// Contact Information
-	Phone   *string `db:"phone" json:"phone,omitempty"`
-	Email   *string `db:"email" json:"email,omitempty"`
-	Website *string `db:"website" json:"website,omitempty"`
+	Phone       *string `db:"phone" json:"phone,omitempty"`
+	Email       *string `db:"email" json:"email,omitempty"`
+	Website     *string `db:"website" json:"website,omitempty"`
+	SocialLinks JSONB   `db:"social_links" json:"social_links,omitempty"`
+
+	// Business Legal Structure
+	LegalEntityType            string  `db:"legal_entity_type" json:"legal_entity_type"`           // preduzetnik, doo, ad
+	BusinessCategory           string  `db:"business_category" json:"business_category"`           // retail, service, restaurant, grocery, other
+	FullLegalName              *string `db:"full_legal_name" json:"full_legal_name,omitempty"`     // Full company name (for legal entities)
+	RegistrationNumber         *string `db:"registration_number" json:"registration_number,omitempty"` // Matični broj (MB)
+	TaxNumber                  *string `db:"tax_number" json:"tax_number,omitempty"`               // PIB (9 digits)
+	VatNumber                  *string `db:"vat_number" json:"vat_number,omitempty"`               // PDV broj (RS + 9 digits)
+	LegalRepresentativeName    *string `db:"legal_representative_name" json:"legal_representative_name,omitempty"`
+	LegalRepresentativePosition *string `db:"legal_representative_position" json:"legal_representative_position,omitempty"`
 
 	// Location
 	Address             *string  `db:"address" json:"address,omitempty"`
@@ -222,27 +233,33 @@ type StorefrontDeliveryOption struct {
 
 // StorefrontUpdate represents fields that can be updated
 type StorefrontUpdate struct {
-	Name                *string  `json:"name,omitempty"`
-	Description         *string  `json:"description,omitempty"`
-	IsActive            *bool    `json:"is_active,omitempty"`
-	LogoURL             *string  `json:"logo_url,omitempty"`
-	BannerURL           *string  `json:"banner_url,omitempty"`
-	Theme               JSONB    `json:"theme,omitempty"`
-	Phone               *string  `json:"phone,omitempty"`
-	Email               *string  `json:"email,omitempty"`
-	Website             *string  `json:"website,omitempty"`
-	Address             *string  `json:"address,omitempty"`
-	City                *string  `json:"city,omitempty"`
-	PostalCode          *string  `json:"postal_code,omitempty"`
-	Country             *string  `json:"country,omitempty"`
-	Latitude            *float64 `json:"latitude,omitempty"`
-	Longitude           *float64 `json:"longitude,omitempty"`
-	FormattedAddress    *string  `json:"formatted_address,omitempty"`
-	Settings            JSONB    `json:"settings,omitempty"`
-	SeoMeta             JSONB    `json:"seo_meta,omitempty"`
-	AIAgentEnabled      *bool    `json:"ai_agent_enabled,omitempty"`
-	LiveShoppingEnabled *bool    `json:"live_shopping_enabled,omitempty"`
-	GroupBuyingEnabled  *bool    `json:"group_buying_enabled,omitempty"`
+	Name                        *string  `json:"name,omitempty"`
+	Description                 *string  `json:"description,omitempty"`
+	IsActive                    *bool    `json:"is_active,omitempty"`
+	LogoURL                     *string  `json:"logo_url,omitempty"`
+	BannerURL                   *string  `json:"banner_url,omitempty"`
+	Theme                       JSONB    `json:"theme,omitempty"`
+	Phone                       *string  `json:"phone,omitempty"`
+	Email                       *string  `json:"email,omitempty"`
+	Website                     *string  `json:"website,omitempty"`
+	Address                     *string  `json:"address,omitempty"`
+	City                        *string  `json:"city,omitempty"`
+	PostalCode                  *string  `json:"postal_code,omitempty"`
+	Country                     *string  `json:"country,omitempty"`
+	Latitude                    *float64 `json:"latitude,omitempty"`
+	Longitude                   *float64 `json:"longitude,omitempty"`
+	FormattedAddress            *string  `json:"formatted_address,omitempty"`
+	Settings                    JSONB    `json:"settings,omitempty"`
+	SeoMeta                     JSONB    `json:"seo_meta,omitempty"`
+	AIAgentEnabled              *bool    `json:"ai_agent_enabled,omitempty"`
+	LiveShoppingEnabled         *bool    `json:"live_shopping_enabled,omitempty"`
+	GroupBuyingEnabled          *bool    `json:"group_buying_enabled,omitempty"`
+	LegalEntityType             *string  `json:"legal_entity_type,omitempty"`
+	BusinessCategory            *string  `json:"business_category,omitempty"`
+	FullLegalName               *string  `json:"full_legal_name,omitempty"`
+	RegistrationNumber          *string  `json:"registration_number,omitempty"`
+	LegalRepresentativeName     *string  `json:"legal_representative_name,omitempty"`
+	LegalRepresentativePosition *string  `json:"legal_representative_position,omitempty"`
 }
 
 // StaffUpdate represents staff fields that can be updated

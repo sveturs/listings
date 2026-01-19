@@ -30,6 +30,18 @@ func mapDomainStorefrontToProto(s *domain.Storefront) *listingspb.StorefrontFull
 		Phone:                 getOptionalString(s.Phone),
 		Email:                 getOptionalString(s.Email),
 		Website:               getOptionalString(s.Website),
+		SocialLinks:           mapJSONBToProtoStruct(s.SocialLinks),
+
+		// Business Legal Structure
+		LegalEntityType:            s.LegalEntityType,
+		BusinessCategory:           s.BusinessCategory,
+		FullLegalName:              getOptionalString(s.FullLegalName),
+		RegistrationNumber:         getOptionalString(s.RegistrationNumber),
+		TaxNumber:                  getOptionalString(s.TaxNumber),
+		VatNumber:                  getOptionalString(s.VatNumber),
+		LegalRepresentativeName:    getOptionalString(s.LegalRepresentativeName),
+		LegalRepresentativePosition: getOptionalString(s.LegalRepresentativePosition),
+
 		Address:               getOptionalString(s.Address),
 		City:                  getOptionalString(s.City),
 		PostalCode:            getOptionalString(s.PostalCode),

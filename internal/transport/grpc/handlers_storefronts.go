@@ -16,7 +16,13 @@ import (
 
 // CreateStorefront creates a new storefront
 func (s *Server) CreateStorefront(ctx context.Context, req *listingspb.CreateStorefrontRequest) (*listingspb.StorefrontFull, error) {
-	s.logger.Info().Int64("user_id", req.UserId).Msg("CreateStorefront called")
+	s.logger.Info().
+		Int64("user_id", req.UserId).
+		Str("legal_entity_type", stringFromOptional(req.LegalEntityType)).
+		Str("business_category", stringFromOptional(req.BusinessCategory)).
+		Str("full_legal_name", stringFromOptional(req.FullLegalName)).
+		Str("registration_number", stringFromOptional(req.RegistrationNumber)).
+		Msg("CreateStorefront called")
 
 	if err := validateCreateStorefrontRequest(req); err != nil {
 		s.logger.Warn().Err(err).Msg("Invalid CreateStorefront request")
@@ -34,6 +40,16 @@ func (s *Server) CreateStorefront(ctx context.Context, req *listingspb.CreateSto
 		Phone:       getOptionalStringPtr(req.Phone),
 		Email:       getOptionalStringPtr(req.Email),
 		Website:     getOptionalStringPtr(req.Website),
+		SocialLinks: mapProtoStructToJSONB(req.SocialLinks),
+		// Business Legal Structure
+		LegalEntityType:            coalesceString(stringFromOptional(req.LegalEntityType), "preduzetnik"),
+		BusinessCategory:           coalesceString(stringFromOptional(req.BusinessCategory), "retail"),
+		FullLegalName:              getOptionalStringPtr(req.FullLegalName),
+		RegistrationNumber:         getOptionalStringPtr(req.RegistrationNumber),
+		TaxNumber:                  getOptionalStringPtr(req.TaxNumber),
+		VatNumber:                  getOptionalStringPtr(req.VatNumber),
+		LegalRepresentativeName:    getOptionalStringPtr(req.LegalRepresentativeName),
+		LegalRepresentativePosition: getOptionalStringPtr(req.LegalRepresentativePosition),
 		Location:    mapProtoLocationToService(req.Location),
 		Settings:    mapProtoStructToJSONB(req.Settings),
 		SeoMeta:     mapProtoStructToJSONB(req.SeoMeta),
@@ -89,14 +105,15 @@ func (s *Server) GetStorefront(ctx context.Context, req *listingspb.GetStorefron
 // GetStorefrontBySlug retrieves a storefront by slug
 func (s *Server) GetStorefrontBySlug(ctx context.Context, req *listingspb.GetStorefrontBySlugRequest) (*listingspb.GetStorefrontResponse, error) {
 	// Convert to GetStorefrontRequest
+	// ✅ CHANGED: Include related entities for public storefront pages
 	getReq := &listingspb.GetStorefrontRequest{
 		Identifier: &listingspb.GetStorefrontRequest_Slug{
 			Slug: req.Slug,
 		},
-		IncludeStaff:           false,
-		IncludeHours:           false,
-		IncludePaymentMethods:  false,
-		IncludeDeliveryOptions: false,
+		IncludeStaff:           true,
+		IncludeHours:           true,
+		IncludePaymentMethods:  true,
+		IncludeDeliveryOptions: true,
 	}
 	return s.GetStorefront(ctx, getReq)
 }
@@ -642,4 +659,12 @@ func (s *Server) UpdateStorefrontStatus(ctx context.Context, req *listingspb.Upd
 		Msg("Storefront status updated successfully")
 
 	return response, nil
+}
+
+// coalesceString returns defaultValue if str is empty
+func coalesceString(str, defaultValue string) string {
+	if str == "" {
+		return defaultValue
+	}
+	return str
 }
