@@ -2,6 +2,7 @@ package listings
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/vondi-global/listings/internal/domain"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // StorefrontRepository defines the interface for storefront data access
@@ -35,6 +37,8 @@ type StorefrontRepository interface {
 	GetStorefrontDashboardStats(ctx context.Context, storefrontID int64, from, to *time.Time) (*domain.StorefrontDashboardStats, error)
 	IsSlugTaken(ctx context.Context, slug string, excludeID *int64) (bool, error)
 	IncrementViewsCount(ctx context.Context, storefrontID int64) error
+	UpdateFields(ctx context.Context, storefrontID int64, updates map[string]interface{}) error
+	IsUserStaff(ctx context.Context, storefrontID, userID int64) (bool, error)
 }
 
 // CreateStorefrontRequest represents storefront creation request
@@ -49,6 +53,16 @@ type CreateStorefrontRequest struct {
 	Phone       *string
 	Email       *string
 	Website     *string
+	SocialLinks domain.JSONB
+	// Business Legal Structure
+	LegalEntityType            string
+	BusinessCategory           string
+	FullLegalName              *string
+	RegistrationNumber         *string
+	TaxNumber                  *string
+	VatNumber                  *string
+	LegalRepresentativeName    *string
+	LegalRepresentativePosition *string
 	Location    StorefrontLocation
 	Settings    domain.JSONB
 	SeoMeta     domain.JSONB
@@ -140,6 +154,16 @@ func (s *StorefrontService) CreateStorefront(ctx context.Context, req *CreateSto
 		Phone:                req.Phone,
 		Email:                req.Email,
 		Website:              req.Website,
+		SocialLinks:          req.SocialLinks,
+		// Business Legal Structure
+		LegalEntityType:            req.LegalEntityType,
+		BusinessCategory:           req.BusinessCategory,
+		FullLegalName:              req.FullLegalName,
+		RegistrationNumber:         req.RegistrationNumber,
+		TaxNumber:                  req.TaxNumber,
+		VatNumber:                  req.VatNumber,
+		LegalRepresentativeName:    req.LegalRepresentativeName,
+		LegalRepresentativePosition: req.LegalRepresentativePosition,
 		Address:              &req.Location.FullAddress,
 		City:                 &req.Location.City,
 		PostalCode:           req.Location.PostalCode,
@@ -170,6 +194,16 @@ func (s *StorefrontService) CreateStorefront(ctx context.Context, req *CreateSto
 
 	if err := s.repo.CreateStorefront(ctx, storefront); err != nil {
 		return nil, fmt.Errorf("failed to create storefront: %w", err)
+	}
+
+	// ✅ ADDED: Parse settings and create related entities
+	if err := s.processStorefrontSettings(ctx, storefront); err != nil {
+		// Log error but don't fail - related entities can be added later via Settings page
+		s.logger.Warn().
+			Err(err).
+			Int64("storefront_id", storefront.ID).
+			Msg("Failed to process storefront settings, continuing")
+		// NOTE: витрина уже создана, не возвращаем ошибку
 	}
 
 	s.logger.Info().
@@ -570,4 +604,305 @@ func generateSlug(name string) string {
 		slug = strings.TrimRight(slug, "-")
 	}
 	return slug
+}
+
+// UpdateStatus updates storefront operational status (vacation mode, accepting orders)
+func (s *StorefrontService) UpdateStatus(ctx context.Context, storefrontID, userID int64, req *listingspb.UpdateStorefrontStatusRequest) error {
+	// Verify storefront exists and user has permission
+	storefront, err := s.repo.GetStorefrontByID(ctx, storefrontID, nil)
+	if err != nil {
+		return fmt.Errorf("storefront not found")
+	}
+
+	// Check ownership or staff permission
+	if storefront.UserID != userID {
+		isStaff, err := s.repo.IsUserStaff(ctx, storefrontID, userID)
+		if err != nil || !isStaff {
+			return fmt.Errorf("not authorized")
+		}
+	}
+
+	// Build update query dynamically
+	updates := make(map[string]interface{})
+	updates["status_updated_at"] = time.Now()
+
+	if req.VacationMode != nil {
+		updates["vacation_mode"] = *req.VacationMode
+	}
+	if req.AcceptingOrders != nil {
+		updates["accepting_orders"] = *req.AcceptingOrders
+	}
+	if req.VacationStartDate != nil {
+		updates["vacation_start_date"] = req.VacationStartDate.AsTime()
+	}
+	if req.VacationEndDate != nil {
+		updates["vacation_end_date"] = req.VacationEndDate.AsTime()
+	}
+	if req.AutoPauseWhenOutOfStock != nil {
+		updates["auto_pause_when_out_of_stock"] = *req.AutoPauseWhenOutOfStock
+	}
+
+	// Update in repository
+	err = s.repo.UpdateFields(ctx, storefrontID, updates)
+	if err != nil {
+		return fmt.Errorf("failed to update status: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", storefrontID).
+		Int64("user_id", userID).
+		Interface("updates", updates).
+		Msg("Storefront status updated")
+
+	return nil
+}
+
+// ✅ ADDED: processStorefrontSettings parses settings JSONB and creates related entities
+func (s *StorefrontService) processStorefrontSettings(ctx context.Context, storefront *domain.Storefront) error {
+	if storefront.Settings == nil || len(storefront.Settings) == 0 {
+		s.logger.Debug().
+			Int64("storefront_id", storefront.ID).
+			Msg("No settings to process")
+		return nil
+	}
+
+	// Unmarshal JSONB to map
+	var settingsMap map[string]interface{}
+	if err := json.Unmarshal(storefront.Settings, &settingsMap); err != nil {
+		return fmt.Errorf("failed to unmarshal settings: %w", err)
+	}
+
+	// Parse business hours
+	if businessHoursRaw, ok := settingsMap["businessHours"]; ok {
+		if err := s.processBusinessHours(ctx, storefront.ID, businessHoursRaw); err != nil {
+			s.logger.Error().
+				Err(err).
+				Int64("storefront_id", storefront.ID).
+				Msg("Failed to process business hours")
+			// Continue processing other settings
+		}
+	}
+
+	// Parse payment methods
+	if paymentMethodsRaw, ok := settingsMap["paymentMethods"]; ok {
+		if err := s.processPaymentMethods(ctx, storefront.ID, paymentMethodsRaw); err != nil {
+			s.logger.Error().
+				Err(err).
+				Int64("storefront_id", storefront.ID).
+				Msg("Failed to process payment methods")
+			// Continue processing other settings
+		}
+	}
+
+	// Parse delivery options
+	if deliveryOptionsRaw, ok := settingsMap["deliveryOptions"]; ok {
+		if err := s.processDeliveryOptions(ctx, storefront.ID, deliveryOptionsRaw); err != nil {
+			s.logger.Error().
+				Err(err).
+				Int64("storefront_id", storefront.ID).
+				Msg("Failed to process delivery options")
+			// Continue processing other settings
+		}
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", storefront.ID).
+		Msg("Settings processed successfully")
+
+	return nil
+}
+
+// processBusinessHours parses businessHours from settings and creates storefront_hours records
+func (s *StorefrontService) processBusinessHours(ctx context.Context, storefrontID int64, hoursRaw interface{}) error {
+	hoursSlice, ok := hoursRaw.([]interface{})
+	if !ok {
+		return fmt.Errorf("businessHours must be an array")
+	}
+
+	hours := make([]domain.StorefrontHours, 0, len(hoursSlice))
+
+	for _, hourRaw := range hoursSlice {
+		hourMap, ok := hourRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		dayOfWeek, ok := hourMap["dayOfWeek"].(float64)
+		if !ok {
+			continue
+		}
+
+		hour := domain.StorefrontHours{
+			StorefrontID: storefrontID,
+			DayOfWeek:    int32(dayOfWeek),
+		}
+
+		if isClosed, ok := hourMap["isClosed"].(bool); ok {
+			hour.IsClosed = isClosed
+		}
+
+		if !hour.IsClosed {
+			if openTime, ok := hourMap["openTime"].(string); ok {
+				hour.OpenTime = &openTime
+			}
+			if closeTime, ok := hourMap["closeTime"].(string); ok {
+				hour.CloseTime = &closeTime
+			}
+		}
+
+		hours = append(hours, hour)
+	}
+
+	if len(hours) != 7 {
+		return fmt.Errorf("businessHours must contain exactly 7 entries, got %d", len(hours))
+	}
+
+	if err := s.repo.SetWorkingHours(ctx, storefrontID, hours); err != nil {
+		return fmt.Errorf("failed to set working hours: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", storefrontID).
+		Int("hours_count", len(hours)).
+		Msg("Business hours processed successfully")
+
+	return nil
+}
+
+// processPaymentMethods parses paymentMethods from settings and creates storefront_payment_methods records
+func (s *StorefrontService) processPaymentMethods(ctx context.Context, storefrontID int64, methodsRaw interface{}) error {
+	methodsSlice, ok := methodsRaw.([]interface{})
+	if !ok {
+		return fmt.Errorf("paymentMethods must be an array")
+	}
+
+	methods := make([]domain.PaymentMethod, 0, len(methodsSlice))
+
+	for _, methodRaw := range methodsSlice {
+		methodType, ok := methodRaw.(string)
+		if !ok {
+			continue
+		}
+
+		method := domain.PaymentMethod{
+			StorefrontID:   storefrontID,
+			MethodType:     methodType,
+			IsEnabled:      true,
+			TransactionFee: 0.0,
+		}
+
+		// Set default transaction fees based on method type
+		switch methodType {
+		case "card":
+			method.TransactionFee = 2.5
+			provider := "stripe"
+			method.Provider = &provider
+		case "bank_transfer":
+			method.TransactionFee = 1.5
+		case "paypal":
+			method.TransactionFee = 3.4
+			provider := "paypal"
+			method.Provider = &provider
+		case "keks_pay":
+			method.TransactionFee = 2.0
+			provider := "keks_pay"
+			method.Provider = &provider
+		case "ips":
+			method.TransactionFee = 1.8
+			provider := "ips"
+			method.Provider = &provider
+		}
+
+		methods = append(methods, method)
+	}
+
+	if len(methods) == 0 {
+		s.logger.Debug().
+			Int64("storefront_id", storefrontID).
+			Msg("No payment methods to process")
+		return nil
+	}
+
+	if err := s.repo.SetPaymentMethods(ctx, storefrontID, methods); err != nil {
+		return fmt.Errorf("failed to set payment methods: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", storefrontID).
+		Int("methods_count", len(methods)).
+		Msg("Payment methods processed successfully")
+
+	return nil
+}
+
+// processDeliveryOptions parses deliveryOptions from settings and creates storefront_delivery_options records
+func (s *StorefrontService) processDeliveryOptions(ctx context.Context, storefrontID int64, optionsRaw interface{}) error {
+	optionsSlice, ok := optionsRaw.([]interface{})
+	if !ok {
+		return fmt.Errorf("deliveryOptions must be an array")
+	}
+
+	options := make([]domain.StorefrontDeliveryOption, 0, len(optionsSlice))
+
+	for _, optionRaw := range optionsSlice {
+		optionMap, ok := optionRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		option := domain.StorefrontDeliveryOption{
+			StorefrontID:     storefrontID,
+			BasePrice:        0.0,
+			PricePerKm:       0.0,
+			PricePerKg:       0.0,
+			EstimatedDaysMin: 1,
+			EstimatedDaysMax: 3,
+			IsActive:         true,
+			DisplayOrder:     0,
+		}
+
+		// Required field: displayName or provider
+		if displayName, ok := optionMap["displayName"].(string); ok {
+			option.Name = displayName
+		} else if provider, ok := optionMap["provider"].(string); ok {
+			option.Name = provider
+		} else {
+			continue // Skip if no name
+		}
+
+		// Optional fields
+		if provider, ok := optionMap["provider"].(string); ok {
+			providerStr := provider
+			option.Provider = &providerStr
+		}
+		if price, ok := optionMap["price"].(float64); ok {
+			option.BasePrice = price
+		}
+		if minDays, ok := optionMap["estimatedDaysMin"].(float64); ok {
+			option.EstimatedDaysMin = int32(minDays)
+		}
+		if maxDays, ok := optionMap["estimatedDaysMax"].(float64); ok {
+			option.EstimatedDaysMax = int32(maxDays)
+		}
+
+		options = append(options, option)
+	}
+
+	if len(options) == 0 {
+		s.logger.Debug().
+			Int64("storefront_id", storefrontID).
+			Msg("No delivery options to process")
+		return nil
+	}
+
+	if err := s.repo.SetDeliveryOptions(ctx, storefrontID, options); err != nil {
+		return fmt.Errorf("failed to set delivery options: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", storefrontID).
+		Int("options_count", len(options)).
+		Msg("Delivery options processed successfully")
+
+	return nil
 }

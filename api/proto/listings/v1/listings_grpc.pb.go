@@ -89,6 +89,7 @@ const (
 	ListingsService_ReindexAll_FullMethodName                      = "/listingssvc.v1.ListingsService/ReindexAll"
 	ListingsService_CreateStorefront_FullMethodName                = "/listingssvc.v1.ListingsService/CreateStorefront"
 	ListingsService_UpdateStorefront_FullMethodName                = "/listingssvc.v1.ListingsService/UpdateStorefront"
+	ListingsService_UpdateStorefrontStatus_FullMethodName          = "/listingssvc.v1.ListingsService/UpdateStorefrontStatus"
 	ListingsService_DeleteStorefront_FullMethodName                = "/listingssvc.v1.ListingsService/DeleteStorefront"
 	ListingsService_GetMyStorefronts_FullMethodName                = "/listingssvc.v1.ListingsService/GetMyStorefronts"
 	ListingsService_AddStaff_FullMethodName                        = "/listingssvc.v1.ListingsService/AddStaff"
@@ -283,6 +284,8 @@ type ListingsServiceClient interface {
 	CreateStorefront(ctx context.Context, in *CreateStorefrontRequest, opts ...grpc.CallOption) (*StorefrontFull, error)
 	// UpdateStorefront updates an existing storefront
 	UpdateStorefront(ctx context.Context, in *UpdateStorefrontRequest, opts ...grpc.CallOption) (*StorefrontFull, error)
+	// UpdateStorefrontStatus updates operational status (vacation mode, accepting orders)
+	UpdateStorefrontStatus(ctx context.Context, in *UpdateStorefrontStatusRequest, opts ...grpc.CallOption) (*UpdateStorefrontStatusResponse, error)
 	// DeleteStorefront removes a storefront (soft or hard delete)
 	DeleteStorefront(ctx context.Context, in *DeleteStorefrontRequest, opts ...grpc.CallOption) (*DeleteStorefrontResponse, error)
 	// GetMyStorefronts retrieves storefronts owned by user
@@ -1034,6 +1037,16 @@ func (c *listingsServiceClient) UpdateStorefront(ctx context.Context, in *Update
 	return out, nil
 }
 
+func (c *listingsServiceClient) UpdateStorefrontStatus(ctx context.Context, in *UpdateStorefrontStatusRequest, opts ...grpc.CallOption) (*UpdateStorefrontStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateStorefrontStatusResponse)
+	err := c.cc.Invoke(ctx, ListingsService_UpdateStorefrontStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *listingsServiceClient) DeleteStorefront(ctx context.Context, in *DeleteStorefrontRequest, opts ...grpc.CallOption) (*DeleteStorefrontResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteStorefrontResponse)
@@ -1442,6 +1455,8 @@ type ListingsServiceServer interface {
 	CreateStorefront(context.Context, *CreateStorefrontRequest) (*StorefrontFull, error)
 	// UpdateStorefront updates an existing storefront
 	UpdateStorefront(context.Context, *UpdateStorefrontRequest) (*StorefrontFull, error)
+	// UpdateStorefrontStatus updates operational status (vacation mode, accepting orders)
+	UpdateStorefrontStatus(context.Context, *UpdateStorefrontStatusRequest) (*UpdateStorefrontStatusResponse, error)
 	// DeleteStorefront removes a storefront (soft or hard delete)
 	DeleteStorefront(context.Context, *DeleteStorefrontRequest) (*DeleteStorefrontResponse, error)
 	// GetMyStorefronts retrieves storefronts owned by user
@@ -1706,6 +1721,9 @@ func (UnimplementedListingsServiceServer) CreateStorefront(context.Context, *Cre
 }
 func (UnimplementedListingsServiceServer) UpdateStorefront(context.Context, *UpdateStorefrontRequest) (*StorefrontFull, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateStorefront not implemented")
+}
+func (UnimplementedListingsServiceServer) UpdateStorefrontStatus(context.Context, *UpdateStorefrontStatusRequest) (*UpdateStorefrontStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateStorefrontStatus not implemented")
 }
 func (UnimplementedListingsServiceServer) DeleteStorefront(context.Context, *DeleteStorefrontRequest) (*DeleteStorefrontResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteStorefront not implemented")
@@ -3031,6 +3049,24 @@ func _ListingsService_UpdateStorefront_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ListingsService_UpdateStorefrontStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateStorefrontStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ListingsServiceServer).UpdateStorefrontStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ListingsService_UpdateStorefrontStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ListingsServiceServer).UpdateStorefrontStatus(ctx, req.(*UpdateStorefrontStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ListingsService_DeleteStorefront_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteStorefrontRequest)
 	if err := dec(in); err != nil {
@@ -3741,6 +3777,10 @@ var ListingsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateStorefront",
 			Handler:    _ListingsService_UpdateStorefront_Handler,
+		},
+		{
+			MethodName: "UpdateStorefrontStatus",
+			Handler:    _ListingsService_UpdateStorefrontStatus_Handler,
 		},
 		{
 			MethodName: "DeleteStorefront",

@@ -341,6 +341,9 @@ service ListingsService {
   // UpdateStorefront updates an existing storefront
   rpc UpdateStorefront(UpdateStorefrontRequest) returns (StorefrontFull);
 
+  // UpdateStorefrontStatus updates operational status (vacation mode, accepting orders)
+  rpc UpdateStorefrontStatus(UpdateStorefrontStatusRequest) returns (UpdateStorefrontStatusResponse);
+
   // DeleteStorefront removes a storefront (soft or hard delete)
   rpc DeleteStorefront(DeleteStorefrontRequest) returns (DeleteStorefrontResponse);
 
@@ -945,6 +948,7 @@ message Storefront {
   optional string phone = 8;
   optional string email = 9;
   optional string website = 10;
+  optional google.protobuf.Struct social_links = 27; // JSON: {"instagram": "url", "facebook": "url", "telegram": "url", "whatsapp": "number"}
   optional string address = 11;
   optional string city = 12;
   optional string postal_code = 13;
@@ -961,6 +965,16 @@ message Storefront {
   int32 followers_count = 24;
   string created_at = 25;
   string updated_at = 26;
+
+  // Business legal structure (added 2026-01-18)
+  string legal_entity_type = 28;           // preduzetnik, doo, ad
+  string business_category = 29;           // retail, service, restaurant, grocery, other
+  optional string full_legal_name = 30;    // Full company name (for legal entities)
+  optional string registration_number = 31; // Matični broj (MB)
+  optional string tax_number = 34;         // PIB (9 digits)
+  optional string vat_number = 35;         // PDV broj (RS + 9 digits)
+  optional string legal_representative_name = 32;
+  optional string legal_representative_position = 33;
 }
 
 // GetStorefrontRequest requests a storefront by ID or slug
@@ -1690,6 +1704,7 @@ message StorefrontFull {
   optional string phone = 9;
   optional string email = 10;
   optional string website = 11;
+  optional google.protobuf.Struct social_links = 54; // JSON: {"instagram": "url", "facebook": "url", "telegram": "url", "whatsapp": "number"}
 
   // Location (address)
   optional string address = 12;
@@ -1711,6 +1726,15 @@ message StorefrontFull {
   bool is_active = 24;                        // default: true
   bool is_verified = 25;                      // default: false
   optional google.protobuf.Timestamp verification_date = 26;
+
+  // Store operational status (NEW - 2026-01-17)
+  bool vacation_mode = 48;                    // default: false - pause all orders temporarily
+  bool accepting_orders = 49;                 // default: true - whether accepting new orders
+  optional google.protobuf.Timestamp vacation_start_date = 50;
+  optional google.protobuf.Timestamp vacation_end_date = 51;
+  bool auto_pause_when_out_of_stock = 52;    // default: false
+  optional google.protobuf.Timestamp status_updated_at = 53;
+
   double rating = 27;                         // NUMERIC(3,2), default: 0.00
   int32 reviews_count = 28;                   // default: 0
   int32 products_count = 29;                  // default: 0
@@ -1742,6 +1766,16 @@ message StorefrontFull {
   repeated StorefrontHours hours = 45;
   repeated StorefrontPaymentMethod payment_methods = 46;
   repeated StorefrontDeliveryOption delivery_options = 47;
+
+  // Business legal structure (added 2026-01-18)
+  string legal_entity_type = 55;           // preduzetnik, doo, ad
+  string business_category = 56;           // retail, service, restaurant, grocery, other
+  optional string full_legal_name = 57;    // Full company name (for legal entities)
+  optional string registration_number = 58; // Matični broj (MB)
+  optional string tax_number = 61;         // PIB (9 digits)
+  optional string vat_number = 62;         // PDV broj (RS + 9 digits)
+  optional string legal_representative_name = 59;
+  optional string legal_representative_position = 60;
 }
 
 // StorefrontStaff represents staff member (b2c_store_staff table)
@@ -1835,9 +1869,20 @@ message CreateStorefrontRequest {
   optional string phone = 8;
   optional string email = 9;   // Validated
   optional string website = 10; // Validated
+  optional google.protobuf.Struct social_links = 22; // Social media links
   Location location = 11; // Required
   optional google.protobuf.Struct settings = 12;
   optional google.protobuf.Struct seo_meta = 13;
+
+  // Business legal structure (added 2026-01-18)
+  optional string legal_entity_type = 14;           // preduzetnik, doo, ad
+  optional string business_category = 15;           // retail, service, restaurant, grocery, other
+  optional string full_legal_name = 16;             // Full company name (for legal entities)
+  optional string registration_number = 17;         // Matični broj (MB)
+  optional string tax_number = 20;                  // PIB (9 digits)
+  optional string vat_number = 21;                  // PDV broj (RS + 9 digits)
+  optional string legal_representative_name = 18;
+  optional string legal_representative_position = 19;
 }
 
 // UpdateStorefrontRequest updates an existing storefront
@@ -1858,6 +1903,37 @@ message UpdateStorefrontRequest {
   optional bool ai_agent_enabled = 14;
   optional bool live_shopping_enabled = 15;
   optional bool group_buying_enabled = 16;
+
+  // Business legal structure (added 2026-01-18)
+  optional string legal_entity_type = 17;
+  optional string business_category = 18;
+  optional string full_legal_name = 19;
+  optional string registration_number = 20;
+  optional string tax_number = 23;
+  optional string vat_number = 24;
+  optional string legal_representative_name = 21;
+  optional string legal_representative_position = 22;
+}
+
+// UpdateStorefrontStatusRequest updates store operational status
+message UpdateStorefrontStatusRequest {
+  int64 storefront_id = 1;                           // Required
+  int64 user_id = 2;                                 // Required - requesting user
+  optional bool vacation_mode = 3;                   // Enable/disable vacation mode
+  optional bool accepting_orders = 4;                // Enable/disable accepting orders
+  optional google.protobuf.Timestamp vacation_start_date = 5;
+  optional google.protobuf.Timestamp vacation_end_date = 6;
+  optional bool auto_pause_when_out_of_stock = 7;
+}
+
+// UpdateStorefrontStatusResponse returns updated status
+message UpdateStorefrontStatusResponse {
+  bool success = 1;
+  bool vacation_mode = 2;
+  bool accepting_orders = 3;
+  optional google.protobuf.Timestamp vacation_start_date = 4;
+  optional google.protobuf.Timestamp vacation_end_date = 5;
+  google.protobuf.Timestamp status_updated_at = 6;
 }
 
 // DeleteStorefrontRequest deletes a storefront

@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 	"github.com/vondi-global/listings/internal/domain"
@@ -15,7 +16,13 @@ import (
 
 // CreateStorefront creates a new storefront
 func (s *Server) CreateStorefront(ctx context.Context, req *listingspb.CreateStorefrontRequest) (*listingspb.StorefrontFull, error) {
-	s.logger.Info().Int64("user_id", req.UserId).Msg("CreateStorefront called")
+	s.logger.Info().
+		Int64("user_id", req.UserId).
+		Str("legal_entity_type", stringFromOptional(req.LegalEntityType)).
+		Str("business_category", stringFromOptional(req.BusinessCategory)).
+		Str("full_legal_name", stringFromOptional(req.FullLegalName)).
+		Str("registration_number", stringFromOptional(req.RegistrationNumber)).
+		Msg("CreateStorefront called")
 
 	if err := validateCreateStorefrontRequest(req); err != nil {
 		s.logger.Warn().Err(err).Msg("Invalid CreateStorefront request")
@@ -33,6 +40,16 @@ func (s *Server) CreateStorefront(ctx context.Context, req *listingspb.CreateSto
 		Phone:       getOptionalStringPtr(req.Phone),
 		Email:       getOptionalStringPtr(req.Email),
 		Website:     getOptionalStringPtr(req.Website),
+		SocialLinks: mapProtoStructToJSONB(req.SocialLinks),
+		// Business Legal Structure
+		LegalEntityType:            coalesceString(stringFromOptional(req.LegalEntityType), "preduzetnik"),
+		BusinessCategory:           coalesceString(stringFromOptional(req.BusinessCategory), "retail"),
+		FullLegalName:              getOptionalStringPtr(req.FullLegalName),
+		RegistrationNumber:         getOptionalStringPtr(req.RegistrationNumber),
+		TaxNumber:                  getOptionalStringPtr(req.TaxNumber),
+		VatNumber:                  getOptionalStringPtr(req.VatNumber),
+		LegalRepresentativeName:    getOptionalStringPtr(req.LegalRepresentativeName),
+		LegalRepresentativePosition: getOptionalStringPtr(req.LegalRepresentativePosition),
 		Location:    mapProtoLocationToService(req.Location),
 		Settings:    mapProtoStructToJSONB(req.Settings),
 		SeoMeta:     mapProtoStructToJSONB(req.SeoMeta),
@@ -88,14 +105,15 @@ func (s *Server) GetStorefront(ctx context.Context, req *listingspb.GetStorefron
 // GetStorefrontBySlug retrieves a storefront by slug
 func (s *Server) GetStorefrontBySlug(ctx context.Context, req *listingspb.GetStorefrontBySlugRequest) (*listingspb.GetStorefrontResponse, error) {
 	// Convert to GetStorefrontRequest
+	// ✅ CHANGED: Include related entities for public storefront pages
 	getReq := &listingspb.GetStorefrontRequest{
 		Identifier: &listingspb.GetStorefrontRequest_Slug{
 			Slug: req.Slug,
 		},
-		IncludeStaff:           false,
-		IncludeHours:           false,
-		IncludePaymentMethods:  false,
-		IncludeDeliveryOptions: false,
+		IncludeStaff:           true,
+		IncludeHours:           true,
+		IncludePaymentMethods:  true,
+		IncludeDeliveryOptions: true,
 	}
 	return s.GetStorefront(ctx, getReq)
 }
@@ -584,4 +602,69 @@ func validateCreateStorefrontRequest(req *listingspb.CreateStorefrontRequest) er
 		return fmt.Errorf("location.country is required")
 	}
 	return nil
+}
+
+// UpdateStorefrontStatus updates operational status of a storefront
+func (s *Server) UpdateStorefrontStatus(ctx context.Context, req *listingspb.UpdateStorefrontStatusRequest) (*listingspb.UpdateStorefrontStatusResponse, error) {
+	if req.StorefrontId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "storefront_id is required")
+	}
+	if req.UserId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	// Call storefrontService to update status
+	err := s.storefrontService.UpdateStatus(ctx, req.StorefrontId, req.UserId, req)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("storefront_id", req.StorefrontId).Msg("Failed to update storefront status")
+
+		// Check specific error types
+		if err.Error() == "storefront not found" {
+			return nil, status.Error(codes.NotFound, "storefront not found")
+		}
+		if err.Error() == "not authorized" {
+			return nil, status.Error(codes.PermissionDenied, "not authorized to update this storefront")
+		}
+
+		return nil, status.Error(codes.Internal, "failed to update storefront status")
+	}
+
+	// Get updated storefront to return current status
+	storefrontID := req.StorefrontId
+	storefront, err := s.storefrontService.GetStorefront(ctx, &storefrontID, nil, nil)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to get updated storefront")
+		return nil, status.Error(codes.Internal, "failed to get updated storefront")
+	}
+
+	// Build response from updated storefront
+	response := &listingspb.UpdateStorefrontStatusResponse{
+		Success:          true,
+		VacationMode:     storefront.VacationMode,
+		AcceptingOrders:  storefront.AcceptingOrders,
+		StatusUpdatedAt:  timestamppb.New(storefront.StatusUpdatedAt),
+	}
+
+	if storefront.VacationStartDate != nil {
+		response.VacationStartDate = timestamppb.New(*storefront.VacationStartDate)
+	}
+	if storefront.VacationEndDate != nil {
+		response.VacationEndDate = timestamppb.New(*storefront.VacationEndDate)
+	}
+
+	s.logger.Info().
+		Int64("storefront_id", req.StorefrontId).
+		Bool("vacation_mode", storefront.VacationMode).
+		Bool("accepting_orders", storefront.AcceptingOrders).
+		Msg("Storefront status updated successfully")
+
+	return response, nil
+}
+
+// coalesceString returns defaultValue if str is empty
+func coalesceString(str, defaultValue string) string {
+	if str == "" {
+		return defaultValue
+	}
+	return str
 }

@@ -1,0 +1,170 @@
+name: Deploy Listings Service (GitOps)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  HARBOR_REGISTRY: registry.vondi.rs
+  IMAGE_NAME: library/listings
+  SERVICE_NAME: listings-service
+  HEALTH_URL: https://listings.vondi.rs/health
+
+jobs:
+  build:
+    runs-on: self-hosted
+    outputs:
+      image_tag: ${{ steps.git_sha.outputs.sha }}
+    steps:
+      - name: Manual checkout (for self-hosted + private repos)
+        run: |
+          echo "Cloning repository manually with token..."
+          if [ -d "$GITHUB_WORKSPACE/.git" ]; then
+            echo "Repository already exists, fetching updates..."
+            cd $GITHUB_WORKSPACE
+            git fetch origin
+            git reset --hard origin/${{ github.ref_name }}
+            git clean -fdx
+          else
+            echo "Fresh clone..."
+            rm -rf $GITHUB_WORKSPACE 2>/dev/null || true
+            mkdir -p $GITHUB_WORKSPACE
+            git clone https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/${{ github.repository }}.git $GITHUB_WORKSPACE
+            cd $GITHUB_WORKSPACE
+            git checkout ${{ github.ref_name }}
+          fi
+          git log -1 --oneline
+          echo "Repository ready!"
+
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Get git sha (short)
+        id: git_sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GO_MODULES_TOKEN }}
+          tags: |
+            ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.git_sha.outputs.sha }}
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Trigger k8s-configs update
+        env:
+          GH_TOKEN: ${{ secrets.K8S_CONFIGS_TOKEN }}
+        run: |
+          echo "Triggering k8s-configs update workflow..."
+
+          gh workflow run update-image.yml \
+            --repo vondi-global/k8s-configs \
+            --ref main \
+            -f service_name="${{ env.SERVICE_NAME }}" \
+            -f image_tag="${{ needs.build.outputs.image_tag }}" \
+            -f triggered_by="${{ github.repository }}@${{ github.sha }}"
+
+          echo "Triggered! Waiting for k8s-configs workflow to complete..."
+
+      - name: Wait for k8s-configs workflow
+        env:
+          GH_TOKEN: ${{ secrets.K8S_CONFIGS_TOKEN }}
+        run: |
+          echo "Waiting 30 seconds for workflow to start..."
+          sleep 30
+
+          # Find the triggered workflow run
+          RUN_ID=$(gh run list \
+            --repo vondi-global/k8s-configs \
+            --workflow update-image.yml \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+
+          if [ -n "$RUN_ID" ]; then
+            echo "Watching workflow run $RUN_ID..."
+            gh run watch "$RUN_ID" --repo vondi-global/k8s-configs --exit-status || {
+              echo "k8s-configs workflow failed!"
+              exit 1
+            }
+          else
+            echo "Warning: Could not find workflow run, continuing..."
+          fi
+
+      - name: Wait for ArgoCD sync
+        run: |
+          echo "Waiting 60 seconds for ArgoCD to sync..."
+          sleep 60
+
+      - name: Health check
+        id: health
+        run: |
+          echo "Checking health at $HEALTH_URL"
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL || echo "000")
+            echo "Health check attempt $((RETRY_COUNT+1))/$MAX_RETRIES: HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed!"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
+
+          echo "Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Rollback on failure
+        if: failure() && steps.health.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.K8S_CONFIGS_TOKEN }}
+        run: |
+          echo "Deployment failed, triggering rollback..."
+
+          gh workflow run rollback.yml \
+            --repo vondi-global/k8s-configs \
+            --ref main \
+            -f service_name="${{ env.SERVICE_NAME }}" \
+            -f commits_back="1" \
+            -f reason="Health check failed for ${{ env.SERVICE_NAME }} (tag: ${{ needs.build.outputs.image_tag }})"
+
+          echo "Rollback triggered!"
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "## Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | ${{ env.SERVICE_NAME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image Tag | ${{ needs.build.outputs.image_tag }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Health URL | ${{ env.HEALTH_URL }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ArgoCD | [View](https://argocd.vondi.rs/applications/argocd/vondi-production) |" >> $GITHUB_STEP_SUMMARY
