@@ -20,24 +20,23 @@ jobs:
         run: |
           echo "Cloning repository manually with token..."
 
-          # If repo exists, fetch and reset; otherwise clone fresh
-          if [ -d "$GITHUB_WORKSPACE/.git" ]; then
-            echo "Repository already exists, fetching updates..."
-            cd $GITHUB_WORKSPACE
-            git fetch origin
-            git reset --hard origin/${{ github.ref_name }}
-            git clean -fdx
-          else
-            echo "Fresh clone..."
-            rm -rf $GITHUB_WORKSPACE 2>/dev/null || true
-            mkdir -p $GITHUB_WORKSPACE
-            git clone https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/${{ github.repository }}.git $GITHUB_WORKSPACE
-            cd $GITHUB_WORKSPACE
-            git checkout ${{ github.ref_name }}
-          fi
+          # Save current dir and go to parent before cleaning workspace
+          cd /tmp
 
+          # Clean entire workspace including hidden files
+          if [ -d "$GITHUB_WORKSPACE" ]; then
+            rm -rf "$GITHUB_WORKSPACE"
+          fi
+          mkdir -p "$GITHUB_WORKSPACE"
+
+          # Clone using HTTPS with token
+          git clone https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/${{ github.repository }}.git "$GITHUB_WORKSPACE"
+
+          cd "$GITHUB_WORKSPACE"
+          git checkout ${{ github.ref_name }}
           git log -1 --oneline
-          echo "✅ Repository ready!"
+
+          echo "✅ Repository cloned successfully!"
 
       - name: Configure Git for private modules
         run: |
@@ -127,15 +126,46 @@ jobs:
           # Cleanup port-forward
           pkill -f "ssh -f -N -L 15432" || true
 
-      - name: Deploy to Kubernetes
+      - name: Update k8s-configs (GitOps)
+        env:
+          GH_TOKEN: ${{ secrets.GO_MODULES_TOKEN }}
         run: |
-          SHA="${{ steps.git_sha.outputs.sha }}"
-          echo "Deploying $DEPLOYMENT_NAME with image $HARBOR_REGISTRY/$IMAGE_NAME:$SHA"
+          echo "Updating k8s-configs with new image tag..."
 
-          ssh vondi "kubectl set image deployment/$DEPLOYMENT_NAME \
-            $DEPLOYMENT_NAME=$HARBOR_REGISTRY/$IMAGE_NAME:$SHA \
-            -n $K8S_NAMESPACE"
+          # Clone k8s-configs repo
+          K8S_CONFIGS_DIR=$(mktemp -d)
+          git clone https://x-access-token:$GH_TOKEN@github.com/vondi-global/k8s-configs.git "$K8S_CONFIGS_DIR"
+          cd "$K8S_CONFIGS_DIR"
 
+          # Update image tag in listings-service.yaml
+          DEPLOYMENT_FILE="production/deployments/listings-service.yaml"
+          IMAGE_TAG="${{ steps.git_sha.outputs.sha }}"
+
+          # Use sed to update image tag
+          sed -i "s|image: registry.vondi.rs/services/listings:.*|image: registry.vondi.rs/services/listings:${IMAGE_TAG}|" "$DEPLOYMENT_FILE"
+
+          # Check if there are changes
+          if git diff --quiet; then
+            echo "No changes to commit (image tag already up to date)"
+          else
+            git config user.name "GitHub Actions"
+            git config user.email "actions@github.com"
+            git add "$DEPLOYMENT_FILE"
+            git commit -m "deploy: update listings-service to ${IMAGE_TAG}"
+            git push origin main
+            echo "✅ k8s-configs updated with image tag: ${IMAGE_TAG}"
+          fi
+
+          # Cleanup
+          rm -rf "$K8S_CONFIGS_DIR"
+
+      - name: Wait for ArgoCD sync
+        run: |
+          echo "Waiting for ArgoCD to sync changes..."
+          sleep 30
+
+          # Check deployment status
+          echo "Checking deployment status..."
           ssh vondi "kubectl rollout status deployment/$DEPLOYMENT_NAME \
             -n $K8S_NAMESPACE --timeout=5m"
 
@@ -169,13 +199,35 @@ jobs:
 
       - name: Rollback on failure
         if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GO_MODULES_TOKEN }}
         run: |
           echo "Deployment failed, rolling back..."
-          ssh vondi "kubectl rollout undo deployment/$DEPLOYMENT_NAME -n $K8S_NAMESPACE"
+
+          # Revert k8s-configs to previous commit
+          K8S_CONFIGS_DIR=$(mktemp -d)
+          git clone https://x-access-token:$GH_TOKEN@github.com/vondi-global/k8s-configs.git "$K8S_CONFIGS_DIR" || true
+          cd "$K8S_CONFIGS_DIR" || true
+
+          # Revert the last commit if it was our deploy commit
+          LAST_COMMIT_MSG=$(git log -1 --format=%s)
+          if [[ "$LAST_COMMIT_MSG" == "deploy: update listings-service"* ]]; then
+            git config user.name "GitHub Actions"
+            git config user.email "actions@github.com"
+            git revert --no-commit HEAD
+            git commit -m "revert: rollback listings-service deployment"
+            git push origin main
+            echo "✅ k8s-configs rollback committed"
+          fi
+
+          rm -rf "$K8S_CONFIGS_DIR"
+
+          # Also trigger kubectl rollback for faster recovery
+          ssh vondi "kubectl rollout undo deployment/$DEPLOYMENT_NAME -n $K8S_NAMESPACE" || true
 
           echo "Waiting for rollback to complete..."
           ssh vondi "kubectl rollout status deployment/$DEPLOYMENT_NAME \
-            -n $K8S_NAMESPACE --timeout=3m"
+            -n $K8S_NAMESPACE --timeout=3m" || true
 
           echo "❌ Deployment failed and rolled back to previous version"
 
@@ -183,4 +235,3 @@ jobs:
         if: always()
         run: |
           rm -f ~/.ssh/id_ed25519_workflow
-# Trigger CI rebuild
