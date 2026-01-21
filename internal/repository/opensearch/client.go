@@ -1033,6 +1033,99 @@ func (c *Client) CreateIndex(ctx context.Context, indexName string, mapping map[
 	return nil
 }
 
+// DeleteAllDocuments deletes all documents from the marketplace_listings index using delete_by_query
+// This is used before full reindexing to ensure stale/deleted documents are removed
+func (c *Client) DeleteAllDocuments(ctx context.Context) error {
+	// Use delete_by_query with match_all to remove all documents
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"match_all": map[string]interface{}{},
+		},
+	}
+
+	body, err := json.Marshal(query)
+	if err != nil {
+		return fmt.Errorf("failed to marshal delete query: %w", err)
+	}
+
+	res, err := c.client.DeleteByQuery(
+		[]string{"marketplace_listings"},
+		bytes.NewReader(body),
+		c.client.DeleteByQuery.WithContext(ctx),
+		c.client.DeleteByQuery.WithRefresh(true), // Make deletion visible immediately
+		c.client.DeleteByQuery.WithWaitForCompletion(true),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete all documents: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("delete_by_query failed: %s - %s", res.Status(), string(bodyBytes))
+	}
+
+	// Parse response to log how many documents were deleted
+	var result map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		c.logger.Warn().Err(err).Msg("failed to parse delete_by_query response")
+	} else {
+		deleted := int64(0)
+		if d, ok := result["deleted"].(float64); ok {
+			deleted = int64(d)
+		}
+		c.logger.Info().Int64("deleted", deleted).Msg("deleted all documents from index")
+	}
+
+	return nil
+}
+
+// DeleteDocumentsBySourceType deletes documents with a specific source_type from the index
+func (c *Client) DeleteDocumentsBySourceType(ctx context.Context, sourceType string) error {
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"term": map[string]interface{}{
+				"source_type": sourceType,
+			},
+		},
+	}
+
+	body, err := json.Marshal(query)
+	if err != nil {
+		return fmt.Errorf("failed to marshal delete query: %w", err)
+	}
+
+	res, err := c.client.DeleteByQuery(
+		[]string{"marketplace_listings"},
+		bytes.NewReader(body),
+		c.client.DeleteByQuery.WithContext(ctx),
+		c.client.DeleteByQuery.WithRefresh(true),
+		c.client.DeleteByQuery.WithWaitForCompletion(true),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete documents by source_type: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("delete_by_query failed: %s - %s", res.Status(), string(bodyBytes))
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		c.logger.Warn().Err(err).Msg("failed to parse delete_by_query response")
+	} else {
+		deleted := int64(0)
+		if d, ok := result["deleted"].(float64); ok {
+			deleted = int64(d)
+		}
+		c.logger.Info().Str("source_type", sourceType).Int64("deleted", deleted).Msg("deleted documents by source_type")
+	}
+
+	return nil
+}
+
 // CountDocuments returns the number of documents in an index
 func (c *Client) CountDocuments(ctx context.Context, indexName string) (int, error) {
 	res, err := c.client.Count(

@@ -33,3 +33,19 @@ func (a *IndexingAdapter) UpdateListing(ctx context.Context, listing *domain.Lis
 func (a *IndexingAdapter) DeleteListing(ctx context.Context, listingID int64) error {
 	return a.client.DeleteProduct(ctx, listingID)
 }
+
+// GetSimilarListings returns similar listings for a given listing
+func (a *IndexingAdapter) GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error) {
+	return a.client.GetSimilarListings(ctx, listingID, limit)
+}
+
+// DeleteAllDocuments deletes all documents from the index
+// Used before full reindexing to remove stale/deleted documents
+func (a *IndexingAdapter) DeleteAllDocuments(ctx context.Context) error {
+	return a.client.DeleteAllDocuments(ctx)
+}
+
+// DeleteDocumentsBySourceType deletes documents with a specific source_type
+func (a *IndexingAdapter) DeleteDocumentsBySourceType(ctx context.Context, sourceType string) error {
+	return a.client.DeleteDocumentsBySourceType(ctx, sourceType)
+}

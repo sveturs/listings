@@ -1194,14 +1194,9 @@ func (s *chatService) enrichChatWithUserNames(ctx context.Context, chat *domain.
 		return
 	}
 
-	userSvc := s.authService.UserService()
-	if userSvc == nil {
-		return
-	}
-
 	// Get buyer name
 	if chat.BuyerID > 0 {
-		buyerUser, err := userSvc.GetUser(ctx, int(chat.BuyerID))
+		buyerUser, err := s.authService.GetUser(ctx, int(chat.BuyerID))
 		if err == nil && buyerUser != nil && buyerUser.Name != "" {
 			chat.BuyerName = &buyerUser.Name
 		}
@@ -1209,7 +1204,7 @@ func (s *chatService) enrichChatWithUserNames(ctx context.Context, chat *domain.
 
 	// Get seller name
 	if chat.SellerID > 0 {
-		sellerUser, err := userSvc.GetUser(ctx, int(chat.SellerID))
+		sellerUser, err := s.authService.GetUser(ctx, int(chat.SellerID))
 		if err == nil && sellerUser != nil && sellerUser.Name != "" {
 			chat.SellerName = &sellerUser.Name
 		}
