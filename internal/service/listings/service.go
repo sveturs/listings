@@ -118,6 +118,10 @@ type IndexingService interface {
 	UpdateListing(ctx context.Context, listing *domain.Listing) error
 	DeleteListing(ctx context.Context, listingID int64) error
 	GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error)
+	// DeleteAllDocuments removes all documents from the index (used before full reindexing)
+	DeleteAllDocuments(ctx context.Context) error
+	// DeleteDocumentsBySourceType removes documents with a specific source_type
+	DeleteDocumentsBySourceType(ctx context.Context, sourceType string) error
 }
 
 // Service implements business logic for listings
@@ -1967,6 +1971,25 @@ func (s *Service) ReindexAll(ctx context.Context, sourceType string, batchSize i
 	// Validate source_type filter
 	if sourceType != "" && sourceType != "b2c" && sourceType != "c2c" {
 		return 0, 0, 0, nil, fmt.Errorf("invalid source_type: must be 'b2c', 'c2c', or empty")
+	}
+
+	// IMPORTANT: Delete existing documents from index before reindexing
+	// This ensures that deleted listings are removed from search results
+	s.logger.Info().Str("source_type", sourceType).Msg("deleting existing documents from index before reindexing")
+	if sourceType == "" {
+		// Delete ALL documents when no source_type filter
+		if err := s.indexer.DeleteAllDocuments(ctx); err != nil {
+			s.logger.Error().Err(err).Msg("failed to delete all documents before reindexing")
+			return 0, 0, 0, nil, fmt.Errorf("failed to clear index: %w", err)
+		}
+		s.logger.Info().Msg("deleted all documents from index")
+	} else {
+		// Delete only documents with the specified source_type
+		if err := s.indexer.DeleteDocumentsBySourceType(ctx, sourceType); err != nil {
+			s.logger.Error().Err(err).Str("source_type", sourceType).Msg("failed to delete documents by source_type before reindexing")
+			return 0, 0, 0, nil, fmt.Errorf("failed to clear index for source_type %s: %w", sourceType, err)
+		}
+		s.logger.Info().Str("source_type", sourceType).Msg("deleted documents by source_type from index")
 	}
 
 	var totalIndexed int32
