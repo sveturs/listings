@@ -39,3 +39,15 @@ func (m *MockIndexingService) GetSimilarListings(ctx context.Context, listingID 
 	}
 	return args.Get(0).([]*domain.Listing), args.Get(1).(int32), args.Error(2)
 }
+
+// DeleteAllDocuments mocks deleting all documents from the index
+func (m *MockIndexingService) DeleteAllDocuments(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+// DeleteDocumentsBySourceType mocks deleting documents by source_type
+func (m *MockIndexingService) DeleteDocumentsBySourceType(ctx context.Context, sourceType string) error {
+	args := m.Called(ctx, sourceType)
+	return args.Error(0)
+}
