@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-23 (ceff491c2)
+
+**Добавлен cleanup в Security Scan workflow**
+
+#### Проблема
+- ❌ Security Scan jobs (govulncheck, gosec, trivy) failed on checkout: `EACCES: permission denied`
+- ❌ Security Scan workflow не имел cleanup steps для .gomodcache
+- ❌ Checkout не мог удалить read-only файлы Go модулей
+
+#### Решение
+- ✅ Добавлен cleanup step во все 3 security scan jobs
+- ✅ Используется `chmod -R +w` перед удалением кэшей
+- ✅ Отключен `clean: true` в checkout (установлен `clean: false`)
+
+#### Файлы
+- `.github/workflows/security-scan.yml` - cleanup добавлен в govulncheck, gosec, trivy jobs
+
+---
+
 ### Fixed - 2026-01-23 (b077baeeb)
 
 **Расширен cleanup старых кэшей на ВСЕ jobs в CI workflow**
