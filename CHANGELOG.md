@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-23 (88271b6e3)
+
+**Добавлен cleanup старых кэшей перед Build job**
+
+#### Проблема
+- ❌ Build job failed on checkout: `File was unable to be removed Error: EACCES: permission denied`
+- ❌ Checkout не может удалить `.gomodcache` из-за read-only файлов Go модулей
+- ❌ `clean: true` в checkout конфликтует с Go module cache permissions
+
+#### Решение
+- ✅ Добавлен шаг "Cleanup old caches" в Build job
+- ✅ Используется `chmod -R +w` перед удалением старых кэшей
+- ✅ Отключен `clean: true` в checkout для Build job
+
+#### Файлы
+- `.github/workflows/ci.yml` - добавлен cleanup step в Build job
+
+---
+
 ### Fixed - 2026-01-23 (b28a6848f)
 
 **Использование локального GOMODCACHE для предотвращения проблем с правами доступа**
