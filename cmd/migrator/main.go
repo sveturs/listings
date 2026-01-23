@@ -17,13 +17,14 @@ import (
 )
 
 type flags struct {
-	command      string
-	withFixtures bool
-	onlyFixtures bool
-	forceVersion int
-	createName   string
-	isFixture    bool
-	showVersion  bool
+	command        string
+	withFixtures   bool
+	onlyFixtures   bool
+	forceVersion   int
+	forceVersionSet bool // tracks if -version flag was explicitly provided
+	createName     string
+	isFixture      bool
+	showVersion    bool
 }
 
 func main() {
@@ -71,11 +72,14 @@ func parseFlags() flags {
 	flag.StringVar(&f.command, "command", "", "Command: up, down, down-all, status, force, create")
 	flag.BoolVar(&f.withFixtures, "with-fixtures", false, "Run fixtures after migrations (for up)")
 	flag.BoolVar(&f.onlyFixtures, "only-fixtures", false, "Run only fixtures (for up, down, down-all)")
-	flag.IntVar(&f.forceVersion, "version", 0, "Version number (for force command)")
+	flag.IntVar(&f.forceVersion, "version", -1, "Version number (for force command)")
 	flag.StringVar(&f.createName, "name", "", "Migration name (for create command)")
 	flag.BoolVar(&f.isFixture, "fixture", false, "Create fixture instead of migration (for create)")
 	flag.BoolVar(&f.showVersion, "v", false, "Show version")
 	flag.Parse()
+
+	// Track if -version was explicitly provided (changed from default -1)
+	f.forceVersionSet = f.forceVersion != -1
 
 	if f.command == "" && flag.NArg() > 0 {
 		f.command = flag.Arg(0)
@@ -187,6 +191,9 @@ func executeStatus(m *migrator.Migrator) error {
 }
 
 func executeForce(m *migrator.Migrator, f flags) error {
+	if !f.forceVersionSet {
+		return fmt.Errorf("-version is required for force command. Usage: migrator force -version N")
+	}
 	if f.forceVersion < 0 {
 		return fmt.Errorf("-version must be >= 0")
 	}

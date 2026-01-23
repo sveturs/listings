@@ -284,6 +284,8 @@ migrate-create: ## Create a new migration file (usage: make migrate-create NAME=
 
 migrate-reset: migrate-down-all migrate-up ## Reset database (down all + up all)
 
+migrate-version: migrate-status ## Alias for migrate-status (backward compatibility)
+
 ## Protobuf commands
 
 proto: ## Generate Go code from protobuf files
