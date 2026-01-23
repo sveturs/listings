@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-23 (e235346bb)
+
+**Отключение Go module cache в CI для совместимости с TMPDIR**
+
+#### Проблема
+- ❌ Test job failed: `open /home/svetu/go/pkg/mod/.../file.go: no such file or directory`
+- ❌ Protobuf errors: `pattern editions_defaults.binpb: no matching files found`
+- Конфликт между `cache: true` в setup-go и TMPDIR=/opt/github-runner/tmp
+
+#### Решение
+- ✅ Отключен `cache: true` в Test и Build jobs (установлен `cache: false`)
+- ✅ Сохранена безопасная конфигурация TMPDIR для предотвращения выполнения кода в /tmp
+
+#### Файлы
+- `.github/workflows/ci.yml` - отключен cache в Test и Build jobs
+
+---
+
+### Fixed - 2026-01-23 (1af08a95d)
+
+**Исправление дубликата метода в chat_service_test.go**
+
+#### Проблема
+- ❌ CI checks failed: typecheck error - method MockMessageRepository.GetLatestMessage declared twice
+- ❌ Locations: chat_service_test.go:153 and chat_service_test.go:181
+
+#### Решение
+- ✅ Удален дублирующий метод GetLatestMessage (строки 181-187)
+- ✅ Оставлено одно корректное объявление метода
+
+#### Файлы
+- `internal/service/chat_service_test.go` - удален дубликат метода
+
+---
+
 ### Fixed - 2026-01-23 (167263b0c)
 
 **Исправление интеграции с Auth Service и добавление поддержки переводов**

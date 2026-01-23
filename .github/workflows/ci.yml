@@ -128,7 +128,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
+          cache: false
 
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -169,7 +169,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
+          cache: false
 
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
