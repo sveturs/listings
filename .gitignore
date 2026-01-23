@@ -66,3 +66,6 @@ coverage.html
 # Migration tool state
 .migrate.lock
 /main
+
+# Migrator binary (if built in root)
+/migrator
