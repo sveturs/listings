@@ -343,7 +343,7 @@ func (s *CategoryDetectionService) detectByBrand(
 	return matches, nil
 }
 
-// detectWithClaude использует Claude AI для детекции
+// detectWithClaude использует Claude AI для детекции с fallback на разные модели
 func (s *CategoryDetectionService) detectWithClaude(
 	ctx context.Context,
 	input domain.DetectFromTextInput,
@@ -354,53 +354,123 @@ func (s *CategoryDetectionService) detectWithClaude(
 
 	prompt := s.buildCategoryDetectionPrompt(input)
 
-	requestBody := map[string]interface{}{
-		"model":      "claude-3-haiku-20240307", // Haiku - fast and cheap for category detection
-		"max_tokens": 1024,
-		"messages": []map[string]interface{}{
-			{
-				"role":    "user",
-				"content": prompt,
+	// Try models in order of preference: Opus/Sonnet (best accuracy) -> Haiku (fast fallback)
+	models := []string{
+		"claude-opus-4-20250514",     // Opus 4 - best reasoning and accuracy for complex categorization
+		"claude-3-7-sonnet-20250219", // Sonnet 3.7 - excellent balance of speed and accuracy
+		"claude-3-5-sonnet-20241022", // Sonnet 3.5 - proven reliable for category detection
+		"claude-3-haiku-20240307",    // Haiku 3 - fastest, cheapest fallback
+	}
+
+	var lastError error
+	var lastStatusCode int
+	var lastResponse string
+
+	for _, model := range models {
+		requestBody := map[string]interface{}{
+			"model":      model,
+			"max_tokens": 1024,
+			"messages": []map[string]interface{}{
+				{
+					"role":    "user",
+					"content": prompt,
+				},
 			},
-		},
+		}
+
+		jsonBody, err := json.Marshal(requestBody)
+		if err != nil {
+			lastError = err
+			s.logger.Warn().Err(err).Str("model", model).Msg("Failed to marshal request")
+			continue
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "POST", claudeAPIURL, bytes.NewBuffer(jsonBody))
+		if err != nil {
+			lastError = err
+			s.logger.Warn().Err(err).Str("model", model).Msg("Failed to create request")
+			continue
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("x-api-key", s.claudeAPIKey)
+		req.Header.Set("anthropic-version", "2023-06-01")
+
+		client := &http.Client{Timeout: 30 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			lastError = err
+			s.logger.Warn().Err(err).Str("model", model).Msg("Request failed, trying next model")
+			continue
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			lastError = err
+			s.logger.Warn().Err(err).Str("model", model).Msg("Failed to read response")
+			continue
+		}
+
+		lastStatusCode = resp.StatusCode
+		lastResponse = string(body)
+
+		// Success!
+		if resp.StatusCode == http.StatusOK {
+			s.logger.Info().Str("model", model).Msg("Successfully used Claude model for category detection")
+
+			var claudeResp claudeResponse
+			if err := json.Unmarshal(body, &claudeResp); err != nil {
+				lastError = err
+				s.logger.Warn().Err(err).Str("model", model).Msg("Failed to decode response")
+				continue
+			}
+
+			if len(claudeResp.Content) == 0 {
+				lastError = fmt.Errorf("empty response from Claude")
+				s.logger.Warn().Str("model", model).Msg("Empty response from Claude")
+				continue
+			}
+
+			return s.parseCategoryResponse(claudeResp.Content[0].Text, input.Language)
+		}
+
+		// Check for specific error codes
+		switch resp.StatusCode {
+		case 529: // Overloaded
+			s.logger.Warn().
+				Int("status", resp.StatusCode).
+				Str("model", model).
+				Str("response", lastResponse).
+				Msg("Claude model overloaded, trying next model")
+			continue
+		case 401: // Unauthorized
+			s.logger.Error().Msg("Claude API authentication failed - check API key")
+			return nil, fmt.Errorf("Claude API authentication failed")
+		case 400:
+			if strings.Contains(lastResponse, "model") {
+				// Model not available, try next
+				s.logger.Warn().
+					Str("model", model).
+					Msg("Model not available, trying next model")
+				continue
+			}
+		}
+
+		// Other errors - log and try next model
+		s.logger.Warn().
+			Int("status", resp.StatusCode).
+			Str("model", model).
+			Str("response", lastResponse[:min(200, len(lastResponse))]).
+			Msg("Claude API error, trying next model")
 	}
 
-	jsonBody, err := json.Marshal(requestBody)
-	if err != nil {
-		return nil, fmt.Errorf("marshal request failed: %w", err)
+	// All models failed
+	if lastError != nil {
+		return nil, fmt.Errorf("all Claude models failed: %w (last status: %d)", lastError, lastStatusCode)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", claudeAPIURL, bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return nil, fmt.Errorf("create request failed: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", s.claudeAPIKey)
-	req.Header.Set("anthropic-version", "2023-06-01")
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("Claude API error %d: %s", resp.StatusCode, string(body))
-	}
-
-	var claudeResp claudeResponse
-	if err := json.NewDecoder(resp.Body).Decode(&claudeResp); err != nil {
-		return nil, fmt.Errorf("decode response failed: %w", err)
-	}
-
-	if len(claudeResp.Content) == 0 {
-		return nil, fmt.Errorf("empty response from Claude")
-	}
-
-	return s.parseCategoryResponse(claudeResp.Content[0].Text, input.Language)
+	return nil, fmt.Errorf("Claude API error %d: %s", lastStatusCode, lastResponse)
 }
 
 // buildCategoryDetectionPrompt строит промпт для Claude с динамическим списком категорий
