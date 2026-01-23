@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-23 (33696c2d1)
+
+**Добавлен cleanup в deployment workflows для предотвращения permission denied**
+
+#### Проблема
+- ❌ Deployment workflows (deploy-production.yml, deploy-production-gitops.yml) failed на checkout
+- ❌ `git clean -fdx` не может удалить read-only файлы `.gomodcache`
+- ❌ Build job провалился с `EACCES: permission denied`
+
+#### Решение
+- ✅ Добавлен cleanup step ПЕРЕД checkout во всех deployment jobs
+- ✅ Используется `chmod -R +w` перед удалением кэшей
+- ✅ Применено к build job и migrate job в deploy-production-gitops.yml
+- ✅ Применено к deploy job в deploy-production.yml
+
+#### Файлы
+- `.github/workflows/deploy-production-gitops.yml` - cleanup добавлен в build и migrate jobs
+- `.github/workflows/deploy-production.yml` - cleanup добавлен в deploy job
+
+---
+
 ### Fixed - 2026-01-23 (ceff491c2)
 
 **Добавлен cleanup в Security Scan workflow**

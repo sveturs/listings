@@ -17,6 +17,14 @@ jobs:
     outputs:
       image_tag: ${{ steps.git_sha.outputs.sha }}
     steps:
+      - name: Cleanup old caches (before checkout)
+        run: |
+          chmod -R +w $GITHUB_WORKSPACE/.gomodcache 2>/dev/null || true
+          chmod -R +w $GITHUB_WORKSPACE/.gotmp 2>/dev/null || true
+          rm -rf $GITHUB_WORKSPACE/.gomodcache
+          rm -rf $GITHUB_WORKSPACE/.gotmp
+          rm -rf $GITHUB_WORKSPACE/.cache
+
       - name: Manual checkout (for self-hosted + private repos)
         run: |
           echo "Cloning repository manually with token..."
@@ -70,12 +78,21 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
+      - name: Cleanup old caches (before checkout)
+        run: |
+          chmod -R +w $GITHUB_WORKSPACE/.gomodcache 2>/dev/null || true
+          chmod -R +w $GITHUB_WORKSPACE/.gotmp 2>/dev/null || true
+          rm -rf $GITHUB_WORKSPACE/.gomodcache
+          rm -rf $GITHUB_WORKSPACE/.gotmp
+          rm -rf $GITHUB_WORKSPACE/.cache
+
       - name: Manual checkout
         run: |
           if [ -d "$GITHUB_WORKSPACE/.git" ]; then
             cd $GITHUB_WORKSPACE
             git fetch origin
             git reset --hard origin/${{ github.ref_name }}
+            git clean -fdx
           else
             rm -rf $GITHUB_WORKSPACE 2>/dev/null || true
             mkdir -p $GITHUB_WORKSPACE

@@ -16,6 +16,14 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
+      - name: Cleanup old caches (before checkout)
+        run: |
+          chmod -R +w $GITHUB_WORKSPACE/.gomodcache 2>/dev/null || true
+          chmod -R +w $GITHUB_WORKSPACE/.gotmp 2>/dev/null || true
+          rm -rf $GITHUB_WORKSPACE/.gomodcache
+          rm -rf $GITHUB_WORKSPACE/.gotmp
+          rm -rf $GITHUB_WORKSPACE/.cache
+
       - name: Manual checkout (for self-hosted + private repos)
         run: |
           echo "Cloning repository manually with token..."
