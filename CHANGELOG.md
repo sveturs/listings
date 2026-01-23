@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-23 (b28a6848f)
+
+**Использование локального GOMODCACHE для предотвращения проблем с правами доступа**
+
+#### Проблема
+- ❌ Test/Lint jobs failed: `open /home/svetu/go/pkg/mod/.../file.go: no such file or directory`
+- ❌ Protobuf errors: `pattern editions_defaults.binpb: no matching files found`
+- ❌ Системный GOMODCACHE (`/home/svetu/go/pkg/mod/`) недоступен для чтения
+
+#### Решение
+- ✅ Добавлен `GOMODCACHE: ${{ github.workspace }}/.gomodcache` для всех jobs
+- ✅ Создаётся локальная директория `.gomodcache` в workspace
+- ✅ Go модули скачиваются в контролируемую директорию с правильными правами
+
+#### Файлы
+- `.github/workflows/ci.yml` - настроен локальный GOMODCACHE
+
+---
+
 ### Fixed - 2026-01-23 (e235346bb)
 
 **Отключение Go module cache в CI для совместимости с TMPDIR**
