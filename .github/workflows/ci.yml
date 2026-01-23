@@ -20,10 +20,17 @@ jobs:
     name: Validate go.mod
     runs-on: self-hosted
     steps:
+      - name: Cleanup old caches
+        run: |
+          chmod -R +w ${{ github.workspace }}/.gomodcache || true
+          rm -rf ${{ github.workspace }}/.gomodcache
+          rm -rf ${{ github.workspace }}/.gotmp
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GO_MODULES_TOKEN }}
+          clean: false
 
       - name: Check no replace directives in go.mod
         run: |
@@ -49,14 +56,25 @@ jobs:
       # /tmp is noexec for security (prevent crypto miners/viruses)
       TMPDIR: ${{ github.workspace }}/.gotmp
       GOTMPDIR: ${{ github.workspace }}/.gotmp
+      # Use local mod cache to avoid permission issues with system cache
+      GOMODCACHE: ${{ github.workspace }}/.gomodcache
     steps:
+      - name: Cleanup old caches
+        run: |
+          chmod -R +w ${{ github.workspace }}/.gomodcache || true
+          rm -rf ${{ github.workspace }}/.gomodcache
+          rm -rf ${{ github.workspace }}/.gotmp
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GO_MODULES_TOKEN }}
+          clean: false
 
       - name: Create temp directory for Go builds
-        run: mkdir -p ${{ github.workspace }}/.gotmp
+        run: |
+          mkdir -p ${{ github.workspace }}/.gotmp
+          mkdir -p ${{ github.workspace }}/.gomodcache
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -90,6 +108,8 @@ jobs:
       # /tmp is noexec for security (prevent crypto miners/viruses)
       TMPDIR: ${{ github.workspace }}/.gotmp
       GOTMPDIR: ${{ github.workspace }}/.gotmp
+      # Use local mod cache to avoid permission issues with system cache
+      GOMODCACHE: ${{ github.workspace }}/.gomodcache
     services:
       postgres:
         image: postgres:15-alpine
@@ -116,19 +136,28 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Cleanup old caches
+        run: |
+          chmod -R +w ${{ github.workspace }}/.gomodcache || true
+          rm -rf ${{ github.workspace }}/.gomodcache
+          rm -rf ${{ github.workspace }}/.gotmp
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GO_MODULES_TOKEN }}
+          clean: false
 
       - name: Create temp directory for tests
-        run: mkdir -p ${{ github.workspace }}/.gotmp
+        run: |
+          mkdir -p ${{ github.workspace }}/.gotmp
+          mkdir -p ${{ github.workspace }}/.gomodcache
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
+          cache: false
 
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -156,20 +185,31 @@ jobs:
       # /tmp is noexec for security (prevent crypto miners/viruses)
       TMPDIR: ${{ github.workspace }}/.gotmp
       GOTMPDIR: ${{ github.workspace }}/.gotmp
+      # Use local mod cache to avoid permission issues with system cache
+      GOMODCACHE: ${{ github.workspace }}/.gomodcache
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GO_MODULES_TOKEN }}
+          clean: false
+
+      - name: Cleanup old caches
+        run: |
+          chmod -R +w ${{ github.workspace }}/.gomodcache || true
+          rm -rf ${{ github.workspace }}/.gomodcache
+          rm -rf ${{ github.workspace }}/.gotmp
 
       - name: Create temp directory for Go builds
-        run: mkdir -p ${{ github.workspace }}/.gotmp
+        run: |
+          mkdir -p ${{ github.workspace }}/.gotmp
+          mkdir -p ${{ github.workspace }}/.gomodcache
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
+          cache: false
 
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -190,10 +230,17 @@ jobs:
     needs: [lint, test]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     steps:
+      - name: Cleanup old caches
+        run: |
+          chmod -R +w ${{ github.workspace }}/.gomodcache || true
+          rm -rf ${{ github.workspace }}/.gomodcache
+          rm -rf ${{ github.workspace }}/.gotmp
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GO_MODULES_TOKEN }}
+          clean: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -217,6 +264,8 @@ jobs:
       # /tmp is noexec for security (prevent crypto miners/viruses)
       TMPDIR: ${{ github.workspace }}/.gotmp
       GOTMPDIR: ${{ github.workspace }}/.gotmp
+      # Use local mod cache to avoid permission issues with system cache
+      GOMODCACHE: ${{ github.workspace }}/.gomodcache
     services:
       postgres:
         image: postgres:15-alpine
@@ -243,10 +292,17 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: Cleanup old caches
+        run: |
+          chmod -R +w ${{ github.workspace }}/.gomodcache || true
+          rm -rf ${{ github.workspace }}/.gomodcache
+          rm -rf ${{ github.workspace }}/.gotmp
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GO_MODULES_TOKEN }}
+          clean: false
 
       - name: Create temp directory for tests
         run: mkdir -p ${{ github.workspace }}/.gotmp

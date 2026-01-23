@@ -79,7 +79,6 @@ func (r *reservationRepository) Create(ctx context.Context, reservation *domain.
 		string(reservation.Status),
 		reservation.ExpiresAt,
 	).Scan(&reservation.ID, &reservation.CreatedAt, &reservation.UpdatedAt)
-
 	if err != nil {
 		r.logger.Error().Err(err).
 			Int64("listing_id", reservation.ListingID).
@@ -127,7 +126,6 @@ func (r *reservationRepository) GetByID(ctx context.Context, reservationID int64
 		&committedAt,
 		&releasedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("reservation not found")
@@ -325,7 +323,6 @@ func (r *reservationRepository) Update(ctx context.Context, reservation *domain.
 		reservation.ReleasedAt,
 		reservation.ID,
 	).Scan(&reservation.UpdatedAt)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return fmt.Errorf("reservation not found")

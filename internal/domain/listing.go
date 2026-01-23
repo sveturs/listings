@@ -41,12 +41,12 @@ type Listing struct {
 	HasIndividualLocation *bool   `json:"has_individual_location,omitempty" db:"has_individual_location"`
 
 	// Translations
-	TitleTranslations       map[string]string `json:"title_translations" db:"title_translations"`
-	DescriptionTranslations map[string]string `json:"description_translations" db:"description_translations"`
-	LocationTranslations    map[string]string `json:"location_translations" db:"location_translations"`
-	CityTranslations        map[string]string `json:"city_translations" db:"city_translations"`
-	CountryTranslations     map[string]string `json:"country_translations" db:"country_translations"`
-	OriginalLanguage        string            `json:"original_language" db:"original_language"`
+	TitleTranslations       JSONBStringMap `json:"title_translations" db:"title_translations"`
+	DescriptionTranslations JSONBStringMap `json:"description_translations" db:"description_translations"`
+	LocationTranslations    JSONBStringMap `json:"location_translations" db:"location_translations"`
+	CityTranslations        JSONBStringMap `json:"city_translations" db:"city_translations"`
+	CountryTranslations     JSONBStringMap `json:"country_translations" db:"country_translations"`
+	OriginalLanguage        string         `json:"original_language" db:"original_language"`
 
 	// Relations (loaded on demand)
 	Attributes []*ListingAttribute `json:"attributes,omitempty" db:"-"`

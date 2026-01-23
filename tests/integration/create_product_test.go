@@ -127,7 +127,6 @@ func getProductByID(t *testing.T, db *sqlx.DB, productID int64) *productRecord {
 		FROM listings
 		WHERE id = $1 AND source_type = 'b2c' AND deleted_at IS NULL
 	`, productID)
-
 	if err != nil {
 		t.Logf("Product %d not found: %v", productID, err)
 		return nil

@@ -71,7 +71,6 @@ func (r *Repository) GetProductByID(ctx context.Context, productID int64, storef
 		&descriptionTranslationsJSON,
 		&originalLanguage,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("product not found")
@@ -567,7 +566,6 @@ func (r *Repository) GetVariantByID(ctx context.Context, variantID int64, produc
 		&variant.CreatedAt,
 		&variant.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("variant not found")
@@ -746,7 +744,6 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 	err := r.db.QueryRowContext(ctx, `
 		SELECT user_id FROM storefronts WHERE id = $1
 	`, input.StorefrontID).Scan(&storefrontOwnerID)
-
 	if err != nil {
 		r.logger.Error().Err(err).
 			Int64("storefront_id", input.StorefrontID).
@@ -872,7 +869,6 @@ func (r *Repository) CreateProduct(ctx context.Context, input *domain.CreateProd
 		&product.ShowOnMap,
 		&product.HasVariants,
 	)
-
 	if err != nil {
 		// Check for unique constraint violation (duplicate SKU)
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -1095,7 +1091,6 @@ func (r *Repository) UpdateProduct(ctx context.Context, productID int64, storefr
 		&product.ShowOnMap,
 		&product.HasVariants,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			r.logger.Error().Int64("product_id", productID).Int64("storefront_id", storefrontID).Msg("product not found or ownership validation failed")
@@ -1311,7 +1306,6 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 	err = tx.QueryRowContext(ctx, `
 		SELECT user_id FROM storefronts WHERE id = $1
 	`, storefrontID).Scan(&storefrontOwnerID)
-
 	if err != nil {
 		r.logger.Error().Err(err).
 			Int64("storefront_id", storefrontID).
@@ -1587,7 +1581,6 @@ func (r *Repository) BulkCreateProducts(ctx context.Context, storefrontID int64,
 			&product.ShowOnMap,
 			&product.HasVariants,
 		)
-
 		if err != nil {
 			// ERROR: Log detailed error information
 			r.logger.Error().Err(err).
@@ -2003,7 +1996,6 @@ func (r *Repository) UpdateProductInventory(ctx context.Context, storefrontID, p
 	// Update stock quantity
 	updateQuery := fmt.Sprintf("UPDATE %s SET quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3 AND source_type = 'b2c'", tableName, idColumn)
 	_, err = tx.ExecContext(ctx, updateQuery, newQuantity, productID, storefrontID)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to update stock quantity")
 		return currentQuantity, newQuantity, fmt.Errorf("failed to update stock quantity: %w", err)
@@ -2074,7 +2066,6 @@ func (r *Repository) GetProductStats(ctx context.Context, storefrontID int64) (*
 		&totalValue,
 		&totalSold,
 	)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to get product stats")
 		return nil, fmt.Errorf("failed to get product stats: %w", err)
@@ -2209,7 +2200,6 @@ func (r *Repository) BatchUpdateStock(ctx context.Context, storefrontID int64, i
 		// Update stock quantity (absolute set)
 		updateQuery := fmt.Sprintf("UPDATE %s SET quantity = $1, updated_at = NOW() WHERE %s = $2 AND storefront_id = $3 AND source_type = 'b2c'", tableName, idColumn)
 		_, err = tx.ExecContext(ctx, updateQuery, item.Quantity, item.ProductID, storefrontID)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to update stock")
 			result.Success = false

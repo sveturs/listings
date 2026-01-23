@@ -108,7 +108,6 @@ func (r *messageRepository) Create(ctx context.Context, message *domain.Message)
 		message.AttachmentsCount,
 		message.IsSystem,
 	).Scan(&message.ID, &message.CreatedAt, &message.UpdatedAt)
-
 	if err != nil {
 		r.logger.Error().Err(err).
 			Int64("chat_id", message.ChatID).
@@ -157,7 +156,6 @@ func (r *messageRepository) GetByID(ctx context.Context, messageID int64) (*doma
 		&readAt,
 		&message.IsSystem,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("message not found")
@@ -201,7 +199,6 @@ func (r *messageRepository) Update(ctx context.Context, message *domain.Message)
 		message.ReadAt,
 		message.ID,
 	).Scan(&message.UpdatedAt)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return fmt.Errorf("message not found")
@@ -391,7 +388,6 @@ func (r *messageRepository) GetLatestMessage(ctx context.Context, chatID int64) 
 		&readAt,
 		&message.IsSystem,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("no messages found in chat")

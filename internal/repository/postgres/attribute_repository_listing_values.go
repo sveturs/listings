@@ -78,7 +78,6 @@ func (r *AttributeRepository) GetListingValues(ctx context.Context, listingID in
 			&attr.CreatedAt,
 			&attr.UpdatedAt,
 		)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to scan listing attribute value row")
 			return nil, fmt.Errorf("failed to scan listing attribute value: %w", err)
@@ -282,7 +281,6 @@ func (r *AttributeRepository) GetCategoryVariantAttributes(ctx context.Context, 
 			&attr.CreatedAt,
 			&attr.UpdatedAt,
 		)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to scan variant attribute row")
 			return nil, fmt.Errorf("failed to scan variant attribute: %w", err)
@@ -372,7 +370,6 @@ func (r *AttributeRepository) GetVariantValues(ctx context.Context, variantID in
 			&attr.CreatedAt,
 			&attr.UpdatedAt,
 		)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to scan variant attribute value row")
 			return nil, fmt.Errorf("failed to scan variant attribute value: %w", err)

@@ -589,7 +589,6 @@ func (s *Service) recordRollback(ctx context.Context, tx *sql.Tx, orderID string
 		userID,     // user_id (system operation)
 		orderID,    // order_id for idempotency
 	)
-
 	if err != nil {
 		// Check if it's a unique constraint violation (duplicate rollback attempt)
 		// This can happen in concurrent scenarios - the UNIQUE index will prevent corruption

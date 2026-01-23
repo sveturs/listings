@@ -63,7 +63,6 @@ func (r *Repository) CreateVariant(ctx context.Context, variant *domain.Variant)
 		&created.CreatedAt,
 		&created.UpdatedAt,
 	)
-
 	if err != nil {
 		r.logger.Error().Err(err).Int64("product_id", variant.ProductID).Msg("failed to create variant")
 		return nil, fmt.Errorf("failed to create variant: %w", err)
@@ -106,7 +105,6 @@ func (r *Repository) GetVariant(ctx context.Context, id int64) (*domain.Variant,
 		&variant.CreatedAt,
 		&variant.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("variant not found: %w", err)
@@ -277,7 +275,6 @@ func (r *Repository) UpdateB2CVariant(ctx context.Context, id int64, update *dom
 		&updated.CreatedAt,
 		&updated.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("variant not found: %w", err)

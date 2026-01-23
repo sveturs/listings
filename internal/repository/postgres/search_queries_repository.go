@@ -76,7 +76,6 @@ func (r *searchQueriesRepository) CreateSearchQuery(
 		&searchQuery.ClickedListingID,
 		&searchQuery.CreatedAt,
 	)
-
 	if err != nil {
 		r.logger.Error().
 			Err(err).

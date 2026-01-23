@@ -282,7 +282,6 @@ func (r *Repository) BulkUpdateProducts(ctx context.Context, storefrontID int64,
 				&product.ShowOnMap,
 				&product.HasVariants,
 			)
-
 			if err != nil {
 				if err == sql.ErrNoRows {
 					result.FailedUpdates = append(result.FailedUpdates, domain.BulkUpdateError{

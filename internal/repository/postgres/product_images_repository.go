@@ -112,7 +112,6 @@ func (r *Repository) AddProductImage(ctx context.Context, image *domain.ProductI
 		image.FileSize,
 		image.MimeType,
 	).Scan(&newImage.ID, &newImage.CreatedAt, &newImage.UpdatedAt)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to add product image")
 		return nil, fmt.Errorf("failed to add product image: %w", err)

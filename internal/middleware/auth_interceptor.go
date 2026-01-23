@@ -186,9 +186,11 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 }
 
 // Context keys for user claims
-type UserIDKey struct{}
-type EmailKey struct{}
-type RolesKey struct{}
+type (
+	UserIDKey struct{}
+	EmailKey  struct{}
+	RolesKey  struct{}
+)
 
 // GetUserID extracts user ID from context
 func GetUserID(ctx context.Context) (int64, bool) {
