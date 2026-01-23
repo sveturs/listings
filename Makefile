@@ -150,24 +150,84 @@ deps: ## Download dependencies
 	@echo "$(GREEN)Downloading dependencies...$(NC)"
 	@$(GO) mod download
 
-## Docker commands
+## Docker dependency commands (PostgreSQL + Redis only)
+
+deps-up: ## Start PostgreSQL and Redis
+	@echo "$(GREEN)Starting PostgreSQL and Redis...$(NC)"
+	@$(DOCKER_COMPOSE) up -d
+	@echo "$(YELLOW)Waiting for PostgreSQL to be ready...$(NC)"
+	@timeout=30; counter=0; \
+	until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U listings_user -d listings_dev_db > /dev/null 2>&1; do \
+		sleep 1; \
+		counter=$$((counter + 1)); \
+		if [ $$counter -ge $$timeout ]; then \
+			echo "$(RED)Timeout waiting for PostgreSQL$(NC)"; \
+			exit 1; \
+		fi; \
+	done
+	@echo "$(GREEN)PostgreSQL is ready$(NC)"
+
+deps-down: ## Stop PostgreSQL and Redis (keep data)
+	@echo "$(YELLOW)Stopping PostgreSQL and Redis (keeping data)...$(NC)"
+	@$(DOCKER_COMPOSE) down
+	@echo "$(GREEN)Services stopped$(NC)"
+
+deps-clean: ## Remove PostgreSQL and Redis with all data
+	@echo "$(RED)Stopping and removing PostgreSQL and Redis with all data...$(NC)"
+	@$(DOCKER_COMPOSE) down -v --remove-orphans
+	@echo "$(GREEN)All containers and volumes removed$(NC)"
+
+deps-reset: deps-clean deps-up ## Clean restart: remove all data + start fresh
+	@echo ""
+	@echo "=========================================="
+	@echo "$(GREEN)✅ Dependencies reset complete!$(NC)"
+	@echo "=========================================="
+	@echo "PostgreSQL and Redis are running with fresh data."
+	@echo "Run 'make migrate-up' to apply migrations."
+
+## Service start/stop commands
+
+start: stop ## Start the service in background with logs to file
+	@mkdir -p logs
+	@echo "$(GREEN)Building $(APP_NAME)...$(NC)"
+	@$(GO) build $(GOFLAGS) -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(APP_NAME) ./cmd/server
+	@echo "$(GREEN)Starting $(APP_NAME) in background...$(NC)"
+	@nohup ./$(BUILD_DIR)/$(APP_NAME) > logs/$(APP_NAME).log 2>&1 &
+	@sleep 2
+	@if lsof -ti:8086 > /dev/null 2>&1; then \
+		echo "$(GREEN)$(APP_NAME) started successfully$(NC)"; \
+		echo "  HTTP: http://localhost:8086"; \
+		echo "  gRPC: localhost:50053"; \
+		echo "  Logs: tail -f logs/$(APP_NAME).log"; \
+	else \
+		echo "$(RED)Failed to start $(APP_NAME). Check logs/$(APP_NAME).log$(NC)"; \
+		exit 1; \
+	fi
+
+stop: ## Stop the service
+	@if lsof -ti:8086 > /dev/null 2>&1; then \
+		echo "$(YELLOW)Stopping $(APP_NAME)...$(NC)"; \
+		lsof -ti:8086 | xargs kill 2>/dev/null || true; \
+		sleep 1; \
+		if lsof -ti:8086 > /dev/null 2>&1; then \
+			echo "$(YELLOW)Force killing $(APP_NAME)...$(NC)"; \
+			lsof -ti:8086 | xargs kill -9 2>/dev/null || true; \
+		fi; \
+		echo "$(GREEN)$(APP_NAME) stopped$(NC)"; \
+	fi
+
+## Docker commands (legacy aliases)
 
 docker-build: ## Build Docker image
 	@echo "$(GREEN)Building Docker image...$(NC)"
 	@docker build -t $(DOCKER_IMAGE) .
 	@echo "$(GREEN)Docker image built: $(DOCKER_IMAGE)$(NC)"
 
-docker-up: ## Start Docker Compose services
-	@echo "$(GREEN)Starting Docker Compose services...$(NC)"
-	@$(DOCKER_COMPOSE) up -d
-	@echo "$(GREEN)Services started. Use 'make docker-logs' to view logs$(NC)"
+docker-up: deps-up ## Alias for deps-up
 
-docker-down: ## Stop Docker Compose services
-	@echo "$(YELLOW)Stopping Docker Compose services...$(NC)"
-	@$(DOCKER_COMPOSE) down
-	@echo "$(GREEN)Services stopped$(NC)"
+docker-down: deps-down ## Alias for deps-down
 
-docker-restart: docker-down docker-up ## Restart Docker Compose services
+docker-restart: deps-down deps-up ## Restart Docker Compose services
 
 docker-logs: ## View Docker Compose logs
 	@$(DOCKER_COMPOSE) logs -f
@@ -175,42 +235,54 @@ docker-logs: ## View Docker Compose logs
 docker-ps: ## Show running containers
 	@$(DOCKER_COMPOSE) ps
 
-docker-clean: docker-down ## Remove Docker volumes and images
-	@echo "$(YELLOW)Cleaning Docker resources...$(NC)"
-	@$(DOCKER_COMPOSE) down -v --rmi local
-	@echo "$(GREEN)Docker cleanup complete$(NC)"
+docker-clean: deps-clean ## Alias for deps-clean
 
 ## Database migration commands
 
-migrate-install: ## Install golang-migrate tool
-	@echo "$(GREEN)Installing golang-migrate...$(NC)"
-	@which migrate > /dev/null || go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-	@echo "$(GREEN)golang-migrate installed$(NC)"
+# Build the migrator
+build-migrator: ## Build migrator binary
+	@echo "$(GREEN)Building migrator...$(NC)"
+	$(GO) build -v -o bin/migrator cmd/migrator/main.go
+	@echo "$(GREEN)Migrator built: bin/migrator$(NC)"
 
-migrate-up: ## Run database migrations up
-	@echo "$(GREEN)Running migrations up...$(NC)"
-	@$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" up
-	@echo "$(GREEN)Migrations applied$(NC)"
+# Build all binaries
+build-all: build build-migrator ## Build all binaries
+
+migrate-up: ## Run database migrations (schema only)
+	@echo "$(GREEN)Running database migrations...$(NC)"
+	$(GO) run cmd/migrator/main.go -command up
+
+migrate-up-fixtures: ## Run migrations + fixtures
+	@echo "$(GREEN)Running database migrations with fixtures...$(NC)"
+	$(GO) run cmd/migrator/main.go -command up -with-fixtures
+
+migrate-only-fixtures: ## Run only fixtures (no schema)
+	@echo "$(GREEN)Running only fixtures...$(NC)"
+	$(GO) run cmd/migrator/main.go -command up -only-fixtures
 
 migrate-down: ## Rollback last migration
 	@echo "$(YELLOW)Rolling back last migration...$(NC)"
-	@$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" down 1
-	@echo "$(GREEN)Rollback complete$(NC)"
+	$(GO) run cmd/migrator/main.go -command down
 
-migrate-reset: ## Reset database (down all + up all)
-	@echo "$(RED)Resetting database...$(NC)"
-	@$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" down -all || true
-	@$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" up
-	@echo "$(GREEN)Database reset complete$(NC)"
+migrate-down-all: ## Rollback all migrations
+	@echo "$(RED)Rolling back all migrations...$(NC)"
+	$(GO) run cmd/migrator/main.go -command down-all
 
-migrate-version: ## Show current migration version
-	@$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" version
+migrate-status: ## Show migration status
+	@echo "$(GREEN)Checking migration status...$(NC)"
+	$(GO) run cmd/migrator/main.go -command status
+
+migrate-force: ## Force set migration version (usage: make migrate-force VERSION=5)
+	@if [ -z "$(VERSION)" ]; then echo "$(RED)VERSION is required. Usage: make migrate-force VERSION=5$(NC)"; exit 1; fi
+	@echo "$(YELLOW)Forcing migration version to $(VERSION)...$(NC)"
+	$(GO) run cmd/migrator/main.go -command force -version $(VERSION)
 
 migrate-create: ## Create a new migration file (usage: make migrate-create NAME=add_users_table)
 	@if [ -z "$(NAME)" ]; then echo "$(RED)NAME is required. Usage: make migrate-create NAME=add_users_table$(NC)"; exit 1; fi
 	@echo "$(GREEN)Creating migration: $(NAME)...$(NC)"
-	@$(MIGRATE) create -ext sql -dir $(MIGRATIONS_DIR) -seq $(NAME)
-	@echo "$(GREEN)Migration created in $(MIGRATIONS_DIR)$(NC)"
+	$(GO) run cmd/migrator/main.go -command create -name $(NAME)
+
+migrate-reset: migrate-down-all migrate-up ## Reset database (down all + up all)
 
 ## Protobuf commands
 

@@ -13,6 +13,7 @@ type Config struct {
 	App      AppConfig
 	Server   ServerConfig
 	DB       DBConfig
+	Fixtures FixturesConfig
 	Redis    RedisConfig
 	Search   SearchConfig
 	Storage  StorageConfig
@@ -57,6 +58,15 @@ type DBConfig struct {
 	MaxIdleConns    int           `envconfig:"VONDILISTINGS_DB_MAX_IDLE_CONNS" default:"10"`
 	ConnMaxLifetime time.Duration `envconfig:"VONDILISTINGS_DB_CONN_MAX_LIFETIME" default:"5m"`
 	ConnMaxIdleTime time.Duration `envconfig:"VONDILISTINGS_DB_CONN_MAX_IDLE_TIME" default:"10m"`
+
+	// Migration settings
+	MigrationPath string `envconfig:"VONDILISTINGS_DB_MIGRATION_PATH" default:"migrations"`
+}
+
+// FixturesConfig contains fixtures configuration
+type FixturesConfig struct {
+	Enabled bool   `envconfig:"VONDILISTINGS_FIXTURES_ENABLED" default:"false"`
+	Path    string `envconfig:"VONDILISTINGS_FIXTURES_PATH" default:"fixtures"`
 }
 
 // DSN returns PostgreSQL connection string
