@@ -97,7 +97,10 @@ jobs:
             rm -rf $GITHUB_WORKSPACE 2>/dev/null || true
             mkdir -p $GITHUB_WORKSPACE
             git clone https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/${{ github.repository }}.git $GITHUB_WORKSPACE
+            cd $GITHUB_WORKSPACE
           fi
+          pwd
+          ls -la migrations/ | head -5
 
       - name: Setup SSH
         env:
@@ -118,14 +121,15 @@ jobs:
 
       - name: Run database migrations
         run: |
-          echo "Running database migrations..."
+          cd $GITHUB_WORKSPACE
+          echo "Running database migrations from $(pwd)"
 
           DB_USER="listings_user"
           DB_PASS="vLj8tQ2mK9rN3xP6wY4zA7bC"
           DB_NAME="listings_db"
 
-          # Setup port-forward in background
-          ssh -f -N -L 15432:postgres-listings-0.postgres-listings.production.svc.cluster.local:5432 vondi
+          # Setup port-forward in background (bind to 127.0.0.1 explicitly)
+          ssh -f -N -L 127.0.0.1:15432:postgres-listings-0.postgres-listings.production.svc.cluster.local:5432 vondi
           sleep 3
 
           # Install golang-migrate if not present
@@ -135,15 +139,15 @@ jobs:
           fi
 
           # Check current version
-          PGPASSWORD=$DB_PASS psql -h localhost -p 15432 -U $DB_USER -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations;" || echo "No migrations yet"
+          PGPASSWORD=$DB_PASS psql -h 127.0.0.1 -p 15432 -U $DB_USER -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations;" || echo "No migrations yet"
 
           # Run migrations
-          migrate -path ./migrations -database "postgres://$DB_USER:$DB_PASS@localhost:15432/$DB_NAME?sslmode=disable" up
+          migrate -path ./migrations -database "postgres://$DB_USER:$DB_PASS@127.0.0.1:15432/$DB_NAME?sslmode=disable" up
 
           echo "✅ Migrations complete!"
 
           # Cleanup
-          pkill -f "ssh -f -N -L 15432" || true
+          pkill -f "ssh -f -N -L.*15432" || true
 
       - name: Cleanup SSH
         if: always()
