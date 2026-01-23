@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-23 (b077baeeb)
+
+**Расширен cleanup старых кэшей на ВСЕ jobs в CI workflow**
+
+#### Проблема
+- ❌ Validate job failed on checkout: `File was unable to be removed Error: EACCES: permission denied`
+- ❌ Первоначальный fix был применён только к Build job, но Validate job (запускается первым) имел ту же проблему
+- ❌ Все jobs с checkout нуждались в cleanup read-only `.gomodcache` файлов
+
+#### Решение
+- ✅ Добавлен шаг "Cleanup old caches" ко ВСЕМ jobs: Validate, Lint, Test, Build, Docker, Integration-test
+- ✅ Используется `chmod -R +w` перед удалением старых кэшей в каждом job
+- ✅ Отключен `clean: true` в checkout для ВСЕХ jobs (установлен `clean: false`)
+- ✅ Добавлен GOMODCACHE env var в integration-test job для консистентности
+
+#### Файлы
+- `.github/workflows/ci.yml` - cleanup step добавлен в 6 jobs (Validate, Lint, Test, Build, Docker, Integration-test)
+
+---
+
 ### Fixed - 2026-01-23 (88271b6e3)
 
 **Добавлен cleanup старых кэшей перед Build job**
