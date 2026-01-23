@@ -1,8 +1,8 @@
-# Sprint 4.4 - dev.svetu.rs Deployment Setup - COMPLETION REPORT
+# Sprint 4.4 - dev.vondi.rs Deployment Setup - COMPLETION REPORT
 
 **Status**: ✅ **COMPLETE**
 **Phase**: 4 - Deployment Infrastructure
-**Sprint**: 4.4 - dev.svetu.rs Deployment Setup
+**Sprint**: 4.4 - dev.vondi.rs Deployment Setup
 **Duration**: 8 hours (estimated)
 **Actual Time**: ~3 hours
 **Date**: 2025-10-31
@@ -12,7 +12,7 @@
 
 ## Executive Summary
 
-Sprint 4.4 successfully delivers complete deployment infrastructure for listings-service on dev.svetu.rs server. All deliverables completed and tested.
+Sprint 4.4 successfully delivers complete deployment infrastructure for listings-service on dev.vondi.rs server. All deliverables completed and tested.
 
 ### Achievement Highlights
 
@@ -183,7 +183,7 @@ sudo systemctl stop listings-service
 ✅ **HTTPS Configuration**:
 - Listens on 443 with HTTP/2
 - SSL managed by certbot (placeholder for certificate paths)
-- Server name: `listings.dev.svetu.rs`
+- Server name: `listings.dev.vondi.rs`
 
 ✅ **Security Headers**:
 - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
@@ -228,7 +228,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 # Setup SSL certificate
-sudo certbot --nginx -d listings.dev.svetu.rs
+sudo certbot --nginx -d listings.dev.vondi.rs
 ```
 
 ---
@@ -294,7 +294,7 @@ sudo certbot --nginx -d listings.dev.svetu.rs
 - Burst: 500
 
 ✅ **CORS**:
-- Origins: `https://dev.svetu.rs`, `https://devapi.svetu.rs`, `http://localhost:3001`
+- Origins: `https://dev.vondi.rs`, `https://devapi.vondi.rs`, `http://localhost:3001`
 - Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH
 - Headers: Content-Type, Authorization, X-Requested-With
 
@@ -412,7 +412,7 @@ vim .env.prod
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  Nginx Reverse Proxy                                         │
-│  - listings.dev.svetu.rs → http://localhost:8086            │
+│  - listings.dev.vondi.rs → http://localhost:8086            │
 │  - SSL termination                                           │
 │  - Security headers                                          │
 │  - Health check endpoint                                     │
@@ -509,7 +509,7 @@ cd /p/github.com/sveturs/listings
 **Output Example**:
 
 ```
-[2025-10-31 19:00:00] 🚀 Starting deployment of listings-service to dev.svetu.rs
+[2025-10-31 19:00:00] 🚀 Starting deployment of listings-service to dev.vondi.rs
 [2025-10-31 19:00:01] 📌 Current branch: master
 [2025-10-31 19:00:02] ⬆️  Pushing to origin/master...
 [2025-10-31 19:00:05] 🔨 Building binary locally...
@@ -538,9 +538,9 @@ cd /p/github.com/sveturs/listings
 [2025-10-31 19:00:55] ✅ Deployment complete!
 
 📍 Service URLs:
-  HTTP API: https://listings.dev.svetu.rs
-  Metrics: http://svetu.rs:9093/metrics (internal only)
-  gRPC: svetu.rs:50053 (internal only)
+  HTTP API: https://listings.dev.vondi.rs
+  Metrics: http://vondi.rs:9093/metrics (internal only)
+  gRPC: vondi.rs:50053 (internal only)
 ```
 
 ---
@@ -572,7 +572,7 @@ curl http://localhost:9093/metrics | head
 # Expected: Prometheus metrics
 
 # 4. Public HTTPS
-curl https://listings.dev.svetu.rs/health
+curl https://listings.dev.vondi.rs/health
 # Expected: {"status":"ok"}
 
 # 5. Process verification
@@ -787,7 +787,7 @@ sudo systemctl reload nginx
 ### Quick Rollback (Service Only)
 
 ```bash
-ssh svetu@svetu.rs
+ssh svetu@vondi.rs
 cd /opt/listings-dev
 
 # Restore previous binary
@@ -800,7 +800,7 @@ sudo systemctl restart listings-service
 ### Full Rollback (Git + Service)
 
 ```bash
-ssh svetu@svetu.rs
+ssh svetu@vondi.rs
 cd /opt/listings-dev
 
 # Find previous commit
@@ -862,7 +862,7 @@ Sprint 4.4 successfully delivers **complete deployment infrastructure** for list
 
 ### 🚀 Ready for Deployment
 
-All deliverables are complete and ready for immediate deployment to dev.svetu.rs server.
+All deliverables are complete and ready for immediate deployment to dev.vondi.rs server.
 
 **Deployment Steps**:
 1. Setup server (create directory, database, Redis)

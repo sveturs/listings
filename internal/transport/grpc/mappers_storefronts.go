@@ -7,9 +7,9 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/service/listings"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/service/listings"
 )
 
 // mapDomainStorefrontToProto maps domain.Storefront to proto StorefrontFull
@@ -30,6 +30,18 @@ func mapDomainStorefrontToProto(s *domain.Storefront) *listingspb.StorefrontFull
 		Phone:                 getOptionalString(s.Phone),
 		Email:                 getOptionalString(s.Email),
 		Website:               getOptionalString(s.Website),
+		SocialLinks:           mapJSONBToProtoStruct(s.SocialLinks),
+
+		// Business Legal Structure
+		LegalEntityType:            s.LegalEntityType,
+		BusinessCategory:           s.BusinessCategory,
+		FullLegalName:              getOptionalString(s.FullLegalName),
+		RegistrationNumber:         getOptionalString(s.RegistrationNumber),
+		TaxNumber:                  getOptionalString(s.TaxNumber),
+		VatNumber:                  getOptionalString(s.VatNumber),
+		LegalRepresentativeName:    getOptionalString(s.LegalRepresentativeName),
+		LegalRepresentativePosition: getOptionalString(s.LegalRepresentativePosition),
+
 		Address:               getOptionalString(s.Address),
 		City:                  getOptionalString(s.City),
 		PostalCode:            getOptionalString(s.PostalCode),
@@ -45,6 +57,12 @@ func mapDomainStorefrontToProto(s *domain.Storefront) *listingspb.StorefrontFull
 		IsActive:              s.IsActive,
 		IsVerified:            s.IsVerified,
 		VerificationDate:      mapTimeToProtoTimestamp(s.VerificationDate),
+		VacationMode:          s.VacationMode,
+		AcceptingOrders:       s.AcceptingOrders,
+		VacationStartDate:     mapTimeToProtoTimestamp(s.VacationStartDate),
+		VacationEndDate:       mapTimeToProtoTimestamp(s.VacationEndDate),
+		AutoPauseWhenOutOfStock: s.AutoPauseWhenOutOfStock,
+		StatusUpdatedAt:       timestamppb.New(s.StatusUpdatedAt),
 		Rating:                s.Rating,
 		ReviewsCount:          s.ReviewsCount,
 		ProductsCount:         s.ProductsCount,

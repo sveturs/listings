@@ -2,20 +2,20 @@
 -- This file provides minimal category data required by test listings
 --
 -- IMPORTANT: This file should be loaded FIRST (prefix 00_) before other fixtures
--- because listings table has FK constraint to c2c_categories
+-- because listings table has FK constraint to categories
 
 BEGIN;
 
 -- Root category: Electronics
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES (1300, 'Electronics', 'electronics', NULL, 0, TRUE, 1);
 
 -- Sub-category: Laptops (most commonly used in tests)
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES (1301, 'Laptops', 'laptops', 1300, 1, TRUE, 1);
 
 -- Additional sub-categories for comprehensive testing
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES
     (1302, 'Smartphones', 'smartphones', 1300, 1, TRUE, 2),
     (1303, 'Tablets', 'tablets', 1300, 1, TRUE, 3),
@@ -23,23 +23,23 @@ VALUES
     (1305, 'Computer Accessories', 'computer-accessories', 1300, 1, TRUE, 5);
 
 -- Root category: Home & Garden
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES (1400, 'Home & Garden', 'home-garden', NULL, 0, TRUE, 2);
 
 -- Sub-category: Furniture
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES (1401, 'Furniture', 'furniture', 1400, 1, TRUE, 1);
 
 -- Root category: Automotive
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES (1500, 'Automotive', 'automotive', NULL, 0, TRUE, 3);
 
 -- Sub-category: Car Parts
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES (1501, 'Car Parts', 'car-parts', 1500, 1, TRUE, 1);
 
 -- Additional test categories for inventory/stock tests
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES
     (2000, 'Test Category 2000', 'test-category-2000', NULL, 0, TRUE, 10),
     (2001, 'Test Category 2001', 'test-category-2001', NULL, 0, TRUE, 11);
@@ -47,7 +47,7 @@ VALUES
 COMMIT;
 
 -- Verification query (for manual testing):
--- SELECT id, name, parent_id, level FROM c2c_categories ORDER BY id;
+-- SELECT id, name, parent_id, level FROM categories ORDER BY id;
 --
 -- Expected result:
 -- | id   | name                  | parent_id | level |

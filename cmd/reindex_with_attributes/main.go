@@ -12,8 +12,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/sveturs/listings/internal/indexer"
-	"github.com/sveturs/listings/internal/repository/opensearch"
+	"github.com/vondi-global/listings/internal/indexer"
+	"github.com/vondi-global/listings/internal/repository/opensearch"
 )
 
 func main() {

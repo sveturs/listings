@@ -8,8 +8,8 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/metrics"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/metrics"
 )
 
 // Repository defines repository interface for worker

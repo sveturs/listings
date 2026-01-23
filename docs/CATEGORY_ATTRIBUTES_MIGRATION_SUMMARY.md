@@ -160,7 +160,7 @@ category_id | attribute_id | is_enabled | is_required | sort_order
 ## Technical Details
 
 ### Database Connections
-- **Source:** `svetubd:5433` (Monolith PostgreSQL)
+- **Source:** `vondi_db:5433` (Monolith PostgreSQL)
 - **Destination:** `listings_dev_db:35434` (Microservice PostgreSQL)
 
 ### Transaction Handling

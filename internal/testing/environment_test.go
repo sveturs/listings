@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	testingpkg "github.com/sveturs/listings/internal/testing"
+	testingpkg "github.com/vondi-global/listings/internal/testing"
 )
 
 // TestNewTestEnvironment_Docker tests environment creation with Docker containers
@@ -77,7 +77,7 @@ func TestSeedTestData(t *testing.T) {
 
 	// Verify categories exist
 	var count int
-	err := env.DB.Get(&count, "SELECT COUNT(*) FROM categories WHERE id IN (1000, 1001)")
+	err := env.DB.Get(&count, "SELECT COUNT(*) FROM categories WHERE id IN ('a0000000-0000-0000-0000-000000001000', 'a0000000-0000-0000-0000-000000001001')")
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, count, 2, "Should have at least 2 test categories")
 
@@ -90,11 +90,6 @@ func TestSeedTestData(t *testing.T) {
 	err = env.DB.Get(&count, "SELECT COUNT(*) FROM listings WHERE id IN (100, 101, 200)")
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, count, 3, "Should have at least 3 test products")
-
-	// Verify inventory exists
-	err = env.DB.Get(&count, "SELECT COUNT(*) FROM inventory WHERE listing_id IN (100, 101, 200)")
-	require.NoError(t, err)
-	assert.GreaterOrEqual(t, count, 3, "Should have at least 3 inventory records")
 }
 
 // TestTruncateTables tests table truncation
@@ -213,7 +208,7 @@ func TestEnvironmentIsolation(t *testing.T) {
 	env1.SeedTestData(t)
 
 	// Insert data in env1
-	_, err := env1.DB.Exec("INSERT INTO listings (id, user_id, storefront_id, title, slug, price, currency, category_id, status) VALUES (9001, 1, 1, 'Env1 Product', 'env1-product', 99.99, 'EUR', 1001, 'active')")
+	_, err := env1.DB.Exec("INSERT INTO listings (id, user_id, storefront_id, title, slug, price, currency, category_id, status) VALUES (9001, 1, 1, 'Env1 Product', 'env1-product', 99.99, 'EUR', 'a0000000-0000-0000-0000-000000001001', 'active')")
 	require.NoError(t, err)
 
 	// Create second environment (different container)

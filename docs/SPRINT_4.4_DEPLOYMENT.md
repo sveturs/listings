@@ -1,25 +1,25 @@
-# Sprint 4.4 - dev.svetu.rs Deployment Setup
+# Sprint 4.4 - dev.vondi.rs Deployment Setup
 
 **Status**: ✅ Complete
 **Phase**: 4 - Deployment Infrastructure
-**Sprint**: 4.4 - dev.svetu.rs Deployment Setup
+**Sprint**: 4.4 - dev.vondi.rs Deployment Setup
 **Duration**: 8 hours
 **Date**: 2025-10-31
 
 ## Overview
 
-This document describes the complete deployment infrastructure for listings-service on dev.svetu.rs server.
+This document describes the complete deployment infrastructure for listings-service on dev.vondi.rs server.
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        dev.svetu.rs Server                       │
+│                        dev.vondi.rs Server                       │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  Nginx (Port 443/80)                                      │  │
-│  │  - listings.dev.svetu.rs → localhost:8086 (HTTP REST)    │  │
+│  │  - listings.dev.vondi.rs → localhost:8086 (HTTP REST)    │  │
 │  └────────────────────┬─────────────────────────────────────┘  │
 │                       │                                          │
 │  ┌────────────────────▼─────────────────────────────────────┐  │
@@ -152,12 +152,12 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 # Setup SSL certificate
-sudo certbot --nginx -d listings.dev.svetu.rs
+sudo certbot --nginx -d listings.dev.vondi.rs
 ```
 
 **Important Notes**:
 
-- ✅ HTTP REST API exposed via Nginx: `listings.dev.svetu.rs`
+- ✅ HTTP REST API exposed via Nginx: `listings.dev.vondi.rs`
 - ❌ gRPC (port 50053) - INTERNAL ONLY (no Nginx exposure)
 - ❌ Metrics (port 9093) - INTERNAL ONLY (security risk if exposed)
 
@@ -197,7 +197,7 @@ vim .env.prod
 1. **Server Access**:
 
 ```bash
-ssh svetu@svetu.rs
+ssh svetu@vondi.rs
 ```
 
 2. **Create Deployment Directory**:
@@ -249,7 +249,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 # Setup SSL
-sudo certbot --nginx -d listings.dev.svetu.rs
+sudo certbot --nginx -d listings.dev.vondi.rs
 ```
 
 ## Deployment Process
@@ -281,12 +281,12 @@ If you need to deploy manually:
 make build
 
 # 2. Upload to server
-scp bin/listings-service svetu@svetu.rs:/opt/listings-dev/bin/
-scp docker-compose.yml svetu@svetu.rs:/opt/listings-dev/
-scp .env.prod svetu@svetu.rs:/opt/listings-dev/.env
+scp bin/listings-service svetu@vondi.rs:/opt/listings-dev/bin/
+scp docker-compose.yml svetu@vondi.rs:/opt/listings-dev/
+scp .env.prod svetu@vondi.rs:/opt/listings-dev/.env
 
 # 3. On server
-ssh svetu@svetu.rs
+ssh svetu@vondi.rs
 cd /opt/listings-dev
 
 # 4. Restart dependencies
@@ -332,7 +332,7 @@ curl http://localhost:9093/metrics
 # Expected: Prometheus metrics output
 
 # Public HTTPS
-curl https://listings.dev.svetu.rs/health
+curl https://listings.dev.vondi.rs/health
 # Expected: {"status":"ok"}
 ```
 
@@ -423,7 +423,7 @@ curl -I http://localhost:8086
 **Check SSH access**:
 
 ```bash
-ssh svetu@svetu.rs echo "OK"
+ssh svetu@vondi.rs echo "OK"
 ```
 
 **Check build**:
@@ -437,7 +437,7 @@ make build
 **Check server disk space**:
 
 ```bash
-ssh svetu@svetu.rs "df -h /opt/listings-dev"
+ssh svetu@vondi.rs "df -h /opt/listings-dev"
 ```
 
 ## Rollback Procedure
@@ -551,28 +551,28 @@ sudo ufw deny 9093/tcp
 1. **Increase connection pools** (if needed):
 
 ```bash
-SVETULISTINGS_DB_MAX_OPEN_CONNS=100
-SVETULISTINGS_REDIS_POOL_SIZE=50
+VONDILISTINGS_DB_MAX_OPEN_CONNS=100
+VONDILISTINGS_REDIS_POOL_SIZE=50
 ```
 
 2. **Enable caching**:
 
 ```bash
-SVETULISTINGS_FEATURE_CACHE_ENABLED=true
-SVETULISTINGS_CACHE_LISTING_TTL=15m
+VONDILISTINGS_FEATURE_CACHE_ENABLED=true
+VONDILISTINGS_CACHE_LISTING_TTL=15m
 ```
 
 3. **Increase worker concurrency**:
 
 ```bash
-SVETULISTINGS_WORKER_CONCURRENCY=20
+VONDILISTINGS_WORKER_CONCURRENCY=20
 ```
 
 ## Future Improvements
 
 ### Phase 5 (Next Steps)
 
-- [ ] Production deployment (prod.svetu.rs)
+- [ ] Production deployment (prod.vondi.rs)
 - [ ] Multi-instance deployment (load balancing)
 - [ ] Blue-green deployment
 - [ ] Canary releases
@@ -583,7 +583,7 @@ SVETULISTINGS_WORKER_CONCURRENCY=20
 
 ## Conclusion
 
-Sprint 4.4 provides complete deployment infrastructure for listings-service on dev.svetu.rs:
+Sprint 4.4 provides complete deployment infrastructure for listings-service on dev.vondi.rs:
 
 ✅ **Automated deployment** via `deploy-to-dev.sh`
 ✅ **systemd service** with proper dependencies and restart policy
@@ -597,4 +597,4 @@ The deployment is production-ready and can be used as a template for future prod
 
 **Sprint Status**: ✅ **COMPLETE**
 **Next Sprint**: Phase 5 - Production Hardening & Monitoring
-**Deployment URL**: https://listings.dev.svetu.rs
+**Deployment URL**: https://listings.dev.vondi.rs

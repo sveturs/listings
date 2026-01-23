@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // MockIndexingService is a mock implementation of listings.IndexingService interface
@@ -38,4 +38,16 @@ func (m *MockIndexingService) GetSimilarListings(ctx context.Context, listingID 
 		return nil, 0, args.Error(2)
 	}
 	return args.Get(0).([]*domain.Listing), args.Get(1).(int32), args.Error(2)
+}
+
+// DeleteAllDocuments mocks deleting all documents from the index
+func (m *MockIndexingService) DeleteAllDocuments(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+// DeleteDocumentsBySourceType mocks deleting documents by source_type
+func (m *MockIndexingService) DeleteDocumentsBySourceType(ctx context.Context, sourceType string) error {
+	args := m.Called(ctx, sourceType)
+	return args.Error(0)
 }

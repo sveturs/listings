@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
-	"github.com/sveturs/auth/pkg/entity"
-	authservice "github.com/sveturs/auth/pkg/service"
+	"github.com/vondi-global/auth/pkg/entity"
+	authservice "github.com/vondi-global/auth/pkg/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -135,14 +135,46 @@ func (a *AuthInterceptor) isPublicMethod(method string) bool {
 		"/listingssvc.v1.ListingsService/GetDeliveryOptions",
 		"/listingssvc.v1.ListingsService/GetMapData",
 		// Attributes public methods (no auth required for viewing category attributes)
-		"/listingssvc.v1.AttributeService/GetCategoryAttributes",
-		"/listingssvc.v1.AttributeService/GetCategoryVariantAttributes",
-		// Category service public methods
+		"/attributes.v1.AttributeService/GetCategoryAttributes",
+		"/attributes.v1.AttributeService/GetCategoryVariantAttributes",
+		// Order service public methods (support both authenticated users and anonymous carts via session_id)
+		"/listingssvc.v1.OrderService/AddToCart",
+		"/listingssvc.v1.OrderService/GetCart",
+		"/listingssvc.v1.OrderService/UpdateCartItem",
+		"/listingssvc.v1.OrderService/RemoveFromCart",
+		"/listingssvc.v1.OrderService/ClearCart",
+		// Category service public methods (V1)
 		"/categoriessvc.v1.CategoryService/GetCategories",
 		"/categoriessvc.v1.CategoryService/GetCategoryBySlug",
 		"/categoriessvc.v1.CategoryService/GetRootCategories",
 		"/categoriessvc.v1.CategoryService/GetCategoryChildren",
 		"/categoriessvc.v1.CategoryService/GetCategoryPath",
+		// Category service V2 public methods (UUID-based with i18n)
+		"/categoriessvc.v2.CategoryServiceV2/GetCategoryTreeV2",
+		"/categoriessvc.v2.CategoryServiceV2/GetCategoryBySlugV2",
+		"/categoriessvc.v2.CategoryServiceV2/GetCategoryByUUID",
+		"/categoriessvc.v2.CategoryServiceV2/GetBreadcrumb",
+		// Search service public methods (all search endpoints are public)
+		"/search.v1.SearchService/SearchListings",
+		"/search.v1.SearchService/SearchWithFilters",
+		"/search.v1.SearchService/GetSearchFacets",
+		"/search.v1.SearchService/GetSuggestions",
+		"/search.v1.SearchService/GetPopularSearches",
+		"/search.v1.SearchService/TrackClick",
+		"/search.v1.SearchService/TrackConversion",
+		"/search.v1.SearchService/GetSearchAnalytics",
+		// Category detection public methods (no auth required for category suggestions)
+		"/categories.v2.CategoryDetectionService/DetectFromText",
+		"/categories.v2.CategoryDetectionService/DetectFromKeywords",
+		"/categories.v2.CategoryDetectionService/DetectBatch",
+		"/categories.v2.CategoryDetectionService/ConfirmSelection",
+		// Analytics public methods (no auth required for recording events - user_id is optional)
+		"/listingssvc.v1.AnalyticsService/RecordStorefrontEvent",
+		// Variant service public methods (viewing variants on product page is public)
+		"/vondi.variants.v1.VariantService/ListVariants",
+		"/vondi.variants.v1.VariantService/GetVariant",
+		"/vondi.variants.v1.VariantService/GetVariantBySku",
+		"/vondi.variants.v1.VariantService/FindVariantByAttributes",
 	}
 
 	for _, publicMethod := range publicMethods {

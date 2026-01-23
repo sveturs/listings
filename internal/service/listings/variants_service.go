@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // CreateB2CProductVariant creates a new B2C product variant with validation

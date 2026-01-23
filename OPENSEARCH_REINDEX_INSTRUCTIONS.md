@@ -26,7 +26,7 @@ python3 scripts/reindex_listings.py \
   --target-password YOUR_DB_PASSWORD \
   --target-host localhost \
   --target-port 5432 \
-  --target-db svetubd \
+  --target-db vondi_db \
   --opensearch-url http://localhost:9200 \
   --opensearch-index marketplace_listings \
   --batch-size 1000 \
@@ -50,7 +50,7 @@ python3 scripts/reindex_listings.py \
 
 ```bash
 # Connect to database
-psql "postgres://postgres:YOUR_PASSWORD@localhost:5432/svetubd?sslmode=disable"
+psql "postgres://postgres:YOUR_PASSWORD@localhost:5432/vondi_db?sslmode=disable"
 
 # Check new columns exist
 \d+ listings
@@ -203,7 +203,7 @@ systemctl status postgresql
 # Check OpenSearch is running  
 systemctl status opensearch
 # Verify connectivity
-psql "postgres://postgres:password@localhost:5432/svetubd" -c "SELECT 1;"
+psql "postgres://postgres:password@localhost:5432/vondi_db" -c "SELECT 1;"
 curl http://localhost:9200
 ```
 

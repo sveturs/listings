@@ -8,8 +8,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
 // MockRepository is a mock implementation of listings.Repository interface
@@ -163,7 +163,7 @@ func (m *MockRepository) GetPopularCategories(ctx context.Context, limit int) ([
 }
 
 // GetCategoryByID mocks getting a category by ID
-func (m *MockRepository) GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error) {
+func (m *MockRepository) GetCategoryByID(ctx context.Context, categoryID string) (*domain.Category, error) {
 	args := m.Called(ctx, categoryID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -172,7 +172,7 @@ func (m *MockRepository) GetCategoryByID(ctx context.Context, categoryID int64) 
 }
 
 // GetCategoryTree mocks getting category tree
-func (m *MockRepository) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
+func (m *MockRepository) GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error) {
 	args := m.Called(ctx, categoryID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -399,8 +399,8 @@ func (m *MockRepository) CreateProductVariant(ctx context.Context, input *domain
 }
 
 // UpdateProductVariant mocks updating a product variant
-func (m *MockRepository) UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
-	args := m.Called(ctx, variantID, productID, input)
+func (m *MockRepository) UpdateProductVariant(ctx context.Context, variantUUID string, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
+	args := m.Called(ctx, variantUUID, productID, input)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -408,8 +408,8 @@ func (m *MockRepository) UpdateProductVariant(ctx context.Context, variantID int
 }
 
 // DeleteProductVariant mocks deleting a product variant
-func (m *MockRepository) DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error {
-	args := m.Called(ctx, variantID, productID)
+func (m *MockRepository) DeleteProductVariant(ctx context.Context, variantUUID string, productID int64) error {
+	args := m.Called(ctx, variantUUID, productID)
 	return args.Error(0)
 }
 
@@ -606,5 +606,11 @@ func (m *MockRepository) DeleteProductImage(ctx context.Context, imageID int64) 
 // ReorderProductImages mocks reordering product images
 func (m *MockRepository) ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error {
 	args := m.Called(ctx, productID, orders)
+	return args.Error(0)
+}
+
+// SetProductImagePrimary mocks setting a product image as primary
+func (m *MockRepository) SetProductImagePrimary(ctx context.Context, productID int64, imageID int64) error {
+	args := m.Called(ctx, productID, imageID)
 	return args.Error(0)
 }

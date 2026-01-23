@@ -8,7 +8,7 @@ import (
 
 	"github.com/gosimple/slug"
 	"github.com/lib/pq"
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // GetRootCategories retrieves all top-level categories (no parent)
@@ -35,7 +35,7 @@ func (r *Repository) GetRootCategories(ctx context.Context) ([]*domain.Category,
 	for rows.Next() {
 		cat := &domain.Category{}
 		var icon, description, customUIComponent sql.NullString
-		var parentID sql.NullInt64
+		var parentID sql.NullString
 
 		err := rows.Scan(
 			&cat.ID,
@@ -59,7 +59,7 @@ func (r *Repository) GetRootCategories(ctx context.Context) ([]*domain.Category,
 
 		// Handle nullable fields
 		if parentID.Valid {
-			cat.ParentID = &parentID.Int64
+			cat.ParentID = &parentID.String
 		}
 		if icon.Valid {
 			cat.Icon = &icon.String
@@ -105,7 +105,7 @@ func (r *Repository) GetAllCategories(ctx context.Context) ([]*domain.Category, 
 	for rows.Next() {
 		cat := &domain.Category{}
 		var icon, description, customUIComponent sql.NullString
-		var parentID sql.NullInt64
+		var parentID sql.NullString
 
 		err := rows.Scan(
 			&cat.ID,
@@ -129,7 +129,7 @@ func (r *Repository) GetAllCategories(ctx context.Context) ([]*domain.Category, 
 
 		// Handle nullable fields
 		if parentID.Valid {
-			cat.ParentID = &parentID.Int64
+			cat.ParentID = &parentID.String
 		}
 		if icon.Valid {
 			cat.Icon = &icon.String
@@ -184,7 +184,7 @@ func (r *Repository) GetPopularCategories(ctx context.Context, limit int) ([]*do
 	for rows.Next() {
 		cat := &domain.Category{}
 		var icon, description, customUIComponent sql.NullString
-		var parentID sql.NullInt64
+		var parentID sql.NullString
 		var listingCount int64
 
 		err := rows.Scan(
@@ -211,7 +211,7 @@ func (r *Repository) GetPopularCategories(ctx context.Context, limit int) ([]*do
 
 		// Handle nullable fields
 		if parentID.Valid {
-			cat.ParentID = &parentID.Int64
+			cat.ParentID = &parentID.String
 		}
 		if icon.Valid {
 			cat.Icon = &icon.String
@@ -234,10 +234,14 @@ func (r *Repository) GetPopularCategories(ctx context.Context, limit int) ([]*do
 }
 
 // GetCategoryByID retrieves a single category by ID
-func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error) {
+func (r *Repository) GetCategoryByID(ctx context.Context, categoryID string) (*domain.Category, error) {
+	// Extract name from JSONB using ->> operator (gets sr locale by default)
 	query := `
 		SELECT
-			id, name, slug, parent_id, icon, description,
+			id::text,
+			COALESCE(name->>'sr', name->>'en', name->>'ru', '') as name,
+			slug, parent_id::text, icon,
+			COALESCE(description->>'sr', description->>'en', description->>'ru', '') as description,
 			is_active, created_at, sort_order, level,
 			has_custom_ui, custom_ui_component,
 			COALESCE((SELECT COUNT(*) FROM listings WHERE category_id = mc.id AND status = 'active'), 0) as listing_count
@@ -246,8 +250,9 @@ func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*do
 	`
 
 	cat := &domain.Category{}
-	var icon, description, customUIComponent sql.NullString
-	var parentID sql.NullInt64
+	var icon, customUIComponent sql.NullString
+	var parentID sql.NullString
+	var descriptionStr string
 
 	err := r.db.QueryRowxContext(ctx, query, categoryID).Scan(
 		&cat.ID,
@@ -255,7 +260,7 @@ func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*do
 		&cat.Slug,
 		&parentID,
 		&icon,
-		&description,
+		&descriptionStr,
 		&cat.IsActive,
 		&cat.CreatedAt,
 		&cat.SortOrder,
@@ -268,19 +273,19 @@ func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*do
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("category not found")
 		}
-		r.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to get category")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to get category")
 		return nil, fmt.Errorf("failed to get category: %w", err)
 	}
 
 	// Handle nullable fields
 	if parentID.Valid {
-		cat.ParentID = &parentID.Int64
+		cat.ParentID = &parentID.String
 	}
 	if icon.Valid {
 		cat.Icon = &icon.String
 	}
-	if description.Valid {
-		cat.Description = &description.String
+	if descriptionStr != "" {
+		cat.Description = &descriptionStr
 	}
 	if customUIComponent.Valid {
 		cat.CustomUIComponent = &customUIComponent.String
@@ -290,7 +295,8 @@ func (r *Repository) GetCategoryByID(ctx context.Context, categoryID int64) (*do
 }
 
 // GetCategoryTree builds a hierarchical tree starting from a category
-func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
+// If categoryID is empty, returns a virtual root node containing all top-level categories
+func (r *Repository) GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error) {
 	// Get all categories
 	categories, err := r.GetAllCategories(ctx)
 	if err != nil {
@@ -298,8 +304,9 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*do
 	}
 
 	// Build map for fast lookup
-	catMap := make(map[int64]*domain.CategoryTreeNode)
+	catMap := make(map[string]*domain.CategoryTreeNode)
 	var rootNode *domain.CategoryTreeNode
+	var topLevelNodes []*domain.CategoryTreeNode
 
 	// First pass: create nodes
 	for _, cat := range categories {
@@ -329,8 +336,13 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*do
 		catMap[cat.ID] = node
 
 		// If this is the requested category, mark it as root
-		if cat.ID == categoryID {
+		if categoryID != "" && cat.ID == categoryID {
 			rootNode = node
+		}
+
+		// Track top-level categories (no parent)
+		if cat.ParentID == nil {
+			topLevelNodes = append(topLevelNodes, node)
 		}
 	}
 
@@ -349,6 +361,22 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*do
 		node.ChildrenCount = int32(len(node.Children))
 	}
 
+	// If categoryID is empty, return a virtual root with all top-level categories
+	if categoryID == "" {
+		virtualRoot := &domain.CategoryTreeNode{
+			ID:       "root",
+			Name:     "Categories",
+			Slug:     "",
+			Level:    0,
+			Children: make([]domain.CategoryTreeNode, 0, len(topLevelNodes)),
+		}
+		for _, node := range topLevelNodes {
+			virtualRoot.Children = append(virtualRoot.Children, *node)
+		}
+		virtualRoot.ChildrenCount = int32(len(virtualRoot.Children))
+		return virtualRoot, nil
+	}
+
 	if rootNode == nil {
 		return nil, fmt.Errorf("category not found in tree")
 	}
@@ -358,9 +386,13 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID int64) (*do
 
 // GetCategoryBySlug retrieves a category by its slug
 func (r *Repository) GetCategoryBySlug(ctx context.Context, slug string) (*domain.Category, error) {
+	// Extract name from JSONB using ->> operator (gets sr locale by default)
 	query := `
 		SELECT
-			id, name, slug, parent_id, icon, description,
+			id::text,
+			COALESCE(name->>'sr', name->>'en', name->>'ru', '') as name,
+			slug, parent_id::text, icon,
+			COALESCE(description->>'sr', description->>'en', description->>'ru', '') as description,
 			is_active, created_at, sort_order, level,
 			has_custom_ui, custom_ui_component,
 			COALESCE((SELECT COUNT(*) FROM listings WHERE category_id = mc.id AND status = 'active'), 0) as listing_count
@@ -369,8 +401,9 @@ func (r *Repository) GetCategoryBySlug(ctx context.Context, slug string) (*domai
 	`
 
 	cat := &domain.Category{}
-	var icon, description, customUIComponent sql.NullString
-	var parentID sql.NullInt64
+	var icon, customUIComponent sql.NullString
+	var parentID sql.NullString
+	var descriptionStr string
 
 	err := r.db.QueryRowxContext(ctx, query, slug).Scan(
 		&cat.ID,
@@ -378,7 +411,7 @@ func (r *Repository) GetCategoryBySlug(ctx context.Context, slug string) (*domai
 		&cat.Slug,
 		&parentID,
 		&icon,
-		&description,
+		&descriptionStr,
 		&cat.IsActive,
 		&cat.CreatedAt,
 		&cat.SortOrder,
@@ -397,13 +430,13 @@ func (r *Repository) GetCategoryBySlug(ctx context.Context, slug string) (*domai
 
 	// Handle nullable fields
 	if parentID.Valid {
-		cat.ParentID = &parentID.Int64
+		cat.ParentID = &parentID.String
 	}
 	if icon.Valid {
 		cat.Icon = &icon.String
 	}
-	if description.Valid {
-		cat.Description = &description.String
+	if descriptionStr != "" {
+		cat.Description = &descriptionStr
 	}
 	if customUIComponent.Valid {
 		cat.CustomUIComponent = &customUIComponent.String
@@ -413,11 +446,14 @@ func (r *Repository) GetCategoryBySlug(ctx context.Context, slug string) (*domai
 }
 
 // GetCategoriesWithPagination returns paginated categories with optional filters
-func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *int64, isActive *bool, limit, offset int32) ([]*domain.Category, int32, error) {
-	// Build query with conditional filters
+func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *string, isActive *bool, limit, offset int32) ([]*domain.Category, int32, error) {
+	// Build query with conditional filters (extract name from JSONB)
 	query := `
 		SELECT
-			id, name, slug, parent_id, icon, description,
+			id::text,
+			COALESCE(name->>'sr', name->>'en', name->>'ru', '') as name,
+			slug, parent_id::text, icon,
+			COALESCE(description->>'sr', description->>'en', description->>'ru', '') as description,
 			is_active, created_at, sort_order, level,
 			has_custom_ui, custom_ui_component,
 			COALESCE((SELECT COUNT(*) FROM listings WHERE category_id = mc.id AND status = 'active'), 0) as listing_count
@@ -472,8 +508,9 @@ func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *
 	var categories []*domain.Category
 	for rows.Next() {
 		cat := &domain.Category{}
-		var icon, description, customUIComponent sql.NullString
-		var parentIDVal sql.NullInt64
+		var icon, customUIComponent sql.NullString
+		var parentIDVal sql.NullString
+		var descriptionStr string
 
 		err := rows.Scan(
 			&cat.ID,
@@ -481,7 +518,7 @@ func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *
 			&cat.Slug,
 			&parentIDVal,
 			&icon,
-			&description,
+			&descriptionStr,
 			&cat.IsActive,
 			&cat.CreatedAt,
 			&cat.SortOrder,
@@ -497,13 +534,13 @@ func (r *Repository) GetCategoriesWithPagination(ctx context.Context, parentID *
 
 		// Handle nullable fields
 		if parentIDVal.Valid {
-			cat.ParentID = &parentIDVal.Int64
+			cat.ParentID = &parentIDVal.String
 		}
 		if icon.Valid {
 			cat.Icon = &icon.String
 		}
-		if description.Valid {
-			cat.Description = &description.String
+		if descriptionStr != "" {
+			cat.Description = &descriptionStr
 		}
 		if customUIComponent.Valid {
 			cat.CustomUIComponent = &customUIComponent.String
@@ -527,7 +564,8 @@ func (r *Repository) CreateCategory(ctx context.Context, cat *domain.Category) (
 	}
 
 	// Calculate level based on parent
-	level := int32(0)
+	// Note: DB constraint requires level >= 1, so root categories have level = 1
+	level := int32(1)
 	if cat.ParentID != nil {
 		parent, err := r.GetCategoryByID(ctx, *cat.ParentID)
 		if err != nil {
@@ -555,45 +593,65 @@ func (r *Repository) CreateCategory(ctx context.Context, cat *domain.Category) (
 	cat.Level = level
 	cat.CreatedAt = time.Now()
 
+	// Convert VARCHAR fields to JSONB format: {"sr": "value", "en": "value", "ru": "value"}
+	// Categories table uses JSONB for name, description, meta_title, meta_description, meta_keywords
+	nameJSON := fmt.Sprintf(`{"sr": "%s", "en": "%s", "ru": "%s"}`, cat.Name, cat.Name, cat.Name)
+
+	var descriptionJSON string
+	if cat.Description != nil && *cat.Description != "" {
+		descriptionJSON = fmt.Sprintf(`{"sr": "%s", "en": "%s", "ru": "%s"}`, *cat.Description, *cat.Description, *cat.Description)
+	} else {
+		descriptionJSON = "{}"
+	}
+
 	query := `
 		INSERT INTO categories (
 			name, slug, parent_id, icon, description,
 			is_active, sort_order, level, has_custom_ui, custom_ui_component,
-			created_at
+			created_at, path
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+			$1::jsonb, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12
 		)
 		RETURNING id
 	`
 
-	var parentID sql.NullInt64
+	var parentID sql.NullString
 	if cat.ParentID != nil {
-		parentID = sql.NullInt64{Int64: *cat.ParentID, Valid: true}
+		parentID = sql.NullString{String: *cat.ParentID, Valid: true}
 	}
 
-	var icon, description, customUIComponent sql.NullString
+	var icon, customUIComponent sql.NullString
 	if cat.Icon != nil {
 		icon = sql.NullString{String: *cat.Icon, Valid: true}
-	}
-	if cat.Description != nil {
-		description = sql.NullString{String: *cat.Description, Valid: true}
 	}
 	if cat.CustomUIComponent != nil {
 		customUIComponent = sql.NullString{String: *cat.CustomUIComponent, Valid: true}
 	}
 
+	// path is calculated from slug (simple implementation)
+	path := cat.Slug
+	if cat.ParentID != nil {
+		// Get parent path and append
+		var parentPath string
+		err := r.db.QueryRowContext(ctx, "SELECT path FROM categories WHERE id = $1", *cat.ParentID).Scan(&parentPath)
+		if err == nil {
+			path = parentPath + "/" + cat.Slug
+		}
+	}
+
 	err := r.db.QueryRowContext(ctx, query,
-		cat.Name,
+		nameJSON,
 		cat.Slug,
 		parentID,
 		icon,
-		description,
+		descriptionJSON,
 		cat.IsActive,
 		cat.SortOrder,
 		cat.Level,
 		cat.HasCustomUI,
 		customUIComponent,
 		cat.CreatedAt,
+		path,
 	).Scan(&cat.ID)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -605,7 +663,7 @@ func (r *Repository) CreateCategory(ctx context.Context, cat *domain.Category) (
 		return nil, fmt.Errorf("failed to create category: %w", err)
 	}
 
-	r.logger.Info().Int64("category_id", cat.ID).Str("name", cat.Name).Msg("category created")
+	r.logger.Info().Str("category_id", cat.ID).Str("name", cat.Name).Msg("category created")
 	return cat, nil
 }
 
@@ -647,56 +705,65 @@ func (r *Repository) UpdateCategory(ctx context.Context, cat *domain.Category) (
 			}
 		}
 	} else if cat.ParentID == nil && existing.ParentID != nil {
-		// Moving to root
-		cat.Level = 0
+		// Moving to root (DB constraint requires level >= 1)
+		cat.Level = 1
 		err = r.updateDescendantLevels(ctx, cat.ID, cat.Level)
 		if err != nil {
 			return nil, fmt.Errorf("failed to update descendant levels: %w", err)
 		}
 	}
 
+	// Convert name and description to JSONB format (same as in CreateCategory)
+	var nameJSON, descriptionJSON *string
+	if cat.Name != "" {
+		jsonStr := fmt.Sprintf(`{"sr": "%s", "en": "%s", "ru": "%s"}`, cat.Name, cat.Name, cat.Name)
+		nameJSON = &jsonStr
+	}
+	if cat.Description != nil && *cat.Description != "" {
+		jsonStr := fmt.Sprintf(`{"sr": "%s", "en": "%s", "ru": "%s"}`, *cat.Description, *cat.Description, *cat.Description)
+		descriptionJSON = &jsonStr
+	}
+
 	query := `
 		UPDATE categories SET
-			name = COALESCE($2, name),
+			name = COALESCE($2::jsonb, name),
 			slug = COALESCE($3, slug),
 			parent_id = $4,
 			icon = $5,
-			description = $6,
+			description = COALESCE($6::jsonb, description),
 			is_active = COALESCE($7, is_active),
 			sort_order = COALESCE($8, sort_order),
 			level = COALESCE($9, level),
 			has_custom_ui = COALESCE($10, has_custom_ui),
 			custom_ui_component = $11
 		WHERE id = $1
-		RETURNING id, name, slug, parent_id, icon, description, is_active, created_at,
+		RETURNING id::text,
+				  COALESCE(name->>'sr', name->>'en', name->>'ru', '') as name,
+				  slug, parent_id::text, icon,
+				  COALESCE(description->>'sr', description->>'en', description->>'ru', '') as description,
+				  is_active, created_at,
 				  sort_order, level, has_custom_ui, custom_ui_component
 	`
 
-	var parentID sql.NullInt64
+	var parentID sql.NullString
 	if cat.ParentID != nil {
-		parentID = sql.NullInt64{Int64: *cat.ParentID, Valid: true}
+		parentID = sql.NullString{String: *cat.ParentID, Valid: true}
 	}
 
-	var icon, description, customUIComponent sql.NullString
+	var icon, customUIComponent sql.NullString
 	if cat.Icon != nil {
 		icon = sql.NullString{String: *cat.Icon, Valid: true}
-	}
-	if cat.Description != nil {
-		description = sql.NullString{String: *cat.Description, Valid: true}
 	}
 	if cat.CustomUIComponent != nil {
 		customUIComponent = sql.NullString{String: *cat.CustomUIComponent, Valid: true}
 	}
 
 	// Prepare nullable values for COALESCE
-	var name, slugVal *string
+	var slugVal *string
 	var isActive *bool
 	var sortOrder, level *int32
 	var hasCustomUI *bool
 
-	if cat.Name != "" {
-		name = &cat.Name
-	}
 	if cat.Slug != "" {
 		slugVal = &cat.Slug
 	}
@@ -710,13 +777,15 @@ func (r *Repository) UpdateCategory(ctx context.Context, cat *domain.Category) (
 	hasCustomUI = &cat.HasCustomUI
 
 	updatedCat := &domain.Category{}
+	var descriptionStr string
+
 	err = r.db.QueryRowContext(ctx, query,
 		cat.ID,
-		name,
+		nameJSON,
 		slugVal,
 		parentID,
 		icon,
-		description,
+		descriptionJSON,
 		isActive,
 		sortOrder,
 		level,
@@ -728,7 +797,7 @@ func (r *Repository) UpdateCategory(ctx context.Context, cat *domain.Category) (
 		&updatedCat.Slug,
 		&parentID,
 		&icon,
-		&description,
+		&descriptionStr,
 		&updatedCat.IsActive,
 		&updatedCat.CreatedAt,
 		&updatedCat.SortOrder,
@@ -742,38 +811,44 @@ func (r *Repository) UpdateCategory(ctx context.Context, cat *domain.Category) (
 				return nil, fmt.Errorf("category with slug '%s' already exists", cat.Slug)
 			}
 		}
-		r.logger.Error().Err(err).Int64("category_id", cat.ID).Msg("failed to update category")
+		r.logger.Error().Err(err).Str("category_id", cat.ID).Msg("failed to update category")
 		return nil, fmt.Errorf("failed to update category: %w", err)
 	}
 
 	// Handle nullable fields
 	if parentID.Valid {
-		updatedCat.ParentID = &parentID.Int64
+		updatedCat.ParentID = &parentID.String
 	}
 	if icon.Valid {
 		updatedCat.Icon = &icon.String
 	}
-	if description.Valid {
-		updatedCat.Description = &description.String
+	if descriptionStr != "" {
+		updatedCat.Description = &descriptionStr
 	}
 	if customUIComponent.Valid {
 		updatedCat.CustomUIComponent = &customUIComponent.String
 	}
 
-	r.logger.Info().Int64("category_id", cat.ID).Msg("category updated")
+	r.logger.Info().Str("category_id", cat.ID).Msg("category updated")
 	return updatedCat, nil
 }
 
 // DeleteCategory soft deletes a category (sets is_active = false)
-func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error {
+func (r *Repository) DeleteCategory(ctx context.Context, categoryID string) error {
 	// Check if category has active listings
 	var activeListingsCount int
 	err := r.db.QueryRowContext(ctx, `
 		SELECT COUNT(*) FROM listings
-		WHERE category_id = $1 AND status = 'active' AND is_deleted = false
+		WHERE category_id = $1::uuid AND status = 'active' AND is_deleted = false
 	`, categoryID).Scan(&activeListingsCount)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to check active listings")
+		// Handle invalid UUID error
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "22P02" { // invalid_text_representation (invalid UUID)
+				return fmt.Errorf("category not found")
+			}
+		}
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to check active listings")
 		return fmt.Errorf("failed to check active listings: %w", err)
 	}
 
@@ -784,7 +859,7 @@ func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error
 	// Soft delete the category and all its children
 	query := `
 		WITH RECURSIVE category_tree AS (
-			SELECT id FROM categories WHERE id = $1
+			SELECT id FROM categories WHERE id = $1::uuid
 			UNION ALL
 			SELECT c.id FROM categories c
 			INNER JOIN category_tree ct ON c.parent_id = ct.id
@@ -795,7 +870,13 @@ func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error
 
 	result, err := r.db.ExecContext(ctx, query, categoryID)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to delete category")
+		// Handle invalid UUID error
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "22P02" { // invalid_text_representation (invalid UUID)
+				return fmt.Errorf("category not found")
+			}
+		}
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to delete category")
 		return fmt.Errorf("failed to delete category: %w", err)
 	}
 
@@ -809,7 +890,7 @@ func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error
 	}
 
 	r.logger.Info().
-		Int64("category_id", categoryID).
+		Str("category_id", categoryID).
 		Int64("categories_deactivated", rowsAffected).
 		Msg("category and descendants deleted")
 
@@ -817,7 +898,7 @@ func (r *Repository) DeleteCategory(ctx context.Context, categoryID int64) error
 }
 
 // isDescendant checks if potentialDescendantID is a descendant of ancestorID
-func (r *Repository) isDescendant(ctx context.Context, ancestorID, potentialDescendantID int64) (bool, error) {
+func (r *Repository) isDescendant(ctx context.Context, ancestorID, potentialDescendantID string) (bool, error) {
 	query := `
 		WITH RECURSIVE category_tree AS (
 			SELECT id, parent_id FROM categories WHERE id = $1
@@ -838,7 +919,7 @@ func (r *Repository) isDescendant(ctx context.Context, ancestorID, potentialDesc
 }
 
 // updateDescendantLevels updates the level of all descendants when a category's level changes
-func (r *Repository) updateDescendantLevels(ctx context.Context, categoryID int64, newLevel int32) error {
+func (r *Repository) updateDescendantLevels(ctx context.Context, categoryID string, newLevel int32) error {
 	query := `
 		WITH RECURSIVE category_tree AS (
 			SELECT id, parent_id, $2::int + 1 as new_level FROM categories WHERE parent_id = $1
@@ -854,7 +935,7 @@ func (r *Repository) updateDescendantLevels(ctx context.Context, categoryID int6
 
 	_, err := r.db.ExecContext(ctx, query, categoryID, newLevel)
 	if err != nil {
-		r.logger.Error().Err(err).Int64("category_id", categoryID).Msg("failed to update descendant levels")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to update descendant levels")
 		return fmt.Errorf("failed to update descendant levels: %w", err)
 	}
 

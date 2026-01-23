@@ -259,7 +259,7 @@ Error budget = 2,592,000,000 × 0.1% = 2,592,000 failed requests
 - Trend graphs (7d, 30d)
 - Per-endpoint breakdown
 
-**Access:** https://grafana.svetu.rs/d/listings-slo
+**Access:** https://grafana.vondi.rs/d/listings-slo
 
 ### Daily Check
 

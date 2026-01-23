@@ -7,15 +7,16 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/cache"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/opensearch"
-	"github.com/sveturs/listings/internal/repository"
+	"github.com/vondi-global/listings/internal/cache"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/opensearch"
+	"github.com/vondi-global/listings/internal/repository"
 )
 
 // Service provides search functionality for listings
 type Service struct {
 	searchClient      *opensearch.SearchClient
+	analyticsClient   *opensearch.AnalyticsClient
 	cache             *cache.SearchCache
 	searchQueriesRepo repository.SearchQueriesRepository
 	logger            zerolog.Logger
@@ -27,8 +28,12 @@ func NewService(
 	cache *cache.SearchCache,
 	logger zerolog.Logger,
 ) *Service {
+	// Create analytics client
+	analyticsClient := opensearch.NewAnalyticsClient(searchClient, logger)
+
 	return &Service{
 		searchClient:      searchClient,
+		analyticsClient:   analyticsClient,
 		cache:             cache,
 		searchQueriesRepo: nil, // Will be set via SetSearchQueriesRepo if needed
 		logger:            logger.With().Str("service", "search").Logger(),
@@ -38,6 +43,11 @@ func NewService(
 // SetSearchQueriesRepo sets the search queries repository (optional)
 func (s *Service) SetSearchQueriesRepo(repo repository.SearchQueriesRepository) {
 	s.searchQueriesRepo = repo
+}
+
+// GetAnalyticsClient returns the analytics client for external access
+func (s *Service) GetAnalyticsClient() *opensearch.AnalyticsClient {
+	return s.analyticsClient
 }
 
 // SearchListings searches for listings based on query and filters
@@ -100,11 +110,38 @@ func (s *Service) SearchListings(ctx context.Context, req *SearchRequest) (*Sear
 	// Parse results
 	listings := s.parseSearchResults(searchResp)
 
+	// Calculate page number from offset/limit
+	page := int(req.Offset / req.Limit)
+
 	response := &SearchResponse{
 		Listings: listings,
 		Total:    searchResp.Hits.Total.Value,
 		TookMs:   int32(searchResp.Took),
 		Cached:   false,
+	}
+
+	// Track search event (async, non-blocking)
+	if s.analyticsClient != nil && req.SessionID != "" {
+		searchEvent := &opensearch.SearchEvent{
+			Query:       req.Query,
+			UserID:      req.UserID,
+			SessionID:   req.SessionID,
+			ResultCount: response.Total,
+			TookMs:      int64(response.TookMs),
+			HasResults:  response.Total > 0,
+			SearchType:  "search",
+			Platform:    req.Platform,
+			Language:    req.Language,
+			Page:        page,
+		}
+
+		if err := s.analyticsClient.TrackSearch(ctx, searchEvent); err != nil {
+			// Don't fail the search, just log the error
+			s.logger.Warn().Err(err).Msg("failed to track search event")
+		} else {
+			// Set search event ID in response for click tracking
+			response.SearchEventID = searchEvent.ID
+		}
 	}
 
 	// Cache result (async, non-blocking)
@@ -227,8 +264,8 @@ func (s *Service) parseListingFromHit(source map[string]interface{}) ListingSear
 	if currency, ok := source["currency"].(string); ok {
 		listing.Currency = currency
 	}
-	if categoryID, ok := source["category_id"].(float64); ok {
-		listing.CategoryID = int64(categoryID)
+	if categoryID, ok := source["category_id"].(string); ok {
+		listing.CategoryID = categoryID // UUID string
 	}
 	if status, ok := source["status"].(string); ok {
 		listing.Status = status
@@ -270,6 +307,8 @@ func (s *Service) parseListingFromHit(source map[string]interface{}) ListingSear
 }
 
 // parseImages parses images from OpenSearch source
+// NOTE: OpenSearch stores images with "public_url" and "is_main" fields,
+// but we also check for legacy fields ("file_path", "url", "is_primary") for backwards compatibility
 func (s *Service) parseImages(imagesData []interface{}) []ListingImageResult {
 	images := make([]ListingImageResult, 0, len(imagesData))
 
@@ -280,12 +319,23 @@ func (s *Service) parseImages(imagesData []interface{}) []ListingImageResult {
 			if id, ok := imgMap["id"].(float64); ok {
 				img.ID = int64(id)
 			}
-			if url, ok := imgMap["url"].(string); ok {
+
+			// Check for public_url first (primary field), then file_path (legacy), then url (legacy)
+			if url, ok := imgMap["public_url"].(string); ok && url != "" {
+				img.URL = url
+			} else if url, ok := imgMap["file_path"].(string); ok && url != "" {
+				img.URL = url
+			} else if url, ok := imgMap["url"].(string); ok {
 				img.URL = url
 			}
-			if isPrimary, ok := imgMap["is_primary"].(bool); ok {
+
+			// Check for is_main first (OpenSearch field), then fall back to is_primary
+			if isMain, ok := imgMap["is_main"].(bool); ok {
+				img.IsPrimary = isMain
+			} else if isPrimary, ok := imgMap["is_primary"].(bool); ok {
 				img.IsPrimary = isPrimary
 			}
+
 			if displayOrder, ok := imgMap["display_order"].(float64); ok {
 				img.DisplayOrder = int32(displayOrder)
 			}
@@ -816,10 +866,10 @@ func (s *Service) parseAggregations(result *opensearch.SearchResponse) (*FacetsR
 		if buckets, ok := categoriesAgg["buckets"].([]interface{}); ok {
 			for _, bucket := range buckets {
 				if b, ok := bucket.(map[string]interface{}); ok {
-					categoryID, _ := b["key"].(float64)
+					categoryID, _ := b["key"].(string) // UUID string
 					docCount, _ := b["doc_count"].(float64)
 					facets.Categories = append(facets.Categories, CategoryFacet{
-						CategoryID: int64(categoryID),
+						CategoryID: categoryID,
 						Count:      int64(docCount),
 					})
 				}
@@ -1032,8 +1082,8 @@ func (s *Service) convertCachedFacets(cached map[string]interface{}, isCached bo
 		for _, cat := range categories {
 			if catMap, ok := cat.(map[string]interface{}); ok {
 				facet := CategoryFacet{}
-				if id, ok := catMap["category_id"].(float64); ok {
-					facet.CategoryID = int64(id)
+				if id, ok := catMap["category_id"].(string); ok {
+					facet.CategoryID = id // UUID string
 				}
 				if count, ok := catMap["count"].(float64); ok {
 					facet.Count = int64(count)
@@ -1504,9 +1554,8 @@ func (s *Service) convertCachedSearchHistory(cached map[string]interface{}) *Sea
 				if queryText, ok := entryMap["query_text"].(string); ok {
 					entry.QueryText = queryText
 				}
-				if categoryID, ok := entryMap["category_id"].(float64); ok {
-					id := int64(categoryID)
-					entry.CategoryID = &id
+				if categoryID, ok := entryMap["category_id"].(string); ok {
+					entry.CategoryID = &categoryID // UUID string
 				}
 				if resultsCount, ok := entryMap["results_count"].(float64); ok {
 					entry.ResultsCount = int32(resultsCount)

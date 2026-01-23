@@ -170,4 +170,4 @@ WHERE created_at >= CURRENT_DATE;
 
 ## License
 
-Internal tool - Svetu.rs marketplace project
+Internal tool - Vondi.rs marketplace project

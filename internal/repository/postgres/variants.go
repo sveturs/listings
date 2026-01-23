@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // CreateVariant creates a new product variant
@@ -326,7 +326,6 @@ func (r *Repository) ListVariants(ctx context.Context, filters *domain.VariantFi
 	if filters.StockStatus != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("stock_status = $%d", argPos))
 		args = append(args, *filters.StockStatus)
-		argPos++
 	}
 
 	whereClause := strings.Join(whereConditions, " AND ")

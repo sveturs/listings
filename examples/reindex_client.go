@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 func main() {

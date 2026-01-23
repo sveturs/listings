@@ -22,11 +22,11 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service/listings"
-	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
-	"github.com/sveturs/listings/tests"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service/listings"
+	grpchandlers "github.com/vondi-global/listings/internal/transport/grpc"
+	"github.com/vondi-global/listings/tests"
 )
 
 // ============================================================================
@@ -42,11 +42,11 @@ const (
 	bulkPerfStorefront   = int64(6005)
 
 	// Categories
-	testCategory1301 = int64(1301) // Bulk Test Electronics
-	testCategory1302 = int64(1302) // Bulk Test Computers
-	testCategory1303 = int64(1303) // Bulk Test Accessories
-	testCategory1304 = int64(1304) // Bulk Test Clothing
-	testCategory1305 = int64(1305) // Bulk Test Home & Garden
+	testCategory1301 = "1301" // Bulk Test Electronics
+	testCategory1302 = "1302" // Bulk Test Computers
+	testCategory1303 = "1303" // Bulk Test Accessories
+	testCategory1304 = "1304" // Bulk Test Clothing
+	testCategory1305 = "1305" // Bulk Test Home & Garden
 
 	// Products for BulkUpdateProducts tests
 	product20001 = int64(20001) // Laptop Dell XPS 13
@@ -105,7 +105,24 @@ func setupBulkOperationsTest(tb testing.TB) (pb.ListingsServiceClient, *tests.Te
 
 	// Create gRPC server (with singleton metrics)
 	m := getTestMetrics()
-	server := grpchandlers.NewServer(service, m, logger)
+	server := grpchandlers.NewServer(
+		service,
+		nil, // storefrontService
+		nil, // attrService
+		nil, // categoryService
+		nil, // categoryRepoV2 (Phase 1, not used in tests)
+		nil, // categoryCache (Phase 1, not used in tests)
+		nil, // orderService
+		nil, // cartService
+		nil, // chatService
+		nil, // analyticsService
+		nil, // storefrontAnalyticsService
+		nil, // inventoryService
+		nil, // invitationService
+		nil, // minioClient
+		m,
+		logger,
+	)
 
 	// Setup in-memory gRPC connection using bufconn
 	lis := bufconn.Listen(bufSize)
@@ -436,7 +453,7 @@ func TestBulkCreateProducts_Error_MissingRequiredFields(t *testing.T) {
 				Price:         100.0,
 				Currency:      "USD",
 				StockQuantity: 10,
-				CategoryId:    0,
+				CategoryId: "",
 				Sku:           stringPtr("INV-CAT-001"),
 			},
 			expectedErr: "category",

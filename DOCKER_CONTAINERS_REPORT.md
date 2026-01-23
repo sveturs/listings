@@ -1,4 +1,4 @@
-# 📊 Полный отчет по Docker контейнерам Listings/Svetu (10 контейнеров)
+# 📊 Полный отчет по Docker контейнерам Listings/Vondi (10 контейнеров)
 
 ## 🗂️ Общая структура
 
@@ -205,7 +205,7 @@ GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
 
 **Подключение:**
 ```bash
-DATA_SOURCE_NAME=postgresql://postgres:mX3g1XGhMRUZEX3l@host.docker.internal:5432/svetubd?sslmode=disable
+DATA_SOURCE_NAME=postgresql://postgres:mX3g1XGhMRUZEX3l@host.docker.internal:5432/vondi_db?sslmode=disable
 ```
 
 **Volumes:**
@@ -405,13 +405,13 @@ docker stats listings_redis
 
 ```bash
 # База данных
-SVETULISTINGS_DB_NAME=listings_dev_db
-SVETULISTINGS_DB_USER=listings_user
-SVETULISTINGS_DB_PASSWORD=listings_secret
+VONDILISTINGS_DB_NAME=listings_dev_db
+VONDILISTINGS_DB_USER=listings_user
+VONDILISTINGS_DB_PASSWORD=listings_secret
 
 # Redis
-SVETULISTINGS_REDIS_PASSWORD=redis_password
-SVETULISTINGS_REDIS_PORT=36380
+VONDILISTINGS_REDIS_PASSWORD=redis_password
+VONDILISTINGS_REDIS_PORT=36380
 
 # Микросервис
 GRPC_PORT=50053

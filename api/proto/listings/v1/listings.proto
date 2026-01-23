@@ -7,7 +7,7 @@ import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/sveturs/listings/api/proto/listings/v1;listingssvcv1";
+option go_package = "github.com/vondi-global/listings/api/proto/listings/v1;listingssvcv1";
 
 // ============================================================================
 // ENUMS - Storefront Management
@@ -227,6 +227,27 @@ service ListingsService {
   // Used for validation before order creation
   rpc CheckStockAvailability(CheckStockAvailabilityRequest) returns (CheckStockAvailabilityResponse);
 
+  // === Inventory Reservation (for Transfers) ===
+
+  // CreateReservation creates a temporary stock hold for transfers
+  // Stock is blocked until committed or released
+  rpc CreateReservation(CreateReservationRequest) returns (CreateReservationResponse);
+
+  // ReleaseReservation releases a previously created reservation
+  // Stock becomes available again
+  rpc ReleaseReservation(ReleaseReservationRequest) returns (ReleaseReservationResponse);
+
+  // CommitReservation commits reservation (decrements actual stock)
+  // Used when transfer is completed
+  rpc CommitReservation(CommitReservationRequest) returns (CommitReservationResponse);
+
+  // GetReservation retrieves reservation details by ID
+  rpc GetReservation(GetReservationRequest) returns (GetReservationResponse);
+
+  // GetReservedQuantityForListing returns total reserved quantity for a listing
+  // Used by inventory display to show how much stock is reserved
+  rpc GetReservedQuantityForListing(GetReservedQuantityRequest) returns (GetReservedQuantityResponse);
+
   // === Product CRUD Operations (Phase 9.5.2) ===
 
   // CreateProduct creates a new B2C product
@@ -302,6 +323,10 @@ service ListingsService {
   // ReorderProductImages updates display order for product images
   rpc ReorderProductImages(ReorderProductImagesRequest) returns (ReorderProductImagesResponse);
 
+  // SetProductImagePrimary sets a specific image as primary for a product
+  // Automatically unsets primary flag from all other images
+  rpc SetProductImagePrimary(SetProductImagePrimaryRequest) returns (SetProductImagePrimaryResponse);
+
   // === OpenSearch Reindexing (ADMINISTRATIVE) ===
 
   // ReindexAll performs full reindexing of all products to OpenSearch
@@ -315,6 +340,9 @@ service ListingsService {
 
   // UpdateStorefront updates an existing storefront
   rpc UpdateStorefront(UpdateStorefrontRequest) returns (StorefrontFull);
+
+  // UpdateStorefrontStatus updates operational status (vacation mode, accepting orders)
+  rpc UpdateStorefrontStatus(UpdateStorefrontStatusRequest) returns (UpdateStorefrontStatusResponse);
 
   // DeleteStorefront removes a storefront (soft or hard delete)
   rpc DeleteStorefront(DeleteStorefrontRequest) returns (DeleteStorefrontResponse);
@@ -372,6 +400,35 @@ service ListingsService {
 
   // GetDashboardStats retrieves storefront dashboard statistics
   rpc GetDashboardStats(DashboardStatsRequest) returns (DashboardStatsResponse);
+
+  // === Storefront Invitations ===
+
+  // CreateStorefrontEmailInvitation creates an email invitation
+  rpc CreateStorefrontEmailInvitation(CreateStorefrontEmailInvitationRequest) returns (StorefrontInvitation);
+
+  // CreateStorefrontLinkInvitation creates a shareable link invitation
+  rpc CreateStorefrontLinkInvitation(CreateStorefrontLinkInvitationRequest) returns (StorefrontInvitation);
+
+  // ListStorefrontInvitations lists invitations for a storefront
+  rpc ListStorefrontInvitations(ListStorefrontInvitationsRequest) returns (ListStorefrontInvitationsResponse);
+
+  // RevokeStorefrontInvitation revokes an invitation
+  rpc RevokeStorefrontInvitation(RevokeStorefrontInvitationRequest) returns (google.protobuf.Empty);
+
+  // GetMyStorefrontInvitations gets pending invitations for a user
+  rpc GetMyStorefrontInvitations(GetMyStorefrontInvitationsRequest) returns (ListStorefrontInvitationsResponse);
+
+  // AcceptStorefrontInvitation accepts an invitation
+  rpc AcceptStorefrontInvitation(AcceptStorefrontInvitationRequest) returns (google.protobuf.Empty);
+
+  // DeclineStorefrontInvitation declines an invitation
+  rpc DeclineStorefrontInvitation(DeclineStorefrontInvitationRequest) returns (google.protobuf.Empty);
+
+  // ValidateStorefrontInviteCode validates an invite code
+  rpc ValidateStorefrontInviteCode(ValidateStorefrontInviteCodeRequest) returns (ValidateStorefrontInviteCodeResponse);
+
+  // AcceptStorefrontInviteCode accepts an invitation via code
+  rpc AcceptStorefrontInviteCode(AcceptStorefrontInviteCodeRequest) returns (google.protobuf.Empty);
 }
 
 // ============================================================================
@@ -397,7 +454,7 @@ message Listing {
   optional string description = 6;
   double price = 7;
   string currency = 8;
-  int64 category_id = 9;
+  string category_id = 9;
   string status = 10;
   string visibility = 11;
   int32 quantity = 12;
@@ -420,6 +477,9 @@ message Listing {
   // Translations
   map<string, ListingFieldTranslations> translations = 30;  // {"en": {...}, "ru": {...}, "sr": {...}}
   string original_language = 31;  // "sr", "en", "ru"
+
+  // Location display settings
+  bool show_on_map = 32;
 }
 
 // ListingImage represents an image associated with a listing
@@ -479,10 +539,10 @@ message ListingVariant {
 
 // Category represents a marketplace category
 message Category {
-  int64 id = 1;
+  string id = 1;
   string name = 2;
   string slug = 3;
-  optional int64 parent_id = 4;
+  optional string parent_id = 4;
   optional string icon = 5;
   optional string description = 6;
   bool is_active = 7;
@@ -497,11 +557,11 @@ message Category {
 
 // CategoryTreeNode represents a category with its children
 message CategoryTreeNode {
-  int64 id = 1;
+  string id = 1;
   string name = 2;
   string slug = 3;
   optional string icon = 4;
-  optional int64 parent_id = 5;
+  optional string parent_id = 5;
   int32 level = 6;
   string path = 7;
   int32 listing_count = 8;
@@ -516,12 +576,13 @@ message CategoryTreeNode {
 // Product represents a B2C product
 message Product {
   int64 id = 1;
+  string uuid = 27;  // UUID for variant operations (required for ListVariants API)
   int64 storefront_id = 2;
   string name = 3;
   string description = 4;
   double price = 5;
   string currency = 6;
-  int64 category_id = 7;
+  string category_id = 7;
   optional string sku = 8;
   optional string barcode = 9;
   int32 stock_quantity = 10;
@@ -546,7 +607,9 @@ message Product {
 // ProductVariant represents a product variant with specific attributes
 message ProductVariant {
   int64 id = 1;
+  string uuid = 20;  // UUID for stock operations (ReserveStock, ReleaseStock)
   int64 product_id = 2;
+  string product_uuid = 21;  // Parent product UUID for cross-reference
   optional string sku = 3;
   optional string barcode = 4;
   optional double price = 5;
@@ -580,6 +643,23 @@ message GetListingResponse {
   Listing listing = 1;
 }
 
+// CreateListingLocation for creating a new listing with location
+message CreateListingLocation {
+  optional string country = 1;
+  optional string city = 2;
+  optional string postal_code = 3;
+  optional string address_line1 = 4;
+  optional string address_line2 = 5;
+  optional double latitude = 6;
+  optional double longitude = 7;
+}
+
+// CreateListingAttribute for creating a new listing with attributes
+message CreateListingAttribute {
+  string attribute_key = 1;
+  string attribute_value = 2;
+}
+
 // CreateListing messages
 message CreateListingRequest {
   int64 user_id = 1;
@@ -588,9 +668,20 @@ message CreateListingRequest {
   optional string description = 4;
   double price = 5;
   string currency = 6;
-  int64 category_id = 7;
+  string category_id = 7;
   int32 quantity = 8;
   optional string sku = 9;
+
+  // Condition (new, used, etc.)
+  optional string condition = 10;
+
+  // Location
+  optional CreateListingLocation location = 11;
+  optional bool show_on_map = 12;
+  optional string location_privacy = 13;  // "exact", "approximate", "hidden"
+
+  // Attributes (flexible key-value pairs)
+  repeated CreateListingAttribute attributes = 14;
 
   // Translations
   map<string, ListingFieldTranslations> translations = 20;
@@ -630,7 +721,7 @@ message DeleteListingResponse {
 // SearchListings messages
 message SearchListingsRequest {
   string query = 1;
-  optional int64 category_id = 2;
+  optional string category_id = 2;
   optional double min_price = 3;
   optional double max_price = 4;
   int32 limit = 5;
@@ -646,7 +737,7 @@ message SearchListingsResponse {
 message ListListingsRequest {
   optional int64 user_id = 1;
   optional int64 storefront_id = 2;
-  optional int64 category_id = 3;
+  optional string category_id = 3;
   optional string status = 4;
   optional double min_price = 5;
   optional double max_price = 6;
@@ -783,7 +874,7 @@ message CategoriesResponse {
 
 // CategoryIDRequest requests a category by ID
 message CategoryIDRequest {
-  int64 category_id = 1;
+  string category_id = 1;
 }
 
 // CategoryResponse returns a single category
@@ -857,6 +948,7 @@ message Storefront {
   optional string phone = 8;
   optional string email = 9;
   optional string website = 10;
+  optional google.protobuf.Struct social_links = 27; // JSON: {"instagram": "url", "facebook": "url", "telegram": "url", "whatsapp": "number"}
   optional string address = 11;
   optional string city = 12;
   optional string postal_code = 13;
@@ -873,6 +965,16 @@ message Storefront {
   int32 followers_count = 24;
   string created_at = 25;
   string updated_at = 26;
+
+  // Business legal structure (added 2026-01-18)
+  string legal_entity_type = 28;           // preduzetnik, doo, ad
+  string business_category = 29;           // retail, service, restaurant, grocery, other
+  optional string full_legal_name = 30;    // Full company name (for legal entities)
+  optional string registration_number = 31; // Matični broj (MB)
+  optional string tax_number = 34;         // PIB (9 digits)
+  optional string vat_number = 35;         // PDV broj (RS + 9 digits)
+  optional string legal_representative_name = 32;
+  optional string legal_representative_position = 33;
 }
 
 // GetStorefrontRequest requests a storefront by ID or slug
@@ -1129,6 +1231,105 @@ message CheckStockAvailabilityResponse {
 }
 
 // ============================================================================
+// Request/Response Messages - Inventory Reservation (for Transfers)
+// ============================================================================
+
+// ReservationItem represents a single item to reserve
+message ReservationItem {
+  int64 listing_id = 1;      // Product/listing ID
+  optional int64 variant_id = 2;  // Optional variant ID
+  int32 quantity = 3;        // Quantity to reserve
+}
+
+// CreateReservationRequest creates a stock reservation
+message CreateReservationRequest {
+  ReservationItem item = 1;           // Item to reserve
+  string reference_type = 2;          // Reference type: "transfer", "order", etc.
+  int64 reference_id = 3;             // Reference ID (transfer_id, order_id, etc.)
+  optional int32 ttl_minutes = 4;     // TTL in minutes (default: 30)
+}
+
+// CreateReservationResponse returns the created reservation
+message CreateReservationResponse {
+  bool success = 1;
+  optional string error = 2;
+  int64 reservation_id = 3;           // ID of created reservation
+  google.protobuf.Timestamp expires_at = 4;  // When reservation expires
+}
+
+// ReleaseReservationRequest releases a reservation by ID
+message ReleaseReservationRequest {
+  int64 reservation_id = 1;
+}
+
+// ReleaseReservationResponse confirms release
+message ReleaseReservationResponse {
+  bool success = 1;
+  optional string error = 2;
+  int32 quantity_released = 3;        // How much stock was released
+}
+
+// CommitReservationRequest commits reservation (decrements stock)
+message CommitReservationRequest {
+  int64 reservation_id = 1;
+}
+
+// CommitReservationResponse confirms commit
+message CommitReservationResponse {
+  bool success = 1;
+  optional string error = 2;
+  int32 quantity_committed = 3;       // How much stock was decremented
+}
+
+// GetReservationRequest retrieves reservation by ID
+message GetReservationRequest {
+  int64 reservation_id = 1;
+}
+
+// ReservationDetails contains full reservation info
+message ReservationDetails {
+  int64 id = 1;
+  int64 listing_id = 2;
+  optional int64 variant_id = 3;
+  int32 quantity = 4;
+  string status = 5;                  // "active", "committed", "released", "expired"
+  string reference_type = 6;
+  int64 reference_id = 7;
+  google.protobuf.Timestamp expires_at = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// GetReservationResponse returns reservation details
+message GetReservationResponse {
+  bool success = 1;
+  optional string error = 2;
+  ReservationDetails reservation = 3;
+}
+
+// GetReservedQuantityRequest gets total reserved quantity for a listing
+message GetReservedQuantityRequest {
+  int64 listing_id = 1;
+  optional string reference_type = 2;  // Optional filter by type: "order", "transfer"
+}
+
+// ReservedQuantityByType shows reserved quantity breakdown by reference type
+message ReservedQuantityByType {
+  string reference_type = 1;           // "order", "transfer"
+  int32 quantity = 2;                  // Total reserved for this type
+  int32 count = 3;                     // Number of active reservations
+}
+
+// GetReservedQuantityResponse returns reserved quantity info
+message GetReservedQuantityResponse {
+  bool success = 1;
+  optional string error = 2;
+  int64 listing_id = 3;
+  int32 total_reserved = 4;            // Total reserved quantity (all types)
+  repeated ReservedQuantityByType by_type = 5;  // Breakdown by reference type
+}
+
+// ============================================================================
 // Request/Response Messages - Product CRUD Operations (Phase 9.5.2)
 // ============================================================================
 
@@ -1139,7 +1340,7 @@ message CreateProductRequest {
   string description = 3; // Optional, up to 5000 characters
   double price = 4; // Required, must be > 0
   string currency = 5; // Required, ISO 4217 code (USD, EUR, etc.)
-  int64 category_id = 6; // Required, must exist
+  string category_id = 6; // Required, must exist
   optional string sku = 7; // Optional, must be unique in storefront
   optional string barcode = 8; // Optional (EAN, UPC, etc.)
   int32 stock_quantity = 9; // Initial stock, default 0
@@ -1167,7 +1368,7 @@ message UpdateProductRequest {
   optional string description = 4;
   optional double price = 5;
   optional string currency = 6;
-  optional int64 category_id = 7;
+  optional string category_id = 7;
   optional string sku = 8;
   optional string barcode = 9;
   optional bool is_active = 10;
@@ -1209,7 +1410,7 @@ message ProductInput {
   string description = 2;
   double price = 3;
   string currency = 4;
-  int64 category_id = 5;
+  string category_id = 5;
   optional string sku = 6;
   optional string barcode = 7;
   int32 stock_quantity = 8;
@@ -1248,7 +1449,7 @@ message ProductUpdateInput {
   optional string description = 3;
   optional double price = 4;
   optional string currency = 5;
-  optional int64 category_id = 6;
+  optional string category_id = 6;
   optional string sku = 7;
   optional string barcode = 8;
   optional bool is_active = 9;
@@ -1503,6 +1704,7 @@ message StorefrontFull {
   optional string phone = 9;
   optional string email = 10;
   optional string website = 11;
+  optional google.protobuf.Struct social_links = 54; // JSON: {"instagram": "url", "facebook": "url", "telegram": "url", "whatsapp": "number"}
 
   // Location (address)
   optional string address = 12;
@@ -1524,6 +1726,15 @@ message StorefrontFull {
   bool is_active = 24;                        // default: true
   bool is_verified = 25;                      // default: false
   optional google.protobuf.Timestamp verification_date = 26;
+
+  // Store operational status (NEW - 2026-01-17)
+  bool vacation_mode = 48;                    // default: false - pause all orders temporarily
+  bool accepting_orders = 49;                 // default: true - whether accepting new orders
+  optional google.protobuf.Timestamp vacation_start_date = 50;
+  optional google.protobuf.Timestamp vacation_end_date = 51;
+  bool auto_pause_when_out_of_stock = 52;    // default: false
+  optional google.protobuf.Timestamp status_updated_at = 53;
+
   double rating = 27;                         // NUMERIC(3,2), default: 0.00
   int32 reviews_count = 28;                   // default: 0
   int32 products_count = 29;                  // default: 0
@@ -1555,6 +1766,16 @@ message StorefrontFull {
   repeated StorefrontHours hours = 45;
   repeated StorefrontPaymentMethod payment_methods = 46;
   repeated StorefrontDeliveryOption delivery_options = 47;
+
+  // Business legal structure (added 2026-01-18)
+  string legal_entity_type = 55;           // preduzetnik, doo, ad
+  string business_category = 56;           // retail, service, restaurant, grocery, other
+  optional string full_legal_name = 57;    // Full company name (for legal entities)
+  optional string registration_number = 58; // Matični broj (MB)
+  optional string tax_number = 61;         // PIB (9 digits)
+  optional string vat_number = 62;         // PDV broj (RS + 9 digits)
+  optional string legal_representative_name = 59;
+  optional string legal_representative_position = 60;
 }
 
 // StorefrontStaff represents staff member (b2c_store_staff table)
@@ -1648,9 +1869,20 @@ message CreateStorefrontRequest {
   optional string phone = 8;
   optional string email = 9;   // Validated
   optional string website = 10; // Validated
+  optional google.protobuf.Struct social_links = 22; // Social media links
   Location location = 11; // Required
   optional google.protobuf.Struct settings = 12;
   optional google.protobuf.Struct seo_meta = 13;
+
+  // Business legal structure (added 2026-01-18)
+  optional string legal_entity_type = 14;           // preduzetnik, doo, ad
+  optional string business_category = 15;           // retail, service, restaurant, grocery, other
+  optional string full_legal_name = 16;             // Full company name (for legal entities)
+  optional string registration_number = 17;         // Matični broj (MB)
+  optional string tax_number = 20;                  // PIB (9 digits)
+  optional string vat_number = 21;                  // PDV broj (RS + 9 digits)
+  optional string legal_representative_name = 18;
+  optional string legal_representative_position = 19;
 }
 
 // UpdateStorefrontRequest updates an existing storefront
@@ -1671,6 +1903,37 @@ message UpdateStorefrontRequest {
   optional bool ai_agent_enabled = 14;
   optional bool live_shopping_enabled = 15;
   optional bool group_buying_enabled = 16;
+
+  // Business legal structure (added 2026-01-18)
+  optional string legal_entity_type = 17;
+  optional string business_category = 18;
+  optional string full_legal_name = 19;
+  optional string registration_number = 20;
+  optional string tax_number = 23;
+  optional string vat_number = 24;
+  optional string legal_representative_name = 21;
+  optional string legal_representative_position = 22;
+}
+
+// UpdateStorefrontStatusRequest updates store operational status
+message UpdateStorefrontStatusRequest {
+  int64 storefront_id = 1;                           // Required
+  int64 user_id = 2;                                 // Required - requesting user
+  optional bool vacation_mode = 3;                   // Enable/disable vacation mode
+  optional bool accepting_orders = 4;                // Enable/disable accepting orders
+  optional google.protobuf.Timestamp vacation_start_date = 5;
+  optional google.protobuf.Timestamp vacation_end_date = 6;
+  optional bool auto_pause_when_out_of_stock = 7;
+}
+
+// UpdateStorefrontStatusResponse returns updated status
+message UpdateStorefrontStatusResponse {
+  bool success = 1;
+  bool vacation_mode = 2;
+  bool accepting_orders = 3;
+  optional google.protobuf.Timestamp vacation_start_date = 4;
+  optional google.protobuf.Timestamp vacation_end_date = 5;
+  google.protobuf.Timestamp status_updated_at = 6;
 }
 
 // DeleteStorefrontRequest deletes a storefront
@@ -1928,4 +2191,138 @@ message ReorderProductImagesRequest {
 // ReorderProductImagesResponse confirms reorder operation
 message ReorderProductImagesResponse {
   bool success = 1;
+}
+
+// SetProductImagePrimaryRequest sets a specific image as primary for a product
+message SetProductImagePrimaryRequest {
+  int64 product_id = 1;     // Required
+  int64 image_id = 2;       // Required - the image to set as primary
+  int64 storefront_id = 3;  // Required for ownership validation
+}
+
+// SetProductImagePrimaryResponse confirms the operation
+message SetProductImagePrimaryResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================================
+// Storefront Invitations - Enums and Messages
+// ============================================================================
+
+// StorefrontInvitationType represents the type of invitation
+enum StorefrontInvitationType {
+  STOREFRONT_INVITATION_TYPE_UNSPECIFIED = 0;
+  STOREFRONT_INVITATION_TYPE_EMAIL = 1; // One-time email invitation
+  STOREFRONT_INVITATION_TYPE_LINK = 2;  // Shareable link invitation
+}
+
+// StorefrontInvitationStatus represents the invitation status
+enum StorefrontInvitationStatus {
+  STOREFRONT_INVITATION_STATUS_UNSPECIFIED = 0;
+  STOREFRONT_INVITATION_STATUS_PENDING = 1;
+  STOREFRONT_INVITATION_STATUS_ACCEPTED = 2;
+  STOREFRONT_INVITATION_STATUS_DECLINED = 3;
+  STOREFRONT_INVITATION_STATUS_EXPIRED = 4;
+  STOREFRONT_INVITATION_STATUS_REVOKED = 5;
+}
+
+// StorefrontInvitation represents an invitation to join a storefront staff
+message StorefrontInvitation {
+  int64 id = 1;
+  int64 storefront_id = 2;
+  StorefrontInvitationType type = 3;
+  string role = 4; // owner, manager, staff, cashier
+  StorefrontInvitationStatus status = 5;
+
+  optional string invited_email = 6;
+  optional int64 invited_user_id = 7;
+  optional string invite_code = 8;
+  optional string invite_url = 9;
+  optional google.protobuf.Timestamp expires_at = 10;
+  optional int32 max_uses = 11;
+  int32 current_uses = 12;
+
+  int64 invited_by_id = 13;
+  optional string comment = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+  optional google.protobuf.Timestamp accepted_at = 17;
+  optional google.protobuf.Timestamp declined_at = 18;
+}
+
+// CreateStorefrontEmailInvitationRequest creates an email invitation
+message CreateStorefrontEmailInvitationRequest {
+  int64 storefront_id = 1;
+  string email = 2;
+  string role = 3; // owner, manager, staff, cashier
+  int64 invited_by_id = 4;
+  optional string comment = 5;
+}
+
+// CreateStorefrontLinkInvitationRequest creates a shareable link invitation
+message CreateStorefrontLinkInvitationRequest {
+  int64 storefront_id = 1;
+  string role = 2; // owner, manager, staff, cashier
+  int64 invited_by_id = 3;
+  int32 expires_in_days = 4; // Expiration in days from now
+  int32 max_uses = 5; // Maximum number of times the link can be used (0 = unlimited)
+  optional string comment = 6;
+}
+
+// ListStorefrontInvitationsRequest lists invitations for a storefront
+message ListStorefrontInvitationsRequest {
+  int64 storefront_id = 1;
+  optional StorefrontInvitationStatus status_filter = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+// ListStorefrontInvitationsResponse returns list of invitations
+message ListStorefrontInvitationsResponse {
+  repeated StorefrontInvitation invitations = 1;
+  int32 total = 2;
+}
+
+// RevokeStorefrontInvitationRequest revokes an invitation
+message RevokeStorefrontInvitationRequest {
+  int64 invitation_id = 1;
+  int64 revoked_by_id = 2;
+}
+
+// GetMyStorefrontInvitationsRequest gets pending invitations for a user
+message GetMyStorefrontInvitationsRequest {
+  int64 user_id = 1;
+  optional string email = 2;
+}
+
+// AcceptStorefrontInvitationRequest accepts an invitation
+message AcceptStorefrontInvitationRequest {
+  int64 invitation_id = 1;
+  int64 user_id = 2;
+}
+
+// DeclineStorefrontInvitationRequest declines an invitation
+message DeclineStorefrontInvitationRequest {
+  int64 invitation_id = 1;
+  int64 user_id = 2;
+}
+
+// ValidateStorefrontInviteCodeRequest validates an invite code
+message ValidateStorefrontInviteCodeRequest {
+  string code = 1;
+}
+
+// ValidateStorefrontInviteCodeResponse returns validation result
+message ValidateStorefrontInviteCodeResponse {
+  StorefrontInvitation invitation = 1;
+  string storefront_name = 2;
+  bool is_valid = 3;
+  optional string error_code = 4; // "expired", "revoked", "max_uses_reached", "not_found"
+}
+
+// AcceptStorefrontInviteCodeRequest accepts an invitation via code
+message AcceptStorefrontInviteCodeRequest {
+  string code = 1;
+  int64 user_id = 2;
 }

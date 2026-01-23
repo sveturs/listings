@@ -750,10 +750,10 @@ For issues or questions:
 1. Check [Troubleshooting](#troubleshooting) section
 2. Review Prometheus/Grafana logs
 3. Validate configuration with `validate-config.sh`
-4. Contact platform team: platform-team@svetu.rs
+4. Contact platform team: platform-team@vondi.rs
 
 ---
 
 ## License
 
-Internal use only - Svetu Platform Team
+Internal use only - Vondi Platform Team

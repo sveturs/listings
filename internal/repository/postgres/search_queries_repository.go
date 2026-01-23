@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository"
 )
 
 // searchQueriesRepository implements repository.SearchQueriesRepository
@@ -122,7 +122,7 @@ func (r *searchQueriesRepository) GetTrendingQueries(
 
 	// Add category filter if provided
 	if filter.CategoryID != nil {
-		query += fmt.Sprintf(" AND category_id = %d", *filter.CategoryID)
+		query += fmt.Sprintf(" AND category_id = '%s'", *filter.CategoryID)
 	}
 
 	// Add results filter
@@ -305,7 +305,7 @@ func (r *searchQueriesRepository) GetPopularQueries(
 
 	// Add category filter if provided
 	if filter.CategoryID != nil {
-		query += fmt.Sprintf(" AND category_id = %d", *filter.CategoryID)
+		query += fmt.Sprintf(" AND category_id = '%s'", *filter.CategoryID)
 	}
 
 	// Add min search count filter
@@ -442,7 +442,7 @@ func (r *searchQueriesRepository) GetCTRAnalysis(
 
 	// Add category filter if provided
 	if filter.CategoryID != nil {
-		query += fmt.Sprintf(" AND category_id = %d", *filter.CategoryID)
+		query += fmt.Sprintf(" AND category_id = '%s'", *filter.CategoryID)
 	}
 
 	// Group and order

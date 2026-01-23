@@ -9,12 +9,13 @@ import (
 // Product represents a B2C storefront product entity
 type Product struct {
 	ID                    int64                  `json:"id" db:"id"`
+	UUID                  string                 `json:"uuid" db:"uuid"` // UUID for variant operations (required for ListVariants API)
 	StorefrontID          int64                  `json:"storefront_id" db:"storefront_id"`
 	Name                  string                 `json:"name" db:"name"`
 	Description           string                 `json:"description" db:"description"`
 	Price                 float64                `json:"price" db:"price"`
 	Currency              string                 `json:"currency" db:"currency"`
-	CategoryID            int64                  `json:"category_id" db:"category_id"`
+	CategoryID            string                 `json:"category_id" db:"category_id"`
 	SKU                   *string                `json:"sku,omitempty" db:"sku"`
 	Barcode               *string                `json:"barcode,omitempty" db:"barcode"`
 	StockQuantity         int32                  `json:"stock_quantity" db:"stock_quantity"`
@@ -46,7 +47,9 @@ type Product struct {
 // ProductVariant represents a product variant (size, color, etc.)
 type ProductVariant struct {
 	ID                int64                  `json:"id" db:"id"`
+	UUID              string                 `json:"uuid" db:"uuid"` // UUID for stock operations (ReserveStock, ReleaseStock)
 	ProductID         int64                  `json:"product_id" db:"product_id"`
+	ProductUUID       string                 `json:"product_uuid" db:"product_uuid"` // Parent product UUID for cross-reference
 	SKU               *string                `json:"sku,omitempty" db:"sku"`
 	Barcode           *string                `json:"barcode,omitempty" db:"barcode"`
 	Price             *float64               `json:"price,omitempty" db:"price"`
@@ -191,7 +194,7 @@ type CreateProductInput struct {
 	Description           string                 `json:"description" validate:"omitempty,max=5000"`
 	Price                 float64                `json:"price" validate:"required,gt=0"`
 	Currency              string                 `json:"currency" validate:"required,len=3"`
-	CategoryID            int64                  `json:"category_id" validate:"required"`
+	CategoryID            string                 `json:"category_id" validate:"required"`
 	SKU                   *string                `json:"sku,omitempty"`
 	Barcode               *string                `json:"barcode,omitempty"`
 	StockQuantity         int32                  `json:"stock_quantity" validate:"gte=0"`

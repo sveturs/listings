@@ -21,11 +21,11 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service/listings"
-	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
-	"github.com/sveturs/listings/tests"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service/listings"
+	grpchandlers "github.com/vondi-global/listings/internal/transport/grpc"
+	"github.com/vondi-global/listings/tests"
 )
 
 // ============================================================================
@@ -61,7 +61,24 @@ func setupCreateProductTest(t *testing.T) (pb.ListingsServiceClient, *tests.Test
 
 	// Create gRPC server (with singleton metrics)
 	m := getTestMetrics()
-	server := grpchandlers.NewServer(service, m, logger)
+	server := grpchandlers.NewServer(
+		service,
+		nil, // storefrontService
+		nil, // attrService
+		nil, // categoryService
+		nil, // categoryRepoV2 (Phase 1, not used in tests)
+		nil, // categoryCache (Phase 1, not used in tests)
+		nil, // orderService
+		nil, // cartService
+		nil, // chatService
+		nil, // analyticsService
+		nil, // storefrontAnalyticsService
+		nil, // inventoryService
+		nil, // invitationService
+		nil, // minioClient
+		m,
+		logger,
+	)
 
 	// Setup in-memory gRPC connection using bufconn
 	lis := bufconn.Listen(bufSize)
@@ -159,7 +176,7 @@ func TestCreateProduct_Success(t *testing.T) {
 		Description:  "Premium smartphone with advanced features",
 		Price:        999.99,
 		Currency:     "USD",
-		CategoryId:   2110,
+		CategoryId: "2110",
 		Sku:          stringPtr("TEST-PHONE-001"),
 		// Barcode: не поддерживается в таблице listings (только в variants)
 		StockQuantity: 50,
@@ -210,7 +227,7 @@ func TestCreateProduct_MinimalFields(t *testing.T) {
 		Name:          "Minimal Product",
 		Price:         19.99,
 		Currency:      "USD",
-		CategoryId:    2110,
+		CategoryId: "2110",
 		StockQuantity: 0, // Zero stock
 		IsActive:      true,
 		// No description, SKU, barcode
@@ -253,7 +270,7 @@ func TestCreateProduct_WithVariants(t *testing.T) {
 		Description:   "Cotton t-shirt available in multiple sizes",
 		Price:         24.99,
 		Currency:      "USD",
-		CategoryId:    2120,
+		CategoryId: "2120",
 		Sku:           stringPtr("TSHIRT-BASE-001"),
 		StockQuantity: 0, // Variants will have stock
 		IsActive:      true,
@@ -301,7 +318,7 @@ func TestCreateProduct_WithAttributes(t *testing.T) {
 		Description:   "Product with rich custom attributes",
 		Price:         149.99,
 		Currency:      "USD",
-		CategoryId:    2111,
+		CategoryId: "2111",
 		Sku:           stringPtr("ATTR-PRODUCT-001"),
 		StockQuantity: 25,
 		IsActive:      true,
@@ -345,7 +362,7 @@ func TestCreateProduct_WithImages(t *testing.T) {
 		Description:   "Product that will have images added",
 		Price:         79.99,
 		Currency:      "USD",
-		CategoryId:    2110,
+		CategoryId: "2110",
 		Sku:           stringPtr("IMG-PRODUCT-001"),
 		StockQuantity: 15,
 		IsActive:      true,
@@ -388,7 +405,7 @@ func TestCreateProduct_MissingName(t *testing.T) {
 		Name:          "", // Empty name
 		Price:         99.99,
 		Currency:      "USD",
-		CategoryId:    2110,
+		CategoryId: "2110",
 		StockQuantity: 10,
 		IsActive:      true,
 	}
@@ -418,7 +435,7 @@ func TestCreateProduct_MissingStorefrontID(t *testing.T) {
 		Name:          "Product without Storefront",
 		Price:         99.99,
 		Currency:      "USD",
-		CategoryId:    2110,
+		CategoryId: "2110",
 		StockQuantity: 10,
 		IsActive:      true,
 	}
@@ -447,7 +464,7 @@ func TestCreateProduct_InvalidCategoryID(t *testing.T) {
 		Name:          "Product with Invalid Category",
 		Price:         99.99,
 		Currency:      "USD",
-		CategoryId:    99999, // Non-existent category
+		CategoryId: "99999", // Non-existent category
 		StockQuantity: 10,
 		IsActive:      true,
 	}
@@ -493,7 +510,7 @@ func TestCreateProduct_NegativePrice(t *testing.T) {
 				Name:          "Product with Invalid Price",
 				Price:         tc.price,
 				Currency:      "USD",
-				CategoryId:    2110,
+				CategoryId: "2110",
 				StockQuantity: 10,
 				IsActive:      true,
 			}
@@ -526,7 +543,7 @@ func TestCreateProduct_DuplicateSKU(t *testing.T) {
 		Name:          "Product with Duplicate SKU",
 		Price:         99.99,
 		Currency:      "USD",
-		CategoryId:    2110,
+		CategoryId: "2110",
 		Sku:           stringPtr("TEST-SKU-001"), // Duplicate SKU
 		StockQuantity: 10,
 		IsActive:      true,
@@ -559,7 +576,7 @@ func TestCreateProduct_DuplicateSKU_DifferentStorefront(t *testing.T) {
 		Name:          "Product in Different Storefront",
 		Price:         99.99,
 		Currency:      "USD",
-		CategoryId:    2110,
+		CategoryId: "2110",
 		Sku:           stringPtr("TEST-SKU-001"), // Same SKU as storefront 1100
 		StockQuantity: 10,
 		IsActive:      true,
@@ -600,7 +617,7 @@ func TestBulkCreateProducts_Success(t *testing.T) {
 			Description:   "First product in bulk",
 			Price:         19.99,
 			Currency:      "USD",
-			CategoryId:    2110,
+			CategoryId: "2110",
 			Sku:           stringPtr("BULK-001"),
 			StockQuantity: 10,
 			IsActive:      true,
@@ -610,7 +627,7 @@ func TestBulkCreateProducts_Success(t *testing.T) {
 			Description:   "Second product in bulk",
 			Price:         29.99,
 			Currency:      "USD",
-			CategoryId:    2111,
+			CategoryId: "2111",
 			Sku:           stringPtr("BULK-002"),
 			StockQuantity: 20,
 			IsActive:      true,
@@ -620,7 +637,7 @@ func TestBulkCreateProducts_Success(t *testing.T) {
 			Description:   "Third product in bulk",
 			Price:         39.99,
 			Currency:      "USD",
-			CategoryId:    2120,
+			CategoryId: "2120",
 			Sku:           stringPtr("BULK-003"),
 			StockQuantity: 30,
 			IsActive:      true,
@@ -673,7 +690,7 @@ func TestBulkCreateProducts_LargeBatch(t *testing.T) {
 			Description:   fmt.Sprintf("Product %d in large batch", i+1),
 			Price:         float64(10 + i),
 			Currency:      "USD",
-			CategoryId:    2110,
+			CategoryId: "2110",
 			Sku:           stringPtr(fmt.Sprintf("LARGE-BATCH-%03d", i+1)),
 			StockQuantity: int32(10 + i),
 			IsActive:      true,
@@ -724,7 +741,7 @@ func TestBulkCreateProducts_PartialFailure(t *testing.T) {
 			Name:          "Valid Product 1",
 			Price:         19.99,
 			Currency:      "USD",
-			CategoryId:    2110,
+			CategoryId: "2110",
 			Sku:           stringPtr("PARTIAL-001"),
 			StockQuantity: 10,
 			IsActive:      true,
@@ -733,7 +750,7 @@ func TestBulkCreateProducts_PartialFailure(t *testing.T) {
 			Name:          "", // INVALID: empty name
 			Price:         29.99,
 			Currency:      "USD",
-			CategoryId:    2111,
+			CategoryId: "2111",
 			Sku:           stringPtr("PARTIAL-002-INVALID"),
 			StockQuantity: 20,
 			IsActive:      true,
@@ -742,7 +759,7 @@ func TestBulkCreateProducts_PartialFailure(t *testing.T) {
 			Name:          "Valid Product 3",
 			Price:         39.99,
 			Currency:      "USD",
-			CategoryId:    2120,
+			CategoryId: "2120",
 			Sku:           stringPtr("PARTIAL-003"),
 			StockQuantity: 30,
 			IsActive:      true,
@@ -808,7 +825,7 @@ func TestBulkCreateProducts_DuplicateSKU(t *testing.T) {
 			Name:          "Product A",
 			Price:         19.99,
 			Currency:      "USD",
-			CategoryId:    2110,
+			CategoryId: "2110",
 			Sku:           stringPtr("DUPLICATE-SKU"),
 			StockQuantity: 10,
 			IsActive:      true,
@@ -817,7 +834,7 @@ func TestBulkCreateProducts_DuplicateSKU(t *testing.T) {
 			Name:          "Product B",
 			Price:         29.99,
 			Currency:      "USD",
-			CategoryId:    2111,
+			CategoryId: "2111",
 			Sku:           stringPtr("DUPLICATE-SKU"), // Duplicate within batch
 			StockQuantity: 20,
 			IsActive:      true,
@@ -861,7 +878,7 @@ func TestCreateProduct_Performance(t *testing.T) {
 		Name:          "Performance Test Product",
 		Price:         99.99,
 		Currency:      "USD",
-		CategoryId:    2110,
+		CategoryId: "2110",
 		Sku:           stringPtr("PERF-TEST-001"),
 		StockQuantity: 50,
 		IsActive:      true,
@@ -912,7 +929,7 @@ func TestCreateProduct_Concurrent(t *testing.T) {
 				Description:   fmt.Sprintf("Created concurrently %d", reqNum),
 				Price:         float64(50 + reqNum),
 				Currency:      "USD",
-				CategoryId:    2110,
+				CategoryId: "2110",
 				Sku:           stringPtr(fmt.Sprintf("CONCURRENT-%03d", reqNum)),
 				StockQuantity: int32(10 + reqNum),
 				IsActive:      true,
@@ -993,7 +1010,7 @@ func TestCreateProduct_Concurrent_SameStorefront(t *testing.T) {
 				Name:          fmt.Sprintf("Same Store Product %d", reqNum),
 				Price:         float64(25 + reqNum),
 				Currency:      "USD",
-				CategoryId:    2110,
+				CategoryId: "2110",
 				Sku:           stringPtr(fmt.Sprintf("SAME-STORE-%03d", reqNum)),
 				StockQuantity: int32(5 + reqNum),
 				IsActive:      true,
@@ -1048,7 +1065,7 @@ func TestCreateProduct_StressTest(t *testing.T) {
 			Name:          fmt.Sprintf("Stress Test Product %d", i),
 			Price:         float64(10 + i%100),
 			Currency:      "USD",
-			CategoryId:    2110,
+			CategoryId: "2110",
 			Sku:           stringPtr(fmt.Sprintf("STRESS-%05d", i)),
 			StockQuantity: int32(i % 50),
 			IsActive:      true,

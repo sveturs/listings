@@ -742,14 +742,14 @@ kubectl exec -it deployment/listings -- \
 
 # 3. Temporarily disable auth (emergency only)
 kubectl set env deployment/listings \
-    SVETULISTINGS_AUTH_ENABLED=false
+    VONDILISTINGS_AUTH_ENABLED=false
 
 # 4. Fix auth config
 kubectl edit configmap listings-config
 
 # 5. Re-enable auth
 kubectl set env deployment/listings \
-    SVETULISTINGS_AUTH_ENABLED=true
+    VONDILISTINGS_AUTH_ENABLED=true
 ```
 
 **Time to recover:** < 5 minutes
@@ -776,7 +776,7 @@ psql -h db-prod -c "SELECT COUNT(*) FROM pg_stat_activity;"
 
 # 4. Enable rate limiting (if not enabled)
 kubectl set env deployment/listings \
-    SVETULISTINGS_RATE_LIMIT_ENABLED=true
+    VONDILISTINGS_RATE_LIMIT_ENABLED=true
 ```
 
 **Time to recover:** < 10 minutes

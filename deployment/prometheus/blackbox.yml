@@ -67,5 +67,5 @@ modules:
     prober: dns
     timeout: 5s
     dns:
-      query_name: "svetu.rs"
+      query_name: "vondi.rs"
       query_type: "A"

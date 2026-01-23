@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

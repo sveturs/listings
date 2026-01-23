@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	testutils "github.com/sveturs/listings/internal/testing"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	testutils "github.com/vondi-global/listings/internal/testing"
 )
 
 // TestGetListing_WithImages verifies that GetListing loads and returns images
@@ -22,15 +22,15 @@ func TestGetListing_WithImages(t *testing.T) {
 
 		// Setup: Create category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 1301, "Electronics", "electronics", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "b0000000-0000-0000-0000-000000001301", "Electronics", "electronics", 1, true, 0)
 
 		// Setup: Create listing
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, description, price, currency, quantity, status, visibility, source_type, uuid, slug)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, gen_random_uuid(), $12)
-		`, 101, 1, 1301, "Test Laptop", "Gaming laptop with RTX 4090", 1999.99, "USD", 5, "active", "public", "b2c", "test-laptop")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, $10, $11, gen_random_uuid(), $12)
+		`, 101, 1, "b0000000-0000-0000-0000-000000001301", "Test Laptop", "Gaming laptop with RTX 4090", 1999.99, "USD", 5, "active", "public", "b2c", "test-laptop")
 
 		// Setup: Create images for the listing
 		ExecuteSQL(t, server, `
@@ -116,15 +116,15 @@ func TestGetListing_WithImages(t *testing.T) {
 
 		// Setup: Create category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 1302, "Books", "books", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "b0000000-0000-0000-0000-000000001302", "Books", "books", 1, true, 0)
 
 		// Setup: Create listing WITHOUT images
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, source_type, uuid, slug)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, gen_random_uuid(), $11)
-		`, 102, 1, 1302, "Test Book", 29.99, "USD", 10, "active", "public", "c2c", "test-book")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, $10, gen_random_uuid(), $11)
+		`, 102, 1, "b0000000-0000-0000-0000-000000001302", "Test Book", 29.99, "USD", 10, "active", "public", "c2c", "test-book")
 
 		// Test: Call GetListing
 		ctx := testutils.TestContext(t)
@@ -154,15 +154,15 @@ func TestGetListing_WithImages(t *testing.T) {
 
 		// Setup: Create category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 1303, "Sports", "sports", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "b0000000-0000-0000-0000-000000001303", "Sports", "sports", 1, true, 0)
 
 		// Setup: Create listing
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (id, user_id, category_id, title, price, currency, quantity, status, visibility, source_type, uuid, slug)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, gen_random_uuid(), $11)
-		`, 103, 1, 1303, "Test Football", 49.99, "USD", 20, "active", "public", "b2c", "test-football")
+			VALUES ($1, $2, $3::uuid, $4, $5, $6, $7, $8, $9, $10, gen_random_uuid(), $11)
+		`, 103, 1, "b0000000-0000-0000-0000-000000001303", "Test Football", 49.99, "USD", 20, "active", "public", "b2c", "test-football")
 
 		// Note: We don't insert images but the implementation should still succeed
 

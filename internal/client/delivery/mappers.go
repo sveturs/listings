@@ -1,7 +1,7 @@
 package delivery
 
 import (
-	deliveryv1 "github.com/sveturs/delivery/gen/go/delivery/v1"
+	deliveryv1 "github.com/vondi-global/delivery/gen/go/delivery/v1"
 )
 
 // mapProviderToProto converts domain provider to proto

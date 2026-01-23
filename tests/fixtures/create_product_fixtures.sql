@@ -5,8 +5,8 @@
 -- ============================================================================
 -- Minimal Dependencies (Foreign Key References)
 -- ============================================================================
--- IMPORTANT: Use c2c_categories table (created by migrations), NOT custom categories table
--- The listings table has FK constraint to c2c_categories (not to categories)
+-- IMPORTANT: Use categories table (created by migrations)
+-- The listings table has FK constraint to categories
 
 -- Create minimal users table (if not exists)
 CREATE TABLE IF NOT EXISTS users (
@@ -45,16 +45,16 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================================================
 -- Additional Test Categories (CreateProduct specific)
 -- ============================================================================
--- Top-level categories (inserted into c2c_categories)
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+-- Top-level categories (inserted into categories)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES
     (2100, 'Electronics Test', 'electronics-test', NULL, 0, true, 1),
     (2101, 'Clothing Test', 'clothing-test', NULL, 0, true, 2),
     (2102, 'Books Test', 'books-test', NULL, 0, true, 3)
 ON CONFLICT (id) DO NOTHING;
 
--- Sub-categories (inserted into c2c_categories)
-INSERT INTO c2c_categories (id, name, slug, parent_id, level, is_active, sort_order)
+-- Sub-categories (inserted into categories)
+INSERT INTO categories (id, name, slug, parent_id, level, is_active, sort_order)
 VALUES
     (2110, 'Smartphones', 'smartphones-test', 2100, 1, true, 1),
     (2111, 'Laptops', 'laptops-test', 2100, 1, true, 2),
@@ -141,7 +141,7 @@ COMMENT ON TABLE storefronts IS 'Test storefronts with capacity for bulk product
 -- To clean up test data, run:
 -- DELETE FROM listing_variants WHERE listing_id >= 7000 AND listing_id < 8000;
 -- DELETE FROM listings WHERE id >= 7000 AND id < 8000;
--- DELETE FROM c2c_categories WHERE id >= 2100 AND id < 2200;
+-- DELETE FROM categories WHERE id >= 2100 AND id < 2200;
 -- DELETE FROM storefronts WHERE id >= 1100 AND id < 1200;
 -- DELETE FROM users WHERE id >= 1100 AND id < 1200;
 
@@ -149,6 +149,6 @@ COMMENT ON TABLE storefronts IS 'Test storefronts with capacity for bulk product
 -- Verification Queries (for debugging)
 -- ============================================================================
 -- SELECT COUNT(*) FROM storefronts WHERE id >= 1100 AND id < 1200; -- Should return 3
--- SELECT COUNT(*) FROM c2c_categories WHERE id >= 2100 AND id < 2200; -- Should return 8
+-- SELECT COUNT(*) FROM categories WHERE id >= 2100 AND id < 2200; -- Should return 8
 -- SELECT COUNT(*) FROM listings WHERE id >= 7000 AND id < 8000; -- Should return 3
 -- SELECT sku, COUNT(*) FROM listings WHERE id >= 7000 GROUP BY sku HAVING COUNT(*) > 1; -- Should return 0 (no duplicates)

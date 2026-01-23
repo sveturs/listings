@@ -7,9 +7,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/tests"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/tests"
 )
 
 // BenchmarkCreateListing measures listing creation performance
@@ -37,7 +37,7 @@ func BenchmarkCreateListing(b *testing.B) {
 		Description: stringPtr("Benchmark Description"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryID:  100,
+		CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 		Quantity:    10,
 		SKU:         stringPtr("BENCH-001"),
 	}
@@ -79,7 +79,7 @@ func BenchmarkGetListingByID(b *testing.B) {
 		Description: stringPtr("Benchmark Description"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryID:  100,
+		CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 		Quantity:    10,
 		SKU:         stringPtr("BENCH-GET-001"),
 	}
@@ -126,7 +126,7 @@ func BenchmarkUpdateListing(b *testing.B) {
 		Description: stringPtr("Benchmark Description"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryID:  100,
+		CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 		Quantity:    10,
 		SKU:         stringPtr("BENCH-UPDATE-001"),
 	}
@@ -179,7 +179,7 @@ func BenchmarkListListings(b *testing.B) {
 			Description: stringPtr("Benchmark Description"),
 			Price:       99.99,
 			Currency:    "USD",
-			CategoryID:  100,
+			CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			Quantity:    10,
 			SKU:         stringPtr("BENCH-LIST-001"),
 		}
@@ -231,7 +231,7 @@ func BenchmarkParallelGetListing(b *testing.B) {
 		Description: stringPtr("Parallel Benchmark Description"),
 		Price:       99.99,
 		Currency:    "USD",
-		CategoryID:  100,
+		CategoryID:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 		Quantity:    10,
 		SKU:         stringPtr("BENCH-PARALLEL-001"),
 	}

@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/sveturs/listings/internal/metrics"
+	"github.com/vondi-global/listings/internal/metrics"
 )
 
 // OrderServiceMiddleware provides gRPC interceptors for order service

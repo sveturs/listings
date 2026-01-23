@@ -11,8 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/events"
+	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
 // OrderService defines business logic operations for order management
@@ -36,9 +37,13 @@ type OrderService interface {
 	ConfirmOrderPayment(ctx context.Context, orderID int64, transactionID string) error
 	ProcessRefund(ctx context.Context, orderID int64) error
 
+	// Payment operations
+	UpdatePaymentInfo(ctx context.Context, orderID int64, req *UpdatePaymentInfoRequest) (*domain.Order, error)
+
 	// Configuration
 	SetChatService(chatService ChatService)
 	SetDeliveryClient(client DeliveryClient)
+	SetEventPublisher(publisher events.OrderEventPublisher)
 }
 
 // OrderItemInput represents a single item for direct checkout
@@ -46,6 +51,16 @@ type OrderItemInput struct {
 	ProductID int64  // Required - product/listing ID
 	VariantID *int64 // Optional - variant ID
 	Quantity  int    // Required - quantity to order
+}
+
+// UpdatePaymentInfoRequest contains parameters for updating payment information
+type UpdatePaymentInfoRequest struct {
+	PaymentProvider       *string // Payment gateway provider (stripe, allsecure, etc.)
+	PaymentSessionID      *string // Checkout session ID
+	PaymentIntentID       *string // Payment intent ID
+	PaymentIdempotencyKey *string // Idempotency key for duplicate prevention
+	PaymentStatus         *string // Payment status (pending, paid, failed, etc.)
+	PaymentTransactionID  *string // Transaction ID from payment provider
 }
 
 // CreateOrderRequest contains parameters for creating an order
@@ -161,8 +176,17 @@ type orderService struct {
 	pool            *pgxpool.Pool
 	config          *FinancialConfig
 	logger          zerolog.Logger
-	chatService     ChatService    // For sending order notifications
-	deliveryClient  DeliveryClient // For delivery microservice integration
+	chatService     ChatService                // For sending order notifications
+	deliveryClient  DeliveryClient             // For delivery microservice integration
+	eventPublisher  events.OrderEventPublisher // For WMS integration
+	variantService  VariantServiceInterface    // For variant stock reservations
+}
+
+// VariantServiceInterface defines operations for variant stock management
+type VariantServiceInterface interface {
+	ReserveStock(ctx context.Context, req *ReserveStockRequest) (*ReserveStockResponse, error)
+	ReleaseStock(ctx context.Context, reservationID string) error
+	ConfirmStockDeduction(ctx context.Context, reservationID string) error
 }
 
 // NewOrderService creates a new order service
@@ -174,6 +198,7 @@ func NewOrderService(
 	pool *pgxpool.Pool,
 	config *FinancialConfig,
 	logger zerolog.Logger,
+	variantService VariantServiceInterface,
 ) OrderService {
 	if config == nil {
 		config = DefaultFinancialConfig()
@@ -187,6 +212,7 @@ func NewOrderService(
 		pool:            pool,
 		config:          config,
 		logger:          logger.With().Str("component", "order_service").Logger(),
+		variantService:  variantService,
 	}
 }
 
@@ -200,6 +226,11 @@ func (s *orderService) SetChatService(chatService ChatService) {
 // This allows delayed initialization to avoid circular dependencies
 func (s *orderService) SetDeliveryClient(client DeliveryClient) {
 	s.deliveryClient = client
+}
+
+// SetEventPublisher sets the event publisher for WMS integration
+func (s *orderService) SetEventPublisher(publisher events.OrderEventPublisher) {
+	s.eventPublisher = publisher
 }
 
 // CreateOrder creates a new order from a cart OR direct items (ACID transaction)
@@ -395,6 +426,50 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 		return nil, fmt.Errorf("failed to create order items: %w", err)
 	}
 
+	// 11.5. Reserve variant stocks (new system)
+	if s.variantService != nil {
+		for i, item := range finalOrderItems {
+			// Check if this is a UUID variant (new system)
+			if item.VariantUUID != nil && len(*item.VariantUUID) == 36 {
+				// Reserve stock via VariantService
+				reservation, err := s.variantService.ReserveStock(ctx, &ReserveStockRequest{
+					VariantID:  *item.VariantUUID,
+					Quantity:   item.Quantity,
+					OrderID:    fmt.Sprintf("%d", order.ID),
+					TTLMinutes: 15, // 15 minutes for payment
+				})
+
+				if err != nil {
+					s.logger.Error().Err(err).
+						Str("variant_uuid", *item.VariantUUID).
+						Int64("order_id", order.ID).
+						Msg("failed to reserve variant stock")
+					return nil, fmt.Errorf("failed to reserve variant stock: %w", err)
+				}
+
+				if !reservation.Success {
+					// Insufficient stock - transaction will rollback automatically
+					s.logger.Warn().
+						Str("variant_uuid", *item.VariantUUID).
+						Str("error", reservation.ErrorMessage).
+						Msg("insufficient variant stock")
+					return nil, fmt.Errorf("insufficient stock for variant %s: %s",
+						*item.VariantUUID, reservation.ErrorMessage)
+				}
+
+				// Update order item with reservation_id
+				finalOrderItems[i].StockReservationID = &reservation.ReservationID
+
+				s.logger.Info().
+					Str("reservation_id", reservation.ReservationID).
+					Str("variant_uuid", *item.VariantUUID).
+					Int64("order_id", order.ID).
+					Int32("quantity", item.Quantity).
+					Msg("variant stock reserved")
+			}
+		}
+	}
+
 	// 12. Create inventory reservations (TTL 30 minutes)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
 	reservations := s.buildReservations(order.ID, cart.Items)
@@ -549,10 +624,37 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 	}
 
 	// Get reservations before releasing (needed for stock restoration)
-	reservations, err := s.reservationRepo.GetByOrderID(ctx, orderID)
+	reservations, err := s.reservationRepo.GetByReference(ctx, domain.ReferenceTypeOrder, orderID)
 	if err != nil {
 		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get reservations")
 		return nil, fmt.Errorf("failed to get reservations: %w", err)
+	}
+
+	// Release variant stock reservations (new system)
+	if s.variantService != nil {
+		items, err := s.orderRepo.GetItems(ctx, orderID)
+		if err != nil {
+			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get order items for stock release")
+			return nil, fmt.Errorf("failed to get order items: %w", err)
+		}
+
+		for _, item := range items {
+			if item.StockReservationID != nil && *item.StockReservationID != "" {
+				err := s.variantService.ReleaseStock(ctx, *item.StockReservationID)
+				if err != nil {
+					s.logger.Error().Err(err).
+						Str("reservation_id", *item.StockReservationID).
+						Int64("order_id", orderID).
+						Msg("failed to release variant stock")
+					// Don't fail - continue with order cancellation
+				} else {
+					s.logger.Info().
+						Str("reservation_id", *item.StockReservationID).
+						Int64("order_id", orderID).
+						Msg("variant stock released")
+				}
+			}
+		}
 	}
 
 	// Update order status to cancelled
@@ -561,9 +663,9 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		return nil, fmt.Errorf("failed to update order status: %w", err)
 	}
 
-	// Release all reservations for this order (batch operation)
+	// Release all reservations for this order (batch operation - legacy system)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
-	if err := reservationRepoTx.ReleaseReservations(ctx, orderID); err != nil {
+	if err := reservationRepoTx.ReleaseReservations(ctx, domain.ReferenceTypeOrder, orderID); err != nil {
 		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to release reservations")
 		return nil, fmt.Errorf("failed to release reservations: %w", err)
 	}
@@ -581,7 +683,12 @@ func (s *orderService) CancelOrder(ctx context.Context, orderID int64, userID in
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	// TODO: Publish OrderCancelledEvent to message queue for Payment Service to process refund
+	// Publish order.cancelled event for WMS
+	if s.eventPublisher != nil {
+		if err := s.eventPublisher.PublishOrderCancelled(ctx, orderID, reason); err != nil {
+			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to publish order.cancelled event (non-critical)")
+		}
+	}
 
 	// Reload order
 	order, err = s.orderRepo.GetByID(ctx, orderID)
@@ -671,9 +778,36 @@ func (s *orderService) ConfirmOrderPayment(ctx context.Context, orderID int64, t
 		return fmt.Errorf("failed to update order: %w", err)
 	}
 
-	// Commit all reservations for this order (batch operation)
+	// Commit stock reservations (variant system)
+	if s.variantService != nil {
+		items, err := s.orderRepo.GetItems(ctx, orderID)
+		if err != nil {
+			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get order items for stock confirmation")
+			return fmt.Errorf("failed to get order items: %w", err)
+		}
+
+		for _, item := range items {
+			if item.StockReservationID != nil && *item.StockReservationID != "" {
+				err := s.variantService.ConfirmStockDeduction(ctx, *item.StockReservationID)
+				if err != nil {
+					s.logger.Error().Err(err).
+						Str("reservation_id", *item.StockReservationID).
+						Int64("order_id", orderID).
+						Msg("failed to confirm variant stock deduction")
+					// Don't fail - order is already paid, just log the error
+				} else {
+					s.logger.Info().
+						Str("reservation_id", *item.StockReservationID).
+						Int64("order_id", orderID).
+						Msg("variant stock deduction confirmed")
+				}
+			}
+		}
+	}
+
+	// Commit all reservations for this order (batch operation - legacy system)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
-	if err := reservationRepoTx.CommitReservations(ctx, orderID); err != nil {
+	if err := reservationRepoTx.CommitReservations(ctx, domain.ReferenceTypeOrder, orderID); err != nil {
 		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to commit reservations")
 		return fmt.Errorf("failed to commit reservations: %w", err)
 	}
@@ -683,7 +817,23 @@ func (s *orderService) ConfirmOrderPayment(ctx context.Context, orderID int64, t
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	// TODO: Publish OrderConfirmedEvent to message queue for Delivery Service to create shipment
+	// Publish order.confirmed event for WMS
+	if s.eventPublisher != nil {
+		// Build items for event
+		items := make([]events.OrderItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			items = append(items, events.OrderItem{
+				ListingID:   item.ListingID,
+				Quantity:    int32(item.Quantity),
+				WarehouseID: 0, // Will use default from publisher
+			})
+		}
+
+		if err := s.eventPublisher.PublishOrderConfirmed(ctx, orderID, order.StorefrontID, items); err != nil {
+			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to publish order.confirmed event (non-critical)")
+			// Don't fail the operation - event publishing is best-effort
+		}
+	}
 
 	s.logger.Info().Int64("order_id", orderID).Msg("order payment confirmed successfully")
 	return nil
@@ -739,6 +889,7 @@ func (s *orderService) buildReservations(orderID int64, cartItems []*domain.Cart
 		reservation := domain.NewInventoryReservation(
 			item.ListingID,
 			item.VariantID,
+			domain.ReferenceTypeOrder,
 			orderID,
 			item.Quantity,
 		)
@@ -1002,7 +1153,7 @@ func (s *orderService) CreateOrderShipment(ctx context.Context, req *CreateShipm
 		s.logger.Warn().Msg("delivery client not configured, using mock shipment data")
 		shipmentID = time.Now().UnixNano() / 1000000 % 10000000
 		trackingNumber = fmt.Sprintf("TRK%d%06d", time.Now().Year(), shipmentID%1000000)
-		labelURL = fmt.Sprintf("https://delivery.svetu.rs/labels/%s.pdf", trackingNumber)
+		labelURL = fmt.Sprintf("https://delivery.vondi.rs/labels/%s.pdf", trackingNumber)
 		estimatedDelivery = time.Now().Add(72 * time.Hour).Format(time.RFC3339)
 		deliveryCost = order.Shipping
 	}
@@ -1304,15 +1455,53 @@ func (s *orderService) confirmCODOrder(ctx context.Context, order *domain.Order)
 		return fmt.Errorf("failed to update order: %w", err)
 	}
 
-	// Commit reservations (stock already deducted, now mark as committed)
+	// Commit variant stock reservations (new system)
+	if s.variantService != nil {
+		items, err := s.orderRepo.GetItems(ctx, order.ID)
+		if err != nil {
+			s.logger.Warn().Err(err).Int64("order_id", order.ID).Msg("failed to get order items for COD stock confirmation")
+		} else {
+			for _, item := range items {
+				if item.StockReservationID != nil && *item.StockReservationID != "" {
+					err := s.variantService.ConfirmStockDeduction(ctx, *item.StockReservationID)
+					if err != nil {
+						s.logger.Warn().Err(err).
+							Str("reservation_id", *item.StockReservationID).
+							Int64("order_id", order.ID).
+							Msg("failed to confirm variant stock for COD order")
+					}
+				}
+			}
+		}
+	}
+
+	// Commit reservations (stock already deducted, now mark as committed - legacy system)
 	reservationRepoTx := s.reservationRepo.WithTx(tx)
-	if err := reservationRepoTx.CommitReservations(ctx, order.ID); err != nil {
+	if err := reservationRepoTx.CommitReservations(ctx, domain.ReferenceTypeOrder, order.ID); err != nil {
 		s.logger.Warn().Err(err).Int64("order_id", order.ID).Msg("failed to commit reservations for COD order")
 		// Don't fail - reservations are not critical for COD
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Publish order.confirmed event for WMS
+	if s.eventPublisher != nil {
+		// Build items for event
+		items := make([]events.OrderItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			items = append(items, events.OrderItem{
+				ListingID:   item.ListingID,
+				Quantity:    int32(item.Quantity),
+				WarehouseID: 0, // Will use default from publisher
+			})
+		}
+
+		if err := s.eventPublisher.PublishOrderConfirmed(ctx, order.ID, order.StorefrontID, items); err != nil {
+			s.logger.Error().Err(err).Int64("order_id", order.ID).Msg("failed to publish order.confirmed event (non-critical)")
+			// Don't fail the operation - event publishing is best-effort
+		}
 	}
 
 	s.logger.Info().
@@ -1595,11 +1784,6 @@ func (s *orderService) notifyBuyerAboutShipmentCreated(ctx context.Context, orde
 		return
 	}
 
-	storefrontName := storefront.Name
-	if storefrontName == "" && order.StorefrontName != nil {
-		storefrontName = *order.StorefrontName
-	}
-
 	provider := "the courier"
 	if order.ShippingProvider != nil {
 		provider = *order.ShippingProvider
@@ -1676,4 +1860,64 @@ func (s *orderService) sendBuyerNotification(ctx context.Context, buyerID int64,
 				Msg("order notification sent to buyer")
 		}
 	}()
+}
+
+// ============================================================================
+// PAYMENT OPERATIONS
+// ============================================================================
+
+// UpdatePaymentInfo updates payment information for an order
+// Used by Payment Service after successful payment processing
+func (s *orderService) UpdatePaymentInfo(ctx context.Context, orderID int64, req *UpdatePaymentInfoRequest) (*domain.Order, error) {
+	s.logger.Debug().
+		Int64("order_id", orderID).
+		Interface("request", req).
+		Msg("UpdatePaymentInfo called")
+
+	// Validate order_id
+	if orderID <= 0 {
+		return nil, fmt.Errorf("order_id must be greater than 0")
+	}
+
+	// At least one payment field must be provided
+	if req.PaymentProvider == nil && req.PaymentSessionID == nil && req.PaymentIntentID == nil &&
+		req.PaymentIdempotencyKey == nil && req.PaymentStatus == nil && req.PaymentTransactionID == nil {
+		return nil, fmt.Errorf("at least one payment field must be provided")
+	}
+
+	// Check if order exists
+	_, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to get order")
+		return nil, fmt.Errorf("order not found")
+	}
+
+	// Update payment fields in repository
+	params := postgres.UpdatePaymentInfoParams{
+		PaymentProvider:       req.PaymentProvider,
+		PaymentSessionID:      req.PaymentSessionID,
+		PaymentIntentID:       req.PaymentIntentID,
+		PaymentIdempotencyKey: req.PaymentIdempotencyKey,
+		PaymentStatus:         req.PaymentStatus,
+		PaymentTransactionID:  req.PaymentTransactionID,
+	}
+
+	if err := s.orderRepo.UpdatePaymentInfo(ctx, orderID, params); err != nil {
+		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to update payment info")
+		return nil, fmt.Errorf("failed to update payment info: %w", err)
+	}
+
+	// Reload order to get updated data
+	updatedOrder, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to reload updated order")
+		return nil, fmt.Errorf("failed to reload order: %w", err)
+	}
+
+	s.logger.Info().
+		Int64("order_id", orderID).
+		Interface("updated_fields", req).
+		Msg("payment info updated successfully")
+
+	return updatedOrder, nil
 }

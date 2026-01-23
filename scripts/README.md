@@ -15,7 +15,7 @@ Comprehensive automation tools for the Listings microservice, including producti
 
 # Data Migration
 
-Production-ready data migration from old monolith database (svetubd) to new microservice database (listings_dev_db).
+Production-ready data migration from old monolith database (vondi_db) to new microservice database (listings_dev_db).
 
 ## Quick Start - Migration
 
@@ -151,7 +151,7 @@ bash scripts/rollback_migration.sh
 
 **Old DB (port 5433):**
 ```
-postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd
+postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db
 ```
 
 **New DB (port 35434):**
@@ -261,7 +261,7 @@ psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?s
 
 ### Data Transformation
 
-**Source:** `svetubd.unified_attributes` (port 5433)
+**Source:** `vondi_db.unified_attributes` (port 5433)
 **Target:** `listings_dev_db.attributes` (port 35434)
 
 **Key Changes:**

@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	testutils "github.com/sveturs/listings/internal/testing"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	testutils "github.com/vondi-global/listings/internal/testing"
 )
 
 // =============================================================================
@@ -32,9 +32,9 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: Insert test category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 1, "Electronics", "electronics", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "3b4246cc-9970-403c-af01-c142a4178dc6", "Electronics", "electronics", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CreateListingRequest{
@@ -43,7 +43,7 @@ func TestCreateListing(t *testing.T) {
 			Description: testutils.StringPtr("A test electronic device"),
 			Price:       99.99,
 			Currency:    "USD",
-			CategoryId:  1,
+			CategoryId:  "3b4246cc-9970-403c-af01-c142a4178dc6",
 			Quantity:    1,
 		}
 
@@ -55,7 +55,7 @@ func TestCreateListing(t *testing.T) {
 		assert.Equal(t, "Test Electronics Listing", resp.Listing.Title)
 		assert.Equal(t, 99.99, resp.Listing.Price)
 		assert.Equal(t, "USD", resp.Listing.Currency)
-		assert.Equal(t, int64(1), resp.Listing.CategoryId)
+		assert.Equal(t, "3b4246cc-9970-403c-af01-c142a4178dc6", resp.Listing.CategoryId)
 		assert.Equal(t, "draft", resp.Listing.Status) // Default status is "draft"
 		assert.NotEmpty(t, resp.Listing.Uuid)
 		assert.False(t, resp.Listing.IsDeleted)
@@ -68,9 +68,9 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: Insert category and storefront
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 2, "Fashion", "fashion", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b", "Fashion", "fashion", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO storefronts (id, user_id, slug, name, country, is_active, is_verified)
@@ -86,7 +86,7 @@ func TestCreateListing(t *testing.T) {
 			Description:  testutils.StringPtr("A fashion item"),
 			Price:        49.99,
 			Currency:     "USD",
-			CategoryId:   2,
+			CategoryId:   "f7b1e2c3-4a5d-6e7f-8a9b-0c1d2e3f4a5b",
 			Quantity:     5,
 		}
 
@@ -107,9 +107,9 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 3, "Vehicles", "vehicles", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f", "Vehicles", "vehicles", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		sku := "TEST-SKU-001"
@@ -119,7 +119,7 @@ func TestCreateListing(t *testing.T) {
 			Description: testutils.StringPtr("Complete vehicle listing with all optional fields"),
 			Price:       25000.00,
 			Currency:    "USD",
-			CategoryId:  3,
+			CategoryId:  "9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f",
 			Quantity:    1,
 			Sku:         &sku,
 		}
@@ -140,9 +140,9 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 4, "Books", "books", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a", "Books", "books", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CreateListingRequest{
@@ -150,7 +150,7 @@ func TestCreateListing(t *testing.T) {
 			Title:      "Minimal Listing",
 			Price:      9.99,
 			Currency:   "USD",
-			CategoryId: 4,
+			CategoryId: "0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
 			Quantity:   1,
 		}
 
@@ -174,7 +174,7 @@ func TestCreateListing(t *testing.T) {
 			Title:      "", // Empty title (invalid)
 			Price:      10.00,
 			Currency:   "USD",
-			CategoryId: 1,
+			CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6",
 			Quantity:   1,
 		}
 
@@ -198,7 +198,7 @@ func TestCreateListing(t *testing.T) {
 			Title:      "Invalid Price Listing",
 			Price:      -10.00, // Negative price (invalid)
 			Currency:   "USD",
-			CategoryId: 1,
+			CategoryId: "3b4246cc-9970-403c-af01-c142a4178dc6",
 			Quantity:   1,
 		}
 
@@ -222,7 +222,7 @@ func TestCreateListing(t *testing.T) {
 			Title:      "Listing with Invalid Category",
 			Price:      10.00,
 			Currency:   "USD",
-			CategoryId: 99999, // Non-existent category
+			CategoryId: "ffffffff-ffff-ffff-ffff-ffffffffffff", // Non-existent category
 			Quantity:   1,
 		}
 
@@ -243,9 +243,9 @@ func TestCreateListing(t *testing.T) {
 
 		// Setup: category
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 5, "Concurrent Test", "concurrent-test", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d", "Concurrent Test", "concurrent-test", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		concurrency := 5
@@ -263,7 +263,7 @@ func TestCreateListing(t *testing.T) {
 					Title:      fmt.Sprintf("Concurrent Listing %d", index),
 					Price:      float64(10 + index),
 					Currency:   "USD",
-					CategoryId: 5,
+					CategoryId: "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
 					Quantity:   1,
 				}
 
@@ -314,9 +314,9 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup: category and listing
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 10, "Update Test", "update-test", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "10000000-0000-0000-0000-000000000010", "Update Test", "update-test", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -325,7 +325,7 @@ func TestUpdateListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 2001, 1000, "Original Title", "Original Description", 50.00, "USD", 10,
+		`, 2001, 1000, "Original Title", "Original Description", 50.00, "USD", "10000000-0000-0000-0000-000000000010",
 			"active", "public", 1, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -356,9 +356,9 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 11, "Partial Update", "partial-update", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "11000000-0000-0000-0000-000000000011", "Partial Update", "partial-update", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -367,7 +367,7 @@ func TestUpdateListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 2002, 1001, "Partial Title", "Partial Description", 30.00, "USD", 11,
+		`, 2002, 1001, "Partial Title", "Partial Description", 30.00, "USD", "11000000-0000-0000-0000-000000000011",
 			"active", "public", 5, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -394,9 +394,9 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 12, "Validation", "validation", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "12000000-0000-0000-0000-000000000012", "Validation", "validation", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -405,7 +405,7 @@ func TestUpdateListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 2003, 1002, "Valid Listing", "Description", 20.00, "USD", 12,
+		`, 2003, 1002, "Valid Listing", "Description", 20.00, "USD", "12000000-0000-0000-0000-000000000012",
 			"active", "public", 5, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -452,9 +452,9 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 13, "Permission", "permission", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "13000000-0000-0000-0000-000000000013", "Permission", "permission", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -463,7 +463,7 @@ func TestUpdateListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 2004, 1004, "Owner's Listing", "Description", 15.00, "USD", 13,
+		`, 2004, 1004, "Owner's Listing", "Description", 15.00, "USD", "13000000-0000-0000-0000-000000000013",
 			"active", "public", 1, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -489,9 +489,9 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 14, "Concurrent Update", "concurrent-update", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "14000000-0000-0000-0000-000000000014", "Concurrent Update", "concurrent-update", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -500,7 +500,7 @@ func TestUpdateListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 2005, 1005, "Concurrent Test", "Description", 100.00, "USD", 14,
+		`, 2005, 1005, "Concurrent Test", "Description", 100.00, "USD", "14000000-0000-0000-0000-000000000014",
 			"active", "public", 10, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -547,9 +547,9 @@ func TestUpdateListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 15, "Status", "status", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "15000000-0000-0000-0000-000000000015", "Status", "status", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -558,7 +558,7 @@ func TestUpdateListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 2006, 1006, "Draft Listing", "Description", 50.00, "USD", 15,
+		`, 2006, 1006, "Draft Listing", "Description", 50.00, "USD", "15000000-0000-0000-0000-000000000015",
 			"draft", "private", 1, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -591,9 +591,9 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 20, "Get Test", "get-test", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "20000000-0000-0000-0000-000000000020", "Get Test", "get-test", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -602,7 +602,7 @@ func TestGetListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 3001, 2000, "Test Listing for Get", "Description", 99.99, "USD", 20,
+		`, 3001, 2000, "Test Listing for Get", "Description", 99.99, "USD", "20000000-0000-0000-0000-000000000020",
 			"active", "public", 1, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -642,9 +642,9 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 21, "Deleted Test", "deleted-test", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "21000000-0000-0000-0000-000000000021", "Deleted Test", "deleted-test", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -653,7 +653,7 @@ func TestGetListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), true
 			)
-		`, 3002, 2001, "Deleted Listing", "Description", 50.00, "USD", 21,
+		`, 3002, 2001, "Deleted Listing", "Description", 50.00, "USD", "21000000-0000-0000-0000-000000000021",
 			"archived", "private", 0, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -676,9 +676,9 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 22, "Related Data", "related-data", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "22000000-0000-0000-0000-000000000022", "Related Data", "related-data", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -687,7 +687,7 @@ func TestGetListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 3003, 2002, "Listing with Relations", "Description", 150.00, "USD", 22,
+		`, 3003, 2002, "Listing with Relations", "Description", 150.00, "USD", "22000000-0000-0000-0000-000000000022",
 			"active", "public", 2, 0, 0)
 
 		ExecuteSQL(t, server, `
@@ -737,9 +737,9 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 23, "Attributes", "attributes", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "23000000-0000-0000-0000-000000000023", "Attributes", "attributes", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -748,7 +748,7 @@ func TestGetListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 3004, 2003, "Listing with Attributes", "Description", 75.00, "USD", 23,
+		`, 3004, 2003, "Listing with Attributes", "Description", 75.00, "USD", "23000000-0000-0000-0000-000000000023",
 			"active", "public", 1, 0, 0)
 
 		ExecuteSQL(t, server, `
@@ -780,9 +780,9 @@ func TestGetListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 24, "Multilang", "multilang", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "24000000-0000-0000-0000-000000000024", "Multilang", "multilang", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -791,7 +791,7 @@ func TestGetListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 3005, 2004, "Товар на русском языке", "Описание на русском", 120.00, "USD", 24,
+		`, 3005, 2004, "Товар на русском языке", "Описание на русском", 120.00, "USD", "24000000-0000-0000-0000-000000000024",
 			"active", "public", 1, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -822,9 +822,9 @@ func TestDeleteListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 30, "Delete Test", "delete-test", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "30000000-0000-0000-0000-000000000030", "Delete Test", "delete-test", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -833,7 +833,7 @@ func TestDeleteListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 4001, 3000, "Listing to Delete", "Description", 45.00, "USD", 30,
+		`, 4001, 3000, "Listing to Delete", "Description", 45.00, "USD", "30000000-0000-0000-0000-000000000030",
 			"active", "public", 1, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -880,9 +880,9 @@ func TestDeleteListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 31, "Permission Delete", "permission-delete", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "31000000-0000-0000-0000-000000000031", "Permission Delete", "permission-delete", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -891,7 +891,7 @@ func TestDeleteListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 4002, 3002, "Protected Listing", "Description", 30.00, "USD", 31,
+		`, 4002, 3002, "Protected Listing", "Description", 30.00, "USD", "31000000-0000-0000-0000-000000000031",
 			"active", "public", 1, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -916,9 +916,9 @@ func TestDeleteListing(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 32, "Already Deleted", "already-deleted", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "32000000-0000-0000-0000-000000000032", "Already Deleted", "already-deleted", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -927,7 +927,7 @@ func TestDeleteListing(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), true
 			)
-		`, 4003, 3003, "Already Deleted", "Description", 25.00, "USD", 32,
+		`, 4003, 3003, "Already Deleted", "Description", 25.00, "USD", "32000000-0000-0000-0000-000000000032",
 			"archived", "private", 0, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -961,9 +961,9 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 40, "Search Category", "search-category", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "40000000-0000-0000-0000-000000000040", "Search Category", "search-category", 1, true, 0)
 
 		for i := 1; i <= 5; i++ {
 			ExecuteSQL(t, server, `
@@ -974,11 +974,11 @@ func TestSearchListings(t *testing.T) {
 					$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 				)
 			`, 5000+i, 4000, fmt.Sprintf("Search Listing %d", i),
-				"Description", float64(10+i), "USD", 40, "active", "public", 1, 0, 0)
+				"Description", float64(10+i), "USD", "40000000-0000-0000-0000-000000000040", "active", "public", 1, 0, 0)
 		}
 
 		ctx := testutils.TestContext(t)
-		categoryID := int64(40)
+		categoryID := "40000000-0000-0000-0000-000000000040"
 		req := &pb.SearchListingsRequest{
 			Query:      "",
 			CategoryId: &categoryID,
@@ -1001,9 +1001,9 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 41, "Price Range", "price-range", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "41000000-0000-0000-0000-000000000041", "Price Range", "price-range", 1, true, 0)
 
 		prices := []float64{10.00, 25.00, 50.00, 75.00, 100.00}
 		for i, price := range prices {
@@ -1015,7 +1015,7 @@ func TestSearchListings(t *testing.T) {
 					$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 				)
 			`, 5010+i, 4001, fmt.Sprintf("Price Listing %d", i),
-				"Description", price, "USD", 41, "active", "public", 1, 0, 0)
+				"Description", price, "USD", "41000000-0000-0000-0000-000000000041", "active", "public", 1, 0, 0)
 		}
 
 		ctx := testutils.TestContext(t)
@@ -1049,9 +1049,9 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 42, "Text Search", "text-search", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "42000000-0000-0000-0000-000000000042", "Text Search", "text-search", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO listings (
@@ -1060,7 +1060,7 @@ func TestSearchListings(t *testing.T) {
 			) VALUES (
 				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 			)
-		`, 5020, 4002, "Unique Laptop Device", "Electronic device", 500.00, "USD", 42,
+		`, 5020, 4002, "Unique Laptop Device", "Electronic device", 500.00, "USD", "42000000-0000-0000-0000-000000000042",
 			"active", "public", 1, 0, 0)
 
 		ctx := testutils.TestContext(t)
@@ -1085,9 +1085,9 @@ func TestSearchListings(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 43, "Pagination", "pagination", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "43000000-0000-0000-0000-000000000043", "Pagination", "pagination", 1, true, 0)
 
 		for i := 1; i <= 15; i++ {
 			ExecuteSQL(t, server, `
@@ -1098,7 +1098,7 @@ func TestSearchListings(t *testing.T) {
 					$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 				)
 			`, 5030+i, 4003, fmt.Sprintf("Pagination Listing %d", i),
-				"Description", float64(20+i), "USD", 43, "active", "public", 1, 0, 0)
+				"Description", float64(20+i), "USD", "43000000-0000-0000-0000-000000000043", "active", "public", 1, 0, 0)
 		}
 
 		ctx := testutils.TestContext(t)
@@ -1133,10 +1133,11 @@ func TestSearchListings(t *testing.T) {
 		defer server.Teardown(t)
 
 		// Setup
+		combinedCategoryID := "c0440000-0000-0000-0000-000000000044"
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 44, "Combined", "combined", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, combinedCategoryID, "Combined", "combined", 1, true, 0)
 
 		for i := 1; i <= 10; i++ {
 			ExecuteSQL(t, server, `
@@ -1144,14 +1145,14 @@ func TestSearchListings(t *testing.T) {
 					id, user_id, title, description, price, currency, category_id,
 					status, visibility, quantity, view_count, favorites_count
 				) VALUES (
-					$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+					$1, $2, $3, $4, $5, $6, $7::uuid, $8, $9, $10, $11, $12
 				)
 			`, 5040+i, 4004, fmt.Sprintf("Combined Listing %d", i),
-				"Description", float64(30+i*5), "USD", 44, "active", "public", 1, 0, 0)
+				"Description", float64(30+i*5), "USD", combinedCategoryID, "active", "public", 1, 0, 0)
 		}
 
 		ctx := testutils.TestContext(t)
-		categoryID := int64(44)
+		categoryID := combinedCategoryID
 		minPrice := 40.0
 		maxPrice := 70.0
 		req := &pb.SearchListingsRequest{
@@ -1170,7 +1171,7 @@ func TestSearchListings(t *testing.T) {
 		assert.Greater(t, len(resp.Listings), 0)
 
 		for _, listing := range resp.Listings {
-			assert.Equal(t, int64(44), listing.CategoryId)
+			assert.Equal(t, combinedCategoryID, listing.CategoryId)
 			assert.GreaterOrEqual(t, listing.Price, 40.0)
 			assert.LessOrEqual(t, listing.Price, 70.0)
 		}
@@ -1212,10 +1213,11 @@ func TestSearchListings(t *testing.T) {
 		defer server.Teardown(t)
 
 		// Setup
+		sourceTypeCategoryID := "c0450000-0000-0000-0000-000000000045"
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 45, "Source Type", "source-type", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, sourceTypeCategoryID, "Source Type", "source-type", 1, true, 0)
 
 		ExecuteSQL(t, server, `
 			INSERT INTO storefronts (id, user_id, slug, name, country, is_active, is_verified)
@@ -1228,9 +1230,9 @@ func TestSearchListings(t *testing.T) {
 				id, user_id, storefront_id, title, description, price, currency, category_id,
 				status, visibility, quantity, view_count, favorites_count
 			) VALUES (
-				$1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+				$1, $2, NULL, $3, $4, $5, $6, $7::uuid, $8, $9, $10, $11, $12
 			)
-		`, 5050, 4005, "C2C Listing", "Description", 30.00, "USD", 45,
+		`, 5050, 4005, "C2C Listing", "Description", 30.00, "USD", sourceTypeCategoryID,
 			"active", "public", 1, 0, 0)
 
 		// B2C listing (with storefront_id)
@@ -1239,13 +1241,13 @@ func TestSearchListings(t *testing.T) {
 				id, user_id, storefront_id, title, description, price, currency, category_id,
 				status, visibility, quantity, view_count, favorites_count
 			) VALUES (
-				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+				$1, $2, $3, $4, $5, $6, $7, $8::uuid, $9, $10, $11, $12, $13
 			)
-		`, 5051, 4005, 5002, "B2C Listing", "Description", 40.00, "USD", 45,
+		`, 5051, 4005, 5002, "B2C Listing", "Description", 40.00, "USD", sourceTypeCategoryID,
 			"active", "public", 2, 0, 0)
 
 		ctx := testutils.TestContext(t)
-		categoryID := int64(45)
+		categoryID := sourceTypeCategoryID
 		req := &pb.SearchListingsRequest{
 			Query:      "",
 			CategoryId: &categoryID,
@@ -1279,10 +1281,11 @@ func TestSearchListings(t *testing.T) {
 		defer server.Teardown(t)
 
 		// Setup
+		perfCategoryID := "c0460000-0000-0000-0000-000000000046"
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 46, "Performance", "performance", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, perfCategoryID, "Performance", "performance", 1, true, 0)
 
 		// Insert 100 listings for performance test
 		for i := 1; i <= 100; i++ {
@@ -1291,14 +1294,14 @@ func TestSearchListings(t *testing.T) {
 					id, user_id, title, description, price, currency, category_id,
 					status, visibility, quantity, view_count, favorites_count
 				) VALUES (
-					$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+					$1, $2, $3, $4, $5, $6, $7::uuid, $8, $9, $10, $11, $12
 				)
 			`, 6000+i, 5000, fmt.Sprintf("Performance Listing %d", i),
-				"Performance test description", float64(50+i), "USD", 46, "active", "public", 1, 0, 0)
+				"Performance test description", float64(50+i), "USD", perfCategoryID, "active", "public", 1, 0, 0)
 		}
 
 		ctx := testutils.TestContext(t)
-		categoryID := int64(46)
+		categoryID := perfCategoryID
 		req := &pb.SearchListingsRequest{
 			Query:      "",
 			CategoryId: &categoryID,
@@ -1390,9 +1393,9 @@ func TestListingEdgeCases(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 50, "Unicode", "unicode", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "50505050-5050-5050-5050-505050505050", "Unicode", "unicode", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 		req := &pb.CreateListingRequest{
@@ -1401,7 +1404,7 @@ func TestListingEdgeCases(t *testing.T) {
 			Description: testutils.StringPtr("Описание с кириллицей и эмодзи 🚀"),
 			Price:       99.99,
 			Currency:    "USD",
-			CategoryId:  50,
+			CategoryId:  "50505050-5050-5050-5050-505050505050",
 			Quantity:    1,
 		}
 
@@ -1426,9 +1429,9 @@ func TestListingEdgeCases(t *testing.T) {
 
 		// Setup
 		ExecuteSQL(t, server, `
-			INSERT INTO c2c_categories (id, name, slug, parent_id, sort_order, level, is_active, count)
-			VALUES ($1, $2, $3, NULL, $4, 0, $5, $6)
-		`, 51, "Boundary", "boundary", 1, true, 0)
+			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
+			VALUES ($1::uuid, to_jsonb($2::text), $3, NULL, $4, 1, $3, $5, $6)
+		`, "51515151-5151-5151-5151-515151515151", "Boundary", "boundary", 1, true, 0)
 
 		ctx := testutils.TestContext(t)
 
@@ -1440,7 +1443,7 @@ func TestListingEdgeCases(t *testing.T) {
 			Title:      longTitle,
 			Price:      999999.99, // Very high price
 			Currency:   "USD",
-			CategoryId: 51,
+			CategoryId: "51515151-5151-5151-5151-515151515151",
 			Quantity:   999999, // Maximum quantity
 		}
 
@@ -1458,7 +1461,7 @@ func TestListingEdgeCases(t *testing.T) {
 			Title:      "Min", // Minimum 3 characters (per validation rules)
 			Price:      0.01,  // Minimum price
 			Currency:   "USD",
-			CategoryId: 51,
+			CategoryId: "51515151-5151-5151-5151-515151515151",
 			Quantity:   1, // Minimum quantity
 		}
 

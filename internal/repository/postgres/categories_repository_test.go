@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/tests"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/tests"
 )
 
 func setupCategoryTestRepo(t *testing.T) (*Repository, *tests.TestDB) {
@@ -126,7 +126,7 @@ func TestRepository_CreateCategory_Success(t *testing.T) {
 			require.NoError(t, err)
 			assert.NotZero(t, created.ID)
 			assert.NotEmpty(t, created.Slug)
-			assert.Equal(t, int32(0), created.Level) // Root category
+			assert.Equal(t, int32(1), created.Level) // Root category (DB constraint: level >= 1)
 			assert.NotZero(t, created.SortOrder)
 
 			// Verify it can be retrieved
@@ -150,7 +150,7 @@ func TestRepository_CreateCategory_WithParent(t *testing.T) {
 	}
 	parentCreated, err := repo.CreateCategory(ctx, parent)
 	require.NoError(t, err)
-	assert.Equal(t, int32(0), parentCreated.Level)
+	assert.Equal(t, int32(1), parentCreated.Level) // Root level (DB constraint: level >= 1)
 
 	// Create child category
 	child := &domain.Category{
@@ -160,7 +160,7 @@ func TestRepository_CreateCategory_WithParent(t *testing.T) {
 	}
 	childCreated, err := repo.CreateCategory(ctx, child)
 	require.NoError(t, err)
-	assert.Equal(t, int32(1), childCreated.Level) // Level should be parent.level + 1
+	assert.Equal(t, int32(2), childCreated.Level) // Level should be parent.level + 1
 	assert.Equal(t, parentCreated.ID, *childCreated.ParentID)
 
 	// Create grandchild
@@ -171,7 +171,7 @@ func TestRepository_CreateCategory_WithParent(t *testing.T) {
 	}
 	grandchildCreated, err := repo.CreateCategory(ctx, grandchild)
 	require.NoError(t, err)
-	assert.Equal(t, int32(2), grandchildCreated.Level)
+	assert.Equal(t, int32(3), grandchildCreated.Level) // Grandchild level
 }
 
 func TestRepository_CreateCategory_DuplicateSlug(t *testing.T) {
@@ -206,7 +206,7 @@ func TestRepository_CreateCategory_InvalidParent(t *testing.T) {
 
 	ctx := context.Background()
 
-	invalidParentID := int64(99999)
+	invalidParentID := "99999999-0000-0000-0000-000000000000" // Non-existent UUID
 	category := &domain.Category{
 		Name:     "Test",
 		ParentID: &invalidParentID,
@@ -268,14 +268,14 @@ func TestRepository_UpdateCategory_ChangeParent(t *testing.T) {
 	}
 	childCreated, err := repo.CreateCategory(ctx, child)
 	require.NoError(t, err)
-	assert.Equal(t, int32(1), childCreated.Level)
+	assert.Equal(t, int32(2), childCreated.Level) // Child of parent1 (level 1 + 1 = 2)
 
 	// Move child to parent2
 	childCreated.ParentID = &parent2Created.ID
 	updated, err := repo.UpdateCategory(ctx, childCreated)
 	require.NoError(t, err)
 	assert.Equal(t, parent2Created.ID, *updated.ParentID)
-	assert.Equal(t, int32(1), updated.Level)
+	assert.Equal(t, int32(2), updated.Level) // Level should still be 2 (parent2.level + 1)
 }
 
 func TestRepository_UpdateCategory_CircularDependency(t *testing.T) {
@@ -443,8 +443,8 @@ func TestRepository_DeleteCategory_WithActiveListings(t *testing.T) {
 	}
 
 	_, err = db.ExecContext(ctx, `
-		INSERT INTO listings (title, slug, category_id, user_id, status, is_deleted)
-		VALUES ('Test Product', 'test-product', $1, $2, 'active', false)
+		INSERT INTO listings (title, slug, category_id, user_id, status, is_deleted, price, currency)
+		VALUES ('Test Product', 'test-product', $1::uuid, $2, 'active', false, 1000, 'RSD')
 	`, created.ID, userID)
 	require.NoError(t, err)
 
@@ -461,7 +461,7 @@ func TestRepository_DeleteCategory_NotFound(t *testing.T) {
 
 	ctx := context.Background()
 
-	err := repo.DeleteCategory(ctx, 99999)
+	err := repo.DeleteCategory(ctx, "99999999-0000-0000-0000-000000000000") // Non-existent UUID
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
 }

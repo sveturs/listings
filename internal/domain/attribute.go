@@ -66,7 +66,7 @@ type Attribute struct {
 // CategoryAttribute represents a category-attribute relationship with overrides
 type CategoryAttribute struct {
 	ID                      int32                  `json:"id" db:"id"`
-	CategoryID              int32                  `json:"category_id" db:"category_id"`
+	CategoryID              string                 `json:"category_id" db:"category_id"` // UUID as string
 	AttributeID             int32                  `json:"attribute_id" db:"attribute_id"`
 	Attribute               *Attribute             `json:"attribute,omitempty" db:"-"` // Loaded on demand
 	IsEnabled               bool                   `json:"is_enabled" db:"is_enabled"`
@@ -100,7 +100,7 @@ type ListingAttributeValue struct {
 // VariantAttribute represents a variant attribute definition for a category
 type VariantAttribute struct {
 	ID           int32      `json:"id" db:"id"`
-	CategoryID   int32      `json:"category_id" db:"category_id"`
+	CategoryID   string     `json:"category_id" db:"category_id"` // UUID as string
 	AttributeID  int32      `json:"attribute_id" db:"attribute_id"`
 	Attribute    *Attribute `json:"attribute,omitempty" db:"-"` // Loaded on demand
 	IsRequired   bool       `json:"is_required" db:"is_required"`
@@ -128,6 +128,20 @@ type VariantAttributeValue struct {
 	PriceModifierType string                 `json:"price_modifier_type" db:"price_modifier_type"` // fixed, percent
 	CreatedAt         time.Time              `json:"created_at" db:"created_at"`
 	UpdatedAt         time.Time              `json:"updated_at" db:"updated_at"`
+}
+
+// AttributeValue represents a predefined value for select/multiselect/color/size attributes
+// Maps to attribute_values table created in Phase 2
+type AttributeValue struct {
+	ID          int32                  `json:"id" db:"id"`
+	AttributeID int32                  `json:"attribute_id" db:"attribute_id"`
+	Value       string                 `json:"value" db:"value"`                 // e.g., "black", "XL", "new"
+	Label       map[string]string      `json:"label" db:"label"`                 // i18n JSONB: {"sr": "Crna", "en": "Black", "ru": "Чёрный"}
+	Metadata    map[string]interface{} `json:"metadata,omitempty" db:"metadata"` // e.g., {"hex": "#000000"} for colors
+	SortOrder   int32                  `json:"sort_order" db:"sort_order"`
+	IsActive    bool                   `json:"is_active" db:"is_active"`
+	CreatedAt   time.Time              `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at" db:"updated_at"`
 }
 
 // AttributeOption represents a predefined option for select/multiselect attributes

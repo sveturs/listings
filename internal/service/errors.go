@@ -312,6 +312,7 @@ func IsNotFoundError(err error) bool {
 	// Check for wrapped errors
 	if errors.Is(err, ErrNotFound) ||
 		errors.Is(err, ErrCartNotFound) ||
+		errors.Is(err, ErrCartItemNotFound) ||
 		errors.Is(err, ErrOrderNotFound) ||
 		errors.Is(err, ErrReservationNotFound) ||
 		errors.Is(err, ErrChatNotFound) ||

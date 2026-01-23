@@ -361,7 +361,7 @@ The service is ready for production deployment. Recommend gradual rollout with m
 ---
 
 **Next Steps:**
-1. Deploy to dev.svetu.rs for integration testing
+1. Deploy to dev.vondi.rs for integration testing
 2. Conduct stress testing (Phase 13.5)
 3. Set up production monitoring/alerting
 4. Plan capacity expansion based on real traffic

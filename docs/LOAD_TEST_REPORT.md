@@ -160,7 +160,7 @@ Under spike load (15k RPS target), the service maintained excellent latency char
    - ✅ Verified service health
    - ✅ Checked database connectivity
    - ✅ Validated metrics endpoint
-   - ✅ Disabled rate limiting (SVETULISTINGS_RATE_LIMIT_ENABLED=false)
+   - ✅ Disabled rate limiting (VONDILISTINGS_RATE_LIMIT_ENABLED=false)
    - ✅ Flushed Redis cache
    - ✅ Rebuilt Docker image with conditional rate limiter
 
@@ -212,7 +212,7 @@ Under spike load (15k RPS target), the service maintained excellent latency char
 1. **Rate Limiting Configuration** (RESOLVED)
    - **Issue:** Rate limiting was always enabled regardless of config
    - **Impact:** Blocked load testing (max 100 req/min per endpoint)
-   - **Root Cause:** `SVETULISTINGS_RATE_LIMIT_ENABLED` env var not checked in server initialization
+   - **Root Cause:** `VONDILISTINGS_RATE_LIMIT_ENABLED` env var not checked in server initialization
    - **Fix:** Modified `cmd/server/main.go` to conditionally add rate limiter interceptor
    - **Verification:** Successfully disabled for testing
 
@@ -304,7 +304,7 @@ python3 scripts/analyze_results.py /tmp/load_test_results_*/sustained_10min.json
 1. **Rate Limiting Disabled:**
    ```bash
    # .env
-   SVETULISTINGS_RATE_LIMIT_ENABLED=false
+   VONDILISTINGS_RATE_LIMIT_ENABLED=false
    ```
 
 2. **Code Modifications:**

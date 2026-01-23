@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Deploy script for listings-service to dev.svetu.rs
-# Deploys to /opt/listings-dev on svetu@svetu.rs server
+# Deploy script for listings-service to dev.vondi.rs
+# Deploys to /opt/listings-dev on svetu@vondi.rs server
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
@@ -30,7 +30,7 @@ info() {
 }
 
 # Configuration
-SERVER="svetu@svetu.rs"
+SERVER="svetu@vondi.rs"
 DEPLOY_DIR="/opt/listings-dev"
 SERVICE_NAME="listings-service"
 BINARY_NAME="listings-service"
@@ -39,7 +39,7 @@ GRPC_PORT="50053"
 METRICS_PORT="9093"
 HEALTH_CHECK_RETRIES=6
 
-log "🚀 Starting deployment of listings-service to dev.svetu.rs"
+log "🚀 Starting deployment of listings-service to dev.vondi.rs"
 
 # 1. Get current branch
 CURRENT_BRANCH=$(git branch --show-current)
@@ -302,9 +302,9 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
     log "✅ Deployment complete!"
     echo ""
     log "📍 Service URLs:"
-    log "  HTTP API: https://listings.dev.svetu.rs"
-    log "  Metrics: http://svetu.rs:$METRICS_PORT/metrics (internal only)"
-    log "  gRPC: svetu.rs:$GRPC_PORT (internal only)"
+    log "  HTTP API: https://listings.dev.vondi.rs"
+    log "  Metrics: http://vondi.rs:$METRICS_PORT/metrics (internal only)"
+    log "  gRPC: vondi.rs:$GRPC_PORT (internal only)"
     echo ""
     log "📋 Useful commands:"
     log "  Status: ssh $SERVER 'sudo systemctl status $SERVICE_NAME'"

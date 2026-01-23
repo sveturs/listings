@@ -1,0 +1,186 @@
+name: Deploy Listings Service to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  HARBOR_REGISTRY: registry.vondi.rs
+  IMAGE_NAME: services/listings
+  K8S_NAMESPACE: production
+  DEPLOYMENT_NAME: listings-service
+  HEALTH_URL: https://listings.vondi.rs/health
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Manual checkout (for self-hosted + private repos)
+        run: |
+          echo "Cloning repository manually with token..."
+
+          # If repo exists, fetch and reset; otherwise clone fresh
+          if [ -d "$GITHUB_WORKSPACE/.git" ]; then
+            echo "Repository already exists, fetching updates..."
+            cd $GITHUB_WORKSPACE
+            git fetch origin
+            git reset --hard origin/${{ github.ref_name }}
+            git clean -fdx
+          else
+            echo "Fresh clone..."
+            rm -rf $GITHUB_WORKSPACE 2>/dev/null || true
+            mkdir -p $GITHUB_WORKSPACE
+            git clone https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/${{ github.repository }}.git $GITHUB_WORKSPACE
+            cd $GITHUB_WORKSPACE
+            git checkout ${{ github.ref_name }}
+          fi
+
+          git log -1 --oneline
+          echo "✅ Repository ready!"
+
+      - name: Configure Git for private modules
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Get git sha (short)
+        id: git_sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GO_MODULES_TOKEN }}
+          tags: |
+            ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.HARBOR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.git_sha.outputs.sha }}
+
+      - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.K8S_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519_workflow
+          chmod 600 ~/.ssh/id_ed25519_workflow
+
+          cat > ~/.ssh/config << 'SSH_CONFIG'
+          Host vondi
+            HostName 62.169.20.78
+            User root
+            IdentityFile ~/.ssh/id_ed25519_workflow
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          SSH_CONFIG
+
+          chmod 600 ~/.ssh/config
+
+          echo "SSH configured for host vondi (62.169.20.78)"
+
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+
+          # Database connection details for production
+          DB_HOST="postgres-listings-0.postgres-listings.$K8S_NAMESPACE.svc.cluster.local"
+          DB_PORT="5432"
+          DB_USER="listings_user"
+          DB_PASS="vLj8tQ2mK9rN3xP6wY4zA7bC"
+          DB_NAME="listings_db"
+
+          # Setup port-forward in background
+          echo "Setting up port-forward to PostgreSQL..."
+          ssh -f -N -L 15432:postgres-listings-0.postgres-listings.production.svc.cluster.local:5432 vondi
+          sleep 3
+
+          # Install golang-migrate if not present
+          if ! command -v migrate &> /dev/null; then
+            echo "Installing golang-migrate..."
+            curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+            sudo mv migrate /usr/local/bin/
+          fi
+
+          # Check current migration version
+          echo "Current migration version:"
+          PGPASSWORD=$DB_PASS psql -h localhost -p 15432 -U $DB_USER -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 1;" || echo "No migrations table yet"
+
+          # Run migrations
+          echo "Applying migrations..."
+          migrate -path ./migrations -database "postgres://$DB_USER:$DB_PASS@localhost:15432/$DB_NAME?sslmode=disable" up
+
+          echo "✅ Migrations complete!"
+          PGPASSWORD=$DB_PASS psql -h localhost -p 15432 -U $DB_USER -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 5;"
+
+          # Cleanup port-forward
+          pkill -f "ssh -f -N -L 15432" || true
+
+      - name: Deploy to Kubernetes
+        run: |
+          SHA="${{ steps.git_sha.outputs.sha }}"
+          echo "Deploying $DEPLOYMENT_NAME with image $HARBOR_REGISTRY/$IMAGE_NAME:$SHA"
+
+          ssh vondi "kubectl set image deployment/$DEPLOYMENT_NAME \
+            $DEPLOYMENT_NAME=$HARBOR_REGISTRY/$IMAGE_NAME:$SHA \
+            -n $K8S_NAMESPACE"
+
+          ssh vondi "kubectl rollout status deployment/$DEPLOYMENT_NAME \
+            -n $K8S_NAMESPACE --timeout=5m"
+
+      - name: Health check
+        run: |
+          echo "Waiting 10 seconds for service to stabilize..."
+          sleep 10
+
+          echo "Checking health at $HEALTH_URL"
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL || echo "000")
+            echo "Health check attempt $((RETRY_COUNT+1))/$MAX_RETRIES: HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Retrying in 5 seconds..."
+              sleep 5
+            fi
+          done
+
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed, rolling back..."
+          ssh vondi "kubectl rollout undo deployment/$DEPLOYMENT_NAME -n $K8S_NAMESPACE"
+
+          echo "Waiting for rollback to complete..."
+          ssh vondi "kubectl rollout status deployment/$DEPLOYMENT_NAME \
+            -n $K8S_NAMESPACE --timeout=3m"
+
+          echo "❌ Deployment failed and rolled back to previous version"
+
+      - name: Cleanup SSH
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_ed25519_workflow
+# Trigger CI rebuild

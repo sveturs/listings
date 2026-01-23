@@ -94,7 +94,7 @@ ghz --version
 ./scripts/performance/quick-check.sh
 
 # Custom server
-./scripts/performance/quick-check.sh dev.svetu.rs:8086
+./scripts/performance/quick-check.sh dev.vondi.rs:8086
 ```
 
 ---
@@ -286,7 +286,7 @@ http://localhost:3030/d/listings-performance
 
 **Production:**
 ```
-https://grafana.svetu.rs/d/listings-performance
+https://grafana.vondi.rs/d/listings-performance
 ```
 
 **Import to Grafana:**

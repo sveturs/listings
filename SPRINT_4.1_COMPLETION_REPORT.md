@@ -92,7 +92,7 @@ listings/
 - ✅ Connection pool settings
 - ✅ CORS configuration
 
-**Environment Variables**: 50+ configuration options with `SVETULISTINGS_` prefix
+**Environment Variables**: 50+ configuration options with `VONDILISTINGS_` prefix
 
 ### 2. Database Schema
 

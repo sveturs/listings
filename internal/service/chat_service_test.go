@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // NOTE: Chat service tests are limited because the service depends on *postgres.Repository (concrete type)
@@ -178,6 +178,14 @@ func (m *MockMessageRepository) GetUnreadCountByUser(ctx context.Context, receiv
 	return args.Get(0).(int32), args.Error(1)
 }
 
+func (m *MockMessageRepository) GetLatestMessage(ctx context.Context, chatID int64) (*domain.Message, error) {
+	args := m.Called(ctx, chatID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Message), args.Error(1)
+}
+
 // MockAttachmentRepository is a mock for AttachmentRepository
 type MockAttachmentRepository struct {
 	mock.Mock
@@ -333,6 +341,12 @@ func TestChatService_GetUserChats_Success(t *testing.T) {
 	// Mock unread counts for each chat
 	messageRepo.On("GetUnreadCount", ctx, int64(1), userID).Return(int32(3), nil)
 	messageRepo.On("GetUnreadCount", ctx, int64(2), userID).Return(int32(0), nil)
+
+	// Mock latest message for each chat
+	messageRepo.On("GetLatestMessage", ctx, int64(1)).
+		Return(&domain.Message{ID: 1, Content: "Test message 1"}, nil)
+	messageRepo.On("GetLatestMessage", ctx, int64(2)).
+		Return(&domain.Message{ID: 2, Content: "Test message 2"}, nil)
 
 	result, total, err := service.GetUserChats(ctx, req)
 

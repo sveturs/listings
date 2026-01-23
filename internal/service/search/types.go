@@ -7,11 +7,17 @@ import (
 
 // SearchRequest represents domain search parameters
 type SearchRequest struct {
-	Query      string // Search query text
-	CategoryID *int64 // Optional category filter
-	Limit      int32  // Results per page (1-100)
-	Offset     int32  // Pagination offset
-	UseCache   bool   // Whether to use cache
+	Query      string  // Search query text
+	CategoryID *string // Optional category filter (UUID string)
+	Limit      int32   // Results per page (1-100)
+	Offset     int32   // Pagination offset
+	UseCache   bool    // Whether to use cache
+
+	// Analytics tracking fields
+	UserID    *int64 // User ID for analytics (optional)
+	SessionID string // Session ID for analytics (optional)
+	Platform  string // Platform: web, ios, android (optional)
+	Language  string // Language: sr, en, ru (optional)
 }
 
 // Validate validates search request parameters
@@ -39,10 +45,11 @@ func (r *SearchRequest) Validate() error {
 
 // SearchResponse represents search result
 type SearchResponse struct {
-	Listings []ListingSearchResult `json:"listings"`
-	Total    int64                 `json:"total"`
-	TookMs   int32                 `json:"took_ms"`
-	Cached   bool                  `json:"cached"`
+	Listings      []ListingSearchResult `json:"listings"`
+	Total         int64                 `json:"total"`
+	TookMs        int32                 `json:"took_ms"`
+	Cached        bool                  `json:"cached"`
+	SearchEventID string                `json:"search_event_id,omitempty"` // For analytics tracking
 }
 
 // ListingSearchResult represents a single listing in search results
@@ -53,7 +60,7 @@ type ListingSearchResult struct {
 	Description  *string              `json:"description,omitempty"`
 	Price        float64              `json:"price"`
 	Currency     string               `json:"currency"`
-	CategoryID   int64                `json:"category_id"`
+	CategoryID   string               `json:"category_id"` // UUID string
 	Status       string               `json:"status"`
 	Images       []ListingImageResult `json:"images,omitempty"`
 	CreatedAt    string               `json:"created_at"`
@@ -80,7 +87,7 @@ type ListingImageResult struct {
 // FacetsRequest - request for GetSearchFacets
 type FacetsRequest struct {
 	Query      string         // Optional pre-filter
-	CategoryID *int64         // Optional pre-filter
+	CategoryID *string        // Optional pre-filter
 	Filters    *SearchFilters // Optional pre-filter (price, attributes)
 	UseCache   bool           // Whether to use cache
 }
@@ -115,8 +122,8 @@ type FacetsResponse struct {
 
 // CategoryFacet represents category distribution
 type CategoryFacet struct {
-	CategoryID int64 `json:"category_id"`
-	Count      int64 `json:"count"`
+	CategoryID string `json:"category_id"`
+	Count      int64  `json:"count"`
 }
 
 // PriceRangeFacet represents price histogram bucket
@@ -147,7 +154,7 @@ type Facet struct {
 // SearchFiltersRequest - enhanced search with filters
 type SearchFiltersRequest struct {
 	Query         string         // Search query text
-	CategoryID    *int64         // Optional category filter
+	CategoryID    *string        // Optional category filter (UUID string)
 	Limit         int32          // Results per page (1-100)
 	Offset        int32          // Pagination offset
 	Filters       *SearchFilters // Advanced filters
@@ -340,10 +347,10 @@ type SearchFiltersResponse struct {
 
 // SuggestionsRequest - autocomplete request
 type SuggestionsRequest struct {
-	Prefix     string // Search prefix (min 2 chars)
-	CategoryID *int64 // Optional category filter
-	Limit      int32  // Max suggestions (1-20)
-	UseCache   bool   // Whether to use cache
+	Prefix     string  // Search prefix (min 2 chars)
+	CategoryID *string // Optional category filter
+	Limit      int32   // Max suggestions (1-20)
+	UseCache   bool    // Whether to use cache
 }
 
 // Validate validates suggestions request parameters
@@ -385,9 +392,9 @@ type Suggestion struct {
 
 // PopularSearchesRequest - trending queries request
 type PopularSearchesRequest struct {
-	CategoryID *int64 // Optional category filter
-	Limit      int32  // Max results (1-20)
-	TimeRange  string // "24h" | "7d" | "30d"
+	CategoryID *string // Optional category filter
+	Limit      int32   // Max results (1-20)
+	TimeRange  string  // "24h" | "7d" | "30d"
 }
 
 // Validate validates popular searches request parameters
@@ -435,9 +442,9 @@ type PopularSearch struct {
 
 // TrendingSearchesRequest - real trending queries from analytics
 type TrendingSearchesRequest struct {
-	CategoryID *int64 // Optional category filter
-	Limit      int32  // Max results (1-50)
-	Days       int32  // Period in days (1-30)
+	CategoryID *string // Optional category filter
+	Limit      int32   // Max results (1-50)
+	Days       int32   // Period in days (1-30)
 }
 
 // Validate validates trending searches request parameters
@@ -510,7 +517,7 @@ type SearchHistoryResponse struct {
 // SearchHistoryEntry represents a single search from user's history
 type SearchHistoryEntry struct {
 	QueryText        string    `json:"query_text"`
-	CategoryID       *int64    `json:"category_id,omitempty"`
+	CategoryID       *string   `json:"category_id,omitempty"` // UUID string
 	ResultsCount     int32     `json:"results_count"`
 	ClickedListingID *int64    `json:"clicked_listing_id,omitempty"`
 	SearchedAt       time.Time `json:"searched_at"`

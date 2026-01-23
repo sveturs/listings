@@ -14,12 +14,12 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Database credentials
-OLD_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/svetubd?sslmode=disable"
+OLD_DB="postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5433/vondi_db?sslmode=disable"
 NEW_DB="postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable"
 
 echo "================================================================================"
 echo "                     MIGRATION VERIFICATION SCRIPT"
-echo "                     svetubd → listings_dev_db"
+echo "                     vondi_db → listings_dev_db"
 echo "================================================================================"
 echo ""
 
@@ -61,9 +61,9 @@ compare_counts() {
 print_header "1. Testing Database Connections"
 
 if psql "$OLD_DB" -c "SELECT 1" > /dev/null 2>&1; then
-    echo -e "${GREEN}✓${NC} Old DB (svetubd:5433) - Connected"
+    echo -e "${GREEN}✓${NC} Old DB (vondi_db:5433) - Connected"
 else
-    echo -e "${RED}✗${NC} Old DB (svetubd:5433) - FAILED"
+    echo -e "${RED}✗${NC} Old DB (vondi_db:5433) - FAILED"
     exit 1
 fi
 

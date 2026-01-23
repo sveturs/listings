@@ -278,7 +278,7 @@ func BuildSuggestionsQuery(req *SuggestionsRequest) map[string]interface{} {
 	if req.CategoryID != nil {
 		completion := query["suggest"].(map[string]interface{})["listing-suggest"].(map[string]interface{})["completion"].(map[string]interface{})
 		completion["contexts"] = map[string]interface{}{
-			"category": []int64{*req.CategoryID},
+			"category": []string{*req.CategoryID}, // UUID string
 		}
 	}
 

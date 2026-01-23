@@ -435,7 +435,7 @@ GET /api/v1/marketplace/listings/6/similar?limit=10
           "id": 1,
           "listing_id": 7,
           "is_main": true,
-          "public_url": "https://s3.svetu.rs/listings/listings/7/..."
+          "public_url": "https://s3.vondi.rs/listings/listings/7/..."
         }
       ]
     }

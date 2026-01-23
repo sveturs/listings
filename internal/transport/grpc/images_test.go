@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
-	minioclient "github.com/sveturs/listings/internal/repository/minio"
-	"github.com/sveturs/listings/internal/service/listings"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
+	minioclient "github.com/vondi-global/listings/internal/repository/minio"
+	"github.com/vondi-global/listings/internal/service/listings"
 )
 
 // testServer wraps Server for testing with interface-based dependencies

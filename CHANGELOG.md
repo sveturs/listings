@@ -33,3 +33,64 @@
 - Исправлены все 56 изменённых файлов (1 новый, 55 обновлённых)
 - Все proto файлы регенерированы
 - Код скомпилирован успешно
+
+---
+
+### Fixed - 2026-01-18 (3a3042184)
+
+**Storefront Data Integrity: Parse settings and create related records**
+
+Добавлен парсинг `settings` JSONB для автоматического создания связанных записей при создании витрины.
+
+#### Problem
+- Listings microservice получал `settings` JSONB от монолита, сохранял в `storefronts.settings`, но НЕ создавал связанные записи
+- Таблицы `storefront_hours`, `storefront_payment_methods`, `storefront_delivery_options` оставались пустыми
+- Данные были в settings, но не использовались
+
+#### Solution
+- `internal/service/listings/storefront_service.go` - Добавлен `processStorefrontSettings()` после `CreateStorefront`:
+  - ✅ Unmarshal settings JSONB → map[string]interface{}
+  - ✅ Парсит `businessHours` → вызывает `processBusinessHours()` → создаёт 7 записей
+  - ✅ Парсит `paymentMethods` → вызывает `processPaymentMethods()` → создаёт N записей
+  - ✅ Парсит `deliveryOptions` → вызывает `processDeliveryOptions()` → создаёт M записей
+  - ✅ Graceful error handling - продолжает при ошибках парсинга
+
+#### Files Changed
+- `internal/service/listings/storefront_service.go` (4 new methods):
+  - `processStorefrontSettings()` - main parser
+  - `processBusinessHours()` - parses businessHours array → creates storefront_hours records
+  - `processPaymentMethods()` - parses paymentMethods array → creates storefront_payment_methods records
+  - `processDeliveryOptions()` - parses deliveryOptions array → creates storefront_delivery_options records
+
+#### Result
+- ✅ Автоматическое создание связанных записей при создании витрины
+- ✅ 100% data integrity для settings данных
+- ✅ Repository методы (SetWorkingHours, SetPaymentMethods, SetDeliveryOptions) reviewed и работают корректно
+
+---
+
+### Fixed - 2026-01-12 (53b7a8981)
+
+**OpenSearch: Fix image indexing and parsing field name mismatch**
+
+#### Problem
+When changing primary image via edit page, the OpenSearch index was not reflecting the change. Root cause: `buildProductDocument()` was writing images with `file_path` field, but `parseImages()` was looking for `public_url` field.
+
+#### Solution
+```go
+// Before (inconsistent field names)
+buildProductDocument() → images[].file_path
+parseImages() → looking for public_url → ❌ not found
+
+// After (consistent field names)
+buildProductDocument() → images[].public_url ✅
+parseImages() → looking for public_url ✅
+```
+
+#### Files Changed
+- `internal/indexer/listing_indexer.go:266` - Changed `"file_path": img.URL` → `"public_url": img.URL`
+
+#### Result
+- ✅ Primary image changes now reflect in OpenSearch immediately
+- ✅ Frontend displays correct images from search results
+- ✅ No data migration needed (reindexing fixes legacy data)

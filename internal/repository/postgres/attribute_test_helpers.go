@@ -1,6 +1,6 @@
 package postgres
 
-import "github.com/sveturs/listings/internal/domain"
+import "github.com/vondi-global/listings/internal/domain"
 
 // Test helper functions for attribute repository tests (attribute-specific only)
 

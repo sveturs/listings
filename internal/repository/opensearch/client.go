@@ -10,7 +10,7 @@ import (
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // Client handles OpenSearch operations for listings
@@ -84,6 +84,27 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		"published_at":    listing.PublishedAt,
 	}
 
+	// Add location if available (for geo_distance similarity scoring)
+	if listing.Location != nil {
+		loc := listing.Location
+		if loc.Latitude != nil && loc.Longitude != nil && (*loc.Latitude != 0 || *loc.Longitude != 0) {
+			doc["location"] = map[string]interface{}{
+				"lat": *loc.Latitude,
+				"lon": *loc.Longitude,
+			}
+			doc["has_location"] = true
+		}
+		if loc.City != nil {
+			doc["city"] = *loc.City
+		}
+		if loc.Country != nil {
+			doc["country"] = *loc.Country
+		}
+		if loc.AddressLine1 != nil {
+			doc["address"] = *loc.AddressLine1
+		}
+	}
+
 	// Add attributes from cache if available
 	attributes, searchableText, err := c.getAttributesFromCache(ctx, int32(listing.ID))
 	if err != nil {
@@ -92,6 +113,23 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 	} else {
 		doc["attributes"] = attributes
 		doc["attributes_searchable_text"] = searchableText
+	}
+
+	// Add listing attributes if present (for similarity matching)
+	if len(listing.Attributes) > 0 {
+		attrMap := make(map[string]string)
+		for _, attr := range listing.Attributes {
+			// Skip attributes with empty keys (invalid for OpenSearch)
+			if attr.AttributeKey == "" {
+				c.logger.Warn().Int64("listing_id", listing.ID).Str("value", attr.AttributeValue).Msg("skipping attribute with empty key")
+				continue
+			}
+			attrMap[attr.AttributeKey] = attr.AttributeValue
+		}
+		// Only add if we have valid attributes
+		if len(attrMap) > 0 {
+			doc["listing_attributes"] = attrMap
+		}
 	}
 
 	// Add images if present
@@ -305,8 +343,16 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 		price, _ := source["price"].(float64)
 		//nolint:errcheck
 		currency, _ := source["currency"].(string)
-		//nolint:errcheck
-		categoryID, _ := source["category_id"].(float64)
+
+		// CategoryID can be string (UUID) or float64 (legacy int)
+		var categoryID string
+		if catStr, ok := source["category_id"].(string); ok {
+			categoryID = catStr
+		} else if catNum, ok := source["category_id"].(float64); ok {
+			// Legacy: convert int to string
+			categoryID = fmt.Sprintf("%d", int64(catNum))
+		}
+
 		//nolint:errcheck
 		status, _ := source["status"].(string)
 		//nolint:errcheck
@@ -327,7 +373,7 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 			Title:          title,
 			Price:          price,
 			Currency:       currency,
-			CategoryID:     int64(categoryID),
+			CategoryID:     categoryID,
 			Status:         status,
 			Visibility:     visibility,
 			Quantity:       int32(quantity),
@@ -366,12 +412,17 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 	return listings, totalHits, nil
 }
 
-// GetSimilarListings finds listings similar to the given listing
-// Similarity is based on:
-// 1. Same category (must match)
-// 2. Similar price range (±20%)
-// 3. Status = active, Visibility = public
-// 4. Excludes the source listing itself
+// GetSimilarListings finds listings similar to the given listing using multi-factor similarity.
+//
+// Similarity factors (in order of importance):
+// 1. Title similarity (more_like_this on title field)
+// 2. Description similarity (more_like_this on description field)
+// 3. Category match (same category = higher score)
+// 4. Price range (±30% for broader results)
+// 5. Geographic proximity (if location available)
+// 6. Attribute matching (if attributes available)
+//
+// Results are ranked by combined similarity score.
 func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error) {
 	// First, fetch the source listing to get its properties
 	res, err := c.client.Get(
@@ -387,8 +438,8 @@ func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit 
 
 	if res.IsError() {
 		if res.StatusCode == 404 {
-			c.logger.Warn().Int64("listing_id", listingID).Msg("source listing not found")
-			return []*domain.Listing{}, 0, nil // Return empty array if listing not found
+			c.logger.Warn().Int64("listing_id", listingID).Msg("source listing not found in index")
+			return []*domain.Listing{}, 0, nil
 		}
 		return nil, 0, fmt.Errorf("failed to get listing: %s", res.Status())
 	}
@@ -403,81 +454,231 @@ func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit 
 		return nil, 0, fmt.Errorf("invalid source structure in get response")
 	}
 
-	// Extract category_id and price
-	categoryID, ok := source["category_id"].(float64)
-	if !ok {
-		c.logger.Warn().Int64("listing_id", listingID).Msg("source listing has no category_id")
-		return []*domain.Listing{}, 0, nil
+	// Extract source listing properties
+	// category_id is stored as string (UUID)
+	categoryID, _ := source["category_id"].(string)
+	title, _ := source["title"].(string)
+	description, _ := source["description"].(string)
+
+	// Extract all title translations for cross-language matching
+	titleSr, _ := source["title_sr"].(string)
+	titleEn, _ := source["title_en"].(string)
+	titleRu, _ := source["title_ru"].(string)
+
+	// Combine all titles for cross-language search
+	// This allows "Gamepad" in Serbian title to match "gamepad" in English translation
+	allTitles := title
+	if titleSr != "" {
+		allTitles += " " + titleSr
+	}
+	if titleEn != "" {
+		allTitles += " " + titleEn
+	}
+	if titleRu != "" {
+		allTitles += " " + titleRu
 	}
 
-	price, ok := source["price"].(float64)
-	if !ok {
-		c.logger.Warn().Int64("listing_id", listingID).Msg("source listing has no price")
-		price = 0 // Use 0 as default if price is missing
+	// Price can be float64 or int (OpenSearch returns long as float64)
+	var price float64
+	if p, ok := source["price"].(float64); ok {
+		price = p
 	}
 
-	// Calculate price range (±20%)
-	minPrice := price * 0.8
-	maxPrice := price * 1.2
-	if price == 0 {
-		// If price is 0, don't apply price filter
-		minPrice = 0
-		maxPrice = 0
+	// Location for geo_distance scoring (if available)
+	var lat, lon float64
+	var hasLocation bool
+	if loc, ok := source["location"].(map[string]interface{}); ok {
+		if latVal, ok := loc["lat"].(float64); ok {
+			lat = latVal
+		}
+		if lonVal, ok := loc["lon"].(float64); ok {
+			lon = lonVal
+		}
+		hasLocation = lat != 0 || lon != 0
 	}
 
-	// Build similarity search query
-	filters := []interface{}{
-		// Must match same category
-		map[string]interface{}{"term": map[string]interface{}{"category_id": int64(categoryID)}},
-		// Only active, visible listings
+	// Build multi-factor similarity query using function_score
+	// Base filters: must be active, public, not the same listing
+	// Note: status, visibility, category_id are already keyword type in mapping, no .keyword suffix needed
+	mustFilters := []interface{}{
 		map[string]interface{}{"term": map[string]interface{}{"status": "active"}},
 		map[string]interface{}{"term": map[string]interface{}{"visibility": "public"}},
 	}
 
-	// Add price range filter if price > 0
-	if price > 0 {
-		filters = append(filters, map[string]interface{}{
-			"range": map[string]interface{}{
-				"price": map[string]interface{}{
-					"gte": minPrice,
-					"lte": maxPrice,
+	mustNotFilters := []interface{}{
+		map[string]interface{}{"term": map[string]interface{}{"id": listingID}},
+	}
+
+	// Build should clauses for similarity scoring
+	shouldClauses := []interface{}{}
+
+	// 1. Title similarity using multi_match with cross_fields
+	// This enables cross-language matching where "Gamepad" in Serbian title
+	// matches "gamepad" in English translation of another listing
+	if allTitles != "" {
+		shouldClauses = append(shouldClauses, map[string]interface{}{
+			"multi_match": map[string]interface{}{
+				"query": allTitles,
+				"fields": []string{
+					"title^3", "title_sr^2", "title_en^2", "title_ru^2",
+				},
+				"type":                 "best_fields",
+				"tie_breaker":          0.3,
+				"minimum_should_match": "1",  // At least 1 term must match
+				"boost":                10.0, // High boost for title matching
+			},
+		})
+	}
+
+	// 2. Description similarity (LOWER priority)
+	// Description often contains common words that may create false positives
+	if description != "" {
+		shouldClauses = append(shouldClauses, map[string]interface{}{
+			"more_like_this": map[string]interface{}{
+				"fields": []string{
+					"description", "description_sr", "description_en", "description_ru",
+				},
+				"like": []interface{}{
+					map[string]interface{}{
+						"_index": c.index,
+						"_id":    fmt.Sprintf("%d", listingID),
+					},
+				},
+				"min_term_freq":        1,
+				"min_doc_freq":         1,
+				"max_query_terms":      50,
+				"minimum_should_match": "1",
+				"boost":                2.0, // Lower boost for description
+			},
+		})
+	}
+
+	// 3. Same category (high weight)
+	if categoryID != "" {
+		shouldClauses = append(shouldClauses, map[string]interface{}{
+			"term": map[string]interface{}{
+				"category_id": map[string]interface{}{
+					"value": categoryID,
+					"boost": 4.0,
 				},
 			},
 		})
 	}
 
-	searchQuery := map[string]interface{}{
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"must": filters,
-				"must_not": []interface{}{
-					// Exclude the source listing itself
-					map[string]interface{}{"term": map[string]interface{}{"id": listingID}},
+	// 4. Price range filter (±30% for broader results, but not a must)
+	if price > 0 {
+		minPrice := price * 0.7
+		maxPrice := price * 1.3
+		shouldClauses = append(shouldClauses, map[string]interface{}{
+			"range": map[string]interface{}{
+				"price": map[string]interface{}{
+					"gte":   minPrice,
+					"lte":   maxPrice,
+					"boost": 2.0,
 				},
 			},
-		},
-		"size": limit,
-		"sort": []interface{}{
-			// Sort by relevance (closest price match first)
-			map[string]interface{}{
-				"_script": map[string]interface{}{
-					"type": "number",
-					"script": map[string]interface{}{
-						"lang":   "painless",
-						"source": fmt.Sprintf("Math.abs(doc['price'].value - %f)", price),
+		})
+	}
+
+	// Build the main query
+	boolQuery := map[string]interface{}{
+		"must":     mustFilters,
+		"must_not": mustNotFilters,
+		"should":   shouldClauses,
+	}
+
+	// Require at least one should clause to match
+	if len(shouldClauses) > 0 {
+		boolQuery["minimum_should_match"] = 1
+	}
+
+	// Build function_score query for additional scoring factors
+	functions := []interface{}{}
+
+	// 5. Geographic proximity scoring (if location available)
+	if hasLocation {
+		functions = append(functions, map[string]interface{}{
+			"gauss": map[string]interface{}{
+				"location": map[string]interface{}{
+					"origin": map[string]interface{}{
+						"lat": lat,
+						"lon": lon,
 					},
-					"order": "asc",
+					"scale":  "10km", // Distance at which score drops to ~0.5
+					"offset": "1km",  // No decay within this distance
+					"decay":  0.5,
 				},
 			},
-			// Secondary sort by creation date (newer first)
-			map[string]interface{}{"created_at": "desc"},
+			"weight": 2.0, // Location proximity weight
+		})
+	}
+
+	// 6. Price proximity scoring (closer price = higher score)
+	if price > 0 {
+		functions = append(functions, map[string]interface{}{
+			"gauss": map[string]interface{}{
+				"price": map[string]interface{}{
+					"origin": price,
+					"scale":  price * 0.2, // 20% price difference = ~0.5 score
+					"offset": price * 0.05,
+					"decay":  0.5,
+				},
+			},
+			"weight": 1.5,
+		})
+	}
+
+	// 7. Recency boost (newer listings slightly preferred)
+	functions = append(functions, map[string]interface{}{
+		"gauss": map[string]interface{}{
+			"created_at": map[string]interface{}{
+				"origin": "now",
+				"scale":  "30d",
+				"offset": "7d",
+				"decay":  0.5,
+			},
 		},
+		"weight": 0.5,
+	})
+
+	// Build final query
+	var searchQuery map[string]interface{}
+	if len(functions) > 0 {
+		searchQuery = map[string]interface{}{
+			"query": map[string]interface{}{
+				"function_score": map[string]interface{}{
+					"query":      map[string]interface{}{"bool": boolQuery},
+					"functions":  functions,
+					"score_mode": "sum",      // Sum all function scores
+					"boost_mode": "multiply", // Multiply with query score
+				},
+			},
+			"size": limit,
+		}
+	} else {
+		searchQuery = map[string]interface{}{
+			"query": map[string]interface{}{"bool": boolQuery},
+			"size":  limit,
+			"sort": []interface{}{
+				map[string]interface{}{"_score": "desc"},
+				map[string]interface{}{"created_at": "desc"},
+			},
+		}
 	}
 
 	body, err := json.Marshal(searchQuery)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to marshal similarity query: %w", err)
 	}
+
+	c.logger.Debug().
+		Int64("listing_id", listingID).
+		Str("category_id", categoryID).
+		Str("title", title).
+		Float64("price", price).
+		Bool("has_location", hasLocation).
+		RawJSON("query", body).
+		Msg("executing similarity search")
 
 	searchRes, err := c.client.Search(
 		c.client.Search.WithContext(ctx),
@@ -491,10 +692,15 @@ func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit 
 	defer searchRes.Body.Close()
 
 	if searchRes.IsError() {
+		bodyBytes, _ := io.ReadAll(searchRes.Body)
+		c.logger.Error().
+			Int("status", searchRes.StatusCode).
+			Str("response", string(bodyBytes)).
+			Msg("similarity search error")
 		return nil, 0, fmt.Errorf("similarity search error: %s", searchRes.Status())
 	}
 
-	// Parse search results (reuse existing parsing logic)
+	// Parse search results
 	var result map[string]interface{}
 	if err := json.NewDecoder(searchRes.Body).Decode(&result); err != nil {
 		return nil, 0, fmt.Errorf("failed to parse similarity search response: %w", err)
@@ -521,7 +727,7 @@ func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit 
 		return nil, 0, fmt.Errorf("invalid hits array in similarity response")
 	}
 
-	var listings []*domain.Listing
+	listings := make([]*domain.Listing, 0, len(hitsArray))
 	for _, hit := range hitsArray {
 		hitMap, ok := hit.(map[string]interface{})
 		if !ok {
@@ -533,77 +739,16 @@ func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit 
 			continue
 		}
 
-		// Extract fields (same as SearchListings)
-		//nolint:errcheck
-		id, _ := hitSource["id"].(float64)
-		//nolint:errcheck
-		uuid, _ := hitSource["uuid"].(string)
-		//nolint:errcheck
-		userID, _ := hitSource["user_id"].(float64)
-		//nolint:errcheck
-		title, _ := hitSource["title"].(string)
-		//nolint:errcheck
-		listingPrice, _ := hitSource["price"].(float64)
-		//nolint:errcheck
-		currency, _ := hitSource["currency"].(string)
-		//nolint:errcheck
-		catID, _ := hitSource["category_id"].(float64)
-		//nolint:errcheck
-		status, _ := hitSource["status"].(string)
-		//nolint:errcheck
-		visibility, _ := hitSource["visibility"].(string)
-		//nolint:errcheck
-		quantity, _ := hitSource["quantity"].(float64)
-		//nolint:errcheck
-		sourceType, _ := hitSource["source_type"].(string)
-		//nolint:errcheck
-		viewsCount, _ := hitSource["views_count"].(float64)
-		//nolint:errcheck
-		favoritesCount, _ := hitSource["favorites_count"].(float64)
-
-		listing := &domain.Listing{
-			ID:             int64(id),
-			UUID:           uuid,
-			UserID:         int64(userID),
-			Title:          title,
-			Price:          listingPrice,
-			Currency:       currency,
-			CategoryID:     int64(catID),
-			Status:         status,
-			Visibility:     visibility,
-			Quantity:       int32(quantity),
-			SourceType:     sourceType,
-			ViewsCount:     int32(viewsCount),
-			FavoritesCount: int32(favoritesCount),
+		listing := c.parseListingFromSource(hitSource)
+		if listing != nil {
+			listings = append(listings, listing)
 		}
-
-		// Optional fields
-		if desc, ok := hitSource["description"].(string); ok {
-			listing.Description = &desc
-		}
-		if sfID, ok := hitSource["storefront_id"].(float64); ok {
-			id := int64(sfID)
-			listing.StorefrontID = &id
-		}
-		if sku, ok := hitSource["sku"].(string); ok {
-			listing.SKU = &sku
-		}
-		if stockStatus, ok := hitSource["stock_status"].(string); ok {
-			listing.StockStatus = &stockStatus
-		}
-		if attributes, ok := hitSource["attributes"].(string); ok {
-			listing.AttributesJSON = &attributes
-		}
-
-		listings = append(listings, listing)
 	}
 
-	c.logger.Debug().
+	c.logger.Info().
 		Int64("listing_id", listingID).
-		Int64("category_id", int64(categoryID)).
+		Str("category_id", categoryID).
 		Float64("price", price).
-		Float64("min_price", minPrice).
-		Float64("max_price", maxPrice).
 		Int("results", len(listings)).
 		Int64("total", totalHits).
 		Msg("similarity search completed")
@@ -611,10 +756,90 @@ func (c *Client) GetSimilarListings(ctx context.Context, listingID int64, limit 
 	return listings, int32(totalHits), nil
 }
 
+// parseListingFromSource extracts a Listing from OpenSearch _source document
+func (c *Client) parseListingFromSource(source map[string]interface{}) *domain.Listing {
+	// Extract ID (required field)
+	id, ok := source["id"].(float64)
+	if !ok {
+		return nil
+	}
+
+	listing := &domain.Listing{
+		ID: int64(id),
+	}
+
+	// String fields
+	if v, ok := source["uuid"].(string); ok {
+		listing.UUID = v
+	}
+	if v, ok := source["title"].(string); ok {
+		listing.Title = v
+	}
+	if v, ok := source["currency"].(string); ok {
+		listing.Currency = v
+	}
+	if v, ok := source["status"].(string); ok {
+		listing.Status = v
+	}
+	if v, ok := source["visibility"].(string); ok {
+		listing.Visibility = v
+	}
+	if v, ok := source["source_type"].(string); ok {
+		listing.SourceType = v
+	}
+
+	// CategoryID can be string (UUID) or float64 (legacy int)
+	if catStr, ok := source["category_id"].(string); ok {
+		listing.CategoryID = catStr
+	} else if catNum, ok := source["category_id"].(float64); ok {
+		listing.CategoryID = fmt.Sprintf("%d", int64(catNum))
+	}
+
+	// Numeric fields
+	if v, ok := source["user_id"].(float64); ok {
+		listing.UserID = int64(v)
+	}
+	if v, ok := source["price"].(float64); ok {
+		listing.Price = v
+	}
+	if v, ok := source["quantity"].(float64); ok {
+		listing.Quantity = int32(v)
+	}
+	if v, ok := source["views_count"].(float64); ok {
+		listing.ViewsCount = int32(v)
+	}
+	if v, ok := source["favorites_count"].(float64); ok {
+		listing.FavoritesCount = int32(v)
+	}
+
+	// Optional string fields (pointers)
+	if v, ok := source["description"].(string); ok {
+		listing.Description = &v
+	}
+	if v, ok := source["sku"].(string); ok {
+		listing.SKU = &v
+	}
+	if v, ok := source["stock_status"].(string); ok {
+		listing.StockStatus = &v
+	}
+	if v, ok := source["attributes"].(string); ok {
+		listing.AttributesJSON = &v
+	}
+
+	// Optional numeric fields (pointers)
+	if v, ok := source["storefront_id"].(float64); ok {
+		sfID := int64(v)
+		listing.StorefrontID = &sfID
+	}
+
+	return listing
+}
+
 // buildFilters constructs filter clauses for search query
+// Fields like status, visibility, source_type, category_id are already keyword type in index mapping
 func buildFilters(query *domain.SearchListingsQuery) []interface{} {
+	// Note: status, visibility, source_type, category_id are already keyword type in mapping
 	filters := []interface{}{
-		// Only active, visible listings
 		map[string]interface{}{"term": map[string]interface{}{"status": "active"}},
 		map[string]interface{}{"term": map[string]interface{}{"visibility": "public"}},
 	}
@@ -714,8 +939,16 @@ func (c *Client) GetListingByID(ctx context.Context, listingID int64) (*domain.L
 	price, _ := source["price"].(float64)
 	//nolint:errcheck
 	currency, _ := source["currency"].(string)
-	//nolint:errcheck
-	categoryID, _ := source["category_id"].(float64)
+
+	// CategoryID can be string (UUID) or float64 (legacy int)
+	var categoryID string
+	if catStr, ok := source["category_id"].(string); ok {
+		categoryID = catStr
+	} else if catNum, ok := source["category_id"].(float64); ok {
+		// Legacy: convert int to string
+		categoryID = fmt.Sprintf("%d", int64(catNum))
+	}
+
 	//nolint:errcheck
 	status, _ := source["status"].(string)
 	//nolint:errcheck
@@ -728,7 +961,7 @@ func (c *Client) GetListingByID(ctx context.Context, listingID int64) (*domain.L
 		Title:      title,
 		Price:      price,
 		Currency:   currency,
-		CategoryID: int64(categoryID),
+		CategoryID: categoryID,
 		Status:     status,
 		SourceType: sourceType,
 	}
@@ -760,6 +993,9 @@ func (c *Client) IndexProduct(ctx context.Context, product *domain.Listing) erro
 		return fmt.Errorf("failed to marshal product document: %w", err)
 	}
 
+	// DEBUG: Log document being indexed to find empty field names
+	c.logger.Info().Int64("product_id", product.ID).Str("document", string(body)).Msg("indexing document")
+
 	// Index document
 	res, err := c.client.Index(
 		c.index,
@@ -775,8 +1011,19 @@ func (c *Client) IndexProduct(ctx context.Context, product *domain.Listing) erro
 	defer res.Body.Close()
 
 	if res.IsError() {
-		c.logger.Error().Int("status", res.StatusCode).Int64("product_id", product.ID).Msg("OpenSearch index error")
-		return fmt.Errorf("OpenSearch index error: %s", res.Status())
+		// Read response body for detailed error
+		bodyBytes, readErr := io.ReadAll(res.Body)
+		if readErr != nil {
+			c.logger.Error().Err(readErr).Int("status", res.StatusCode).Int64("product_id", product.ID).Msg("failed to read OpenSearch error response")
+			return fmt.Errorf("OpenSearch index error: %s (failed to read error details)", res.Status())
+		}
+
+		c.logger.Error().
+			Int("status", res.StatusCode).
+			Int64("product_id", product.ID).
+			Str("error_body", string(bodyBytes)).
+			Msg("OpenSearch index error with details")
+		return fmt.Errorf("OpenSearch index error: %s - %s", res.Status(), string(bodyBytes))
 	}
 
 	c.logger.Debug().Int64("product_id", product.ID).Msg("product indexed successfully")
@@ -948,13 +1195,17 @@ func (c *Client) buildProductDocument(product *domain.Listing) map[string]interf
 	}
 
 	// Add images if present
+	// NOTE: Field names must match what parseImages() expects in search service:
+	// - public_url (not file_path or url)
+	// - is_main (not is_primary)
 	if len(product.Images) > 0 {
 		images := make([]map[string]interface{}, 0, len(product.Images))
 		for _, img := range product.Images {
 			images = append(images, map[string]interface{}{
-				"id":        img.ID,
-				"file_path": img.URL,
-				"is_main":   img.IsPrimary,
+				"id":            img.ID,
+				"public_url":    img.URL,
+				"is_main":       img.IsPrimary,
+				"display_order": img.DisplayOrder,
 			})
 		}
 		doc["images"] = images
@@ -1051,6 +1302,99 @@ func (c *Client) CreateIndex(ctx context.Context, indexName string, mapping map[
 	}
 
 	c.logger.Info().Str("index", indexName).Msg("index created successfully")
+	return nil
+}
+
+// DeleteAllDocuments deletes all documents from the marketplace_listings index using delete_by_query
+// This is used before full reindexing to ensure stale/deleted documents are removed
+func (c *Client) DeleteAllDocuments(ctx context.Context) error {
+	// Use delete_by_query with match_all to remove all documents
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"match_all": map[string]interface{}{},
+		},
+	}
+
+	body, err := json.Marshal(query)
+	if err != nil {
+		return fmt.Errorf("failed to marshal delete query: %w", err)
+	}
+
+	res, err := c.client.DeleteByQuery(
+		[]string{"marketplace_listings"},
+		bytes.NewReader(body),
+		c.client.DeleteByQuery.WithContext(ctx),
+		c.client.DeleteByQuery.WithRefresh(true), // Make deletion visible immediately
+		c.client.DeleteByQuery.WithWaitForCompletion(true),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete all documents: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("delete_by_query failed: %s - %s", res.Status(), string(bodyBytes))
+	}
+
+	// Parse response to log how many documents were deleted
+	var result map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		c.logger.Warn().Err(err).Msg("failed to parse delete_by_query response")
+	} else {
+		deleted := int64(0)
+		if d, ok := result["deleted"].(float64); ok {
+			deleted = int64(d)
+		}
+		c.logger.Info().Int64("deleted", deleted).Msg("deleted all documents from index")
+	}
+
+	return nil
+}
+
+// DeleteDocumentsBySourceType deletes documents with a specific source_type from the index
+func (c *Client) DeleteDocumentsBySourceType(ctx context.Context, sourceType string) error {
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"term": map[string]interface{}{
+				"source_type": sourceType,
+			},
+		},
+	}
+
+	body, err := json.Marshal(query)
+	if err != nil {
+		return fmt.Errorf("failed to marshal delete query: %w", err)
+	}
+
+	res, err := c.client.DeleteByQuery(
+		[]string{"marketplace_listings"},
+		bytes.NewReader(body),
+		c.client.DeleteByQuery.WithContext(ctx),
+		c.client.DeleteByQuery.WithRefresh(true),
+		c.client.DeleteByQuery.WithWaitForCompletion(true),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete documents by source_type: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("delete_by_query failed: %s - %s", res.Status(), string(bodyBytes))
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		c.logger.Warn().Err(err).Msg("failed to parse delete_by_query response")
+	} else {
+		deleted := int64(0)
+		if d, ok := result["deleted"].(float64); ok {
+			deleted = int64(d)
+		}
+		c.logger.Info().Str("source_type", sourceType).Int64("deleted", deleted).Msg("deleted documents by source_type")
+	}
+
 	return nil
 }
 

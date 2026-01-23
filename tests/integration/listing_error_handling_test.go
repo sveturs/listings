@@ -18,11 +18,11 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service/listings"
-	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
-	"github.com/sveturs/listings/tests"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service/listings"
+	grpchandlers "github.com/vondi-global/listings/internal/transport/grpc"
+	"github.com/vondi-global/listings/tests"
 )
 
 // ============================================================================
@@ -48,7 +48,7 @@ func TestListing_Error_MissingRequiredFields(t *testing.T) {
 				Title:      "", // Missing
 				Price:      99.99,
 				Currency:   "USD",
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
@@ -60,7 +60,7 @@ func TestListing_Error_MissingRequiredFields(t *testing.T) {
 				Title:      "Test Product",
 				Price:      99.99,
 				Currency:   "", // Missing
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
@@ -72,7 +72,7 @@ func TestListing_Error_MissingRequiredFields(t *testing.T) {
 				Title:      "Test Product",
 				Price:      99.99,
 				Currency:   "USD",
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			},
 			expectedErr: codes.InvalidArgument,
@@ -115,7 +115,7 @@ func TestListing_Error_InvalidEnumValues(t *testing.T) {
 				Title:      "Test Product",
 				Price:      99.99,
 				Currency:   "USD",
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			}
 
@@ -221,7 +221,7 @@ func TestListing_Error_InvalidCurrency(t *testing.T) {
 				Title:      "Test Product",
 				Price:      99.99,
 				Currency:   tc.currency,
-				CategoryId: 1,
+				CategoryId: "1",
 				Quantity:   1,
 			}
 
@@ -253,7 +253,7 @@ func TestListing_Error_DuplicateSKU(t *testing.T) {
 		Title:      "First Product",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 
 		Sku: stringPtr("DUPLICATE-SKU-001"),
@@ -269,7 +269,7 @@ func TestListing_Error_DuplicateSKU(t *testing.T) {
 		Title:      "Second Product",
 		Price:      149.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 
 		Sku: stringPtr("DUPLICATE-SKU-001"), // Same SKU
@@ -315,7 +315,7 @@ func TestListing_Error_TooManyListings(t *testing.T) {
 			Title:      "Bulk Test Product",
 			Price:      99.99,
 			Currency:   "USD",
-			CategoryId: 1,
+			CategoryId: "1",
 			Quantity:   1,
 		}
 
@@ -366,7 +366,24 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 
 	// Create gRPC server
 	m := getTestMetrics()
-	server := grpchandlers.NewServer(service, m, logger)
+	server := grpchandlers.NewServer(
+		service,
+		nil, // storefrontService
+		nil, // attrService
+		nil, // categoryService
+		nil, // categoryRepoV2 (Phase 1, not used in tests)
+		nil, // categoryCache (Phase 1, not used in tests)
+		nil, // orderService
+		nil, // cartService
+		nil, // chatService
+		nil, // analyticsService
+		nil, // storefrontAnalyticsService
+		nil, // inventoryService
+		nil, // invitationService
+		nil, // minioClient
+		m,
+		logger,
+	)
 
 	// Setup gRPC connection
 	lis := bufconn.Listen(bufSize)
@@ -398,7 +415,7 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 		Title:      "Test Before Disconnect",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -416,7 +433,7 @@ func TestListing_Error_DatabaseDisconnect(t *testing.T) {
 		Title:      "Test After Disconnect",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -450,7 +467,7 @@ func TestListing_Error_ContextTimeout(t *testing.T) {
 		Title:      "Timeout Test",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -479,7 +496,7 @@ func TestListing_Error_ContextCancellation(t *testing.T) {
 		Title:      "Cancelled Request Test",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -509,7 +526,7 @@ func TestListing_Error_UpdateOthersListing(t *testing.T) {
 		Title:      "User 100 Listing",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 
@@ -551,7 +568,7 @@ func TestListing_Error_DeleteOthersListing(t *testing.T) {
 		Title:      "User 100 Listing",
 		Price:      99.99,
 		Currency:   "USD",
-		CategoryId: 1,
+		CategoryId: "1",
 		Quantity:   1,
 	}
 

@@ -162,7 +162,7 @@ Push → Lint (2m) → Unit Tests (5m) → Integration (8m) → Build (3m) → D
 
 **Need Help?**
 - Slack: #devops, #performance
-- Email: devops@svetu.rs
+- Email: devops@vondi.rs
 
 ---
 

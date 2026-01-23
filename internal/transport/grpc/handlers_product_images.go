@@ -6,9 +6,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
 // AddProductImage adds a new image to a B2C product
@@ -323,6 +323,90 @@ func (s *Server) ReorderProductImages(ctx context.Context, req *listingspb.Reord
 
 	return &listingspb.ReorderProductImagesResponse{
 		Success: true,
+	}, nil
+}
+
+// SetProductImagePrimary sets a specific image as the primary image for a product
+// Automatically unsets primary flag from all other images
+func (s *Server) SetProductImagePrimary(ctx context.Context, req *listingspb.SetProductImagePrimaryRequest) (*listingspb.SetProductImagePrimaryResponse, error) {
+	s.logger.Info().
+		Int64("product_id", req.ProductId).
+		Int64("image_id", req.ImageId).
+		Int64("storefront_id", req.StorefrontId).
+		Msg("SetProductImagePrimary called")
+
+	// ============================================================================
+	// VALIDATION
+	// ============================================================================
+
+	if req.ProductId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "product_id must be positive")
+	}
+
+	if req.ImageId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "image_id must be positive")
+	}
+
+	if req.StorefrontId <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "storefront_id must be positive")
+	}
+
+	// ============================================================================
+	// AUTHORIZATION: Verify product belongs to storefront
+	// ============================================================================
+
+	product, err := s.service.GetProduct(ctx, req.ProductId, nil)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("product_id", req.ProductId).Msg("product not found")
+		return nil, status.Error(codes.NotFound, "product not found")
+	}
+
+	if product.StorefrontID != req.StorefrontId {
+		s.logger.Warn().
+			Int64("product_storefront_id", product.StorefrontID).
+			Int64("requested_storefront_id", req.StorefrontId).
+			Msg("product does not belong to storefront")
+		return nil, status.Error(codes.PermissionDenied, "product does not belong to this storefront")
+	}
+
+	// ============================================================================
+	// VERIFY IMAGE BELONGS TO THIS PRODUCT
+	// ============================================================================
+
+	image, err := s.service.GetProductImageByID(ctx, req.ImageId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("image_id", req.ImageId).Msg("image not found")
+		return nil, status.Error(codes.NotFound, "image not found")
+	}
+
+	if image.ProductID == nil || *image.ProductID != req.ProductId {
+		s.logger.Warn().
+			Int64("image_id", req.ImageId).
+			Int64("requested_product_id", req.ProductId).
+			Msg("image does not belong to this product")
+		return nil, status.Error(codes.InvalidArgument, "image does not belong to this product")
+	}
+
+	// ============================================================================
+	// SET PRIMARY IMAGE
+	// ============================================================================
+
+	if err := s.service.SetProductImagePrimary(ctx, req.ProductId, req.ImageId); err != nil {
+		s.logger.Error().Err(err).
+			Int64("product_id", req.ProductId).
+			Int64("image_id", req.ImageId).
+			Msg("failed to set product image primary")
+		return nil, status.Error(codes.Internal, "failed to set primary image")
+	}
+
+	s.logger.Info().
+		Int64("product_id", req.ProductId).
+		Int64("image_id", req.ImageId).
+		Msg("SetProductImagePrimary completed")
+
+	return &listingspb.SetProductImagePrimaryResponse{
+		Success: true,
+		Message: "Image set as primary successfully",
 	}, nil
 }
 

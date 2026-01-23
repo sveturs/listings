@@ -100,7 +100,7 @@ Alert Rule Fields:
   [✅] All 14 have expr (PromQL):         YES
   [✅] All 14 have labels:                YES
   [✅] All 14 have annotations:           YES
-  [✅] All have runbook_url:              YES (https://wiki.svetu.rs/runbooks/*)
+  [✅] All have runbook_url:              YES (https://wiki.vondi.rs/runbooks/*)
   [✅] Severity distribution:             7 critical, 7 warning (balanced)
 
 Recording Rules (11 total):

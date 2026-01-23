@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // GetProduct retrieves a single product by ID
@@ -265,8 +265,8 @@ func (s *Server) CreateProduct(ctx context.Context, req *listingspb.CreateProduc
 		return nil, status.Error(codes.InvalidArgument, "currency cannot be empty")
 	}
 
-	if req.CategoryId <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "category ID must be greater than 0")
+	if req.CategoryId == "" {
+		return nil, status.Error(codes.InvalidArgument, "category_id is required")
 	}
 
 	if req.StockQuantity < 0 {
@@ -580,11 +580,18 @@ func (s *Server) UpdateProductVariant(ctx context.Context, req *listingspb.Updat
 		return nil, status.Error(codes.InvalidArgument, "product ID must be greater than 0")
 	}
 
+	// Get variant to retrieve UUID (product_variants.id is now UUID)
+	existingVariant, err := s.service.GetVariant(ctx, req.VariantId, &req.ProductId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("variant_id", req.VariantId).Msg("failed to get variant for update")
+		return nil, status.Error(codes.NotFound, "variants.not_found")
+	}
+
 	// Convert proto to domain input
 	input := ProtoToUpdateVariantInput(req)
 
-	// Update variant via service
-	variant, err := s.service.UpdateProductVariant(ctx, req.VariantId, req.ProductId, input)
+	// Update variant via service using UUID
+	variant, err := s.service.UpdateProductVariant(ctx, existingVariant.UUID, req.ProductId, input)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to update variant")
 
@@ -630,8 +637,15 @@ func (s *Server) DeleteProductVariant(ctx context.Context, req *listingspb.Delet
 		return nil, status.Error(codes.InvalidArgument, "product ID must be greater than 0")
 	}
 
-	// Delete variant via service
-	err := s.service.DeleteProductVariant(ctx, req.VariantId, req.ProductId)
+	// Get variant to retrieve UUID (product_variants.id is now UUID)
+	existingVariant, err := s.service.GetVariant(ctx, req.VariantId, &req.ProductId)
+	if err != nil {
+		s.logger.Error().Err(err).Int64("variant_id", req.VariantId).Msg("failed to get variant for deletion")
+		return nil, status.Error(codes.NotFound, "variants.not_found")
+	}
+
+	// Delete variant via service using UUID
+	err = s.service.DeleteProductVariant(ctx, existingVariant.UUID, req.ProductId)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to delete variant")
 

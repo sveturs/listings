@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // Validation constants
@@ -87,9 +87,9 @@ func NewValidator(repo Repository) *Validator {
 }
 
 // ValidateCategory checks if category exists and is active
-func (v *Validator) ValidateCategory(ctx context.Context, categoryID int64) error {
-	if categoryID <= 0 {
-		return NewValidationError("category_id", "category_id must be greater than 0")
+func (v *Validator) ValidateCategory(ctx context.Context, categoryID string) error {
+	if categoryID == "" {
+		return NewValidationError("category_id", "category_id must not be empty")
 	}
 
 	category, err := v.repo.GetCategoryByID(ctx, categoryID)

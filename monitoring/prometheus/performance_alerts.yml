@@ -21,7 +21,7 @@ groups:
             This exceeds the critical threshold of 50ms.
             Current value: {{ $value | humanizeDuration }}
             Threshold: 50ms
-          runbook_url: "https://wiki.svetu.rs/runbooks/high-latency"
+          runbook_url: "https://wiki.vondi.rs/runbooks/high-latency"
 
       - alert: CriticalP99Latency
         expr: |
@@ -41,7 +41,7 @@ groups:
             Immediate investigation required.
             Current value: {{ $value | humanizeDuration }}
             Threshold: 100ms
-          runbook_url: "https://wiki.svetu.rs/runbooks/critical-latency"
+          runbook_url: "https://wiki.vondi.rs/runbooks/critical-latency"
 
       - alert: SustainedHighLatency
         expr: |
@@ -60,7 +60,7 @@ groups:
             Current value: {{ $value | humanizeDuration }}
             Expected: < 20ms
             This indicates general performance degradation.
-          runbook_url: "https://wiki.svetu.rs/runbooks/sustained-latency"
+          runbook_url: "https://wiki.vondi.rs/runbooks/sustained-latency"
 
       # === Error Rate Alerts ===
 
@@ -82,7 +82,7 @@ groups:
             This exceeds the warning threshold of 0.5%.
             Current rate: {{ $value | humanizePercentage }}
             Threshold: 0.5%
-          runbook_url: "https://wiki.svetu.rs/runbooks/high-error-rate"
+          runbook_url: "https://wiki.vondi.rs/runbooks/high-error-rate"
 
       - alert: CriticalErrorRate
         expr: |
@@ -103,7 +103,7 @@ groups:
             Immediate action required!
             Current rate: {{ $value | humanizePercentage }}
             Threshold: 1%
-          runbook_url: "https://wiki.svetu.rs/runbooks/critical-error-rate"
+          runbook_url: "https://wiki.vondi.rs/runbooks/critical-error-rate"
 
       # === Database Performance Alerts ===
 
@@ -124,7 +124,7 @@ groups:
             This may indicate database performance issues.
             Current value: {{ $value | humanizeDuration }}
             Threshold: 50ms
-          runbook_url: "https://wiki.svetu.rs/runbooks/slow-queries"
+          runbook_url: "https://wiki.vondi.rs/runbooks/slow-queries"
 
       - alert: DatabaseConnectionPoolSaturation
         expr: |
@@ -144,7 +144,7 @@ groups:
             Consider increasing pool size or investigating slow queries.
             Current usage: {{ $value | humanizePercentage }}
             Threshold: 80%
-          runbook_url: "https://wiki.svetu.rs/runbooks/db-pool-saturation"
+          runbook_url: "https://wiki.vondi.rs/runbooks/db-pool-saturation"
 
       - alert: DatabaseConnectionPoolExhaustion
         expr: |
@@ -163,7 +163,7 @@ groups:
             Service degradation or failures imminent!
             Current usage: {{ $value | humanizePercentage }}
             Threshold: 95%
-          runbook_url: "https://wiki.svetu.rs/runbooks/db-pool-exhaustion"
+          runbook_url: "https://wiki.vondi.rs/runbooks/db-pool-exhaustion"
 
       # === Throughput Alerts ===
 
@@ -182,7 +182,7 @@ groups:
             This may indicate upstream issues or service degradation.
             Current rate: {{ $value | humanize }} RPS
             Expected: > 10 RPS
-          runbook_url: "https://wiki.svetu.rs/runbooks/low-throughput"
+          runbook_url: "https://wiki.vondi.rs/runbooks/low-throughput"
 
       - alert: UnusuallyHighThroughput
         expr: |
@@ -199,7 +199,7 @@ groups:
             This may indicate a traffic spike or potential DDoS.
             Current rate: {{ $value | humanize }} RPS
             Baseline: < 1000 RPS
-          runbook_url: "https://wiki.svetu.rs/runbooks/high-throughput"
+          runbook_url: "https://wiki.vondi.rs/runbooks/high-throughput"
 
       # === Memory Alerts ===
 
@@ -220,7 +220,7 @@ groups:
             This may indicate a memory leak or high load.
             Current usage: {{ $value | humanizePercentage }}
             Threshold: 80%
-          runbook_url: "https://wiki.svetu.rs/runbooks/high-memory"
+          runbook_url: "https://wiki.vondi.rs/runbooks/high-memory"
 
       - alert: MemoryLeak
         expr: |
@@ -236,7 +236,7 @@ groups:
             Memory allocation rate has been consistently increasing.
             Rate: {{ $value | humanize }} bytes/sec
             This may indicate a memory leak requiring investigation.
-          runbook_url: "https://wiki.svetu.rs/runbooks/memory-leak"
+          runbook_url: "https://wiki.vondi.rs/runbooks/memory-leak"
 
       # === Stock Operation Performance Alerts (CRITICAL for order processing) ===
 
@@ -258,7 +258,7 @@ groups:
             This may impact checkout experience.
             Current value: {{ $value | humanizeDuration }}
             Threshold: 30ms
-          runbook_url: "https://wiki.svetu.rs/runbooks/slow-stock-ops"
+          runbook_url: "https://wiki.vondi.rs/runbooks/slow-stock-ops"
 
       - alert: StockOperationErrors
         expr: |
@@ -278,7 +278,7 @@ groups:
             This will directly impact order processing!
             Current error rate: {{ $value | humanizePercentage }}
             Threshold: 0.1%
-          runbook_url: "https://wiki.svetu.rs/runbooks/stock-errors"
+          runbook_url: "https://wiki.vondi.rs/runbooks/stock-errors"
 
   - name: performance_recording_rules
     interval: 15s

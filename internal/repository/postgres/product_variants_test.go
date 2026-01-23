@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/tests"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/tests"
 )
 
 // ============================================================================
@@ -86,7 +86,7 @@ func TestCreateProductVariant_Success(t *testing.T) {
 	variant, err := repo.CreateProductVariant(ctx, input)
 
 	require.NoError(t, err)
-	assert.NotZero(t, variant.ID)
+	assert.NotEmpty(t, variant.UUID) // Changed: UUID is now a string
 	assert.Equal(t, product.ID, variant.ProductID)
 	assert.Equal(t, "VAR-RED-L", *variant.SKU)
 	assert.Equal(t, price, *variant.Price)
@@ -133,7 +133,7 @@ func TestCreateProductVariant_WithAttributes(t *testing.T) {
 	variant, err := repo.CreateProductVariant(ctx, input)
 
 	require.NoError(t, err)
-	assert.NotZero(t, variant.ID)
+	assert.NotEmpty(t, variant.UUID) // Changed: UUID is now a string
 	assert.Equal(t, 4, len(variant.VariantAttributes))
 	assert.Equal(t, "blue", variant.VariantAttributes["color"])
 	assert.Equal(t, "cotton", variant.VariantAttributes["material"])
@@ -284,10 +284,10 @@ func TestUpdateProductVariant_Success(t *testing.T) {
 		StockQuantity: &newQuantity,
 	}
 
-	updatedVariant, err := repo.UpdateProductVariant(ctx, variant.ID, product.ID, updateInput)
+	updatedVariant, err := repo.UpdateProductVariant(ctx, variant.UUID, product.ID, updateInput)
 
 	require.NoError(t, err)
-	assert.Equal(t, variant.ID, updatedVariant.ID)
+	assert.Equal(t, variant.UUID, updatedVariant.UUID)
 	assert.Equal(t, newSKU, *updatedVariant.SKU)
 	assert.Equal(t, newPrice, *updatedVariant.Price)
 	assert.Equal(t, newQuantity, updatedVariant.StockQuantity)
@@ -321,7 +321,7 @@ func TestUpdateProductVariant_PartialUpdate(t *testing.T) {
 		Price: &newPrice,
 	}
 
-	updatedVariant, err := repo.UpdateProductVariant(ctx, variant.ID, product.ID, updateInput)
+	updatedVariant, err := repo.UpdateProductVariant(ctx, variant.UUID, product.ID, updateInput)
 
 	require.NoError(t, err)
 	assert.Equal(t, newPrice, *updatedVariant.Price)
@@ -361,7 +361,7 @@ func TestUpdateProductVariant_UpdatePrice(t *testing.T) {
 		CostPrice:      &costPrice,
 	}
 
-	updatedVariant, err := repo.UpdateProductVariant(ctx, variant.ID, product.ID, updateInput)
+	updatedVariant, err := repo.UpdateProductVariant(ctx, variant.UUID, product.ID, updateInput)
 
 	require.NoError(t, err)
 	assert.Equal(t, newPrice, *updatedVariant.Price)
@@ -387,7 +387,7 @@ func TestUpdateProductVariant_NonExistentVariant(t *testing.T) {
 		Price: &newPrice,
 	}
 
-	updatedVariant, err := repo.UpdateProductVariant(ctx, 99999, product.ID, updateInput)
+	updatedVariant, err := repo.UpdateProductVariant(ctx, "00000000-0000-0000-0000-000000000000", product.ID, updateInput)
 
 	assert.Error(t, err)
 	assert.Nil(t, updatedVariant)
@@ -427,7 +427,7 @@ func TestUpdateProductVariant_UpdateAttributes(t *testing.T) {
 		},
 	}
 
-	updatedVariant, err := repo.UpdateProductVariant(ctx, variant.ID, product.ID, updateInput)
+	updatedVariant, err := repo.UpdateProductVariant(ctx, variant.UUID, product.ID, updateInput)
 
 	require.NoError(t, err)
 	assert.Equal(t, 3, len(updatedVariant.VariantAttributes))
@@ -461,12 +461,12 @@ func TestDeleteProductVariant_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// Delete variant
-	err = repo.DeleteProductVariant(ctx, variant.ID, product.ID)
+	err = repo.DeleteProductVariant(ctx, variant.UUID, product.ID)
 
 	require.NoError(t, err)
 
 	// Verify variant is deleted
-	_, err = repo.GetVariantByID(ctx, variant.ID, &product.ID)
+	_, err = repo.GetVariantByUUID(ctx, variant.UUID, &product.ID)
 	assert.Error(t, err)
 }
 
@@ -479,7 +479,7 @@ func TestDeleteProductVariant_NonExistentVariant(t *testing.T) {
 	ctx := tests.TestContext(t)
 
 	// Try to delete non-existent variant
-	err := repo.DeleteProductVariant(ctx, 99999, product.ID)
+	err := repo.DeleteProductVariant(ctx, "00000000-0000-0000-0000-000000000000", product.ID)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "variants.not_found")
@@ -516,11 +516,11 @@ func TestDeleteProductVariant_UpdatesProductStock(t *testing.T) {
 	require.NoError(t, err)
 
 	// Delete first variant
-	err = repo.DeleteProductVariant(ctx, variant1.ID, product.ID)
+	err = repo.DeleteProductVariant(ctx, variant1.UUID, product.ID)
 	require.NoError(t, err)
 
 	// Verify second variant still exists
-	remainingVariant, err := repo.GetVariantByID(ctx, variant2.ID, &product.ID)
+	remainingVariant, err := repo.GetVariantByUUID(ctx, variant2.UUID, &product.ID)
 	require.NoError(t, err)
 	assert.NotNil(t, remainingVariant)
 
@@ -551,11 +551,11 @@ func TestDeleteProductVariant_AlreadyDeleted(t *testing.T) {
 	require.NoError(t, err)
 
 	// Delete once
-	err = repo.DeleteProductVariant(ctx, variant.ID, product.ID)
+	err = repo.DeleteProductVariant(ctx, variant.UUID, product.ID)
 	require.NoError(t, err)
 
 	// Try to delete again (idempotency check)
-	err = repo.DeleteProductVariant(ctx, variant.ID, product.ID)
+	err = repo.DeleteProductVariant(ctx, variant.UUID, product.ID)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "variants.not_found")
@@ -620,7 +620,7 @@ func TestBulkCreateProductVariants_Success(t *testing.T) {
 
 	// Verify all variants created
 	for _, variant := range variants {
-		assert.NotZero(t, variant.ID)
+		assert.NotZero(t, variant.UUID)
 		assert.Equal(t, product.ID, variant.ProductID)
 		assert.NotNil(t, variant.SKU)
 		assert.True(t, variant.IsActive)

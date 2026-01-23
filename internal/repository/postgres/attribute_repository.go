@@ -11,7 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // AttributeRepository implements PostgreSQL data access for attributes
@@ -634,10 +634,12 @@ func (r *AttributeRepository) unmarshalAttributeJSONB(attr *domain.Attribute, na
 	}
 
 	if len(optionsBytes) > 0 && string(optionsBytes) != "null" {
-		if err := json.Unmarshal(optionsBytes, &attr.Options); err != nil {
-			r.logger.Error().Err(err).Msg("failed to unmarshal options")
-			return fmt.Errorf("failed to unmarshal options: %w", err)
+		// Options может быть либо array ([]AttributeOption), либо object ({"allow_custom": true})
+		var tempOptions []domain.AttributeOption
+		if err := json.Unmarshal(optionsBytes, &tempOptions); err == nil {
+			attr.Options = tempOptions
 		}
+		// Если не array - пропускаем, это config object
 	}
 
 	if len(validationRulesBytes) > 0 && string(validationRulesBytes) != "null" {
@@ -662,7 +664,7 @@ func (r *AttributeRepository) unmarshalAttributeJSONB(attr *domain.Attribute, na
 // =============================================================================
 
 // LinkToCategory links an attribute to a category with specific settings
-func (r *AttributeRepository) LinkToCategory(ctx context.Context, categoryID int32, attributeID int32, settings *domain.CategoryAttributeSettings) (*domain.CategoryAttribute, error) {
+func (r *AttributeRepository) LinkToCategory(ctx context.Context, categoryID string, attributeID int32, settings *domain.CategoryAttributeSettings) (*domain.CategoryAttribute, error) {
 	if settings == nil {
 		return nil, fmt.Errorf("settings cannot be nil")
 	}
@@ -699,7 +701,7 @@ func (r *AttributeRepository) LinkToCategory(ctx context.Context, categoryID int
 	query := `
 		INSERT INTO category_attributes (
 			category_id, attribute_id, is_enabled, is_required, is_searchable, is_filterable,
-			sort_order, category_specific_options, custom_validation_rules, custom_ui_settings
+			sort_order, category_options, custom_validation, custom_ui_settings
 		)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT (category_id, attribute_id)
@@ -709,12 +711,12 @@ func (r *AttributeRepository) LinkToCategory(ctx context.Context, categoryID int
 			is_searchable = EXCLUDED.is_searchable,
 			is_filterable = EXCLUDED.is_filterable,
 			sort_order = EXCLUDED.sort_order,
-			category_specific_options = EXCLUDED.category_specific_options,
-			custom_validation_rules = EXCLUDED.custom_validation_rules,
+			category_options = EXCLUDED.category_options,
+			custom_validation = EXCLUDED.custom_validation,
 			custom_ui_settings = EXCLUDED.custom_ui_settings,
 			updated_at = CURRENT_TIMESTAMP
 		RETURNING id, category_id, attribute_id, is_enabled, is_required, is_searchable, is_filterable,
-		          sort_order, category_specific_options, custom_validation_rules, custom_ui_settings,
+		          sort_order, category_options, custom_validation, custom_ui_settings,
 		          is_active, created_at, updated_at
 	`
 
@@ -751,7 +753,7 @@ func (r *AttributeRepository) LinkToCategory(ctx context.Context, categoryID int
 		&catAttr.UpdatedAt,
 	)
 	if err != nil {
-		r.logger.Error().Err(err).Int32("category_id", categoryID).Int32("attribute_id", attributeID).Msg("failed to link attribute to category")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Int32("attribute_id", attributeID).Msg("failed to link attribute to category")
 		return nil, fmt.Errorf("failed to link attribute to category: %w", err)
 	}
 
@@ -760,7 +762,7 @@ func (r *AttributeRepository) LinkToCategory(ctx context.Context, categoryID int
 		return nil, err
 	}
 
-	r.logger.Info().Int32("id", catAttr.ID).Int32("category_id", categoryID).Int32("attribute_id", attributeID).Msg("attribute linked to category")
+	r.logger.Info().Int32("id", catAttr.ID).Str("category_id", categoryID).Int32("attribute_id", attributeID).Msg("attribute linked to category")
 	return &catAttr, nil
 }
 
@@ -806,13 +808,13 @@ func (r *AttributeRepository) UpdateCategoryAttribute(ctx context.Context, catAt
 		    is_searchable = $4,
 		    is_filterable = $5,
 		    sort_order = $6,
-		    category_specific_options = $7,
-		    custom_validation_rules = $8,
+		    category_options = $7,
+		    custom_validation = $8,
 		    custom_ui_settings = $9,
 		    updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1 AND is_active = true
 		RETURNING id, category_id, attribute_id, is_enabled, is_required, is_searchable, is_filterable,
-		          sort_order, category_specific_options, custom_validation_rules, custom_ui_settings,
+		          sort_order, category_options, custom_validation, custom_ui_settings,
 		          is_active, created_at, updated_at
 	`
 
@@ -865,7 +867,7 @@ func (r *AttributeRepository) UpdateCategoryAttribute(ctx context.Context, catAt
 }
 
 // UnlinkFromCategory removes attribute-category link
-func (r *AttributeRepository) UnlinkFromCategory(ctx context.Context, categoryID int32, attributeID int32) error {
+func (r *AttributeRepository) UnlinkFromCategory(ctx context.Context, categoryID string, attributeID int32) error {
 	query := `
 		UPDATE category_attributes
 		SET is_active = false, updated_at = CURRENT_TIMESTAMP
@@ -874,7 +876,7 @@ func (r *AttributeRepository) UnlinkFromCategory(ctx context.Context, categoryID
 
 	result, err := r.db.ExecContext(ctx, query, categoryID, attributeID)
 	if err != nil {
-		r.logger.Error().Err(err).Int32("category_id", categoryID).Int32("attribute_id", attributeID).Msg("failed to unlink attribute from category")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Int32("attribute_id", attributeID).Msg("failed to unlink attribute from category")
 		return fmt.Errorf("failed to unlink attribute from category: %w", err)
 	}
 
@@ -887,12 +889,12 @@ func (r *AttributeRepository) UnlinkFromCategory(ctx context.Context, categoryID
 		return fmt.Errorf("category attribute link not found or already deleted")
 	}
 
-	r.logger.Info().Int32("category_id", categoryID).Int32("attribute_id", attributeID).Msg("attribute unlinked from category")
+	r.logger.Info().Str("category_id", categoryID).Int32("attribute_id", attributeID).Msg("attribute unlinked from category")
 	return nil
 }
 
 // GetCategoryAttributes retrieves attributes for a specific category with filters
-func (r *AttributeRepository) GetCategoryAttributes(ctx context.Context, categoryID int32, filter *domain.GetCategoryAttributesFilter) ([]*domain.CategoryAttribute, error) {
+func (r *AttributeRepository) GetCategoryAttributes(ctx context.Context, categoryID string, filter *domain.GetCategoryAttributesFilter) ([]*domain.CategoryAttribute, error) {
 	// Build WHERE clause dynamically
 	whereConditions := []string{"ca.category_id = $1", "ca.is_active = true", "a.is_active = true"}
 	args := []interface{}{categoryID}
@@ -920,7 +922,6 @@ func (r *AttributeRepository) GetCategoryAttributes(ctx context.Context, categor
 		if filter.IsFilterable != nil {
 			whereConditions = append(whereConditions, fmt.Sprintf("COALESCE(ca.is_filterable, a.is_filterable) = $%d", argPos))
 			args = append(args, *filter.IsFilterable)
-			argPos++
 		}
 	}
 
@@ -928,7 +929,7 @@ func (r *AttributeRepository) GetCategoryAttributes(ctx context.Context, categor
 
 	query := fmt.Sprintf(`
 		SELECT ca.id, ca.category_id, ca.attribute_id, ca.is_enabled, ca.is_required, ca.is_searchable, ca.is_filterable,
-		       ca.sort_order, ca.category_specific_options, ca.custom_validation_rules, ca.custom_ui_settings,
+		       ca.sort_order, ca.category_options, ca.custom_validation, ca.custom_ui_settings,
 		       ca.is_active, ca.created_at, ca.updated_at,
 		       a.id, a.code, a.name, a.display_name, a.attribute_type, a.purpose,
 		       a.options, a.validation_rules, a.ui_settings,
@@ -943,7 +944,7 @@ func (r *AttributeRepository) GetCategoryAttributes(ctx context.Context, categor
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		r.logger.Error().Err(err).Int32("category_id", categoryID).Msg("failed to get category attributes")
+		r.logger.Error().Err(err).Str("category_id", categoryID).Msg("failed to get category attributes")
 		return nil, fmt.Errorf("failed to get category attributes: %w", err)
 	}
 	defer rows.Close()
@@ -1043,4 +1044,224 @@ func (r *AttributeRepository) unmarshalCategoryAttributeJSONB(catAttr *domain.Ca
 	}
 
 	return nil
+}
+
+// =============================================================================
+// Phase 2: Attribute Inheritance & Values
+// =============================================================================
+
+// GetByCategoryID получает все атрибуты для категории (с наследованием от родителей + глобальные)
+// Использует функцию get_category_attributes_with_inheritance()
+func (r *AttributeRepository) GetByCategoryID(ctx context.Context, categoryID string, locale string) ([]*domain.Attribute, error) {
+	// Validate inputs
+	if categoryID == "" {
+		return nil, fmt.Errorf("category_id cannot be empty")
+	}
+	if locale == "" {
+		locale = "sr" // default locale
+	}
+
+	// ВАЖНО: функция возвращает только attribute_id и настройки связи
+	// Нужно сделать JOIN с таблицей attributes для получения полных данных атрибута
+	query := `
+		WITH inherited AS (
+			SELECT * FROM get_category_attributes_with_inheritance($1::uuid)
+		)
+		SELECT
+			a.id,
+			a.code,
+			a.name,
+			a.display_name,
+			a.attribute_type,
+			a.purpose,
+			a.options,
+			a.validation_rules,
+			a.ui_settings,
+			a.is_searchable,
+			a.is_filterable,
+			a.is_required,
+			a.is_variant_compatible,
+			a.affects_stock,
+			a.affects_price,
+			a.show_in_card,
+			a.is_active,
+			a.sort_order,
+			a.icon,
+			a.created_at,
+			a.updated_at,
+			-- Настройки из category_attributes (могут переопределять базовые)
+			COALESCE(i.is_required, a.is_required) as final_is_required,
+			COALESCE(i.is_filterable, a.is_filterable) as final_is_filterable,
+			i.sort_order as category_sort_order
+		FROM inherited i
+		JOIN attributes a ON a.id = i.attribute_id
+		WHERE a.is_active = true
+		ORDER BY i.sort_order, a.code
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, categoryID)
+	if err != nil {
+		r.logger.Error().
+			Err(err).
+			Str("category_id", categoryID).
+			Msg("failed to query attributes by category")
+		return nil, fmt.Errorf("failed to query attributes by category: %w", err)
+	}
+	defer rows.Close()
+
+	var attributes []*domain.Attribute
+	for rows.Next() {
+		var attr domain.Attribute
+		var nameJSON, displayNameJSON, optionsJSON, validationRulesJSON, uiSettingsJSON []byte
+		var finalIsRequired, finalIsFilterable bool
+		var categorySortOrder int32
+
+		err := rows.Scan(
+			&attr.ID, &attr.Code,
+			&nameJSON, &displayNameJSON,
+			&attr.AttributeType, &attr.Purpose,
+			&optionsJSON, &validationRulesJSON, &uiSettingsJSON,
+			&attr.IsSearchable, &attr.IsFilterable, &attr.IsRequired,
+			&attr.IsVariantCompatible, &attr.AffectsStock, &attr.AffectsPrice,
+			&attr.ShowInCard, &attr.IsActive, &attr.SortOrder, &attr.Icon,
+			&attr.CreatedAt, &attr.UpdatedAt,
+			&finalIsRequired, &finalIsFilterable, &categorySortOrder,
+		)
+		if err != nil {
+			r.logger.Error().
+				Err(err).
+				Str("category_id", categoryID).
+				Msg("failed to scan attribute row")
+			return nil, fmt.Errorf("failed to scan attribute: %w", err)
+		}
+
+		// Unmarshal JSONB fields
+		if err := json.Unmarshal(nameJSON, &attr.Name); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal name: %w", err)
+		}
+		if err := json.Unmarshal(displayNameJSON, &attr.DisplayName); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal display_name: %w", err)
+		}
+		if len(optionsJSON) > 0 && string(optionsJSON) != "null" {
+			// Options может быть либо array ([]AttributeOption), либо object ({"allow_custom": true})
+			// Пытаемся unmarshal как array, если не получается - пропускаем (это config object)
+			var tempOptions []domain.AttributeOption
+			if err := json.Unmarshal(optionsJSON, &tempOptions); err == nil {
+				attr.Options = tempOptions
+			}
+			// Если не array - пропускаем, это config object для ui_settings
+		}
+		if len(validationRulesJSON) > 0 && string(validationRulesJSON) != "null" {
+			if err := json.Unmarshal(validationRulesJSON, &attr.ValidationRules); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal validation_rules: %w", err)
+			}
+		}
+		if len(uiSettingsJSON) > 0 && string(uiSettingsJSON) != "null" {
+			if err := json.Unmarshal(uiSettingsJSON, &attr.UISettings); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal ui_settings: %w", err)
+			}
+		}
+
+		// Применить переопределения из category_attributes
+		attr.IsRequired = finalIsRequired
+		attr.IsFilterable = finalIsFilterable
+		attr.SortOrder = categorySortOrder
+
+		attributes = append(attributes, &attr)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.logger.Error().
+			Err(err).
+			Str("category_id", categoryID).
+			Msg("error iterating attribute rows")
+		return nil, fmt.Errorf("failed to iterate attributes: %w", err)
+	}
+
+	r.logger.Debug().
+		Str("category_id", categoryID).
+		Str("locale", locale).
+		Int("count", len(attributes)).
+		Msg("retrieved attributes for category with inheritance")
+
+	return attributes, nil
+}
+
+// GetValues получает все активные значения для атрибута (для select/multiselect/color/size)
+func (r *AttributeRepository) GetValues(ctx context.Context, attributeID int32, locale string) ([]*domain.AttributeValue, error) {
+	// Validate inputs
+	if attributeID <= 0 {
+		return nil, fmt.Errorf("attribute_id must be positive")
+	}
+	if locale == "" {
+		locale = "sr" // default locale
+	}
+
+	query := `
+		SELECT
+			id, attribute_id, value, label, metadata,
+			sort_order, is_active, created_at, updated_at
+		FROM attribute_values
+		WHERE attribute_id = $1 AND is_active = true
+		ORDER BY sort_order, value
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, attributeID)
+	if err != nil {
+		r.logger.Error().
+			Err(err).
+			Int32("attribute_id", attributeID).
+			Msg("failed to query attribute values")
+		return nil, fmt.Errorf("failed to query attribute values: %w", err)
+	}
+	defer rows.Close()
+
+	var values []*domain.AttributeValue
+	for rows.Next() {
+		var val domain.AttributeValue
+		var labelJSON, metadataJSON []byte
+
+		err := rows.Scan(
+			&val.ID, &val.AttributeID, &val.Value,
+			&labelJSON, &metadataJSON,
+			&val.SortOrder, &val.IsActive, &val.CreatedAt, &val.UpdatedAt,
+		)
+		if err != nil {
+			r.logger.Error().
+				Err(err).
+				Int32("attribute_id", attributeID).
+				Msg("failed to scan attribute value row")
+			return nil, fmt.Errorf("failed to scan attribute value: %w", err)
+		}
+
+		// Unmarshal JSONB fields
+		if len(labelJSON) > 0 {
+			if err := json.Unmarshal(labelJSON, &val.Label); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal label: %w", err)
+			}
+		}
+		if len(metadataJSON) > 0 && string(metadataJSON) != "null" {
+			if err := json.Unmarshal(metadataJSON, &val.Metadata); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal metadata: %w", err)
+			}
+		}
+
+		values = append(values, &val)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.logger.Error().
+			Err(err).
+			Int32("attribute_id", attributeID).
+			Msg("error iterating attribute value rows")
+		return nil, fmt.Errorf("failed to iterate attribute values: %w", err)
+	}
+
+	r.logger.Debug().
+		Int32("attribute_id", attributeID).
+		Str("locale", locale).
+		Int("count", len(values)).
+		Msg("retrieved attribute values")
+
+	return values, nil
 }

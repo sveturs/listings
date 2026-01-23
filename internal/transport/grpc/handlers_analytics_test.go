@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	listingssvcv1 "github.com/sveturs/listings/api/proto/listings/v1"
+	listingssvcv1 "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // ============================================================================
@@ -74,14 +74,6 @@ func analyticsTestTimeNow() time.Time {
 
 func analyticsTestTimeDaysAgo(days int) time.Time {
 	return analyticsTestTimeNow().AddDate(0, 0, -days)
-}
-
-// analyticsContainsError checks if error message contains a substring (case-insensitive)
-func analyticsContainsError(err error, substr string) bool {
-	if err == nil {
-		return false
-	}
-	return contains(err.Error(), substr)
 }
 
 // ============================================================================

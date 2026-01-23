@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	searchv1 "github.com/sveturs/listings/api/proto/search/v1"
-	"github.com/sveturs/listings/internal/service/search"
+	searchv1 "github.com/vondi-global/listings/api/proto/search/v1"
+	"github.com/vondi-global/listings/internal/service/search"
 )
 
 // SearchServiceInterface defines the interface for search service
@@ -380,10 +380,9 @@ func (h *SearchHandler) protoToTrendingRequest(req *searchv1.GetTrendingSearches
 		Days:  req.Days,
 	}
 
-	// Handle optional category_id
-	if req.CategoryId != nil {
-		categoryID := *req.CategoryId
-		domainReq.CategoryID = &categoryID
+	// Handle optional category_id (UUID string)
+	if req.CategoryId != "" {
+		domainReq.CategoryID = &req.CategoryId
 	}
 
 	// Set defaults
@@ -529,9 +528,9 @@ func (h *SearchHandler) searchHistoryResponseToProto(result *search.SearchHistor
 			},
 		}
 
-		// Handle optional fields
+		// Handle optional fields (UUID string)
 		if entry.CategoryID != nil {
-			protoEntry.CategoryId = entry.CategoryID
+			protoEntry.CategoryId = *entry.CategoryID
 		}
 		if entry.ClickedListingID != nil {
 			protoEntry.ClickedListingId = entry.ClickedListingID
@@ -584,12 +583,20 @@ func (h *SearchHandler) protoToDomainRequest(req *searchv1.SearchListingsRequest
 		Limit:    req.Limit,
 		Offset:   req.Offset,
 		UseCache: req.UseCache,
+		// Analytics fields (Phase 7)
+		SessionID: req.SessionId,
+		Platform:  req.Platform,
+		Language:  req.Language,
 	}
 
-	// Handle optional category_id
-	if req.CategoryId != nil {
-		categoryID := *req.CategoryId
-		domainReq.CategoryID = &categoryID
+	// Handle optional category_id (UUID string)
+	if req.CategoryId != "" {
+		domainReq.CategoryID = &req.CategoryId
+	}
+
+	// Handle optional user_id for analytics
+	if req.UserId != nil {
+		domainReq.UserID = req.UserId
 	}
 
 	// Set defaults
@@ -649,9 +656,10 @@ func (h *SearchHandler) domainToProtoResponse(result *search.SearchResponse) *se
 	}
 
 	return &searchv1.SearchListingsResponse{
-		Listings: protoListings,
-		Total:    result.Total,
-		TookMs:   result.TookMs,
-		Cached:   result.Cached,
+		Listings:      protoListings,
+		Total:         result.Total,
+		TookMs:        result.TookMs,
+		Cached:        result.Cached,
+		SearchEventId: result.SearchEventID, // Analytics: for click tracking
 	}
 }

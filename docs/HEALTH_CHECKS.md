@@ -273,19 +273,19 @@ startupProbe:
 
 ```bash
 # Health check timeout for individual checks (default: 5s)
-SVETULISTINGS_HEALTH_CHECK_TIMEOUT=5s
+VONDILISTINGS_HEALTH_CHECK_TIMEOUT=5s
 
 # Interval between cached checks (default: 30s)
-SVETULISTINGS_HEALTH_CHECK_INTERVAL=30s
+VONDILISTINGS_HEALTH_CHECK_INTERVAL=30s
 
 # Timeout for startup checks (default: 60s)
-SVETULISTINGS_HEALTH_STARTUP_TIMEOUT=60s
+VONDILISTINGS_HEALTH_STARTUP_TIMEOUT=60s
 
 # Duration to cache check results (default: 10s)
-SVETULISTINGS_HEALTH_CACHE_DURATION=10s
+VONDILISTINGS_HEALTH_CACHE_DURATION=10s
 
 # Enable deep diagnostics endpoint (default: true)
-SVETULISTINGS_HEALTH_ENABLE_DEEP_CHECKS=true
+VONDILISTINGS_HEALTH_ENABLE_DEEP_CHECKS=true
 ```
 
 ### Default Configuration
@@ -380,7 +380,7 @@ SVETULISTINGS_HEALTH_ENABLE_DEEP_CHECKS=true
 
 To prevent overloading dependencies with health checks, results are cached:
 
-- **Cache Duration:** 10 seconds (configurable via `SVETULISTINGS_HEALTH_CACHE_DURATION`)
+- **Cache Duration:** 10 seconds (configurable via `VONDILISTINGS_HEALTH_CACHE_DURATION`)
 - **Cache Invalidation:** Automatic expiry after duration
 - **Thread Safety:** Concurrent-safe using read-write locks
 
@@ -496,11 +496,11 @@ spec:
           successThreshold: 1
 
         env:
-        - name: SVETULISTINGS_HEALTH_CHECK_TIMEOUT
+        - name: VONDILISTINGS_HEALTH_CHECK_TIMEOUT
           value: "5s"
-        - name: SVETULISTINGS_HEALTH_CACHE_DURATION
+        - name: VONDILISTINGS_HEALTH_CACHE_DURATION
           value: "10s"
-        - name: SVETULISTINGS_HEALTH_ENABLE_DEEP_CHECKS
+        - name: VONDILISTINGS_HEALTH_ENABLE_DEEP_CHECKS
           value: "true"
 
         resources:
@@ -523,7 +523,7 @@ spec:
 - Logs show "context deadline exceeded"
 
 **Solutions:**
-1. Increase timeout: `SVETULISTINGS_HEALTH_CHECK_TIMEOUT=10s`
+1. Increase timeout: `VONDILISTINGS_HEALTH_CHECK_TIMEOUT=10s`
 2. Check dependency connectivity (DB, Redis, OpenSearch, MinIO)
 3. Verify network latency between service and dependencies
 4. Check if dependencies are overloaded
@@ -540,7 +540,7 @@ spec:
 1. Check Redis connectivity: `redis-cli -h <host> -p <port> PING`
 2. Check PostgreSQL connectivity: `psql -h <host> -p <port> -U <user> -c "SELECT 1"`
 3. Review recent errors: `curl http://localhost:8086/health/deep | jq .diagnostics.recent_errors`
-4. Verify configuration: check `SVETULISTINGS_DB_*` and `SVETULISTINGS_REDIS_*` env vars
+4. Verify configuration: check `VONDILISTINGS_DB_*` and `VONDILISTINGS_REDIS_*` env vars
 
 ---
 
@@ -552,7 +552,7 @@ spec:
 - Slow response times
 
 **Solutions:**
-1. Increase cache duration: `SVETULISTINGS_HEALTH_CACHE_DURATION=30s`
+1. Increase cache duration: `VONDILISTINGS_HEALTH_CACHE_DURATION=30s`
 2. Reduce health check frequency in Kubernetes probes
 3. Use separate health check endpoints for different purposes:
    - Liveness: `/health/live` (lightweight)
@@ -568,7 +568,7 @@ spec:
 - Kubernetes keeps restarting the pod
 
 **Solutions:**
-1. Increase startup timeout: `SVETULISTINGS_HEALTH_STARTUP_TIMEOUT=120s`
+1. Increase startup timeout: `VONDILISTINGS_HEALTH_STARTUP_TIMEOUT=120s`
 2. Increase Kubernetes probe `failureThreshold`: 30 → 60
 3. Check startup logs for initialization errors
 4. Verify database migrations are completing

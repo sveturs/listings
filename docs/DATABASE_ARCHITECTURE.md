@@ -11,7 +11,7 @@
 ### ❌ НЕПРАВИЛЬНАЯ конфигурация (до исправления):
 
 ```
-Listings Microservice → svetubd (порт 5433) - МОНОЛИТ
+Listings Microservice → vondi_db (порт 5433) - МОНОЛИТ
                         └─ Пустая таблица listings
                         └─ Таблица c2c_favorites
 ```
@@ -21,7 +21,7 @@ Listings Microservice → svetubd (порт 5433) - МОНОЛИТ
 ### ✅ ПРАВИЛЬНАЯ конфигурация (после исправления):
 
 ```
-Monolith Backend → svetubd (порт 5433)
+Monolith Backend → vondi_db (порт 5433)
                    └─ Legacy tables: c2c_favorites, c2c_categories, etc.
                    └─ Shared tables: users, balance_transactions, etc.
 
@@ -52,13 +52,13 @@ docker exec -it listings_postgres psql -U listings_user -d listings_dev_db
 ### Переменные окружения (.env)
 
 ```bash
-# ВАЖНО: Микросервис использует ОТДЕЛЬНУЮ БД (НЕ монолит svetubd!)
-SVETULISTINGS_DB_HOST=localhost
-SVETULISTINGS_DB_PORT=35434              # НЕ 5433!
-SVETULISTINGS_DB_USER=listings_user       # НЕ postgres!
-SVETULISTINGS_DB_PASSWORD=listings_secret
-SVETULISTINGS_DB_NAME=listings_dev_db     # НЕ svetubd!
-SVETULISTINGS_DB_SSLMODE=disable
+# ВАЖНО: Микросервис использует ОТДЕЛЬНУЮ БД (НЕ монолит vondi_db!)
+VONDILISTINGS_DB_HOST=localhost
+VONDILISTINGS_DB_PORT=35434              # НЕ 5433!
+VONDILISTINGS_DB_USER=listings_user       # НЕ postgres!
+VONDILISTINGS_DB_PASSWORD=listings_secret
+VONDILISTINGS_DB_NAME=listings_dev_db     # НЕ vondi_db!
+VONDILISTINGS_DB_SSLMODE=disable
 ```
 
 ### Docker Container
@@ -128,13 +128,13 @@ cd /p/github.com/sveturs/listings
 
 ### Проблема: "listing not found"
 
-**Причина:** Микросервис подключен к монолитной БД (svetubd:5433) вместо своей БД.
+**Причина:** Микросервис подключен к монолитной БД (vondi_db:5433) вместо своей БД.
 
 **Решение:**
 1. Проверить `.env`:
    ```bash
    cat /p/github.com/sveturs/listings/.env | grep DB_PORT
-   # Должно быть: SVETULISTINGS_DB_PORT=35434
+   # Должно быть: VONDILISTINGS_DB_PORT=35434
    ```
 
 2. Перезапустить микросервис:
@@ -175,7 +175,7 @@ cd /p/github.com/sveturs/listings
 Перед запуском микросервиса убедись:
 
 - [ ] `.env` указывает на порт 35434 (НЕ 5433)
-- [ ] `.env` указывает на БД `listings_dev_db` (НЕ `svetubd`)
+- [ ] `.env` указывает на БД `listings_dev_db` (НЕ `vondi_db`)
 - [ ] Docker container `listings_postgres` запущен
 - [ ] Таблица `listings` содержит данные
 - [ ] Таблица `listing_favorites` существует

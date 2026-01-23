@@ -67,7 +67,7 @@
         "type": "keyword"
       },
       "category_id": {
-        "type": "long"
+        "type": "keyword"
       },
       "status": {
         "type": "keyword"
@@ -118,11 +118,46 @@
       "tags": {
         "type": "keyword"
       },
+      "source_type": {
+        "type": "keyword"
+      },
+      "stock_status": {
+        "type": "keyword"
+      },
       "attributes": {
         "type": "nested",
         "properties": {
-          "key": {"type": "keyword"},
-          "value": {"type": "text"}
+          "code": {
+            "type": "keyword"
+          },
+          "type": {
+            "type": "keyword"
+          },
+          "value_text": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "value_number": {
+            "type": "float"
+          },
+          "value_boolean": {
+            "type": "boolean"
+          },
+          "value_date": {
+            "type": "date",
+            "format": "strict_date_optional_time||epoch_millis"
+          },
+          "value_select": {
+            "type": "keyword"
+          },
+          "value_multiselect": {
+            "type": "keyword"
+          }
         }
       },
       "created_at": {

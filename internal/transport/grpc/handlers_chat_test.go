@@ -12,10 +12,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	chatsvcv1 "github.com/sveturs/listings/api/proto/chat/v1"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/middleware"
-	"github.com/sveturs/listings/internal/service"
+	chatsvcv1 "github.com/vondi-global/listings/api/proto/chat/v1"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/middleware"
+	"github.com/vondi-global/listings/internal/service"
 )
 
 // =============================================================================
@@ -76,14 +76,6 @@ func (m *MockChatService) SendMessage(ctx context.Context, req *service.SendMess
 	return args.Get(0).(*domain.Message), args.Error(1)
 }
 
-func (m *MockChatService) SendSystemMessage(ctx context.Context, req *service.SendSystemMessageRequest) (*domain.Message, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.Message), args.Error(1)
-}
-
 func (m *MockChatService) GetMessages(ctx context.Context, req *service.GetMessagesRequest) ([]*domain.Message, bool, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
@@ -121,6 +113,14 @@ func (m *MockChatService) GetAttachment(ctx context.Context, attachmentID, userI
 func (m *MockChatService) DeleteAttachment(ctx context.Context, attachmentID, userID int64) error {
 	args := m.Called(ctx, attachmentID, userID)
 	return args.Error(0)
+}
+
+func (m *MockChatService) SendSystemMessage(ctx context.Context, req *service.SendSystemMessageRequest) (*domain.Message, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Message), args.Error(1)
 }
 
 func (m *MockChatService) SetHub(hub service.ChatHub) {

@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
 )
 
 // GRPCTestClient wraps a gRPC client connection with test-friendly utilities.

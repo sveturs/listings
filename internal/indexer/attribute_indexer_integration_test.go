@@ -21,8 +21,7 @@ import (
 func getTestDB(t *testing.T) *sqlx.DB {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		// Use correct credentials from .env
-		dsn = "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable"
+		t.Skip("DATABASE_URL not set, skipping integration test")
 	}
 
 	db, err := sqlx.Connect("postgres", dsn)

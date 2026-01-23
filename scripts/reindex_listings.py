@@ -450,7 +450,7 @@ def main():
             console.print("\nNext steps:")
             console.print("  1. Verify data: python3 scripts/validate_opensearch.py")
             console.print("  2. Test search API endpoints")
-            console.print(f"  3. Update service config: SVETULISTINGS_OPENSEARCH_INDEX={args.opensearch_index}")
+            console.print(f"  3. Update service config: VONDILISTINGS_OPENSEARCH_INDEX={args.opensearch_index}")
 
     finally:
         conn.close()

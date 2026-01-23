@@ -12,15 +12,16 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 
-	pb "github.com/sveturs/listings/api/proto/listings/v1"
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/metrics"
-	miniorepo "github.com/sveturs/listings/internal/repository/minio"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service"
-	"github.com/sveturs/listings/internal/service/listings"
-	testutils "github.com/sveturs/listings/internal/testing"
-	grpchandlers "github.com/sveturs/listings/internal/transport/grpc"
+	pb "github.com/vondi-global/listings/api/proto/listings/v1"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/events"
+	"github.com/vondi-global/listings/internal/metrics"
+	miniorepo "github.com/vondi-global/listings/internal/repository/minio"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service"
+	"github.com/vondi-global/listings/internal/service/listings"
+	testutils "github.com/vondi-global/listings/internal/testing"
+	grpchandlers "github.com/vondi-global/listings/internal/transport/grpc"
 )
 
 // =============================================================================
@@ -97,6 +98,12 @@ func (m *mockOrderService) SetChatService(chatService service.ChatService) {}
 
 func (m *mockOrderService) SetDeliveryClient(client service.DeliveryClient) {}
 
+func (m *mockOrderService) UpdatePaymentInfo(ctx context.Context, orderID int64, req *service.UpdatePaymentInfoRequest) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) SetEventPublisher(publisher events.OrderEventPublisher) {}
+
 // =============================================================================
 // Mock Cart Service
 // =============================================================================
@@ -144,84 +151,6 @@ func (m *mockCartService) RecalculateCart(ctx context.Context, cartID int64) (*d
 }
 
 func (m *mockCartService) ValidateCartItems(ctx context.Context, cartID int64) ([]service.PriceChangeItem, error) {
-	return nil, nil
-}
-
-// =============================================================================
-// Mock Chat Service
-// =============================================================================
-
-type mockChatService struct{}
-
-func (m *mockChatService) CreateChat(ctx context.Context, req *service.CreateChatRequest) (*domain.Chat, error) {
-	return nil, nil
-}
-
-func (m *mockChatService) GetOrCreateChat(ctx context.Context, req *service.GetOrCreateChatRequest) (*domain.Chat, bool, error) {
-	return nil, false, nil
-}
-
-func (m *mockChatService) GetChat(ctx context.Context, chatID, userID int64) (*domain.Chat, error) {
-	return nil, nil
-}
-
-func (m *mockChatService) GetUserChats(ctx context.Context, req *service.GetUserChatsRequest) ([]*domain.Chat, int, error) {
-	return nil, 0, nil
-}
-
-func (m *mockChatService) ArchiveChat(ctx context.Context, chatID, userID int64, archived bool) error {
-	return nil
-}
-
-func (m *mockChatService) DeleteChat(ctx context.Context, chatID int64) error {
-	return nil
-}
-
-func (m *mockChatService) SendMessage(ctx context.Context, req *service.SendMessageRequest) (*domain.Message, error) {
-	return nil, nil
-}
-
-func (m *mockChatService) SendSystemMessage(ctx context.Context, req *service.SendSystemMessageRequest) (*domain.Message, error) {
-	return nil, nil
-}
-
-func (m *mockChatService) GetMessages(ctx context.Context, req *service.GetMessagesRequest) ([]*domain.Message, bool, error) {
-	return nil, false, nil
-}
-
-func (m *mockChatService) MarkMessagesAsRead(ctx context.Context, req *service.MarkMessagesAsReadRequest) (int, error) {
-	return 0, nil
-}
-
-func (m *mockChatService) GetUnreadCount(ctx context.Context, userID int64, chatID *int64) (int, error) {
-	return 0, nil
-}
-
-func (m *mockChatService) UploadAttachment(ctx context.Context, req *service.UploadAttachmentRequest) (*domain.ChatAttachment, error) {
-	return nil, nil
-}
-
-func (m *mockChatService) GetAttachment(ctx context.Context, attachmentID, userID int64) (*domain.ChatAttachment, error) {
-	return nil, nil
-}
-
-func (m *mockChatService) DeleteAttachment(ctx context.Context, attachmentID, userID int64) error {
-	return nil
-}
-
-func (m *mockChatService) SetHub(hub service.ChatHub) {}
-
-// =============================================================================
-// Mock Storefront Analytics Service
-// =============================================================================
-
-type mockStorefrontAnalyticsService struct{}
-
-func (m *mockStorefrontAnalyticsService) RecordView(ctx context.Context, storefrontID, userID *int64, sessionID *string) error {
-	return nil
-}
-
-func (m *mockStorefrontAnalyticsService) GetStorefrontStats(ctx context.Context, req *pb.GetStorefrontStatsRequest) (*pb.GetStorefrontStatsResponse, error) {
 	return nil, nil
 }
 
@@ -356,14 +285,14 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 	// Create mock cart service for integration tests
 	cartService := &mockCartService{}
 
-	// Create mock chat service for integration tests
-	chatService := &mockChatService{}
-
 	// Mock analytics service (nil is OK for integration tests that don't need analytics)
 	var analyticsService service.AnalyticsService = nil
 
-	// Create mock storefront analytics service for integration tests
-	storefrontAnalyticsService := &mockStorefrontAnalyticsService{}
+	// Mock chat service (nil is OK for integration tests that don't need chat)
+	var chatService service.ChatService = nil
+
+	// Mock storefront analytics service (nil is OK for integration tests)
+	var storefrontAnalyticsService service.StorefrontAnalyticsService = nil
 
 	// Mock minio client (nil is OK for integration tests that don't need image operations)
 	var minioClient *miniorepo.Client = nil
@@ -377,11 +306,15 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		storefrontService,
 		attrService,
 		categoryService,
+		nil, // categoryRepoV2 (not used in integration tests)
+		nil, // categoryCache (not used in integration tests)
 		orderService,
 		cartService,
 		chatService,
 		analyticsService,
 		storefrontAnalyticsService,
+		nil, // inventoryService
+		nil, // invitationService
 		minioClient,
 		m,
 		logger,
@@ -607,4 +540,130 @@ func TruncateTables(t *testing.T, server *TestServer, tables ...string) {
 func CleanupTestData(t *testing.T, server *TestServer, table string, minID, maxID int64) {
 	t.Helper()
 	server.DB.CleanupTestData(t, table, minID, maxID)
+}
+
+// SeedTestCategories is a helper to create test category fixtures for integration tests.
+// This creates a small hierarchy of categories with proper JSONB translations.
+//
+// Returns: map of slug -> category UUID for easy reference in tests.
+//
+// Example:
+//
+//	catIDs := SeedTestCategories(t, server)
+//	electronicsID := catIDs["electronics"]
+func SeedTestCategories(t *testing.T, server *TestServer) map[string]string {
+	t.Helper()
+
+	categories := []struct {
+		id           string
+		name         string
+		slug         string
+		parentSlug   *string
+		level        int32
+		path         string
+		sortOrder    int32
+		listingCount int32
+	}{
+		// Root categories
+		{
+			id:           "c0000000-0000-0000-0000-000000000001",
+			name:         `{"sr": "Elektronika", "en": "Electronics", "ru": "Электроника"}`,
+			slug:         "electronics",
+			parentSlug:   nil,
+			level:        1,
+			path:         "electronics",
+			sortOrder:    1,
+			listingCount: 10,
+		},
+		{
+			id:           "c0000000-0000-0000-0000-000000000002",
+			name:         `{"sr": "Moda", "en": "Fashion", "ru": "Мода"}`,
+			slug:         "fashion",
+			parentSlug:   nil,
+			level:        1,
+			path:         "fashion",
+			sortOrder:    2,
+			listingCount: 15,
+		},
+		{
+			id:           "c0000000-0000-0000-0000-000000000003",
+			name:         `{"sr": "Kuća i bašta", "en": "Home & Garden", "ru": "Дом и сад"}`,
+			slug:         "home-garden",
+			parentSlug:   nil,
+			level:        1,
+			path:         "home-garden",
+			sortOrder:    3,
+			listingCount: 20,
+		},
+		// Electronics children
+		{
+			id:           "c0000000-0000-0000-0000-000000000004",
+			name:         `{"sr": "Računari", "en": "Computers", "ru": "Компьютеры"}`,
+			slug:         "computers",
+			parentSlug:   stringPtr("electronics"),
+			level:        2,
+			path:         "electronics/computers",
+			sortOrder:    1,
+			listingCount: 5,
+		},
+		{
+			id:           "c0000000-0000-0000-0000-000000000005",
+			name:         `{"sr": "Telefoni", "en": "Phones", "ru": "Телефоны"}`,
+			slug:         "phones",
+			parentSlug:   stringPtr("electronics"),
+			level:        2,
+			path:         "electronics/phones",
+			sortOrder:    2,
+			listingCount: 8,
+		},
+		// Fashion children
+		{
+			id:           "c0000000-0000-0000-0000-000000000006",
+			name:         `{"sr": "Muška odeća", "en": "Men's Clothing", "ru": "Мужская одежда"}`,
+			slug:         "mens-clothing",
+			parentSlug:   stringPtr("fashion"),
+			level:        2,
+			path:         "fashion/mens-clothing",
+			sortOrder:    1,
+			listingCount: 10,
+		},
+		{
+			id:           "c0000000-0000-0000-0000-000000000007",
+			name:         `{"sr": "Ženska odeća", "en": "Women's Clothing", "ru": "Женская одежда"}`,
+			slug:         "womens-clothing",
+			parentSlug:   stringPtr("fashion"),
+			level:        2,
+			path:         "fashion/womens-clothing",
+			sortOrder:    2,
+			listingCount: 12,
+		},
+	}
+
+	// Build slug to ID map
+	slugToID := make(map[string]string)
+	for _, cat := range categories {
+		slugToID[cat.slug] = cat.id
+	}
+
+	// Insert categories
+	for _, cat := range categories {
+		var parentID *string
+		if cat.parentSlug != nil {
+			pid := slugToID[*cat.parentSlug]
+			parentID = &pid
+		}
+
+		ExecuteSQL(t, server, `
+			INSERT INTO categories (id, name, slug, parent_id, level, path, sort_order, is_active, listing_count)
+			VALUES ($1::uuid, $2::jsonb, $3, $4::uuid, $5, $6, $7, true, $8)
+			ON CONFLICT (id) DO NOTHING
+		`, cat.id, cat.name, cat.slug, parentID, cat.level, cat.path, cat.sortOrder, cat.listingCount)
+	}
+
+	return slugToID
+}
+
+// stringPtr is a helper to create a string pointer.
+func stringPtr(s string) *string {
+	return &s
 }

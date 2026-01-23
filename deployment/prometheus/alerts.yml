@@ -21,7 +21,7 @@ groups:
           summary: "Listings service is DOWN"
           description: "Listings microservice {{ $labels.instance }} has been down for more than 1 minute."
           impact: "All listings operations unavailable. Users cannot view, create, or update listings."
-          runbook_url: "https://wiki.svetu.rs/runbooks/listings-service-down"
+          runbook_url: "https://wiki.vondi.rs/runbooks/listings-service-down"
           dashboard_url: "http://grafana:3000/d/listings-overview"
 
       # High Error Rate - Critical threshold
@@ -43,7 +43,7 @@ groups:
           description: "Error rate above 1% for 5 minutes on {{ $labels.instance }}"
           impact: "High number of user requests failing. Service degradation."
           current_value: "{{ $value | humanizePercentage }}"
-          runbook_url: "https://wiki.svetu.rs/runbooks/high-error-rate"
+          runbook_url: "https://wiki.vondi.rs/runbooks/high-error-rate"
 
       # High Latency P99 - Critical threshold
       - alert: HighLatencyP99Critical
@@ -62,7 +62,7 @@ groups:
           description: "99th percentile latency above 2s for {{ $labels.method }} on {{ $labels.instance }}"
           impact: "Severe performance degradation. User experience significantly impacted."
           current_value: "{{ $value | humanizeDuration }}"
-          runbook_url: "https://wiki.svetu.rs/runbooks/high-latency"
+          runbook_url: "https://wiki.vondi.rs/runbooks/high-latency"
 
       # Database Connection Pool Exhaustion
       - alert: DatabaseConnectionsHigh
@@ -81,7 +81,7 @@ groups:
           description: "Database connection pool usage above 90% on {{ $labels.instance }}"
           impact: "New requests may fail due to connection exhaustion. Database operations blocked."
           current_value: "{{ $value | humanize }}%"
-          runbook_url: "https://wiki.svetu.rs/runbooks/db-connections-high"
+          runbook_url: "https://wiki.vondi.rs/runbooks/db-connections-high"
 
       # Disk Space Critical
       - alert: DiskSpaceCritical
@@ -102,7 +102,7 @@ groups:
           description: "Disk space below 15% on {{ $labels.instance }}"
           impact: "Service may crash or fail to write logs/data. Immediate action required."
           current_value: "{{ $value | humanize }}% free"
-          runbook_url: "https://wiki.svetu.rs/runbooks/disk-space-critical"
+          runbook_url: "https://wiki.vondi.rs/runbooks/disk-space-critical"
 
       # Memory Usage Critical
       - alert: MemoryUsageCritical
@@ -125,7 +125,7 @@ groups:
           description: "Memory usage above 95% on {{ $labels.instance }}"
           impact: "Service at risk of OOM killer. Performance severely degraded."
           current_value: "{{ $value | humanize }}%"
-          runbook_url: "https://wiki.svetu.rs/runbooks/memory-critical"
+          runbook_url: "https://wiki.vondi.rs/runbooks/memory-critical"
 
   # ===================================================================
   # WARNING ALERTS - Slack (proactive monitoring)
@@ -307,7 +307,7 @@ groups:
           summary: "Fast error budget burn detected"
           description: "Error budget burning 5x faster than sustainable rate"
           impact: "At this rate, monthly error budget will be exhausted in {{ $value | humanize }} hours"
-          runbook_url: "https://wiki.svetu.rs/runbooks/error-budget-burn"
+          runbook_url: "https://wiki.vondi.rs/runbooks/error-budget-burn"
 
       # Error Budget Burn Rate - Slow burn (2x)
       - alert: ErrorBudgetBurnRateSlow
@@ -350,7 +350,7 @@ groups:
           impact: "SLO breach will be reported to stakeholders"
           current_value: "{{ $value | humanize }}%"
           slo_target: "99.9%"
-          runbook_url: "https://wiki.svetu.rs/runbooks/slo-breach"
+          runbook_url: "https://wiki.vondi.rs/runbooks/slo-breach"
 
       # Success Rate SLO Breach (99.5%)
       - alert: SuccessRateSLOBreach
@@ -372,7 +372,7 @@ groups:
           description: "Request success rate below 99.5% SLO target"
           current_value: "{{ $value | humanize }}%"
           slo_target: "99.5%"
-          runbook_url: "https://wiki.svetu.rs/runbooks/slo-breach"
+          runbook_url: "https://wiki.vondi.rs/runbooks/slo-breach"
 
       # Latency SLO Breach P95 (200ms)
       - alert: LatencyP95SLOBreach
@@ -433,7 +433,7 @@ groups:
           summary: "Database connection errors detected"
           description: "{{ $value | humanize }} connection errors per second on {{ $labels.instance }}"
           impact: "Database operations failing. Service degradation."
-          runbook_url: "https://wiki.svetu.rs/runbooks/db-connection-errors"
+          runbook_url: "https://wiki.vondi.rs/runbooks/db-connection-errors"
 
       # Database Connection Wait Time High
       - alert: DatabaseConnectionWaitTimeHigh

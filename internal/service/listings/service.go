@@ -10,8 +10,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
-	"github.com/sveturs/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/repository/postgres"
 )
 
 // Repository defines the interface for listing data access
@@ -37,8 +37,8 @@ type Repository interface {
 	GetRootCategories(ctx context.Context) ([]*domain.Category, error)
 	GetAllCategories(ctx context.Context) ([]*domain.Category, error)
 	GetPopularCategories(ctx context.Context, limit int) ([]*domain.Category, error)
-	GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error)
-	GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error)
+	GetCategoryByID(ctx context.Context, categoryID string) (*domain.Category, error)
+	GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error)
 
 	// Favorites operations
 	GetFavoritedUsers(ctx context.Context, listingID int64) ([]int64, error)
@@ -82,8 +82,8 @@ type Repository interface {
 	GetVariantByID(ctx context.Context, variantID int64, productID *int64) (*domain.ProductVariant, error)
 	GetVariantsByProductID(ctx context.Context, productID int64, isActiveOnly bool) ([]*domain.ProductVariant, error)
 	CreateProductVariant(ctx context.Context, input *domain.CreateVariantInput) (*domain.ProductVariant, error)
-	UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error)
-	DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error
+	UpdateProductVariant(ctx context.Context, variantUUID string, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error)
+	DeleteProductVariant(ctx context.Context, variantUUID string, productID int64) error
 	BulkCreateProductVariants(ctx context.Context, productID int64, inputs []*domain.CreateVariantInput) ([]*domain.ProductVariant, error)
 
 	// Inventory Management operations
@@ -98,6 +98,7 @@ type Repository interface {
 	GetProductImages(ctx context.Context, productID int64) ([]*domain.ProductImage, error)
 	DeleteProductImage(ctx context.Context, imageID int64) error
 	ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error
+	SetProductImagePrimary(ctx context.Context, productID int64, imageID int64) error
 
 	// Transaction and database operations
 	BeginTx(ctx context.Context) (*sql.Tx, error)
@@ -117,6 +118,10 @@ type IndexingService interface {
 	UpdateListing(ctx context.Context, listing *domain.Listing) error
 	DeleteListing(ctx context.Context, listingID int64) error
 	GetSimilarListings(ctx context.Context, listingID int64, limit int32) ([]*domain.Listing, int32, error)
+	// DeleteAllDocuments removes all documents from the index (used before full reindexing)
+	DeleteAllDocuments(ctx context.Context) error
+	// DeleteDocumentsBySourceType removes documents with a specific source_type
+	DeleteDocumentsBySourceType(ctx context.Context, sourceType string) error
 }
 
 // Service implements business logic for listings
@@ -492,16 +497,17 @@ func (s *Service) SearchListings(ctx context.Context, query *domain.SearchListin
 		query.Limit = 20
 	}
 
-	if len(query.Query) < 2 {
+	// Require minimum 2 characters for text search (empty query = filter-only search)
+	if query.Query != "" && len(query.Query) < 2 {
 		return nil, 0, fmt.Errorf("search query must be at least 2 characters")
 	}
 
 	// Try cache for search results (if cache is available)
-	categoryID := int64(0)
+	categoryID := ""
 	if query.CategoryID != nil {
 		categoryID = *query.CategoryID
 	}
-	cacheKey := fmt.Sprintf("search:%s:%d:%d:%d", query.Query, categoryID, query.Limit, query.Offset)
+	cacheKey := fmt.Sprintf("search:%s:%s:%d:%d", query.Query, categoryID, query.Limit, query.Offset)
 	var cachedResults []*domain.Listing
 	var cachedTotal int32
 
@@ -568,6 +574,12 @@ func (s *Service) GetSimilarListings(ctx context.Context, listingID int64, limit
 	}
 
 	// Cache miss - query OpenSearch via indexer
+	// Check if indexer is available (nil when AsyncIndexing is disabled)
+	if s.indexer == nil {
+		s.logger.Debug().Int64("listing_id", listingID).Msg("indexer not available, returning empty similar listings")
+		return []*domain.Listing{}, 0, nil
+	}
+
 	listings, total, err := s.indexer.GetSimilarListings(ctx, listingID, limit)
 	if err != nil {
 		s.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to get similar listings")
@@ -926,11 +938,11 @@ func (s *Service) GetPopularCategories(ctx context.Context, limit int) ([]*domai
 	return s.repo.GetPopularCategories(ctx, limit)
 }
 
-func (s *Service) GetCategoryByID(ctx context.Context, categoryID int64) (*domain.Category, error) {
+func (s *Service) GetCategoryByID(ctx context.Context, categoryID string) (*domain.Category, error) {
 	return s.repo.GetCategoryByID(ctx, categoryID)
 }
 
-func (s *Service) GetCategoryTree(ctx context.Context, categoryID int64) (*domain.CategoryTreeNode, error) {
+func (s *Service) GetCategoryTree(ctx context.Context, categoryID string) (*domain.CategoryTreeNode, error) {
 	return s.repo.GetCategoryTree(ctx, categoryID)
 }
 
@@ -1702,9 +1714,9 @@ func (s *Service) CreateProductVariant(ctx context.Context, input *domain.Create
 }
 
 // UpdateProductVariant updates an existing product variant with validation
-func (s *Service) UpdateProductVariant(ctx context.Context, variantID int64, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
+func (s *Service) UpdateProductVariant(ctx context.Context, variantUUID string, productID int64, input *domain.UpdateVariantInput) (*domain.ProductVariant, error) {
 	s.logger.Debug().
-		Int64("variant_id", variantID).
+		Str("variant_uuid", variantUUID).
 		Int64("product_id", productID).
 		Msg("updating product variant")
 
@@ -1715,31 +1727,31 @@ func (s *Service) UpdateProductVariant(ctx context.Context, variantID int64, pro
 	}
 
 	// Update variant in repository
-	variant, err := s.repo.UpdateProductVariant(ctx, variantID, productID, input)
+	variant, err := s.repo.UpdateProductVariant(ctx, variantUUID, productID, input)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to update variant")
 		return nil, err // Return as-is to preserve error placeholders
 	}
 
-	s.logger.Info().Int64("variant_id", variant.ID).Msg("product variant updated successfully")
+	s.logger.Info().Str("variant_uuid", variant.UUID).Msg("product variant updated successfully")
 	return variant, nil
 }
 
 // DeleteProductVariant deletes a product variant with business rules enforcement
-func (s *Service) DeleteProductVariant(ctx context.Context, variantID int64, productID int64) error {
+func (s *Service) DeleteProductVariant(ctx context.Context, variantUUID string, productID int64) error {
 	s.logger.Debug().
-		Int64("variant_id", variantID).
+		Str("variant_uuid", variantUUID).
 		Int64("product_id", productID).
 		Msg("deleting product variant")
 
 	// Delete variant in repository (business rules enforced there)
-	err := s.repo.DeleteProductVariant(ctx, variantID, productID)
+	err := s.repo.DeleteProductVariant(ctx, variantUUID, productID)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to delete variant")
 		return err // Return as-is to preserve error placeholders
 	}
 
-	s.logger.Info().Int64("variant_id", variantID).Msg("product variant deleted successfully")
+	s.logger.Info().Str("variant_uuid", variantUUID).Msg("product variant deleted successfully")
 	return nil
 }
 
@@ -1961,6 +1973,25 @@ func (s *Service) ReindexAll(ctx context.Context, sourceType string, batchSize i
 		return 0, 0, 0, nil, fmt.Errorf("invalid source_type: must be 'b2c', 'c2c', or empty")
 	}
 
+	// IMPORTANT: Delete existing documents from index before reindexing
+	// This ensures that deleted listings are removed from search results
+	s.logger.Info().Str("source_type", sourceType).Msg("deleting existing documents from index before reindexing")
+	if sourceType == "" {
+		// Delete ALL documents when no source_type filter
+		if err := s.indexer.DeleteAllDocuments(ctx); err != nil {
+			s.logger.Error().Err(err).Msg("failed to delete all documents before reindexing")
+			return 0, 0, 0, nil, fmt.Errorf("failed to clear index: %w", err)
+		}
+		s.logger.Info().Msg("deleted all documents from index")
+	} else {
+		// Delete only documents with the specified source_type
+		if err := s.indexer.DeleteDocumentsBySourceType(ctx, sourceType); err != nil {
+			s.logger.Error().Err(err).Str("source_type", sourceType).Msg("failed to delete documents by source_type before reindexing")
+			return 0, 0, 0, nil, fmt.Errorf("failed to clear index for source_type %s: %w", sourceType, err)
+		}
+		s.logger.Info().Str("source_type", sourceType).Msg("deleted documents by source_type from index")
+	}
+
 	var totalIndexed int32
 	var totalFailed int32
 	var errors []string
@@ -2077,7 +2108,7 @@ func convertProductToListing(product *domain.Product) *domain.Listing {
 		Title:      product.Name,
 		Price:      product.Price,
 		Currency:   product.Currency,
-		CategoryID: product.CategoryID,
+		CategoryID: product.CategoryID, // UUID string
 		Quantity:   product.StockQuantity,
 		ViewsCount: product.ViewCount,
 		CreatedAt:  product.CreatedAt,
@@ -2207,4 +2238,42 @@ func (s *Service) DeleteProductImage(ctx context.Context, imageID int64) error {
 // ReorderProductImages updates display order for product images
 func (s *Service) ReorderProductImages(ctx context.Context, productID int64, orders []postgres.ProductImageOrder) error {
 	return s.repo.ReorderProductImages(ctx, productID, orders)
+}
+
+// SetProductImagePrimary sets a specific image as primary and unsets all other primary images for the product
+func (s *Service) SetProductImagePrimary(ctx context.Context, productID int64, imageID int64) error {
+	err := s.repo.SetProductImagePrimary(ctx, productID, imageID)
+	if err != nil {
+		return err
+	}
+
+	// Reindex product in OpenSearch after primary image change (async)
+	if s.indexer != nil && productID > 0 {
+		go func() {
+			indexCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			// Get full product with images
+			fullProduct, err := s.repo.GetProductByID(indexCtx, productID, nil)
+			if err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("failed to get product for reindexing after primary image change (non-blocking)")
+				return
+			}
+
+			// Convert to listing for indexing
+			listing := convertProductToListing(fullProduct)
+
+			// Update in OpenSearch
+			if err := s.indexer.UpdateListing(indexCtx, listing); err != nil {
+				s.logger.Warn().Err(err).Int64("product_id", productID).
+					Msg("OpenSearch reindexing failed after primary image change (non-blocking)")
+			} else {
+				s.logger.Info().Int64("product_id", productID).Int64("image_id", imageID).
+					Msg("product reindexed in OpenSearch after primary image change")
+			}
+		}()
+	}
+
+	return nil
 }

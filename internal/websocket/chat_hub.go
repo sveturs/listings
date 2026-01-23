@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 	"github.com/rs/zerolog"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // ChatHub manages WebSocket connections for chat

@@ -26,7 +26,7 @@ This directory contains performance baseline measurement and testing scripts for
 ./baseline.sh --output /tmp/baseline_$(date +%Y%m%d).json
 
 # Custom gRPC server
-./baseline.sh --grpc-addr dev.svetu.rs:8086
+./baseline.sh --grpc-addr dev.vondi.rs:8086
 ```
 
 **Options:**
@@ -65,7 +65,7 @@ go install github.com/bojand/ghz/cmd/ghz@latest
 ./quick-check.sh
 
 # Remote server
-./quick-check.sh dev.svetu.rs:8086
+./quick-check.sh dev.vondi.rs:8086
 ```
 
 **Tested Endpoints:**

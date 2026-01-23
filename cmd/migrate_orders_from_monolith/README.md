@@ -33,7 +33,7 @@ See comprehensive guide: [/p/github.com/sveturs/listings/docs/PHASE_17_DATA_MIGR
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--monolith-dsn` | postgres://postgres:...@localhost:5433/svetubd | Monolith DB connection string |
+| `--monolith-dsn` | postgres://postgres:...@localhost:5433/vondi_db | Monolith DB connection string |
 | `--microservice-dsn` | postgres://listings_user:...@localhost:35434/listings_dev_db | Microservice DB connection string |
 | `--dry-run` | `true` | Dry-run mode (no writes) |
 | `--verbose` | `false` | Verbose logging |

@@ -231,7 +231,9 @@ func TestCheckDeadline(t *testing.T) {
 			name: "context not expired",
 			setup: func() context.Context {
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
+				// Note: not calling cancel here as context is used after return
+				// This is intentional for testing non-expired context
+				_ = cancel // nolint:staticcheck
 				return ctx
 			},
 			expectErr: false,

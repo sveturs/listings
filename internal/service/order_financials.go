@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // FinancialConfig contains configuration for financial calculations

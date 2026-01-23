@@ -15,8 +15,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service"
 )
 
 // TestEnvironment provides a complete testing environment with all dependencies.
@@ -425,6 +425,7 @@ func (env *TestEnvironment) setupServices(tb testing.TB) {
 		env.PgPool,          // pool
 		nil,                 // config (uses default)
 		env.Logger,
+		nil, // variantService (not used in tests)
 	)
 
 	tb.Log("Services initialized")
@@ -438,10 +439,10 @@ func (env *TestEnvironment) SeedTestData(tb testing.TB) {
 
 	// Create test categories
 	_, err := env.DB.ExecContext(ctx, `
-		INSERT INTO categories (id, name, slug, parent_id, level, created_at)
+		INSERT INTO categories (id, name, slug, parent_id, level, path, sort_order, is_active, listing_count, created_at)
 		VALUES
-			(1000, 'Test Electronics', 'test-electronics', NULL, 0, NOW()),
-			(1001, 'Test Phones', 'test-phones', 1000, 1, NOW())
+			('a0000000-0000-0000-0000-000000001000', '{"en": "Test Electronics"}'::jsonb, 'test-electronics', NULL, 1, 'test-electronics', 0, true, 0, NOW()),
+			('a0000000-0000-0000-0000-000000001001', '{"en": "Test Phones"}'::jsonb, 'test-phones', 'a0000000-0000-0000-0000-000000001000', 2, 'test-electronics/test-phones', 0, true, 0, NOW())
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(tb, err, "Failed to seed categories")
@@ -460,9 +461,9 @@ func (env *TestEnvironment) SeedTestData(tb testing.TB) {
 	_, err = env.DB.ExecContext(ctx, `
 		INSERT INTO listings (id, user_id, storefront_id, title, slug, description, price, currency, category_id, status, created_at, updated_at)
 		VALUES
-			(100, 1, 1, 'Test Product 1', 'test-product-1', 'Description 1', 99.99, 'EUR', 1001, 'active', NOW(), NOW()),
-			(101, 1, 1, 'Test Product 2', 'test-product-2', 'Description 2', 149.99, 'EUR', 1001, 'active', NOW(), NOW()),
-			(200, 2, 2, 'Test Product 3', 'test-product-3', 'Description 3', 199.99, 'EUR', 1001, 'active', NOW(), NOW())
+			(100, 1, 1, 'Test Product 1', 'test-product-1', 'Description 1', 99.99, 'EUR', 'a0000000-0000-0000-0000-000000001001', 'active', NOW(), NOW()),
+			(101, 1, 1, 'Test Product 2', 'test-product-2', 'Description 2', 149.99, 'EUR', 'a0000000-0000-0000-0000-000000001001', 'active', NOW(), NOW()),
+			(200, 2, 2, 'Test Product 3', 'test-product-3', 'Description 3', 199.99, 'EUR', 'a0000000-0000-0000-0000-000000001001', 'active', NOW(), NOW())
 		ON CONFLICT (id) DO NOTHING
 	`)
 	require.NoError(tb, err, "Failed to seed products")
@@ -514,7 +515,7 @@ func (env *TestEnvironment) CreateTestProduct(tb testing.TB, storefrontID int64,
 		"Test description",
 		price,
 		"EUR",
-		1001,
+		"a0000000-0000-0000-0000-000000001001",
 		"active",
 	).Scan(&productID)
 	require.NoError(tb, err, "Failed to create test product")

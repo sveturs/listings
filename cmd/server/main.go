@@ -13,34 +13,38 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	authservice "github.com/sveturs/auth/pkg/service"
+	authservice "github.com/vondi-global/auth/pkg/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	attributespb "github.com/sveturs/listings/api/proto/attributes/v1"
-	categoriespb "github.com/sveturs/listings/api/proto/categories/v1"
-	chatsvcv1 "github.com/sveturs/listings/api/proto/chat/v1"
-	listingspb "github.com/sveturs/listings/api/proto/listings/v1"
-	searchv1 "github.com/sveturs/listings/api/proto/search/v1"
-	"github.com/sveturs/listings/internal/cache"
-	deliveryclient "github.com/sveturs/listings/internal/client/delivery"
-	"github.com/sveturs/listings/internal/config"
-	"github.com/sveturs/listings/internal/health"
-	"github.com/sveturs/listings/internal/metrics"
-	"github.com/sveturs/listings/internal/middleware"
-	"github.com/sveturs/listings/internal/opensearch"
-	"github.com/sveturs/listings/internal/ratelimit"
-	"github.com/sveturs/listings/internal/repository/minio"
-	opensearchRepo "github.com/sveturs/listings/internal/repository/opensearch"
-	"github.com/sveturs/listings/internal/repository/postgres"
-	"github.com/sveturs/listings/internal/service"
-	"github.com/sveturs/listings/internal/service/listings"
-	searchService "github.com/sveturs/listings/internal/service/search"
-	"github.com/sveturs/listings/internal/timeout"
-	grpcTransport "github.com/sveturs/listings/internal/transport/grpc"
-	httpTransport "github.com/sveturs/listings/internal/transport/http"
-	ws "github.com/sveturs/listings/internal/websocket"
-	"github.com/sveturs/listings/internal/worker"
+	attributespb "github.com/vondi-global/listings/api/proto/attributes/v1"
+	attributessvcv1 "github.com/vondi-global/listings/api/proto/attributessvc/v1"
+	categoriespb "github.com/vondi-global/listings/api/proto/categories/v1"
+	categoriesv2 "github.com/vondi-global/listings/api/proto/categories/v2"
+	chatsvcv1 "github.com/vondi-global/listings/api/proto/chat/v1"
+	listingspb "github.com/vondi-global/listings/api/proto/listings/v1"
+	searchv1 "github.com/vondi-global/listings/api/proto/search/v1"
+	variantspb "github.com/vondi-global/listings/api/proto/variants/v1"
+	"github.com/vondi-global/listings/internal/cache"
+	deliveryclient "github.com/vondi-global/listings/internal/client/delivery"
+	"github.com/vondi-global/listings/internal/config"
+	"github.com/vondi-global/listings/internal/events"
+	"github.com/vondi-global/listings/internal/health"
+	"github.com/vondi-global/listings/internal/metrics"
+	"github.com/vondi-global/listings/internal/middleware"
+	"github.com/vondi-global/listings/internal/opensearch"
+	"github.com/vondi-global/listings/internal/ratelimit"
+	"github.com/vondi-global/listings/internal/repository/minio"
+	opensearchRepo "github.com/vondi-global/listings/internal/repository/opensearch"
+	"github.com/vondi-global/listings/internal/repository/postgres"
+	"github.com/vondi-global/listings/internal/service"
+	"github.com/vondi-global/listings/internal/service/listings"
+	searchService "github.com/vondi-global/listings/internal/service/search"
+	"github.com/vondi-global/listings/internal/timeout"
+	grpcTransport "github.com/vondi-global/listings/internal/transport/grpc"
+	httpTransport "github.com/vondi-global/listings/internal/transport/http"
+	ws "github.com/vondi-global/listings/internal/websocket"
+	"github.com/vondi-global/listings/internal/worker"
 )
 
 var (
@@ -183,12 +187,13 @@ func main() {
 	// Initialize MinIO (optional)
 	var minioClient *minio.Client
 	if cfg.Storage.Endpoint != "" {
-		minioClient, err = minio.NewClient(
+		minioClient, err = minio.NewClientWithPublicURL(
 			cfg.Storage.Endpoint,
 			cfg.Storage.AccessKey,
 			cfg.Storage.SecretKey,
 			cfg.Storage.Bucket,
 			cfg.Storage.UseSSL,
+			cfg.Storage.PublicBaseURL,
 			zerologLogger,
 		)
 		if err != nil {
@@ -228,8 +233,36 @@ func main() {
 	attrRepo := postgres.NewAttributeRepository(db, zerologLogger)
 	attributeService := service.NewAttributeService(attrRepo, redisCache.GetClient(), zerologLogger)
 
+	// Initialize category cache (for V2 API)
+	categoryCache := cache.NewCategoryCache(redisCache.GetClient(), zerologLogger)
+
 	// Initialize category service
 	categoryService := service.NewCategoryService(pgRepo, redisCache.GetClient(), zerologLogger)
+
+	// Initialize category detection repository
+	categoryDetectionRepo := postgres.NewCategoryDetectionRepository(db, zerologLogger)
+
+	// Initialize category detection service
+	claudeAPIKey := os.Getenv("VONDILISTINGS_CLAUDE_API_KEY")
+	if claudeAPIKey == "" {
+		claudeAPIKey = os.Getenv("CLAUDE_API_KEY") // fallback
+	}
+
+	// ВАЖНО: Создаём сервис всегда (даже без API ключа)
+	// Он будет работать на keyword/similarity matching (без AI)
+	categoryDetectionService := service.NewCategoryDetectionService(
+		categoryDetectionRepo,
+		pgRepo, // implements CategoryRepositoryInterface
+		redisCache.GetClient(),
+		claudeAPIKey, // может быть пустым - сервис использует fallback
+		zerologLogger,
+	)
+
+	if claudeAPIKey != "" {
+		logger.Info().Msg("Category detection service initialized with Claude AI support")
+	} else {
+		logger.Warn().Msg("Category detection service initialized WITHOUT AI (using keyword/similarity matching only)")
+	}
 
 	// Initialize analytics repository (Phase 29) - PostgreSQL only, no OpenSearch dependency
 	// Analytics uses materialized views and analytics_events table
@@ -301,8 +334,10 @@ func main() {
 	// Initialize storefront analytics service (Phase 30.1)
 	var storefrontAnalyticsSvc service.StorefrontAnalyticsService
 	storefrontAnalyticsRepo := postgres.NewStorefrontAnalyticsRepository(pgxPool, zerologLogger)
+	storefrontEventRepo := postgres.NewStorefrontEventRepository(pgxPool, zerologLogger)
 	storefrontAnalyticsSvc = service.NewStorefrontAnalyticsService(
 		storefrontAnalyticsRepo,
+		storefrontEventRepo,
 		redisCache.GetClient(), // Reuse existing Redis client
 		zerologLogger,
 	)
@@ -312,6 +347,20 @@ func main() {
 	cartRepo := postgres.NewCartRepository(pgxPool, zerologLogger)
 	orderRepo := postgres.NewOrderRepository(pgxPool, zerologLogger)
 	reservationRepo := postgres.NewReservationRepository(pgxPool, zerologLogger)
+
+	// Initialize variant service dependencies (for stock management)
+	variantRepo := postgres.NewVariantRepository(db, zerologLogger)
+	stockReservationRepo := postgres.NewStockReservationRepository(db, zerologLogger)
+	skuGenerator := service.NewSKUGenerator()
+
+	// Initialize variant service
+	variantService := service.NewVariantService(
+		variantRepo,
+		stockReservationRepo,
+		skuGenerator,
+		db,
+		zerologLogger,
+	)
 
 	// Initialize cart service
 	cartService := service.NewCartService(
@@ -330,6 +379,16 @@ func main() {
 		pgRepo,
 		pgxPool,
 		nil, // Use default financial config
+		zerologLogger,
+		variantService, // Add variant service for stock reservations
+	)
+
+	// Initialize inventory service (for reservations)
+	inventoryService := service.NewInventoryService(
+		reservationRepo,
+		pgRepo,
+		orderRepo,
+		pgxPool,
 		zerologLogger,
 	)
 
@@ -365,6 +424,19 @@ func main() {
 		deliveryAdapter := deliveryclient.NewServiceAdapter(deliveryClient)
 		orderService.SetDeliveryClient(deliveryAdapter)
 	}
+
+	// Initialize order event publisher for WMS integration
+	eventPublisher := events.NewRedisOrderEventPublisher(
+		redisCache.GetClient(),
+		zerologLogger,
+		events.OrdersStream,
+		cfg.WMS.DefaultWarehouseID,
+	)
+	orderService.SetEventPublisher(eventPublisher)
+	logger.Info().
+		Str("stream", events.OrdersStream).
+		Int64("default_warehouse_id", cfg.WMS.DefaultWarehouseID).
+		Msg("Order event publisher initialized for WMS integration")
 
 	// Initialize chat service dependencies
 	chatRepo := postgres.NewChatRepository(pgxPool, zerologLogger)
@@ -411,6 +483,10 @@ func main() {
 	// Connect chat service to order service for notifications
 	orderService.SetChatService(chatService)
 
+	// Initialize invitation service
+	invitationService := service.NewInvitationService(db.DB, db, zerologLogger)
+	logger.Info().Msg("Invitation service initialized successfully")
+
 	// Initialize health check service
 	healthConfig := &health.Config{
 		CheckTimeout:     cfg.Health.CheckTimeout,
@@ -420,6 +496,14 @@ func main() {
 		EnableDeepChecks: cfg.Health.EnableDeepChecks,
 	}
 	healthChecker := health.NewService(db.DB, redisCache, searchClient, minioClient, healthConfig, zerologLogger)
+
+	// Initialize OpenSearch stats collector (if search client available)
+	if searchClient != nil {
+		statsCollector := opensearchRepo.NewStatsCollector(searchClient, 60*time.Second, zerologLogger)
+		go statsCollector.Start(context.Background())
+		defer statsCollector.Stop()
+		logger.Info().Dur("interval", 60*time.Second).Msg("OpenSearch stats collector started")
+	}
 
 	// Initialize worker (if enabled and search is available)
 	var indexWorker *worker.Worker
@@ -480,13 +564,35 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(interceptors...),
 	)
-	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, minioClient, metricsInstance, zerologLogger)
+	grpcHandler := grpcTransport.NewServer(listingsService, storefrontService, attributeService, categoryService, pgRepo, categoryCache, orderService, cartService, chatService, analyticsSvc, storefrontAnalyticsSvc, inventoryService, invitationService, minioClient, metricsInstance, zerologLogger)
 	listingspb.RegisterListingsServiceServer(grpcServer, grpcHandler)
 	attributespb.RegisterAttributeServiceServer(grpcServer, grpcHandler)
+
+	// Register Phase 2 AttributeService (GetAttributesByCategory, GetAttributeValues)
+	attrPhase2Handler := grpcTransport.NewAttributeServicePhase2Server(attrRepo)
+	attributessvcv1.RegisterAttributeServiceServer(grpcServer, attrPhase2Handler)
+	logger.Info().Msg("AttributeService Phase 2 registered with gRPC server")
 
 	// Create separate CategoryService handler to avoid method name conflicts
 	categoryHandler := grpcTransport.NewCategoryServiceServer(grpcHandler)
 	categoriespb.RegisterCategoryServiceServer(grpcServer, categoryHandler)
+
+	// Register CategoryServiceV2 (UUID-based with i18n)
+	categoriesv2.RegisterCategoryServiceV2Server(grpcServer, grpcHandler)
+	logger.Info().Msg("CategoryServiceV2 registered with gRPC server")
+
+	// Register CategoryDetectionService (всегда регистрируем, даже без AI)
+	categoryDetectionHandler := grpcTransport.NewCategoryDetectionHandler(
+		categoryDetectionService,
+		zerologLogger,
+	)
+	categoriesv2.RegisterCategoryDetectionServiceServer(grpcServer, categoryDetectionHandler)
+
+	if claudeAPIKey != "" {
+		logger.Info().Msg("CategoryDetectionService registered (with Claude AI)")
+	} else {
+		logger.Info().Msg("CategoryDetectionService registered (keyword/similarity only, NO AI)")
+	}
 
 	listingspb.RegisterOrderServiceServer(grpcServer, grpcHandler)
 
@@ -504,6 +610,11 @@ func main() {
 	// Register ChatService
 	chatsvcv1.RegisterChatServiceServer(grpcServer, grpcHandler)
 	logger.Info().Msg("ChatService registered with gRPC server")
+
+	// Register VariantService (Phase 3)
+	variantHandler := grpcTransport.NewVariantHandler(variantService, zerologLogger)
+	variantspb.RegisterVariantServiceServer(grpcServer, variantHandler)
+	logger.Info().Msg("VariantService registered with gRPC server")
 
 	// Enable gRPC reflection for tools like grpcurl
 	reflection.Register(grpcServer)
@@ -523,7 +634,16 @@ func main() {
 
 	// Initialize HTTP server with health checks
 	httpHandler := httpTransport.NewMinimalHandler(listingsService, zerologLogger)
-	healthHandler := httpTransport.NewHealthHandler(healthChecker, zerologLogger)
+
+	// Use enhanced health handler with OpenSearch monitoring
+	var healthHandler *httpTransport.HealthHandler
+	if searchClient != nil {
+		healthHandler = httpTransport.NewHealthHandlerWithOpenSearch(healthChecker, searchClient, zerologLogger)
+		logger.Info().Msg("Health handler initialized with OpenSearch monitoring")
+	} else {
+		healthHandler = httpTransport.NewHealthHandler(healthChecker, zerologLogger)
+		logger.Warn().Msg("Health handler initialized without OpenSearch monitoring")
+	}
 
 	// Initialize WebSocket handler (requires auth service)
 	var chatWSHandler *httpTransport.ChatWebSocketHandler
@@ -534,12 +654,20 @@ func main() {
 		logger.Warn().Msg("Chat WebSocket disabled - auth service not available")
 	}
 
+	// Initialize search analytics HTTP handler (Phase 7)
+	var analyticsHandler *httpTransport.AnalyticsHandler
+	if searchSvc != nil && searchSvc.GetAnalyticsClient() != nil {
+		analyticsHandler = httpTransport.NewAnalyticsHandler(searchSvc.GetAnalyticsClient(), zerologLogger)
+		logger.Info().Msg("Search analytics HTTP handler initialized")
+	}
+
 	httpApp, err := httpTransport.StartMinimalServer(
 		cfg.Server.HTTPHost,
 		cfg.Server.HTTPPort,
 		httpHandler,
 		healthHandler,
 		chatWSHandler,
+		analyticsHandler,
 		zerologLogger,
 	)
 	if err != nil {

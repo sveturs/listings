@@ -38,10 +38,10 @@ Traces → WHERE in the flow (which service/function)
 
 | Tool | URL | Purpose | Access Level |
 |------|-----|---------|--------------|
-| **Grafana** | https://grafana.svetu.rs | Dashboards and visualization | All engineers |
-| **Prometheus** | http://prometheus.svetu.rs:9090 | Metrics and queries | All engineers |
-| **AlertManager** | http://alertmanager.svetu.rs:9093 | Alert management | On-call engineers |
-| **Jaeger** | http://jaeger.svetu.rs:16686 | Distributed tracing | All engineers |
+| **Grafana** | https://grafana.vondi.rs | Dashboards and visualization | All engineers |
+| **Prometheus** | http://prometheus.vondi.rs:9090 | Metrics and queries | All engineers |
+| **AlertManager** | http://alertmanager.vondi.rs:9093 | Alert management | On-call engineers |
+| **Jaeger** | http://jaeger.vondi.rs:16686 | Distributed tracing | All engineers |
 
 **Credentials:** Stored in company password manager
 
@@ -113,7 +113,7 @@ Traces → WHERE in the flow (which service/function)
 #### 1. Listings Service Overview
 
 **Location:** Dashboards → Listings → Overview
-**URL:** https://grafana.svetu.rs/d/listings-overview
+**URL:** https://grafana.vondi.rs/d/listings-overview
 
 **Purpose:** High-level service health and SLO tracking
 
@@ -145,7 +145,7 @@ Traces → WHERE in the flow (which service/function)
 #### 2. Listings Service Details
 
 **Location:** Dashboards → Listings → Details
-**URL:** https://grafana.svetu.rs/d/listings-details
+**URL:** https://grafana.vondi.rs/d/listings-details
 
 **Purpose:** Deep-dive into service internals
 
@@ -185,7 +185,7 @@ Traces → WHERE in the flow (which service/function)
 #### 3. Database Performance
 
 **Location:** Dashboards → Listings → Database
-**URL:** https://grafana.svetu.rs/d/listings-database
+**URL:** https://grafana.vondi.rs/d/listings-database
 
 **Purpose:** PostgreSQL monitoring
 
@@ -241,7 +241,7 @@ sum(rate(listings_db_query_duration_seconds_bucket{le="1.0"}[5m]))
 #### 4. Redis Performance
 
 **Location:** Dashboards → Listings → Redis
-**URL:** https://grafana.svetu.rs/d/listings-redis
+**URL:** https://grafana.vondi.rs/d/listings-redis
 
 **Purpose:** Cache and rate limiter monitoring
 
@@ -280,7 +280,7 @@ sum(rate(listings_db_query_duration_seconds_bucket{le="1.0"}[5m]))
 #### 5. SLO Dashboard
 
 **Location:** Dashboards → Listings → SLO
-**URL:** https://grafana.svetu.rs/d/listings-slo
+**URL:** https://grafana.vondi.rs/d/listings-slo
 
 **Purpose:** SLO tracking and error budget management
 
@@ -1022,7 +1022,7 @@ sum(rate(listings_grpc_requests_total[5m]))
 **Checks:**
 ```bash
 # Check Prometheus
-curl http://prometheus.svetu.rs:9090/-/healthy
+curl http://prometheus.vondi.rs:9090/-/healthy
 
 # Check Grafana datasource
 Grafana → Configuration → Data Sources → Prometheus → Test
@@ -1041,7 +1041,7 @@ curl http://localhost:8086/metrics | grep listings_
 curl -s http://localhost:8086/metrics | grep <metric_name>
 
 # Check Prometheus targets
-curl http://prometheus.svetu.rs:9090/api/v1/targets | jq '.data.activeTargets[] | select(.labels.job == "listings")'
+curl http://prometheus.vondi.rs:9090/api/v1/targets | jq '.data.activeTargets[] | select(.labels.job == "listings")'
 
 # Check for metric typo in query
 ```
@@ -1053,13 +1053,13 @@ curl http://prometheus.svetu.rs:9090/api/v1/targets | jq '.data.activeTargets[] 
 **Checks:**
 ```bash
 # Check alert rule
-curl http://prometheus.svetu.rs:9090/api/v1/rules | jq '.data.groups[].rules[] | select(.name == "ListingsHighErrorRate")'
+curl http://prometheus.vondi.rs:9090/api/v1/rules | jq '.data.groups[].rules[] | select(.name == "ListingsHighErrorRate")'
 
 # Check alert state
-curl http://prometheus.svetu.rs:9090/api/v1/alerts | jq '.data.alerts[] | select(.labels.alertname == "ListingsHighErrorRate")'
+curl http://prometheus.vondi.rs:9090/api/v1/alerts | jq '.data.alerts[] | select(.labels.alertname == "ListingsHighErrorRate")'
 
 # Check AlertManager
-curl http://alertmanager.svetu.rs:9093/api/v2/alerts
+curl http://alertmanager.vondi.rs:9093/api/v2/alerts
 ```
 
 ---

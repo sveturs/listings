@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sveturs/listings/internal/domain"
+	"github.com/vondi-global/listings/internal/domain"
 )
 
 // CreateStorefront creates a new storefront
@@ -15,7 +15,9 @@ func (r *Repository) CreateStorefront(ctx context.Context, storefront *domain.St
 	query := `
 		INSERT INTO storefronts (
 			user_id, slug, name, description, logo_url, banner_url, theme,
-			phone, email, website,
+			phone, email, website, social_links,
+			legal_entity_type, business_category, full_legal_name, registration_number,
+			tax_number, vat_number, legal_representative_name, legal_representative_position,
 			address, city, postal_code, country, latitude, longitude, formatted_address,
 			geo_strategy, default_privacy_level, address_verified,
 			settings, seo_meta,
@@ -24,14 +26,20 @@ func (r *Repository) CreateStorefront(ctx context.Context, storefront *domain.St
 			ai_agent_enabled, ai_agent_config, live_shopping_enabled, group_buying_enabled,
 			followers_count
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-			$21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+			$12, $13, $14, $15, $16, $17, $18, $19,
+			$20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31,
+			$32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48
 		) RETURNING id, created_at, updated_at`
 
 	return r.db.QueryRowContext(ctx, query,
 		storefront.UserID, storefront.Slug, storefront.Name, storefront.Description,
 		storefront.LogoURL, storefront.BannerURL, storefront.Theme,
-		storefront.Phone, storefront.Email, storefront.Website,
+		storefront.Phone, storefront.Email, storefront.Website, storefront.SocialLinks,
+		// Business Legal Structure
+		storefront.LegalEntityType, storefront.BusinessCategory, storefront.FullLegalName,
+		storefront.RegistrationNumber, storefront.TaxNumber, storefront.VatNumber,
+		storefront.LegalRepresentativeName, storefront.LegalRepresentativePosition,
 		storefront.Address, storefront.City, storefront.PostalCode, storefront.Country,
 		storefront.Latitude, storefront.Longitude, storefront.FormattedAddress,
 		storefront.GeoStrategy, storefront.DefaultPrivacyLevel, storefront.AddressVerified,
@@ -319,7 +327,6 @@ func (r *Repository) ListStorefronts(ctx context.Context, filter *domain.ListSto
 		where = append(where, fmt.Sprintf("(name ILIKE $%d OR description ILIKE $%d)", argIdx, argIdx))
 		searchPattern := "%" + *filter.Search + "%"
 		args = append(args, searchPattern)
-		argIdx++
 	}
 
 	whereClause := strings.Join(where, " AND ")
@@ -464,6 +471,18 @@ func (r *Repository) GetStaff(ctx context.Context, storefrontID int64) ([]domain
 	}
 
 	return staff, nil
+}
+
+// IsUserStaff checks if a user is a staff member of the storefront
+func (r *Repository) IsUserStaff(ctx context.Context, storefrontID, userID int64) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM storefront_staff WHERE storefront_id = $1 AND user_id = $2)`
+
+	var exists bool
+	if err := r.db.GetContext(ctx, &exists, query, storefrontID, userID); err != nil {
+		return false, fmt.Errorf("failed to check staff membership: %w", err)
+	}
+
+	return exists, nil
 }
 
 // SetWorkingHours sets working hours for a storefront (replaces existing)
@@ -684,7 +703,6 @@ func (r *Repository) GetMapData(ctx context.Context, bounds *domain.MapBounds, f
 		if filter.IsVerified != nil {
 			where = append(where, fmt.Sprintf("is_verified = $%d", argIdx))
 			args = append(args, *filter.IsVerified)
-			argIdx++
 		}
 	}
 
@@ -796,6 +814,37 @@ func (r *Repository) loadRelatedEntities(ctx context.Context, storefront *domain
 			return fmt.Errorf("failed to load delivery options: %w", err)
 		}
 		storefront.DeliveryOptions = options
+	}
+
+	return nil
+}
+
+// UpdateFields updates specific fields of a storefront dynamically
+func (r *Repository) UpdateFields(ctx context.Context, storefrontID int64, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+
+	// Build dynamic UPDATE query
+	query := "UPDATE storefronts SET "
+	args := make([]interface{}, 0, len(updates)+1)
+	i := 1
+
+	for field, value := range updates {
+		if i > 1 {
+			query += ", "
+		}
+		query += fmt.Sprintf("%s = $%d", field, i)
+		args = append(args, value)
+		i++
+	}
+
+	query += fmt.Sprintf(" WHERE id = $%d", i)
+	args = append(args, storefrontID)
+
+	_, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to update storefront fields: %w", err)
 	}
 
 	return nil
