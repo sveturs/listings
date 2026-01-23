@@ -1274,8 +1274,9 @@ func ApplyTranslation(listing *domain.Listing, lang string) {
 
 	// Apply location translation if Location is loaded
 	if listing.Location != nil {
+		// LocationTranslations contains full address (e.g., "123 Main St, Belgrade")
 		if loc, ok := listing.LocationTranslations[lang]; ok && loc != "" {
-			listing.Location.Country = &loc
+			listing.Location.AddressLine1 = &loc
 		}
 		if city, ok := listing.CityTranslations[lang]; ok && city != "" {
 			listing.Location.City = &city

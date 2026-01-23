@@ -40,7 +40,6 @@ func (s *Server) ReindexAll(ctx context.Context, req *listingspb.ReindexAllReque
 		sourceType,
 		batchSize,
 	)
-
 	if err != nil {
 		s.logger.Error().Err(err).Msg("ReindexAll operation failed")
 

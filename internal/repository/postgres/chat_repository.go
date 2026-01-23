@@ -93,7 +93,6 @@ func (r *chatRepository) Create(ctx context.Context, chat *domain.Chat) error {
 		chat.IsArchived,
 		chat.LastMessageAt,
 	).Scan(&chat.ID, &chat.CreatedAt, &chat.UpdatedAt)
-
 	if err != nil {
 		r.logger.Error().Err(err).
 			Int64("buyer_id", chat.BuyerID).
@@ -133,7 +132,6 @@ func (r *chatRepository) GetByID(ctx context.Context, chatID int64) (*domain.Cha
 		&chat.CreatedAt,
 		&chat.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("chat not found")
@@ -181,7 +179,6 @@ func (r *chatRepository) GetByParticipantsAndListing(ctx context.Context, buyerI
 		&chat.CreatedAt,
 		&chat.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("chat not found")
@@ -233,7 +230,6 @@ func (r *chatRepository) GetByParticipantsAndProduct(ctx context.Context, buyerI
 		&chat.CreatedAt,
 		&chat.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("chat not found")
@@ -286,7 +282,6 @@ func (r *chatRepository) GetByParticipantsDirect(ctx context.Context, userID1, u
 		&chat.CreatedAt,
 		&chat.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("chat not found")
@@ -329,7 +324,6 @@ func (r *chatRepository) Update(ctx context.Context, chat *domain.Chat) error {
 		chat.LastMessageAt,
 		chat.ID,
 	).Scan(&chat.UpdatedAt)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return fmt.Errorf("chat not found")

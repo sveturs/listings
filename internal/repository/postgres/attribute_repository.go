@@ -138,7 +138,6 @@ func (r *AttributeRepository) Create(ctx context.Context, input *domain.CreateAt
 		&attr.CreatedAt,
 		&attr.UpdatedAt,
 	)
-
 	if err != nil {
 		r.logger.Error().Err(err).Str("code", input.Code).Msg("failed to create attribute")
 		return nil, fmt.Errorf("failed to create attribute: %w", err)
@@ -334,7 +333,6 @@ func (r *AttributeRepository) Update(ctx context.Context, id int32, input *domai
 		&attr.CreatedAt,
 		&attr.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("attribute not found or already deleted")
@@ -417,7 +415,6 @@ func (r *AttributeRepository) GetByID(ctx context.Context, id int32) (*domain.At
 		&attr.CreatedAt,
 		&attr.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("attribute not found")
@@ -472,7 +469,6 @@ func (r *AttributeRepository) GetByCode(ctx context.Context, code string) (*doma
 		&attr.CreatedAt,
 		&attr.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("attribute not found")
@@ -600,7 +596,6 @@ func (r *AttributeRepository) List(ctx context.Context, filter *domain.ListAttri
 			&attr.CreatedAt,
 			&attr.UpdatedAt,
 		)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to scan attribute row")
 			return nil, 0, fmt.Errorf("failed to scan attribute: %w", err)
@@ -755,7 +750,6 @@ func (r *AttributeRepository) LinkToCategory(ctx context.Context, categoryID int
 		&catAttr.CreatedAt,
 		&catAttr.UpdatedAt,
 	)
-
 	if err != nil {
 		r.logger.Error().Err(err).Int32("category_id", categoryID).Int32("attribute_id", attributeID).Msg("failed to link attribute to category")
 		return nil, fmt.Errorf("failed to link attribute to category: %w", err)
@@ -853,7 +847,6 @@ func (r *AttributeRepository) UpdateCategoryAttribute(ctx context.Context, catAt
 		&catAttr.CreatedAt,
 		&catAttr.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("category attribute not found or already deleted")
@@ -999,7 +992,6 @@ func (r *AttributeRepository) GetCategoryAttributes(ctx context.Context, categor
 			&attr.CreatedAt,
 			&attr.UpdatedAt,
 		)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to scan category attribute row")
 			return nil, fmt.Errorf("failed to scan category attribute: %w", err)

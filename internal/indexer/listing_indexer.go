@@ -64,7 +64,6 @@ func (idx *ListingIndexer) IndexListing(ctx context.Context, listing *domain.Lis
 		osClient.Index.WithDocumentID(fmt.Sprintf("%d", listing.ID)),
 		osClient.Index.WithRefresh("false"),
 	)
-
 	if err != nil {
 		idx.logger.Error().Err(err).Int64("listing_id", listing.ID).Msg("failed to index listing")
 		return fmt.Errorf("failed to index listing: %w", err)
@@ -102,6 +101,13 @@ func (idx *ListingIndexer) BulkIndexListings(ctx context.Context, listings []*do
 
 		// Build document
 		doc := idx.buildListingDocument(listing, attributes, searchableText)
+
+		// DEBUG: Log document content before indexing
+		idx.logger.Debug().
+			Int64("listing_id", listing.ID).
+			Interface("title_translations_in_doc", doc["title_translations"]).
+			Interface("description_translations_in_doc", doc["description_translations"]).
+			Msg("document prepared for indexing")
 
 		// Action line
 		action := map[string]interface{}{
@@ -141,7 +147,6 @@ func (idx *ListingIndexer) BulkIndexListings(ctx context.Context, listings []*do
 		bytes.NewReader(bulkBody.Bytes()),
 		osClient.Bulk.WithContext(ctx),
 	)
-
 	if err != nil {
 		idx.logger.Error().Err(err).Int("listing_count", successCount).Msg("bulk index request failed")
 		return fmt.Errorf("bulk index request failed: %w", err)
@@ -178,6 +183,13 @@ func (idx *ListingIndexer) DeleteListing(ctx context.Context, listingID int64) e
 
 // buildListingDocument builds an OpenSearch document from listing and attributes
 func (idx *ListingIndexer) buildListingDocument(listing *domain.Listing, attributes []AttributeForIndex, searchableText string) map[string]interface{} {
+	// DEBUG: Log incoming listing data
+	idx.logger.Debug().
+		Int64("listing_id", listing.ID).
+		Int("title_trans_count_IN", len(listing.TitleTranslations)).
+		Interface("title_trans_IN", listing.TitleTranslations).
+		Msg("buildListingDocument called")
+
 	doc := map[string]interface{}{
 		"id":              listing.ID,
 		"uuid":            listing.UUID,
@@ -200,6 +212,33 @@ func (idx *ListingIndexer) buildListingDocument(listing *domain.Listing, attribu
 	// Optional fields
 	if listing.Description != nil {
 		doc["description"] = *listing.Description
+	}
+
+	// Add translations for multilingual search
+	// Supported languages: sr (Serbian), en (English), ru (Russian)
+	if listing.OriginalLanguage != "" {
+		doc["original_language"] = listing.OriginalLanguage
+	}
+	if len(listing.TitleTranslations) > 0 {
+		idx.logger.Debug().Int64("listing_id", listing.ID).Interface("title_translations", listing.TitleTranslations).Msg("adding title translations")
+		for lang, translation := range listing.TitleTranslations {
+			if translation != "" {
+				doc["title_"+lang] = translation
+			}
+		}
+		// Add complete translation object for frontend consumption
+		doc["title_translations"] = listing.TitleTranslations
+	} else {
+		idx.logger.Warn().Int64("listing_id", listing.ID).Msg("no title translations found")
+	}
+	if len(listing.DescriptionTranslations) > 0 {
+		for lang, translation := range listing.DescriptionTranslations {
+			if translation != "" {
+				doc["description_"+lang] = translation
+			}
+		}
+		// Add complete translation object for frontend consumption
+		doc["description_translations"] = listing.DescriptionTranslations
 	}
 	if listing.StorefrontID != nil {
 		doc["storefront_id"] = *listing.StorefrontID

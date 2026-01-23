@@ -278,7 +278,6 @@ func (r *Repository) CreateListing(ctx context.Context, input *domain.CreateList
 		&listing.DeletedAt,
 		&listing.IsDeleted,
 	)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to create listing")
 		return nil, fmt.Errorf("failed to create listing: %w", err)
@@ -360,7 +359,6 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 		&listing.DeletedAt,
 		&listing.IsDeleted,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("listing not found: %w", err)
@@ -664,7 +662,9 @@ func (r *Repository) ListListings(ctx context.Context, filter *domain.ListListin
 	query := fmt.Sprintf(`
 		SELECT id, uuid, slug, user_id, storefront_id, title, description, price, currency, category_id,
 		       status, visibility, quantity, sku, source_type, view_count, favorites_count,
-		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted
+		       expires_at, created_at, updated_at, published_at, deleted_at, is_deleted,
+		       title_translations, description_translations, location_translations,
+		       city_translations, country_translations, original_language
 		FROM listings
 		WHERE %s
 		ORDER BY created_at DESC
@@ -676,6 +676,16 @@ func (r *Repository) ListListings(ctx context.Context, filter *domain.ListListin
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to list listings")
 		return nil, 0, fmt.Errorf("failed to list listings: %w", err)
+	}
+
+	// DEBUG: Check if translations are loaded
+	for _, listing := range listings {
+		r.logger.Debug().
+			Int64("listing_id", listing.ID).
+			Int("title_trans_count", len(listing.TitleTranslations)).
+			Int("desc_trans_count", len(listing.DescriptionTranslations)).
+			Interface("title_trans", listing.TitleTranslations).
+			Msg("listing loaded from DB")
 	}
 
 	return listings, total, nil

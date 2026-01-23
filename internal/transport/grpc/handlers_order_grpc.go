@@ -52,7 +52,6 @@ func (s *Server) AddToCart(ctx context.Context, req *listingspb.AddToCartRequest
 		VariantID:    req.VariantId,
 		Quantity:     req.Quantity,
 	})
-
 	if err != nil {
 		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
@@ -294,7 +293,6 @@ func (s *Server) CreateOrder(ctx context.Context, req *listingspb.CreateOrderReq
 		CustomerEmail:      req.CustomerEmail,
 		CustomerPhone:      req.CustomerPhone,
 	})
-
 	if err != nil {
 		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}
@@ -381,7 +379,6 @@ func (s *Server) ListOrders(ctx context.Context, req *listingspb.ListOrdersReque
 		Limit:        int(pageSize),
 		Offset:       int(offset),
 	})
-
 	if err != nil {
 		return nil, mapServiceErrorToGRPC(err, s.logger)
 	}

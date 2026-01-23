@@ -110,7 +110,6 @@ func (r *orderRepository) Create(ctx context.Context, order *domain.Order) error
 		order.CustomerName, order.CustomerEmail, order.CustomerPhone,
 		order.CustomerNotes, order.AdminNotes,
 	).Scan(&order.ID, &order.CreatedAt, &order.UpdatedAt)
-
 	if err != nil {
 		r.logger.Error().Err(err).Str("order_number", order.OrderNumber).Msg("failed to create order")
 		return fmt.Errorf("failed to create order: %w", err)
@@ -162,7 +161,6 @@ func (r *orderRepository) GetByID(ctx context.Context, orderID int64) (*domain.O
 		&labelURL,
 		&storefrontName,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("order not found")
@@ -426,7 +424,6 @@ func (r *orderRepository) Update(ctx context.Context, order *domain.Order) error
 		order.LabelURL,
 		order.ID,
 	).Scan(&order.UpdatedAt)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return fmt.Errorf("order not found")

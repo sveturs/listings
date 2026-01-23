@@ -595,7 +595,6 @@ func (r *Repository) CreateCategory(ctx context.Context, cat *domain.Category) (
 		customUIComponent,
 		cat.CreatedAt,
 	).Scan(&cat.ID)
-
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			if pqErr.Code == "23505" { // unique_violation
@@ -737,7 +736,6 @@ func (r *Repository) UpdateCategory(ctx context.Context, cat *domain.Category) (
 		&updatedCat.HasCustomUI,
 		&customUIComponent,
 	)
-
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			if pqErr.Code == "23505" { // unique_violation

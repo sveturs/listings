@@ -24,7 +24,6 @@ func NewClient(endpoint, accessKey, secretKey, bucket string, useSSL bool, logge
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create MinIO client: %w", err)
 	}
@@ -68,7 +67,6 @@ func (c *Client) UploadImage(ctx context.Context, objectName string, reader io.R
 		size,
 		minio.PutObjectOptions{ContentType: contentType},
 	)
-
 	if err != nil {
 		c.logger.Error().Err(err).Str("object", objectName).Msg("failed to upload image")
 		return fmt.Errorf("failed to upload image: %w", err)

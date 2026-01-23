@@ -76,7 +76,6 @@ func (r *cartRepository) Create(ctx context.Context, cart *domain.Cart) error {
 		cart.SessionID,
 		cart.StorefrontID,
 	).Scan(&cart.ID, &cart.CreatedAt, &cart.UpdatedAt)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to create cart")
 		return fmt.Errorf("failed to create cart: %w", err)
@@ -106,7 +105,6 @@ func (r *cartRepository) GetByID(ctx context.Context, cartID int64) (*domain.Car
 		&cart.CreatedAt,
 		&cart.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("cart not found")
@@ -153,7 +151,6 @@ func (r *cartRepository) GetByUserAndStorefront(ctx context.Context, userID, sto
 		&cart.CreatedAt,
 		&cart.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("cart not found")
@@ -200,7 +197,6 @@ func (r *cartRepository) GetBySessionAndStorefront(ctx context.Context, sessionI
 		&cart.CreatedAt,
 		&cart.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("cart not found")
@@ -307,7 +303,6 @@ func (r *cartRepository) Update(ctx context.Context, cart *domain.Cart) error {
 		cart.StorefrontID,
 		cart.ID,
 	).Scan(&cart.UpdatedAt)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return fmt.Errorf("cart not found")
@@ -361,7 +356,6 @@ func (r *cartRepository) AddItem(ctx context.Context, item *domain.CartItem) err
 		item.Quantity,
 		item.PriceSnapshot,
 	).Scan(&item.ID, &item.CreatedAt, &item.UpdatedAt)
-
 	if err != nil {
 		r.logger.Error().Err(err).Int64("cart_id", item.CartID).Msg("failed to add cart item")
 		return fmt.Errorf("failed to add cart item: %w", err)
@@ -390,7 +384,6 @@ func (r *cartRepository) UpdateItem(ctx context.Context, item *domain.CartItem) 
 		item.ID,
 		item.CartID,
 	).Scan(&item.UpdatedAt)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return fmt.Errorf("cart item not found")
@@ -479,7 +472,6 @@ func (r *cartRepository) GetCartItemByID(ctx context.Context, cartItemID int64) 
 		&availableStock,
 		&currentPrice,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("cart item not found")

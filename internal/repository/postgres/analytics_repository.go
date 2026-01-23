@@ -132,7 +132,6 @@ func (r *analyticsRepository) GetOverviewStats(ctx context.Context, filter *doma
 		&stats.AverageOrderValue,
 		&stats.AverageFavoritesRate,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			// Return empty stats instead of error
@@ -257,7 +256,6 @@ func (r *analyticsRepository) GetListingStats(ctx context.Context, filter *domai
 		&lastFavoritedAt,
 		&lastOrderedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("listing not found")
@@ -342,7 +340,6 @@ func (r *analyticsRepository) LogEvent(ctx context.Context, eventType, entityTyp
 		eventType, entityType, entityID,
 		userID, sessionID, metadataJSON,
 	).Scan(&eventUUID)
-
 	if err != nil {
 		r.logger.Error().
 			Err(err).

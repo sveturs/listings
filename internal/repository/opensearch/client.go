@@ -106,6 +106,34 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		doc["images"] = images
 	}
 
+	// Add translations for multilingual support
+	if len(listing.TitleTranslations) > 0 {
+		c.logger.Debug().Int64("listing_id", listing.ID).Interface("title_translations", listing.TitleTranslations).Msg("adding title translations")
+		doc["title_translations"] = listing.TitleTranslations
+		// Also add individual language fields for search
+		for lang, translation := range listing.TitleTranslations {
+			if translation != "" {
+				doc["title_"+lang] = translation
+			}
+		}
+	} else {
+		c.logger.Warn().Int64("listing_id", listing.ID).Msg("no title translations found")
+	}
+
+	if len(listing.DescriptionTranslations) > 0 {
+		doc["description_translations"] = listing.DescriptionTranslations
+		// Also add individual language fields for search
+		for lang, translation := range listing.DescriptionTranslations {
+			if translation != "" {
+				doc["description_"+lang] = translation
+			}
+		}
+	}
+
+	if listing.OriginalLanguage != "" {
+		doc["original_language"] = listing.OriginalLanguage
+	}
+
 	body, err := json.Marshal(doc)
 	if err != nil {
 		c.logger.Error().Err(err).Int64("listing_id", listing.ID).Msg("failed to marshal document")
@@ -120,7 +148,6 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		c.client.Index.WithDocumentID(fmt.Sprintf("%d", listing.ID)),
 		c.client.Index.WithRefresh("false"), // Async refresh
 	)
-
 	if err != nil {
 		c.logger.Error().Err(err).Int64("listing_id", listing.ID).Msg("failed to index listing")
 		return fmt.Errorf("failed to index listing: %w", err)
@@ -150,7 +177,6 @@ func (c *Client) DeleteListing(ctx context.Context, listingID int64) error {
 		fmt.Sprintf("%d", listingID),
 		c.client.Delete.WithContext(ctx),
 	)
-
 	if err != nil {
 		c.logger.Error().Err(err).Int64("listing_id", listingID).Msg("failed to delete listing from index")
 		return fmt.Errorf("failed to delete listing: %w", err)
@@ -217,7 +243,6 @@ func (c *Client) SearchListings(ctx context.Context, query *domain.SearchListing
 		c.client.Search.WithIndex(c.index),
 		c.client.Search.WithBody(bytes.NewReader(body)),
 	)
-
 	if err != nil {
 		c.logger.Error().Err(err).Msg("search query failed")
 		return nil, 0, fmt.Errorf("search query failed: %w", err)
@@ -653,7 +678,6 @@ func (c *Client) GetListingByID(ctx context.Context, listingID int64) (*domain.L
 		fmt.Sprintf("%d", listingID),
 		c.client.Get.WithContext(ctx),
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get listing: %w", err)
 	}
@@ -744,7 +768,6 @@ func (c *Client) IndexProduct(ctx context.Context, product *domain.Listing) erro
 		c.client.Index.WithDocumentID(fmt.Sprintf("%d", product.ID)),
 		c.client.Index.WithRefresh("false"), // Async refresh for performance
 	)
-
 	if err != nil {
 		c.logger.Error().Err(err).Int64("product_id", product.ID).Msg("failed to index product")
 		return fmt.Errorf("failed to index product: %w", err)
@@ -776,7 +799,6 @@ func (c *Client) DeleteProduct(ctx context.Context, productID int64) error {
 		fmt.Sprintf("%d", productID),
 		c.client.Delete.WithContext(ctx),
 	)
-
 	if err != nil {
 		c.logger.Error().Err(err).Int64("product_id", productID).Msg("failed to delete product from index")
 		return fmt.Errorf("failed to delete product: %w", err)
@@ -837,7 +859,6 @@ func (c *Client) BulkIndexProducts(ctx context.Context, products []*domain.Listi
 		bytes.NewReader(bulkBody.Bytes()),
 		c.client.Bulk.WithContext(ctx),
 	)
-
 	if err != nil {
 		c.logger.Error().Err(err).Int("product_count", len(products)).Msg("bulk index request failed")
 		return fmt.Errorf("bulk index request failed: %w", err)

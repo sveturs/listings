@@ -71,7 +71,6 @@ func (cb *CircuitBreaker) Execute(fn func() error) error {
 
 	// Execute function
 	err := fn()
-
 	// Handle result
 	if err != nil {
 		cb.recordFailure()

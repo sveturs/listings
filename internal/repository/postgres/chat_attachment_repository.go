@@ -95,7 +95,6 @@ func (r *chatAttachmentRepository) Create(ctx context.Context, attachment *domai
 		attachment.ThumbnailURL,
 		attachment.Metadata,
 	).Scan(&attachment.ID, &attachment.CreatedAt)
-
 	if err != nil {
 		r.logger.Error().Err(err).
 			Int64("message_id", attachment.MessageID).
@@ -139,7 +138,6 @@ func (r *chatAttachmentRepository) GetByID(ctx context.Context, attachmentID int
 		&attachment.Metadata,
 		&attachment.CreatedAt,
 	)
-
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("attachment not found")
@@ -179,7 +177,6 @@ func (r *chatAttachmentRepository) Update(ctx context.Context, attachment *domai
 		attachment.Metadata,
 		attachment.ID,
 	)
-
 	if err != nil {
 		r.logger.Error().Err(err).Int64("attachment_id", attachment.ID).Msg("failed to update attachment")
 		return fmt.Errorf("failed to update attachment: %w", err)

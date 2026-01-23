@@ -975,7 +975,6 @@ func TestBulkDeleteProducts_Success_CascadeVariants(t *testing.T) {
 	}
 
 	resp, err := client.BulkDeleteProducts(ctx, req)
-
 	// Products might not exist in fixtures, which is OK - test the API behavior
 	if err != nil {
 		st, ok := status.FromError(err)

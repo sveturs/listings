@@ -67,7 +67,6 @@ func (r *RedisLimiter) Allow(ctx context.Context, key string, limit int, window 
 		int(window.Seconds()),
 		time.Now().Unix(),
 	).Result()
-
 	if err != nil {
 		// If Redis fails, fail open (allow the request) to avoid cascading failures
 		r.logger.Error().

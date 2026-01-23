@@ -46,7 +46,6 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 		SELECT has_variants FROM listings
 		WHERE id = $1 AND status = 'active' AND deleted_at IS NULL AND source_type = 'b2c'
 	`, input.ProductID).Scan(&hasVariants)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("variants.product_not_found")
@@ -67,7 +66,6 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 			SET is_default = false, updated_at = NOW()
 			WHERE product_id = $1 AND is_default = true
 		`, input.ProductID)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to unset other defaults")
 			return nil, fmt.Errorf("variants.create_failed")
@@ -171,7 +169,6 @@ func (r *Repository) CreateProductVariant(ctx context.Context, input *domain.Cre
 		&variant.CreatedAt,
 		&variant.UpdatedAt,
 	)
-
 	if err != nil {
 		// Check for unique constraint violation (duplicate SKU)
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -266,7 +263,6 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 			WHERE id = $1 AND product_id = $2
 		)
 	`, variantID, productID).Scan(&exists)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to check variant")
 		return nil, fmt.Errorf("variants.update_failed")
@@ -283,7 +279,6 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 			SELECT COUNT(*) FROM b2c_product_variants
 			WHERE product_id = $1 AND is_active = true AND id != $2
 		`, productID, variantID).Scan(&activeCount)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to count active variants")
 			return nil, fmt.Errorf("variants.update_failed")
@@ -301,7 +296,6 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 			SET is_default = false, updated_at = NOW()
 			WHERE product_id = $1 AND is_default = true AND id != $2
 		`, productID, variantID)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to unset other defaults")
 			return nil, fmt.Errorf("variants.update_failed")
@@ -451,7 +445,6 @@ func (r *Repository) UpdateProductVariant(ctx context.Context, variantID int64, 
 		&variant.CreatedAt,
 		&variant.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("variants.not_found")
@@ -549,7 +542,6 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 		),
 		COALESCE((SELECT is_default FROM b2c_product_variants WHERE id = $1), false)
 	`, variantID, productID).Scan(&exists, &isDefault)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to check variant")
 		return fmt.Errorf("variants.delete_failed")
@@ -565,7 +557,6 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 		SELECT COUNT(*) FROM b2c_product_variants
 		WHERE product_id = $1 AND id != $2
 	`, productID, variantID).Scan(&activeCount)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to count variants")
 		return fmt.Errorf("variants.delete_failed")
@@ -578,7 +569,6 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 			SET has_variants = false, updated_at = NOW()
 			WHERE id = $1 AND source_type = 'b2c'
 		`, productID)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to update product has_variants")
 			return fmt.Errorf("variants.delete_failed")
@@ -594,7 +584,6 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 			ORDER BY id ASC
 			LIMIT 1
 		`, productID, variantID)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to assign new default")
 			return fmt.Errorf("variants.delete_failed")
@@ -606,7 +595,6 @@ func (r *Repository) DeleteProductVariant(ctx context.Context, variantID int64, 
 		DELETE FROM b2c_product_variants
 		WHERE id = $1 AND product_id = $2
 	`, variantID, productID)
-
 	if err != nil {
 		r.logger.Error().Err(err).Msg("failed to delete variant")
 		return fmt.Errorf("variants.delete_failed")
@@ -670,7 +658,6 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 		SELECT has_variants FROM listings
 		WHERE id = $1 AND status = 'active' AND deleted_at IS NULL AND source_type = 'b2c'
 	`, productID).Scan(&hasVariants)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("variants.product_not_found")
@@ -704,7 +691,6 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 			SET is_default = false, updated_at = NOW()
 			WHERE product_id = $1 AND is_default = true
 		`, productID)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to unset other defaults")
 			return nil, fmt.Errorf("variants.bulk_create_failed")
@@ -838,7 +824,6 @@ func (r *Repository) BulkCreateProductVariants(ctx context.Context, productID in
 			&variant.CreatedAt,
 			&variant.UpdatedAt,
 		)
-
 		if err != nil {
 			r.logger.Error().Err(err).Msg("failed to scan variant")
 			return nil, fmt.Errorf("variants.bulk_create_failed")
