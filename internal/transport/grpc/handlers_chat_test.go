@@ -76,6 +76,14 @@ func (m *MockChatService) SendMessage(ctx context.Context, req *service.SendMess
 	return args.Get(0).(*domain.Message), args.Error(1)
 }
 
+func (m *MockChatService) SendSystemMessage(ctx context.Context, req *service.SendSystemMessageRequest) (*domain.Message, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Message), args.Error(1)
+}
+
 func (m *MockChatService) GetMessages(ctx context.Context, req *service.GetMessagesRequest) ([]*domain.Message, bool, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
@@ -113,6 +121,10 @@ func (m *MockChatService) GetAttachment(ctx context.Context, attachmentID, userI
 func (m *MockChatService) DeleteAttachment(ctx context.Context, attachmentID, userID int64) error {
 	args := m.Called(ctx, attachmentID, userID)
 	return args.Error(0)
+}
+
+func (m *MockChatService) SetHub(hub service.ChatHub) {
+	m.Called(hub)
 }
 
 // =============================================================================

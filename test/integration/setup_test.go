@@ -77,6 +77,26 @@ func (m *mockOrderService) ProcessRefund(ctx context.Context, orderID int64) err
 	return nil
 }
 
+func (m *mockOrderService) AcceptOrder(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) CreateOrderShipment(ctx context.Context, req *service.CreateShipmentRequest) (*service.CreateShipmentResult, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) MarkOrderShipped(ctx context.Context, orderID int64, sellerID int64, sellerNotes string) (*domain.Order, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) GetOrderTracking(ctx context.Context, orderID int64, userID int64) (*service.TrackingInfo, error) {
+	return nil, nil
+}
+
+func (m *mockOrderService) SetChatService(chatService service.ChatService) {}
+
+func (m *mockOrderService) SetDeliveryClient(client service.DeliveryClient) {}
+
 // =============================================================================
 // Mock Cart Service
 // =============================================================================
@@ -124,6 +144,84 @@ func (m *mockCartService) RecalculateCart(ctx context.Context, cartID int64) (*d
 }
 
 func (m *mockCartService) ValidateCartItems(ctx context.Context, cartID int64) ([]service.PriceChangeItem, error) {
+	return nil, nil
+}
+
+// =============================================================================
+// Mock Chat Service
+// =============================================================================
+
+type mockChatService struct{}
+
+func (m *mockChatService) CreateChat(ctx context.Context, req *service.CreateChatRequest) (*domain.Chat, error) {
+	return nil, nil
+}
+
+func (m *mockChatService) GetOrCreateChat(ctx context.Context, req *service.GetOrCreateChatRequest) (*domain.Chat, bool, error) {
+	return nil, false, nil
+}
+
+func (m *mockChatService) GetChat(ctx context.Context, chatID, userID int64) (*domain.Chat, error) {
+	return nil, nil
+}
+
+func (m *mockChatService) GetUserChats(ctx context.Context, req *service.GetUserChatsRequest) ([]*domain.Chat, int, error) {
+	return nil, 0, nil
+}
+
+func (m *mockChatService) ArchiveChat(ctx context.Context, chatID, userID int64, archived bool) error {
+	return nil
+}
+
+func (m *mockChatService) DeleteChat(ctx context.Context, chatID int64) error {
+	return nil
+}
+
+func (m *mockChatService) SendMessage(ctx context.Context, req *service.SendMessageRequest) (*domain.Message, error) {
+	return nil, nil
+}
+
+func (m *mockChatService) SendSystemMessage(ctx context.Context, req *service.SendSystemMessageRequest) (*domain.Message, error) {
+	return nil, nil
+}
+
+func (m *mockChatService) GetMessages(ctx context.Context, req *service.GetMessagesRequest) ([]*domain.Message, bool, error) {
+	return nil, false, nil
+}
+
+func (m *mockChatService) MarkMessagesAsRead(ctx context.Context, req *service.MarkMessagesAsReadRequest) (int, error) {
+	return 0, nil
+}
+
+func (m *mockChatService) GetUnreadCount(ctx context.Context, userID int64, chatID *int64) (int, error) {
+	return 0, nil
+}
+
+func (m *mockChatService) UploadAttachment(ctx context.Context, req *service.UploadAttachmentRequest) (*domain.ChatAttachment, error) {
+	return nil, nil
+}
+
+func (m *mockChatService) GetAttachment(ctx context.Context, attachmentID, userID int64) (*domain.ChatAttachment, error) {
+	return nil, nil
+}
+
+func (m *mockChatService) DeleteAttachment(ctx context.Context, attachmentID, userID int64) error {
+	return nil
+}
+
+func (m *mockChatService) SetHub(hub service.ChatHub) {}
+
+// =============================================================================
+// Mock Storefront Analytics Service
+// =============================================================================
+
+type mockStorefrontAnalyticsService struct{}
+
+func (m *mockStorefrontAnalyticsService) RecordView(ctx context.Context, storefrontID, userID *int64, sessionID *string) error {
+	return nil
+}
+
+func (m *mockStorefrontAnalyticsService) GetStorefrontStats(ctx context.Context, req *pb.GetStorefrontStatsRequest) (*pb.GetStorefrontStatsResponse, error) {
 	return nil, nil
 }
 
@@ -258,8 +356,14 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 	// Create mock cart service for integration tests
 	cartService := &mockCartService{}
 
+	// Create mock chat service for integration tests
+	chatService := &mockChatService{}
+
 	// Mock analytics service (nil is OK for integration tests that don't need analytics)
 	var analyticsService service.AnalyticsService = nil
+
+	// Create mock storefront analytics service for integration tests
+	storefrontAnalyticsService := &mockStorefrontAnalyticsService{}
 
 	// Mock minio client (nil is OK for integration tests that don't need image operations)
 	var minioClient *miniorepo.Client = nil
@@ -275,7 +379,9 @@ func SetupTestServer(t *testing.T, config TestServerConfig) *TestServer {
 		categoryService,
 		orderService,
 		cartService,
+		chatService,
 		analyticsService,
+		storefrontAnalyticsService,
 		minioClient,
 		m,
 		logger,

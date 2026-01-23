@@ -150,6 +150,14 @@ func (m *MockMessageRepository) GetMessages(ctx context.Context, chatID int64, b
 	return args.Get(0).([]*domain.Message), args.Error(1)
 }
 
+func (m *MockMessageRepository) GetLatestMessage(ctx context.Context, chatID int64) (*domain.Message, error) {
+	args := m.Called(ctx, chatID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Message), args.Error(1)
+}
+
 func (m *MockMessageRepository) MarkMessagesAsRead(ctx context.Context, chatID, receiverID int64, messageIDs []int64) (int, error) {
 	args := m.Called(ctx, chatID, receiverID, messageIDs)
 	return args.Int(0), args.Error(1)

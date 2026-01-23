@@ -197,7 +197,7 @@ func TestDeleteListingImage(t *testing.T) {
 		`, 301, 204, "https://example.com/basketball.jpg", 1, false)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.ImageIDRequest{
+		req := &pb.DeleteListingImageRequest{
 			ImageId: 301,
 		}
 
@@ -239,7 +239,7 @@ func TestDeleteListingImage(t *testing.T) {
 			304, 205, "https://example.com/chair3.jpg", 3, false)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.ImageIDRequest{
+		req := &pb.DeleteListingImageRequest{
 			ImageId: 302, // Delete primary image
 		}
 
@@ -265,7 +265,7 @@ func TestDeleteListingImage(t *testing.T) {
 		defer server.Teardown(t)
 
 		ctx := testutils.TestContext(t)
-		req := &pb.ImageIDRequest{
+		req := &pb.DeleteListingImageRequest{
 			ImageId: 99999, // Non-existent image
 		}
 
