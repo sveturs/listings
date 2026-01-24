@@ -276,19 +276,19 @@ type Category struct {
 
 // CategoryTreeNode represents a category with its children in a tree structure
 type CategoryTreeNode struct {
-	ID                string             `json:"id"`
-	Name              string             `json:"name"`
-	Slug              string             `json:"slug"`
-	Icon              *string            `json:"icon,omitempty"`
-	ParentID          *string            `json:"parent_id,omitempty"`
-	Level             int32              `json:"level"`
-	Path              string             `json:"path"`
-	ListingCount      int32              `json:"listing_count"`
-	ChildrenCount     int32              `json:"children_count"`
-	Children          []CategoryTreeNode `json:"children"`
-	HasCustomUI       bool               `json:"has_custom_ui"`
-	CustomUIComponent *string            `json:"custom_ui_component,omitempty"`
-	CreatedAt         string             `json:"created_at"`
+	ID                string               `json:"id"`
+	Name              string               `json:"name"`
+	Slug              string               `json:"slug"`
+	Icon              *string              `json:"icon,omitempty"`
+	ParentID          *string              `json:"parent_id,omitempty"`
+	Level             int32                `json:"level"`
+	Path              string               `json:"path"`
+	ListingCount      int32                `json:"listing_count"`
+	ChildrenCount     int32                `json:"children_count"`
+	Children          []*CategoryTreeNode  `json:"children"`
+	HasCustomUI       bool                 `json:"has_custom_ui"`
+	CustomUIComponent *string              `json:"custom_ui_component,omitempty"`
+	CreatedAt         string               `json:"created_at"`
 }
 
 // ListingVariant represents a product variant

@@ -368,11 +368,13 @@ func TestCategoryHierarchy(t *testing.T) {
 	testutils.SkipIfShort(t)
 	testutils.SkipIfNoDocker(t)
 
-	t.Run("VerifyParentChildRelationships", func(t *testing.T) {
-		config := DefaultTestServerConfig()
-		server := SetupTestServer(t, config)
-		defer server.Teardown(t)
+	// Setup server once for all subtests
+	config := DefaultTestServerConfig()
+	server := SetupTestServer(t, config)
+	defer server.Teardown(t)
+	ctx := testutils.TestContext(t)
 
+	t.Run("VerifyParentChildRelationships", func(t *testing.T) {
 		// Setup: Use consistent UUIDs
 		parentUUID := "c0000000-0000-0000-0000-000000000070"
 		child1UUID := "c0000000-0000-0000-0000-000000000071"
@@ -393,8 +395,6 @@ func TestCategoryHierarchy(t *testing.T) {
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES ($1::uuid, $2::jsonb, $3, $4::uuid, $5, $6, $7, $8, $9)
 		`, child2UUID, `{"en": "Child 2", "sr": "Dete 2", "ru": "Ребенок 2"}`, "child-2", parentUUID, 2, 2, "parent/child-2", true, 12)
-
-		ctx := testutils.TestContext(t)
 
 		// Get parent category
 		parentReq := &pb.CategoryIDRequest{CategoryId: parentUUID}
@@ -423,10 +423,6 @@ func TestCategoryHierarchy(t *testing.T) {
 	})
 
 	t.Run("VerifyMultiLevelHierarchy", func(t *testing.T) {
-		config := DefaultTestServerConfig()
-		server := SetupTestServer(t, config)
-		defer server.Teardown(t)
-
 		// Setup: Use consistent UUIDs
 		rootUUID := "c0000000-0000-0000-0000-000000000080"
 		midUUID := "c0000000-0000-0000-0000-000000000081"
@@ -447,8 +443,6 @@ func TestCategoryHierarchy(t *testing.T) {
 			INSERT INTO categories (id, name, slug, parent_id, sort_order, level, path, is_active, listing_count)
 			VALUES ($1::uuid, $2::jsonb, $3, $4::uuid, $5, $6, $7, $8, $9)
 		`, leafUUID, `{"en": "Leaf Level", "sr": "List Nivo", "ru": "Листовой Уровень"}`, "leaf-level", midUUID, 1, 3, "root-level/mid-level/leaf-level", true, 10)
-
-		ctx := testutils.TestContext(t)
 
 		// Verify root level
 		rootReq := &pb.CategoryIDRequest{CategoryId: rootUUID}
