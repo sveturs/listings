@@ -127,27 +127,44 @@ jobs:
           DB_USER="listings_user"
           DB_PASS="vLj8tQ2mK9rN3xP6wY4zA7bC"
           DB_NAME="listings_db"
-
-          # Setup port-forward in background (bind to 127.0.0.1 explicitly)
-          ssh -f -N -L 127.0.0.1:15432:postgres-listings-0.postgres-listings.production.svc.cluster.local:5432 vondi
-          sleep 3
+          POD_NAME="postgres-listings-0"
+          NAMESPACE="production"
 
           # Install golang-migrate if not present
           if ! command -v migrate &> /dev/null; then
+            echo "Installing golang-migrate..."
             curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
             sudo mv migrate /usr/local/bin/
           fi
 
-          # Check current version
-          PGPASSWORD=$DB_PASS psql -h 127.0.0.1 -p 15432 -U $DB_USER -d $DB_NAME -c "SELECT version, dirty FROM schema_migrations;" || echo "No migrations yet"
+          # Run migrations via kubectl exec (most reliable method)
+          echo "Copying golang-migrate to pod..."
+          ssh vondi "kubectl cp /usr/local/bin/migrate $NAMESPACE/$POD_NAME:/tmp/migrate"
+          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- chmod +x /tmp/migrate"
 
-          # Run migrations
-          migrate -path ./migrations -database "postgres://$DB_USER:$DB_PASS@127.0.0.1:15432/$DB_NAME?sslmode=disable" up
+          # Copy migrations directory to pod
+          echo "Copying migrations to pod..."
+          tar czf /tmp/migrations.tar.gz migrations/
+          ssh vondi "kubectl cp /tmp/migrations.tar.gz $NAMESPACE/$POD_NAME:/tmp/migrations.tar.gz"
+          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- tar xzf /tmp/migrations.tar.gz -C /tmp/"
+
+          # Check current version
+          echo "Current migration version:"
+          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- psql -U $DB_USER -d $DB_NAME -c 'SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 1;'" || echo "No migrations yet"
+
+          # Run migrations inside pod
+          echo "Running migrations..."
+          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- /tmp/migrate -path /tmp/migrations -database 'postgres://$DB_USER:$DB_PASS@localhost:5432/$DB_NAME?sslmode=disable' up"
+
+          # Check final version
+          echo "Final migration version:"
+          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- psql -U $DB_USER -d $DB_NAME -c 'SELECT version, dirty FROM schema_migrations ORDER BY version DESC LIMIT 1;'"
 
           echo "✅ Migrations complete!"
 
           # Cleanup
-          pkill -f "ssh -f -N -L.*15432" || true
+          rm -f /tmp/migrations.tar.gz
+          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- rm -rf /tmp/migrations /tmp/migrate /tmp/migrations.tar.gz" || true
 
       - name: Cleanup SSH
         if: always()
