@@ -1,10 +1,18 @@
 .PHONY: help build run test clean docker-build docker-up docker-down migrate-up migrate-down proto lint format tidy deps dump2mig-dump dump2mig
 
+# Load .env file if exists
+-include .env
+export
+
 # Variables
 APP_NAME := listings-service
 BUILD_DIR := bin
 MIGRATIONS_DIR := migrations
 PROTO_DIR := api/proto/listings/v1
+
+# Port variables (from .env)
+HTTP_PORT ?= $(VONDILISTINGS_HTTP_PORT)
+GRPC_PORT ?= $(VONDILISTINGS_GRPC_PORT)
 
 # Go variables
 GO := go
@@ -154,7 +162,7 @@ deps: ## Download dependencies
 
 deps-up: ## Start PostgreSQL and Redis
 	@echo "$(GREEN)Starting PostgreSQL and Redis...$(NC)"
-	@$(DOCKER_COMPOSE) up -d
+	@$(DOCKER_COMPOSE) up -d postgres redis
 	@echo "$(YELLOW)Waiting for PostgreSQL to be ready...$(NC)"
 	@timeout=30; counter=0; \
 	until $(DOCKER_COMPOSE) exec -T postgres pg_isready -U listings_user -d listings_dev_db > /dev/null 2>&1; do \
@@ -185,6 +193,15 @@ deps-reset: deps-clean deps-up ## Clean restart: remove all data + start fresh
 	@echo "PostgreSQL and Redis are running with fresh data."
 	@echo "Run 'make migrate-up' to apply migrations."
 
+reset-all: stop deps-reset migrate-up start ## Full reset: stop + clean DB + migrate + start
+	@echo ""
+	@echo "=========================================="
+	@echo "$(GREEN)✅ Full reset complete!$(NC)"
+	@echo "=========================================="
+
+status: ## Check status of all services
+	@bash scripts/status.sh
+
 ## Service start/stop commands
 
 start: stop ## Start the service in background with logs to file
@@ -193,11 +210,11 @@ start: stop ## Start the service in background with logs to file
 	@$(GO) build $(GOFLAGS) -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(APP_NAME) ./cmd/server
 	@echo "$(GREEN)Starting $(APP_NAME) in background...$(NC)"
 	@nohup ./$(BUILD_DIR)/$(APP_NAME) > logs/$(APP_NAME).log 2>&1 &
-	@sleep 2
-	@if lsof -ti:8086 > /dev/null 2>&1; then \
+	@sleep 5
+	@if lsof -ti:$(HTTP_PORT) > /dev/null 2>&1; then \
 		echo "$(GREEN)$(APP_NAME) started successfully$(NC)"; \
-		echo "  HTTP: http://localhost:8086"; \
-		echo "  gRPC: localhost:50053"; \
+		echo "  HTTP: http://localhost:$(HTTP_PORT)"; \
+		echo "  gRPC: localhost:$(GRPC_PORT)"; \
 		echo "  Logs: tail -f logs/$(APP_NAME).log"; \
 	else \
 		echo "$(RED)Failed to start $(APP_NAME). Check logs/$(APP_NAME).log$(NC)"; \
@@ -205,13 +222,15 @@ start: stop ## Start the service in background with logs to file
 	fi
 
 stop: ## Stop the service
-	@if lsof -ti:8086 > /dev/null 2>&1; then \
+	@if lsof -ti:$(HTTP_PORT) > /dev/null 2>&1 || lsof -ti:$(GRPC_PORT) > /dev/null 2>&1; then \
 		echo "$(YELLOW)Stopping $(APP_NAME)...$(NC)"; \
-		lsof -ti:8086 | xargs kill 2>/dev/null || true; \
+		lsof -ti:$(HTTP_PORT) 2>/dev/null | xargs kill 2>/dev/null || true; \
+		lsof -ti:$(GRPC_PORT) 2>/dev/null | xargs kill 2>/dev/null || true; \
 		sleep 1; \
-		if lsof -ti:8086 > /dev/null 2>&1; then \
+		if lsof -ti:$(HTTP_PORT) > /dev/null 2>&1 || lsof -ti:$(GRPC_PORT) > /dev/null 2>&1; then \
 			echo "$(YELLOW)Force killing $(APP_NAME)...$(NC)"; \
-			lsof -ti:8086 | xargs kill -9 2>/dev/null || true; \
+			lsof -ti:$(HTTP_PORT) 2>/dev/null | xargs kill -9 2>/dev/null || true; \
+			lsof -ti:$(GRPC_PORT) 2>/dev/null | xargs kill -9 2>/dev/null || true; \
 		fi; \
 		echo "$(GREEN)$(APP_NAME) stopped$(NC)"; \
 	fi
