@@ -142,11 +142,9 @@ jobs:
           ssh vondi "kubectl cp /usr/local/bin/migrate $NAMESPACE/$POD_NAME:/tmp/migrate"
           ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- chmod +x /tmp/migrate"
 
-          # Copy migrations directory to pod
+          # Copy migrations directory to pod via stdin
           echo "Copying migrations to pod..."
-          tar czf /tmp/migrations.tar.gz migrations/
-          ssh vondi "kubectl cp /tmp/migrations.tar.gz $NAMESPACE/$POD_NAME:/tmp/migrations.tar.gz"
-          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- tar xzf /tmp/migrations.tar.gz -C /tmp/"
+          tar czf - migrations/ | ssh vondi "kubectl exec -i -n $NAMESPACE $POD_NAME -- tar xzf - -C /tmp/"
 
           # Check current version
           echo "Current migration version:"
@@ -163,8 +161,7 @@ jobs:
           echo "✅ Migrations complete!"
 
           # Cleanup
-          rm -f /tmp/migrations.tar.gz
-          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- rm -rf /tmp/migrations /tmp/migrate /tmp/migrations.tar.gz" || true
+          ssh vondi "kubectl exec -n $NAMESPACE $POD_NAME -- rm -rf /tmp/migrations /tmp/migrate" || true
 
       - name: Cleanup SSH
         if: always()
