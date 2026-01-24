@@ -105,7 +105,7 @@ func (s *Server) GetCategoryTreeForCategorySvc(ctx context.Context, req *categor
 			if len(tree.Children) > 0 {
 				pbTrees = make([]*categoriespb.CategoryTree, len(tree.Children))
 				for i := range tree.Children {
-					pbTrees[i] = DomainToCategoryServiceProtoCategoryTree(&tree.Children[i])
+					pbTrees[i] = DomainToCategoryServiceProtoCategoryTree(tree.Children[i])
 				}
 			} else {
 				// Single root category without children
@@ -355,10 +355,10 @@ func filterActiveCategoriesInTree(node *domain.CategoryTreeNode) *domain.Categor
 
 	// Filter children recursively
 	if len(node.Children) > 0 {
-		activeChildren := make([]domain.CategoryTreeNode, 0, len(node.Children))
+		activeChildren := make([]*domain.CategoryTreeNode, 0, len(node.Children))
 		for i := range node.Children {
-			if filteredChild := filterActiveCategoriesInTree(&node.Children[i]); filteredChild != nil {
-				activeChildren = append(activeChildren, *filteredChild)
+			if filteredChild := filterActiveCategoriesInTree(node.Children[i]); filteredChild != nil {
+				activeChildren = append(activeChildren, filteredChild)
 			}
 		}
 		node.Children = activeChildren

@@ -445,8 +445,7 @@ func DomainToProtoCategoryTree(node *domain.CategoryTreeNode) *listingspb.Catego
 	if len(node.Children) > 0 {
 		pbNode.Children = make([]*listingspb.CategoryTreeNode, len(node.Children))
 		for i, child := range node.Children {
-			childCopy := child // Create copy to avoid pointer issues
-			pbNode.Children[i] = DomainToProtoCategoryTree(&childCopy)
+			pbNode.Children[i] = DomainToProtoCategoryTree(child)
 		}
 	}
 
@@ -1438,7 +1437,7 @@ func DomainToCategoryServiceProtoCategoryTree(node *domain.CategoryTreeNode) *ca
 	if len(node.Children) > 0 {
 		pbTree.Subcategories = make([]*categoriespb.CategoryTree, len(node.Children))
 		for i := range node.Children {
-			pbTree.Subcategories[i] = DomainToCategoryServiceProtoCategoryTree(&node.Children[i])
+			pbTree.Subcategories[i] = DomainToCategoryServiceProtoCategoryTree(node.Children[i])
 		}
 	}
 

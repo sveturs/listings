@@ -317,7 +317,7 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID string) (*d
 			ParentID:     cat.ParentID,
 			Level:        cat.Level,
 			ListingCount: cat.ListingCount,
-			Children:     []domain.CategoryTreeNode{},
+			Children:     []*domain.CategoryTreeNode{},
 			HasCustomUI:  cat.HasCustomUI,
 			CreatedAt:    cat.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		}
@@ -351,7 +351,7 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID string) (*d
 		if node.ParentID != nil {
 			parent, exists := catMap[*node.ParentID]
 			if exists {
-				parent.Children = append(parent.Children, *node)
+				parent.Children = append(parent.Children, node)
 			}
 		}
 	}
@@ -368,10 +368,10 @@ func (r *Repository) GetCategoryTree(ctx context.Context, categoryID string) (*d
 			Name:     "Categories",
 			Slug:     "",
 			Level:    0,
-			Children: make([]domain.CategoryTreeNode, 0, len(topLevelNodes)),
+			Children: make([]*domain.CategoryTreeNode, 0, len(topLevelNodes)),
 		}
 		for _, node := range topLevelNodes {
-			virtualRoot.Children = append(virtualRoot.Children, *node)
+			virtualRoot.Children = append(virtualRoot.Children, node)
 		}
 		virtualRoot.ChildrenCount = int32(len(virtualRoot.Children))
 		return virtualRoot, nil
