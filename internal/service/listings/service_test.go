@@ -3062,7 +3062,7 @@ func TestGetCategoryTree_Success(t *testing.T) {
 		Slug:     "electronics",
 		Level:    1,
 		Path:     "1",
-		Children: []domain.CategoryTreeNode{},
+		Children: []*domain.CategoryTreeNode{},
 	}
 
 	mockRepo.On("GetCategoryTree", ctx, categoryID).
