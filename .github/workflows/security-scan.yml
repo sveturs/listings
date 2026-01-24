@@ -27,10 +27,10 @@ jobs:
         with:
           clean: false
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Verify Go installation
+        run: |
+          go version
+          echo "Go is already installed on self-hosted runner"
 
       - name: Configure Git for private modules
         run: git config --global url."https://${{ github.token }}@github.com/".insteadOf "https://github.com/"

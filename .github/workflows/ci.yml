@@ -78,10 +78,10 @@ jobs:
           mkdir -p ${{ github.workspace }}/.gotmp
           mkdir -p ${{ github.workspace }}/.gomodcache
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Verify Go installation
+        run: |
+          go version
+          echo "Go is already installed on self-hosted runner"
 
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -156,11 +156,10 @@ jobs:
           mkdir -p ${{ github.workspace }}/.gotmp
           mkdir -p ${{ github.workspace }}/.gomodcache
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: false
+      - name: Verify Go installation
+        run: |
+          go version
+          echo "Go is already installed on self-hosted runner"
 
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -209,11 +208,10 @@ jobs:
           mkdir -p ${{ github.workspace }}/.gotmp
           mkdir -p ${{ github.workspace }}/.gomodcache
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: false
+      - name: Verify Go installation
+        run: |
+          go version
+          echo "Go is already installed on self-hosted runner"
 
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -311,12 +309,14 @@ jobs:
           clean: false
 
       - name: Create temp directory for tests
-        run: mkdir -p ${{ github.workspace }}/.gotmp
+        run: |
+          mkdir -p ${{ github.workspace }}/.gotmp
+          mkdir -p ${{ github.workspace }}/.gomodcache
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Verify Go installation
+        run: |
+          go version
+          echo "Go is already installed on self-hosted runner"
 
       - name: Configure git for private modules
         run: git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}@github.com/".insteadOf "https://github.com/"
