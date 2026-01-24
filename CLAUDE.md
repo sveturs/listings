@@ -1,5 +1,63 @@
 # CLAUDE.md - Listings Microservice
 
+## 🚀 Быстрый старт
+
+### Запуск сервиса (рекомендуется)
+
+```bash
+make status       # Проверить статус сервиса (что запущено, на каких портах)
+make deps-up      # Запустить PostgreSQL и Redis
+make migrate-up   # Применить миграции
+make start        # Запустить сервис в фоне (автоматически остановит предыдущий)
+make stop         # Остановить сервис
+```
+
+Сервис запускается в фоне, логи пишутся в `logs/listings-service.log`.
+
+### Управление Docker зависимостями (PostgreSQL + Redis)
+
+```bash
+make deps-up      # Запустить PostgreSQL и Redis
+make deps-down    # Остановить (данные сохраняются)
+make deps-clean   # Полностью удалить контейнеры и volumes (все данные!)
+make deps-reset   # Чистый перезапуск: удалить всё + запустить заново
+```
+
+### Чистый перезапуск всего окружения
+
+Если нужно начать с чистого листа (удалить все данные БД):
+
+```bash
+make reset-all    # Одна команда: stop + deps-reset + migrate-up + start
+```
+
+Или по шагам:
+```bash
+make stop         # Остановить сервис
+make deps-reset   # Удалить и пересоздать БД
+make migrate-up   # Применить миграции
+make start        # Запустить сервис
+```
+
+### Порты
+
+| Сервис | Порт | Протокол |
+|--------|------|----------|
+| Listings Service | 50053 | gRPC |
+| Listings Service | 48086 | HTTP |
+| PostgreSQL | 35434 | TCP |
+| Redis | 36380 | TCP |
+
+### Проверка кода
+
+```bash
+make format       # Форматирование
+make lint         # Линтер
+make test         # Тесты
+make ci           # Полная проверка (deps + lint + test + build)
+```
+
+---
 
 ## 🔴 ПРАВИЛО №16: ZERO HALLUCINATION POLICY
 
