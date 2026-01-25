@@ -193,7 +193,8 @@ deps-reset: deps-clean deps-up ## Clean restart: remove all data + start fresh
 	@echo "PostgreSQL and Redis are running with fresh data."
 	@echo "Run 'make migrate-up' to apply migrations."
 
-OPENSEARCH_URL ?= http://localhost:9200
+# OpenSearch URL from .env or default
+OPENSEARCH_URL := $(if $(VONDILISTINGS_OPENSEARCH_ADDRESSES),$(VONDILISTINGS_OPENSEARCH_ADDRESSES),http://localhost:9200)
 
 reindex: ## Reindex listings to OpenSearch (creates index if needed)
 	@echo "$(GREEN)Ensuring OpenSearch index exists...$(NC)"
