@@ -1,4 +1,4 @@
-.PHONY: help build run test clean docker-build docker-up docker-down migrate-up migrate-down proto lint format tidy deps dump2mig-dump dump2mig
+.PHONY: help build run test clean docker-build docker-up docker-down migrate-up migrate-down proto lint format tidy deps dump2mig-dump dump2mig reindex reindex-if-available
 
 # Load .env file if exists
 -include .env
@@ -193,7 +193,30 @@ deps-reset: deps-clean deps-up ## Clean restart: remove all data + start fresh
 	@echo "PostgreSQL and Redis are running with fresh data."
 	@echo "Run 'make migrate-up' to apply migrations."
 
-reset-all: stop deps-reset migrate-up start ## Full reset: stop + clean DB + migrate + start
+OPENSEARCH_URL ?= http://localhost:9200
+
+reindex: ## Reindex listings to OpenSearch (creates index if needed)
+	@echo "$(GREEN)Ensuring OpenSearch index exists...$(NC)"
+	@python3 scripts/create_opensearch_index.py --force 2>/dev/null || python3 scripts/create_opensearch_index.py
+	@echo "$(GREEN)Reindexing listings to OpenSearch...$(NC)"
+	@python3 scripts/reindex_listings.py --target-port 35434 --target-password listings_secret --target-db listings_dev_db
+	@echo "$(GREEN)Reindex complete$(NC)"
+
+reindex-if-available: ## Reindex if OpenSearch is running, otherwise show warning
+	@if curl -s --connect-timeout 2 $(OPENSEARCH_URL)/_cluster/health > /dev/null 2>&1; then \
+		echo "$(GREEN)OpenSearch is running, ensuring index exists...$(NC)"; \
+		python3 scripts/create_opensearch_index.py --force 2>/dev/null || python3 scripts/create_opensearch_index.py; \
+		echo "$(GREEN)Reindexing listings...$(NC)"; \
+		python3 scripts/reindex_listings.py --target-port 35434 --target-password listings_secret --target-db listings_dev_db; \
+		echo "$(GREEN)Reindex complete$(NC)"; \
+	else \
+		echo ""; \
+		echo "$(YELLOW)⚠️  OpenSearch is not running at $(OPENSEARCH_URL)$(NC)"; \
+		echo "$(YELLOW)   Skipping reindex. Run 'make reindex' manually after starting OpenSearch.$(NC)"; \
+		echo ""; \
+	fi
+
+reset-all: stop deps-reset migrate-up-fixtures start reindex-if-available ## Full reset: stop + clean DB + migrate + fixtures + start + reindex
 	@echo ""
 	@echo "=========================================="
 	@echo "$(GREEN)✅ Full reset complete!$(NC)"
