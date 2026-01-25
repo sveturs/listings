@@ -2,6 +2,50 @@
 
 ## [Unreleased]
 
+### Added - 2026-01-25 (585b7ee66)
+
+**Реализованы 6 недостающих gRPC CRUD handlers для Product Variants**
+
+#### Проблема
+- ❌ 6 из 10 gRPC методов возвращали `status.Unimplemented`
+- ❌ Невозможно создать/обновить/удалить варианты товаров через gRPC
+- ❌ Frontend не может работать с вариантами
+- ❌ База данных остаётся пустой (0 вариантов)
+
+#### Решение
+- ✅ Реализованы 6 gRPC handlers в `handlers_variants.go`:
+  - `CreateVariant` - создание варианта с auto-SKU generation
+  - `GetVariant` - получение варианта по ID
+  - `UpdateVariant` - обновление варианта (partial update)
+  - `DeleteVariant` - удаление варианта
+  - `GetVariantBySku` - получение варианта по SKU
+  - `FindVariantByAttributes` - поиск варианта по атрибутам
+
+- ✅ Добавлены 5 методов в `VariantService`:
+  - `GetByID(ctx, variantID)` - делегирует в repository
+  - `GetBySKU(ctx, sku)` - делегирует в repository
+  - `Update(ctx, variantID, input)` - делегирует в repository
+  - `Delete(ctx, variantID)` - делегирует в repository
+  - `FindByAttributes(ctx, filter)` - делегирует в repository
+
+- ✅ Добавлены helper функции для конвертации proto optional полей
+
+#### Статус gRPC API
+**До изменений:** 4/10 методов работали (40%)
+**После изменений:** 10/10 методов работают (100%)
+
+#### Файлы
+- `internal/transport/grpc/handlers_variants.go` - реализованы 6 handlers
+- `internal/service/variant_service.go` - добавлены 5 методов
+
+#### Импакт
+- ✅ Разблокирована ФАЗА 0 и ФАЗА 2 Frontend fixes
+- ✅ Теперь можно создавать варианты товаров
+- ✅ Frontend может загружать/обновлять/удалять варианты
+- ✅ CRUD операции доступны через монолит proxy
+
+---
+
 ### Fixed - 2026-01-23 (33696c2d1)
 
 **Добавлен cleanup в deployment workflows для предотвращения permission denied**
