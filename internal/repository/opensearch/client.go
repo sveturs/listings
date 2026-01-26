@@ -105,6 +105,29 @@ func (c *Client) IndexListing(ctx context.Context, listing *domain.Listing) erro
 		}
 	}
 
+	// Add location translations (country, city, address) for multilingual support
+	if len(listing.CountryTranslations) > 0 {
+		for lang, translation := range listing.CountryTranslations {
+			if translation != "" {
+				doc["country_"+lang] = translation
+			}
+		}
+	}
+	if len(listing.CityTranslations) > 0 {
+		for lang, translation := range listing.CityTranslations {
+			if translation != "" {
+				doc["city_"+lang] = translation
+			}
+		}
+	}
+	if len(listing.LocationTranslations) > 0 {
+		for lang, translation := range listing.LocationTranslations {
+			if translation != "" {
+				doc["address_"+lang] = translation
+			}
+		}
+	}
+
 	// Add attributes from cache if available
 	attributes, searchableText, err := c.getAttributesFromCache(ctx, int32(listing.ID))
 	if err != nil {

@@ -351,6 +351,31 @@ func (s *VariantService) ListByProduct(ctx context.Context, productID string) ([
 	return variants, nil
 }
 
+// GetByID retrieves a variant by ID
+func (s *VariantService) GetByID(ctx context.Context, variantID string) (*domain.ProductVariantV2, error) {
+	return s.variantRepo.GetByID(ctx, variantID)
+}
+
+// GetBySKU retrieves a variant by SKU
+func (s *VariantService) GetBySKU(ctx context.Context, sku string) (*domain.ProductVariantV2, error) {
+	return s.variantRepo.GetBySKU(ctx, sku)
+}
+
+// Update updates a variant
+func (s *VariantService) Update(ctx context.Context, variantID string, input *domain.UpdateVariantInputV2) (*domain.ProductVariantV2, error) {
+	return s.variantRepo.Update(ctx, variantID, input)
+}
+
+// Delete deletes a variant
+func (s *VariantService) Delete(ctx context.Context, variantID string) error {
+	return s.variantRepo.Delete(ctx, variantID)
+}
+
+// FindByAttributes finds a variant by attribute combination
+func (s *VariantService) FindByAttributes(ctx context.Context, filter *domain.FindVariantByAttributesFilter) (*domain.ProductVariantV2, error) {
+	return s.variantRepo.FindByAttributes(ctx, filter)
+}
+
 // Helper: extract value label from CreateVariantAttributeValue
 func (s *VariantService) extractValueLabel(attr *domain.CreateVariantAttributeValue) string {
 	if attr.ValueText != nil {
