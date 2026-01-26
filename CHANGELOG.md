@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-26 (64bcdb7aa)
+
+**Миграция 000026: правильные type casts для двух разных таблиц**
+
+Проблема:
+- category_attributes.category_id - UUID
+- category_variant_attributes.category_id - VARCHAR(36)
+- Предыдущий fix добавил ::varchar везде, но это сломало category_attributes
+
+Решение:
+- category_attributes: (SELECT id FROM categories) - UUID остаётся UUID
+- category_variant_attributes: (SELECT id::varchar FROM categories) - UUID → VARCHAR
+- JOIN для category_variant_attributes: c.id::varchar
+
+Файлы:
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.up.sql
+
+---
+
 ### Fixed - 2026-01-26 (41e191b6d)
 
 **Миграция 000026: добавлен varchar cast для category_id (fix type mismatch)**
