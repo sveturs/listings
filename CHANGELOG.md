@@ -2,22 +2,24 @@
 
 ## [Unreleased]
 
-### Fixed - 2026-01-26 (a90df3c57)
+### Fixed - 2026-01-26 (d9778f0d4)
 
-**Миграция 000023: graceful skip если категории не существуют (fix integration tests)**
+**Миграция 000023 удалена (перенесена в будущий PR после ФАЗЫ 0)**
 
 #### Проблема
-- ❌ Integration Tests провалились: миграция 000023 выбрасывает EXCEPTION
-- ❌ Ошибка: "Missing categories: graficke-kartice, procesori, ram-memorija..."
-- ❌ Тестовая БД не содержит категории из ФАЗЫ 0
+- ❌ Integration Tests провалились: миграция 000023 требует категории из ФАЗЫ 0
+- ❌ Ошибка: "null value in column category_id violates not-null constraint"
+- ❌ Graceful skip через RETURN не работает (остальная миграция продолжается)
 
 #### Решение
-- ✅ Изменён RAISE EXCEPTION → RAISE NOTICE + RETURN
-- ✅ Миграция мягко пропускается если категорий нет
-- ✅ Integration tests могут применить все миграции без ошибок
+- ✅ Миграция 000023 (привязка атрибутов к категориям) удалена из PR
+- ✅ Будет добавлена в отдельный PR после ФАЗЫ 0 (создание категорий)
+- ✅ В этом PR только миграции 000022 (атрибуты) и 000024 (UUID fix)
+- ✅ Integration tests проходят без ошибок
 
 #### Файлы
-- migrations/000023_link_racunarske_komponente_attributes_to_categories.up.sql
+- migrations/000023_*.sql - удалены (будут в отдельном PR)
+- migrations/README_RACUNARSKE_KOMPONENTE_ATTRIBUTES.md - обновлён
 
 ---
 

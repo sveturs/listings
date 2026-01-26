@@ -20,10 +20,11 @@
 
 | Миграция | Описание | Статус |
 |----------|----------|--------|
-| `000022_create_racunarske_komponente_attributes.up.sql` | Создание 84+ атрибутов | ✅ Готова |
-| `000022_create_racunarske_komponente_attributes.down.sql` | Откат создания атрибутов | ✅ Готова |
-| `000023_link_racunarske_komponente_attributes_to_categories.up.sql` | Привязка атрибутов к категориям | ⚠️ Требует ФАЗУ 0 |
-| `000023_link_racunarske_komponente_attributes_to_categories.down.sql` | Откат привязки атрибутов | ✅ Готова |
+| `000022_create_racunarske_komponente_attributes.up.sql` | Создание 77 атрибутов | ✅ В этом PR |
+| `000022_create_racunarske_komponente_attributes.down.sql` | Откат создания атрибутов | ✅ В этом PR |
+| `000024_fix_product_variants_product_id_to_uuid.up.sql` | Fix: product_id bigint → UUID | ✅ В этом PR |
+| `000024_fix_product_variants_product_id_to_uuid.down.sql` | Откат UUID fix | ✅ В этом PR |
+| ~~`000023_link_racunarske_komponente_attributes_to_categories.up.sql`~~ | Привязка атрибутов к категориям | ⚠️ **Перенесено в будущий PR** (после ФАЗЫ 0) |
 
 ## 🚀 Порядок применения миграций
 
@@ -49,12 +50,15 @@
 
 ---
 
-### ФАЗА 1: Создание атрибутов
+### ФАЗА 1: Создание атрибутов (в этом PR)
 
-**После завершения ФАЗЫ 0 применить:**
+**Миграция 000022 применяется автоматически:**
 
 ```bash
-# Миграция 000022 - Создание атрибутов
+# Через migrator (рекомендуется)
+make migrate-up
+
+# Или напрямую
 psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
   -f /p/github.com/vondi-global/listings/migrations/000022_create_racunarske_komponente_attributes.up.sql
 ```
@@ -88,15 +92,15 @@ SELECT COUNT(*) FROM attributes WHERE code LIKE 'pc_%'
 
 ---
 
-### ФАЗА 2: Привязка атрибутов к категориям
+### ФАЗА 2: Привязка атрибутов к категориям (будет в отдельном PR)
 
-**После применения миграции 000022 применить:**
+**⚠️ ВАЖНО:** Миграция 000023 НЕ включена в этот PR!
 
-```bash
-# Миграция 000023 - Привязка атрибутов к категориям
-psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
-  -f /p/github.com/vondi-global/listings/migrations/000023_link_racunarske_komponente_attributes_to_categories.up.sql
-```
+**Она будет добавлена в отдельный PR после:**
+1. ФАЗЫ 0: Создание 9 подкатегорий (graficke-kartice, procesori, ram-memorija, и т.д.)
+2. Merge этого PR с миграцией 000022
+
+**Причина:** Integration tests провалились из-за отсутствия категорий в тестовой БД.
 
 **Что будет создано:**
 - Связи `category_attributes` для регулярных атрибутов
