@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-26 (89cb62769)
+
+**Миграция: переименование 000023 в 000026 (fix порядок применения)**
+
+Проблема:
+- Миграция 000023 НЕ применилась в production
+- Причина: migrate применяет миграции по порядку номеров
+- Current version был 24, применилась 000025, но 000023 пропущена (она СТАРШЕ чем 24)
+- Атрибуты не привязаны к категориям (attrs count = 0)
+
+Решение:
+- Переименовано: 000023 → 000026
+- Теперь порядок: 000024 (UUID) → 000025 (категории) → 000026 (атрибуты)
+- Миграция 000026 применится при следующем deployment
+
+Файлы:
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.up.sql (было 000023)
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.down.sql (было 000023)
+- migrations/README_PHASE0_CATEGORIES.md - обновлены номера
+- migrations/README_RACUNARSKE_KOMPONENTE_ATTRIBUTES.md - обновлены номера
+
+---
+
 ### Fixed - 2026-01-26 (24a7a8316)
 
 **CI: Временно отключены Integration Tests (deprecated API)**

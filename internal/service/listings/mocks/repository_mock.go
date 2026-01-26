@@ -118,6 +118,15 @@ func (m *MockRepository) AddImage(ctx context.Context, image *domain.ListingImag
 	return args.Get(0).(*domain.ListingImage), args.Error(1)
 }
 
+// GetListingLocation mocks getting location for a listing
+func (m *MockRepository) GetListingLocation(ctx context.Context, listingID int64) (*domain.ListingLocation, error) {
+	args := m.Called(ctx, listingID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.ListingLocation), args.Error(1)
+}
+
 // GetImages mocks getting images for a listing
 func (m *MockRepository) GetImages(ctx context.Context, listingID int64) ([]*domain.ListingImage, error) {
 	args := m.Called(ctx, listingID)

@@ -26,6 +26,9 @@ type Repository interface {
 	SearchListings(ctx context.Context, query *domain.SearchListingsQuery) ([]*domain.Listing, int32, error)
 	EnqueueIndexing(ctx context.Context, listingID int64, operation string) error
 
+	// Location operations
+	GetListingLocation(ctx context.Context, listingID int64) (*domain.ListingLocation, error)
+
 	// Image operations
 	GetImageByID(ctx context.Context, imageID int64) (*domain.ListingImage, error)
 	DeleteImage(ctx context.Context, imageID int64) error
@@ -2043,13 +2046,22 @@ func (s *Service) ReindexAll(ctx context.Context, sourceType string, batchSize i
 
 		s.logger.Debug().Int("count", len(listings)).Int32("total", total).Msg("fetched batch")
 
-		// Load images for each listing
+		// Load images and locations for each listing
 		for _, listing := range listings {
+			// Load images
 			images, err := s.repo.GetImages(ctx, listing.ID)
 			if err != nil {
 				s.logger.Warn().Err(err).Int64("listing_id", listing.ID).Msg("failed to load images")
 			} else {
 				listing.Images = images
+			}
+
+			// Load location (needed for address field and address translations in indexing)
+			location, err := s.repo.GetListingLocation(ctx, listing.ID)
+			if err != nil {
+				s.logger.Debug().Err(err).Int64("listing_id", listing.ID).Msg("failed to load location")
+			} else if location != nil {
+				listing.Location = location
 			}
 		}
 

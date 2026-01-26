@@ -416,8 +416,8 @@ func (r *Repository) createListingAttribute(ctx context.Context, listingID int64
 	return err
 }
 
-// getListingLocation retrieves location for a listing
-func (r *Repository) getListingLocation(ctx context.Context, listingID int64) (*domain.ListingLocation, error) {
+// GetListingLocation retrieves location for a listing
+func (r *Repository) GetListingLocation(ctx context.Context, listingID int64) (*domain.ListingLocation, error) {
 	query := `
 		SELECT id, listing_id, country, city, postal_code, address_line1, address_line2, latitude, longitude, created_at, updated_at
 		FROM listing_locations
@@ -567,7 +567,7 @@ func (r *Repository) GetListingByID(ctx context.Context, id int64) (*domain.List
 	}
 
 	// Load location
-	location, err := r.getListingLocation(ctx, id)
+	location, err := r.GetListingLocation(ctx, id)
 	if err != nil {
 		r.logger.Warn().Err(err).Int64("listing_id", id).Msg("failed to load location for listing")
 	} else {
