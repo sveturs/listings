@@ -85,7 +85,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'graficke-kartice'),
+    (SELECT id FROM categories WHERE slug = 'graficke-kartice'),
     a.id,
     CASE WHEN a.code IN ('gpu_series', 'gpu_vram') THEN true ELSE false END,
     CASE WHEN a.code IN ('gpu_series', 'gpu_chip', 'gpu_vram', 'gpu_memory_type', 'gpu_cooling', 'gpu_tdp', 'gpu_ray_tracing') THEN true ELSE false END,
@@ -107,6 +107,7 @@ WHERE a.code LIKE 'gpu_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для видеокарт
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'graficke-kartice'),
@@ -120,7 +121,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'procesori'),
+    (SELECT id FROM categories WHERE slug = 'procesori'),
     a.id,
     CASE WHEN a.code IN ('cpu_series', 'cpu_socket', 'cpu_cores') THEN true ELSE false END,
     CASE WHEN a.code IN ('cpu_series', 'cpu_socket', 'cpu_cores', 'cpu_tdp', 'cpu_igpu', 'cpu_generation') THEN true ELSE false END,
@@ -141,6 +142,7 @@ WHERE a.code LIKE 'cpu_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для процессоров
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'procesori'),
@@ -154,7 +156,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'ram-memorija'),
+    (SELECT id FROM categories WHERE slug = 'ram-memorija'),
     a.id,
     CASE WHEN a.code IN ('ram_type', 'ram_capacity') THEN true ELSE false END,
     CASE WHEN a.code IN ('ram_type', 'ram_capacity', 'ram_kit', 'ram_speed', 'ram_ecc', 'ram_heatspreader') THEN true ELSE false END,
@@ -174,6 +176,7 @@ WHERE a.code LIKE 'ram_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для RAM
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'ram-memorija'),
@@ -190,7 +193,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'ssd-nakopitelji'),
+    (SELECT id FROM categories WHERE slug = 'ssd-nakopitelji'),
     a.id,
     CASE WHEN a.code IN ('ssd_capacity', 'ssd_interface') THEN true ELSE false END,
     CASE WHEN a.code IN ('ssd_capacity', 'ssd_interface', 'ssd_form_factor', 'ssd_nand_type', 'ssd_dram_cache') THEN true ELSE false END,
@@ -210,6 +213,7 @@ WHERE a.code LIKE 'ssd_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для SSD
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'ssd-nakopitelji'),
@@ -226,7 +230,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'hdd-nakopitelji'),
+    (SELECT id FROM categories WHERE slug = 'hdd-nakopitelji'),
     a.id,
     CASE WHEN a.code IN ('hdd_capacity', 'hdd_rpm') THEN true ELSE false END,
     CASE WHEN a.code IN ('hdd_capacity', 'hdd_rpm', 'hdd_cache', 'hdd_form_factor', 'hdd_usage') THEN true ELSE false END,
@@ -244,6 +248,7 @@ WHERE a.code LIKE 'hdd_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для HDD
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'hdd-nakopitelji'),
@@ -260,7 +265,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'maticne-ploce'),
+    (SELECT id FROM categories WHERE slug = 'maticne-ploce'),
     a.id,
     CASE WHEN a.code IN ('mb_socket', 'mb_chipset', 'mb_form_factor', 'mb_memory_type') THEN true ELSE false END,
     CASE WHEN a.code IN ('mb_socket', 'mb_chipset', 'mb_form_factor', 'mb_memory_type', 'mb_memory_slots', 'mb_wifi', 'mb_bluetooth') THEN true ELSE false END,
@@ -282,6 +287,7 @@ WHERE a.code LIKE 'mb_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для материнских плат
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'maticne-ploce'),
@@ -298,7 +304,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'napajanja'),
+    (SELECT id FROM categories WHERE slug = 'napajanja'),
     a.id,
     CASE WHEN a.code IN ('psu_wattage', 'psu_efficiency') THEN true ELSE false END,
     CASE WHEN a.code IN ('psu_wattage', 'psu_efficiency', 'psu_modular', 'psu_form_factor', 'psu_pcie5') THEN true ELSE false END,
@@ -316,6 +322,7 @@ WHERE a.code LIKE 'psu_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для PSU
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'napajanja'),
@@ -332,7 +339,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'kucista'),
+    (SELECT id FROM categories WHERE slug = 'kucista'),
     a.id,
     CASE WHEN a.code IN ('case_form_factor') THEN true ELSE false END,
     CASE WHEN a.code IN ('case_form_factor', 'case_max_gpu_length', 'case_fans_included', 'case_tempered_glass', 'case_rgb_fans', 'case_dust_filters') THEN true ELSE false END,
@@ -352,6 +359,7 @@ WHERE a.code LIKE 'case_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для корпусов
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'kucista'),
@@ -365,7 +373,7 @@ ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 INSERT INTO category_attributes (category_id, attribute_id, is_required, is_filterable, is_searchable, sort_order)
 SELECT
-    (SELECT id::varchar FROM categories WHERE slug = 'hladjenje'),
+    (SELECT id FROM categories WHERE slug = 'hladjenje'),
     a.id,
     CASE WHEN a.code IN ('cooler_type') THEN true ELSE false END,
     CASE WHEN a.code IN ('cooler_type', 'cooler_radiator', 'cooler_fan_size', 'cooler_max_tdp', 'cooler_rgb') THEN true ELSE false END,
@@ -383,6 +391,7 @@ WHERE a.code LIKE 'cooler_%'
 ON CONFLICT (category_id, attribute_id) DO NOTHING;
 
 -- Добавить вариативные атрибуты для охлаждения
+-- ВАЖНО: category_variant_attributes.category_id - varchar(36), categories.id - uuid
 INSERT INTO category_variant_attributes (category_id, attribute_id, is_required, affects_price, affects_stock, sort_order)
 VALUES
     ((SELECT id::varchar FROM categories WHERE slug = 'hladjenje'),
