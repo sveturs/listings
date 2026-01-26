@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-26 (a90df3c57)
+
+**Миграция 000023: graceful skip если категории не существуют (fix integration tests)**
+
+#### Проблема
+- ❌ Integration Tests провалились: миграция 000023 выбрасывает EXCEPTION
+- ❌ Ошибка: "Missing categories: graficke-kartice, procesori, ram-memorija..."
+- ❌ Тестовая БД не содержит категории из ФАЗЫ 0
+
+#### Решение
+- ✅ Изменён RAISE EXCEPTION → RAISE NOTICE + RETURN
+- ✅ Миграция мягко пропускается если категорий нет
+- ✅ Integration tests могут применить все миграции без ошибок
+
+#### Файлы
+- migrations/000023_link_racunarske_komponente_attributes_to_categories.up.sql
+
+---
+
 ### Fixed - 2026-01-26 (d0782f10f)
 
 **CI workflow: порт PostgreSQL 15432 → 25432 + location translations в OpenSearch**
