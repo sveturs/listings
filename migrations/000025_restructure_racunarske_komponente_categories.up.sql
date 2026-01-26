@@ -96,7 +96,9 @@ BEGIN
     SELECT id INTO parent_uuid FROM categories WHERE slug = 'racunarske-komponente';
 
     IF parent_uuid IS NULL THEN
-        RAISE EXCEPTION 'Parent category "racunarske-komponente" not found';
+        RAISE NOTICE '⚠️  Parent category "racunarske-komponente" not found - skipping subcategory creation';
+        RAISE NOTICE '⚠️  This migration is only needed for production DB with existing category structure';
+        RETURN;
     END IF;
 
     RAISE NOTICE '📦 Creating 9 new general subcategories...';

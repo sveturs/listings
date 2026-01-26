@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-26 (9eca2b336)
+
+**Миграция 000025: graceful skip блока создания subcategories**
+
+#### Проблема
+- Блок 3 (создание subcategories) выдавал EXCEPTION если parent не найден
+- В тестовых БД category "racunarske-komponente" не существует (production-only)
+- Миграция должна полностью skip, а не падать с ошибкой
+
+#### Решение
+- migrations/000025 - EXCEPTION → RETURN в блоке создания
+- Все 3 блока теперь gracefully skip если parent не существует
+- Добавлено пояснение: "This migration is only needed for production DB"
+
+---
+
 ### Fixed - 2026-01-26 (4ba8c1f4a)
 
 **Миграция 000025: dynamic parent category lookup вместо hardcoded UUID**
