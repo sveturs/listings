@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-26 (e06e90fb2)
+
+**CI workflow: добавлен cleanup старых Docker контейнеров**
+
+#### Проблема
+- ❌ Test job провалился: "Bind for 0.0.0.0:15432 failed: port is already allocated"
+- ❌ Self-hosted runner содержит старые контейнеры от предыдущих runs
+- ❌ GitHub Actions не может создать новый service container
+
+#### Решение
+- ✅ Добавлен cleanup step в начало test и integration-tests jobs
+- ✅ Удаляются старые postgres:15-alpine и redis:7-alpine контейнеры
+- ✅ Освобождаются порты 15432 и 16379
+
+#### Файлы
+- .github/workflows/ci.yml - добавлен Docker cleanup
+
+---
+
 ### Added - 2026-01-26 (c1bca4782)
 
 **Созданы SQL миграции для 77+ атрибутов категории "Računarske komponente"**
