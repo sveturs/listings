@@ -507,17 +507,20 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 
 	idx.logger.Info().Int("batch_size", batchSize).Msg("starting full reindex with attributes")
 
-	// Get all active listings with category slug and translations
+	// Get all active listings with category slug and ALL translations (including location)
 	// Note: category_id is UUID in DB but we don't use it for indexing (use category_slug instead)
 	query := `
 		SELECT l.id, l.uuid, l.user_id, l.storefront_id, l.title, l.description,
-		       l.price, l.currency, l.category_id::text, c.slug AS category_slug,
+		       l.price, l.currency, COALESCE(l.category_id::text, '') AS category_id, c.slug AS category_slug,
 		       l.status, l.visibility, l.quantity, l.sku,
 		       l.source_type, l.stock_status, l.view_count, l.favorites_count,
 		       l.created_at, l.updated_at, l.published_at,
 		       COALESCE(l.title_translations, '{}'::jsonb) AS title_translations,
 		       COALESCE(l.description_translations, '{}'::jsonb) AS description_translations,
-		       COALESCE(l.original_language, 'sr') AS original_language
+		       COALESCE(l.original_language, 'sr') AS original_language,
+		       COALESCE(l.location_translations, '{}'::jsonb) AS location_translations,
+		       COALESCE(l.city_translations, '{}'::jsonb) AS city_translations,
+		       COALESCE(l.country_translations, '{}'::jsonb) AS country_translations
 		FROM listings l
 		LEFT JOIN categories c ON l.category_id = c.id
 		WHERE l.status = 'active' AND l.visibility = 'public' AND l.is_deleted = false
@@ -535,7 +538,7 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 
 	for rows.Next() {
 		var listing domain.Listing
-		var titleTransJSON, descTransJSON []byte
+		var titleTransJSON, descTransJSON, locationTransJSON, cityTransJSON, countryTransJSON []byte
 
 		err := rows.Scan(
 			&listing.ID,
@@ -562,13 +565,16 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 			&titleTransJSON,
 			&descTransJSON,
 			&listing.OriginalLanguage,
+			&locationTransJSON,
+			&cityTransJSON,
+			&countryTransJSON,
 		)
 		if err != nil {
 			idx.logger.Error().Err(err).Msg("failed to scan listing")
 			continue
 		}
 
-		// Parse translations from JSONB
+		// Parse title/description translations from JSONB
 		if len(titleTransJSON) > 0 {
 			if err := json.Unmarshal(titleTransJSON, &listing.TitleTranslations); err != nil {
 				idx.logger.Debug().Err(err).Int64("listing_id", listing.ID).Msg("failed to parse title translations")
@@ -580,6 +586,23 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 			}
 		}
 
+		// Parse location translations from JSONB
+		if len(locationTransJSON) > 0 {
+			if err := json.Unmarshal(locationTransJSON, &listing.LocationTranslations); err != nil {
+				idx.logger.Debug().Err(err).Int64("listing_id", listing.ID).Msg("failed to parse location translations")
+			}
+		}
+		if len(cityTransJSON) > 0 {
+			if err := json.Unmarshal(cityTransJSON, &listing.CityTranslations); err != nil {
+				idx.logger.Debug().Err(err).Int64("listing_id", listing.ID).Msg("failed to parse city translations")
+			}
+		}
+		if len(countryTransJSON) > 0 {
+			if err := json.Unmarshal(countryTransJSON, &listing.CountryTranslations); err != nil {
+				idx.logger.Debug().Err(err).Int64("listing_id", listing.ID).Msg("failed to parse country translations")
+			}
+		}
+
 		listings = append(listings, &listing)
 
 		// Process batch when full
@@ -587,6 +610,11 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 			// Load images for this batch
 			if err := idx.loadImagesForListings(ctx, listings); err != nil {
 				idx.logger.Warn().Err(err).Msg("failed to load images for batch")
+			}
+
+			// Load locations for this batch
+			if err := idx.loadLocationsForListings(ctx, listings); err != nil {
+				idx.logger.Warn().Err(err).Msg("failed to load locations for batch")
 			}
 
 			if err := idx.BulkIndexListings(ctx, listings); err != nil {
@@ -603,6 +631,11 @@ func (idx *ListingIndexer) ReindexAllWithAttributes(ctx context.Context, batchSi
 		// Load images for final batch
 		if err := idx.loadImagesForListings(ctx, listings); err != nil {
 			idx.logger.Warn().Err(err).Msg("failed to load images for final batch")
+		}
+
+		// Load locations for final batch
+		if err := idx.loadLocationsForListings(ctx, listings); err != nil {
+			idx.logger.Warn().Err(err).Msg("failed to load locations for final batch")
 		}
 
 		if err := idx.BulkIndexListings(ctx, listings); err != nil {
@@ -675,6 +708,61 @@ func (idx *ListingIndexer) loadImagesForListings(ctx context.Context, listings [
 		// Add image to corresponding listing
 		if listing, ok := listingMap[img.ListingID]; ok {
 			listing.Images = append(listing.Images, &img)
+		}
+	}
+
+	return rows.Err()
+}
+
+// loadLocationsForListings loads location data for a batch of listings
+func (idx *ListingIndexer) loadLocationsForListings(ctx context.Context, listings []*domain.Listing) error {
+	if len(listings) == 0 {
+		return nil
+	}
+
+	// Collect all listing IDs
+	ids := make([]int64, len(listings))
+	listingMap := make(map[int64]*domain.Listing, len(listings))
+	for i, l := range listings {
+		ids[i] = l.ID
+		listingMap[l.ID] = l
+	}
+
+	// Query all locations for these listings in one batch
+	query := `
+		SELECT listing_id, country, city, postal_code,
+		       address_line1, address_line2,
+		       latitude, longitude
+		FROM listing_locations
+		WHERE listing_id = ANY($1)
+	`
+
+	rows, err := idx.db.QueryContext(ctx, query, pq.Array(ids))
+	if err != nil {
+		return fmt.Errorf("failed to query locations: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var loc domain.ListingLocation
+		err := rows.Scan(
+			&loc.ListingID,
+			&loc.Country,
+			&loc.City,
+			&loc.PostalCode,
+			&loc.AddressLine1,
+			&loc.AddressLine2,
+			&loc.Latitude,
+			&loc.Longitude,
+		)
+		if err != nil {
+			idx.logger.Warn().Err(err).Msg("failed to scan location")
+			continue
+		}
+
+		// Add location to corresponding listing
+		if listing, ok := listingMap[loc.ListingID]; ok {
+			listing.Location = &loc
 		}
 	}
 

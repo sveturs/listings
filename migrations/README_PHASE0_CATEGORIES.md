@@ -2,7 +2,7 @@
 
 **Дата:** 2026-01-26
 **Статус:** ✅ Готово к применению
-**Миграции:** 000025 (категории) + 000023 (атрибуты)
+**Миграции:** 000025 (категории) + 000026 (атрибуты)
 
 ---
 
@@ -38,7 +38,7 @@
 
 ---
 
-### Миграция 000023: Привязка атрибутов к категориям
+### Миграция 000026: Привязка атрибутов к категориям
 
 **Привязывает 77 атрибутов к 9 категориям:**
 
@@ -76,7 +76,7 @@ git checkout -b feature/phase0-categories-restructure
 
 # 2. Добавить миграции (уже созданы локально)
 git add migrations/000025_*.sql
-git add migrations/000023_*.sql
+git add migrations/000026_*.sql
 git add migrations/README_PHASE0_CATEGORIES.md
 
 # 3. Обновить CHANGELOG.md
@@ -88,14 +88,14 @@ echo "### Added - 2026-01-26 (COMMIT_HASH)
 - Удалено 20 конкретных подкатегорий
 - Создано 9 общих подкатегорий
 
-#### Миграция 000023
+#### Миграция 000026
 - Привязано 77 атрибутов к 9 категориям
 - ~200 связей category_attributes
 - ~40 вариативных атрибутов
 
 #### Файлы
 - migrations/000025_restructure_racunarske_komponente_categories.{up,down}.sql
-- migrations/000023_link_racunarske_komponente_attributes_to_categories.{up,down}.sql
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.{up,down}.sql
 " >> CHANGELOG.md
 
 # 4. Commit + Push
@@ -130,7 +130,7 @@ gh pr merge --merge
    - kubectl cp migrations/ в postgres pod
    - kubectl exec: /tmp/migrate -path /tmp/migrations -database '...' up
    - Применяет 000025 → удаляет 20 категорий, создаёт 9 новых
-   - Применяет 000023 → привязывает атрибуты
+   - Применяет 000026 → привязывает атрибуты
    ↓
 4. Deploy job: обновляет k8s-configs (GitOps)
    ↓
@@ -218,8 +218,8 @@ ORDER BY c.slug;
 |----------|----------|---------|-------|
 | **000025** | DELETE categories | 20 | <1s |
 | **000025** | INSERT categories | 9 | <1s |
-| **000023** | INSERT category_attributes | ~200 | ~2s |
-| **000023** | INSERT category_variant_attributes | ~40 | <1s |
+| **000026** | INSERT category_attributes | ~200 | ~2s |
+| **000026** | INSERT category_variant_attributes | ~40 | <1s |
 | **ИТОГО** | - | ~270 | **~5s** |
 
 ---
