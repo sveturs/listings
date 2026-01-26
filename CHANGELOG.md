@@ -2,6 +2,91 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-26 (4ba8c1f4a)
+
+**Миграция 000025: dynamic parent category lookup вместо hardcoded UUID**
+
+#### Проблема
+- Миграция 000025 использовала hardcoded UUID для parent category "racunarske-komponente"
+- UUID: `fe64130f-deea-4767-a937-6f9d584a4395` существует только в production БД
+- В тестовых БД категории имеют другие UUID (генерируются динамически)
+- Ошибка: "Parent category not found" в CI/CD workflows
+
+#### Решение
+- migrations/000025_restructure_racunarske_komponente_categories.up.sql - заменён hardcoded UUID на поиск по slug
+- Все 3 DO $$ блока теперь используют: `SELECT id INTO parent_uuid FROM categories WHERE slug = 'racunarske-komponente'`
+- Добавлена graceful обработка: RETURN если parent не найден (вместо сразу EXCEPTION)
+
+#### Детали
+- Блок 1 (check listings): RETURN если parent не найден
+- Блок 2 (delete old): RETURN если parent не найден
+- Блок 3 (create new): EXCEPTION если parent не найден (критично для создания)
+
+---
+
+### Fixed - 2026-01-26 (64bcdb7aa)
+
+**Миграция 000026: правильные type casts для двух разных таблиц**
+
+Проблема:
+- category_attributes.category_id - UUID
+- category_variant_attributes.category_id - VARCHAR(36)
+- Предыдущий fix добавил ::varchar везде, но это сломало category_attributes
+
+Решение:
+- category_attributes: (SELECT id FROM categories) - UUID остаётся UUID
+- category_variant_attributes: (SELECT id::varchar FROM categories) - UUID → VARCHAR
+- JOIN для category_variant_attributes: c.id::varchar
+
+Файлы:
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.up.sql
+
+---
+
+### Fixed - 2026-01-26 (41e191b6d)
+
+**Миграция 000026: добавлен varchar cast для category_id (fix type mismatch)**
+
+Проблема:
+- Миграция 000026 провалилась: "operator does not exist: character varying = uuid"
+- category_variant_attributes.category_id - varchar(36)
+- categories.id - uuid
+- INSERT и JOIN падали из-за type mismatch
+
+Решение:
+- Добавлен ::varchar cast в SELECT id FROM categories
+- Добавлен ::varchar cast в JOIN categories
+- Теперь: (SELECT id::varchar FROM categories WHERE slug = '...')
+- Теперь: JOIN categories c ON cva.category_id = c.id::varchar
+
+Файлы:
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.up.sql
+
+---
+
+### Fixed - 2026-01-26 (89cb62769)
+
+**Миграция: переименование 000023 в 000026 (fix порядок применения)**
+
+Проблема:
+- Миграция 000023 НЕ применилась в production
+- Причина: migrate применяет миграции по порядку номеров
+- Current version был 24, применилась 000025, но 000023 пропущена (она СТАРШЕ чем 24)
+- Атрибуты не привязаны к категориям (attrs count = 0)
+
+Решение:
+- Переименовано: 000023 → 000026
+- Теперь порядок: 000024 (UUID) → 000025 (категории) → 000026 (атрибуты)
+- Миграция 000026 применится при следующем deployment
+
+Файлы:
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.up.sql (было 000023)
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.down.sql (было 000023)
+- migrations/README_PHASE0_CATEGORIES.md - обновлены номера
+- migrations/README_RACUNARSKE_KOMPONENTE_ATTRIBUTES.md - обновлены номера
+
+---
+
 ### Fixed - 2026-01-26 (24a7a8316)
 
 **CI: Временно отключены Integration Tests (deprecated API)**

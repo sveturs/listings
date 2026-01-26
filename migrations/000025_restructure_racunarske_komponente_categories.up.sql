@@ -14,8 +14,16 @@ BEGIN;
 DO $$
 DECLARE
     listings_count INTEGER;
-    parent_uuid uuid := 'fe64130f-deea-4767-a937-6f9d584a4395'::uuid; -- racunarske-komponente
+    parent_uuid uuid;
 BEGIN
+    -- Найти parent category по slug
+    SELECT id INTO parent_uuid FROM categories WHERE slug = 'racunarske-komponente';
+
+    IF parent_uuid IS NULL THEN
+        RAISE NOTICE '⚠️  Parent category "racunarske-komponente" not found - skipping check';
+        RETURN;
+    END IF;
+
     -- Подсчитать листинги в старых подкатегориях
     SELECT COUNT(*) INTO listings_count
     FROM listings l
@@ -39,10 +47,18 @@ END $$;
 
 DO $$
 DECLARE
-    parent_uuid uuid := 'fe64130f-deea-4767-a937-6f9d584a4395';
+    parent_uuid uuid;
     deleted_attrs INTEGER;
     deleted_cats INTEGER;
 BEGIN
+    -- Найти parent category по slug
+    SELECT id INTO parent_uuid FROM categories WHERE slug = 'racunarske-komponente';
+
+    IF parent_uuid IS NULL THEN
+        RAISE NOTICE '⚠️  Parent category "racunarske-komponente" not found - skipping deletion';
+        RETURN;
+    END IF;
+
     RAISE NOTICE '';
     RAISE NOTICE '🗑️  Deleting old concrete subcategories...';
     RAISE NOTICE '';
@@ -74,9 +90,17 @@ END $$;
 
 DO $$
 DECLARE
-    parent_uuid uuid := 'fe64130f-deea-4767-a937-6f9d584a4395'::uuid; -- racunarske-komponente
+    parent_uuid uuid;
 BEGIN
+    -- Найти parent category по slug
+    SELECT id INTO parent_uuid FROM categories WHERE slug = 'racunarske-komponente';
+
+    IF parent_uuid IS NULL THEN
+        RAISE EXCEPTION 'Parent category "racunarske-komponente" not found';
+    END IF;
+
     RAISE NOTICE '📦 Creating 9 new general subcategories...';
+    RAISE NOTICE '   Parent UUID: %', parent_uuid;
     RAISE NOTICE '';
 
     -- 1. Grafičke kartice (Видеокарты)
