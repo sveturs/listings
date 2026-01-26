@@ -24,7 +24,7 @@
 | `000022_create_racunarske_komponente_attributes.down.sql` | Откат создания атрибутов | ✅ В этом PR |
 | `000024_fix_product_variants_product_id_to_uuid.up.sql` | Fix: product_id bigint → UUID | ✅ В этом PR |
 | `000024_fix_product_variants_product_id_to_uuid.down.sql` | Откат UUID fix | ✅ В этом PR |
-| ~~`000023_link_racunarske_komponente_attributes_to_categories.up.sql`~~ | Привязка атрибутов к категориям | ⚠️ **Перенесено в будущий PR** (после ФАЗЫ 0) |
+| ~~`000026_link_racunarske_komponente_attributes_to_categories.up.sql`~~ | Привязка атрибутов к категориям | ⚠️ **Перенесено в будущий PR** (после ФАЗЫ 0) |
 
 ## 🚀 Порядок применения миграций
 
@@ -94,7 +94,7 @@ SELECT COUNT(*) FROM attributes WHERE code LIKE 'pc_%'
 
 ### ФАЗА 2: Привязка атрибутов к категориям (будет в отдельном PR)
 
-**⚠️ ВАЖНО:** Миграция 000023 НЕ включена в этот PR!
+**⚠️ ВАЖНО:** Миграция 000026 НЕ включена в этот PR!
 
 **Она будет добавлена в отдельный PR после:**
 1. ФАЗЫ 0: Создание 9 подкатегорий (graficke-kartice, procesori, ram-memorija, и т.д.)
@@ -149,7 +149,7 @@ ORDER BY c.slug, a.code;
 
 ```bash
 psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?sslmode=disable" \
-  -f /p/github.com/vondi-global/listings/migrations/000023_link_racunarske_komponente_attributes_to_categories.down.sql
+  -f /p/github.com/vondi-global/listings/migrations/000026_link_racunarske_komponente_attributes_to_categories.down.sql
 ```
 
 ### Откат ФАЗЫ 1 (атрибуты)
@@ -407,7 +407,7 @@ psql "postgres://listings_user:listings_secret@localhost:35434/listings_dev_db?s
 
 - [ ] ФАЗА 0 завершена (категории переструктурированы)
 - [ ] Миграция 000022 применена (атрибуты созданы)
-- [ ] Миграция 000023 применена (атрибуты привязаны к категориям)
+- [ ] Миграция 000026 применена (атрибуты привязаны к категориям)
 - [ ] Проверка: атрибуты видны в БД
 - [ ] Проверка: фильтры работают на frontend
 - [ ] Тестовые листинги созданы для каждой подкатегории
