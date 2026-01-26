@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Fixed - 2026-01-26 (41e191b6d)
+
+**Миграция 000026: добавлен varchar cast для category_id (fix type mismatch)**
+
+Проблема:
+- Миграция 000026 провалилась: "operator does not exist: character varying = uuid"
+- category_variant_attributes.category_id - varchar(36)
+- categories.id - uuid
+- INSERT и JOIN падали из-за type mismatch
+
+Решение:
+- Добавлен ::varchar cast в SELECT id FROM categories
+- Добавлен ::varchar cast в JOIN categories
+- Теперь: (SELECT id::varchar FROM categories WHERE slug = '...')
+- Теперь: JOIN categories c ON cva.category_id = c.id::varchar
+
+Файлы:
+- migrations/000026_link_racunarske_komponente_attributes_to_categories.up.sql
+
+---
+
 ### Fixed - 2026-01-26 (89cb62769)
 
 **Миграция: переименование 000023 в 000026 (fix порядок применения)**
