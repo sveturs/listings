@@ -2,22 +2,26 @@
 
 ## [Unreleased]
 
-### Fixed - 2026-01-26 (e06e90fb2)
+### Fixed - 2026-01-26 (d0782f10f)
 
-**CI workflow: добавлен cleanup старых Docker контейнеров**
+**CI workflow: порт PostgreSQL 15432 → 25432 + location translations в OpenSearch**
 
 #### Проблема
 - ❌ Test job провалился: "Bind for 0.0.0.0:15432 failed: port is already allocated"
-- ❌ Self-hosted runner содержит старые контейнеры от предыдущих runs
-- ❌ GitHub Actions не может создать новый service container
+- ❌ Порт 15432 занят на self-hosted runner
+- ❌ Location translations не индексировались в OpenSearch
 
 #### Решение
-- ✅ Добавлен cleanup step в начало test и integration-tests jobs
-- ✅ Удаляются старые postgres:15-alpine и redis:7-alpine контейнеры
-- ✅ Освобождаются порты 15432 и 16379
+- ✅ Изменён порт PostgreSQL: 15432 → 25432
+- ✅ Изменён порт Redis: 16379 → 26379
+- ✅ Обновлены ENV переменные в workflow
+- ✅ Добавлена индексация location translations (country, city, address) в OpenSearch
+- ✅ Обновлён .gitignore (backups/, fixtures/, *_REPORT.md)
 
 #### Файлы
-- .github/workflows/ci.yml - добавлен Docker cleanup
+- .github/workflows/ci.yml - порты 25432/26379
+- internal/repository/opensearch/client.go - location translations
+- .gitignore - исключены временные файлы
 
 ---
 

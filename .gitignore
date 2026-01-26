@@ -69,3 +69,13 @@ coverage.html
 
 # Migrator binary (if built in root)
 /migrator
+
+# Temporary reports and backups (generated files)
+*_REPORT.md
+backups/
+fixtures/000003_*.sql
+fixtures/000004_*.sql
+fixtures/000005_*.sql
+fixtures/000006_*.sql
+fixtures/000007_*.sql
+fixtures/README.md
