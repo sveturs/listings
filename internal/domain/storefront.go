@@ -224,6 +224,7 @@ type StorefrontDeliveryOption struct {
 	AvailableDays    JSONB     `db:"available_days" json:"available_days,omitempty"`
 	CutoffTime       *string   `db:"cutoff_time" json:"cutoff_time,omitempty"`
 	Provider         *string   `db:"provider" json:"provider,omitempty"`
+	MethodType       *string   `db:"method_type" json:"method_type,omitempty"`        // standard, express, pickup, pickup_point
 	ProviderConfig   JSONB     `db:"provider_config" json:"provider_config,omitempty"`
 	IsActive         bool      `db:"is_active" json:"is_active"`
 	DisplayOrder     int32     `db:"display_order" json:"display_order"`

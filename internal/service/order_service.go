@@ -83,6 +83,9 @@ type CreateOrderRequest struct {
 	CustomerNotes      *string                // Optional customer notes
 	AcceptPriceChanges bool                   // If true, skip price validation (for direct checkout)
 
+	// Delivery method details (optional, from frontend checkout)
+	DeliveryMethodDetails map[string]interface{} // JSONB: provider_id, method_type, price, etc.
+
 	// Customer contact info (for seller to see on sales page)
 	CustomerName  *string // Customer full name
 	CustomerEmail *string // Customer email
@@ -342,22 +345,23 @@ func (s *orderService) CreateOrder(ctx context.Context, req *CreateOrderRequest)
 
 	// 10. Create order
 	order := &domain.Order{
-		OrderNumber:     orderNumber,
-		UserID:          req.UserID,
-		StorefrontID:    cart.StorefrontID,
-		Status:          domain.OrderStatusPending,
-		PaymentStatus:   domain.PaymentStatusPending,
-		Subtotal:        financials.Subtotal,
-		Tax:             financials.Tax,
-		Shipping:        financials.ShippingCost,
-		Discount:        financials.Discount,
-		Total:           financials.Total,
-		Commission:      financials.Commission,
-		SellerAmount:    financials.SellerAmount,
-		Currency:        financials.Currency,
-		ShippingAddress: req.ShippingAddress,
-		BillingAddress:  req.BillingAddress,
-		EscrowDays:      s.config.EscrowDays,
+		OrderNumber:           orderNumber,
+		UserID:                req.UserID,
+		StorefrontID:          cart.StorefrontID,
+		Status:                domain.OrderStatusPending,
+		PaymentStatus:         domain.PaymentStatusPending,
+		Subtotal:              financials.Subtotal,
+		Tax:                   financials.Tax,
+		Shipping:              financials.ShippingCost,
+		Discount:              financials.Discount,
+		Total:                 financials.Total,
+		Commission:            financials.Commission,
+		SellerAmount:          financials.SellerAmount,
+		Currency:              financials.Currency,
+		ShippingAddress:       req.ShippingAddress,
+		BillingAddress:        req.BillingAddress,
+		DeliveryMethodDetails: req.DeliveryMethodDetails, // NEW: Delivery method from checkout
+		EscrowDays:            s.config.EscrowDays,
 	}
 
 	// Set payment method
@@ -829,7 +833,7 @@ func (s *orderService) ConfirmOrderPayment(ctx context.Context, orderID int64, t
 			})
 		}
 
-		if err := s.eventPublisher.PublishOrderConfirmed(ctx, orderID, order.StorefrontID, items); err != nil {
+		if err := s.eventPublisher.PublishOrderConfirmed(ctx, orderID, order.StorefrontID, items, order.DeliveryMethodDetails); err != nil {
 			s.logger.Error().Err(err).Int64("order_id", orderID).Msg("failed to publish order.confirmed event (non-critical)")
 			// Don't fail the operation - event publishing is best-effort
 		}
@@ -1498,7 +1502,7 @@ func (s *orderService) confirmCODOrder(ctx context.Context, order *domain.Order)
 			})
 		}
 
-		if err := s.eventPublisher.PublishOrderConfirmed(ctx, order.ID, order.StorefrontID, items); err != nil {
+		if err := s.eventPublisher.PublishOrderConfirmed(ctx, order.ID, order.StorefrontID, items, order.DeliveryMethodDetails); err != nil {
 			s.logger.Error().Err(err).Int64("order_id", order.ID).Msg("failed to publish order.confirmed event (non-critical)")
 			// Don't fail the operation - event publishing is best-effort
 		}

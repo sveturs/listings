@@ -252,6 +252,12 @@ func (s *Server) CreateOrder(ctx context.Context, req *listingspb.CreateOrderReq
 	shippingAddress := protoStructToMap(req.ShippingAddress)
 	billingAddress := protoStructToMap(req.BillingAddress)
 
+	// Parse delivery_method_details (optional)
+	var deliveryMethodDetails map[string]interface{}
+	if req.DeliveryMethodDetails != nil {
+		deliveryMethodDetails = protoStructToMap(req.DeliveryMethodDetails)
+	}
+
 	// Convert proto Items to service.OrderItemInput
 	var items []service.OrderItemInput
 	if len(req.Items) > 0 {
@@ -277,21 +283,22 @@ func (s *Server) CreateOrder(ctx context.Context, req *listingspb.CreateOrderReq
 
 	// Call service layer
 	order, err := s.orderService.CreateOrder(ctx, &service.CreateOrderRequest{
-		CartID:             cartID,
-		Items:              items,
-		StorefrontID:       req.StorefrontId,
-		UserID:             req.UserId,
-		ShippingAddress:    shippingAddress,
-		BillingAddress:     billingAddress,
-		ShippingCost:       0, // TODO: Calculate shipping cost
-		DiscountCode:       nil,
-		DiscountAmount:     0,
-		PaymentMethod:      req.PaymentMethod,
-		CustomerNotes:      req.CustomerNotes,
-		AcceptPriceChanges: req.AcceptPriceChanges,
-		CustomerName:       req.CustomerName,
-		CustomerEmail:      req.CustomerEmail,
-		CustomerPhone:      req.CustomerPhone,
+		CartID:                cartID,
+		Items:                 items,
+		StorefrontID:          req.StorefrontId,
+		UserID:                req.UserId,
+		ShippingAddress:       shippingAddress,
+		BillingAddress:        billingAddress,
+		ShippingCost:          0, // TODO: Calculate shipping cost
+		DiscountCode:          nil,
+		DiscountAmount:        0,
+		PaymentMethod:         req.PaymentMethod,
+		CustomerNotes:         req.CustomerNotes,
+		AcceptPriceChanges:    req.AcceptPriceChanges,
+		DeliveryMethodDetails: deliveryMethodDetails, // NEW: Delivery method from checkout
+		CustomerName:          req.CustomerName,
+		CustomerEmail:         req.CustomerEmail,
+		CustomerPhone:         req.CustomerPhone,
 	})
 	if err != nil {
 		return nil, mapServiceErrorToGRPC(err, s.logger)

@@ -7,15 +7,14 @@
 package listingssvcv1
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -475,6 +474,9 @@ type Order struct {
 	ShippingProvider *string          `protobuf:"bytes,14,opt,name=shipping_provider,json=shippingProvider,proto3,oneof" json:"shipping_provider,omitempty"` // Post Express, AKS, DHL, etc.
 	TrackingNumber   *string          `protobuf:"bytes,15,opt,name=tracking_number,json=trackingNumber,proto3,oneof" json:"tracking_number,omitempty"`       // Shipment tracking number
 	ShipmentId       *int64           `protobuf:"varint,16,opt,name=shipment_id,json=shipmentId,proto3,oneof" json:"shipment_id,omitempty"`                  // FK to Delivery Service shipment
+	// Delivery method details (selected by customer at checkout)
+	// Contains: provider_id, method_type, display_name, price, currency, estimated_days_min, estimated_days_max, supports_cod, supports_tracking
+	DeliveryMethodDetails *structpb.Struct `protobuf:"bytes,39,opt,name=delivery_method_details,json=deliveryMethodDetails,proto3,oneof" json:"delivery_method_details,omitempty"` // JSONB with complete delivery method information
 	// Escrow (platform holds funds)
 	EscrowReleaseDate *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=escrow_release_date,json=escrowReleaseDate,proto3,oneof" json:"escrow_release_date,omitempty"` // When funds released to seller
 	EscrowDays        int32                  `protobuf:"varint,18,opt,name=escrow_days,json=escrowDays,proto3" json:"escrow_days,omitempty"`                             // Days to hold in escrow (default: 3)
@@ -649,6 +651,13 @@ func (x *Order) GetShipmentId() int64 {
 		return *x.ShipmentId
 	}
 	return 0
+}
+
+func (x *Order) GetDeliveryMethodDetails() *structpb.Struct {
+	if x != nil {
+		return x.DeliveryMethodDetails
+	}
+	return nil
 }
 
 func (x *Order) GetEscrowReleaseDate() *timestamppb.Timestamp {
@@ -2006,6 +2015,8 @@ type CreateOrderRequest struct {
 	ShippingAddress *structpb.Struct `protobuf:"bytes,5,opt,name=shipping_address,json=shippingAddress,proto3" json:"shipping_address,omitempty"` // Required
 	BillingAddress  *structpb.Struct `protobuf:"bytes,6,opt,name=billing_address,json=billingAddress,proto3" json:"billing_address,omitempty"`    // Optional (defaults to shipping)
 	ShippingMethod  string           `protobuf:"bytes,7,opt,name=shipping_method,json=shippingMethod,proto3" json:"shipping_method,omitempty"`    // Required
+	// Delivery method details (optional, for WMS integration)
+	DeliveryMethodDetails *structpb.Struct `protobuf:"bytes,16,opt,name=delivery_method_details,json=deliveryMethodDetails,proto3,oneof" json:"delivery_method_details,omitempty"` // Complete delivery method info from frontend
 	// Payment information
 	PaymentMethod string `protobuf:"bytes,8,opt,name=payment_method,json=paymentMethod,proto3" json:"payment_method,omitempty"` // Required
 	// Customer contact (required for guest orders)
@@ -2099,6 +2110,13 @@ func (x *CreateOrderRequest) GetShippingMethod() string {
 		return x.ShippingMethod
 	}
 	return ""
+}
+
+func (x *CreateOrderRequest) GetDeliveryMethodDetails() *structpb.Struct {
+	if x != nil {
+		return x.DeliveryMethodDetails
+	}
+	return nil
 }
 
 func (x *CreateOrderRequest) GetPaymentMethod() string {
@@ -4076,7 +4094,7 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\x0e_listing_imageB\x0f\n" +
 	"\r_variant_dataB\x12\n" +
 	"\x10_available_stockB\x10\n" +
-	"\x0e_current_price\"\xa8\x13\n" +
+	"\x0e_current_price\"\x9a\x14\n" +
 	"\x05Order\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12!\n" +
 	"\forder_number\x18\x02 \x01(\tR\vorderNumber\x12\x1c\n" +
@@ -4097,36 +4115,37 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\x11shipping_provider\x18\x0e \x01(\tH\x05R\x10shippingProvider\x88\x01\x01\x12,\n" +
 	"\x0ftracking_number\x18\x0f \x01(\tH\x06R\x0etrackingNumber\x88\x01\x01\x12$\n" +
 	"\vshipment_id\x18\x10 \x01(\x03H\aR\n" +
-	"shipmentId\x88\x01\x01\x12O\n" +
-	"\x13escrow_release_date\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampH\bR\x11escrowReleaseDate\x88\x01\x01\x12\x1f\n" +
+	"shipmentId\x88\x01\x01\x12T\n" +
+	"\x17delivery_method_details\x18' \x01(\v2\x17.google.protobuf.StructH\bR\x15deliveryMethodDetails\x88\x01\x01\x12O\n" +
+	"\x13escrow_release_date\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampH\tR\x11escrowReleaseDate\x88\x01\x01\x12\x1f\n" +
 	"\vescrow_days\x18\x12 \x01(\x05R\n" +
 	"escrowDays\x12(\n" +
-	"\rcustomer_name\x18\x13 \x01(\tH\tR\fcustomerName\x88\x01\x01\x12*\n" +
-	"\x0ecustomer_email\x18\x14 \x01(\tH\n" +
-	"R\rcustomerEmail\x88\x01\x01\x12*\n" +
-	"\x0ecustomer_phone\x18\x15 \x01(\tH\vR\rcustomerPhone\x88\x01\x01\x12*\n" +
-	"\x0ecustomer_notes\x18\x16 \x01(\tH\fR\rcustomerNotes\x88\x01\x01\x12$\n" +
-	"\vadmin_notes\x18\x17 \x01(\tH\rR\n" +
+	"\rcustomer_name\x18\x13 \x01(\tH\n" +
+	"R\fcustomerName\x88\x01\x01\x12*\n" +
+	"\x0ecustomer_email\x18\x14 \x01(\tH\vR\rcustomerEmail\x88\x01\x01\x12*\n" +
+	"\x0ecustomer_phone\x18\x15 \x01(\tH\fR\rcustomerPhone\x88\x01\x01\x12*\n" +
+	"\x0ecustomer_notes\x18\x16 \x01(\tH\rR\rcustomerNotes\x88\x01\x01\x12$\n" +
+	"\vadmin_notes\x18\x17 \x01(\tH\x0eR\n" +
 	"adminNotes\x88\x01\x01\x12&\n" +
-	"\fseller_notes\x18  \x01(\tH\x0eR\vsellerNotes\x88\x01\x01\x129\n" +
+	"\fseller_notes\x18  \x01(\tH\x0fR\vsellerNotes\x88\x01\x01\x129\n" +
 	"\n" +
 	"created_at\x18\x18 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\x19 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12B\n" +
-	"\fconfirmed_at\x18\x1a \x01(\v2\x1a.google.protobuf.TimestampH\x0fR\vconfirmedAt\x88\x01\x01\x12@\n" +
-	"\vaccepted_at\x18! \x01(\v2\x1a.google.protobuf.TimestampH\x10R\n" +
+	"\fconfirmed_at\x18\x1a \x01(\v2\x1a.google.protobuf.TimestampH\x10R\vconfirmedAt\x88\x01\x01\x12@\n" +
+	"\vaccepted_at\x18! \x01(\v2\x1a.google.protobuf.TimestampH\x11R\n" +
 	"acceptedAt\x88\x01\x01\x12>\n" +
 	"\n" +
-	"shipped_at\x18\x1b \x01(\v2\x1a.google.protobuf.TimestampH\x11R\tshippedAt\x88\x01\x01\x12B\n" +
-	"\fdelivered_at\x18\x1c \x01(\v2\x1a.google.protobuf.TimestampH\x12R\vdeliveredAt\x88\x01\x01\x12B\n" +
-	"\fcancelled_at\x18\x1d \x01(\v2\x1a.google.protobuf.TimestampH\x13R\vcancelledAt\x88\x01\x01\x12 \n" +
-	"\tlabel_url\x18\" \x01(\tH\x14R\blabelUrl\x88\x01\x01\x12.\n" +
-	"\x10payment_provider\x18# \x01(\tH\x15R\x0fpaymentProvider\x88\x01\x01\x121\n" +
-	"\x12payment_session_id\x18$ \x01(\tH\x16R\x10paymentSessionId\x88\x01\x01\x12/\n" +
-	"\x11payment_intent_id\x18% \x01(\tH\x17R\x0fpaymentIntentId\x88\x01\x01\x12;\n" +
-	"\x17payment_idempotency_key\x18& \x01(\tH\x18R\x15paymentIdempotencyKey\x88\x01\x01\x12/\n" +
+	"shipped_at\x18\x1b \x01(\v2\x1a.google.protobuf.TimestampH\x12R\tshippedAt\x88\x01\x01\x12B\n" +
+	"\fdelivered_at\x18\x1c \x01(\v2\x1a.google.protobuf.TimestampH\x13R\vdeliveredAt\x88\x01\x01\x12B\n" +
+	"\fcancelled_at\x18\x1d \x01(\v2\x1a.google.protobuf.TimestampH\x14R\vcancelledAt\x88\x01\x01\x12 \n" +
+	"\tlabel_url\x18\" \x01(\tH\x15R\blabelUrl\x88\x01\x01\x12.\n" +
+	"\x10payment_provider\x18# \x01(\tH\x16R\x0fpaymentProvider\x88\x01\x01\x121\n" +
+	"\x12payment_session_id\x18$ \x01(\tH\x17R\x10paymentSessionId\x88\x01\x01\x12/\n" +
+	"\x11payment_intent_id\x18% \x01(\tH\x18R\x0fpaymentIntentId\x88\x01\x01\x12;\n" +
+	"\x17payment_idempotency_key\x18& \x01(\tH\x19R\x15paymentIdempotencyKey\x88\x01\x01\x12/\n" +
 	"\x05items\x18\x1e \x03(\v2\x19.listingssvc.v1.OrderItemR\x05items\x12,\n" +
-	"\x0fstorefront_name\x18\x1f \x01(\tH\x19R\x0estorefrontName\x88\x01\x01B\n" +
+	"\x0fstorefront_name\x18\x1f \x01(\tH\x1aR\x0estorefrontName\x88\x01\x01B\n" +
 	"\n" +
 	"\b_user_idB\x11\n" +
 	"\x0f_payment_methodB\x19\n" +
@@ -4135,7 +4154,8 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\x10_shipping_methodB\x14\n" +
 	"\x12_shipping_providerB\x12\n" +
 	"\x10_tracking_numberB\x0e\n" +
-	"\f_shipment_idB\x16\n" +
+	"\f_shipment_idB\x1a\n" +
+	"\x18_delivery_method_detailsB\x16\n" +
 	"\x14_escrow_release_dateB\x10\n" +
 	"\x0e_customer_nameB\x11\n" +
 	"\x0f_customer_emailB\x11\n" +
@@ -4300,7 +4320,7 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\n" +
 	"variant_id\x18\x02 \x01(\x03H\x00R\tvariantId\x88\x01\x01\x12\x1a\n" +
 	"\bquantity\x18\x03 \x01(\x05R\bquantityB\r\n" +
-	"\v_variant_id\"\xf7\x05\n" +
+	"\v_variant_id\"\xe9\x06\n" +
 	"\x12CreateOrderRequest\x12\x1c\n" +
 	"\auser_id\x18\x01 \x01(\x03H\x00R\x06userId\x88\x01\x01\x12\"\n" +
 	"\n" +
@@ -4309,20 +4329,22 @@ const file_api_proto_listings_v1_orders_proto_rawDesc = "" +
 	"\acart_id\x18\x04 \x01(\x03H\x02R\x06cartId\x88\x01\x01\x12B\n" +
 	"\x10shipping_address\x18\x05 \x01(\v2\x17.google.protobuf.StructR\x0fshippingAddress\x12@\n" +
 	"\x0fbilling_address\x18\x06 \x01(\v2\x17.google.protobuf.StructR\x0ebillingAddress\x12'\n" +
-	"\x0fshipping_method\x18\a \x01(\tR\x0eshippingMethod\x12%\n" +
+	"\x0fshipping_method\x18\a \x01(\tR\x0eshippingMethod\x12T\n" +
+	"\x17delivery_method_details\x18\x10 \x01(\v2\x17.google.protobuf.StructH\x03R\x15deliveryMethodDetails\x88\x01\x01\x12%\n" +
 	"\x0epayment_method\x18\b \x01(\tR\rpaymentMethod\x12(\n" +
-	"\rcustomer_name\x18\t \x01(\tH\x03R\fcustomerName\x88\x01\x01\x12*\n" +
+	"\rcustomer_name\x18\t \x01(\tH\x04R\fcustomerName\x88\x01\x01\x12*\n" +
 	"\x0ecustomer_email\x18\n" +
-	" \x01(\tH\x04R\rcustomerEmail\x88\x01\x01\x12*\n" +
-	"\x0ecustomer_phone\x18\v \x01(\tH\x05R\rcustomerPhone\x88\x01\x01\x12*\n" +
-	"\x0ecustomer_notes\x18\f \x01(\tH\x06R\rcustomerNotes\x88\x01\x01\x120\n" +
+	" \x01(\tH\x05R\rcustomerEmail\x88\x01\x01\x12*\n" +
+	"\x0ecustomer_phone\x18\v \x01(\tH\x06R\rcustomerPhone\x88\x01\x01\x12*\n" +
+	"\x0ecustomer_notes\x18\f \x01(\tH\aR\rcustomerNotes\x88\x01\x01\x120\n" +
 	"\x14accept_price_changes\x18\r \x01(\bR\x12acceptPriceChanges\x124\n" +
 	"\x05items\x18\x0f \x03(\v2\x1e.listingssvc.v1.OrderItemInputR\x05itemsB\n" +
 	"\n" +
 	"\b_user_idB\r\n" +
 	"\v_session_idB\n" +
 	"\n" +
-	"\b_cart_idB\x10\n" +
+	"\b_cart_idB\x1a\n" +
+	"\x18_delivery_method_detailsB\x10\n" +
 	"\x0e_customer_nameB\x11\n" +
 	"\x0f_customer_emailB\x11\n" +
 	"\x0f_customer_phoneB\x11\n" +
@@ -4634,96 +4656,98 @@ var file_api_proto_listings_v1_orders_proto_depIdxs = []int32{
 	50, // 9: listingssvc.v1.Order.payment_completed_at:type_name -> google.protobuf.Timestamp
 	51, // 10: listingssvc.v1.Order.shipping_address:type_name -> google.protobuf.Struct
 	51, // 11: listingssvc.v1.Order.billing_address:type_name -> google.protobuf.Struct
-	50, // 12: listingssvc.v1.Order.escrow_release_date:type_name -> google.protobuf.Timestamp
-	50, // 13: listingssvc.v1.Order.created_at:type_name -> google.protobuf.Timestamp
-	50, // 14: listingssvc.v1.Order.updated_at:type_name -> google.protobuf.Timestamp
-	50, // 15: listingssvc.v1.Order.confirmed_at:type_name -> google.protobuf.Timestamp
-	50, // 16: listingssvc.v1.Order.accepted_at:type_name -> google.protobuf.Timestamp
-	50, // 17: listingssvc.v1.Order.shipped_at:type_name -> google.protobuf.Timestamp
-	50, // 18: listingssvc.v1.Order.delivered_at:type_name -> google.protobuf.Timestamp
-	50, // 19: listingssvc.v1.Order.cancelled_at:type_name -> google.protobuf.Timestamp
-	7,  // 20: listingssvc.v1.Order.items:type_name -> listingssvc.v1.OrderItem
-	51, // 21: listingssvc.v1.OrderItem.variant_data:type_name -> google.protobuf.Struct
-	51, // 22: listingssvc.v1.OrderItem.attributes:type_name -> google.protobuf.Struct
-	50, // 23: listingssvc.v1.OrderItem.created_at:type_name -> google.protobuf.Timestamp
-	2,  // 24: listingssvc.v1.InventoryReservation.status:type_name -> listingssvc.v1.ReservationStatus
-	50, // 25: listingssvc.v1.InventoryReservation.expires_at:type_name -> google.protobuf.Timestamp
-	50, // 26: listingssvc.v1.InventoryReservation.created_at:type_name -> google.protobuf.Timestamp
-	50, // 27: listingssvc.v1.InventoryReservation.updated_at:type_name -> google.protobuf.Timestamp
-	50, // 28: listingssvc.v1.InventoryReservation.committed_at:type_name -> google.protobuf.Timestamp
-	50, // 29: listingssvc.v1.InventoryReservation.released_at:type_name -> google.protobuf.Timestamp
-	3,  // 30: listingssvc.v1.AddToCartResponse.cart:type_name -> listingssvc.v1.Cart
-	4,  // 31: listingssvc.v1.UpdateCartItemResponse.item:type_name -> listingssvc.v1.CartItem
-	3,  // 32: listingssvc.v1.GetCartResponse.cart:type_name -> listingssvc.v1.Cart
-	17, // 33: listingssvc.v1.GetCartResponse.summary:type_name -> listingssvc.v1.CartSummary
-	3,  // 34: listingssvc.v1.GetUserCartsResponse.carts:type_name -> listingssvc.v1.Cart
-	51, // 35: listingssvc.v1.CreateOrderRequest.shipping_address:type_name -> google.protobuf.Struct
-	51, // 36: listingssvc.v1.CreateOrderRequest.billing_address:type_name -> google.protobuf.Struct
-	21, // 37: listingssvc.v1.CreateOrderRequest.items:type_name -> listingssvc.v1.OrderItemInput
-	5,  // 38: listingssvc.v1.CreateOrderResponse.order:type_name -> listingssvc.v1.Order
-	5,  // 39: listingssvc.v1.GetOrderResponse.order:type_name -> listingssvc.v1.Order
-	0,  // 40: listingssvc.v1.ListOrdersRequest.status:type_name -> listingssvc.v1.OrderStatus
-	1,  // 41: listingssvc.v1.ListOrdersRequest.payment_status:type_name -> listingssvc.v1.PaymentStatus
-	50, // 42: listingssvc.v1.ListOrdersRequest.date_from:type_name -> google.protobuf.Timestamp
-	50, // 43: listingssvc.v1.ListOrdersRequest.date_to:type_name -> google.protobuf.Timestamp
-	5,  // 44: listingssvc.v1.ListOrdersResponse.orders:type_name -> listingssvc.v1.Order
-	28, // 45: listingssvc.v1.ListOrdersResponse.stats:type_name -> listingssvc.v1.OrderStatsSummary
-	5,  // 46: listingssvc.v1.CancelOrderResponse.order:type_name -> listingssvc.v1.Order
-	0,  // 47: listingssvc.v1.UpdateOrderStatusRequest.new_status:type_name -> listingssvc.v1.OrderStatus
-	5,  // 48: listingssvc.v1.UpdateOrderStatusResponse.order:type_name -> listingssvc.v1.Order
-	50, // 49: listingssvc.v1.GetOrderStatsRequest.date_from:type_name -> google.protobuf.Timestamp
-	50, // 50: listingssvc.v1.GetOrderStatsRequest.date_to:type_name -> google.protobuf.Timestamp
-	28, // 51: listingssvc.v1.GetOrderStatsResponse.stats:type_name -> listingssvc.v1.OrderStatsSummary
-	35, // 52: listingssvc.v1.GetOrderStatsResponse.status_breakdown:type_name -> listingssvc.v1.OrderStatusCount
-	36, // 53: listingssvc.v1.GetOrderStatsResponse.daily_stats:type_name -> listingssvc.v1.DailyOrderStats
-	0,  // 54: listingssvc.v1.OrderStatusCount.status:type_name -> listingssvc.v1.OrderStatus
-	5,  // 55: listingssvc.v1.AcceptOrderResponse.order:type_name -> listingssvc.v1.Order
-	40, // 56: listingssvc.v1.CreateOrderShipmentRequest.package_info:type_name -> listingssvc.v1.PackageInfo
-	5,  // 57: listingssvc.v1.CreateOrderShipmentResponse.order:type_name -> listingssvc.v1.Order
-	42, // 58: listingssvc.v1.CreateOrderShipmentResponse.shipment:type_name -> listingssvc.v1.ShipmentInfo
-	5,  // 59: listingssvc.v1.MarkOrderShippedResponse.order:type_name -> listingssvc.v1.Order
-	47, // 60: listingssvc.v1.GetOrderTrackingResponse.events:type_name -> listingssvc.v1.TrackingEvent
-	50, // 61: listingssvc.v1.TrackingEvent.timestamp:type_name -> google.protobuf.Timestamp
-	5,  // 62: listingssvc.v1.UpdateOrderPaymentResponse.order:type_name -> listingssvc.v1.Order
-	9,  // 63: listingssvc.v1.OrderService.AddToCart:input_type -> listingssvc.v1.AddToCartRequest
-	11, // 64: listingssvc.v1.OrderService.UpdateCartItem:input_type -> listingssvc.v1.UpdateCartItemRequest
-	13, // 65: listingssvc.v1.OrderService.RemoveFromCart:input_type -> listingssvc.v1.RemoveFromCartRequest
-	15, // 66: listingssvc.v1.OrderService.GetCart:input_type -> listingssvc.v1.GetCartRequest
-	18, // 67: listingssvc.v1.OrderService.ClearCart:input_type -> listingssvc.v1.ClearCartRequest
-	19, // 68: listingssvc.v1.OrderService.GetUserCarts:input_type -> listingssvc.v1.GetUserCartsRequest
-	22, // 69: listingssvc.v1.OrderService.CreateOrder:input_type -> listingssvc.v1.CreateOrderRequest
-	24, // 70: listingssvc.v1.OrderService.GetOrder:input_type -> listingssvc.v1.GetOrderRequest
-	26, // 71: listingssvc.v1.OrderService.ListOrders:input_type -> listingssvc.v1.ListOrdersRequest
-	29, // 72: listingssvc.v1.OrderService.CancelOrder:input_type -> listingssvc.v1.CancelOrderRequest
-	31, // 73: listingssvc.v1.OrderService.UpdateOrderStatus:input_type -> listingssvc.v1.UpdateOrderStatusRequest
-	33, // 74: listingssvc.v1.OrderService.GetOrderStats:input_type -> listingssvc.v1.GetOrderStatsRequest
-	37, // 75: listingssvc.v1.OrderService.AcceptOrder:input_type -> listingssvc.v1.AcceptOrderRequest
-	39, // 76: listingssvc.v1.OrderService.CreateOrderShipment:input_type -> listingssvc.v1.CreateOrderShipmentRequest
-	43, // 77: listingssvc.v1.OrderService.MarkOrderShipped:input_type -> listingssvc.v1.MarkOrderShippedRequest
-	45, // 78: listingssvc.v1.OrderService.GetOrderTracking:input_type -> listingssvc.v1.GetOrderTrackingRequest
-	48, // 79: listingssvc.v1.OrderService.UpdateOrderPayment:input_type -> listingssvc.v1.UpdateOrderPaymentRequest
-	10, // 80: listingssvc.v1.OrderService.AddToCart:output_type -> listingssvc.v1.AddToCartResponse
-	12, // 81: listingssvc.v1.OrderService.UpdateCartItem:output_type -> listingssvc.v1.UpdateCartItemResponse
-	14, // 82: listingssvc.v1.OrderService.RemoveFromCart:output_type -> listingssvc.v1.RemoveFromCartResponse
-	16, // 83: listingssvc.v1.OrderService.GetCart:output_type -> listingssvc.v1.GetCartResponse
-	52, // 84: listingssvc.v1.OrderService.ClearCart:output_type -> google.protobuf.Empty
-	20, // 85: listingssvc.v1.OrderService.GetUserCarts:output_type -> listingssvc.v1.GetUserCartsResponse
-	23, // 86: listingssvc.v1.OrderService.CreateOrder:output_type -> listingssvc.v1.CreateOrderResponse
-	25, // 87: listingssvc.v1.OrderService.GetOrder:output_type -> listingssvc.v1.GetOrderResponse
-	27, // 88: listingssvc.v1.OrderService.ListOrders:output_type -> listingssvc.v1.ListOrdersResponse
-	30, // 89: listingssvc.v1.OrderService.CancelOrder:output_type -> listingssvc.v1.CancelOrderResponse
-	32, // 90: listingssvc.v1.OrderService.UpdateOrderStatus:output_type -> listingssvc.v1.UpdateOrderStatusResponse
-	34, // 91: listingssvc.v1.OrderService.GetOrderStats:output_type -> listingssvc.v1.GetOrderStatsResponse
-	38, // 92: listingssvc.v1.OrderService.AcceptOrder:output_type -> listingssvc.v1.AcceptOrderResponse
-	41, // 93: listingssvc.v1.OrderService.CreateOrderShipment:output_type -> listingssvc.v1.CreateOrderShipmentResponse
-	44, // 94: listingssvc.v1.OrderService.MarkOrderShipped:output_type -> listingssvc.v1.MarkOrderShippedResponse
-	46, // 95: listingssvc.v1.OrderService.GetOrderTracking:output_type -> listingssvc.v1.GetOrderTrackingResponse
-	49, // 96: listingssvc.v1.OrderService.UpdateOrderPayment:output_type -> listingssvc.v1.UpdateOrderPaymentResponse
-	80, // [80:97] is the sub-list for method output_type
-	63, // [63:80] is the sub-list for method input_type
-	63, // [63:63] is the sub-list for extension type_name
-	63, // [63:63] is the sub-list for extension extendee
-	0,  // [0:63] is the sub-list for field type_name
+	51, // 12: listingssvc.v1.Order.delivery_method_details:type_name -> google.protobuf.Struct
+	50, // 13: listingssvc.v1.Order.escrow_release_date:type_name -> google.protobuf.Timestamp
+	50, // 14: listingssvc.v1.Order.created_at:type_name -> google.protobuf.Timestamp
+	50, // 15: listingssvc.v1.Order.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 16: listingssvc.v1.Order.confirmed_at:type_name -> google.protobuf.Timestamp
+	50, // 17: listingssvc.v1.Order.accepted_at:type_name -> google.protobuf.Timestamp
+	50, // 18: listingssvc.v1.Order.shipped_at:type_name -> google.protobuf.Timestamp
+	50, // 19: listingssvc.v1.Order.delivered_at:type_name -> google.protobuf.Timestamp
+	50, // 20: listingssvc.v1.Order.cancelled_at:type_name -> google.protobuf.Timestamp
+	7,  // 21: listingssvc.v1.Order.items:type_name -> listingssvc.v1.OrderItem
+	51, // 22: listingssvc.v1.OrderItem.variant_data:type_name -> google.protobuf.Struct
+	51, // 23: listingssvc.v1.OrderItem.attributes:type_name -> google.protobuf.Struct
+	50, // 24: listingssvc.v1.OrderItem.created_at:type_name -> google.protobuf.Timestamp
+	2,  // 25: listingssvc.v1.InventoryReservation.status:type_name -> listingssvc.v1.ReservationStatus
+	50, // 26: listingssvc.v1.InventoryReservation.expires_at:type_name -> google.protobuf.Timestamp
+	50, // 27: listingssvc.v1.InventoryReservation.created_at:type_name -> google.protobuf.Timestamp
+	50, // 28: listingssvc.v1.InventoryReservation.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 29: listingssvc.v1.InventoryReservation.committed_at:type_name -> google.protobuf.Timestamp
+	50, // 30: listingssvc.v1.InventoryReservation.released_at:type_name -> google.protobuf.Timestamp
+	3,  // 31: listingssvc.v1.AddToCartResponse.cart:type_name -> listingssvc.v1.Cart
+	4,  // 32: listingssvc.v1.UpdateCartItemResponse.item:type_name -> listingssvc.v1.CartItem
+	3,  // 33: listingssvc.v1.GetCartResponse.cart:type_name -> listingssvc.v1.Cart
+	17, // 34: listingssvc.v1.GetCartResponse.summary:type_name -> listingssvc.v1.CartSummary
+	3,  // 35: listingssvc.v1.GetUserCartsResponse.carts:type_name -> listingssvc.v1.Cart
+	51, // 36: listingssvc.v1.CreateOrderRequest.shipping_address:type_name -> google.protobuf.Struct
+	51, // 37: listingssvc.v1.CreateOrderRequest.billing_address:type_name -> google.protobuf.Struct
+	51, // 38: listingssvc.v1.CreateOrderRequest.delivery_method_details:type_name -> google.protobuf.Struct
+	21, // 39: listingssvc.v1.CreateOrderRequest.items:type_name -> listingssvc.v1.OrderItemInput
+	5,  // 40: listingssvc.v1.CreateOrderResponse.order:type_name -> listingssvc.v1.Order
+	5,  // 41: listingssvc.v1.GetOrderResponse.order:type_name -> listingssvc.v1.Order
+	0,  // 42: listingssvc.v1.ListOrdersRequest.status:type_name -> listingssvc.v1.OrderStatus
+	1,  // 43: listingssvc.v1.ListOrdersRequest.payment_status:type_name -> listingssvc.v1.PaymentStatus
+	50, // 44: listingssvc.v1.ListOrdersRequest.date_from:type_name -> google.protobuf.Timestamp
+	50, // 45: listingssvc.v1.ListOrdersRequest.date_to:type_name -> google.protobuf.Timestamp
+	5,  // 46: listingssvc.v1.ListOrdersResponse.orders:type_name -> listingssvc.v1.Order
+	28, // 47: listingssvc.v1.ListOrdersResponse.stats:type_name -> listingssvc.v1.OrderStatsSummary
+	5,  // 48: listingssvc.v1.CancelOrderResponse.order:type_name -> listingssvc.v1.Order
+	0,  // 49: listingssvc.v1.UpdateOrderStatusRequest.new_status:type_name -> listingssvc.v1.OrderStatus
+	5,  // 50: listingssvc.v1.UpdateOrderStatusResponse.order:type_name -> listingssvc.v1.Order
+	50, // 51: listingssvc.v1.GetOrderStatsRequest.date_from:type_name -> google.protobuf.Timestamp
+	50, // 52: listingssvc.v1.GetOrderStatsRequest.date_to:type_name -> google.protobuf.Timestamp
+	28, // 53: listingssvc.v1.GetOrderStatsResponse.stats:type_name -> listingssvc.v1.OrderStatsSummary
+	35, // 54: listingssvc.v1.GetOrderStatsResponse.status_breakdown:type_name -> listingssvc.v1.OrderStatusCount
+	36, // 55: listingssvc.v1.GetOrderStatsResponse.daily_stats:type_name -> listingssvc.v1.DailyOrderStats
+	0,  // 56: listingssvc.v1.OrderStatusCount.status:type_name -> listingssvc.v1.OrderStatus
+	5,  // 57: listingssvc.v1.AcceptOrderResponse.order:type_name -> listingssvc.v1.Order
+	40, // 58: listingssvc.v1.CreateOrderShipmentRequest.package_info:type_name -> listingssvc.v1.PackageInfo
+	5,  // 59: listingssvc.v1.CreateOrderShipmentResponse.order:type_name -> listingssvc.v1.Order
+	42, // 60: listingssvc.v1.CreateOrderShipmentResponse.shipment:type_name -> listingssvc.v1.ShipmentInfo
+	5,  // 61: listingssvc.v1.MarkOrderShippedResponse.order:type_name -> listingssvc.v1.Order
+	47, // 62: listingssvc.v1.GetOrderTrackingResponse.events:type_name -> listingssvc.v1.TrackingEvent
+	50, // 63: listingssvc.v1.TrackingEvent.timestamp:type_name -> google.protobuf.Timestamp
+	5,  // 64: listingssvc.v1.UpdateOrderPaymentResponse.order:type_name -> listingssvc.v1.Order
+	9,  // 65: listingssvc.v1.OrderService.AddToCart:input_type -> listingssvc.v1.AddToCartRequest
+	11, // 66: listingssvc.v1.OrderService.UpdateCartItem:input_type -> listingssvc.v1.UpdateCartItemRequest
+	13, // 67: listingssvc.v1.OrderService.RemoveFromCart:input_type -> listingssvc.v1.RemoveFromCartRequest
+	15, // 68: listingssvc.v1.OrderService.GetCart:input_type -> listingssvc.v1.GetCartRequest
+	18, // 69: listingssvc.v1.OrderService.ClearCart:input_type -> listingssvc.v1.ClearCartRequest
+	19, // 70: listingssvc.v1.OrderService.GetUserCarts:input_type -> listingssvc.v1.GetUserCartsRequest
+	22, // 71: listingssvc.v1.OrderService.CreateOrder:input_type -> listingssvc.v1.CreateOrderRequest
+	24, // 72: listingssvc.v1.OrderService.GetOrder:input_type -> listingssvc.v1.GetOrderRequest
+	26, // 73: listingssvc.v1.OrderService.ListOrders:input_type -> listingssvc.v1.ListOrdersRequest
+	29, // 74: listingssvc.v1.OrderService.CancelOrder:input_type -> listingssvc.v1.CancelOrderRequest
+	31, // 75: listingssvc.v1.OrderService.UpdateOrderStatus:input_type -> listingssvc.v1.UpdateOrderStatusRequest
+	33, // 76: listingssvc.v1.OrderService.GetOrderStats:input_type -> listingssvc.v1.GetOrderStatsRequest
+	37, // 77: listingssvc.v1.OrderService.AcceptOrder:input_type -> listingssvc.v1.AcceptOrderRequest
+	39, // 78: listingssvc.v1.OrderService.CreateOrderShipment:input_type -> listingssvc.v1.CreateOrderShipmentRequest
+	43, // 79: listingssvc.v1.OrderService.MarkOrderShipped:input_type -> listingssvc.v1.MarkOrderShippedRequest
+	45, // 80: listingssvc.v1.OrderService.GetOrderTracking:input_type -> listingssvc.v1.GetOrderTrackingRequest
+	48, // 81: listingssvc.v1.OrderService.UpdateOrderPayment:input_type -> listingssvc.v1.UpdateOrderPaymentRequest
+	10, // 82: listingssvc.v1.OrderService.AddToCart:output_type -> listingssvc.v1.AddToCartResponse
+	12, // 83: listingssvc.v1.OrderService.UpdateCartItem:output_type -> listingssvc.v1.UpdateCartItemResponse
+	14, // 84: listingssvc.v1.OrderService.RemoveFromCart:output_type -> listingssvc.v1.RemoveFromCartResponse
+	16, // 85: listingssvc.v1.OrderService.GetCart:output_type -> listingssvc.v1.GetCartResponse
+	52, // 86: listingssvc.v1.OrderService.ClearCart:output_type -> google.protobuf.Empty
+	20, // 87: listingssvc.v1.OrderService.GetUserCarts:output_type -> listingssvc.v1.GetUserCartsResponse
+	23, // 88: listingssvc.v1.OrderService.CreateOrder:output_type -> listingssvc.v1.CreateOrderResponse
+	25, // 89: listingssvc.v1.OrderService.GetOrder:output_type -> listingssvc.v1.GetOrderResponse
+	27, // 90: listingssvc.v1.OrderService.ListOrders:output_type -> listingssvc.v1.ListOrdersResponse
+	30, // 91: listingssvc.v1.OrderService.CancelOrder:output_type -> listingssvc.v1.CancelOrderResponse
+	32, // 92: listingssvc.v1.OrderService.UpdateOrderStatus:output_type -> listingssvc.v1.UpdateOrderStatusResponse
+	34, // 93: listingssvc.v1.OrderService.GetOrderStats:output_type -> listingssvc.v1.GetOrderStatsResponse
+	38, // 94: listingssvc.v1.OrderService.AcceptOrder:output_type -> listingssvc.v1.AcceptOrderResponse
+	41, // 95: listingssvc.v1.OrderService.CreateOrderShipment:output_type -> listingssvc.v1.CreateOrderShipmentResponse
+	44, // 96: listingssvc.v1.OrderService.MarkOrderShipped:output_type -> listingssvc.v1.MarkOrderShippedResponse
+	46, // 97: listingssvc.v1.OrderService.GetOrderTracking:output_type -> listingssvc.v1.GetOrderTrackingResponse
+	49, // 98: listingssvc.v1.OrderService.UpdateOrderPayment:output_type -> listingssvc.v1.UpdateOrderPaymentResponse
+	82, // [82:99] is the sub-list for method output_type
+	65, // [65:82] is the sub-list for method input_type
+	65, // [65:65] is the sub-list for extension type_name
+	65, // [65:65] is the sub-list for extension extendee
+	0,  // [0:65] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_listings_v1_orders_proto_init() }

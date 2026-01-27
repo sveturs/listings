@@ -45,7 +45,7 @@ func ExampleRedisOrderEventPublisher_PublishOrderConfirmed() {
 
 	// Publish order confirmed event
 	ctx := context.Background()
-	err := publisher.PublishOrderConfirmed(ctx, 12345, 999, items)
+	err := publisher.PublishOrderConfirmed(ctx, 12345, 999, items, nil)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return

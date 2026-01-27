@@ -115,6 +115,10 @@ message Order {
   optional string tracking_number = 15;         // Shipment tracking number
   optional int64 shipment_id = 16;              // FK to Delivery Service shipment
 
+  // Delivery method details (selected by customer at checkout)
+  // Contains: provider_id, method_type, display_name, price, currency, estimated_days_min, estimated_days_max, supports_cod, supports_tracking
+  optional google.protobuf.Struct delivery_method_details = 39; // JSONB with complete delivery method information
+
   // Escrow (platform holds funds)
   optional google.protobuf.Timestamp escrow_release_date = 17; // When funds released to seller
   int32 escrow_days = 18;                       // Days to hold in escrow (default: 3)
@@ -326,6 +330,9 @@ message CreateOrderRequest {
   google.protobuf.Struct shipping_address = 5; // Required
   google.protobuf.Struct billing_address = 6;  // Optional (defaults to shipping)
   string shipping_method = 7;        // Required
+
+  // Delivery method details (optional, for WMS integration)
+  optional google.protobuf.Struct delivery_method_details = 16; // Complete delivery method info from frontend
 
   // Payment information
   string payment_method = 8;         // Required

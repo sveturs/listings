@@ -97,12 +97,16 @@ type Order struct {
 	PaymentIdempotencyKey *string       `json:"payment_idempotency_key,omitempty" db:"payment_idempotency_key"` // Idempotency key
 
 	// Shipping information
-	ShippingAddress  map[string]interface{} `json:"shipping_address,omitempty" db:"shipping_address"`   // JSONB
-	BillingAddress   map[string]interface{} `json:"billing_address,omitempty" db:"billing_address"`     // JSONB
+	ShippingAddress  map[string]any `json:"shipping_address,omitempty" db:"shipping_address"`   // JSONB
+	BillingAddress   map[string]any `json:"billing_address,omitempty" db:"billing_address"`     // JSONB
 	ShippingMethod   *string                `json:"shipping_method,omitempty" db:"shipping_method_id"`  // standard, express, overnight
 	ShippingProvider *string                `json:"shipping_provider,omitempty" db:"shipping_provider"` // Post Express, AKS, DHL, etc.
 	TrackingNumber   *string                `json:"tracking_number,omitempty" db:"tracking_number"`     // Shipment tracking number
 	ShipmentID       *int64                 `json:"shipment_id,omitempty" db:"shipment_id"`             // FK to Delivery Service shipment
+
+	// Delivery method details (selected by customer at checkout)
+	// Contains: provider_id, method_type, display_name, price, currency, estimated_days, supports_cod, supports_tracking
+	DeliveryMethodDetails map[string]any `json:"delivery_method_details,omitempty" db:"delivery_method_details"` // JSONB
 
 	// Escrow (platform holds funds)
 	EscrowReleaseDate *time.Time `json:"escrow_release_date,omitempty" db:"escrow_release_date"` // When funds released to seller
@@ -148,8 +152,8 @@ type OrderItem struct {
 	// Snapshot data (immutable after order creation)
 	ListingName string                 `json:"listing_name" db:"listing_name"`           // Product name at purchase time
 	SKU         *string                `json:"sku,omitempty" db:"sku"`                   // SKU at purchase time
-	VariantData map[string]interface{} `json:"variant_data,omitempty" db:"variant_data"` // Variant attributes snapshot
-	Attributes  map[string]interface{} `json:"attributes,omitempty" db:"attributes"`     // Product attributes snapshot
+	VariantData map[string]any `json:"variant_data,omitempty" db:"variant_data"` // Variant attributes snapshot
+	Attributes  map[string]any `json:"attributes,omitempty" db:"attributes"`     // Product attributes snapshot
 
 	// Quantity and pricing
 	Quantity  int32   `json:"quantity" db:"quantity"` // Quantity ordered
@@ -496,6 +500,9 @@ func OrderFromProto(pb *pb.Order) *Order {
 		shipmentID := *pb.ShipmentId
 		order.ShipmentID = &shipmentID
 	}
+	if pb.DeliveryMethodDetails != nil {
+		order.DeliveryMethodDetails = pb.DeliveryMethodDetails.AsMap()
+	}
 
 	// Escrow
 	if pb.EscrowReleaseDate != nil {
@@ -651,6 +658,12 @@ func (o *Order) ToProto() *pb.Order {
 	}
 	if o.ShipmentID != nil {
 		pbOrder.ShipmentId = o.ShipmentID
+	}
+	if o.DeliveryMethodDetails != nil {
+		deliveryMethodStruct, err := structpb.NewStruct(o.DeliveryMethodDetails)
+		if err == nil {
+			pbOrder.DeliveryMethodDetails = deliveryMethodStruct
+		}
 	}
 
 	// Escrow

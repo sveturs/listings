@@ -36,7 +36,7 @@ func TestPublishOrderConfirmed(t *testing.T) {
 		{ListingID: 101, Quantity: 1, WarehouseID: 5}, // Should keep specified warehouse
 	}
 
-	err := publisher.PublishOrderConfirmed(ctx, 12345, 999, items)
+	err := publisher.PublishOrderConfirmed(ctx, 12345, 999, items, nil)
 	require.NoError(t, err)
 
 	// Verify stream exists and has messages
@@ -93,7 +93,7 @@ func TestDefaultWarehouseID(t *testing.T) {
 		{ListingID: 100, Quantity: 2, WarehouseID: 0}, // Should get default
 	}
 
-	err := publisher.PublishOrderConfirmed(ctx, 12345, 999, items)
+	err := publisher.PublishOrderConfirmed(ctx, 12345, 999, items, nil)
 	require.NoError(t, err)
 
 	// Read the stream entry
@@ -125,7 +125,7 @@ func TestMultipleEvents(t *testing.T) {
 	// Publish multiple events
 	items := []OrderItem{{ListingID: 100, Quantity: 1, WarehouseID: 1}}
 
-	err := publisher.PublishOrderConfirmed(ctx, 1, 999, items)
+	err := publisher.PublishOrderConfirmed(ctx, 1, 999, items, nil)
 	require.NoError(t, err)
 
 	time.Sleep(10 * time.Millisecond) // Ensure different timestamps
@@ -156,7 +156,7 @@ func TestKeepSpecifiedWarehouse(t *testing.T) {
 		{ListingID: 100, Quantity: 1, WarehouseID: 5}, // Should keep 5
 	}
 
-	err := publisher.PublishOrderConfirmed(ctx, 12345, 999, items)
+	err := publisher.PublishOrderConfirmed(ctx, 12345, 999, items, nil)
 	require.NoError(t, err)
 
 	// Read the stream entry

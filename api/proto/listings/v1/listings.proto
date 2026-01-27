@@ -1836,6 +1836,7 @@ message StorefrontDeliveryOption {
   optional google.protobuf.Struct available_days = 15; // JSON array: [1,2,3,4,5]
   optional string cutoff_time = 16; // TIME (HH:MM:SS)
   optional string provider = 17;    // DeliveryProvider as string
+  optional string method_type = 23; // Delivery method type: standard, express, overnight, pickup, pickup_point
   optional google.protobuf.Struct provider_config = 18; // JSON
   bool is_active = 19; // default: true
   int32 display_order = 20; // default: 0

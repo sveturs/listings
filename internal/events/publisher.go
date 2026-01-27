@@ -12,7 +12,7 @@ import (
 
 // OrderEventPublisher defines interface for publishing order events
 type OrderEventPublisher interface {
-	PublishOrderConfirmed(ctx context.Context, orderID int64, storefrontID int64, items []OrderItem) error
+	PublishOrderConfirmed(ctx context.Context, orderID int64, storefrontID int64, items []OrderItem, deliveryMethodDetails map[string]interface{}) error
 	PublishOrderCancelled(ctx context.Context, orderID int64, reason string) error
 	Close() error
 }
@@ -43,7 +43,7 @@ func NewRedisOrderEventPublisher(redisClient *redis.Client, logger zerolog.Logge
 }
 
 // PublishOrderConfirmed publishes order.confirmed event to Redis Stream
-func (p *RedisOrderEventPublisher) PublishOrderConfirmed(ctx context.Context, orderID int64, storefrontID int64, items []OrderItem) error {
+func (p *RedisOrderEventPublisher) PublishOrderConfirmed(ctx context.Context, orderID int64, storefrontID int64, items []OrderItem, deliveryMethodDetails map[string]interface{}) error {
 	// Set default warehouse if not specified
 	for i := range items {
 		if items[i].WarehouseID == 0 {
@@ -62,6 +62,16 @@ func (p *RedisOrderEventPublisher) PublishOrderConfirmed(ctx context.Context, or
 		"storefront_id": fmt.Sprintf("%d", storefrontID),
 		"items":         string(itemsJSON),
 		"timestamp":     fmt.Sprintf("%d", time.Now().Unix()),
+	}
+
+	// Add delivery_method_details if provided
+	if deliveryMethodDetails != nil && len(deliveryMethodDetails) > 0 {
+		deliveryJSON, err := json.Marshal(deliveryMethodDetails)
+		if err != nil {
+			p.logger.Warn().Err(err).Msg("failed to marshal delivery_method_details, skipping")
+		} else {
+			values["delivery_method_details"] = string(deliveryJSON)
+		}
 	}
 
 	result, err := p.redis.XAdd(ctx, &redis.XAddArgs{

@@ -7,16 +7,15 @@
 package listingssvcv1
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -11374,6 +11373,7 @@ type StorefrontDeliveryOption struct {
 	AvailableDays    *structpb.Struct       `protobuf:"bytes,15,opt,name=available_days,json=availableDays,proto3,oneof" json:"available_days,omitempty"`          // JSON array: [1,2,3,4,5]
 	CutoffTime       *string                `protobuf:"bytes,16,opt,name=cutoff_time,json=cutoffTime,proto3,oneof" json:"cutoff_time,omitempty"`                   // TIME (HH:MM:SS)
 	Provider         *string                `protobuf:"bytes,17,opt,name=provider,proto3,oneof" json:"provider,omitempty"`                                         // DeliveryProvider as string
+	MethodType       *string                `protobuf:"bytes,23,opt,name=method_type,json=methodType,proto3,oneof" json:"method_type,omitempty"`                   // Delivery method type: standard, express, overnight, pickup, pickup_point
 	ProviderConfig   *structpb.Struct       `protobuf:"bytes,18,opt,name=provider_config,json=providerConfig,proto3,oneof" json:"provider_config,omitempty"`       // JSON
 	IsActive         bool                   `protobuf:"varint,19,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`                              // default: true
 	DisplayOrder     int32                  `protobuf:"varint,20,opt,name=display_order,json=displayOrder,proto3" json:"display_order,omitempty"`                  // default: 0
@@ -11528,6 +11528,13 @@ func (x *StorefrontDeliveryOption) GetCutoffTime() string {
 func (x *StorefrontDeliveryOption) GetProvider() string {
 	if x != nil && x.Provider != nil {
 		return *x.Provider
+	}
+	return ""
+}
+
+func (x *StorefrontDeliveryOption) GetMethodType() string {
+	if x != nil && x.MethodType != nil {
+		return *x.MethodType
 	}
 	return ""
 }
@@ -16657,7 +16664,7 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\t_providerB\v\n" +
 	"\t_settingsB\r\n" +
 	"\v_min_amountB\r\n" +
-	"\v_max_amount\"\xed\b\n" +
+	"\v_max_amount\"\xa3\t\n" +
 	"\x18StorefrontDeliveryOption\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12#\n" +
 	"\rstorefront_id\x18\x02 \x01(\x03R\fstorefrontId\x12\x12\n" +
@@ -16680,8 +16687,11 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x0eavailable_days\x18\x0f \x01(\v2\x17.google.protobuf.StructH\x06R\ravailableDays\x88\x01\x01\x12$\n" +
 	"\vcutoff_time\x18\x10 \x01(\tH\aR\n" +
 	"cutoffTime\x88\x01\x01\x12\x1f\n" +
-	"\bprovider\x18\x11 \x01(\tH\bR\bprovider\x88\x01\x01\x12E\n" +
-	"\x0fprovider_config\x18\x12 \x01(\v2\x17.google.protobuf.StructH\tR\x0eproviderConfig\x88\x01\x01\x12\x1b\n" +
+	"\bprovider\x18\x11 \x01(\tH\bR\bprovider\x88\x01\x01\x12$\n" +
+	"\vmethod_type\x18\x17 \x01(\tH\tR\n" +
+	"methodType\x88\x01\x01\x12E\n" +
+	"\x0fprovider_config\x18\x12 \x01(\v2\x17.google.protobuf.StructH\n" +
+	"R\x0eproviderConfig\x88\x01\x01\x12\x1b\n" +
 	"\tis_active\x18\x13 \x01(\bR\bisActive\x12#\n" +
 	"\rdisplay_order\x18\x14 \x01(\x05R\fdisplayOrder\x129\n" +
 	"\n" +
@@ -16696,7 +16706,8 @@ const file_api_proto_listings_v1_listings_proto_rawDesc = "" +
 	"\x06_zonesB\x11\n" +
 	"\x0f_available_daysB\x0e\n" +
 	"\f_cutoff_timeB\v\n" +
-	"\t_providerB\x12\n" +
+	"\t_providerB\x0e\n" +
+	"\f_method_typeB\x12\n" +
 	"\x10_provider_config\"\xc7\x01\n" +
 	"\bLocation\x12\x19\n" +
 	"\buser_lat\x18\x01 \x01(\x01R\auserLat\x12\x19\n" +
